@@ -87,6 +87,47 @@ test("main flow stays top→down when an external lane is present (s1)", async (
   expect(y("k8s-ingress")).toBeLessThan(y("was-1"));
 });
 
+test.each(["s1", "s2", "s3", "s4", "s5"])("no edge runs horizontally through a group name band (%s)", async (id) => {
+  const l = await lay(fx(id));
+  const bad: string[] = [];
+  for (const e of l.edges) {
+    for (let i = 1; i < e.points.length; i++) {
+      const [p, q] = [e.points[i - 1], e.points[i]];
+      if (Math.abs(p.y - q.y) > 0.5) continue;
+      const [x1, x2] = [Math.min(p.x, q.x), Math.max(p.x, q.x)];
+      for (const g of Object.values(l.groups)) {
+        if (p.y > g.y + 0.5 && p.y < g.y + 30 - 0.5 && x1 < g.x + g.width && x2 > g.x) bad.push(`${e.id}×${g.id}@${p.y}`);
+      }
+    }
+  }
+  expect(bad).toEqual([]);
+});
+
+test("redundancy members connected by an edge still sit in one row (s2 db-pair)", async () => {
+  const st = fx("s2");
+  const l = await lay(st);
+  const p = l.nodes["db-primary"];
+  const s = l.nodes["db-standby"];
+  expect(p.y).toBe(s.y);
+  const e = Object.values(st.edges).find(
+    (x) => (x.from === "db-primary" && x.to === "db-standby") || (x.from === "db-standby" && x.to === "db-primary"),
+  )!;
+  const pts = l.edges.find((x) => x.id === e.id)!.points;
+  expect(pts).toHaveLength(2);
+  const from = l.nodes[e.from];
+  const to = l.nodes[e.to];
+  const cy = p.y + p.height / 2;
+  const fromSide = from.x < to.x ? from.x + from.width : from.x;
+  const toSide = from.x < to.x ? to.x : to.x + to.width;
+  expect(pts).toEqual([{ x: fromSide, y: cy }, { x: toSide, y: cy }]);
+});
+
+test("redundancy members sit in one row (s4 aurora-cluster)", async () => {
+  const l = await lay(fx("s4"));
+  const ys = ["aurora-writer", "aurora-reader-1", "aurora-reader-2"].map((id) => l.nodes[id].y);
+  expect(new Set(ys).size).toBe(1);
+});
+
 test("long labels truncate without overlap", async () => {
   const st = applyCommands(fx("s2"), [
     { op: "update_node", id: "was-1", label: "주문결제통합처리애플리케이션서버첫번째인스턴스입니다" },

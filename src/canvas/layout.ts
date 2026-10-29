@@ -1,7 +1,6 @@
 import ELK from "elkjs/lib/elk.bundled.js";
 import type { ElkExtendedEdge, ElkNode } from "elkjs/lib/elk-api";
 
-import { GROUP_KINDS } from "@/domain/catalog";
 import type { DisplayGraph } from "./display";
 import { elbowRoute } from "./elbow";
 import { textWidth, truncate } from "./text";
@@ -23,7 +22,6 @@ const SUB_PX = 9.5;
 const ROOT = "__root";
 const CHANNEL_MARGIN = 24; // main 오른쪽 끝 ↔ 첫 통로, 마지막 통로 ↔ 외부 열
 const CHANNEL_STEP = 12; // 통로끼리 간격 (spacing.edgeEdge)
-const ROW_SEARCH = 400;
 const CONTENT_WIDTH = NODE.maxWidth - NODE.padLeft - NODE.padRight;
 
 const elk = new ELK();
@@ -42,7 +40,6 @@ const BASE_OPTIONS: Record<string, string> = {
   "elk.layered.mergeHierarchyEdges": "false",
 };
 const GROUP_PADDING = `[top=${GROUP_PAD.top},left=${GROUP_PAD.side},bottom=${GROUP_PAD.bottom},right=${GROUP_PAD.side}]`;
-const INNER_DIRECTION = new Map<string, string>(GROUP_KINDS.map((k) => [k.kind, k.innerDirection]));
 
 function nodeWidth(label: string, sub: string | undefined): number {
   const text = Math.max(textWidth(label, LABEL_PX), sub ? textWidth(sub, SUB_PX) : 0);
@@ -104,6 +101,14 @@ export async function layoutDiagram(g: DisplayGraph, pinned: Record<string, { x:
     if (p !== null && !g.groups[p].collapsed) filled.add(p);
   }
 
+  // Members of a redundancy group sit in one row. An edge between two direct children of the same
+  // redundancy group would push them into different ELK layers, so it is left out of ELK and drawn
+  // afterwards as a short horizontal connector.
+  const rowEdge = (from: string, to: string): boolean => {
+    const p = parentOf(from);
+    return p !== null && p === parentOf(to) && g.groups[p].groupKind === "redundancy_group" && !!g.nodes[from] && !!g.nodes[to];
+  };
+
   // One ELK run over the hierarchy under `tops`. Each edge sits in the lowest common ancestor container
   // of its endpoints; ELK returns its sections relative to that container, so the container's absolute
   // offset is added back.
@@ -116,11 +121,12 @@ export async function layoutDiagram(g: DisplayGraph, pinned: Record<string, { x:
     // Parents before children; input order otherwise (stable model order for ELK).
     for (const grp of groups.filter((x) => inRun(x.id)).sort((a, b) => depth(a.id) - depth(b.id))) {
       // Collapsed and empty groups are plain boxes. ELK lays a whole INCLUDE_CHILDREN hierarchy out in its
-      // root's direction; the catalog's inner direction is still passed as the group's option.
+      // root's direction and ignores a per-group direction, so the catalog's innerDirection is not passed;
+      // a redundancy group's side-by-side row comes from `rowEdge` below.
       const n: ElkNode = filled.has(grp.id)
         ? {
             id: grp.id,
-            layoutOptions: { ...BASE_OPTIONS, "elk.direction": INNER_DIRECTION.get(grp.groupKind) ?? "DOWN", "elk.padding": GROUP_PADDING },
+            layoutOptions: { ...BASE_OPTIONS, "elk.padding": GROUP_PADDING },
             children: [],
             edges: [],
           }
@@ -140,7 +146,7 @@ export async function layoutDiagram(g: DisplayGraph, pinned: Record<string, { x:
     };
     const edgeContainer = new Map<string, string>();
     for (const e of g.edges) {
-      if (!inRun(e.from) || !inRun(e.to)) continue;
+      if (!inRun(e.from) || !inRun(e.to) || rowEdge(e.from, e.to)) continue;
       const toChain = new Set(chain(e.to));
       const lca = chain(e.from).find((c) => toChain.has(c)) ?? ROOT;
       edgeContainer.set(e.id, lca);
@@ -184,12 +190,11 @@ export async function layoutDiagram(g: DisplayGraph, pinned: Record<string, { x:
   const rects = new Map(main.rects);
   const points = new Map(main.edges);
 
+  const inLane = (id: string) => laneSet.has(topOf(id));
+  const cross = g.edges.filter((e) => inLane(e.from) !== inLane(e.to));
+  const mainRight = Math.max(0, ...[...main.rects.values()].map((r) => r.x + r.width));
   if (laneIds.length > 0) {
-    const inLane = (id: string) => laneSet.has(topOf(id));
-    const cross = g.edges.filter((e) => inLane(e.from) !== inLane(e.to));
-    const mainRight = Math.max(0, ...[...main.rects.values()].map((r) => r.x + r.width));
     const laneX = mainRight + 2 * CHANNEL_MARGIN + Math.max(0, cross.length - 1) * CHANNEL_STEP;
-
     // Stack lane groups top→down, each near the highest main node it talks to.
     const wantY = (laneTop: string): number => {
       const ys = cross
@@ -208,12 +213,37 @@ export async function layoutDiagram(g: DisplayGraph, pinned: Record<string, { x:
       for (const [k, v] of run.rects) rects.set(k, v);
       for (const [k, v] of run.edges) points.set(k, v);
     }
+  }
 
-    // Hand-routed rows avoid nodes (with a little air) and every group's name band.
-    const obstacles: Rect[] = [
-      ...nodes.map((n) => rects.get(n.id)!).map((r) => ({ x: r.x - 4, y: r.y - 4, width: r.width + 8, height: r.height + 8 })),
-      ...groups.map((x) => rects.get(x.id)!).map((r) => ({ x: r.x, y: r.y, width: r.width, height: GROUP_PAD.top })),
-    ];
+  // Redundancy row connectors: facing borders at the shared centre line, in the edge's own direction.
+  // If another member sits between the two, the connector dips into the group's bottom padding instead.
+  for (const e of g.edges) {
+    if (!rowEdge(e.from, e.to)) continue;
+    const a = rects.get(e.from)!;
+    const b = rects.get(e.to)!;
+    const [l, r] = a.x <= b.x ? [a, b] : [b, a];
+    const between = [...rects.entries()].some(
+      ([id, m]) => g.nodes[id] && m !== l && m !== r && m.x >= l.x + l.width && m.x + m.width <= r.x && m.y < l.y + l.height && m.y + m.height > l.y,
+    );
+    let pts: Pt[];
+    if (!between) {
+      const cy = l.y + l.height / 2;
+      pts = [{ x: l.x + l.width, y: cy }, { x: r.x, y: cy }];
+    } else {
+      const dip = Math.max(l.y + l.height, r.y + r.height) + GROUP_PAD.bottom / 2;
+      const lx = l.x + l.width / 2;
+      const rx = r.x + r.width / 2;
+      pts = [{ x: lx, y: l.y + l.height }, { x: lx, y: dip }, { x: rx, y: dip }, { x: rx, y: r.y + r.height }];
+    }
+    points.set(e.id, a === l ? pts : pts.reverse());
+  }
+
+  if (laneIds.length > 0) {
+    // Hand-routed runs avoid nodes (with a little air) and every group's name band.
+    const nodeBoxes = new Map(nodes.map((n) => [n.id, rects.get(n.id)!] as const));
+    const air = (r: Rect): Rect => ({ x: r.x - 4, y: r.y - 4, width: r.width + 8, height: r.height + 8 });
+    const nameBands = groups.map((x) => rects.get(x.id)!).map((r) => ({ x: r.x, y: r.y, width: r.width, height: GROUP_PAD.top }));
+    const obstacles: Rect[] = [...[...nodeBoxes.values()].map(air), ...nameBands];
     // Horizontal runs additionally keep off group bottom borders and off other edges' horizontal runs,
     // so a line never hides along a border or merges with an unrelated line.
     const band = (a: Pt, b: Pt): Rect => ({ x: Math.min(a.x, b.x), y: a.y - 4, width: Math.abs(a.x - b.x), height: 8 });
@@ -223,38 +253,70 @@ export async function layoutDiagram(g: DisplayGraph, pinned: Record<string, { x:
       ...[...points.values()].flatMap((pts) => pts.slice(1).flatMap((q, i) => (Math.abs(q.y - pts[i].y) < 0.5 ? [band(pts[i], q)] : []))),
     ];
     const clear = (a: Pt, b: Pt, blockers: Rect[]): boolean => blockers.every((o) => !touches(segmentRect(a, b), o));
-    // Nearest row below (dir 1) or above (dir -1) a node edge reachable by a clear vertical stub and a
-    // clear horizontal run to the channel.
-    const row = (x: number, y0: number, dir: 1 | -1, channelX: number): number => {
-      let y = y0 + (dir * NODE.layerGap) / 2;
-      for (let d = 8; d <= ROW_SEARCH; d += 2) {
-        const c = y0 + dir * d;
-        if (clear({ x, y: y0 + dir * 5 }, { x, y: c }, obstacles) && clear({ x, y: c }, { x: channelX, y: c }, rowBlockers)) {
-          y = c;
-          break;
+    const span = Math.max(...[...rects.values()].map((r) => r.y + r.height)) + NODE.layerGap;
+
+    // Main side: the nearest row below the node (else above it) reachable by a clear vertical stub and a
+    // clear horizontal run to the channel. No such row means the route would cross something: fail loudly.
+    const exitRow = (edgeId: string, m: Rect, channelX: number): { y: number; from: Pt } => {
+      const x = m.x + m.width / 2;
+      for (let d = 8; d <= span; d += 2) {
+        for (const dir of [1, -1] as const) {
+          const y0 = dir === 1 ? m.y + m.height : m.y;
+          const y = y0 + dir * d;
+          if (clear({ x, y: y0 + dir * 5 }, { x, y }, obstacles) && clear({ x, y }, { x: channelX, y }, rowBlockers)) {
+            rowBlockers.push(band({ x, y }, { x: channelX, y }));
+            return { y, from: { x, y: y0 } };
+          }
         }
       }
-      rowBlockers.push(band({ x, y }, { x: channelX, y }));
-      return y;
+      throw new Error(`layout: no clear row out of the main flow for edge ${edgeId}`);
     };
+    // Lane side: enter the node's left side at its centre line (crossing only its group's side border).
+    // Several edges on one node spread over its height.
+    const entries = new Map<string, number>();
+    for (const e of cross) {
+      const id = inLane(e.from) ? e.from : e.to;
+      entries.set(id, (entries.get(id) ?? 0) + 1);
+    }
+    const used = new Map<string, number>();
+    const entryY = (id: string, t: Rect): number => {
+      const n = entries.get(id)!;
+      const k = used.get(id) ?? 0;
+      used.set(id, k + 1);
+      return t.y + t.height / 2 + (k - (n - 1) / 2) * Math.min(8, (t.height - 8) / Math.max(1, n - 1));
+    };
+    // If something sits left of the lane node, come in from above instead: a row in the gap above its
+    // lane group, then straight down through its own groups into the node's top.
+    const laneRoute = (edgeId: string, laneId: string, channelX: number): Pt[] => {
+      const t = nodeBoxes.get(laneId) ?? rects.get(laneId)!;
+      const y = entryY(laneId, t);
+      const others = [...nodeBoxes.entries()].filter(([id]) => id !== laneId).map(([, r]) => air(r));
+      if (clear({ x: channelX, y }, { x: t.x - 1, y }, [...others, ...nameBands, ...rowBlockers.filter((r) => r.height === 8)])) {
+        rowBlockers.push(band({ x: channelX, y }, { x: t.x, y }));
+        return [{ x: channelX, y }, { x: t.x, y }];
+      }
+      const top = rects.get(topOf(laneId))!;
+      const tx = t.x + t.width / 2;
+      for (let ry = top.y - 8; ry >= top.y - NODE.gap + 4; ry -= 2) {
+        if (clear({ x: channelX, y: ry }, { x: tx, y: ry }, rowBlockers) && clear({ x: tx, y: ry }, { x: tx, y: t.y - 5 }, others)) {
+          rowBlockers.push(band({ x: channelX, y: ry }, { x: tx, y: ry }));
+          return [{ x: channelX, y: ry }, { x: tx, y: ry }, { x: tx, y: t.y }];
+        }
+      }
+      throw new Error(`layout: no clear way into lane node ${laneId} for edge ${edgeId}`);
+    };
+
     [...cross]
-      .sort((a, b) => rects.get(a.from)!.y - rects.get(b.from)!.y)
+      .sort((a, b) => rects.get(inLane(a.from) ? a.to : a.from)!.y - rects.get(inLane(b.from) ? b.to : b.from)!.y)
       .forEach((e, i) => {
-        const s = rects.get(e.from)!;
-        const t = rects.get(e.to)!;
+        const fromLane = inLane(e.from);
+        const mainId = fromLane ? e.to : e.from;
+        const laneId = fromLane ? e.from : e.to;
         const channelX = mainRight + CHANNEL_MARGIN + i * CHANNEL_STEP;
-        const sx = s.x + s.width / 2;
-        const tx = t.x + t.width / 2;
-        const y1 = row(sx, s.y + s.height, 1, channelX);
-        const y2 = row(tx, t.y, -1, channelX);
-        points.set(e.id, [
-          { x: sx, y: s.y + s.height },
-          { x: sx, y: y1 },
-          { x: channelX, y: y1 },
-          { x: channelX, y: y2 },
-          { x: tx, y: y2 },
-          { x: tx, y: t.y },
-        ]);
+        const exit = exitRow(e.id, rects.get(mainId)!, channelX);
+        const into = laneRoute(e.id, laneId, channelX);
+        const pts = [exit.from, { x: exit.from.x, y: exit.y }, { x: channelX, y: exit.y }, ...into];
+        points.set(e.id, fromLane ? pts.reverse() : pts);
       });
     // Edges between two different lane groups (rare): a plain elbow.
     for (const e of g.edges) if (!points.has(e.id)) points.set(e.id, elbowRoute(rects.get(e.from)!, rects.get(e.to)!));
