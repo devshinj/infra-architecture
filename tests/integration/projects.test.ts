@@ -84,6 +84,27 @@ describe("projects", () => {
     expect((await getDiagram(a, d.id)).pinnedPositions).toEqual({});
   });
 
+  test("invalid pinned positions are rejected and leave stored value unchanged", async () => {
+    const a = await user("a"); const p = await createProject(a, "x"); const d = await createDiagram(a, p.id, "y");
+    const good = { "was-1": { x: 1, y: 2 } };
+    await savePinnedPositions(a, d.id, good);
+    const many: Record<string, { x: number; y: number }> = {};
+    for (let i = 0; i < 2001; i++) many[`n-${i}`] = { x: 0, y: 0 };
+    const bad: unknown[] = [
+      { "was-1": { x: Number.NaN, y: 0 } },
+      { "was-1": "10,20" },
+      [{ x: 1, y: 2 }],
+      many,
+      { "Bad Key": { x: 1, y: 2 } },
+      { "was-1": { x: 1, y: 2, z: 3 } },
+      { "was-1": { x: 2_000_000, y: 0 } },
+    ];
+    for (const b of bad) {
+      await expect(savePinnedPositions(a, d.id, b as never)).rejects.toThrow("위치 정보가 올바르지 않습니다");
+    }
+    expect((await getDiagram(a, d.id)).pinnedPositions).toEqual(good);
+  });
+
   test("names are trimmed and length-checked", async () => {
     const a = await user("a");
     await expect(createProject(a, "   ")).rejects.toThrow("이름은 1~60자로 입력해 주세요");

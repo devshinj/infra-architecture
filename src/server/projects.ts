@@ -1,4 +1,5 @@
 import { and, asc, eq, sql } from "drizzle-orm";
+import { z } from "zod";
 
 import { db } from "@/db/client";
 import { diagrams, projects } from "@/db/schema";
@@ -129,13 +130,25 @@ export async function getDiagram(userId: string, diagramId: string) {
   return { ...d, latest };
 }
 
+const coord = z.number().refine((v) => Number.isFinite(v) && Math.abs(v) <= 1_000_000);
+const pinnedSchema = z
+  .record(z.string().regex(/^[a-z0-9][a-z0-9-]{0,63}$/), z.object({ x: coord, y: coord }).strict())
+  .refine((o) => Object.keys(o).length <= 2000);
+
+function parsePinned(positions: unknown): PinnedPositions {
+  const r = Array.isArray(positions) ? null : pinnedSchema.safeParse(positions);
+  if (!r || !r.success) throw new Error("위치 정보가 올바르지 않습니다");
+  return r.data;
+}
+
 export async function savePinnedPositions(
   userId: string,
   diagramId: string,
   positions: PinnedPositions,
 ): Promise<void> {
   await getOwnedDiagram(userId, diagramId);
-  await db.update(diagrams).set({ pinnedPositions: positions }).where(eq(diagrams.id, diagramId));
+  const clean = parsePinned(positions);
+  await db.update(diagrams).set({ pinnedPositions: clean }).where(eq(diagrams.id, diagramId));
 }
 
 export async function clearPinnedPositions(userId: string, diagramId: string): Promise<void> {
