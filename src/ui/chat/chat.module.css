@@ -37,3 +37,18 @@
 .assumptionChoice:hover:not(:disabled) { background: var(--line-node); }
 .assumptionChoice:disabled { opacity: 0.5; cursor: default; }
 .assumptionChip:focus-visible, .assumptionChoice:focus-visible { outline: 1.5px solid var(--text-secondary); outline-offset: 2px; }
+/* 빠진 정보 체크리스트. 숫자만 --state-missing 으로 강조한다. */
+.top { display: flex; flex-direction: column; }
+.missing { margin: 10px 12px 0; border: 1px solid var(--line-node); border-radius: var(--radius-node); background: var(--bg-node); }
+.missingHead { width: 100%; font: inherit; font-size: 12.5px; text-align: left; color: var(--text-primary); background: transparent; border: 0; border-radius: var(--radius-node); padding: 7px 10px; cursor: pointer; }
+.missingCount { color: var(--state-missing); font-weight: 600; }
+.missingBody { max-height: 45vh; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding: 4px 10px 10px; border-top: 1px solid var(--line-node); }
+.missingBlock { display: flex; flex-direction: column; gap: 6px; padding-top: 8px; }
+.missingTitle { margin: 0; font-size: 12.5px; font-weight: 600; color: var(--text-primary); }
+.missingRow { display: grid; grid-template-columns: 84px 1fr auto; align-items: center; gap: 8px; }
+.missingLabel { font-size: 12px; color: var(--text-secondary); }
+.missingInput { font: inherit; font-size: 12.5px; min-width: 0; color: var(--text-primary); background: var(--bg-node); border: 1px solid var(--line-node); border-radius: 6px; padding: 4px 8px; }
+.missingInput:disabled { opacity: 0.5; }
+.missingUnknown { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: var(--text-secondary); cursor: pointer; }
+.missingError { margin: 0; font-size: 12px; color: var(--text-primary); border: 1px solid var(--state-missing); border-radius: var(--radius-node); padding: 5px 8px; }
+.missingHead:focus-visible, .missingInput:focus-visible, .missingUnknown input:focus-visible { outline: 1.5px solid var(--text-secondary); outline-offset: 2px; }

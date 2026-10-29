@@ -26,6 +26,8 @@ export interface ChatPanelProps {
   assumptions?: Record<string, Assumption>;
   onChooseAssumption?(key: string, value: string): void;
   onConfirmAssumption?(key: string): void;
+  /** 빠진 정보 체크리스트. 가정 칩과 함께 대화 위쪽에 둔다. */
+  checklist?: ReactNode;
 }
 
 const PHASE_LABEL: Record<ChatPhase, string> = { thinking: "구성 검토 중…", drawing: "그리는 중…", answering: "답변 작성 중…" };
@@ -53,7 +55,7 @@ function renderText(text: string): ReactNode[] {
   return out;
 }
 
-export function ChatPanel({ lines, busy, phase, onSend, onStop, health, disabledReason, mentionRef, footer, assumptions, onChooseAssumption, onConfirmAssumption }: ChatPanelProps) {
+export function ChatPanel({ lines, busy, phase, onSend, onStop, health, disabledReason, mentionRef, footer, assumptions, onChooseAssumption, onConfirmAssumption, checklist }: ChatPanelProps) {
   const list = useRef<HTMLDivElement>(null);
   const stick = useRef(true);
   const [hasContent, setHasContent] = useState(false);
@@ -73,13 +75,18 @@ export function ChatPanel({ lines, busy, phase, onSend, onStop, health, disabled
           {DOWN}
         </div>
       )}
-      {assumptions && (
-        <AssumptionChips
-          assumptions={assumptions}
-          busy={blocked}
-          onChoose={(k, v) => onChooseAssumption?.(k, v)}
-          onConfirm={(k) => onConfirmAssumption?.(k)}
-        />
+      {(assumptions || checklist) && (
+        <div className={styles.top}>
+          {assumptions && (
+            <AssumptionChips
+              assumptions={assumptions}
+              busy={blocked}
+              onChoose={(k, v) => onChooseAssumption?.(k, v)}
+              onConfirm={(k) => onConfirmAssumption?.(k)}
+            />
+          )}
+          {checklist}
+        </div>
       )}
       <div
         ref={list}

@@ -10,6 +10,7 @@ import {
   importSampleAction,
   listVersionsAction,
   restoreVersionAction,
+  saveFieldsAction,
   savePinnedAction,
 } from "@/app/(app)/actions";
 import { Canvas, type CanvasOptions, type DiffMarks } from "@/canvas/Canvas";
@@ -23,6 +24,7 @@ import styles from "./app.module.css";
 import type { VersionRow } from "./HistoryPanel";
 import { type LlmHealth } from "./chat/ChatPanel";
 import type { MentionInputHandle } from "./chat/MentionInput";
+import { MissingChecklist, type MissingChecklistProps } from "./chat/MissingChecklist";
 import { type ChatLine, useChatTurn } from "./chat/useChatTurn";
 import { RightPanel, type Tab } from "./RightPanel";
 
@@ -191,6 +193,31 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
     void confirmKey(key, a.value);
   };
 
+  // Badge click: open the 대화 tab checklist at that node. A fresh token re-triggers the same node.
+  const [focus, setFocus] = useState<{ id: string; token: number } | null>(null);
+  const focusSeq = useRef(0);
+  const onBadgeClick = (id: string) => {
+    setTab("대화");
+    focusSeq.current += 1;
+    setFocus({ id, token: focusSeq.current });
+  };
+  const onTabChange = (t: Tab) => {
+    setTab(t);
+    if (t !== "대화") setFocus(null); // coming back to 대화 must not jump to the old target again
+  };
+
+  // Form save = one version (source form); adopt it through the same server-state path as assumptions.
+  const saveFields: MissingChecklistProps["onSave"] = async (input) => {
+    try {
+      const r = await saveFieldsAction(diagramId, input);
+      if (!r.ok) return { ok: false, message: r.error };
+      if (r.number !== null) refreshFromServer();
+      return { ok: true };
+    } catch {
+      return { ok: false, message: "저장하지 못했어요. 다시 시도해 주세요." };
+    }
+  };
+
   const enter = (next: Mode, state: DiagramState) => {
     setMode(next);
     setEditMode(false);
@@ -280,7 +307,7 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
             onAutoArrange={onAutoArrange}
             onEditModeChange={(v) => live && !locked && setEditMode(v)}
             onMotionChange={setMotion}
-            {...(live ? { onMention } : {})}
+            {...(live ? { onMention, onBadgeClick } : {})}
             {...(mode.kind === "compare" ? { diffMarks: mode.marks } : {})}
           />
         </div>
@@ -295,7 +322,7 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
         onImportSample={importSample}
         importing={busy || locked}
         tab={tab}
-        onTabChange={setTab}
+        onTabChange={onTabChange}
         onHistoryOpen={loadVersions}
         history={{
           versions,
@@ -314,6 +341,15 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
           assumptions: current.state.assumptions,
           onChooseAssumption,
           onConfirmAssumption,
+          checklist: (
+            <MissingChecklist
+              state={current.state}
+              busy={locked || !live}
+              focusId={focus?.id ?? null}
+              {...(focus ? { focusToken: focus.token } : {})}
+              onSave={saveFields}
+            />
+          ),
           health,
           mentionRef,
           ...(live ? {} : { disabledReason: "이전 버전을 보는 중에는 대화할 수 없어요." }),

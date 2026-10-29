@@ -1,5 +1,5 @@
 import "@testing-library/jest-dom/vitest";
-import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, expect, test, vi } from "vitest";
 
 const hookState = vi.hoisted(() => ({ busy: false, onCommand: null as null | ((c: unknown) => void) }));
@@ -8,12 +8,14 @@ vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
 vi.mock("@/app/(app)/actions", () => ({
   clearPinnedAction: vi.fn(), getVersionAction: vi.fn(), importSampleAction: vi.fn(),
   listVersionsAction: vi.fn(async () => []), restoreVersionAction: vi.fn(), savePinnedAction: vi.fn(),
+  saveFieldsAction: vi.fn(async () => ({ ok: true, number: 2 })),
 }));
 vi.mock("@/canvas/Canvas", () => ({
-  Canvas: ({ state, onMention }: { state: { nodes: object }; onMention?: (id: string) => void }) => (
+  Canvas: ({ state, onMention, onBadgeClick }: { state: { nodes: object }; onMention?: (id: string) => void; onBadgeClick?: (id: string) => void }) => (
     <div>
       <div data-testid="n">{Object.keys(state.nodes).join(",")}</div>
       {onMention && <button onClick={() => onMention("a")}>멘션a</button>}
+      {onBadgeClick && <button onClick={() => onBadgeClick("a")}>배지a</button>}
     </div>
   ),
 }));
@@ -24,6 +26,7 @@ vi.mock("@/ui/chat/useChatTurn", () => ({
   },
 }));
 
+import { saveFieldsAction } from "@/app/(app)/actions";
 import { emptyState } from "@/domain/types";
 import { DiagramWorkspace } from "@/ui/DiagramWorkspace";
 
@@ -58,4 +61,29 @@ test("canvas mention opens the 대화 tab and inserts a chip for the node", () =
   expect(screen.getByRole("tab", { name: "대화" })).toHaveAttribute("aria-selected", "true");
   expect(screen.getByRole("button", { name: "a 참조 제거" })).toBeInTheDocument();
   expect(screen.getByRole("textbox")).toHaveFocus();
+});
+
+test("badge click opens the chat tab checklist at that node", async () => {
+  hookState.busy = false;
+  Element.prototype.scrollIntoView = vi.fn();
+  const web = (id: string) => [id, { id, kind: "web_server", label: id, parent: null, attrs: {} }];
+  const latest = { number: 1, state: { ...emptyState(), nodes: Object.fromEntries([web("a"), web("b")]) } };
+  render(<DiagramWorkspace diagramId="d" name="n" latest={latest as never} initialPinned={{}} samples={[]} />);
+  fireEvent.click(screen.getByRole("tab", { name: "설명" }));
+  fireEvent.click(screen.getByRole("button", { name: "배지a" }));
+  expect(screen.getByRole("tab", { name: "대화" })).toHaveAttribute("aria-selected", "true");
+  expect(screen.getByRole("button", { name: /채워야 할 정보/ })).toHaveAttribute("aria-expanded", "true");
+  const a = screen.getByRole("group", { name: "a" });
+  const host = within(a).getByRole("textbox", { name: "호스트명" });
+  expect(host).toHaveFocus();
+  // 접고 같은 배지를 다시 눌러도 다시 펼쳐진다.
+  fireEvent.click(screen.getByRole("button", { name: /채워야 할 정보/ }));
+  fireEvent.click(screen.getByRole("button", { name: "배지a" }));
+  expect(screen.getByRole("button", { name: /채워야 할 정보/ })).toHaveAttribute("aria-expanded", "true");
+  // 저장은 saveFieldsAction 으로 간다.
+  fireEvent.change(within(screen.getByRole("group", { name: "a" })).getByRole("textbox", { name: "호스트명" }), { target: { value: "web-01" } });
+  await act(async () => {
+    fireEvent.click(within(screen.getByRole("group", { name: "a" })).getByRole("button", { name: "저장" }));
+  });
+  expect(saveFieldsAction).toHaveBeenCalledWith("d", { targetKind: "node", targetId: "a", values: { hostname: "web-01" }, unknown: [] });
 });
