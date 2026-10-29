@@ -14,16 +14,23 @@ const choice = (id: string, confidence = 0.9) => ({
   intent: { type: "choice", choice: id, confidence, probabilities: {} },
 });
 
+/** Clef 요청 본문 중 테스트가 보는 부분. */
+interface ClefBody {
+  model: string;
+  state: string;
+  questions: Record<string, { type: string; options?: unknown; instructions?: string; criteria?: Record<string, string> }>;
+}
+
 function setup(
-  responses: Array<(init?: any) => Response | Promise<Response>>,
+  responses: Array<(init?: RequestInit) => Response | Promise<Response>>,
   maxConcurrency = 2,
   classifyCapMs = 3000,
 ) {
-  const calls: Array<{ url: string; body: any; headers: Headers }> = [];
+  const calls: Array<{ url: string; body: ClefBody; headers: Headers }> = [];
   const sleeps: number[] = [];
   let i = 0;
-  const fetchFn = (async (url: any, init: any) => {
-    calls.push({ url: String(url), body: JSON.parse(init.body), headers: new Headers(init.headers) });
+  const fetchFn = (async (url: RequestInfo | URL, init?: RequestInit) => {
+    calls.push({ url: String(url), body: JSON.parse(String(init?.body)) as ClefBody, headers: new Headers(init?.headers) });
     return responses[Math.min(i++, responses.length - 1)]!(init);
   }) as typeof fetch;
   const client = createClefClient(
@@ -151,7 +158,7 @@ describe("clef", () => {
     const client = createClefClient(
       { url: "http://clef.test//", key: "k", maxConcurrency: 1 },
       {
-        fetch: (async (u: any) => {
+        fetch: (async (u: RequestInfo | URL) => {
           calls.push(String(u));
           return ok(choice("other"));
         }) as typeof fetch,
@@ -162,9 +169,9 @@ describe("clef", () => {
   });
 
   describe("classifyIntent budget", () => {
-    const hang = (init: any) =>
+    const hang = (init?: RequestInit) =>
       new Promise<Response>((_, reject) => {
-        init.signal.addEventListener("abort", () => reject(new DOMException("a", "AbortError")));
+        init?.signal?.addEventListener("abort", () => reject(new DOMException("a", "AbortError")));
       });
 
     test("503 -> exactly one fetch, no sleep, null", async () => {

@@ -22,14 +22,24 @@ const errRes = (status: number) =>
     headers: { "content-type": "application/json" },
   });
 
+/** Qwen 요청 본문 중 테스트가 보는 부분. */
+interface QwenBody {
+  model: string;
+  stream: boolean;
+  temperature: number;
+  max_tokens: number;
+  chat_template_kwargs: unknown;
+  messages: unknown;
+}
+
 function setup(responses: Array<() => Response>) {
-  const bodies: any[] = [];
+  const bodies: QwenBody[] = [];
   const headers: Headers[] = [];
   const sleeps: number[] = [];
   let i = 0;
-  const fetchFn = (async (_url: any, init: any) => {
-    bodies.push(JSON.parse(init.body));
-    headers.push(new Headers(init.headers));
+  const fetchFn = (async (_url: RequestInfo | URL, init?: RequestInit) => {
+    bodies.push(JSON.parse(String(init?.body)) as QwenBody);
+    headers.push(new Headers(init?.headers));
     const r = responses[Math.min(i++, responses.length - 1)]!;
     return r();
   }) as typeof fetch;
@@ -51,7 +61,7 @@ describe("qwen client", () => {
   test("sends model, stream, temperature 0.3, max_tokens 16000 and chat_template_kwargs at top level", async () => {
     const c = setup([() => okRes(sse(["a"]))]);
     await run(c).p;
-    const b = c.bodies[0];
+    const b = c.bodies[0]!;
     expect(b.model).toBe("qwen3.8-flash-next");
     expect(b.stream).toBe(true);
     expect(b.temperature).toBe(0.3);
