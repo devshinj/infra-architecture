@@ -67,8 +67,7 @@ export function EdgeLayer({ layout, edges, selectedId, hoverLabels, motion, appe
   }, [edges, selectedId]);
   const isDim = (ids: string[]) => selectedId !== null && !ids.some((i) => incident.has(i));
 
-  // Which bundles animate. Over 40 nodes only the ones touching the selection; the selection is
-  // not a dependency otherwise so changing it does not restart the lights.
+  // Which bundles animate. Over 40 nodes only the ones touching the selection; 
   const restrictTo = nodeCount > MANY_NODES ? incident : null;
   const active = useMemo(
     () =>
@@ -78,11 +77,20 @@ export function EdgeLayer({ layout, edges, selectedId, hoverLabels, motion, appe
     [bundles, motion, restrictTo],
   );
 
+  // Restart the lights only when geometry, timing or the active set really change, not when the
+  // parent hands us new but equal arrays.
+  const activeRef = useRef(active);
+  activeRef.current = active;
+  const signature = active
+    .map((b) => `${b.id}@${b.periodMs}/${b.offsetMs}:${b.segments.map((s) => `${s.key}=${s.d}#${s.startMs}~${s.edgeKind}`).join(";")}`)
+    .join("|");
+
   useEffect(() => {
     const svg = svgRef.current;
-    if (!svg || active.length === 0 || prefersReducedMotion()) return;
+    const bs = activeRef.current;
+    if (!svg || bs.length === 0 || prefersReducedMotion()) return;
     const stops: Array<() => void> = [];
-    for (const b of active) {
+    for (const b of bs) {
       const kinds = new Set<MotionKind>();
       for (const s of b.segments) {
         const m = motionOf(s.edgeKind);
@@ -91,7 +99,7 @@ export function EdgeLayer({ layout, edges, selectedId, hoverLabels, motion, appe
       for (const k of kinds) stops.push(startBundleMotion(svg, b, k));
     }
     return () => stops.forEach((stop) => stop());
-  }, [active]);
+  }, [signature]);
 
   const junctionDim = (b: Bundle) => isDim(b.segments.flatMap((s) => s.edgeIds));
 

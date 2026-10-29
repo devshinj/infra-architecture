@@ -107,10 +107,12 @@ export function startBundleMotion(svg: SVGSVGElement, bundle: Bundle, kind: Moti
   if (capsules.length) {
     const t0 = performance.now();
     const tick = (now: number) => {
-      const t = (((now - t0 + bundle.offsetMs) % bundle.periodMs) + bundle.periodMs) % bundle.periodMs;
+      // Same phase as WAAPI `delay: offsetMs` + fill "backwards": nothing before the first window.
+      const x = now - t0 - bundle.offsetMs;
+      const t = x < 0 ? -1 : x % bundle.periodMs;
       for (const c of capsules) {
         const pos = (speed * (t - c.seg.startMs)) / 1000 - c.k * CAPSULE.gap;
-        if (pos < 0 || pos > c.seg.length) {
+        if (t < 0 || pos < 0 || pos > c.seg.length) {
           c.el.setAttribute("visibility", "hidden");
           continue;
         }

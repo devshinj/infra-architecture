@@ -1,6 +1,6 @@
 /* Edge layer. Colors come only from tokens.css variables. */
 .edge-layer { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; }
-.edge-seg, .edge-arrows, .edge-junction, .edge-labels { transition: opacity 0.35s ease; }
+.edge-seg, .edge, .edge-junction { transition: opacity 0.35s ease; }
 .edge--dim { opacity: 0.22; }
 .edge--degraded { opacity: 0.8; }
 .edge-line, .edge-arrow, .edge-hit, .motion-path { fill: none; stroke-linecap: round; stroke-linejoin: round; }

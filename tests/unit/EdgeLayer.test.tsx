@@ -115,3 +115,19 @@ test("appearing edges get the draw-in class", () => {
   render(<EdgeLayer layout={fanOutLayout} edges={fanOutEdges} {...base} appearing={new Set(["e1"])} />);
   expect(document.querySelectorAll(".edge-line--appear").length).toBeGreaterThan(0);
 });
+
+test("equal-but-new arrays and a selection change do not restart motion", () => {
+  const stop = vi.fn();
+  start.mockReturnValue(stop);
+  const clone = () => ({
+    layout: lay(fanOutLayout.edges.map((e) => ({ ...e, points: e.points.map((p) => ({ ...p })) }))),
+    edges: fanOutEdges.map((e) => ({ ...e })),
+  });
+  const a = clone();
+  const { rerender } = render(<EdgeLayer layout={a.layout} edges={a.edges} {...base} motion />);
+  expect(start).toHaveBeenCalledTimes(1);
+  const b = clone();
+  rerender(<EdgeLayer layout={b.layout} edges={b.edges} {...base} motion selectedId="alb" />);
+  expect(start).toHaveBeenCalledTimes(1);
+  expect(stop).not.toHaveBeenCalled();
+});

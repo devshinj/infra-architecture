@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 import type { DisplayEdge } from "@/canvas/display";
 import { EdgeLayer } from "@/canvas/EdgeLayer";
@@ -79,22 +79,24 @@ const PANELS: Panel[] = [
 
 function PanelView({ panel }: { panel: Panel }) {
   const [selected, setSelected] = useState<string | null>(null);
-  const edges: DisplayEdge[] = panel.edges.map((e) => ({
-    id: e.id, from: e.from, to: e.to, edgeKind: e.kind, sourceEdgeIds: [e.id], ...(e.label ? { label: e.label } : {}),
-  }));
-  const layout: Layout = {
+  const edges = useMemo<DisplayEdge[]>(
+    () => panel.edges.map((e) => ({ id: e.id, from: e.from, to: e.to, edgeKind: e.kind, sourceEdgeIds: [e.id], ...(e.label ? { label: e.label } : {}) })),
+    [panel],
+  );
+  const layout = useMemo<Layout>(() => ({
     nodes: {}, groups: {}, width: 330, height: 240,
     edges: panel.edges.map((e) => {
       const mid = e.pts[Math.floor(e.pts.length / 2)];
       return { id: e.id, points: e.pts.map(([x, y]) => ({ x, y })), labelAt: { x: mid[0], y: mid[1] } };
     }),
-  };
+  }), [panel]);
+  const appearing = useMemo(() => new Set<string>(), []);
   return (
     <section style={{ background: "var(--bg-node)", border: "1px solid var(--line-node)", borderRadius: "var(--radius-zone)", padding: "12px 14px" }}>
       <h3 style={{ margin: "0 0 2px", fontSize: 14, fontWeight: 600 }}>{panel.title}</h3>
       <p style={{ margin: "2px 0 8px", fontSize: 12.5, lineHeight: 1.55, color: "var(--text-secondary)" }}>{panel.desc}</p>
       <div style={{ position: "relative", width: 330, height: 240 }} onClick={() => setSelected(null)}>
-        <EdgeLayer layout={layout} edges={edges} selectedId={selected} hoverLabels motion appearing={new Set()} nodeCount={panel.nodes.length} />
+        <EdgeLayer layout={layout} edges={edges} selectedId={selected} hoverLabels motion appearing={appearing} nodeCount={panel.nodes.length} />
         {panel.nodes.map((nd) => (
           <div
             key={nd.id}
