@@ -14,7 +14,11 @@ const envSchema = z.object({
 export type Env = z.infer<typeof envSchema>;
 
 export function parseEnv(raw: Record<string, string | undefined>): Env {
-  const result = envSchema.safeParse(raw);
+  // 빈 문자열은 값이 없는 것과 같게 취급한다 (.env.example 이 모든 키를 빈 값으로 나열함).
+  const cleaned = Object.fromEntries(
+    Object.entries(raw).filter(([, value]) => value !== "")
+  );
+  const result = envSchema.safeParse(cleaned);
   if (!result.success) {
     const issues = result.error.issues
       .map((issue) => `${issue.path.join(".")}: ${issue.message}`)
