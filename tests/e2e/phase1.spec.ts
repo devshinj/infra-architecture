@@ -27,6 +27,13 @@ test("가입 → 프로젝트·구성도 → 샘플 → 선택 → 편집 이동
   await signup(page, `jae${uid()}`);
   await newProject(page, "쇼핑몰");
 
+  // 프로젝트 메뉴 → 새 구성도 "운영"
+  await page.getByRole("button", { name: "쇼핑몰 메뉴" }).click();
+  await page.getByRole("menuitem", { name: "새 구성도" }).click();
+  await page.getByRole("dialog").getByLabel("이름").fill("운영");
+  await page.getByRole("dialog").getByRole("button", { name: "만들기" }).click();
+  await expect(page.getByRole("button", { name: "운영", exact: true })).toHaveAttribute("aria-current", "page");
+
   await importSample(page, "IDC WEB-WAS-DB 이중화");
   const nodes = page.locator(".react-flow__node-infra");
   await expect(nodes).toHaveCount(9);
@@ -45,8 +52,9 @@ test("가입 → 프로젝트·구성도 → 샘플 → 선택 → 편집 이동
   await page.mouse.down();
   await page.mouse.move(cx + 60, cy + 60, { steps: 8 });
   await page.mouse.move(cx + 120, cy + 120, { steps: 8 });
+  const saved = page.waitForResponse((r) => r.request().method() === "POST" && r.request().headers()["next-action"] !== undefined);
   await page.mouse.up();
-  await page.waitForTimeout(1500); // savePinnedAction 반영 대기
+  await saved; // savePinnedAction 응답을 기다린다
   await page.reload();
   await expect(nodes).toHaveCount(9);
   const after = (await page.locator(".react-flow__node-infra", { has: page.getByTitle("WAS#1") }).boundingBox())!;
@@ -64,15 +72,15 @@ test("가입 → 프로젝트·구성도 → 샘플 → 선택 → 편집 이동
 });
 
 test("다른 사용자는 남의 구성도 URL 에서 404", async ({ browser }) => {
-  const a = await (await browser.newContext({ baseURL: "http://localhost:3100" })).newPage();
+  const baseURL = test.info().project.use.baseURL;
+  const a = await (await browser.newContext({ baseURL })).newPage();
   await signup(a, `ua${uid()}`);
   await newProject(a, "비공개");
   const url = a.url();
 
-  const b = await (await browser.newContext({ baseURL: "http://localhost:3100" })).newPage();
+  const b = await (await browser.newContext({ baseURL })).newPage();
   await signup(b, `ub${uid()}`);
   const res = await b.goto(url);
-  const notFound = res?.status() === 404 || (await b.getByText(/404|not found|찾을 수 없/i).count()) > 0;
-  expect(notFound).toBe(true);
+  expect(res?.status()).toBe(404);
   await expect(b.locator(".react-flow")).toHaveCount(0);
 });
