@@ -582,7 +582,12 @@ describe("runChatTurn", () => {
     const msgs = qwen.calls[0]!;
     expect(msgs[0]).toEqual({ role: "system", content: SYSTEM_PROMPT });
     const user = msgs.at(-1)!.content;
-    expect(user).toContain("채워야 할 정보:\nwas-1 ram(RAM)");
+    expect(user).toContain("
+
+채워야 할 정보:
+");
+    expect(user).toContain("
+was-1 ram(RAM)");
     expect(user).toContain("e-was-1-db-1 label(프로토콜/포트)");
     expect(user).not.toContain("was-1 ip(IP)");
     expect(user.indexOf("채워야 할 정보:")).toBeLessThan(user.indexOf("요청: RAM 은 16GB"));
