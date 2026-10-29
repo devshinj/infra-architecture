@@ -1,0 +1,2401 @@
+{
+ "note": "2026-10-29 스파이크에서 Qwen qwen3.8-flash-next 가 실제 출력한 명령을 적용한 최종 상태. 당시 스키마(redundancy_pair, az 그룹)를 그대로 보존함 — 테스트 픽스처로 쓸 때 변환 필요.",
+ "scenarios": [
+  {
+   "id": "s1",
+   "title": "결제·카카오 로그인 쇼핑몰",
+   "prompt": "결제대행사(PG) 연동이랑 카카오 로그인 붙는 쇼핑몰 구성 그려줘. 회원은 10만 정도.",
+   "metrics": {
+    "firstCmdMs": 1058,
+    "totalMs": 9006,
+    "cmds": 44,
+    "nodes": 12,
+    "groups": 8,
+    "edges": 15
+   },
+   "state": {
+    "groups": {
+     "aws-region": {
+      "op": "add_group",
+      "id": "aws-region",
+      "group_kind": "cloud_region",
+      "label": "AWS Seoul Region",
+      "parent": null
+     },
+     "vpc-main": {
+      "op": "add_group",
+      "id": "vpc-main",
+      "group_kind": "vpc",
+      "label": "Main VPC",
+      "parent": "aws-region"
+     },
+     "subnet-public": {
+      "op": "add_group",
+      "id": "subnet-public",
+      "group_kind": "subnet_public",
+      "label": "Public Subnet",
+      "parent": "vpc-main"
+     },
+     "subnet-private": {
+      "op": "add_group",
+      "id": "subnet-private",
+      "group_kind": "subnet_private",
+      "label": "Private Subnet",
+      "parent": "vpc-main"
+     },
+     "k8s-cluster": {
+      "op": "add_group",
+      "id": "k8s-cluster",
+      "group_kind": "k8s_cluster",
+      "label": "EKS Cluster",
+      "parent": "subnet-private"
+     },
+     "ext-pg": {
+      "op": "add_group",
+      "id": "ext-pg",
+      "group_kind": "external_service",
+      "label": "PG Payment Gateway",
+      "parent": null
+     },
+     "ext-kakao": {
+      "op": "add_group",
+      "id": "ext-kakao",
+      "group_kind": "external_service",
+      "label": "Kakao Auth",
+      "parent": null
+     },
+     "pair-was": {
+      "op": "add_group",
+      "id": "pair-was",
+      "group_kind": "redundancy_pair",
+      "label": "WAS VIP",
+      "parent": "k8s-cluster"
+     }
+    },
+    "nodes": {
+     "client-web": {
+      "op": "add_node",
+      "id": "client-web",
+      "kind": "client_web",
+      "label": "웹 브라우저",
+      "sub": null,
+      "parent": null,
+      "attrs": {
+       "sw": "Browser",
+       "hostname": null,
+       "cpu": null,
+       "ram": null,
+       "ip": null
+      }
+     },
+     "client-mobile": {
+      "op": "add_node",
+      "id": "client-mobile",
+      "kind": "client_mobile",
+      "label": "모바일 앱",
+      "sub": null,
+      "parent": null,
+      "attrs": {
+       "sw": "iOS/Android",
+       "hostname": null,
+       "cpu": null,
+       "ram": null,
+       "ip": null
+      }
+     },
+     "cdn": {
+      "op": "add_node",
+      "id": "cdn",
+      "kind": "cdn",
+      "label": "CloudFront",
+      "sub": "CDN",
+      "parent": "aws-region",
+      "attrs": {
+       "sw": "CloudFront",
+       "hostname": null,
+       "cpu": null,
+       "ram": null,
+       "ip": null
+      }
+     },
+     "waf": {
+      "op": "add_node",
+      "id": "waf",
+      "kind": "waf",
+      "label": "WAF",
+      "sub": "Web ACL",
+      "parent": "aws-region",
+      "attrs": {
+       "sw": "AWS WAF",
+       "hostname": null,
+       "cpu": null,
+       "ram": null,
+       "ip": null
+      }
+     },
+     "lb-l7": {
+      "op": "add_node",
+      "id": "lb-l7",
+      "kind": "lb_l7",
+      "label": "ALB",
+      "sub": "Load Balancer",
+      "parent": "subnet-public",
+      "attrs": {
+       "sw": "ALB",
+       "hostname": null,
+       "cpu": null,
+       "ram": null,
+       "ip": null
+      }
+     },
+     "k8s-ingress": {
+      "op": "add_node",
+      "id": "k8s-ingress",
+      "kind": "k8s_ingress",
+      "label": "Ingress Controller",
+      "sub": "NGINX",
+      "parent": "k8s-cluster",
+      "attrs": {
+       "sw": "NGINX Ingress",
+       "hostname": null,
+       "cpu": null,
+       "ram": null,
+       "ip": null
+      }
+     },
+     "was-1": {
+      "op": "add_node",
+      "id": "was-1",
+      "kind": "was",
+      "label": "WAS #1",
+      "sub": "Spring Boot",
+      "parent": "pair-was",
+      "attrs": {
+       "sw": "Spring Boot",
+       "hostname": null,
+       "cpu": null,
+       "ram": null,
+       "ip": null
+      }
+     },
+     "was-2": {
+      "op": "add_node",
+      "id": "was-2",
+      "kind": "was",
+      "label": "WAS #2",
+      "sub": "Spring Boot",
+      "parent": "pair-was",
+      "attrs": {
+       "sw": "Spring Boot",
+       "hostname": null,
+       "cpu": null,
+       "ram": null,
+       "ip": null
+      }
+     },
+     "cache": {
+      "op": "add_node",
+      "id": "cache",
+      "kind": "cache",
+      "label": "Redis Cluster",
+      "sub": "ElastiCache",
+      "parent": "subnet-private",
+      "attrs": {
+       "sw": "Redis",
+       "hostname": null,
+       "cpu": null,
+       "ram": null,
+       "ip": null
+      }
+     },
+     "db-rdb": {
+      "op": "add_node",
+      "id": "db-rdb",
+      "kind": "db_rdb",
+      "label": "RDS MySQL",
+      "sub": "Multi-AZ",
+      "parent": "subnet-private",
+      "attrs": {
+       "sw": "MySQL 8.0",
+       "hostname": null,
+       "cpu": null,
+       "ram": null,
+       "ip": null
+      }
+     },
+     "ext-pg-api": {
+      "op": "add_node",
+      "id": "ext-pg-api",
+      "kind": "external_api",
+      "label": "PG API Endpoint",
+      "sub": "Payment API",
+      "parent": "ext-pg",
+      "attrs": {
+       "sw": "REST API",
+       "hostname": null,
+       "cpu": null,
+       "ram": null,
+       "ip": null
+      }
+     },
+     "ext-kakao-auth": {
+      "op": "add_node",
+      "id": "ext-kakao-auth",
+      "kind": "external_auth",
+      "label": "Kakao OAuth API",
+      "sub": "Auth Endpoint",
+      "parent": "ext-kakao",
+      "attrs": {
+       "sw": "OAuth 2.0",
+       "hostname": null,
+       "cpu": null,
+       "ram": null,
+       "ip": null
+      }
+     }
+    },
+    "edges": {
+     "e-client-web-cdn": {
+      "op": "add_edge",
+      "id": "e-client-web-cdn",
+      "from": "client-web",
+      "to": "cdn",
+      "edge_kind": "request",
+      "label": "HTTPS 443"
+     },
+     "e-client-mobile-cdn": {
+      "op": "add_edge",
+      "id": "e-client-mobile-cdn",
+      "from": "client-mobile",
+      "to": "cdn",
+      "edge_kind": "request",
+      "label": "HTTPS 443"
+     },
+     "e-cdn-waf": {
+      "op": "add_edge",
+      "id": "e-cdn-waf",
+      "from": "cdn",
+      "to": "waf",
+      "edge_kind": "request",
+      "label": "HTTPS"
+     },
+     "e-waf-lb": {
+      "op": "add_edge",
+      "id": "e-waf-lb",
+      "from": "waf",
+      "to": "lb-l7",
+      "edge_kind": "request",
+      "label": "HTTPS"
+     },
+     "e-lb-ingress": {
+      "op": "add_edge",
+      "id": "e-lb-ingress",
+      "from": "lb-l7",
+      "to": "k8s-ingress",
+      "edge_kind": "request",
+      "label": "HTTP 80/443"
+     },
+     "e-ingress-was1": {
+      "op": "add_edge",
+      "id": "e-ingress-was1",
+      "from": "k8s-ingress",
+      "to": "was-1",
+      "edge_kind": "request",
+      "label": "HTTP"
+     },
+     "e-ingress-was2": {
+      "op": "add_edge",
+      "id": "e-ingress-was2",
+      "from": "k8s-ingress",
+      "to": "was-2",
+      "edge_kind": "request",
+      "label": "HTTP"
+     },
+     "e-was1-cache": {
+      "op": "add_edge",
+      "id": "e-was1-cache",
+      "from": "was-1",
+      "to": "cache",
+      "edge_kind": "request",
+      "label": "Redis Protocol"
+     },
+     "e-was2-cache": {
+      "op": "add_edge",
+      "id": "e-was2-cache",
+      "from": "was-2",
+      "to": "cache",
+      "edge_kind": "request",
+      "label": "Redis Protocol"
+     },
+     "e-was1-db": {
+      "op": "add_edge",
+      "id": "e-was1-db",
+      "from": "was-1",
+      "to": "db-rdb",
+      "edge_kind": "request",
+      "label": "MySQL 3306"
+     },
+     "e-was2-db": {
+      "op": "add_edge",
+      "id": "e-was2-db",
+      "from": "was-2",
+      "to": "db-rdb",
+      "edge_kind": "request",
+      "label": "MySQL 3306"
+     },
+     "e-was1-pg": {
+      "op": "add_edge",
+      "id": "e-was1-pg",
+      "from": "was-1",
+      "to": "ext-pg-api",
+      "edge_kind": "request",
+      "label": "HTTPS (Payment)"
+     },
+     "e-was2-pg": {
+      "op": "add_edge",
+      "id": "e-was2-pg",
+      "from": "was-2",
+      "to": "ext-pg-api",
+      "edge_kind": "request",
+      "label": "HTTPS (Payment)"
+     },
+     "e-was1-kakao": {
+      "op": "add_edge",
+      "id": "e-was1-kakao",
+      "from": "was-1",
+      "to": "ext-kakao-auth",
+      "edge_kind": "request",
+      "label": "HTTPS (OAuth)"
+     },
+     "e-was2-kakao": {
+      "op": "add_edge",
+      "id": "e-was2-kakao",
+      "from": "was-2",
+      "to": "ext-kakao-auth",
+      "edge_kind": "request",
+      "label": "HTTPS (OAuth)"
+     }
+    },
+    "assumptions": {
+     "environment": "AWS 리전 기반 클라우드 환경",
+     "scale": "월간 활성 사용자 10만 명 수준의 중형 트래픽",
+     "redundancy": "웹/WAS/DB 이중화 및 멀티 AZ 구성",
+     "deploy": "컨테이너 기반 배포 (Kubernetes) 가정"
+    },
+    "warns": [
+     {
+      "op": "warn",
+      "target": "db-rdb",
+      "message": "개인정보 및 결제 데이터가 저장되는 DB이므로 접근 제어 및 암호화 정책 확인이 필요합니다."
+     }
+    ]
+   }
+  },
+  {
+   "id": "s2",
+   "title": "IDC WEB-WAS-DB 이중화",
+   "prompt": "사내 IDC 온프레미스로 WEB-WAS-DB 기본 이중화 구성 그려줘. WEB은 Apache, WAS는 Tomcat, DB는 Oracle Active-Standby 이고 WAS와 DB 사이에 DB 중계 서버가 있어. 외부 구간에는 방화벽 있어.",
+   "metrics": {
+    "firstCmdMs": 1068,
+    "totalMs": 7251,
+    "cmds": 34,
+    "nodes": 9,
+    "groups": 6,
+    "edges": 12
+   },
+   "state": {
+    "groups": {
+     "idc-main": {
+      "op": "add_group",
+      "id": "idc-main",
+      "group_kind": "idc",
+      "label": "사내 IDC",
+      "parent": null
+     },
+     "dmz-zone": {
+      "op": "add_group",
+      "id": "dmz-zone",
+      "group_kind": "dmz",
+      "label": "외부 구간 (DMZ)",
+      "parent": "idc-main"
+     },
+     "private-zone": {
+      "op": "add_group",
+      "id": "private-zone",
+      "group_kind": "onprem_zone",
+      "label": "내부 구간",
+      "parent": "idc-main"
+     },
+     "web-pair": {
+      "op": "add_group",
+      "id": "web-pair",
+      "group_kind": "redundancy_pair",
+      "label": "WEB VIP",
+      "parent": "dmz-zone"
+     },
+     "was-pair": {
+      "op": "add_group",
+      "id": "was-pair",
+      "group_kind": "redundancy_pair",
+      "label": "WAS VIP",
+      "parent": "private-zone"
+     },
+     "db-pair": {
+      "op": "add_group",
+      "id": "db-pair",
+      "group_kind": "redundancy_pair",
+      "label": "DB VIP",
+      "parent": "private-zone"
+     }
+    },
+    "nodes": {
+     "fw-external": {
+      "op": "add_node",
+      "id": "fw-external",
+      "kind": "firewall",
+      "label": "외부 방화벽",
+      "sub": "FW",
+      "parent": "dmz-zone",
+      "attrs": {
+       "sw": null,
+       "hostname": null,
+       "cpu": null,
+       "ram": null,
+       "ip": null
+      }
+     },
+     "web-1": {
+      "op": "add_node",
+      "id": "web-1",
+      "kind": "web_server",
+      "label": "WEB#1",
+      "sub": "Apache",
+      "parent": "web-pair",
+      "attrs": {
+       "sw": "Apache",
+       "hostname": null,
+       "cpu": null,
+       "ram": null,
+       "ip": null
+      }
+     },
+     "web-2": {
+      "op": "add_node",
+      "id": "web-2",
+      "kind": "web_server",
+      "label": "WEB#2",
+      "sub": "Apache",
+      "parent": "web-pair",
+      "attrs": {
+       "sw": "Apache",
+       "hostname": null,
+       "cpu": null,
+       "ram": null,
+       "ip": null
+      }
+     },
+     "was-1": {
+      "op": "add_node",
+      "id": "was-1",
+      "kind": "was",
+      "label": "WAS#1",
+      "sub": "Tomcat",
+      "parent": "was-pair",
+      "attrs": {
+       "sw": "Tomcat",
+       "hostname": null,
+       "cpu": null,
+       "ram": null,
+       "ip": null
+      }
+     },
+     "was-2": {
+      "op": "add_node",
+      "id": "was-2",
+      "kind": "was",
+      "label": "WAS#2",
+      "sub": "Tomcat",
+      "parent": "was-pair",
+      "attrs": {
+       "sw": "Tomcat",
+       "hostname": null,
+       "cpu": null,
+       "ram": null,
+       "ip": null
+      }
+     },
+     "db-proxy": {
+      "op": "add_node",
+      "id": "db-proxy",
+      "kind": "db_proxy",
+      "label": "DB 중계 서버",
+      "sub": "Proxy",
+      "parent": "private-zone",
+      "attrs": {
+       "sw": null,
+       "hostname": null,
+       "cpu": null,
+       "ram": null,
+       "ip": null
+      }
+     },
+     "db-primary": {
+      "op": "add_node",
+      "id": "db-primary",
+      "kind": "db_rdb",
+      "label": "DB Primary",
+      "sub": "Oracle",
+      "parent": "db-pair",
+      "attrs": {
+       "sw": "Oracle",
+       "hostname": null,
+       "cpu": null,
+       "ram": null,
+       "ip": null
+      }
+     },
+     "db-standby": {
+      "op": "add_node",
+      "id": "db-standby",
+      "kind": "db_rdb",
+      "label": "DB Standby",
+      "sub": "Oracle",
+      "parent": "db-pair",
+      "attrs": {
+       "sw": "Oracle",
+       "hostname": null,
+       "cpu": null,
+       "ram": null,
+       "ip": null
+      }
+     },
+     "client-web": {
+      "op": "add_node",
+      "id": "client-web",
+      "kind": "client_web",
+      "label": "사용자 (Web)",
+      "sub": null,
+      "parent": null,
+      "attrs": {
+       "sw": null,
+       "hostname": null,
+       "cpu": null,
+       "ram": null,
+       "ip": null
+      }
+     }
+    },
+    "edges": {
+     "e-client-web-fw-external": {
+      "op": "add_edge",
+      "id": "e-client-web-fw-external",
+      "from": "client-web",
+      "to": "fw-external",
+      "edge_kind": "request",
+      "label": "HTTPS 443"
+     },
+     "e-fw-external-web-pair": {
+      "op": "add_edge",
+      "id": "e-fw-external-web-pair",
+      "from": "fw-external",
+      "to": "web-1",
+      "edge_kind": "request",
+      "label": "HTTP 80/443"
+     },
+     "e-fw-external-web-pair-2": {
+      "op": "add_edge",
+      "id": "e-fw-external-web-pair-2",
+      "from": "fw-external",
+      "to": "web-2",
+      "edge_kind": "request",
+      "label": "HTTP 80/443"
+     },
+     "e-web-1-was-pair": {
+      "op": "add_edge",
+      "id": "e-web-1-was-pair",
+      "from": "web-1",
+      "to": "was-1",
+      "edge_kind": "request",
+      "label": "HTTP/AJP"
+     },
+     "e-web-1-was-pair-2": {
+      "op": "add_edge",
+      "id": "e-web-1-was-pair-2",
+      "from": "web-1",
+      "to": "was-2",
+      "edge_kind": "request",
+      "label": "HTTP/AJP"
+     },
+     "e-web-2-was-pair": {
+      "op": "add_edge",
+      "id": "e-web-2-was-pair",
+      "from": "web-2",
+      "to": "was-1",
+      "edge_kind": "request",
+      "label": "HTTP/AJP"
+     },
+     "e-web-2-was-pair-2": {
+      "op": "add_edge",
+      "id": "e-web-2-was-pair-2",
+      "from": "web-2",
+      "to": "was-2",
+      "edge_kind": "request",
+      "label": "HTTP/AJP"
+     },
+     "e-was-1-db-proxy": {
+      "op": "add_edge",
+      "id": "e-was-1-db-proxy",
+      "from": "was-1",
+      "to": "db-proxy",
+      "edge_kind": "request",
+      "label": "TCP 1521"
+     },
+     "e-was-2-db-proxy": {
+      "op": "add_edge",
+      "id": "e-was-2-db-proxy",
+      "from": "was-2",
+      "to": "db-proxy",
+      "edge_kind": "request",
+      "label": "TCP 1521"
+     },
+     "e-db-proxy-db-primary": {
+      "op": "add_edge",
+      "id": "e-db-proxy-db-primary",
+      "from": "db-proxy",
+      "to": "db-primary",
+      "edge_kind": "request",
+      "label": "Oracle Net"
+     },
+     "e-db-proxy-db-standby": {
+      "op": "add_edge",
+      "id": "e-db-proxy-db-standby",
+      "from": "db-proxy",
+      "to": "db-standby",
+      "edge_kind": "request",
+      "label": "Oracle Net"
+     },
+     "e-db-primary-db-standby": {
+      "op": "add_edge",
+      "id": "e-db-primary-db-standby",
+      "from": "db-primary",
+      "to": "db-standby",
+      "edge_kind": "replication",
+      "label": "Redo Log"
+     }
+    },
+    "assumptions": {
+     "environment": "사내 IDC 온프레미스",
+     "redundancy": "WEB, WAS, DB 모두 이중화",
+     "deploy": "Active-Standby (DB) 및 Active-Active (WEB/WAS) 가정"
+    },
+    "warns": [
+     {
+      "op": "warn",
+      "target": "db-proxy",
+      "message": "DB 중계 서버가 단일 장애점(SPOF)이 될 수 있습니다. 이중화 구성을 권장합니다."
+     }
+    ]
+   }
+  },
+  {
+   "id": "s3",
+   "title": "K8s MSA + Kafka",
+   "prompt": "AWS EKS 위에 주문, 결제, 상품, 회원 마이크로서비스가 있고 서비스 간 이벤트는 Kafka(MSK)로 주고받아. 각 서비스는 자기 DB(RDS PostgreSQL)를 가지고 있고, 앞단은 ALB Ingress야. 모니터링은 Prometheus/Grafana.",
+   "metrics": {
+    "firstCmdMs": 1078,
+    "totalMs": 9822,
+    "cmds": 46,
+    "nodes": 13,
+    "groups": 7,
+    "edges": 18
+   },
+   "state": {
+    "groups": {
+     "aws-region": {
+      "op": "add_group",
+      "id": "aws-region",
+      "group_kind": "cloud_region",
+      "label": "AWS 리전",
+      "parent": null
+     },
+     "vpc-main": {
+      "op": "add_group",
+      "id": "vpc-main",
+      "group_kind": "vpc",
+      "label": "메인 VPC",
+      "parent": "aws-region"
+     },
+     "subnet-public": {
+      "op": "add_group",
+      "id": "subnet-public",
+      "group_kind": "subnet_public",
+      "label": "퍼블릭 서브넷",
+      "parent": "vpc-main"
+     },
+     "subnet-private": {
+      "op": "add_group",
+      "id": "subnet-private",
+      "group_kind": "subnet_private",
+      "label": "프라이빗 서브넷",
+      "parent": "vpc-main"
+     },
+     "k8s-cluster": {
+      "op": "add_group",
+      "id": "k8s-cluster",
+      "group_kind": "k8s_cluster",
+      "label": "EKS 클러스터",
+      "parent": "subnet-private"
+     },
+     "data-layer": {
+      "op": "add_group",
+      "id": "data-layer",
+      "group_kind": "subnet_private",
+      "label": "데이터 계층",
+      "parent": "vpc-main"
+     },
+     "monitoring-group": {
+      "op": "add_group",
+      "id": "monitoring-group",
+      "group_kind": "subnet_private",
+      "label": "모니터링",
+      "parent": "vpc-main"
+     }
+    },
+    "nodes": {
+     "client-web": {
+      "op": "add_node",
+      "id": "client-web",
+      "kind": "client_web",
+      "label": "웹 클라이언트",
+      "sub": "브라우저",
+      "parent": null,
+      "attrs": {
+       "sw": null,
+       "hostname": null,
+       "cpu": null,
+       "ram": null,
+       "ip": null
+      }
+     },
+     "alb-ingress": {
+      "op": "add_node",
+      "id": "alb-ingress",
+      "kind": "k8s_ingress",
+      "label": "ALB Ingress",
+      "sub": "AWS ALB",
+      "parent": "subnet-public",
+      "attrs": {
+       "sw": "AWS ALB",
+       "hostname": null,
+       "cpu": null,
+       "ram": null,
+       "ip": null
+      }
+     },
+     "svc-order": {
+      "op": "add_node",
+      "id": "svc-order",
+      "kind": "k8s_service",
+      "label": "주문 서비스",
+      "sub": "Microservice",
+      "parent": "k8s-cluster",
+      "attrs": {
+       "sw": null,
+       "hostname": null,
+       "cpu": null,
+       "ram": null,
+       "ip": null
+      }
+     },
+     "svc-payment": {
+      "op": "add_node",
+      "id": "svc-payment",
+      "kind": "k8s_service",
+      "label": "결제 서비스",
+      "sub": "Microservice",
+      "parent": "k8s-cluster",
+      "attrs": {
+       "sw": null,
+       "hostname": null,
+       "cpu": null,
+       "ram": null,
+       "ip": null
+      }
+     },
+     "svc-product": {
+      "op": "add_node",
+      "id": "svc-product",
+      "kind": "k8s_service",
+      "label": "상품 서비스",
+      "sub": "Microservice",
+      "parent": "k8s-cluster",
+      "attrs": {
+       "sw": null,
+       "hostname": null,
+       "cpu": null,
+       "ram": null,
+       "ip": null
+      }
+     },
+     "svc-member": {
+      "op": "add_node",
+      "id": "svc-member",
+      "kind": "k8s_service",
+      "label": "회원 서비스",
+      "sub": "Microservice",
+      "parent": "k8s-cluster",
+      "attrs": {
+       "sw": null,
+       "hostname": null,
+       "cpu": null,
+       "ram": null,
+       "ip": null
+      }
+     },
+     "msk-kafka": {
+      "op": "add_node",
+      "id": "msk-kafka",
+      "kind": "stream",
+      "label": "MSK Kafka",
+      "sub": "Managed Streaming for Kafka",
+      "parent": "subnet-private",
+      "attrs": {
+       "sw": "Amazon MSK",
+       "hostname": null,
+       "cpu": null,
+       "ram": null,
+       "ip": null
+      }
+     },
+     "db-order": {
+      "op": "add_node",
+      "id": "db-order",
+      "kind": "db_rdb",
+      "label": "주문 DB",
+      "sub": "RDS PostgreSQL",
+      "parent": "data-layer",
+      "attrs": {
+       "sw": "PostgreSQL",
+       "hostname": null,
+       "cpu": null,
+       "ram": null,
+       "ip": null
+      }
+     },
+     "db-payment": {
+      "op": "add_node",
+      "id": "db-payment",
+      "kind": "db_rdb",
+      "label": "결제 DB",
+      "sub": "RDS PostgreSQL",
+      "parent": "data-layer",
+      "attrs": {
+       "sw": "PostgreSQL",
+       "hostname": null,
+       "cpu": null,
+       "ram": null,
+       "ip": null
+      }
+     },
+     "db-product": {
+      "op": "add_node",
+      "id": "db-product",
+      "kind": "db_rdb",
+      "label": "상품 DB",
+      "sub": "RDS PostgreSQL",
+      "parent": "data-layer",
+      "attrs": {
+       "sw": "PostgreSQL",
+       "hostname": null,
+       "cpu": null,
+       "ram": null,
+       "ip": null
+      }
+     },
+     "db-member": {
+      "op": "add_node",
+      "id": "db-member",
+      "kind": "db_rdb",
+      "label": "회원 DB",
+      "sub": "RDS PostgreSQL",
+      "parent": "data-layer",
+      "attrs": {
+       "sw": "PostgreSQL",
+       "hostname": null,
+       "cpu": null,
+       "ram": null,
+       "ip": null
+      }
+     },
+     "prometheus": {
+      "op": "add_node",
+      "id": "prometheus",
+      "kind": "monitoring",
+      "label": "Prometheus",
+      "sub": "Metrics Collection",
+      "parent": "monitoring-group",
+      "attrs": {
+       "sw": "Prometheus",
+       "hostname": null,
+       "cpu": null,
+       "ram": null,
+       "ip": null
+      }
+     },
+     "grafana": {
+      "op": "add_node",
+      "id": "grafana",
+      "kind": "monitoring",
+      "label": "Grafana",
+      "sub": "Visualization",
+      "parent": "monitoring-group",
+      "attrs": {
+       "sw": "Grafana",
+       "hostname": null,
+       "cpu": null,
+       "ram": null,
+       "ip": null
+      }
+     }
+    },
+    "edges": {
+     "e-client-web-alb-ingress": {
+      "op": "add_edge",
+      "id": "e-client-web-alb-ingress",
+      "from": "client-web",
+      "to": "alb-ingress",
+      "edge_kind": "request",
+      "label": "HTTPS 443"
+     },
+     "e-alb-ingress-svc-order": {
+      "op": "add_edge",
+      "id": "e-alb-ingress-svc-order",
+      "from": "alb-ingress",
+      "to": "svc-order",
+      "edge_kind": "request",
+      "label": "HTTP"
+     },
+     "e-alb-ingress-svc-payment": {
+      "op": "add_edge",
+      "id": "e-alb-ingress-svc-payment",
+      "from": "alb-ingress",
+      "to": "svc-payment",
+      "edge_kind": "request",
+      "label": "HTTP"
+     },
+     "e-alb-ingress-svc-product": {
+      "op": "add_edge",
+      "id": "e-alb-ingress-svc-product",
+      "from": "alb-ingress",
+      "to": "svc-product",
+      "edge_kind": "request",
+      "label": "HTTP"
+     },
+     "e-alb-ingress-svc-member": {
+      "op": "add_edge",
+      "id": "e-alb-ingress-svc-member",
+      "from": "alb-ingress",
+      "to": "svc-member",
+      "edge_kind": "request",
+      "label": "HTTP"
+     },
+     "e-svc-order-msk-kafka": {
+      "op": "add_edge",
+      "id": "e-svc-order-msk-kafka",
+      "from": "svc-order",
+      "to": "msk-kafka",
+      "edge_kind": "async",
+      "label": "Kafka Produce"
+     },
+     "e-svc-payment-msk-kafka": {
+      "op": "add_edge",
+      "id": "e-svc-payment-msk-kafka",
+      "from": "svc-payment",
+      "to": "msk-kafka",
+      "edge_kind": "async",
+      "label": "Kafka Produce"
+     },
+     "e-svc-product-msk-kafka": {
+      "op": "add_edge",
+      "id": "e-svc-product-msk-kafka",
+      "from": "svc-product",
+      "to": "msk-kafka",
+      "edge_kind": "async",
+      "label": "Kafka Produce"
+     },
+     "e-svc-member-msk-kafka": {
+      "op": "add_edge",
+      "id": "e-svc-member-msk-kafka",
+      "from": "svc-member",
+      "to": "msk-kafka",
+      "edge_kind": "async",
+      "label": "Kafka Produce"
+     },
+     "e-msk-kafka-svc-order": {
+      "op": "add_edge",
+      "id": "e-msk-kafka-svc-order",
+      "from": "msk-kafka",
+      "to": "svc-order",
+      "edge_kind": "async",
+      "label": "Kafka Consume"
+     },
+     "e-msk-kafka-svc-payment": {
+      "op": "add_edge",
+      "id": "e-msk-kafka-svc-payment",
+      "from": "msk-kafka",
+      "to": "svc-payment",
+      "edge_kind": "async",
+      "label": "Kafka Consume"
+     },
+     "e-msk-kafka-svc-product": {
+      "op": "add_edge",
+      "id": "e-msk-kafka-svc-product",
+      "from": "msk-kafka",
+      "to": "svc-product",
+      "edge_kind": "async",
+      "label": "Kafka Consume"
+     },
+     "e-msk-kafka-svc-member": {
+      "op": "add_edge",
+      "id": "e-msk-kafka-svc-member",
+      "from": "msk-kafka",
+      "to": "svc-member",
+      "edge_kind": "async",
+      "label": "Kafka Consume"
+     },
+     "e-svc-order-db-order": {
+      "op": "add_edge",
+      "id": "e-svc-order-db-order",
+      "from": "svc-order",
+      "to": "db-order",
+      "edge_kind": "request",
+      "label": "SQL 5432"
+     },
+     "e-svc-payment-db-payment": {
+      "op": "add_edge",
+      "id": "e-svc-payment-db-payment",
+      "from": "svc-payment",
+      "to": "db-payment",
+      "edge_kind": "request",
+      "label": "SQL 5432"
+     },
+     "e-svc-product-db-product": {
+      "op": "add_edge",
+      "id": "e-svc-product-db-product",
+      "from": "svc-product",
+      "to": "db-product",
+      "edge_kind": "request",
+      "label": "SQL 5432"
+     },
+     "e-svc-member-db-member": {
+      "op": "add_edge",
+      "id": "e-svc-member-db-member",
+      "from": "svc-member",
+      "to": "db-member",
+      "edge_kind": "request",
+      "label": "SQL 5432"
+     },
+     "e-prometheus-grafana": {
+      "op": "add_edge",
+      "id": "e-prometheus-grafana",
+      "from": "prometheus",
+      "to": "grafana",
+      "edge_kind": "request",
+      "label": "HTTP 3000"
+     }
+    },
+    "assumptions": {
+     "environment": "AWS 리전 내 VPC",
+     "scale": "마이크로서비스 4종(주문, 결제, 상품, 회원)",
+     "redundancy": "EKS 및 RDS 기본 고가용성 구성 가정"
+    },
+    "warns": [
+     {
+      "op": "warn",
+      "target": "db-order",
+      "message": "주문 DB가 단일 인스턴스로 구성되어 있어 장애 시 서비스 중단 위험이 있습니다."
+     },
+     {
+      "op": "warn",
+      "target": "db-payment",
+      "message": "결제 DB가 단일 인스턴스로 구성되어 있어 장애 시 결제 불가 위험이 있습니다."
+     },
+     {
+      "op": "warn",
+      "target": "db-product",
+      "message": "상품 DB가 단일 인스턴스로 구성되어 있어 장애 시 상품 조회 불가 위험이 있습니다."
+     },
+     {
+      "op": "warn",
+      "target": "db-member",
+      "message": "회원 DB가 단일 인스턴스로 구성되어 있어 장애 시 로그인 불가 위험이 있습니다."
+     }
+    ]
+   }
+  },
+  {
+   "id": "s4",
+   "title": "대규모 멀티 AZ 커머스",
+   "prompt": "대형 커머스 서비스 구성 그려줘. AWS 서울 리전 2개 AZ 에 걸쳐 있고, CloudFront CDN, WAF, ALB, 웹 서버 4대, API 서버 6대, 배치 서버 2대, Redis 클러스터, Aurora MySQL(Writer 1 + Reader 2), Elasticsearch, S3, SQS, 관리자 페이지, Bastion, NAT, 그리고 외부로 PG사, 택배사 API, 문자 발송 API 연동.",
+   "metrics": {
+    "firstCmdMs": 1067,
+    "totalMs": 18565,
+    "cmds": 93,
+    "nodes": 33,
+    "groups": 18,
+    "edges": 33
+   },
+   "state": {
+    "groups": {
+     "region-seoul": {
+      "op": "add_group",
+      "id": "region-seoul",
+      "group_kind": "cloud_region",
+      "label": "AWS Seoul Region",
+      "parent": null
+     },
+     "az-a": {
+      "op": "add_group",
+      "id": "az-a",
+      "group_kind": "az",
+      "label": "AZ a",
+      "parent": "region-seoul"
+     },
+     "az-b": {
+      "op": "add_group",
+      "id": "az-b",
+      "group_kind": "az",
+      "label": "AZ b",
+      "parent": "region-seoul"
+     },
+     "vpc-main": {
+      "op": "add_group",
+      "id": "vpc-main",
+      "group_kind": "vpc",
+      "label": "Main VPC",
+      "parent": "region-seoul"
+     },
+     "subnet-public": {
+      "op": "add_group",
+      "id": "subnet-public",
+      "group_kind": "subnet_public",
+      "label": "Public Subnet",
+      "parent": "vpc-main"
+     },
+     "subnet-private": {
+      "op": "add_group",
+      "id": "subnet-private",
+      "group_kind": "subnet_private",
+      "label": "Private Subnet",
+      "parent": "vpc-main"
+     },
+     "subnet-db": {
+      "op": "add_group",
+      "id": "subnet-db",
+      "group_kind": "subnet_private",
+      "label": "DB Subnet",
+      "parent": "vpc-main"
+     },
+     "subnet-cache": {
+      "op": "add_group",
+      "id": "subnet-cache",
+      "group_kind": "subnet_private",
+      "label": "Cache Subnet",
+      "parent": "vpc-main"
+     },
+     "subnet-search": {
+      "op": "add_group",
+      "id": "subnet-search",
+      "group_kind": "subnet_private",
+      "label": "Search Subnet",
+      "parent": "vpc-main"
+     },
+     "subnet-mgmt": {
+      "op": "add_group",
+      "id": "subnet-mgmt",
+      "group_kind": "subnet_private",
+      "label": "Mgmt Subnet",
+      "parent": "vpc-main"
+     },
+     "ext-pg": {
+      "op": "add_group",
+      "id": "ext-pg",
+      "group_kind": "external_service",
+      "label": "PG사 연동",
+      "parent": null
+     },
+     "ext-delivery": {
+      "op": "add_group",
+      "id": "ext-delivery",
+      "group_kind": "external_service",
+      "label": "택배사 API",
+      "parent": null
+     },
+     "ext-sms": {
+      "op": "add_group",
+      "id": "ext-sms",
+      "group_kind": "external_service",
+      "label": "문자 발송 API",
+      "parent": null
+     },
+     "pair-web": {
+      "op": "add_group",
+      "id": "pair-web",
+      "group_kind": "redundancy_pair",
+      "label": "Web VIP",
+      "parent": "subnet-private"
+     },
+     "pair-api": {
+      "op": "add_group",
+      "id": "pair-api",
+      "group_kind": "redundancy_pair",
+      "label": "API VIP",
+      "parent": "subnet-private"
+     },
+     "pair-batch": {
+      "op": "add_group",
+      "id": "pair-batch",
+      "group_kind": "redundancy_pair",
+      "label": "Batch VIP",
+      "parent": "subnet-private"
+     },
+     "aurora-cluster": {
+      "op": "add_group",
+      "id": "aurora-cluster",
+      "group_kind": "redundancy_pair",
+      "label": "Aurora Cluster",
+      "parent": "subnet-db"
+     },
+     "redis-cluster": {
+      "op": "add_group",
+      "id": "redis-cluster",
+      "group_kind": "redundancy_pair",
+      "label": "Redis Cluster",
+      "parent": "subnet-cache"
+     }
+    },
+    "nodes": {
+     "cdn-cloudfront": {
+      "op": "add_node",
+      "id": "cdn-cloudfront",
+      "kind": "cdn",
+      "label": "CloudFront",
+      "sub": "CDN",
+      "parent": "region-seoul",
+      "attrs": {
+       "sw": "CloudFront",
+       "hostname": null,
+       "cpu": null,
+       "ram": null,
+       "ip": null
+      }
+     },
+     "waf-global": {
+      "op": "add_node",
+      "id": "waf-global",
+      "kind": "waf",
+      "label": "WAF",
+      "sub": "AWS WAF",
+      "parent": "region-seoul",
+      "attrs": {
+       "sw": "AWS WAF",
+       "hostname": null,
+       "cpu": null,
+       "ram": null,
+       "ip": null
+      }
+     },
+     "ext-pg-api": {
+      "op": "add_node",
+      "id": "ext-pg-api",
+      "kind": "external_pg",
+      "label": "PG사 API",
+      "sub": "Payment Gateway",
+      "parent": "ext-pg",
+      "attrs": {
+       "sw": null,
+       "hostname": null,
+       "cpu": null,
+       "ram": null,
+       "ip": null
+      }
+     },
+     "ext-delivery-api": {
+      "op": "add_node",
+      "id": "ext-delivery-api",
+      "kind": "external_api",
+      "label": "택배사 API",
+      "sub": "Delivery Service",
+      "parent": "ext-delivery",
+      "attrs": {
+       "sw": null,
+       "hostname": null,
+       "cpu": null,
+       "ram": null,
+       "ip": null
+      }
+     },
+     "ext-sms-api": {
+      "op": "add_node",
+      "id": "ext-sms-api",
+      "kind": "external_api",
+      "label": "문자 발송 API",
+      "sub": "SMS Service",
+      "parent": "ext-sms",
+      "attrs": {
+       "sw": null,
+       "hostname": null,
+       "cpu": null,
+       "ram": null,
+       "ip": null
+      }
+     },
+     "client-web": {
+      "op": "add_node",
+      "id": "client-web",
+      "kind": "client_web",
+      "label": "웹 사용자",
+      "sub": "Browser",
+      "parent": null,
+      "attrs": {
+       "sw": null,
+       "hostname": null,
+       "cpu": null,
+       "ram": null,
+       "ip": null
+      }
+     },
+     "client-mobile": {
+      "op": "add_node",
+      "id": "client-mobile",
+      "kind": "client_mobile",
+      "label": "모바일 사용자",
+      "sub": "App",
+      "parent": null,
+      "attrs": {
+       "sw": null,
+       "hostname": null,
+       "cpu": null,
+       "ram": null,
+       "ip": null
+      }
+     },
+     "admin-user": {
+      "op": "add_node",
+      "id": "admin-user",
+      "kind": "admin_user",
+      "label": "관리자",
+      "sub": "Admin",
+      "parent": null,
+      "attrs": {
+       "sw": null,
+       "hostname": null,
+       "cpu": null,
+       "ram": null,
+       "ip": null
+      }
+     },
+     "nat-gateway": {
+      "op": "add_node",
+      "id": "nat-gateway",
+      "kind": "nat",
+      "label": "NAT Gateway",
+      "sub": "NAT",
+      "parent": "subnet-public",
+      "attrs": {
+       "sw": "AWS NAT Gateway",
+       "hostname": null,
+       "cpu": null,
+       "ram": null,
+       "ip": null
+      }
+     },
+     "bastion-host": {
+      "op": "add_node",
+      "id": "bastion-host",
+      "kind": "bastion",
+      "label": "Bastion Host",
+      "sub": "EC2",
+      "parent": "subnet-mgmt",
+      "attrs": {
+       "sw": "Amazon Linux",
+       "hostname": null,
+       "cpu": null,
+       "ram": null,
+       "ip": null
+      }
+     },
+     "alb-main": {
+      "op": "add_node",
+      "id": "alb-main",
+      "kind": "lb_l7",
+      "label": "ALB",
+      "sub": "Application LB",
+      "parent": "subnet-public",
+      "attrs": {
+       "sw": "AWS ALB",
+       "hostname": null,
+       "cpu": null,
+       "ram": null,
+       "ip": null
+      }
+     },
+     "web-1": {
+      "op": "add_node",
+      "id": "web-1",
+      "kind": "web_server",
+      "label": "Web #1",
+      "sub": "Nginx",
+      "parent": "pair-web",
+      "attrs": {
+       "sw": "Nginx",
+       "hostname": null,
+       "cpu": null,
+       "ram": null,
+       "ip": null
+      }
+     },
+     "web-2": {
+      "op": "add_node",
+      "id": "web-2",
+      "kind": "web_server",
+      "label": "Web #2",
+      "sub": "Nginx",
+      "parent": "pair-web",
+      "attrs": {
+       "sw": "Nginx",
+       "hostname": null,
+       "cpu": null,
+       "ram": null,
+       "ip": null
+      }
+     },
+     "web-3": {
+      "op": "add_node",
+      "id": "web-3",
+      "kind": "web_server",
+      "label": "Web #3",
+      "sub": "Nginx",
+      "parent": "pair-web",
+      "attrs": {
+       "sw": "Nginx",
+       "hostname": null,
+       "cpu": null,
+       "ram": null,
+       "ip": null
+      }
+     },
+     "web-4": {
+      "op": "add_node",
+      "id": "web-4",
+      "kind": "web_server",
+      "label": "Web #4",
+      "sub": "Nginx",
+      "parent": "pair-web",
+      "attrs": {
+       "sw": "Nginx",
+       "hostname": null,
+       "cpu": null,
+       "ram": null,
+       "ip": null
+      }
+     },
+     "api-1": {
+      "op": "add_node",
+      "id": "api-1",
+      "kind": "app_server",
+      "label": "API #1",
+      "sub": "Spring Boot",
+      "parent": "pair-api",
+      "attrs": {
+       "sw": "Spring Boot",
+       "hostname": null,
+       "cpu": null,
+       "ram": null,
+       "ip": null
+      }
+     },
+     "api-2": {
+      "op": "add_node",
+      "id": "api-2",
+      "kind": "app_server",
+      "label": "API #2",
+      "sub": "Spring Boot",
+      "parent": "pair-api",
+      "attrs": {
+       "sw": "Spring Boot",
+       "hostname": null,
+       "cpu": null,
+       "ram": null,
+       "ip": null
+      }
+     },
+     "api-3": {
+      "op": "add_node",
+      "id": "api-3",
+      "kind": "app_server",
+      "label": "API #3",
+      "sub": "Spring Boot",
+      "parent": "pair-api",
+      "attrs": {
+       "sw": "Spring Boot",
+       "hostname": null,
+       "cpu": null,
+       "ram": null,
+       "ip": null
+      }
+     },
+     "api-4": {
+      "op": "add_node",
+      "id": "api-4",
+      "kind": "app_server",
+      "label": "API #4",
+      "sub": "Spring Boot",
+      "parent": "pair-api",
+      "attrs": {
+       "sw": "Spring Boot",
+       "hostname": null,
+       "cpu": null,
+       "ram": null,
+       "ip": null
+      }
+     },
+     "api-5": {
+      "op": "add_node",
+      "id": "api-5",
+      "kind": "app_server",
+      "label": "API #5",
+      "sub": "Spring Boot",
+      "parent": "pair-api",
+      "attrs": {
+       "sw": "Spring Boot",
+       "hostname": null,
+       "cpu": null,
+       "ram": null,
+       "ip": null
+      }
+     },
+     "api-6": {
+      "op": "add_node",
+      "id": "api-6",
+      "kind": "app_server",
+      "label": "API #6",
+      "sub": "Spring Boot",
+      "parent": "pair-api",
+      "attrs": {
+       "sw": "Spring Boot",
+       "hostname": null,
+       "cpu": null,
+       "ram": null,
+       "ip": null
+      }
+     },
+     "batch-1": {
+      "op": "add_node",
+      "id": "batch-1",
+      "kind": "batch_server",
+      "label": "Batch #1",
+      "sub": "Spring Batch",
+      "parent": "pair-batch",
+      "attrs": {
+       "sw": "Spring Batch",
+       "hostname": null,
+       "cpu": null,
+       "ram": null,
+       "ip": null
+      }
+     },
+     "batch-2": {
+      "op": "add_node",
+      "id": "batch-2",
+      "kind": "batch_server",
+      "label": "Batch #2",
+      "sub": "Spring Batch",
+      "parent": "pair-batch",
+      "attrs": {
+       "sw": "Spring Batch",
+       "hostname": null,
+       "cpu": null,
+       "ram": null,
+       "ip": null
+      }
+     },
+     "aurora-writer": {
+      "op": "add_node",
+      "id": "aurora-writer",
+      "kind": "db_rdb",
+      "label": "Aurora Writer",
+      "sub": "MySQL",
+      "parent": "aurora-cluster",
+      "attrs": {
+       "sw": "Aurora MySQL",
+       "hostname": null,
+       "cpu": null,
+       "ram": null,
+       "ip": null
+      }
+     },
+     "aurora-reader-1": {
+      "op": "add_node",
+      "id": "aurora-reader-1",
+      "kind": "db_rdb",
+      "label": "Aurora Reader 1",
+      "sub": "MySQL",
+      "parent": "aurora-cluster",
+      "attrs": {
+       "sw": "Aurora MySQL",
+       "hostname": null,
+       "cpu": null,
+       "ram": null,
+       "ip": null
+      }
+     },
+     "aurora-reader-2": {
+      "op": "add_node",
+      "id": "aurora-reader-2",
+      "kind": "db_rdb",
+      "label": "Aurora Reader 2",
+      "sub": "MySQL",
+      "parent": "aurora-cluster",
+      "attrs": {
+       "sw": "Aurora MySQL",
+       "hostname": null,
+       "cpu": null,
+       "ram": null,
+       "ip": null
+      }
+     },
+     "redis-1": {
+      "op": "add_node",
+      "id": "redis-1",
+      "kind": "cache",
+      "label": "Redis Node 1",
+      "sub": "Redis",
+      "parent": "redis-cluster",
+      "attrs": {
+       "sw": "Redis",
+       "hostname": null,
+       "cpu": null,
+       "ram": null,
+       "ip": null
+      }
+     },
+     "redis-2": {
+      "op": "add_node",
+      "id": "redis-2",
+      "kind": "cache",
+      "label": "Redis Node 2",
+      "sub": "Redis",
+      "parent": "redis-cluster",
+      "attrs": {
+       "sw": "Redis",
+       "hostname": null,
+       "cpu": null,
+       "ram": null,
+       "ip": null
+      }
+     },
+     "redis-3": {
+      "op": "add_node",
+      "id": "redis-3",
+      "kind": "cache",
+      "label": "Redis Node 3",
+      "sub": "Redis",
+      "parent": "redis-cluster",
+      "attrs": {
+       "sw": "Redis",
+       "hostname": null,
+       "cpu": null,
+       "ram": null,
+       "ip": null
+      }
+     },
+     "es-cluster": {
+      "op": "add_node",
+      "id": "es-cluster",
+      "kind": "search",
+      "label": "Elasticsearch",
+      "sub": "OpenSearch",
+      "parent": "subnet-search",
+      "attrs": {
+       "sw": "OpenSearch",
+       "hostname": null,
+       "cpu": null,
+       "ram": null,
+       "ip": null
+      }
+     },
+     "s3-bucket": {
+      "op": "add_node",
+      "id": "s3-bucket",
+      "kind": "object_storage",
+      "label": "S3 Bucket",
+      "sub": "S3",
+      "parent": "region-seoul",
+      "attrs": {
+       "sw": "S3",
+       "hostname": null,
+       "cpu": null,
+       "ram": null,
+       "ip": null
+      }
+     },
+     "sqs-queue": {
+      "op": "add_node",
+      "id": "sqs-queue",
+      "kind": "queue",
+      "label": "SQS Queue",
+      "sub": "SQS",
+      "parent": "region-seoul",
+      "attrs": {
+       "sw": "SQS",
+       "hostname": null,
+       "cpu": null,
+       "ram": null,
+       "ip": null
+      }
+     },
+     "admin-app": {
+      "op": "add_node",
+      "id": "admin-app",
+      "kind": "app_server",
+      "label": "Admin App",
+      "sub": "Spring Boot",
+      "parent": "subnet-private",
+      "attrs": {
+       "sw": "Spring Boot",
+       "hostname": null,
+       "cpu": null,
+       "ram": null,
+       "ip": null
+      }
+     }
+    },
+    "edges": {
+     "e-client-web-cdn": {
+      "op": "add_edge",
+      "id": "e-client-web-cdn",
+      "from": "client-web",
+      "to": "cdn-cloudfront",
+      "edge_kind": "request",
+      "label": "HTTPS 443"
+     },
+     "e-client-mobile-cdn": {
+      "op": "add_edge",
+      "id": "e-client-mobile-cdn",
+      "from": "client-mobile",
+      "to": "cdn-cloudfront",
+      "edge_kind": "request",
+      "label": "HTTPS 443"
+     },
+     "e-cdn-waf": {
+      "op": "add_edge",
+      "id": "e-cdn-waf",
+      "from": "cdn-cloudfront",
+      "to": "waf-global",
+      "edge_kind": "request",
+      "label": "Origin Fetch"
+     },
+     "e-waf-alb": {
+      "op": "add_edge",
+      "id": "e-waf-alb",
+      "from": "waf-global",
+      "to": "alb-main",
+      "edge_kind": "request",
+      "label": "Forward"
+     },
+     "e-alb-web": {
+      "op": "add_edge",
+      "id": "e-alb-web",
+      "from": "alb-main",
+      "to": "web-1",
+      "edge_kind": "request",
+      "label": "HTTP 80"
+     },
+     "e-alb-web2": {
+      "op": "add_edge",
+      "id": "e-alb-web2",
+      "from": "alb-main",
+      "to": "web-2",
+      "edge_kind": "request",
+      "label": "HTTP 80"
+     },
+     "e-alb-web3": {
+      "op": "add_edge",
+      "id": "e-alb-web3",
+      "from": "alb-main",
+      "to": "web-3",
+      "edge_kind": "request",
+      "label": "HTTP 80"
+     },
+     "e-alb-web4": {
+      "op": "add_edge",
+      "id": "e-alb-web4",
+      "from": "alb-main",
+      "to": "web-4",
+      "edge_kind": "request",
+      "label": "HTTP 80"
+     },
+     "e-web-api1": {
+      "op": "add_edge",
+      "id": "e-web-api1",
+      "from": "web-1",
+      "to": "api-1",
+      "edge_kind": "request",
+      "label": "HTTP 8080"
+     },
+     "e-web-api2": {
+      "op": "add_edge",
+      "id": "e-web-api2",
+      "from": "web-2",
+      "to": "api-2",
+      "edge_kind": "request",
+      "label": "HTTP 8080"
+     },
+     "e-web-api3": {
+      "op": "add_edge",
+      "id": "e-web-api3",
+      "from": "web-3",
+      "to": "api-3",
+      "edge_kind": "request",
+      "label": "HTTP 8080"
+     },
+     "e-web-api4": {
+      "op": "add_edge",
+      "id": "e-web-api4",
+      "from": "web-4",
+      "to": "api-4",
+      "edge_kind": "request",
+      "label": "HTTP 8080"
+     },
+     "e-alb-api5": {
+      "op": "add_edge",
+      "id": "e-alb-api5",
+      "from": "alb-main",
+      "to": "api-5",
+      "edge_kind": "request",
+      "label": "HTTP 8080"
+     },
+     "e-alb-api6": {
+      "op": "add_edge",
+      "id": "e-alb-api6",
+      "from": "alb-main",
+      "to": "api-6",
+      "edge_kind": "request",
+      "label": "HTTP 8080"
+     },
+     "e-api-aurora-w": {
+      "op": "add_edge",
+      "id": "e-api-aurora-w",
+      "from": "api-1",
+      "to": "aurora-writer",
+      "edge_kind": "request",
+      "label": "MySQL 3306"
+     },
+     "e-api-aurora-r1": {
+      "op": "add_edge",
+      "id": "e-api-aurora-r1",
+      "from": "api-2",
+      "to": "aurora-reader-1",
+      "edge_kind": "request",
+      "label": "MySQL 3306"
+     },
+     "e-api-aurora-r2": {
+      "op": "add_edge",
+      "id": "e-api-aurora-r2",
+      "from": "api-3",
+      "to": "aurora-reader-2",
+      "edge_kind": "request",
+      "label": "MySQL 3306"
+     },
+     "e-api-redis": {
+      "op": "add_edge",
+      "id": "e-api-redis",
+      "from": "api-1",
+      "to": "redis-1",
+      "edge_kind": "request",
+      "label": "Redis 6379"
+     },
+     "e-api-es": {
+      "op": "add_edge",
+      "id": "e-api-es",
+      "from": "api-1",
+      "to": "es-cluster",
+      "edge_kind": "request",
+      "label": "HTTP 9200"
+     },
+     "e-api-s3": {
+      "op": "add_edge",
+      "id": "e-api-s3",
+      "from": "api-1",
+      "to": "s3-bucket",
+      "edge_kind": "request",
+      "label": "HTTPS"
+     },
+     "e-api-sqs": {
+      "op": "add_edge",
+      "id": "e-api-sqs",
+      "from": "api-1",
+      "to": "sqs-queue",
+      "edge_kind": "async",
+      "label": "Send Msg"
+     },
+     "e-sqs-batch": {
+      "op": "add_edge",
+      "id": "e-sqs-batch",
+      "from": "sqs-queue",
+      "to": "batch-1",
+      "edge_kind": "async",
+      "label": "Poll Msg"
+     },
+     "e-batch-aurora": {
+      "op": "add_edge",
+      "id": "e-batch-aurora",
+      "from": "batch-1",
+      "to": "aurora-writer",
+      "edge_kind": "request",
+      "label": "MySQL 3306"
+     },
+     "e-admin-adminapp": {
+      "op": "add_edge",
+      "id": "e-admin-adminapp",
+      "from": "admin-user",
+      "to": "admin-app",
+      "edge_kind": "request",
+      "label": "HTTPS"
+     },
+     "e-adminapp-aurora": {
+      "op": "add_edge",
+      "id": "e-adminapp-aurora",
+      "from": "admin-app",
+      "to": "aurora-writer",
+      "edge_kind": "request",
+      "label": "MySQL 3306"
+     },
+     "e-api-pg": {
+      "op": "add_edge",
+      "id": "e-api-pg",
+      "from": "api-1",
+      "to": "ext-pg-api",
+      "edge_kind": "request",
+      "label": "HTTPS"
+     },
+     "e-batch-delivery": {
+      "op": "add_edge",
+      "id": "e-batch-delivery",
+      "from": "batch-1",
+      "to": "ext-delivery-api",
+      "edge_kind": "request",
+      "label": "HTTPS"
+     },
+     "e-api-sms": {
+      "op": "add_edge",
+      "id": "e-api-sms",
+      "from": "api-1",
+      "to": "ext-sms-api",
+      "edge_kind": "request",
+      "label": "HTTPS"
+     },
+     "e-nat-internet": {
+      "op": "add_edge",
+      "id": "e-nat-internet",
+      "from": "nat-gateway",
+      "to": "ext-pg-api",
+      "edge_kind": "request",
+      "label": "Outbound"
+     },
+     "e-bastion-web": {
+      "op": "add_edge",
+      "id": "e-bastion-web",
+      "from": "bastion-host",
+      "to": "web-1",
+      "edge_kind": "request",
+      "label": "SSH 22"
+     },
+     "e-bastion-api": {
+      "op": "add_edge",
+      "id": "e-bastion-api",
+      "from": "bastion-host",
+      "to": "api-1",
+      "edge_kind": "request",
+      "label": "SSH 22"
+     },
+     "e-aurora-w-r1": {
+      "op": "add_edge",
+      "id": "e-aurora-w-r1",
+      "from": "aurora-writer",
+      "to": "aurora-reader-1",
+      "edge_kind": "replication",
+      "label": "Replication"
+     },
+     "e-aurora-w-r2": {
+      "op": "add_edge",
+      "id": "e-aurora-w-r2",
+      "from": "aurora-writer",
+      "to": "aurora-reader-2",
+      "edge_kind": "replication",
+      "label": "Replication"
+     }
+    },
+    "assumptions": {
+     "environment": "AWS ap-northeast-2 (Seoul) 리전",
+     "scale": "대형 커머스 트래픽 대응"
+    },
+    "warns": [
+     {
+      "op": "warn",
+      "target": "nat-gateway",
+      "message": "NAT Gateway가 단일 AZ에 위치할 경우 해당 AZ 장애 시 외부 연동이 중단될 수 있습니다."
+     }
+    ]
+   }
+  },
+  {
+   "id": "s5",
+   "title": "수정 요청 (s2 기반)",
+   "prompt": "WAS#1 메모리 32GB로 바꾸고, WEB과 WAS 사이에 L4 스위치 넣어줘. 그리고 WAS 세션 공유용 Redis 하나 추가해줘.",
+   "metrics": {
+    "firstCmdMs": 1395,
+    "totalMs": 3709,
+    "cmds": 15,
+    "nodes": 11,
+    "groups": 6,
+    "edges": 14
+   },
+   "state": {
+    "groups": {
+     "idc-main": {
+      "op": "add_group",
+      "id": "idc-main",
+      "group_kind": "idc",
+      "label": "사내 IDC",
+      "parent": null
+     },
+     "dmz-zone": {
+      "op": "add_group",
+      "id": "dmz-zone",
+      "group_kind": "dmz",
+      "label": "외부 구간 (DMZ)",
+      "parent": "idc-main"
+     },
+     "private-zone": {
+      "op": "add_group",
+      "id": "private-zone",
+      "group_kind": "onprem_zone",
+      "label": "내부 구간",
+      "parent": "idc-main"
+     },
+     "web-pair": {
+      "op": "add_group",
+      "id": "web-pair",
+      "group_kind": "redundancy_pair",
+      "label": "WEB VIP",
+      "parent": "dmz-zone"
+     },
+     "was-pair": {
+      "op": "add_group",
+      "id": "was-pair",
+      "group_kind": "redundancy_pair",
+      "label": "WAS VIP",
+      "parent": "private-zone"
+     },
+     "db-pair": {
+      "op": "add_group",
+      "id": "db-pair",
+      "group_kind": "redundancy_pair",
+      "label": "DB VIP",
+      "parent": "private-zone"
+     }
+    },
+    "nodes": {
+     "fw-external": {
+      "op": "add_node",
+      "id": "fw-external",
+      "kind": "firewall",
+      "label": "외부 방화벽",
+      "sub": "FW",
+      "parent": "dmz-zone",
+      "attrs": {
+       "sw": null,
+       "hostname": null,
+       "cpu": null,
+       "ram": null,
+       "ip": null
+      }
+     },
+     "web-1": {
+      "op": "add_node",
+      "id": "web-1",
+      "kind": "web_server",
+      "label": "WEB#1",
+      "sub": "Apache",
+      "parent": "web-pair",
+      "attrs": {
+       "sw": "Apache",
+       "hostname": null,
+       "cpu": null,
+       "ram": null,
+       "ip": null
+      }
+     },
+     "web-2": {
+      "op": "add_node",
+      "id": "web-2",
+      "kind": "web_server",
+      "label": "WEB#2",
+      "sub": "Apache",
+      "parent": "web-pair",
+      "attrs": {
+       "sw": "Apache",
+       "hostname": null,
+       "cpu": null,
+       "ram": null,
+       "ip": null
+      }
+     },
+     "was-1": {
+      "op": "add_node",
+      "id": "was-1",
+      "kind": "was",
+      "label": "WAS#1",
+      "sub": "Tomcat",
+      "parent": "was-pair",
+      "attrs": {
+       "sw": "Tomcat",
+       "hostname": null,
+       "cpu": null,
+       "ram": "32GB",
+       "ip": null
+      },
+      "_updated": true
+     },
+     "was-2": {
+      "op": "add_node",
+      "id": "was-2",
+      "kind": "was",
+      "label": "WAS#2",
+      "sub": "Tomcat",
+      "parent": "was-pair",
+      "attrs": {
+       "sw": "Tomcat",
+       "hostname": null,
+       "cpu": null,
+       "ram": null,
+       "ip": null
+      }
+     },
+     "db-proxy": {
+      "op": "add_node",
+      "id": "db-proxy",
+      "kind": "db_proxy",
+      "label": "DB 중계 서버",
+      "sub": "Proxy",
+      "parent": "private-zone",
+      "attrs": {
+       "sw": null,
+       "hostname": null,
+       "cpu": null,
+       "ram": null,
+       "ip": null
+      }
+     },
+     "db-primary": {
+      "op": "add_node",
+      "id": "db-primary",
+      "kind": "db_rdb",
+      "label": "DB Primary",
+      "sub": "Oracle",
+      "parent": "db-pair",
+      "attrs": {
+       "sw": "Oracle",
+       "hostname": null,
+       "cpu": null,
+       "ram": null,
+       "ip": null
+      }
+     },
+     "db-standby": {
+      "op": "add_node",
+      "id": "db-standby",
+      "kind": "db_rdb",
+      "label": "DB Standby",
+      "sub": "Oracle",
+      "parent": "db-pair",
+      "attrs": {
+       "sw": "Oracle",
+       "hostname": null,
+       "cpu": null,
+       "ram": null,
+       "ip": null
+      }
+     },
+     "client-web": {
+      "op": "add_node",
+      "id": "client-web",
+      "kind": "client_web",
+      "label": "사용자 (Web)",
+      "sub": null,
+      "parent": null,
+      "attrs": {
+       "sw": null,
+       "hostname": null,
+       "cpu": null,
+       "ram": null,
+       "ip": null
+      }
+     },
+     "lb-l4-was": {
+      "op": "add_node",
+      "id": "lb-l4-was",
+      "kind": "lb_l4",
+      "label": "L4 스위치",
+      "sub": "L4 LB",
+      "parent": "private-zone",
+      "attrs": {
+       "sw": null,
+       "hostname": null,
+       "cpu": null,
+       "ram": null,
+       "ip": null
+      }
+     },
+     "redis-session": {
+      "op": "add_node",
+      "id": "redis-session",
+      "kind": "cache",
+      "label": "Redis (Session)",
+      "sub": "Redis",
+      "parent": "private-zone",
+      "attrs": {
+       "sw": "Redis",
+       "hostname": null,
+       "cpu": null,
+       "ram": null,
+       "ip": null
+      }
+     }
+    },
+    "edges": {
+     "e-client-web-fw-external": {
+      "op": "add_edge",
+      "id": "e-client-web-fw-external",
+      "from": "client-web",
+      "to": "fw-external",
+      "edge_kind": "request",
+      "label": "HTTPS 443"
+     },
+     "e-fw-external-web-pair": {
+      "op": "add_edge",
+      "id": "e-fw-external-web-pair",
+      "from": "fw-external",
+      "to": "web-1",
+      "edge_kind": "request",
+      "label": "HTTP 80/443"
+     },
+     "e-fw-external-web-pair-2": {
+      "op": "add_edge",
+      "id": "e-fw-external-web-pair-2",
+      "from": "fw-external",
+      "to": "web-2",
+      "edge_kind": "request",
+      "label": "HTTP 80/443"
+     },
+     "e-was-1-db-proxy": {
+      "op": "add_edge",
+      "id": "e-was-1-db-proxy",
+      "from": "was-1",
+      "to": "db-proxy",
+      "edge_kind": "request",
+      "label": "TCP 1521"
+     },
+     "e-was-2-db-proxy": {
+      "op": "add_edge",
+      "id": "e-was-2-db-proxy",
+      "from": "was-2",
+      "to": "db-proxy",
+      "edge_kind": "request",
+      "label": "TCP 1521"
+     },
+     "e-db-proxy-db-primary": {
+      "op": "add_edge",
+      "id": "e-db-proxy-db-primary",
+      "from": "db-proxy",
+      "to": "db-primary",
+      "edge_kind": "request",
+      "label": "Oracle Net"
+     },
+     "e-db-proxy-db-standby": {
+      "op": "add_edge",
+      "id": "e-db-proxy-db-standby",
+      "from": "db-proxy",
+      "to": "db-standby",
+      "edge_kind": "request",
+      "label": "Oracle Net"
+     },
+     "e-db-primary-db-standby": {
+      "op": "add_edge",
+      "id": "e-db-primary-db-standby",
+      "from": "db-primary",
+      "to": "db-standby",
+      "edge_kind": "replication",
+      "label": "Redo Log"
+     },
+     "e-web-1-lb-l4-was": {
+      "op": "add_edge",
+      "id": "e-web-1-lb-l4-was",
+      "from": "web-1",
+      "to": "lb-l4-was",
+      "edge_kind": "request",
+      "label": "HTTP/AJP"
+     },
+     "e-web-2-lb-l4-was": {
+      "op": "add_edge",
+      "id": "e-web-2-lb-l4-was",
+      "from": "web-2",
+      "to": "lb-l4-was",
+      "edge_kind": "request",
+      "label": "HTTP/AJP"
+     },
+     "e-lb-l4-was-was-1": {
+      "op": "add_edge",
+      "id": "e-lb-l4-was-was-1",
+      "from": "lb-l4-was",
+      "to": "was-1",
+      "edge_kind": "request",
+      "label": "TCP"
+     },
+     "e-lb-l4-was-was-2": {
+      "op": "add_edge",
+      "id": "e-lb-l4-was-was-2",
+      "from": "lb-l4-was",
+      "to": "was-2",
+      "edge_kind": "request",
+      "label": "TCP"
+     },
+     "e-was-1-redis-session": {
+      "op": "add_edge",
+      "id": "e-was-1-redis-session",
+      "from": "was-1",
+      "to": "redis-session",
+      "edge_kind": "request",
+      "label": "Redis 6379"
+     },
+     "e-was-2-redis-session": {
+      "op": "add_edge",
+      "id": "e-was-2-redis-session",
+      "from": "was-2",
+      "to": "redis-session",
+      "edge_kind": "request",
+      "label": "Redis 6379"
+     }
+    },
+    "assumptions": {
+     "environment": "사내 IDC 온프레미스",
+     "redundancy": "WEB, WAS, DB 모두 이중화",
+     "deploy": "Active-Standby (DB) 및 Active-Active (WEB/WAS) 가정"
+    },
+    "warns": []
+   }
+  }
+ ]
+}
