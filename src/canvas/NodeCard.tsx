@@ -15,12 +15,14 @@ export interface NodeCardData extends Record<string, unknown> {
   state: NodeVisualState;
   badge?: { kind: "missing" | "warn"; count?: number };
   az?: string;
+  /** Compare mode marker. */
+  diff?: "added" | "removed" | "changed";
 }
 
 export function NodeCard({ data }: Pick<NodeProps, "data"> & Partial<NodeProps>) {
   const d = data as NodeCardData;
   return (
-    <div className={`node node--${d.state}`} title={d.fullLabel} data-category={d.category}>
+    <div className={`node node--${d.state}${d.diff ? ` node--diff-${d.diff}` : ""}`} title={d.fullLabel} data-category={d.category}>
       <span className="node__icon" style={{ "--cat": `var(--cat-${d.category})` } as React.CSSProperties}>
         <CategoryIcon category={d.category} />
       </span>

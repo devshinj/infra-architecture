@@ -32,6 +32,9 @@
 .node__az { flex: none; font-size: 8.5px; color: var(--text-secondary); border: 1px solid var(--line-node); border-radius: 3px; padding: 0 3px; }
 
 .node--selected { outline: 1.5px solid var(--accent); outline-offset: 4px; }
+.node--diff-added { border-color: var(--cat-data); }
+.node--diff-changed { border-color: var(--accent); }
+.node--diff-removed { border: 1px dashed var(--state-missing); opacity: 0.75; }
 .node--dimmed { opacity: 0.35; }
 .node--appearing { animation: node-appear 0.35s ease-out both; }
 @keyframes node-appear {

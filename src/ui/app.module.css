@@ -1,0 +1,79 @@
+/* App shell, sidebar, right panel, workspace. Tokens only. */
+.shell { display: grid; grid-template-columns: 240px minmax(0, 1fr); height: 100vh; background: var(--bg-canvas); color: var(--text-primary); }
+.main { min-width: 0; min-height: 0; }
+.emptyState { height: 100%; display: grid; place-content: center; text-align: center; gap: 8px; padding: 24px; }
+.emptyState h1 { margin: 0; font-size: 16px; font-weight: 600; }
+.emptyState p { margin: 0; font-size: 13px; color: var(--text-secondary); }
+
+.sidebar { display: flex; flex-direction: column; min-height: 0; border-right: 1px solid var(--line-node); background: var(--bg-canvas); }
+.brand { margin: 0; padding: 14px 16px 10px; font-size: 14px; font-weight: 600; }
+.tree { flex: 1; min-height: 0; overflow-y: auto; margin: 0; padding: 0 8px; list-style: none; }
+.subtree { margin: 0; padding: 0; list-style: none; }
+.row { display: flex; align-items: center; gap: 2px; border-radius: var(--radius-node); position: relative; }
+.row:hover { background: var(--bg-node); }
+.rowMain {
+  flex: 1; min-width: 0; text-align: left; font: inherit; font-size: 13px; color: var(--text-primary);
+  background: transparent; border: 0; padding: 7px 8px; cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.diagramRow { margin-left: 14px; }
+.current { background: var(--bg-node); box-shadow: inset 2px 0 0 var(--accent); }
+.menuBtn {
+  flex: none; font: inherit; font-size: 14px; line-height: 1; color: var(--text-secondary); background: transparent;
+  border: 0; border-radius: 4px; padding: 4px 6px; cursor: pointer;
+}
+.menuBtn:hover { color: var(--text-primary); }
+.menu {
+  position: absolute; right: 4px; top: 100%; z-index: 30; min-width: 120px; display: flex; flex-direction: column;
+  background: var(--bg-node); border: 1px solid var(--line-node); border-radius: var(--radius-node); padding: 4px;
+}
+.menu button { font: inherit; font-size: 12.5px; color: var(--text-primary); background: transparent; border: 0; text-align: left; padding: 6px 8px; border-radius: 4px; cursor: pointer; }
+.menu button:hover { background: var(--bg-canvas); }
+.sideFoot { padding: 8px; border-top: 1px solid var(--line-node); display: flex; flex-direction: column; gap: 8px; }
+.user { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 12px; color: var(--text-secondary); padding: 0 4px; }
+.user span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.btn {
+  font: inherit; font-size: 12.5px; color: var(--text-primary); background: var(--bg-node);
+  border: 1px solid var(--line-node); border-radius: 6px; padding: 6px 10px; cursor: pointer;
+}
+.btn:hover:not(:disabled) { border-color: var(--text-secondary); }
+.btn:disabled { opacity: 0.5; cursor: default; }
+.linkBtn { font: inherit; font-size: 12px; color: var(--text-secondary); background: transparent; border: 0; cursor: pointer; padding: 2px 4px; }
+.linkBtn:hover { color: var(--text-primary); }
+.sidebar button:focus-visible, .panel button:focus-visible, .banner button:focus-visible, .dialog button:focus-visible, .dialog input:focus-visible { outline: 1.5px solid var(--accent); outline-offset: 2px; }
+
+.backdrop { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; background: color-mix(in srgb, var(--bg-canvas) 70%, transparent); }
+.dialog { width: 320px; display: flex; flex-direction: column; gap: 12px; padding: 16px; background: var(--bg-node); border: 1px solid var(--line-node); border-radius: var(--radius-zone); }
+.dialog h2 { margin: 0; font-size: 14px; font-weight: 600; }
+.dialog p { margin: 0; font-size: 13px; line-height: 1.5; }
+.dialog label { display: flex; flex-direction: column; gap: 6px; font-size: 12px; color: var(--text-secondary); }
+.dialog input { font: inherit; font-size: 13px; color: var(--text-primary); background: var(--bg-canvas); border: 1px solid var(--line-node); border-radius: var(--radius-node); padding: 7px 9px; }
+.dialogActions { display: flex; justify-content: flex-end; gap: 8px; }
+.error { color: var(--state-missing); font-size: 12px; }
+
+.workspace { display: grid; grid-template-columns: minmax(0, 1fr) 360px; height: 100%; min-height: 0; }
+.center { position: relative; min-width: 0; min-height: 0; display: flex; flex-direction: column; }
+.canvasWrap { flex: 1; min-height: 0; position: relative; }
+.banner {
+  display: flex; align-items: center; gap: 12px; padding: 8px 14px; font-size: 12.5px;
+  background: var(--bg-node); border-bottom: 1px solid var(--accent); color: var(--text-primary);
+}
+.banner button { font: inherit; font-size: 12px; color: var(--text-primary); background: transparent; border: 1px solid var(--line-node); border-radius: 6px; padding: 3px 9px; cursor: pointer; }
+.legend { display: flex; gap: 12px; margin-left: auto; font-size: 11.5px; color: var(--text-secondary); }
+.legend span { display: inline-flex; align-items: center; gap: 5px; }
+.swatch { width: 14px; height: 10px; border-radius: 3px; border: 1.5px solid; box-sizing: border-box; }
+.swAdded { border-color: var(--cat-data); }
+.swChanged { border-color: var(--accent); }
+.swRemoved { border: 1.5px dashed var(--state-missing); }
+
+.panel { display: flex; flex-direction: column; min-height: 0; border-left: 1px solid var(--line-node); background: var(--bg-canvas); }
+.tabs { display: flex; border-bottom: 1px solid var(--line-node); }
+.tab {
+  flex: 1; font: inherit; font-size: 13px; color: var(--text-secondary); background: transparent; border: 0;
+  border-bottom: 2px solid transparent; padding: 11px 0; cursor: pointer;
+}
+.tab[aria-selected="true"] { color: var(--text-primary); border-bottom-color: var(--accent); }
+.panelBody { flex: 1; min-height: 0; overflow-y: auto; }
+.chatEmpty { padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+.chatEmpty p { margin: 0; font-size: 13px; line-height: 1.6; color: var(--text-secondary); }
+.samples { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.sample { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 13px; }

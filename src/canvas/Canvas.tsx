@@ -15,6 +15,7 @@ import { nodeTypes } from "./nodeTypes";
 import { useDiagramView } from "./useDiagramView";
 
 export type CanvasOptions = DisplayOptions & { hoverLabels: boolean };
+export type DiffMarks = { added: Set<string>; removed: Set<string>; changed: Set<string> };
 type Pinned = Record<string, { x: number; y: number }>;
 
 export interface CanvasProps {
@@ -30,6 +31,8 @@ export interface CanvasProps {
   /** Toolbar toggles; the parent owns editMode / motion. */
   onEditModeChange(v: boolean): void;
   onMotionChange(v: boolean): void;
+  /** Compare mode: ids to outline as added / removed (ghost) / changed. Only nodes are marked. */
+  diffMarks?: DiffMarks;
 }
 
 export const FAR_ZOOM = 0.6;
@@ -91,7 +94,7 @@ interface FlowProps extends CanvasProps {
   updated: Set<string>;
 }
 
-function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onPinnedChange, motion, layout, display, appearing, updated }: FlowProps) {
+function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onPinnedChange, motion, layout, display, appearing, updated, diffMarks }: FlowProps) {
   const far = useStore((s) => s.transform[2] < FAR_ZOOM);
   const selected = drawnId(state, options.collapsed, options.selectedId);
 
@@ -137,6 +140,7 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
       else if (appearing.has(ln.id)) visual = "appearing";
       else if (updated.has(ln.id)) visual = "updated";
       const az = n.attrs.az;
+      const diff = diffMarks?.removed.has(ln.id) ? "removed" : diffMarks?.added.has(ln.id) ? "added" : diffMarks?.changed.has(ln.id) ? "changed" : undefined;
       const data: NodeCardData = {
         label: ln.displayLabel,
         fullLabel: n.label,
@@ -144,6 +148,7 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
         category: categoryOf(n.kind),
         state: visual,
         ...(az !== undefined && az !== null ? { az: String(az) } : {}),
+        ...(diff ? { diff } : {}),
       };
       out.push({
         id: n.id,
@@ -158,7 +163,7 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
       });
     }
     return out;
-  }, [layout, display, selected, appearing, updated, editMode, options, onOptionsChange]);
+  }, [layout, display, selected, appearing, updated, editMode, options, onOptionsChange, diffMarks]);
 
   const [nodes, setNodes] = useState<Node[]>(computed);
   useEffect(() => setNodes(computed), [computed]);
