@@ -6,7 +6,8 @@ import type { ChatMessage } from "@/server/llm/qwen";
 export const HISTORY_LIMIT = 20;
 
 // 허용값 목록은 catalog 에서 만든다(손으로 복사하지 않는다).
-const KIND_LIST = NODE_KINDS.map((k) => k.kind).join(", ");
+// k8s_cluster 는 그룹으로만 쓴다(노드 kind 목록에서 제외).
+const KIND_LIST = NODE_KINDS.map((k) => k.kind).filter((k) => k !== "k8s_cluster").join(", ");
 const GROUP_KIND_LIST = GROUP_KINDS.map((k) => k.kind).join(", ");
 const EDGE_KIND_LIST = EDGE_KINDS.map((k) => k.kind).join(", ");
 

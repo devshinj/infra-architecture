@@ -69,6 +69,9 @@ describe("SYSTEM_PROMPT examples", () => {
     expect(parseCommand(JSON.parse(line("update_node"))).ok).toBe(true);
     expect(parseCommand(JSON.parse(line("update_edge"))).ok).toBe(true);
     expect(SYSTEM_PROMPT).toContain("k8s_cluster 는 그룹(group_kind)으로만");
+    const lines = SYSTEM_PROMPT.split("\n");
+    expect(lines.find((l) => l.startsWith("KIND 허용값:"))).not.toContain("k8s_cluster");
+    expect(lines.find((l) => l.startsWith("GROUP_KIND 허용값:"))).toContain("k8s_cluster");
     expect(SYSTEM_PROMPT).toContain("영역(그룹)의 이름·상위 영역은 바꿀 수 없다");
   });
 });
