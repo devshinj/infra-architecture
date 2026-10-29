@@ -3,7 +3,7 @@ import { randomUUID } from "node:crypto";
 import { db } from "@/db/client";
 import { diagrams, projects, users } from "@/db/schema";
 
-export async function makeDiagram(): Promise<string> {
+export async function makeOwnedDiagram(): Promise<{ userId: string; diagramId: string }> {
   const tag = randomUUID().slice(0, 8);
   const [user] = await db
     .insert(users)
@@ -17,5 +17,9 @@ export async function makeDiagram(): Promise<string> {
     .insert(diagrams)
     .values({ projectId: project.id, name: "d" })
     .returning({ id: diagrams.id });
-  return diagram.id;
+  return { userId: user.id, diagramId: diagram.id };
+}
+
+export async function makeDiagram(): Promise<string> {
+  return (await makeOwnedDiagram()).diagramId;
 }

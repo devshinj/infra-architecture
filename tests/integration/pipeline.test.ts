@@ -1,0 +1,410 @@
+import { eq } from "drizzle-orm";
+import { describe, expect, test, vi } from "vitest";
+
+import { db } from "@/db/client";
+import { diagramVersions } from "@/db/schema";
+import type { DiagramState } from "@/domain/types";
+import { emptyState } from "@/domain/types";
+import type { ChatEvent } from "@/server/chat/events";
+import { listMessages } from "@/server/chat/messages";
+import { runChatTurn, type ChatDeps } from "@/server/chat/pipeline";
+import { ANSWER_PROMPT, SYSTEM_PROMPT } from "@/server/chat/prompt";
+import type { ClefClient, Intent } from "@/server/llm/clef";
+import type { ChatMessage, QwenClient } from "@/server/llm/qwen";
+import { NotFoundError } from "@/server/projects";
+import { createVersion, getLatestState } from "@/server/versions";
+
+import { fx } from "../fixtures/spike";
+import { makeOwnedDiagram } from "./helpers";
+
+const BUSY = "다른 응답을 처리하고 있어요. 끝난 뒤 다시 보내 주세요.";
+const NO_AI = "AI 서버에 연결할 수 없어요. 잠시 뒤 다시 시도하거나 관리자에게 문의해 주세요.";
+const HISTORY_TEXT = "변경 이력은 오른쪽 '이력' 탭에서 보고 되돌릴 수 있어요.";
+const TIMEOUT_TEXT = "응답 시간이 너무 길어 중단했어요.";
+const GENERIC_ERR = "응답을 처리하지 못했어요. 잠시 뒤 다시 시도해 주세요.";
+
+/** spike s2 상태를 모델이 냈을 법한 명령 줄로 되돌린다(그룹은 부모 먼저). */
+function stateToLines(state: DiagramState): string[] {
+  const lines: string[] = [JSON.stringify({ op: "say", text: "구성을 그리는 중…" })];
+  for (const a of Object.values(state.assumptions)) {
+    lines.push(JSON.stringify({ op: "set_assumption", key: a.key, value: a.value }));
+  }
+  const done = new Set<string>();
+  const groups = Object.values(state.groups);
+  while (done.size < groups.length) {
+    for (const g of groups) {
+      if (done.has(g.id) || (g.parent !== null && !done.has(g.parent))) continue;
+      done.add(g.id);
+      lines.push(JSON.stringify({ op: "add_group", id: g.id, group_kind: g.groupKind, label: g.label, parent: g.parent }));
+    }
+  }
+  for (const n of Object.values(state.nodes)) {
+    lines.push(JSON.stringify({ op: "add_node", id: n.id, kind: n.kind, label: n.label, sub: n.sub, parent: n.parent, attrs: n.attrs }));
+  }
+  for (const e of Object.values(state.edges)) {
+    lines.push(JSON.stringify({ op: "add_edge", id: e.id, from: e.from, to: e.to, edge_kind: e.edgeKind, label: e.label }));
+  }
+  return lines;
+}
+
+const s2 = fx("s2");
+const S2_LINES = stateToLines(s2);
+const S2_CMDS = S2_LINES.length - 1;
+
+function abortError() {
+  return new DOMException("The operation was aborted.", "AbortError");
+}
+
+/** 텍스트를 일정 크기로 잘라 onDelta 에 흘리는 가짜 Qwen. 신호를 존중한다. */
+function fakeQwen(
+  text: string,
+  opts: { chunk?: number; gate?: Promise<void>; failAfter?: number; hang?: boolean } = {},
+): QwenClient & { calls: ChatMessage[][] } {
+  const calls: ChatMessage[][] = [];
+  return {
+    calls,
+    async streamCompletion(messages, { signal, onDelta }) {
+      calls.push(messages);
+      if (opts.gate) await opts.gate;
+      if (opts.hang) {
+        await new Promise((_r, reject) => signal.addEventListener("abort", () => reject(abortError()), { once: true }));
+      }
+      const size = opts.chunk ?? 37;
+      let sent = 0;
+      for (let i = 0; i < text.length; i += size) {
+        if (signal.aborted) throw abortError();
+        if (opts.failAfter !== undefined && sent >= opts.failAfter) throw new Error("upstream failed at http://10.0.0.1/secret");
+        const part = text.slice(i, i + size);
+        onDelta(part);
+        sent += part.length;
+        await new Promise((r) => setImmediate(r));
+      }
+      if (signal.aborted) throw abortError();
+      return { text, finishReason: "stop" };
+    },
+  };
+}
+
+function fakeClef(result: { intent: Intent; confidence: number } | null): ClefClient & { calls: unknown[] } {
+  const calls: unknown[] = [];
+  return {
+    calls,
+    async decide() {
+      throw new Error("not used");
+    },
+    async classifyIntent(input, context) {
+      calls.push({ input, context });
+      return result;
+    },
+  };
+}
+
+const neverQwen: QwenClient = {
+  async streamCompletion() {
+    throw new Error("qwen must not be called");
+  },
+};
+
+async function turn(
+  ids: { userId: string; diagramId: string },
+  text: string,
+  deps: ChatDeps,
+  opts: { signal?: AbortSignal; onEvent?: (e: ChatEvent) => void } = {},
+) {
+  const events: ChatEvent[] = [];
+  const result = await runChatTurn(
+    {
+      ...ids,
+      text,
+      signal: opts.signal ?? new AbortController().signal,
+      emit(e) {
+        events.push(e);
+        opts.onEvent?.(e);
+      },
+    },
+    deps,
+  );
+  return { events, result };
+}
+
+const of = <T extends ChatEvent["t"]>(events: ChatEvent[], t: T) =>
+  events.filter((e): e is Extract<ChatEvent, { t: T }> => e.t === t);
+
+async function versions(diagramId: string) {
+  return db.select().from(diagramVersions).where(eq(diagramVersions.diagramId, diagramId)).orderBy(diagramVersions.number);
+}
+
+describe("runChatTurn", () => {
+  test("structure turn streams cmds, saves one ai version linked to the user message", async () => {
+    const ids = await makeOwnedDiagram();
+    await createVersion(ids.diagramId, emptyState(), { source: "import" });
+    const qwen = fakeQwen(S2_LINES.join("\n"));
+    const { events, result } = await turn(ids, "IDC 이중화 그려줘", {
+      qwen,
+      clef: fakeClef({ intent: "structure_change", confidence: 0.9 }),
+    });
+
+    expect(result).toEqual({ status: "ok" });
+    const start = of(events, "start")[0]!;
+    expect(start.intent).toBe("structure_change");
+    expect(events[0]).toBe(start);
+    expect(of(events, "status").map((e) => e.phase)).toEqual(["thinking", "drawing"]);
+    expect(of(events, "say").map((e) => e.text)).toEqual(["구성을 그리는 중…"]);
+    expect(of(events, "cmd")).toHaveLength(S2_CMDS);
+    expect(of(events, "skip")).toHaveLength(0);
+    // 첫 cmd 바로 앞에 drawing
+    const firstCmd = events.findIndex((e) => e.t === "cmd");
+    expect(events[firstCmd - 1]).toEqual({ t: "status", phase: "drawing" });
+
+    const done = events.at(-1)!;
+    expect(done).toMatchObject({
+      t: "done",
+      version: 2,
+      status: "complete",
+      applied: S2_CMDS,
+      skipped: 0,
+      nodes: Object.keys(s2.nodes).length,
+      edges: Object.keys(s2.edges).length,
+    });
+
+    const vs = await versions(ids.diagramId);
+    expect(vs).toHaveLength(2);
+    expect(vs[1]).toMatchObject({ number: 2, source: "ai", status: "complete", messageId: start.messageId });
+    expect(vs[1]!.state).toEqual(s2);
+
+    const msgs = await listMessages(ids.diagramId);
+    expect(msgs.map((m) => m.role)).toEqual(["user", "assistant"]);
+    expect(msgs[0]).toMatchObject({ id: start.messageId, content: "IDC 이중화 그려줘" });
+    expect(msgs[1]).toMatchObject({
+      id: (done as Extract<ChatEvent, { t: "done" }>).assistantMessageId,
+      content: "구성을 그리는 중…",
+      meta: { intent: "structure_change", applied: S2_CMDS, skipped: 0, version: 2, status: "complete", says: ["구성을 그리는 중…"] },
+    });
+    expect(qwen.calls[0]![0]).toEqual({ role: "system", content: SYSTEM_PROMPT });
+  });
+
+  test("bad lines are skipped and counted", async () => {
+    const ids = await makeOwnedDiagram();
+    const lines = [
+      JSON.stringify({ op: "add_group", id: "vpc", group_kind: "vpc", label: "VPC", parent: null }),
+      "{not json",
+      JSON.stringify({ op: "add_node", id: "web-1", kind: "web_server", label: "WEB#1", parent: "nope" }),
+      JSON.stringify({ op: "warn", text: "위험" }),
+      JSON.stringify({ op: "add_node", id: "web-2", kind: "web_server", label: "WEB#2", parent: "vpc" }),
+    ];
+    const { events } = await turn(ids, "그려줘", { qwen: fakeQwen(lines.join("\n"), { chunk: 5 }), clef: fakeClef(null) });
+    expect(of(events, "cmd").map((e) => e.cmd.op)).toEqual(["add_group", "add_node"]);
+    expect(of(events, "skip")).toHaveLength(3);
+    for (const s of of(events, "skip")) expect(s.reason.length).toBeGreaterThan(0);
+    expect(events.at(-1)).toMatchObject({ t: "done", applied: 2, skipped: 3, version: 1, nodes: 1, edges: 0 });
+  });
+
+  test("zero applied commands creates no version", async () => {
+    const ids = await makeOwnedDiagram();
+    await createVersion(ids.diagramId, emptyState(), { source: "import" });
+    const lines = [JSON.stringify({ op: "say", text: "바꿀 게 없어요" }), "garbage"];
+    const { events } = await turn(ids, "그대로 둬", { qwen: fakeQwen(lines.join("\n")), clef: fakeClef(null) });
+    expect(events.at(-1)).toMatchObject({ t: "done", version: null, status: "complete", applied: 0, skipped: 1 });
+    expect(await versions(ids.diagramId)).toHaveLength(1);
+    const msgs = await listMessages(ids.diagramId);
+    expect(msgs[1]).toMatchObject({ role: "assistant", content: "바꿀 게 없어요", meta: { version: null, applied: 0 } });
+  });
+
+  test("abort mid-stream saves aborted version and releases lock", async () => {
+    const ids = await makeOwnedDiagram();
+    const ctrl = new AbortController();
+    let cmds = 0;
+    const { events, result } = await turn(
+      ids,
+      "그려줘",
+      { qwen: fakeQwen(S2_LINES.join("\n"), { chunk: 20 }), clef: fakeClef(null) },
+      {
+        signal: ctrl.signal,
+        onEvent(e) {
+          if (e.t === "cmd" && ++cmds === 3) ctrl.abort();
+        },
+      },
+    );
+    expect(result).toEqual({ status: "ok" });
+    expect(of(events, "cmd")).toHaveLength(3);
+    expect(of(events, "error")).toHaveLength(0);
+    expect(events.at(-1)).toMatchObject({ t: "done", status: "aborted", applied: 3, version: 1 });
+    const vs = await versions(ids.diagramId);
+    expect(vs).toHaveLength(1);
+    expect(vs[0]).toMatchObject({ status: "aborted", source: "ai" });
+    const msgs = await listMessages(ids.diagramId);
+    expect(msgs[1]!.meta).toMatchObject({ status: "aborted", applied: 3, version: 1 });
+
+    // 잠금이 풀려 곧바로 다음 차례가 된다
+    const next = await turn(ids, "다시", {
+      qwen: fakeQwen(JSON.stringify({ op: "say", text: "네" })),
+      clef: fakeClef(null),
+    });
+    expect(next.result).toEqual({ status: "ok" });
+    expect(next.events.at(-1)).toMatchObject({ t: "done", status: "complete" });
+  });
+
+  test("second concurrent turn is rejected", async () => {
+    const ids = await makeOwnedDiagram();
+    let release!: () => void;
+    const gate = new Promise<void>((r) => (release = r));
+    let thinking!: () => void;
+    const started = new Promise<void>((r) => (thinking = r));
+    const lines = [JSON.stringify({ op: "add_node", id: "web-1", kind: "web_server", label: "WEB#1", parent: null })];
+    const a = turn(
+      ids,
+      "A",
+      { qwen: fakeQwen(lines.join("\n"), { gate }), clef: fakeClef(null) },
+      { onEvent: (e) => e.t === "status" && thinking() },
+    );
+    await started;
+
+    const b = await turn(ids, "B", { qwen: neverQwen, clef: fakeClef(null) });
+    expect(b.result).toEqual({ status: "busy" });
+    expect(b.events).toEqual([{ t: "error", message: BUSY }]);
+
+    release();
+    const ra = await a;
+    expect(ra.result).toEqual({ status: "ok" });
+    expect(ra.events.at(-1)).toMatchObject({ t: "done", status: "complete", applied: 1, version: 1 });
+    // B 는 사용자 메시지도 남기지 않는다
+    expect((await listMessages(ids.diagramId)).map((m) => [m.role, m.content])).toEqual([
+      ["user", "A"],
+      ["assistant", ""],
+    ]);
+  });
+
+  test("low-confidence or failed intent falls back to SYSTEM_PROMPT path", async () => {
+    for (const r of [{ intent: "question" as const, confidence: 0.4 }, null]) {
+      const ids = await makeOwnedDiagram();
+      const qwen = fakeQwen(JSON.stringify({ op: "add_node", id: "web-1", kind: "web_server", label: "WEB#1", parent: null }));
+      const { events } = await turn(ids, "WEB 하나", { qwen, clef: fakeClef(r) });
+      expect(of(events, "start")[0]!.intent).toBeNull();
+      expect(qwen.calls[0]![0]!.content).toBe(SYSTEM_PROMPT);
+      expect(of(events, "cmd")).toHaveLength(1);
+      expect(of(events, "answer")).toHaveLength(0);
+      expect(events.at(-1)).toMatchObject({ t: "done", applied: 1, version: 1 });
+      const msgs = await listMessages(ids.diagramId);
+      expect(msgs[1]!.meta.intent).toBeUndefined();
+    }
+  });
+
+  test("question intent streams answer deltas and creates no version", async () => {
+    const ids = await makeOwnedDiagram();
+    await createVersion(ids.diagramId, s2, { source: "import" });
+    const answer = "WAS 는 Tomcat 두 대로 이중화되어 있어요. DB 는 Oracle Active-Standby 예요.";
+    const qwen = fakeQwen(answer, { chunk: 8 });
+    const { events } = await turn(ids, "WAS 는 몇 대야?", { qwen, clef: fakeClef({ intent: "question", confidence: 0.95 }) });
+    expect(qwen.calls[0]![0]!.content).toBe(ANSWER_PROMPT);
+    expect(of(events, "status").map((e) => e.phase)).toEqual(["thinking", "answering"]);
+    expect(of(events, "answer").map((e) => e.delta).join("")).toBe(answer);
+    expect(of(events, "cmd")).toHaveLength(0);
+    expect(events.at(-1)).toMatchObject({ t: "done", version: null, status: "complete", applied: 0, skipped: 0 });
+    expect(await versions(ids.diagramId)).toHaveLength(1);
+    const msgs = await listMessages(ids.diagramId);
+    expect(msgs[1]).toMatchObject({ role: "assistant", content: answer, meta: { intent: "question", status: "complete" } });
+  });
+
+  test("history intent replies fixed text and open_history", async () => {
+    const ids = await makeOwnedDiagram();
+    const { events } = await turn(ids, "어제 버전으로 되돌려줘", {
+      qwen: neverQwen,
+      clef: fakeClef({ intent: "history", confidence: 0.8 }),
+    });
+    expect(events.map((e) => e.t)).toEqual(["start", "say", "open_history", "done"]);
+    expect(of(events, "say")[0]!.text).toBe(HISTORY_TEXT);
+    expect(events.at(-1)).toMatchObject({ t: "done", version: null, status: "complete", applied: 0 });
+    const msgs = await listMessages(ids.diagramId);
+    expect(msgs[1]).toMatchObject({ role: "assistant", content: HISTORY_TEXT, meta: { intent: "history" } });
+    expect(await versions(ids.diagramId)).toHaveLength(0);
+  });
+
+  test("confirmed assumption change from the model is skipped", async () => {
+    const ids = await makeOwnedDiagram();
+    const base: DiagramState = {
+      ...emptyState(),
+      assumptions: { scale: { key: "scale", value: "100명", confirmed: true } },
+    };
+    await createVersion(ids.diagramId, base, { source: "import" });
+    const lines = [
+      JSON.stringify({ op: "set_assumption", key: "scale", value: "1만명" }),
+      JSON.stringify({ op: "set_assumption", key: "deploy", value: "단일 리전" }),
+    ];
+    const { events } = await turn(ids, "그려줘", { qwen: fakeQwen(lines.join("\n")), clef: fakeClef(null) });
+    expect(of(events, "skip")).toHaveLength(1);
+    expect(of(events, "cmd").map((e) => e.cmd)).toEqual([{ op: "set_assumption", key: "deploy", value: "단일 리전" }]);
+    const latest = await getLatestState(ids.diagramId);
+    expect(latest!.number).toBe(2);
+    expect(latest!.state.assumptions.scale).toEqual({ key: "scale", value: "100명", confirmed: true });
+  });
+
+  test("missing qwen config emits the AI-unavailable error", async () => {
+    const ids = await makeOwnedDiagram();
+    const clef = fakeClef({ intent: "structure_change", confidence: 0.9 });
+    const { events, result } = await turn(ids, "그려줘", { qwen: null, clef });
+    expect(result).toEqual({ status: "ok" });
+    expect(events.map((e) => e.t)).toEqual(["start", "error", "done"]);
+    expect(of(events, "error")[0]!.message).toBe(NO_AI);
+    expect(events.at(-1)).toMatchObject({ t: "done", version: null, status: "complete", applied: 0, skipped: 0 });
+    expect(clef.calls).toHaveLength(0);
+    const msgs = await listMessages(ids.diagramId);
+    expect(msgs.map((m) => m.role)).toEqual(["user"]);
+  });
+
+  test("other user's diagram throws NotFoundError", async () => {
+    const a = await makeOwnedDiagram();
+    const b = await makeOwnedDiagram();
+    await expect(
+      turn({ userId: b.userId, diagramId: a.diagramId }, "x", { qwen: neverQwen, clef: fakeClef(null) }),
+    ).rejects.toBeInstanceOf(NotFoundError);
+  });
+
+  test("history passed to the model excludes system messages and the current message", async () => {
+    const ids = await makeOwnedDiagram();
+    const say = (t: string) => JSON.stringify({ op: "say", text: t });
+    await turn(ids, "첫 요청", { qwen: fakeQwen(say("첫 답")), clef: fakeClef(null) });
+    const { createMessage } = await import("@/server/chat/messages");
+    await createMessage(ids.diagramId, "system", "v1로 되돌림 (새 버전 v2)");
+    const qwen = fakeQwen(say("둘째 답"));
+    const clef = fakeClef(null);
+    await turn(ids, "둘째 요청", { qwen, clef });
+    const msgs = qwen.calls[0]!;
+    expect(msgs.slice(1, -1)).toEqual([
+      { role: "user", content: "첫 요청" },
+      { role: "assistant", content: "첫 답" },
+    ]);
+    expect(msgs.at(-1)!.content).toContain("요청: 둘째 요청");
+    expect(clef.calls[0]).toEqual({ input: "둘째 요청", context: { lastAssistant: "첫 답" } });
+  });
+
+  test("unexpected error keeps applied work as aborted version and hides the raw error", async () => {
+    const ids = await makeOwnedDiagram();
+    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const first = S2_LINES.slice(0, 3).join("\n") + "\n";
+    const { events } = await turn(ids, "그려줘", {
+      qwen: fakeQwen(first + S2_LINES.slice(3).join("\n"), { chunk: first.length, failAfter: first.length }),
+      clef: fakeClef(null),
+    });
+    expect(spy).toHaveBeenCalled();
+    spy.mockRestore();
+    expect(of(events, "error").map((e) => e.message)).toEqual([GENERIC_ERR]);
+    expect(JSON.stringify(events)).not.toContain("10.0.0.1");
+    expect(events.at(-1)).toMatchObject({ t: "done", status: "aborted", applied: 2, version: 1 });
+    expect((await versions(ids.diagramId))[0]).toMatchObject({ status: "aborted" });
+    const msgs = await listMessages(ids.diagramId);
+    expect(msgs[1]!.meta).toMatchObject({ status: "error", applied: 2, version: 1 });
+  });
+
+  test("turn time cap aborts with the timeout error", async () => {
+    const ids = await makeOwnedDiagram();
+    const { events } = await turn(ids, "그려줘", {
+      qwen: fakeQwen("", { hang: true }),
+      clef: fakeClef(null),
+      turnTimeoutMs: 50,
+    });
+    expect(of(events, "error").map((e) => e.message)).toEqual([TIMEOUT_TEXT]);
+    expect(events.at(-1)).toMatchObject({ t: "done", status: "aborted", applied: 0, version: null });
+    const msgs = await listMessages(ids.diagramId);
+    expect(msgs[1]!.meta).toMatchObject({ status: "aborted" });
+  });
+});
