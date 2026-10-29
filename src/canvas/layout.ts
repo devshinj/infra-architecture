@@ -232,6 +232,7 @@ export async function layoutDiagram(g: DisplayGraph, pinned: Record<string, { x:
     const hi = Math.min(l.y + l.height, r.y + r.height);
     if (hi - lo < 1 || r.x < l.x + l.width) {
       points.set(e.id, elbowRoute(a, b));
+      degraded.add(e.id);
       continue;
     }
     const between = [...rects.entries()].some(

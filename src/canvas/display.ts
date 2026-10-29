@@ -127,10 +127,17 @@ export function buildDisplayGraph(state: DiagramState, opts: DisplayOptions): Di
     const out: Work[] = [];
     const byPair = new Map<string, Work>();
     for (const w of work) {
-      const key = `${w.from}\u0000${w.to}`;
+      // Aux edges never merge with non-aux ones; among non-aux the smallest id is the (order-independent) representative.
+      const key = `${w.edgeKind === "aux" ? "aux" : "main"}\u0000${w.from}\u0000${w.to}`;
       const existing = byPair.get(key);
-      if (existing) existing.ids.push(...w.ids);
-      else {
+      if (existing) {
+        existing.ids.push(...w.ids);
+        if (w.id < existing.id) {
+          existing.id = w.id;
+          existing.edgeKind = w.edgeKind;
+          existing.label = w.label;
+        }
+      } else {
         const copy = { ...w, ids: [...w.ids] };
         byPair.set(key, copy);
         out.push(copy);

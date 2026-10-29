@@ -11,6 +11,8 @@ vi.mock("@/canvas/layout", async (orig) => {
 import { defaultDisplayOptions } from "@/canvas/display";
 import { useDiagramView } from "@/canvas/useDiagramView";
 import { applyCommands } from "@/domain/apply";
+import type { Command } from "@/domain/commands";
+import { emptyState } from "@/domain/types";
 
 import { fx } from "../fixtures/spike";
 
@@ -43,4 +45,23 @@ test("selecting a node keeps every position, runs ELK once, and overlays the rev
   for (const [id, n] of Object.entries(before.nodes)) expect([after.nodes[id].x, after.nodes[id].y]).toEqual([n.x, n.y]);
   expect(after.edges.find((e) => e.id === "e-prometheus-grafana")!.degraded).toBe(true);
   expect(spy).toHaveBeenCalledTimes(1);
+});
+
+test("aux-first parallel edge: selecting an endpoint keeps the request edge in display and layout", async () => {
+  const s = applyCommands(emptyState(), [
+    { op: "add_node", id: "x", kind: "was", label: "X", parent: null },
+    { op: "add_node", id: "y", kind: "db_rdb", label: "Y", parent: null },
+    { op: "add_edge", id: "a-aux", from: "x", to: "y", edge_kind: "aux" },
+    { op: "add_edge", id: "z-req", from: "x", to: "y", edge_kind: "request" },
+  ] as Command[]).state;
+  const { result, rerender } = renderHook(({ sel }) => useDiagramView(s, {}, { ...defaultDisplayOptions(s), selectedId: sel }), {
+    initialProps: { sel: null as string | null },
+  });
+  await waitFor(() => expect(result.current.layout).not.toBeNull());
+  rerender({ sel: "x" });
+  await waitFor(() => expect(result.current.display.edges.some((e) => e.id === "a-aux")).toBe(true));
+  expect(result.current.display.edges.find((e) => e.edgeKind === "request")!.id).toBe("z-req");
+  const ids = result.current.layout!.edges.map((e) => e.id);
+  expect(ids).toContain("z-req");
+  expect(ids).toContain("a-aux");
 });

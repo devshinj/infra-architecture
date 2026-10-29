@@ -1,6 +1,6 @@
-import { applyNodeChanges, Background, ReactFlow, ReactFlowProvider, useStore, type Node, type NodeChange } from "@xyflow/react";
+import { applyNodeChanges, Background, ReactFlow, ReactFlowProvider, useReactFlow, useStore, type Node, type NodeChange } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { categoryOf } from "@/domain/catalog";
 import type { DiagramState } from "@/domain/types";
@@ -33,9 +33,12 @@ export interface CanvasProps {
   onMotionChange(v: boolean): void;
   /** Compare mode: ids to outline as added / removed (ghost) / changed. Only nodes are marked. */
   diffMarks?: DiffMarks;
+  /** Changes when the shown diagram version/mode changes; the view is re-fitted. */
+  fitKey?: string;
 }
 
 export const FAR_ZOOM = 0.6;
+const LAYOUT_FAILED_MESSAGE = "구성도를 배치하지 못했어요. 새로고침하거나 구성을 다시 확인해 주세요.";
 const EMPTY_MESSAGE = "아직 구성도가 비어 있어요. 오른쪽 대화에서 만들고 싶은 서비스를 설명하거나, 샘플을 불러와 보세요.";
 
 type ToggleKey = "hideAux" | "busSimplify" | "hoverLabels" | "mergeDuplicates";
@@ -76,6 +79,8 @@ export function Canvas(props: CanvasProps) {
       </div>
       {empty ? (
         <p className="canvas__empty">{EMPTY_MESSAGE}</p>
+      ) : !view.layout && view.layoutFailed ? (
+        <p className="canvas__empty" role="alert">{LAYOUT_FAILED_MESSAGE}</p>
       ) : (
         view.layout && (
           <ReactFlowProvider>
@@ -94,7 +99,7 @@ interface FlowProps extends CanvasProps {
   updated: Set<string>;
 }
 
-function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onPinnedChange, motion, layout, display, appearing, updated, diffMarks }: FlowProps) {
+function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onPinnedChange, motion, layout, display, appearing, updated, diffMarks, fitKey }: FlowProps) {
   const far = useStore((s) => s.transform[2] < FAR_ZOOM);
   const selected = drawnId(state, options.collapsed, options.selectedId);
 
@@ -173,6 +178,22 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
 
   const [nodes, setNodes] = useState<Node[]>(computed);
   useEffect(() => setNodes(computed), [computed]);
+
+  // Re-fit when the version/mode or the set of drawn nodes changes (not on selection or pin changes).
+  const { fitView } = useReactFlow();
+  const drawnKey = `${fitKey ?? ""}|${Object.keys(layout.nodes).sort().join(",")}`;
+  const lastKey = useRef(drawnKey);
+  const fitPending = useRef(false);
+  useEffect(() => {
+    if (lastKey.current === drawnKey) return;
+    lastKey.current = drawnKey;
+    fitPending.current = true;
+  }, [drawnKey]);
+  useEffect(() => {
+    if (!fitPending.current) return;
+    fitPending.current = false;
+    void fitView();
+  }, [nodes, fitView]);
   const onNodesChange = useCallback((changes: NodeChange[]) => setNodes((ns) => applyNodeChanges(changes, ns)), []);
 
   return (

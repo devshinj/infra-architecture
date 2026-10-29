@@ -72,3 +72,32 @@ describe("applyCommand", () => {
     expect(Object.keys(r.state.nodes)).toEqual(["b"]);
   });
 });
+
+describe("single id namespace", () => {
+  test("node/group ids cannot reuse an edge id; edge ids cannot reuse a node/group id", () => {
+    const s = base();
+    const edgeId = Object.keys(s.edges)[0];
+    expect(applyCommand(s, { op: "add_node", id: edgeId, kind: "was", label: "x", parent: null } as Command).ok).toBe(false);
+    expect(applyCommand(s, { op: "add_group", id: edgeId, group_kind: "vpc", label: "x", parent: null } as Command).ok).toBe(false);
+    expect(applyCommand(s, { op: "add_edge", id: "db", from: "was-1", to: "db", edge_kind: "request" } as Command).ok).toBe(false);
+  });
+
+  test("generated edge id is suffixed when it collides with a node id", () => {
+    let s = applyCommand(base(), { op: "add_node", id: "e-was-1-db-2", kind: "cache", label: "c", parent: null } as Command);
+    expect(s.ok).toBe(true);
+    s = applyCommand(s.state, { op: "add_edge", from: "was-1", to: "db", edge_kind: "request" } as Command);
+    expect(s.ok && Object.keys(s.state.edges)).toEqual(["e-was-1-db", "e-was-1-db-3"]);
+  });
+
+  test("ids like constructor behave as ordinary ids", () => {
+    let s = applyCommand(emptyState(), { op: "add_node", id: "constructor", kind: "was", label: "c", parent: null } as Command);
+    expect(s.ok).toBe(true);
+    s = applyCommand(s.state, { op: "add_node", id: "toString", kind: "db_rdb", label: "d", parent: null } as Command);
+    s = applyCommand(s.state, { op: "add_edge", from: "constructor", to: "toString", edge_kind: "request" } as Command);
+    expect(s.ok).toBe(true);
+    expect(applyCommand(s.state, { op: "add_node", id: "constructor", kind: "was", label: "c", parent: null } as Command).ok).toBe(false);
+    expect(applyCommand(emptyState(), { op: "update_node", id: "constructor", label: "z" } as Command).ok).toBe(false);
+    expect(applyCommand(emptyState(), { op: "remove_edge", id: "hasOwnProperty" } as Command).ok).toBe(false);
+    expect(applyCommand(s.state, { op: "remove_node", id: "constructor" } as Command).ok).toBe(true);
+  });
+});

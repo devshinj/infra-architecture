@@ -14,6 +14,8 @@ type Pinned = Record<string, { x: number; y: number }>;
 
 export interface DiagramView {
   layout: Layout | null;
+  /** True when the layout engine rejected; with no previous layout the canvas has nothing to draw. */
+  layoutFailed: boolean;
   display: DisplayGraph;
   appearing: Set<string>;
   updated: Set<string>;
@@ -37,6 +39,7 @@ export function useDiagramView(state: DiagramState, pinned: Pinned, opts: Displa
   );
   /* eslint-enable react-hooks/exhaustive-deps */
   const [baseLayout, setBaseLayout] = useState<Layout | null>(null);
+  const [layoutFailed, setLayoutFailed] = useState(false);
   const [appearing, setAppearing] = useState<Set<string>>(() => new Set());
   const [updated, setUpdated] = useState<Set<string>>(() => new Set());
 
@@ -44,9 +47,14 @@ export function useDiagramView(state: DiagramState, pinned: Pinned, opts: Displa
     let cancelled = false;
     layoutDiagram(layoutDisplay, JSON.parse(pinnedKey) as Pinned)
       .then((l) => {
-        if (!cancelled) setBaseLayout(l);
+        if (cancelled) return;
+        setBaseLayout(l);
+        setLayoutFailed(false);
       })
-      .catch((err) => console.error("layout failed", err));
+      .catch((err) => {
+        console.error("layout failed", err);
+        if (!cancelled) setLayoutFailed(true);
+      });
     return () => {
       cancelled = true;
     };
@@ -56,10 +64,11 @@ export function useDiagramView(state: DiagramState, pinned: Pinned, opts: Displa
   const layout = useMemo<Layout | null>(() => {
     if (!baseLayout) return null;
     const have = new Set(baseLayout.edges.map((e) => e.id));
-    const pairs = new Set(layoutDisplay.edges.map((e) => `${e.from}>${e.to}`));
+    const pairKey = (e: { from: string; to: string; edgeKind: string }) => `${e.edgeKind === "aux"}:${e.from}>${e.to}`;
+    const pairs = new Set(layoutDisplay.edges.map(pairKey));
     const rect = (id: string) => baseLayout.nodes[id] ?? baseLayout.groups[id];
     const extra = display.edges.flatMap((e) => {
-      if (have.has(e.id) || pairs.has(`${e.from}>${e.to}`)) return [];
+      if (have.has(e.id) || pairs.has(pairKey(e))) return [];
       const a = rect(e.from);
       const b = rect(e.to);
       return a && b ? [{ id: e.id, points: elbowRoute(a, b), degraded: true }] : [];
@@ -85,5 +94,5 @@ export function useDiagramView(state: DiagramState, pinned: Pinned, opts: Displa
   }, [state]);
   useEffect(() => () => timers.current.forEach(clearTimeout), []);
 
-  return { layout, display, appearing, updated };
+  return { layout, layoutFailed, display, appearing, updated };
 }

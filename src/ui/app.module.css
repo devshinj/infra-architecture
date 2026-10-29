@@ -16,7 +16,7 @@
   background: transparent; border: 0; padding: 7px 8px; cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .diagramRow { margin-left: 14px; }
-.current { background: var(--bg-node); box-shadow: inset 2px 0 0 var(--text-secondary); }
+.current { background: var(--bg-node); font-weight: 600; }
 .menuBtn {
   flex: none; font: inherit; font-size: 14px; line-height: 1; color: var(--text-secondary); background: transparent;
   border: 0; border-radius: 4px; padding: 4px 6px; cursor: pointer;

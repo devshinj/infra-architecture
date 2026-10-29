@@ -97,3 +97,24 @@ test("> 40 nodes starts with non-root groups collapsed", () => {
   expect(initialCollapsed(fx("s2")).size).toBe(0);
   expect(defaultDisplayOptions(big).collapsed.has("sub")).toBe(true);
 });
+
+test("aux never merges with a request edge; non-aux representative is order-independent", () => {
+  const mk = (order: Command[]) =>
+    applyCommands(emptyState(), [
+      { op: "add_node", id: "x", kind: "was", label: "X", parent: null },
+      { op: "add_node", id: "y", kind: "db_rdb", label: "Y", parent: null },
+      ...order,
+    ] as Command[]).state;
+  const aux: Command = { op: "add_edge", id: "a-aux", from: "x", to: "y", edge_kind: "aux" };
+  const req: Command = { op: "add_edge", id: "z-req", from: "x", to: "y", edge_kind: "request" };
+  const req2: Command = { op: "add_edge", id: "b-req", from: "x", to: "y", edge_kind: "replication" } as Command;
+  for (const order of [[aux, req], [req, aux]]) {
+    const s = mk(order);
+    const g = buildDisplayGraph(s, { ...defaultDisplayOptions(s), selectedId: "x" });
+    expect(g.edges.map((e) => [e.id, e.edgeKind]).sort()).toEqual([["a-aux", "aux"], ["z-req", "request"]]);
+  }
+  const a = buildDisplayGraph(mk([req, req2]), defaultDisplayOptions(emptyState()));
+  const b = buildDisplayGraph(mk([req2, req]), defaultDisplayOptions(emptyState()));
+  expect(a.edges.map((e) => e.id)).toEqual(["b-req"]);
+  expect(b.edges.map((e) => e.id)).toEqual(["b-req"]);
+});

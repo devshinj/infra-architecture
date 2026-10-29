@@ -6,9 +6,11 @@ export type ApplyResult =
   | { ok: false; error: string; state: DiagramState };
 
 const fail = (state: DiagramState, error: string): ApplyResult => ({ ok: false, error, state });
-const idTaken = (s: DiagramState, id: string) => id in s.groups || id in s.nodes;
-const parentOk = (s: DiagramState, parent: string | null) => parent === null || parent in s.groups;
-const endpointOk = (s: DiagramState, id: string) => id in s.nodes || id in s.groups;
+const has = (o: object, k: string) => Object.hasOwn(o, k);
+/** Groups, nodes and edges share one id space (selection is by id). */
+const idTaken = (s: DiagramState, id: string) => has(s.groups, id) || has(s.nodes, id) || has(s.edges, id);
+const parentOk = (s: DiagramState, parent: string | null) => parent === null || has(s.groups, parent);
+const endpointOk = (s: DiagramState, id: string) => has(s.nodes, id) || has(s.groups, id);
 
 export function applyCommand(state: DiagramState, cmd: Command): ApplyResult {
   switch (cmd.op) {
@@ -43,15 +45,15 @@ export function applyCommand(state: DiagramState, cmd: Command): ApplyResult {
       if (id === undefined) {
         const stem = `e-${cmd.from}-${cmd.to}`;
         id = stem;
-        for (let n = 2; id in state.edges; n++) id = `${stem}-${n}`;
-      } else if (id in state.edges) {
-        return fail(state, `edge ${id} already exists`);
+        for (let n = 2; idTaken(state, id); n++) id = `${stem}-${n}`;
+      } else if (idTaken(state, id)) {
+        return fail(state, `id ${id} already exists`);
       }
       const edge = { id, from: cmd.from, to: cmd.to, edgeKind: cmd.edge_kind, ...(cmd.label !== undefined ? { label: cmd.label } : {}) };
       return { ok: true, state: { ...state, edges: { ...state.edges, [id]: edge } } };
     }
     case "update_node": {
-      const node = state.nodes[cmd.id];
+      const node = has(state.nodes, cmd.id) ? state.nodes[cmd.id] : undefined;
       if (!node) return fail(state, `node ${cmd.id} not found`);
       if (cmd.parent !== undefined && !parentOk(state, cmd.parent)) return fail(state, `parent ${cmd.parent} not found`);
       const next = {
@@ -64,7 +66,7 @@ export function applyCommand(state: DiagramState, cmd: Command): ApplyResult {
       return { ok: true, state: { ...state, nodes: { ...state.nodes, [cmd.id]: next } } };
     }
     case "update_edge": {
-      const edge = state.edges[cmd.id];
+      const edge = has(state.edges, cmd.id) ? state.edges[cmd.id] : undefined;
       if (!edge) return fail(state, `edge ${cmd.id} not found`);
       const next = {
         ...edge,
@@ -74,20 +76,20 @@ export function applyCommand(state: DiagramState, cmd: Command): ApplyResult {
       return { ok: true, state: { ...state, edges: { ...state.edges, [cmd.id]: next } } };
     }
     case "remove_node": {
-      if (!(cmd.id in state.nodes)) return fail(state, `node ${cmd.id} not found`);
+      if (!has(state.nodes, cmd.id)) return fail(state, `node ${cmd.id} not found`);
       const nodes = { ...state.nodes };
       delete nodes[cmd.id];
       const edges = Object.fromEntries(Object.entries(state.edges).filter(([, e]) => e.from !== cmd.id && e.to !== cmd.id));
       return { ok: true, state: { ...state, nodes, edges } };
     }
     case "remove_edge": {
-      if (!(cmd.id in state.edges)) return fail(state, `edge ${cmd.id} not found`);
+      if (!has(state.edges, cmd.id)) return fail(state, `edge ${cmd.id} not found`);
       const edges = { ...state.edges };
       delete edges[cmd.id];
       return { ok: true, state: { ...state, edges } };
     }
     case "set_assumption": {
-      const cur = state.assumptions[cmd.key];
+      const cur = has(state.assumptions, cmd.key) ? state.assumptions[cmd.key] : undefined;
       if (cur?.confirmed) return fail(state, `assumption ${cmd.key} is confirmed`);
       const next = { key: cmd.key, value: cmd.value, confirmed: false };
       return { ok: true, state: { ...state, assumptions: { ...state.assumptions, [cmd.key]: next } } };

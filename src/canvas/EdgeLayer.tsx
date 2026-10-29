@@ -72,7 +72,7 @@ export function EdgeLayer({ layout, edges, selectedId, hoverLabels, motion, appe
   const isSelectedEdge = (e: DisplayEdge) => selectedId !== null && (e.id === selectedId || e.sourceEdgeIds.includes(selectedId));
   const isDim = (ids: string[]) => selectedId !== null && !ids.some((i) => incident.has(i));
 
-  // Which bundles animate. Over 40 nodes only the ones touching the selection; 
+  // Which bundles animate. Over 40 nodes only the ones touching the selection; with fewer, every bundle animates.
   const restrictTo = nodeCount > MANY_NODES ? incident : null;
   const active = useMemo(
     () =>

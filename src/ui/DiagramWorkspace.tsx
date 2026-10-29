@@ -161,6 +161,7 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
             editMode={live && editMode}
             options={options}
             motion={motion}
+            fitKey={`${current.number}:${mode.kind}:${mode.kind === "live" ? "" : mode.number}`}
             onOptionsChange={setOptions}
             onSelect={(id) => setOptions((o) => ({ ...o, selectedId: id }))}
             onPinnedChange={live ? onPinnedChange : () => {}}

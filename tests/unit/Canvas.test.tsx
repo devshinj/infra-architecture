@@ -2,6 +2,7 @@ import "@testing-library/jest-dom/vitest";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeAll, expect, test, vi } from "vitest";
 
+import * as layoutMod from "@/canvas/layout";
 import { Canvas, type CanvasOptions, type CanvasProps } from "@/canvas/Canvas";
 import { defaultDisplayOptions } from "@/canvas/display";
 import { emptyState } from "@/domain/types";
@@ -24,6 +25,11 @@ beforeAll(() => {
   vi.stubGlobal("DOMMatrix", DM);
 });
 afterEach(cleanup);
+
+vi.mock("@/canvas/layout", async (orig) => {
+  const m = await orig<typeof import("@/canvas/layout")>();
+  return { ...m, layoutDiagram: vi.fn(m.layoutDiagram) };
+});
 
 const baseProps = (state = fx("s2")): CanvasProps => {
   const options: CanvasOptions = { ...defaultDisplayOptions(state), hoverLabels: true };
@@ -67,4 +73,11 @@ test("selecting a node inside a collapsed group highlights the group and keeps i
   await waitFor(() => expect(container.querySelector('.react-flow__node-zone[data-id="was-pair"] .group--selected')).not.toBeNull());
   expect(container.querySelector('.react-flow__node[data-id="web-1"] .node--dimmed')).toBeNull();
   expect(container.querySelector('.react-flow__node[data-id="db-proxy"] .node--dimmed')).toBeNull();
+});
+
+test("a rejected layout shows a message instead of a blank canvas", async () => {
+  vi.mocked(layoutMod.layoutDiagram).mockRejectedValueOnce(new Error("elk"));
+  vi.spyOn(console, "error").mockImplementation(() => {});
+  render(<div style={{ width: 800, height: 600 }}><Canvas {...baseProps()} /></div>);
+  expect(await screen.findByText("구성도를 배치하지 못했어요. 새로고침하거나 구성을 다시 확인해 주세요.")).toBeInTheDocument();
 });
