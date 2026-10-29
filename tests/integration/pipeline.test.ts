@@ -203,6 +203,25 @@ describe("runChatTurn", () => {
     expect(events.at(-1)).toMatchObject({ t: "done", applied: 2, skipped: 3, version: 1, nodes: 1, edges: 0 });
   });
 
+  test("AI lines with sub:null / missing parent / array attrs are normalized and applied, not skipped", async () => {
+    const ids = await makeOwnedDiagram();
+    const lines = [
+      JSON.stringify({ op: "add_node", id: "client-web", kind: "client_web", label: "웹 브라우저", sub: null, parent: null, attrs: { sw: "Browser", ip: null } }),
+      JSON.stringify({ op: "add_node", id: "was-1", kind: "was", label: "WAS#1", attrs: { az: ["2a", "2c"], multi_az: true } }),
+      JSON.stringify({ op: "add_edge", id: "e-client-web-was-1", from: "client-web", to: "was-1", edge_kind: "request", label: null }),
+    ];
+    const { events } = await turn(ids, "그려줘", { qwen: fakeQwen(lines.join("\n")), clef: fakeClef(null) });
+    expect(of(events, "skip")).toHaveLength(0);
+    expect(of(events, "cmd").map((e) => e.cmd)).toEqual([
+      { op: "add_node", id: "client-web", kind: "client_web", label: "웹 브라우저", parent: null, attrs: { sw: "Browser", ip: null } },
+      { op: "add_node", id: "was-1", kind: "was", label: "WAS#1", parent: null, attrs: { az: "2a, 2c", multi_az: "true" } },
+      { op: "add_edge", id: "e-client-web-was-1", from: "client-web", to: "was-1", edge_kind: "request" },
+    ]);
+    expect(events.at(-1)).toMatchObject({ t: "done", applied: 3, skipped: 0, nodes: 2, edges: 1 });
+    const saved = await getLatestState(ids.diagramId);
+    expect(saved!.state.nodes["client-web"]).toBeDefined();
+  });
+
   test("zero applied commands creates no version", async () => {
     const ids = await makeOwnedDiagram();
     await createVersion(ids.diagramId, emptyState(), { source: "import" });

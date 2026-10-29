@@ -11,6 +11,7 @@ import { createVersion, getLatestState } from "@/server/versions";
 import type { ChatEvent, MessageMeta } from "./events";
 import { withDiagramLock } from "./lock";
 import { createMessage, listMessages } from "./messages";
+import { normalizeAiCommand } from "./normalize";
 import { buildMessages, parseMentions } from "./prompt";
 
 export interface ChatDeps {
@@ -131,7 +132,7 @@ async function lockedTurn(args: TurnArgs, deps: ChatDeps): Promise<void> {
       }
       const op = opName(raw);
       if (!KNOWN_OPS.has(op)) return skip(`지원하지 않는 명령(${op})`);
-      const parsed = parseCommand(raw);
+      const parsed = parseCommand(normalizeAiCommand(raw));
       if (!parsed.ok) return skip(`형식이 맞지 않는 명령(${op})`);
       const r = applyCommand(state, parsed.cmd);
       if (!r.ok) return skip(`적용할 수 없는 명령(${op}) ${r.error}`);

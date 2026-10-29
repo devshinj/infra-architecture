@@ -29,6 +29,7 @@ async function main(): Promise<number> {
   const { createClefClient } = await import("../src/server/llm/clef");
   const { createJsonlParser } = await import("../src/server/llm/jsonl");
   const { buildMessages } = await import("../src/server/chat/prompt");
+  const { normalizeAiCommand } = await import("../src/server/chat/normalize");
   const { parseCommand } = await import("../src/domain/commands");
   const { applyCommand } = await import("../src/domain/apply");
   const { emptyState } = await import("../src/domain/types");
@@ -61,7 +62,7 @@ async function main(): Promise<number> {
       const parser = createJsonlParser(
         (v) => {
           if ((v as { op?: unknown } | null)?.op === "say") return; // 진행 안내 줄은 명령이 아니다
-          const p = parseCommand(v);
+          const p = parseCommand(normalizeAiCommand(v)); // 대화 경로와 같은 정규화
           if (!p.ok) return void skipped++;
           if (firstMs === null) firstMs = Date.now() - t0;
           const r = applyCommand(state, p.cmd);
