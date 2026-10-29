@@ -18,6 +18,8 @@ export interface EdgeLayerProps {
   appearing: Set<string>;
   /** Number of nodes in the diagram; above 40 only bundles touching the selection animate. */
   nodeCount: number;
+  /** Click on an edge's hit path selects it (by edge id). */
+  onSelect?(id: string): void;
 }
 
 const MANY_NODES = 40;
@@ -49,7 +51,7 @@ function prefersReducedMotion(): boolean {
   return typeof window !== "undefined" && !!window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
 }
 
-export function EdgeLayer({ layout, edges, selectedId, hoverLabels, motion, appearing, nodeCount }: EdgeLayerProps) {
+export function EdgeLayer({ layout, edges, selectedId, hoverLabels, motion, appearing, nodeCount, onSelect }: EdgeLayerProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [hovered, setHovered] = useState<string | null>(null);
 
@@ -62,9 +64,12 @@ export function EdgeLayer({ layout, edges, selectedId, hoverLabels, motion, appe
 
   const incident = useMemo(() => {
     const s = new Set<string>();
-    if (selectedId !== null) for (const e of edges) if (e.from === selectedId || e.to === selectedId) s.add(e.id);
+    const selEdge = selectedId === null ? undefined : edges.find((e) => e.id === selectedId || e.sourceEdgeIds.includes(selectedId));
+    if (selEdge) s.add(selEdge.id);
+    else if (selectedId !== null) for (const e of edges) if (e.from === selectedId || e.to === selectedId) s.add(e.id);
     return s;
   }, [edges, selectedId]);
+  const isSelectedEdge = (e: DisplayEdge) => selectedId !== null && (e.id === selectedId || e.sourceEdgeIds.includes(selectedId));
   const isDim = (ids: string[]) => selectedId !== null && !ids.some((i) => incident.has(i));
 
   // Which bundles animate. Over 40 nodes only the ones touching the selection; 
@@ -150,11 +155,15 @@ export function EdgeLayer({ layout, edges, selectedId, hoverLabels, motion, appe
         const dim = isDim([e.id]);
         const showLabel = !!e.label && !!l.labelAt && (!hoverLabels || hovered === e.id || incident.has(e.id));
         return (
-          <g key={e.id} className={`edge${dim ? " edge--dim" : ""}`} data-edge-id={e.id} data-edge-kind={e.edgeKind}>
+          <g key={e.id} className={`edge${dim ? " edge--dim" : ""}${isSelectedEdge(e) ? " edge--selected" : ""}`} data-edge-id={e.id} data-edge-kind={e.edgeKind}>
             {d && <path className={`edge-arrow edge-arrow--${e.edgeKind}`} d={d} />}
             <path
               className="edge-hit"
               d={toD(l.points)}
+              onClick={(ev) => {
+                ev.stopPropagation();
+                onSelect?.(e.id);
+              }}
               onMouseEnter={() => setHovered(e.id)}
               onMouseLeave={() => setHovered((h) => (h === e.id ? null : h))}
             />

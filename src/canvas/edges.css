@@ -44,3 +44,5 @@
 @media (prefers-reduced-motion: reduce) {
   .edge-line--appear { animation: none; }
 }
+
+.edge--selected .edge-label { fill: var(--text-primary); }

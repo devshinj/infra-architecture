@@ -14,12 +14,13 @@ import {
   duplicateDiagram,
   getOwnedDiagram,
   NotFoundError,
+  ValidationError,
   renameDiagram,
   renameProject,
   savePinnedPositions,
   type PinnedPositions,
 } from "@/server/projects";
-import { importSample } from "@/server/samples";
+import { importSample, SAMPLES } from "@/server/samples";
 import { getVersion, listVersions, restoreVersion } from "@/server/versions";
 
 const DIAGRAM_ROUTE = "/p/[projectId]/d/[diagramId]";
@@ -42,21 +43,40 @@ async function run<T>(fn: (uid: string) => Promise<T>): Promise<T> {
   }
 }
 
+/** Expected validation failures come back as data: Next hides thrown messages in production. */
+export type ActionResult<T extends object = object> = ({ ok: true } & T) | { ok: false; error: string };
+
+async function runResult<T extends object>(fn: (uid: string) => Promise<T>): Promise<ActionResult<T>> {
+  return run(async (uid) => {
+    try {
+      return { ok: true as const, ...(await fn(uid)) };
+    } catch (e) {
+      if (e instanceof ValidationError) return { ok: false as const, error: e.message };
+      throw e;
+    }
+  });
+}
+
+const validVersion = (n: number) => {
+  if (!Number.isInteger(n) || n < 1) notFound();
+};
+
 const refreshAll = () => revalidatePath("/", "layout");
 const refreshDiagram = () => revalidatePath(DIAGRAM_ROUTE, "page");
 
-export async function createProjectAction(name: string): Promise<{ id: string }> {
-  return run(async (uid) => {
+export async function createProjectAction(name: string): Promise<ActionResult<{ id: string }>> {
+  return runResult(async (uid) => {
     const p = await createProject(uid, name);
     refreshAll();
     return { id: p.id };
   });
 }
 
-export async function renameProjectAction(projectId: string, name: string): Promise<void> {
-  return run(async (uid) => {
+export async function renameProjectAction(projectId: string, name: string): Promise<ActionResult> {
+  return runResult(async (uid) => {
     await renameProject(uid, projectId, name);
     refreshAll();
+    return {};
   });
 }
 
@@ -67,18 +87,19 @@ export async function deleteProjectAction(projectId: string): Promise<void> {
   });
 }
 
-export async function createDiagramAction(projectId: string, name: string): Promise<{ id: string }> {
-  return run(async (uid) => {
+export async function createDiagramAction(projectId: string, name: string): Promise<ActionResult<{ id: string }>> {
+  return runResult(async (uid) => {
     const d = await createDiagram(uid, projectId, name);
     refreshAll();
     return d;
   });
 }
 
-export async function renameDiagramAction(diagramId: string, name: string): Promise<void> {
-  return run(async (uid) => {
+export async function renameDiagramAction(diagramId: string, name: string): Promise<ActionResult> {
+  return runResult(async (uid) => {
     await renameDiagram(uid, diagramId, name);
     refreshAll();
+    return {};
   });
 }
 
@@ -99,6 +120,7 @@ export async function duplicateDiagramAction(diagramId: string): Promise<{ id: s
 }
 
 export async function importSampleAction(diagramId: string, sampleId: string): Promise<{ number: number }> {
+  if (!SAMPLES.some((x) => x.id === sampleId)) notFound();
   return run(async (uid) => {
     const r = await importSample(uid, diagramId, sampleId);
     refreshDiagram();
@@ -107,8 +129,10 @@ export async function importSampleAction(diagramId: string, sampleId: string): P
 }
 
 export async function restoreVersionAction(diagramId: string, number: number): Promise<{ number: number }> {
+  validVersion(number);
   return run(async (uid) => {
     await getOwnedDiagram(uid, diagramId);
+    if ((await getVersion(diagramId, number)) === null) notFound();
     const r = await restoreVersion(diagramId, number);
     refreshDiagram();
     return r;
@@ -116,6 +140,7 @@ export async function restoreVersionAction(diagramId: string, number: number): P
 }
 
 export async function getVersionAction(diagramId: string, number: number): Promise<DiagramState | null> {
+  validVersion(number);
   return run(async (uid) => {
     await getOwnedDiagram(uid, diagramId);
     return getVersion(diagramId, number);
@@ -129,10 +154,11 @@ export async function listVersionsAction(diagramId: string) {
   });
 }
 
-export async function savePinnedAction(diagramId: string, positions: PinnedPositions): Promise<void> {
-  return run(async (uid) => {
+export async function savePinnedAction(diagramId: string, positions: PinnedPositions): Promise<ActionResult> {
+  return runResult(async (uid) => {
     await savePinnedPositions(uid, diagramId, positions);
     refreshDiagram();
+    return {};
   });
 }
 

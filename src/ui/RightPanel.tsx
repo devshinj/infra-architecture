@@ -28,13 +28,15 @@ export function RightPanel({ state, selectedId, onSelect, samples, onImportSampl
   const [before, setBefore] = useState<Tab | null>(null); // tab to return to when the selection clears
   const [seenSelected, setSeenSelected] = useState<string | null>(selectedId);
 
-  // Selecting a node/edge switches to 설명; clearing the selection restores the previous tab.
+  // Any new selection switches to 설명 (remembering the tab we left); clearing it returns there.
   if (seenSelected !== selectedId) {
     setSeenSelected(selectedId);
-    if (selectedId !== null && seenSelected === null) {
-      setBefore(tab);
-      setTab("설명");
-    } else if (selectedId === null && before !== null) {
+    if (selectedId !== null) {
+      if (tab !== "설명") {
+        if (before === null) setBefore(tab);
+        setTab("설명");
+      }
+    } else if (before !== null) {
       setTab(before);
       setBefore(null);
     }
@@ -42,7 +44,6 @@ export function RightPanel({ state, selectedId, onSelect, samples, onImportSampl
 
   const choose = (t: Tab) => {
     setTab(t);
-    setBefore(null);
     if (t === "이력") onHistoryOpen?.();
   };
 

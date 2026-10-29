@@ -131,3 +131,17 @@ test("equal-but-new arrays and a selection change do not restart motion", () => 
   expect(start).toHaveBeenCalledTimes(1);
   expect(stop).not.toHaveBeenCalled();
 });
+
+test("clicking an edge hit path selects that edge", () => {
+  const onSelect = vi.fn();
+  render(<EdgeLayer layout={fanOutLayout} edges={fanOutEdges} {...base} onSelect={onSelect} />);
+  fireEvent.click(document.querySelector('[data-edge-id="e2"] .edge-hit')!);
+  expect(onSelect).toHaveBeenCalledWith("e2");
+});
+
+test("a selected edge keeps itself undimmed and dims the others", () => {
+  render(<EdgeLayer layout={fanOutLayout} edges={fanOutEdges} {...base} selectedId="e1" />);
+  expect(document.querySelector('[data-edge-id="e1"]')).toHaveClass("edge--selected");
+  expect(document.querySelector('[data-edge-id="e1"]')).not.toHaveClass("edge--dim");
+  expect(document.querySelector('[data-edge-id="e2"]')).toHaveClass("edge--dim");
+});

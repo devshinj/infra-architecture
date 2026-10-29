@@ -34,3 +34,14 @@ test("selecting activates 설명 and clearing returns to the previous tab", () =
   rerender(<RightPanel {...props(null)} />);
   expect(screen.getByRole("tab", { name: "대화" })).toHaveAttribute("aria-selected", "true");
 });
+
+test("selecting another node while on 이력 switches back to 설명 and deselect restores the first tab", async () => {
+  const { rerender } = render(<RightPanel {...props(null)} />);
+  rerender(<RightPanel {...props("was-1")} />);
+  await userEvent.click(screen.getByRole("tab", { name: "이력" }));
+  expect(screen.getByRole("tab", { name: "이력" })).toHaveAttribute("aria-selected", "true");
+  rerender(<RightPanel {...props("was-2")} />);
+  expect(screen.getByRole("tab", { name: "설명" })).toHaveAttribute("aria-selected", "true");
+  rerender(<RightPanel {...props(null)} />);
+  expect(screen.getByRole("tab", { name: "대화" })).toHaveAttribute("aria-selected", "true");
+});

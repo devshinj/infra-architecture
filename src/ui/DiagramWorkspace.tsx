@@ -123,7 +123,7 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
 
   const onPinnedChange = (p: Pinned) => {
     setPinned(p);
-    savePinnedAction(diagramId, p).catch(fail);
+    savePinnedAction(diagramId, p).then((r) => (r.ok ? setError(null) : setError(r.error)), fail);
   };
   const onAutoArrange = () => {
     setPinned({});

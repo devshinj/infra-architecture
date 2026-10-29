@@ -101,10 +101,16 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
   const computed = useMemo<Node[]>(() => {
     const neighbors = new Set<string>();
     if (selected !== null) {
-      neighbors.add(selected);
-      for (const e of display.edges) {
-        if (e.from === selected) neighbors.add(e.to);
-        if (e.to === selected) neighbors.add(e.from);
+      const selEdge = display.edges.find((e) => e.id === selected || e.sourceEdgeIds.includes(selected));
+      if (selEdge) {
+        neighbors.add(selEdge.from);
+        neighbors.add(selEdge.to);
+      } else {
+        neighbors.add(selected);
+        for (const e of display.edges) {
+          if (e.from === selected) neighbors.add(e.to);
+          if (e.to === selected) neighbors.add(e.from);
+        }
       }
     }
     const toggleGroup = (id: string) => {
@@ -201,6 +207,7 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
           motion={motion}
           appearing={appearing}
           nodeCount={Object.keys(state.nodes).length}
+          onSelect={onSelect}
         />
       </ReactFlow>
     </div>

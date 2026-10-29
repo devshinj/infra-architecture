@@ -23,8 +23,8 @@ export interface SidebarProject {
 }
 
 type Dialog =
-  | { kind: "name"; title: string; submit: string; initial: string; run(name: string): Promise<void> }
-  | { kind: "delete"; name: string; run(): Promise<void> };
+  | { kind: "name"; title: string; submit: string; initial: string; run(name: string): Promise<string | void> }
+  | { kind: "delete"; name: string; run(): Promise<string | void> };
 
 type MenuTarget = { type: "project" | "diagram"; id: string; name: string };
 type MenuAction = "newDiagram" | "rename" | "duplicate" | "delete";
@@ -35,6 +35,8 @@ export function Sidebar({ projects, userName }: { projects: SidebarProject[]; us
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   const [menu, setMenu] = useState<string | null>(null);
   const [dialog, setDialog] = useState<Dialog | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [duplicating, startDup] = useTransition();
 
   const toggle = (id: string) =>
     setCollapsed((s) => {
@@ -53,7 +55,9 @@ export function Sidebar({ projects, userName }: { projects: SidebarProject[]; us
       initial: "",
       run: async (name) => {
         const p = await createProjectAction(name);
+        if (!p.ok) return p.error;
         const d = await createDiagramAction(p.id, "새 구성도");
+        if (!d.ok) return d.error;
         goDiagram(p.id, d.id);
       },
     });
@@ -68,6 +72,7 @@ export function Sidebar({ projects, userName }: { projects: SidebarProject[]; us
         initial: "",
         run: async (name) => {
           const d = await createDiagramAction(t.id, name);
+          if (!d.ok) return d.error;
           goDiagram(t.id, d.id);
         },
       });
@@ -78,13 +83,21 @@ export function Sidebar({ projects, userName }: { projects: SidebarProject[]; us
         submit: "바꾸기",
         initial: t.name,
         run: async (name) => {
-          if (t.type === "project") await renameProjectAction(t.id, name);
-          else await renameDiagramAction(t.id, name);
+          const r = t.type === "project" ? await renameProjectAction(t.id, name) : await renameDiagramAction(t.id, name);
+          if (!r.ok) return r.error;
           router.refresh();
         },
       });
     } else if (action === "duplicate") {
-      void duplicateDiagramAction(t.id).then((d) => goDiagram(d.projectId, d.id));
+      setNotice(null);
+      startDup(async () => {
+        try {
+          const d = await duplicateDiagramAction(t.id);
+          goDiagram(d.projectId, d.id);
+        } catch {
+          setNotice("복제하지 못했어요. 잠시 후 다시 시도해 주세요.");
+        }
+      });
     } else {
       setDialog({
         kind: "delete",
@@ -167,6 +180,11 @@ export function Sidebar({ projects, userName }: { projects: SidebarProject[]; us
           );
         })}
       </ul>
+      {(notice || duplicating) && (
+        <p className={notice ? styles.error : styles.user} role={notice ? "alert" : "status"} style={{ padding: "0 12px" }}>
+          {notice ?? "복제하는 중…"}
+        </p>
+      )}
       <div className={styles.sideFoot}>
         <button type="button" className={styles.btn} onClick={newProject}>새 프로젝트</button>
         <div className={styles.user}>
@@ -189,9 +207,9 @@ function DialogView({ dialog, onClose }: { dialog: Dialog; onClose(): void }) {
   const submit = () =>
     start(async () => {
       try {
-        if (dialog.kind === "name") await dialog.run(value);
-        else await dialog.run();
-        onClose();
+        const err = dialog.kind === "name" ? await dialog.run(value) : await dialog.run();
+        if (err) setError(err);
+        else onClose();
       } catch (e) {
         setError(e instanceof Error ? e.message : "처리하지 못했어요");
       }

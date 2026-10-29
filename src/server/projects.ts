@@ -14,6 +14,14 @@ export class NotFoundError extends Error {
   }
 }
 
+/** 사용자에게 그대로 보여줄 수 있는 입력 검증 실패. */
+export class ValidationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "ValidationError";
+  }
+}
+
 export type PinnedPositions = Record<string, { x: number; y: number }>;
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -24,7 +32,7 @@ function assertUuid(id: string): void {
 
 function cleanName(name: string): string {
   const n = name.trim();
-  if (n.length < 1 || n.length > 60) throw new Error("이름은 1~60자로 입력해 주세요");
+  if (n.length < 1 || n.length > 60) throw new ValidationError("이름은 1~60자로 입력해 주세요");
   return n;
 }
 
@@ -137,7 +145,7 @@ const pinnedSchema = z
   .refine((o) => Object.keys(o).length <= 2000);
 
 function parsePinned(positions: unknown): PinnedPositions {
-  const fail = () => new Error("위치 정보가 올바르지 않습니다");
+  const fail = () => new ValidationError("위치 정보가 올바르지 않습니다");
   if (typeof positions !== "object" || positions === null || Array.isArray(positions)) throw fail();
   const proto = Object.getPrototypeOf(positions);
   if (proto !== Object.prototype && proto !== null) throw fail();
