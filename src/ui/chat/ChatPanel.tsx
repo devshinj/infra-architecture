@@ -2,6 +2,9 @@
 
 import { type ReactNode, type RefObject, useLayoutEffect, useRef, useState } from "react";
 
+import type { Assumption } from "@/domain/types";
+
+import { AssumptionChips } from "./AssumptionChips";
 import styles from "./chat.module.css";
 import { MentionInput, type MentionInputHandle } from "./MentionInput";
 import type { ChatLine, ChatPhase } from "./useChatTurn";
@@ -19,6 +22,10 @@ export interface ChatPanelProps {
   mentionRef: RefObject<MentionInputHandle | null>;
   /** Rendered under the conversation (sample list for an empty diagram). */
   footer?: ReactNode;
+  /** Assumption chips above the conversation; omitted = no chips. */
+  assumptions?: Record<string, Assumption>;
+  onChooseAssumption?(key: string, value: string): void;
+  onConfirmAssumption?(key: string): void;
 }
 
 const PHASE_LABEL: Record<ChatPhase, string> = { thinking: "구성 검토 중…", drawing: "그리는 중…", answering: "답변 작성 중…" };
@@ -46,7 +53,7 @@ function renderText(text: string): ReactNode[] {
   return out;
 }
 
-export function ChatPanel({ lines, busy, phase, onSend, onStop, health, disabledReason, mentionRef, footer }: ChatPanelProps) {
+export function ChatPanel({ lines, busy, phase, onSend, onStop, health, disabledReason, mentionRef, footer, assumptions, onChooseAssumption, onConfirmAssumption }: ChatPanelProps) {
   const list = useRef<HTMLDivElement>(null);
   const stick = useRef(true);
   const [hasContent, setHasContent] = useState(false);
@@ -65,6 +72,14 @@ export function ChatPanel({ lines, busy, phase, onSend, onStop, health, disabled
         <div className={styles.notice} role="status">
           {DOWN}
         </div>
+      )}
+      {assumptions && (
+        <AssumptionChips
+          assumptions={assumptions}
+          busy={blocked}
+          onChoose={(k, v) => onChooseAssumption?.(k, v)}
+          onConfirm={(k) => onConfirmAssumption?.(k)}
+        />
       )}
       <div
         ref={list}

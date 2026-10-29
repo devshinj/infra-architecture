@@ -178,5 +178,5 @@ export function useChatTurn(args: UseChatTurnArgs) {
 
   const stop = useCallback(() => abortRef.current?.abort(), []);
 
-  return { lines, busy, phase, send, stop };
+  return { lines, busy, phase, send, stop, pushLine: push };
 }

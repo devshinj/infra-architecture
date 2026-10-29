@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from
 
 import {
   clearPinnedAction,
+  confirmAssumptionAction,
   getVersionAction,
   importSampleAction,
   listVersionsAction,
@@ -14,6 +15,7 @@ import {
 import { Canvas, type CanvasOptions, type DiffMarks } from "@/canvas/Canvas";
 import { defaultDisplayOptions } from "@/canvas/display";
 import { applyCommand } from "@/domain/apply";
+import { ASSUMPTION_LABELS, confirmAssumption } from "@/domain/assumptions";
 import { diffStates } from "@/domain/diff";
 import type { DiagramState } from "@/domain/types";
 
@@ -163,6 +165,32 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
     void chat.send(text);
   }; // no history view/compare/restore, edit mode or sample import while the AI answers
 
+  // Confirm first (the model cannot overwrite confirmed assumptions), then ask the AI to adjust the structure.
+  const confirmKey = async (key: string, value: string): Promise<boolean> => {
+    try {
+      const r = await confirmAssumptionAction(diagramId, key, value);
+      if (!r.ok) {
+        chat.pushLine({ kind: "error", text: r.error });
+        return false;
+      }
+      setCurrent((c) => ({ number: c.number, state: confirmAssumption(c.state, key, value) }));
+      refreshFromServer();
+      return true;
+    } catch {
+      chat.pushLine({ kind: "error", text: "가정을 확정하지 못했어요. 다시 시도해 주세요." });
+      return false;
+    }
+  };
+  const onChooseAssumption = async (key: string, value: string) => {
+    if (!live || chat.busy) return;
+    if (await confirmKey(key, value)) sendChat(`가정 변경: ${ASSUMPTION_LABELS[key] ?? key} → ${value}. 이 가정에 맞게 구성을 조정해 줘.`);
+  };
+  const onConfirmAssumption = (key: string) => {
+    const a = current.state.assumptions[key];
+    if (!live || chat.busy || !a) return;
+    void confirmKey(key, a.value);
+  };
+
   const enter = (next: Mode, state: DiagramState) => {
     setMode(next);
     setEditMode(false);
@@ -283,6 +311,9 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
           phase: chat.phase,
           onSend: sendChat,
           onStop: chat.stop,
+          assumptions: current.state.assumptions,
+          onChooseAssumption,
+          onConfirmAssumption,
           health,
           mentionRef,
           ...(live ? {} : { disabledReason: "이전 버전을 보는 중에는 대화할 수 없어요." }),

@@ -1,0 +1,107 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+
+import { ASSUMPTION_CHOICES, ASSUMPTION_LABELS } from "@/domain/assumptions";
+import type { Assumption } from "@/domain/types";
+
+import styles from "./chat.module.css";
+
+export interface AssumptionChipsProps {
+  assumptions: Record<string, Assumption>;
+  busy: boolean;
+  onChoose(key: string, value: string): void;
+  onConfirm(key: string): void;
+}
+
+const labelOf = (key: string) => ASSUMPTION_LABELS[key] ?? key;
+
+/** Known keys in label order first, then any others alphabetically. */
+function orderedKeys(assumptions: Record<string, Assumption>): string[] {
+  const keys = Object.keys(assumptions);
+  const known = Object.keys(ASSUMPTION_LABELS).filter((k) => keys.includes(k));
+  const other = keys.filter((k) => !(k in ASSUMPTION_LABELS)).sort();
+  return [...known, ...other];
+}
+
+export function AssumptionChips({ assumptions, busy, onChoose, onConfirm }: AssumptionChipsProps) {
+  const [open, setOpen] = useState<string | null>(null);
+  const root = useRef<HTMLUListElement>(null);
+
+  useEffect(() => {
+    if (open === null) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(null);
+    };
+    const onDown = (e: MouseEvent) => {
+      if (root.current && !root.current.contains(e.target as Node)) setOpen(null);
+    };
+    document.addEventListener("keydown", onKey);
+    document.addEventListener("mousedown", onDown);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.removeEventListener("mousedown", onDown);
+    };
+  }, [open]);
+
+  useEffect(() => {
+    if (busy) setOpen(null);
+  }, [busy]);
+
+  const keys = orderedKeys(assumptions);
+  if (keys.length === 0) return null;
+
+  return (
+    <ul ref={root} className={styles.assumptions} aria-label="AI가 세운 가정">
+      {keys.map((key) => {
+        const a = assumptions[key]!;
+        const isOpen = open === key;
+        const choices = ASSUMPTION_CHOICES[key] ?? [];
+        return (
+          <li key={key} className={styles.assumptionItem}>
+            <button
+              type="button"
+              className={`${styles.assumptionChip} ${a.confirmed ? styles.assumptionConfirmed : ""}`}
+              aria-expanded={isOpen}
+              disabled={busy}
+              onClick={() => setOpen(isOpen ? null : key)}
+            >
+              {labelOf(key)}: {a.value}
+              {a.confirmed && <span className={styles.assumptionMark}>확정</span>}
+            </button>
+            {isOpen && (
+              <div className={styles.assumptionMenu} role="group" aria-label={`${labelOf(key)} 대안`}>
+                {choices.map((c) => (
+                  <button
+                    key={c}
+                    type="button"
+                    className={styles.assumptionChoice}
+                    disabled={busy}
+                    onClick={() => {
+                      setOpen(null);
+                      onChoose(key, c);
+                    }}
+                  >
+                    {c}
+                    {c === a.value && <span className={styles.assumptionMark}>현재</span>}
+                  </button>
+                ))}
+                <button
+                  type="button"
+                  className={styles.assumptionChoice}
+                  disabled={busy}
+                  onClick={() => {
+                    setOpen(null);
+                    onConfirm(key);
+                  }}
+                >
+                  이대로 확정
+                </button>
+              </div>
+            )}
+          </li>
+        );
+      })}
+    </ul>
+  );
+}

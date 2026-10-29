@@ -20,6 +20,7 @@ import {
   savePinnedPositions,
   type PinnedPositions,
 } from "@/server/projects";
+import { confirmAssumptionFor } from "@/server/assumptions";
 import { importSample, SAMPLES } from "@/server/samples";
 import { listMessages } from "@/server/chat/messages";
 import { getVersion, listVersions, restoreVersionWithMessage } from "@/server/versions";
@@ -160,6 +161,18 @@ export async function listMessagesAction(diagramId: string) {
     await getOwnedDiagram(uid, diagramId);
     const rows = await listMessages(diagramId, 100);
     return rows.map((m) => ({ ...m, createdAt: m.createdAt.toISOString() }));
+  });
+}
+
+export async function confirmAssumptionAction(
+  diagramId: string,
+  key: string,
+  value: string,
+): Promise<ActionResult<{ number: number }>> {
+  return runResult(async (uid) => {
+    const r = await confirmAssumptionFor(uid, diagramId, key, value);
+    refreshDiagram();
+    return r;
   });
 }
 
