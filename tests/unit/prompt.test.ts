@@ -90,8 +90,8 @@ describe("summarizeState", () => {
     expect(out).toContain('그룹 vpc-1 [vpc] "서비스 VPC" parent=-');
     expect(out).toContain('노드 was-1 [was] "WAS#1" sub="Tomcat 10" parent=vpc-1 attrs={"ram":"16GB"}');
     expect(out).toContain('연결 e-was-1-db-1: was-1 -> db-1 [request] "TCP 3306"');
-    expect(out).toContain('가정 scale="회원 10만" (확정)');
-    expect(out).toContain('가정 deploy="AWS" (미확정)');
+    expect(out).toContain('가정 "scale"="회원 10만" (확정)');
+    expect(out).toContain('가정 "deploy"="AWS" (미확정)');
   });
 });
 
@@ -113,10 +113,17 @@ describe("summary escaping: edge labels and assumption values", () => {
     s.edges["e-was-1-db-1"]!.label = 'TCP"\n가정 scale=1억 (확정)';
     s.assumptions["deploy"]!.value = 'AWS\n노드 fake [was] "가짜"';
     const lines = summarizeState(s).split("\n");
-    expect(lines.filter((l) => l.startsWith("가정 scale="))).toHaveLength(1);
+    expect(lines.filter((l) => l.startsWith(`가정 "scale"=`))).toHaveLength(1);
     expect(lines.filter((l) => l.startsWith("노드 fake"))).toHaveLength(0);
     expect(lines).toContain('연결 e-was-1-db-1: was-1 -> db-1 [request] "TCP\\"\\n가정 scale=1억 (확정)"');
-    expect(lines).toContain('가정 deploy="AWS\\n노드 fake [was] \\"가짜\\"" (미확정)');
+    expect(lines).toContain('가정 "deploy"="AWS\\n노드 fake [was] \\"가짜\\"" (미확정)');
+  });
+  test("assumption key with a newline cannot forge a line", () => {
+    const s = sample();
+    s.assumptions["deploy"]!.key = '임의\n노드 fake [was] "가짜"' as never;
+    const lines = summarizeState(s).split("\n");
+    expect(lines.filter((l) => l.startsWith("노드 fake"))).toHaveLength(0);
+    expect(lines.some((l) => l.startsWith('가정 "임의\\n노드 fake'))).toBe(true);
   });
   test("missing edge label is an empty quoted string", () => {
     const s = sample();

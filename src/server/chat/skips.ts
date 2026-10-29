@@ -11,7 +11,13 @@ const SAMPLE_COUNT = 3;
 
 /** 같은 원인끼리 묶이도록 만든 키. apply 오류("endpoint x not found")는 id 를 지운다. */
 export function skipKey(kind: SkipKind, op = "", detail = ""): string {
-  const d = kind === "apply" ? detail.replace(/^(\w+) \S+/, "$1 …") : detail;
+  // invalid: 경로가 attrs 아래면 AI 가 쓴 속성 이름이 로그에 새지 않게 attrs 까지만 남긴다.
+  const d =
+    kind === "apply"
+      ? detail.replace(/^(\w+) \S+/, "$1 …")
+      : kind === "invalid" && /^attrs[.:]/.test(detail)
+        ? "attrs"
+        : detail;
   return [kind, op, d].filter(Boolean).join(" ").slice(0, KEY_MAX);
 }
 

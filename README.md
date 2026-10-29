@@ -49,6 +49,8 @@
    npm run db:migrate
    ```
 
+   새 버전을 받은 뒤에도 `npm run db:migrate` 를 다시 실행하세요. 빠뜨리면 새 테이블이 없어 화면이 500 오류를 낼 수 있습니다. 이 명령은 `.env` 를 읽으며, `.env` 파일이 없으면 오류로 끝납니다.
+
 5. 개발 서버 실행 후 http://localhost:3000 접속
 
    ```bash

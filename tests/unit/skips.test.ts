@@ -16,6 +16,11 @@ describe("skipKey", () => {
     expect(skipKey("bad_json")).toBe("bad_json");
     expect(skipKey("invalid", "add_node", "x".repeat(300)).length).toBeLessThanOrEqual(100);
   });
+  test("invalid attrs path is reduced to attrs", () => {
+    expect(skipKey("invalid", "add_node", "attrs.비밀이름: Invalid input: expected string")).toBe("invalid add_node attrs");
+    expect(skipKey("invalid", "update_node", "attrs: Invalid input")).toBe("invalid update_node attrs");
+    expect(skipKey("invalid", "add_node", "attrsX: bad")).toBe("invalid add_node attrsX: bad");
+  });
 });
 
 describe("createSkipTally", () => {

@@ -80,7 +80,7 @@ export function summarizeState(state: DiagramState): string {
   }
   // 사용자가 쓴 글(연결 이름·가정 값)은 노드 이름처럼 JSON 으로 감싸 줄바꿈이 새 줄을 만들지 못하게 한다.
   for (const a of Object.values(state.assumptions)) {
-    lines.push(`가정 ${a.key}=${JSON.stringify(a.value)} (${a.confirmed ? "확정" : "미확정"})`);
+    lines.push(`가정 ${JSON.stringify(a.key)}=${JSON.stringify(a.value)} (${a.confirmed ? "확정" : "미확정"})`);
   }
   return lines.join("\n");
 }

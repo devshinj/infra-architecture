@@ -31,7 +31,8 @@ async function main(): Promise<number> {
   const { buildMessages } = await import("../src/server/chat/prompt");
   const { normalizeAiCommand } = await import("../src/server/chat/normalize");
   const { createSkipTally, skipKey } = await import("../src/server/chat/skips");
-  const { parseCommand } = await import("../src/domain/commands");
+  const { parseCommand, COMMAND_OPS } = await import("../src/domain/commands");
+  const KNOWN_OPS: ReadonlySet<string> = new Set(COMMAND_OPS);
   const { applyCommand } = await import("../src/domain/apply");
   const { emptyState } = await import("../src/domain/types");
 
@@ -69,6 +70,11 @@ async function main(): Promise<number> {
           if (rawOp === "say") return; // 진행 안내 줄은 명령이 아니다
           const op = typeof rawOp === "string" ? rawOp.slice(0, 40) : "?";
           const p = parseCommand(normalizeAiCommand(v)); // 대화 경로와 같은 정규화
+          if (!p.ok && !KNOWN_OPS.has(op)) {
+            // 파이프라인과 같은 라벨: 허용 밖 op 는 invalid 가 아니라 unknown_op
+            tally.add(skipKey("unknown_op", op), JSON.stringify(v));
+            return void skipped++;
+          }
           if (!p.ok) {
             tally.add(skipKey("invalid", op, p.error), JSON.stringify(v));
             return void skipped++;
