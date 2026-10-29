@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 
-import { computeMissing, missingReminder } from "@/domain/missing";
+import { computeMissing, missingReminder, requiredKeysFor } from "@/domain/missing";
 import { emptyState, type DiagramState } from "@/domain/types";
 
 const withNode = (attrs: Record<string, string | number | null>, unknown?: string[]): DiagramState => ({
@@ -73,4 +73,17 @@ test("unknown travels with the state", () => {
 
 test("missingReminder", () => {
   expect(missingReminder(3)).toBe("빠진 정보 3개가 있어요");
+});
+
+test("requiredKeysFor returns the target's keys or null", () => {
+  const s = withNode({});
+  s.edges = {
+    r: { id: "r", from: "a", to: "b", edgeKind: "request" },
+    x: { id: "x", from: "a", to: "b", edgeKind: "aux" },
+  };
+  expect(requiredKeysFor(s, "node", "was-1")).toContain("ram");
+  expect(requiredKeysFor(s, "edge", "r")).toEqual(["label"]);
+  expect(requiredKeysFor(s, "edge", "x")).toEqual([]);
+  expect(requiredKeysFor(s, "node", "nope")).toBeNull();
+  expect(requiredKeysFor(s, "edge", "nope")).toBeNull();
 });

@@ -21,6 +21,7 @@ import {
   type PinnedPositions,
 } from "@/server/projects";
 import { confirmAssumptionFor } from "@/server/assumptions";
+import { saveFieldsFor, type SaveFieldsInput } from "@/server/fields";
 import { importSample, SAMPLES } from "@/server/samples";
 import { listMessages } from "@/server/chat/messages";
 import { getVersion, listVersions, restoreVersionWithMessage } from "@/server/versions";
@@ -171,6 +172,17 @@ export async function confirmAssumptionAction(
 ): Promise<ActionResult<{ number: number }>> {
   return runResult(async (uid) => {
     const r = await confirmAssumptionFor(uid, diagramId, key, value);
+    refreshDiagram();
+    return r;
+  });
+}
+
+export async function saveFieldsAction(
+  diagramId: string,
+  input: SaveFieldsInput,
+): Promise<ActionResult<{ number: number | null }>> {
+  return runResult(async (uid) => {
+    const r = await saveFieldsFor(uid, diagramId, input);
     refreshDiagram();
     return r;
   });

@@ -9,6 +9,7 @@ import { getOwnedDiagram } from "@/server/projects";
 import { createVersion, getLatestState } from "@/server/versions";
 
 import type { ChatEvent, MessageMeta } from "./events";
+import { BUSY_MESSAGE } from "./busy";
 import { withDiagramLock } from "./lock";
 import { createMessage, listMessages } from "./messages";
 import { normalizeAiCommand } from "./normalize";
@@ -25,7 +26,7 @@ export interface ChatDeps {
 /** `busy` 면 잠금을 얻지 못한 것(이미 `error` 이벤트를 보냈다). 호출자는 409 로 바꾼다. */
 export type ChatTurnResult = { status: "ok" } | { status: "busy" };
 
-export const BUSY_MESSAGE = "다른 응답을 처리하고 있어요. 끝난 뒤 다시 보내 주세요.";
+export { BUSY_MESSAGE };
 export const AI_UNAVAILABLE_MESSAGE = "AI 서버에 연결할 수 없어요. 잠시 뒤 다시 시도하거나 관리자에게 문의해 주세요.";
 export const HISTORY_REPLY = "변경 이력은 오른쪽 '이력' 탭에서 보고 되돌릴 수 있어요.";
 export const TIMEOUT_MESSAGE = "응답 시간이 너무 길어 중단했어요.";

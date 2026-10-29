@@ -45,6 +45,16 @@ function requiredKeysForEdge(edge: Edge): string[] {
   return edge.edgeKind === "request" || edge.edgeKind === "async" ? ["label"] : [];
 }
 
+/** 대상 노드·연결의 필수 키. 대상이 없으면 null. */
+export function requiredKeysFor(state: DiagramState, targetKind: "node" | "edge", targetId: string): string[] | null {
+  if (targetKind === "node") {
+    const node = state.nodes[targetId];
+    return node ? requiredKeysForNode(node) : null;
+  }
+  const edge = state.edges[targetId];
+  return edge ? requiredKeysForEdge(edge) : null;
+}
+
 export function computeMissing(state: DiagramState): {
   items: MissingItem[];
   count: number;
