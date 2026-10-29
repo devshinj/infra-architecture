@@ -1,8 +1,9 @@
 import { applyCommand } from "@/domain/apply";
-import { parseCommand } from "@/domain/commands";
+import { COMMAND_OPS, parseCommand } from "@/domain/commands";
 import { emptyState, type DiagramState } from "@/domain/types";
 import { INTENT_MIN_CONFIDENCE, type ClefClient, type Intent } from "@/server/llm/clef";
 import { createJsonlParser } from "@/server/llm/jsonl";
+import { createThinkStripper } from "@/server/llm/think";
 import type { QwenClient } from "@/server/llm/qwen";
 import { getOwnedDiagram } from "@/server/projects";
 import { createVersion, getLatestState } from "@/server/versions";
@@ -42,9 +43,20 @@ interface TurnArgs {
 
 export async function runChatTurn(args: TurnArgs, deps: ChatDeps): Promise<ChatTurnResult> {
   await getOwnedDiagram(args.userId, args.diagramId); // NotFoundError 는 그대로 던진다
-  const locked = await withDiagramLock(args.diagramId, () => lockedTurn(args, deps));
+  // 전송이 끊겨 emit 이 던져도 차례는 끝까지 돌아 버전·메시지를 저장한다.
+  let emitFailed = false;
+  const emit = (e: ChatEvent) => {
+    try {
+      args.emit(e);
+    } catch (err) {
+      if (!emitFailed) console.error("chat emit failed", err);
+      emitFailed = true;
+    }
+  };
+  const turnArgs = { ...args, emit };
+  const locked = await withDiagramLock(args.diagramId, () => lockedTurn(turnArgs, deps));
   if (!locked.ok) {
-    args.emit({ t: "error", message: BUSY_MESSAGE });
+    emit({ t: "error", message: BUSY_MESSAGE });
     return { status: "busy" };
   }
   return { status: "ok" };
@@ -55,16 +67,9 @@ function opName(raw: unknown): string {
   return typeof op === "string" ? op.slice(0, OP_MAX) : "?";
 }
 
-const KNOWN_OPS = new Set([
-  "add_group",
-  "add_node",
-  "add_edge",
-  "update_node",
-  "update_edge",
-  "remove_node",
-  "remove_edge",
-  "set_assumption",
-]);
+const KNOWN_OPS: ReadonlySet<string> = new Set(COMMAND_OPS);
+const SKIP_PREFIX = "건너뜀: ";
+const SKIP_MAX = 120;
 
 async function lockedTurn(args: TurnArgs, deps: ChatDeps): Promise<void> {
   const { diagramId, emit } = args;
@@ -112,7 +117,7 @@ async function lockedTurn(args: TurnArgs, deps: ChatDeps): Promise<void> {
 
     const skip = (reason: string) => {
       skipped++;
-      emit({ t: "skip", reason });
+      emit({ t: "skip", reason: (SKIP_PREFIX + reason).slice(0, SKIP_MAX) });
     };
     const onLine = (raw: unknown) => {
       if (signal.aborted) return;
@@ -121,41 +126,47 @@ async function lockedTurn(args: TurnArgs, deps: ChatDeps): Promise<void> {
         if (typeof text === "string" && text.trim() !== "") {
           says.push(text);
           emit({ t: "say", text });
-        } else skip("내용이 없는 안내 줄을 건너뛰었어요");
+        } else skip("내용이 없는 안내 줄");
         return;
       }
       const op = opName(raw);
-      if (!KNOWN_OPS.has(op)) return skip(`지원하지 않는 명령(${op})을 건너뛰었어요`);
+      if (!KNOWN_OPS.has(op)) return skip(`지원하지 않는 명령(${op})`);
       const parsed = parseCommand(raw);
-      if (!parsed.ok) return skip(`형식이 맞지 않는 명령(${op})을 건너뛰었어요`);
+      if (!parsed.ok) return skip(`형식이 맞지 않는 명령(${op})`);
       const r = applyCommand(state, parsed.cmd);
-      if (!r.ok) return skip(`적용할 수 없는 명령(${op})을 건너뛰었어요: ${r.error}`);
+      if (!r.ok) return skip(`적용할 수 없는 명령(${op}) ${r.error}`);
       state = r.state;
       if (applied === 0) emit({ t: "status", phase: "drawing" });
       applied++;
       emit({ t: "cmd", cmd: parsed.cmd });
     };
     const parser = createJsonlParser(onLine, () => {
-      if (!signal.aborted) skip("읽을 수 없는 줄을 건너뛰었어요");
+      if (!signal.aborted) skip("읽을 수 없는 줄");
     });
 
+    // 답변 경로: <think> 를 지운 글만 보내고, 보낸 글 그대로 모아 저장한다(중단·오류여도).
     let answering = false;
+    let shown = "";
+    const stripper = createThinkStripper((text) => {
+      if (signal.aborted) return;
+      if (!answering) {
+        answering = true;
+        emit({ t: "status", phase: "answering" });
+      }
+      shown += text;
+      emit({ t: "answer", delta: text });
+    });
     try {
-      const result = await deps.qwen.streamCompletion(messages, {
+      await deps.qwen.streamCompletion(messages, {
         signal,
         onDelta(delta) {
           if (signal.aborted) return;
-          if (answerMode) {
-            if (!answering) {
-              answering = true;
-              emit({ t: "status", phase: "answering" });
-            }
-            emit({ t: "answer", delta });
-          } else parser.push(delta);
+          if (answerMode) stripper.push(delta);
+          else parser.push(delta);
         },
       });
       if (signal.aborted) throw new DOMException("The operation was aborted.", "AbortError");
-      if (answerMode) answer = result.text.trim();
+      if (answerMode) stripper.end();
       else parser.end();
     } catch (err) {
       if (signal.aborted) {
@@ -167,6 +178,7 @@ async function lockedTurn(args: TurnArgs, deps: ChatDeps): Promise<void> {
         emit({ t: "error", message: GENERIC_ERROR_MESSAGE });
       }
     }
+    answer = shown.trim();
   }
 
   let version: number | null = null;

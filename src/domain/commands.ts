@@ -25,6 +25,9 @@ export const commandSchema = z.discriminatedUnion("op", [
 
 export type Command = z.infer<typeof commandSchema>;
 
+/** 스키마가 받는 명령 이름 전부(스키마에서 뽑는다). */
+export const COMMAND_OPS: readonly Command["op"][] = commandSchema.options.map((o) => o.shape.op.value);
+
 export function parseCommand(raw: unknown): { ok: true; cmd: Command } | { ok: false; error: string } {
   const r = commandSchema.safeParse(raw);
   if (r.success) return { ok: true, cmd: r.data };

@@ -3,6 +3,7 @@ import { describe, expect, test, vi } from "vitest";
 
 import { db } from "@/db/client";
 import { diagramVersions } from "@/db/schema";
+import { applyCommands } from "@/domain/apply";
 import type { DiagramState } from "@/domain/types";
 import { emptyState } from "@/domain/types";
 import type { ChatEvent } from "@/server/chat/events";
@@ -195,7 +196,10 @@ describe("runChatTurn", () => {
     const { events } = await turn(ids, "그려줘", { qwen: fakeQwen(lines.join("\n"), { chunk: 5 }), clef: fakeClef(null) });
     expect(of(events, "cmd").map((e) => e.cmd.op)).toEqual(["add_group", "add_node"]);
     expect(of(events, "skip")).toHaveLength(3);
-    for (const s of of(events, "skip")) expect(s.reason.length).toBeGreaterThan(0);
+    for (const s of of(events, "skip")) {
+      expect(s.reason.startsWith("건너뜀: ")).toBe(true);
+      expect(s.reason.length).toBeLessThanOrEqual(120);
+    }
     expect(events.at(-1)).toMatchObject({ t: "done", applied: 2, skipped: 3, version: 1, nodes: 1, edges: 0 });
   });
 
@@ -232,6 +236,10 @@ describe("runChatTurn", () => {
     const vs = await versions(ids.diagramId);
     expect(vs).toHaveLength(1);
     expect(vs[0]).toMatchObject({ status: "aborted", source: "ai" });
+    // 보낸 cmd 를 시작 상태에 다시 적용하면 저장된 상태와 같다
+    const replay = applyCommands(emptyState(), of(events, "cmd").map((e) => e.cmd));
+    expect(replay.errors).toEqual([]);
+    expect(vs[0]!.state).toEqual(replay.state);
     const msgs = await listMessages(ids.diagramId);
     expect(msgs[1]!.meta).toMatchObject({ status: "aborted", applied: 3, version: 1 });
 
@@ -406,5 +414,82 @@ describe("runChatTurn", () => {
     expect(events.at(-1)).toMatchObject({ t: "done", status: "aborted", applied: 0, version: null });
     const msgs = await listMessages(ids.diagramId);
     expect(msgs[1]!.meta).toMatchObject({ status: "aborted" });
+  });
+  test("long skip reasons are capped at 120 chars", async () => {
+    const ids = await makeOwnedDiagram();
+    const long = "x".repeat(300);
+    const lines = [JSON.stringify({ op: "add_node", id: "web-1", kind: "web_server", label: "W", parent: long.slice(0, 60) })];
+    const { events } = await turn(ids, "그려줘", { qwen: fakeQwen(lines.join("\n")), clef: fakeClef(null) });
+    const [s] = of(events, "skip");
+    expect(s!.reason.startsWith("건너뜀: ")).toBe(true);
+    expect(s!.reason.length).toBeLessThanOrEqual(120);
+  });
+
+  test("think tags split across chunks never reach answer events or the stored message", async () => {
+    const ids = await makeOwnedDiagram();
+    const raw = "<think>속으로 생각</think>WAS 는 두 대예요.<think>또</think> DB 는 한 쌍이에요.";
+    const { events } = await turn(ids, "몇 대야?", {
+      qwen: fakeQwen(raw, { chunk: 3 }),
+      clef: fakeClef({ intent: "question", confidence: 0.9 }),
+    });
+    const shown = of(events, "answer").map((e) => e.delta).join("");
+    expect(shown).toBe("WAS 는 두 대예요. DB 는 한 쌍이에요.");
+    for (const e of of(events, "answer")) expect(e.delta).not.toMatch(/think|<|>/);
+    const msgs = await listMessages(ids.diagramId);
+    expect(msgs[1]).toMatchObject({ role: "assistant", content: shown, meta: { status: "complete" } });
+  });
+
+  test("abort mid-answer stores the partial stripped text", async () => {
+    const ids = await makeOwnedDiagram();
+    const ctrl = new AbortController();
+    let n = 0;
+    const raw = "<think>음</think>첫 문장이에요. 둘째 문장이에요. 셋째 문장이에요.";
+    const { events } = await turn(
+      ids,
+      "설명해줘",
+      { qwen: fakeQwen(raw, { chunk: 4 }), clef: fakeClef({ intent: "other", confidence: 0.9 }) },
+      {
+        signal: ctrl.signal,
+        onEvent(e) {
+          if (e.t === "answer" && ++n === 3) ctrl.abort();
+        },
+      },
+    );
+    const shown = of(events, "answer").map((e) => e.delta).join("");
+    expect(shown.length).toBeGreaterThan(0);
+    expect(raw).toContain(shown);
+    expect(events.at(-1)).toMatchObject({ t: "done", status: "aborted", version: null });
+    const msgs = await listMessages(ids.diagramId);
+    // 저장 글은 보낸 글을 앞뒤 공백만 다듬은 것
+    expect(msgs[1]).toMatchObject({ content: shown.trim(), meta: { status: "aborted" } });
+  });
+
+  test("an emit that throws does not skip persistence (turn completes)", async () => {
+    const ids = await makeOwnedDiagram();
+    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
+    let cmds = 0;
+    const events: ChatEvent[] = [];
+    const result = await runChatTurn(
+      {
+        ...ids,
+        text: "그려줘",
+        signal: new AbortController().signal,
+        emit(e) {
+          if (cmds >= 2) throw new Error("stream closed");
+          events.push(e);
+          if (e.t === "cmd") cmds++;
+        },
+      },
+      { qwen: fakeQwen(S2_LINES.join("\n")), clef: fakeClef(null) },
+    );
+    spy.mockRestore();
+    expect(result).toEqual({ status: "ok" });
+    expect(of(events, "cmd")).toHaveLength(2);
+    const vs = await versions(ids.diagramId);
+    expect(vs).toHaveLength(1);
+    expect(vs[0]).toMatchObject({ status: "complete", source: "ai" });
+    expect(vs[0]!.state).toEqual(s2);
+    const msgs = await listMessages(ids.diagramId);
+    expect(msgs[1]!.meta).toMatchObject({ status: "complete", applied: S2_CMDS, version: 1 });
   });
 });
