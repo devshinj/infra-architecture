@@ -11,7 +11,8 @@ export const GROUP_PAD = { top: 30, side: 12, bottom: 12 }; // top 은 이름 �
 export interface Rect { x: number; y: number; width: number; height: number }
 export interface LaidOutNode extends Rect { id: string; parent: string | null; displayLabel: string; displaySub?: string }
 export interface LaidOutGroup extends Rect { id: string; parent: string | null }
-export interface LaidOutEdge { id: string; points: { x: number; y: number }[]; labelAt?: { x: number; y: number } }
+// degraded: no clear route was found, so the edge is a plain elbow that may cross other shapes.
+export interface LaidOutEdge { id: string; points: { x: number; y: number }[]; labelAt?: { x: number; y: number }; degraded?: boolean }
 export interface Layout { nodes: Record<string, LaidOutNode>; groups: Record<string, LaidOutGroup>; edges: LaidOutEdge[]; width: number; height: number }
 
 type Pt = { x: number; y: number };
@@ -215,19 +216,30 @@ export async function layoutDiagram(g: DisplayGraph, pinned: Record<string, { x:
     }
   }
 
-  // Redundancy row connectors: facing borders at the shared centre line, in the edge's own direction.
-  // If another member sits between the two, the connector dips into the group's bottom padding instead.
+  // Edges that could not get a clear route; drawn as plain elbows and flagged on the result.
+  const degraded = new Set<string>();
+
+  // Redundancy row connectors: facing borders on a line inside both members' vertical ranges, in the
+  // edge's own direction. If another member sits between the two, the connector dips into the group's
+  // bottom padding instead. If ELK still put the two in different rows (an outside edge into only one
+  // member can do that), there is no straight line and a plain elbow is used.
   for (const e of g.edges) {
     if (!rowEdge(e.from, e.to)) continue;
     const a = rects.get(e.from)!;
     const b = rects.get(e.to)!;
     const [l, r] = a.x <= b.x ? [a, b] : [b, a];
+    const lo = Math.max(l.y, r.y);
+    const hi = Math.min(l.y + l.height, r.y + r.height);
+    if (hi - lo < 1 || r.x < l.x + l.width) {
+      points.set(e.id, elbowRoute(a, b));
+      continue;
+    }
     const between = [...rects.entries()].some(
       ([id, m]) => g.nodes[id] && m !== l && m !== r && m.x >= l.x + l.width && m.x + m.width <= r.x && m.y < l.y + l.height && m.y + m.height > l.y,
     );
     let pts: Pt[];
     if (!between) {
-      const cy = l.y + l.height / 2;
+      const cy = (lo + hi) / 2;
       pts = [{ x: l.x + l.width, y: cy }, { x: r.x, y: cy }];
     } else {
       const dip = Math.max(l.y + l.height, r.y + r.height) + GROUP_PAD.bottom / 2;
@@ -256,8 +268,8 @@ export async function layoutDiagram(g: DisplayGraph, pinned: Record<string, { x:
     const span = Math.max(...[...rects.values()].map((r) => r.y + r.height)) + NODE.layerGap;
 
     // Main side: the nearest row below the node (else above it) reachable by a clear vertical stub and a
-    // clear horizontal run to the channel. No such row means the route would cross something: fail loudly.
-    const exitRow = (edgeId: string, m: Rect, channelX: number): { y: number; from: Pt } => {
+    // clear horizontal run to the channel; null if there is none.
+    const exitRow = (m: Rect, channelX: number): { y: number; from: Pt } | null => {
       const x = m.x + m.width / 2;
       for (let d = 8; d <= span; d += 2) {
         for (const dir of [1, -1] as const) {
@@ -269,7 +281,7 @@ export async function layoutDiagram(g: DisplayGraph, pinned: Record<string, { x:
           }
         }
       }
-      throw new Error(`layout: no clear row out of the main flow for edge ${edgeId}`);
+      return null;
     };
     // Lane side: enter the node's left side at its centre line (crossing only its group's side border).
     // Several edges on one node spread over its height.
@@ -286,8 +298,9 @@ export async function layoutDiagram(g: DisplayGraph, pinned: Record<string, { x:
       return t.y + t.height / 2 + (k - (n - 1) / 2) * Math.min(8, (t.height - 8) / Math.max(1, n - 1));
     };
     // If something sits left of the lane node, come in from above instead: a row in the gap above its
-    // lane group, then straight down through its own groups into the node's top.
-    const laneRoute = (edgeId: string, laneId: string, channelX: number): Pt[] => {
+    // lane group (only ~NODE.gap tall, so it can run out), then straight down into the node's top.
+    // null if neither works.
+    const laneRoute = (laneId: string, channelX: number): Pt[] | null => {
       const t = nodeBoxes.get(laneId) ?? rects.get(laneId)!;
       const y = entryY(laneId, t);
       const others = [...nodeBoxes.entries()].filter(([id]) => id !== laneId).map(([, r]) => air(r));
@@ -303,7 +316,7 @@ export async function layoutDiagram(g: DisplayGraph, pinned: Record<string, { x:
           return [{ x: channelX, y: ry }, { x: tx, y: ry }, { x: tx, y: t.y }];
         }
       }
-      throw new Error(`layout: no clear way into lane node ${laneId} for edge ${edgeId}`);
+      return null;
     };
 
     [...cross]
@@ -313,8 +326,14 @@ export async function layoutDiagram(g: DisplayGraph, pinned: Record<string, { x:
         const mainId = fromLane ? e.to : e.from;
         const laneId = fromLane ? e.from : e.to;
         const channelX = mainRight + CHANNEL_MARGIN + i * CHANNEL_STEP;
-        const exit = exitRow(e.id, rects.get(mainId)!, channelX);
-        const into = laneRoute(e.id, laneId, channelX);
+        const exit = exitRow(rects.get(mainId)!, channelX);
+        const into = exit && laneRoute(laneId, channelX);
+        if (!exit || !into) {
+          // Never throw on arbitrary diagrams: fall back to an elbow and flag it.
+          degraded.add(e.id);
+          points.set(e.id, elbowRoute(rects.get(e.from)!, rects.get(e.to)!));
+          return;
+        }
         const pts = [exit.from, { x: exit.from.x, y: exit.y }, { x: channelX, y: exit.y }, ...into];
         points.set(e.id, fromLane ? pts.reverse() : pts);
       });
@@ -340,8 +359,14 @@ export async function layoutDiagram(g: DisplayGraph, pinned: Record<string, { x:
   // Pinned nodes keep their stored position; their edges are redrawn as elbows.
   const rectOf = (id: string): Rect => out.nodes[id] ?? out.groups[id];
   for (const e of g.edges) {
-    const pts = pinned[e.from] || pinned[e.to] ? elbowRoute(rectOf(e.from), rectOf(e.to)) : (points.get(e.id) ?? []);
+    let pts = pinned[e.from] || pinned[e.to] ? elbowRoute(rectOf(e.from), rectOf(e.to)) : (points.get(e.id) ?? []);
+    if (pts.length < 2) {
+      // ELK returned no route for this edge.
+      pts = elbowRoute(rectOf(e.from), rectOf(e.to));
+      degraded.add(e.id);
+    }
     const le: LaidOutEdge = { id: e.id, points: pts };
+    if (degraded.has(e.id)) le.degraded = true;
     if (e.label !== undefined) {
       const mid = pathMidpoint(pts);
       if (mid) le.labelAt = mid;

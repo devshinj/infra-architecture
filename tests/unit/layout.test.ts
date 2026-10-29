@@ -6,6 +6,7 @@ import { layoutDiagram, type Layout, type Rect } from "@/canvas/layout";
 import { findOverlaps } from "@/canvas/overlap";
 import { textWidth, truncate } from "@/canvas/text";
 import { applyCommand, applyCommands } from "@/domain/apply";
+import type { Command } from "@/domain/commands";
 import type { DiagramState } from "@/domain/types";
 import { emptyState } from "@/domain/types";
 import { fx, isInExternal } from "../fixtures/spike";
@@ -126,6 +127,60 @@ test("redundancy members sit in one row (s4 aurora-cluster)", async () => {
   const l = await lay(fx("s4"));
   const ys = ["aurora-writer", "aurora-reader-1", "aurora-reader-2"].map((id) => l.nodes[id].y);
   expect(new Set(ys).size).toBe(1);
+});
+
+test("many cross edges into crowded lane nodes never throw", async () => {
+  const cmds: Command[] = [
+    { op: "add_group", id: "vpc", group_kind: "vpc", label: "VPC", parent: null },
+    { op: "add_group", id: "sub", group_kind: "subnet_private", label: "내부", parent: "vpc" },
+    { op: "add_group", id: "ext", group_kind: "external_service", label: "외부", parent: null },
+    { op: "add_group", id: "ext-inner", group_kind: "subnet_private", label: "외부 안쪽", parent: "ext" },
+    { op: "add_node", id: "x-left", kind: "external_api", label: "왼쪽 API", parent: "ext-inner" },
+    { op: "add_node", id: "x-in", kind: "external_api", label: "안쪽 API", parent: "ext-inner" },
+  ];
+  for (let i = 0; i < 10; i++) {
+    cmds.push({ op: "add_node", id: `m${i}`, kind: "app_server", label: `APP-${i}`, parent: i % 2 ? "sub" : "vpc" });
+    cmds.push({ op: "add_edge", from: `m${i}`, to: "x-in", edge_kind: "request" });
+    if (i < 4) cmds.push({ op: "add_edge", from: `m${i}`, to: "x-left", edge_kind: "request" });
+    if (i > 0) cmds.push({ op: "add_edge", from: `m${i - 1}`, to: `m${i}`, edge_kind: "request" });
+  }
+  const { state, errors } = applyCommands(emptyState(), cmds);
+  expect(errors).toEqual([]);
+  const g = buildDisplayGraph(state, defaultDisplayOptions(state));
+  const l = await layoutDiagram(g, {});
+  expect(l.edges).toHaveLength(g.edges.length);
+  for (const e of l.edges) expect(e.points.length).toBeGreaterThanOrEqual(2);
+  // The gap above the lane group runs out, so some edges fall back to a flagged elbow.
+  expect(l.edges.some((e) => e.degraded)).toBe(true);
+  expect(findOverlaps(l)).toEqual([]);
+});
+
+test("redundancy connector stays on both borders when the members land in different rows", async () => {
+  const { state, errors } = applyCommands(emptyState(), [
+    { op: "add_group", id: "vpc", group_kind: "vpc", label: "VPC", parent: null },
+    { op: "add_node", id: "front", kind: "app_server", label: "FRONT", parent: "vpc" },
+    { op: "add_group", id: "pair", group_kind: "redundancy_group", label: "이중화", parent: "vpc" },
+    { op: "add_node", id: "a", kind: "db_rdb", label: "A", parent: "pair" },
+    { op: "add_node", id: "b", kind: "db_rdb", label: "B", parent: "pair" },
+    { op: "add_group", id: "inner", group_kind: "subnet_private", label: "안쪽", parent: "pair" },
+    { op: "add_node", id: "c", kind: "app_server", label: "C", parent: "inner" },
+    { op: "add_edge", from: "front", to: "a", edge_kind: "request" },
+    { op: "add_edge", from: "a", to: "c", edge_kind: "request" },
+    { op: "add_edge", from: "c", to: "b", edge_kind: "request" },
+    { op: "add_edge", from: "a", to: "b", edge_kind: "replication" },
+  ]);
+  expect(errors).toEqual([]);
+  const l = await lay(state);
+  // a → c → b through a nested group (not a direct member, so ELK keeps those edges) splits the row.
+  expect(l.nodes.a.y).toBeLessThan(l.nodes.b.y);
+  const e = l.edges.find((x) => x.id === Object.values(state.edges).find((d) => d.from === "a" && d.to === "b")!.id)!;
+  expect(onBorder(e.points[0], l.nodes.a)).toBe(true);
+  expect(onBorder(e.points[e.points.length - 1], l.nodes.b)).toBe(true);
+  for (let i = 1; i < e.points.length; i++) {
+    const [p, q] = [e.points[i - 1], e.points[i]];
+    expect(Math.abs(p.x - q.x) < 0.5 || Math.abs(p.y - q.y) < 0.5).toBe(true);
+  }
+  expect(findOverlaps(l)).toEqual([]);
 });
 
 test("long labels truncate without overlap", async () => {
