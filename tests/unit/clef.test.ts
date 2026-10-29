@@ -62,10 +62,31 @@ describe("clef", () => {
     expect(q.criteria).toEqual({
       structure_change: "구성도에 노드/연결/영역을 추가·삭제·수정해 달라는 요청",
       question: "용어·구성에 대한 질문이나 설명 요청",
-      missing_info_answer: "IP·스펙·hostname 같은 빠진 정보에 대한 답",
+      missing_info_answer:
+        "채워야 할 정보에 대한 값만 알려 주는 답(예: '4코어 16기가', '10.0.2.11, 10.0.2.12', 'RAM 은 32GB'). 새 노드·연결을 만들라는 말이 없으면 이것",
       history: "이전 버전으로 되돌리기나 변경 이력 요청",
       other: "그 밖의 대화",
     });
+  });
+
+  test("state includes open items line when given", async () => {
+    const { client, calls } = setup([() => ok(choice("missing_info_answer"))]);
+    await client.classifyIntent("4코어 16기가", { lastAssistant: "알려 주세요", openItems: ["WAS#1 CPU", "WAS#1 RAM"] });
+    expect(calls[0]!.body.state).toBe("직전 AI 메시지: 알려 주세요\n채워야 할 정보: WAS#1 CPU, WAS#1 RAM\n사용자: 4코어 16기가");
+    await client.classifyIntent("a", { openItems: [] });
+    expect(calls[1]!.body.state).toBe("직전 AI 메시지: \n사용자: a");
+  });
+
+  test("open items are capped", async () => {
+    const { client, calls } = setup([() => ok(choice("other"))]);
+    await client.classifyIntent("a", { openItems: Array.from({ length: 30 }, (_, i) => `N${i} CPU`) });
+    const line = calls[0]!.body.state.split("\n")[1]!;
+    expect(line.startsWith("채워야 할 정보: ")).toBe(true);
+    expect(line).toContain("N19 CPU");
+    expect(line).not.toContain("N20 CPU");
+    await client.classifyIntent("a", { openItems: Array.from({ length: 20 }, () => "가".repeat(100)) });
+    const body = calls[1]!.body.state.split("\n")[1]!.slice("채워야 할 정보: ".length);
+    expect(body.length).toBeLessThanOrEqual(600);
   });
 
   test("truncates last assistant to 300 chars", async () => {

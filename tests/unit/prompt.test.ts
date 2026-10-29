@@ -143,6 +143,34 @@ describe("parseMentions", () => {
   });
 });
 
+describe("missing block", () => {
+  const items = [
+    { targetKind: "node" as const, targetId: "was-1", key: "cpu", label: "CPU", unknown: false },
+    { targetKind: "node" as const, targetId: "was-1", key: "ram", label: "RAM", unknown: true },
+    { targetKind: "edge" as const, targetId: "e-was-1-db-1", key: "label", label: "프로토콜/포트", unknown: false },
+  ];
+  const user = (intent: Parameters<typeof buildMessages>[0]["intent"]) =>
+    buildMessages({ intent, text: "4코어", state: sample(), mentions: [], history: [], missing: items }).at(-1)!.content;
+
+  test("missing block only for missing_info_answer", () => {
+    const u = user("missing_info_answer");
+    expect(u).toContain("채워야 할 정보:\nwas-1 cpu(CPU)\ne-was-1-db-1 label(프로토콜/포트)\n\n요청: 4코어");
+    for (const i of ["structure_change", "question", "other", "history", null] as const) {
+      expect(user(i)).not.toContain("채워야 할 정보");
+    }
+  });
+
+  test("unknown items are excluded from the block", () => {
+    expect(user("missing_info_answer")).not.toContain("was-1 ram");
+  });
+
+  test("system prompt has the fill-only rule", () => {
+    expect(SYSTEM_PROMPT).toContain(
+      "- 사용자가 채워야 할 정보의 값을 알려 주면 update_node(attrs) 또는 update_edge(label) 로 그 값만 반영한다. 노드·연결을 새로 만들지 않는다.",
+    );
+  });
+});
+
 describe("buildMessages", () => {
   const hist = (n: number) =>
     Array.from({ length: n }, (_, i) => ({ role: (i % 2 ? "assistant" : "user") as "user" | "assistant", content: `m${i}` }));

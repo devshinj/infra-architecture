@@ -142,7 +142,24 @@ async function main(): Promise<number> {
       irows.push([text, expect, r ? r.intent : "(실패)", r ? r.confidence.toFixed(2) : "-", sec(Date.now() - t0), ok ? "O" : "X"]);
     }
     console.log(formatTable(["문장", "기대", "결과", "신뢰도", "시간", "일치"], irows));
-    console.log(`정답률: ${accuracy(oks)}`);
+    console.log(`문맥 없음 ${accuracy(oks)}`);
+
+    // 문맥 있는 분류: 스파이크에서 실패했던 값만 알려 주는 답 2건.
+    const ctx = {
+      lastAssistant: "WAS#1·WAS#2 의 CPU·RAM·IP 를 알려 주세요.",
+      openItems: ["WAS#1 CPU", "WAS#1 RAM", "WAS#1 IP", "WAS#2 CPU", "WAS#2 RAM", "WAS#2 IP"],
+    };
+    const crows: string[][] = [];
+    const coks: boolean[] = [];
+    for (const text of ["WAS 두 대 다 4코어 16기가야", "10.0.2.11, 10.0.2.12"]) {
+      const t0 = Date.now();
+      const r = await clef.classifyIntent(text, ctx);
+      const ok = r?.intent === "missing_info_answer";
+      coks.push(ok);
+      crows.push([text, "missing_info_answer", r ? r.intent : "(실패)", r ? r.confidence.toFixed(2) : "-", sec(Date.now() - t0), ok ? "O" : "X"]);
+    }
+    console.log(formatTable(["문장(문맥 있음)", "기대", "결과", "신뢰도", "시간", "일치"], crows));
+    console.log(`문맥 있음 ${accuracy(coks)}`);
   }
 
   if (health.qwen !== "ok" || health.clef !== "ok") failed = true;

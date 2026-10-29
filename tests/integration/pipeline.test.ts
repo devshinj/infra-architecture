@@ -4,6 +4,7 @@ import { describe, expect, test, vi } from "vitest";
 import { db } from "@/db/client";
 import { diagramVersions } from "@/db/schema";
 import { applyCommands } from "@/domain/apply";
+import { computeMissing } from "@/domain/missing";
 import type { DiagramState } from "@/domain/types";
 import { emptyState } from "@/domain/types";
 import type { ChatEvent } from "@/server/chat/events";
@@ -446,7 +447,7 @@ describe("runChatTurn", () => {
       { role: "assistant", content: "첫 답" },
     ]);
     expect(msgs.at(-1)!.content).toContain("요청: 둘째 요청");
-    expect(clef.calls[0]).toEqual({ input: "둘째 요청", context: { lastAssistant: "첫 답" } });
+    expect(clef.calls[0]).toEqual({ input: "둘째 요청", context: { lastAssistant: "첫 답", openItems: [] } });
   });
 
   test("unexpected error keeps applied work as aborted version and hides the raw error", async () => {
@@ -555,5 +556,35 @@ describe("runChatTurn", () => {
     expect(vs[0]!.state).toEqual(s2);
     const msgs = await listMessages(ids.diagramId);
     expect(msgs[1]!.meta).toMatchObject({ status: "complete", applied: S2_CMDS, version: 1 });
+  });
+
+  test("missing_info_answer turn passes open items to clef and the prompt", async () => {
+    const ids = await makeOwnedDiagram();
+    const st = emptyState();
+    st.nodes["was-1"] = { id: "was-1", kind: "was", label: "WAS#1", parent: null, attrs: { cpu: "4코어" }, unknown: ["ip"] };
+    st.nodes["db-1"] = { id: "db-1", kind: "db_rdb", label: "DB", parent: null, attrs: {} };
+    st.edges["e-was-1-db-1"] = { id: "e-was-1-db-1", from: "was-1", to: "db-1", edgeKind: "request", label: "" };
+    await createVersion(ids.diagramId, st, { source: "import" });
+    const missing = computeMissing(st).items.filter((m) => !m.unknown);
+    expect(missing.length).toBeGreaterThan(0);
+
+    const clef = fakeClef({ intent: "missing_info_answer", confidence: 0.9 });
+    const qwen = fakeQwen(JSON.stringify({ op: "update_node", id: "was-1", attrs: { ram: "16GB" } }));
+    await turn(ids, "RAM 은 16GB", { qwen, clef });
+
+    const ctx = (clef.calls[0] as { context: { openItems?: string[] } }).context;
+    expect(ctx.openItems).toContain("WAS#1 RAM");
+    expect(ctx.openItems).toContain("WAS#1 → DB 프로토콜/포트");
+    expect(ctx.openItems).not.toContain("WAS#1 IP"); // 모름 항목 제외
+    expect(ctx.openItems).not.toContain("WAS#1 CPU"); // 이미 채워짐
+    expect(ctx.openItems).toHaveLength(missing.length);
+
+    const msgs = qwen.calls[0]!;
+    expect(msgs[0]).toEqual({ role: "system", content: SYSTEM_PROMPT });
+    const user = msgs.at(-1)!.content;
+    expect(user).toContain("채워야 할 정보:\nwas-1 ram(RAM)");
+    expect(user).toContain("e-was-1-db-1 label(프로토콜/포트)");
+    expect(user).not.toContain("was-1 ip(IP)");
+    expect(user.indexOf("채워야 할 정보:")).toBeLessThan(user.indexOf("요청: RAM 은 16GB"));
   });
 });

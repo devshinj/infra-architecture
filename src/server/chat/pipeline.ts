@@ -99,7 +99,15 @@ async function lockedTurn(args: TurnArgs, deps: ChatDeps): Promise<void> {
     return;
   }
 
-  const classified = await deps.clef.classifyIntent(clean, { lastAssistant }, signal);
+  // 차례 시작 상태의 열린(모름 아닌) 빠진 정보. 값만 알려 주는 답을 분류·반영하는 데 쓴다.
+  const openMissing = computeMissing(state).items.filter((m) => !m.unknown);
+  const nameOf = (id: string) => state.nodes[id]?.label ?? state.groups[id]?.label ?? id;
+  const openItems = openMissing.map((m) => {
+    if (m.targetKind === "node") return `${nameOf(m.targetId)} ${m.label}`;
+    const e = state.edges[m.targetId];
+    return e ? `${nameOf(e.from)} → ${nameOf(e.to)} ${m.label}` : `${m.targetId} ${m.label}`;
+  });
+  const classified = await deps.clef.classifyIntent(clean, { lastAssistant, openItems }, signal);
   const intent: Intent | null =
     classified && classified.confidence >= INTENT_MIN_CONFIDENCE ? classified.intent : null;
   emit({ t: "start", messageId: userMsg.id, intent });
@@ -116,7 +124,7 @@ async function lockedTurn(args: TurnArgs, deps: ChatDeps): Promise<void> {
     emit({ t: "open_history" });
   } else {
     const answerMode = intent === "question" || intent === "other";
-    const messages = buildMessages({ intent, text: clean, state, mentions, history });
+    const messages = buildMessages({ intent, text: clean, state, mentions, history, missing: openMissing });
     emit({ t: "status", phase: "thinking" });
 
     const skip = (reason: string, key: string) => {

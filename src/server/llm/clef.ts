@@ -18,7 +18,7 @@ export interface ClefClient {
   ): Promise<ClefAnswers>;
   classifyIntent(
     input: string,
-    context: { lastAssistant?: string },
+    context: { lastAssistant?: string; openItems?: string[] },
     signal?: AbortSignal,
   ): Promise<{ intent: Intent; confidence: number } | null>;
 }
@@ -38,6 +38,9 @@ const RESTART_DELAYS = [5000, 15000, 45000];
 const MAX_RETRIES = 3;
 // classifyIntent 는 매 대화 턴 앞에서 돌므로 대기열·재시도를 포함해 3초 안에 끝낸다.
 const CLASSIFY_CAP_MS = 3000;
+// 빠진 정보 문맥은 앞 20개, 600자까지만 넘긴다.
+const OPEN_ITEMS_MAX = 20;
+const OPEN_ITEMS_CHARS = 600;
 
 interface RunOpts {
   maxRetries: number;
@@ -54,7 +57,8 @@ const INTENT_QUESTION = {
     criteria: {
       structure_change: "구성도에 노드/연결/영역을 추가·삭제·수정해 달라는 요청",
       question: "용어·구성에 대한 질문이나 설명 요청",
-      missing_info_answer: "IP·스펙·hostname 같은 빠진 정보에 대한 답",
+      missing_info_answer:
+        "채워야 할 정보에 대한 값만 알려 주는 답(예: '4코어 16기가', '10.0.2.11, 10.0.2.12', 'RAM 은 32GB'). 새 노드·연결을 만들라는 말이 없으면 이것",
       history: "이전 버전으로 되돌리기나 변경 이력 요청",
       other: "그 밖의 대화",
     },
@@ -208,13 +212,14 @@ export function createClefClient(
 
   async function classifyIntent(
     input: string,
-    context: { lastAssistant?: string },
+    context: { lastAssistant?: string; openItems?: string[] },
     signal?: AbortSignal,
   ): Promise<{ intent: Intent; confidence: number } | null> {
     if (!cfg) return null;
     try {
       const prev = (context.lastAssistant ?? "").slice(0, 300);
-      const state = `직전 AI 메시지: ${prev}\n사용자: ${input}`;
+      const open = (context.openItems ?? []).slice(0, OPEN_ITEMS_MAX).join(", ").slice(0, OPEN_ITEMS_CHARS);
+      const state = `직전 AI 메시지: ${prev}\n${open ? `채워야 할 정보: ${open}\n` : ""}사용자: ${input}`;
       const answers = await run(state, INTENT_QUESTION, {
         maxRetries: 1,
         retryOn429Only: true,

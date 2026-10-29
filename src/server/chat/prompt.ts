@@ -1,9 +1,11 @@
 import { EDGE_KINDS, GROUP_KINDS, NODE_KINDS } from "@/domain/catalog";
+import type { MissingItem } from "@/domain/missing";
 import type { DiagramState } from "@/domain/types";
 import type { Intent } from "@/server/llm/clef";
 import type { ChatMessage } from "@/server/llm/qwen";
 
 export const HISTORY_LIMIT = 20;
+const MISSING_LINES_MAX = 40;
 
 // 허용값 목록은 catalog 에서 만든다(손으로 복사하지 않는다).
 // k8s_cluster 는 그룹으로만 쓴다(노드 kind 목록에서 제외).
@@ -50,6 +52,7 @@ EDGE_KIND 허용값: ${EDGE_KIND_LIST}
 - CDN, WAF, DNS 처럼 VPC 밖 전역 서비스는 VPC 밖(리전 그룹 또는 최상위)에 둔다.
 - 사용자(client_*)에서 시작하는 진입 연결을 반드시 그린다.
 - warn 과 report_missing 명령은 내지 않는다. 위험 진단은 다른 단계가 맡는다.
+- 사용자가 채워야 할 정보의 값을 알려 주면 update_node(attrs) 또는 update_edge(label) 로 그 값만 반영한다. 노드·연결을 새로 만들지 않는다.
 - 사용자가 질문만 하면 구성은 건드리지 않는다. 질문이면 명령 없이 {"op":"say","text":"…"} 한두 문장으로만 답한다.`;
 
 export const ANSWER_PROMPT = `너는 인프라 아키텍처 구성도 도구의 도우미다.
@@ -108,11 +111,14 @@ export function buildMessages(input: {
   state: DiagramState;
   mentions: Mention[];
   history: { role: "user" | "assistant"; content: string }[];
+  missing?: MissingItem[];
 }): ChatMessage[] {
   const system = input.intent === "question" || input.intent === "other" ? ANSWER_PROMPT : SYSTEM_PROMPT;
   const labelOf = (id: string, fallback: string) => input.state.nodes[id]?.label ?? input.state.groups[id]?.label ?? fallback;
   const refs = input.mentions.length ? input.mentions.map((m) => `${m.id} ${labelOf(m.id, m.label).replace(/\s+/g, " ")}`).join("\n") : "없음";
-  const user = `현재 구성:\n${summarizeState(input.state)}\n\n참조 노드:\n${refs}\n\n요청: ${input.text}`;
+  const open = input.intent === "missing_info_answer" ? (input.missing ?? []).filter((m) => !m.unknown).slice(0, MISSING_LINES_MAX) : [];
+  const missingBlock = open.length ? `채워야 할 정보:\n${open.map((m) => `${m.targetId} ${m.key}(${m.label})`).join("\n")}\n\n` : "";
+  const user = `현재 구성:\n${summarizeState(input.state)}\n\n참조 노드:\n${refs}\n\n${missingBlock}요청: ${input.text}`;
   return [
     { role: "system", content: system },
     ...input.history.slice(-HISTORY_LIMIT).map((h) => ({ role: h.role, content: h.content })),
