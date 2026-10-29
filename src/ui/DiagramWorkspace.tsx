@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useCallback, useMemo, useState, useTransition } from "react";
 
 import {
@@ -12,12 +13,14 @@ import {
 } from "@/app/(app)/actions";
 import { Canvas, type CanvasOptions, type DiffMarks } from "@/canvas/Canvas";
 import { defaultDisplayOptions } from "@/canvas/display";
+import { applyCommand } from "@/domain/apply";
 import { diffStates } from "@/domain/diff";
 import type { DiagramState } from "@/domain/types";
 
 import styles from "./app.module.css";
 import type { VersionRow } from "./HistoryPanel";
-import { RightPanel } from "./RightPanel";
+import { type ChatLine, useChatTurn } from "./chat/useChatTurn";
+import { RightPanel, type Tab } from "./RightPanel";
 
 type Pinned = Record<string, { x: number; y: number }>;
 type Mode =
@@ -31,6 +34,8 @@ export interface DiagramWorkspaceProps {
   latest: { number: number; state: DiagramState };
   initialPinned: Pinned;
   samples: { id: string; title: string }[];
+  /** Saved conversation (Task 10 maps server messages to lines). */
+  initialChat?: ChatLine[];
 }
 
 /** Compare view draws current ∪ old so removed nodes appear as ghosts beside the live ones. */
@@ -43,7 +48,8 @@ const unionState = (old: DiagramState, cur: DiagramState): DiagramState => ({
 
 const optionsFor = (state: DiagramState): CanvasOptions => ({ ...defaultDisplayOptions(state), hoverLabels: true });
 
-export function DiagramWorkspace({ diagramId, name, latest, initialPinned, samples }: DiagramWorkspaceProps) {
+export function DiagramWorkspace({ diagramId, name, latest, initialPinned, samples, initialChat = [] }: DiagramWorkspaceProps) {
+  const router = useRouter();
   const [current, setCurrent] = useState(latest);
   const [pinned, setPinned] = useState<Pinned>(initialPinned);
   const [options, setOptions] = useState<CanvasOptions>(() => optionsFor(latest.state));
@@ -68,6 +74,7 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
   }, [mode, current.state]);
 
   const live = mode.kind === "live";
+  const [tab, setTab] = useState<Tab>("대화");
   const fail = (e: unknown) => setError(e instanceof Error ? e.message : "처리하지 못했어요");
   const run = (fn: () => Promise<void>) =>
     startBusy(async () => {
@@ -83,6 +90,24 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
     listVersionsAction(diagramId).then((v) => setVersions(v as VersionRow[]), fail);
   }, [diagramId]);
 
+  // Live chat: each server-applied command is replayed on the live state so nodes appear one by one.
+  const refreshFromServer = () => {
+    router.refresh();
+    loadVersions();
+  };
+  const chat = useChatTurn({
+    diagramId,
+    initial: initialChat,
+    onCommand: (cmd) => setCurrent((c) => ({ number: c.number, state: applyCommand(c.state, cmd).state })),
+    onDone: refreshFromServer,
+    onOpenHistory: () => {
+      setTab("이력");
+      loadVersions();
+    },
+    onInterrupted: refreshFromServer,
+  });
+  const locked = chat.busy; // no history view/compare/restore, edit mode or sample import while the AI answers
+
   const enter = (next: Mode, state: DiagramState) => {
     setMode(next);
     setEditMode(false);
@@ -94,12 +119,14 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
   };
 
   const view = (number: number) =>
+    !locked &&
     run(async () => {
       const state = await getVersionAction(diagramId, number);
       if (state) enter({ kind: "view", number, state }, state);
     });
 
   const compare = (number: number) =>
+    !locked &&
     run(async () => {
       const old = await getVersionAction(diagramId, number);
       if (!old) return;
@@ -108,12 +135,14 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
     });
 
   const restore = (number: number) =>
+    !locked &&
     run(async () => {
       await restoreVersionAction(diagramId, number);
       loadVersions();
     });
 
   const importSample = (sampleId: string) =>
+    !locked &&
     run(async () => {
       await importSampleAction(diagramId, sampleId);
       await clearPinnedAction(diagramId);
@@ -158,7 +187,7 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
           <Canvas
             state={shown}
             pinned={live ? pinned : {}}
-            editMode={live && editMode}
+            editMode={live && !locked && editMode}
             options={options}
             motion={motion}
             fitKey={`${current.number}:${mode.kind}:${mode.kind === "live" ? "" : mode.number}`}
@@ -166,7 +195,7 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
             onSelect={(id) => setOptions((o) => ({ ...o, selectedId: id }))}
             onPinnedChange={live ? onPinnedChange : () => {}}
             onAutoArrange={onAutoArrange}
-            onEditModeChange={(v) => live && setEditMode(v)}
+            onEditModeChange={(v) => live && !locked && setEditMode(v)}
             onMotionChange={setMotion}
             {...(mode.kind === "compare" ? { diffMarks: mode.marks } : {})}
           />
@@ -178,7 +207,9 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
         onSelect={(id) => setOptions((o) => ({ ...o, selectedId: id }))}
         samples={samples}
         onImportSample={importSample}
-        importing={busy}
+        importing={busy || locked}
+        tab={tab}
+        onTabChange={setTab}
         onHistoryOpen={loadVersions}
         history={{
           versions,

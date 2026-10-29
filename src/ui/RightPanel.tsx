@@ -21,10 +21,18 @@ export interface RightPanelProps {
   history: HistoryPanelProps;
   /** Fired when the 이력 tab becomes active so the parent can (re)load versions. */
   onHistoryOpen?(): void;
+  /** Optional controlled tab (e.g. the chat switches to 이력 on `open_history`). Uncontrolled when omitted. */
+  tab?: Tab;
+  onTabChange?(tab: Tab): void;
 }
 
-export function RightPanel({ state, selectedId, onSelect, samples, onImportSample, importing = false, history, onHistoryOpen }: RightPanelProps) {
-  const [tab, setTab] = useState<Tab>("대화");
+export function RightPanel({ state, selectedId, onSelect, samples, onImportSample, importing = false, history, onHistoryOpen, tab: controlledTab, onTabChange }: RightPanelProps) {
+  const [innerTab, setInnerTab] = useState<Tab>("대화");
+  const tab = controlledTab ?? innerTab;
+  const setTab = (t: Tab) => {
+    setInnerTab(t);
+    onTabChange?.(t);
+  };
   const [before, setBefore] = useState<Tab | null>(null); // tab to return to when the selection clears
   const [seenSelected, setSeenSelected] = useState<string | null>(selectedId);
 
