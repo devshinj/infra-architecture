@@ -10,6 +10,7 @@
     "test": "vitest run --project node --project jsdom",
     "test:int": "vitest run --project integration",
     "test:e2e": "playwright test",
+    "smoke:llm": "tsx --env-file=.env scripts/smoke-llm.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate"
   },
