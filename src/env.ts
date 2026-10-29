@@ -8,6 +8,12 @@ const envSchema = z.object({
   SMTP_USER: z.string().optional(),
   SMTP_PASS: z.string().optional(),
   SMTP_FROM: z.string().optional(),
+  QWEN_CODER_KEY: z.string().optional(),
+  QWEN_MODEL: z.string().default("qwen3.8-flash-next"),
+  QWEN_API_URL: z.string().optional(),
+  CLEF_API_KEY: z.string().optional(),
+  CLEF_API_URL: z.string().default("http://192.168.102.105:30000"),
+  CLEF_MAX_CONCURRENCY: z.coerce.number().int().positive().default(2),
   APP_URL: z.string().default("http://localhost:3000"),
 });
 

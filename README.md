@@ -55,6 +55,26 @@
    npm run dev
    ```
 
+## AI 서버 설정
+
+AI 대화 기능에 쓰는 선택 값입니다. 모두 비워 두어도 앱은 시작되며, 이 경우 AI 기능만 꺼집니다. 키는 `.env` 에만 넣고 저장소에 올리지 마세요.
+
+```env
+# 생성 모델 (OpenAI 호환 서버)
+QWEN_CODER_KEY=발급받은-키
+QWEN_MODEL=qwen3.8-flash-next
+# 내부망 예: 192.168.102.107:8000/v1   외부 예: https://open-llm.cudo.co.kr:8877/v1
+# 끝의 /chat/completions 나 /, 스킴 생략은 자동으로 정리됩니다.
+QWEN_API_URL=192.168.102.107:8000/v1
+
+# 의도 분류 (Clef, 선택)
+CLEF_API_KEY=발급받은-키
+CLEF_API_URL=http://192.168.102.105:30000
+CLEF_MAX_CONCURRENCY=2
+```
+
+로그인한 상태에서 `GET /api/llm/health` 로 연결 상태를 확인할 수 있습니다. 각 항목은 `ok`(정상), `missing`(설정 없음), `down`(연결 실패) 중 하나이며 결과는 60초 동안 캐시됩니다.
+
 ## 테스트
 
 | 명령 | 설명 | 사전 준비 |
