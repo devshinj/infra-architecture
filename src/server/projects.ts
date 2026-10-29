@@ -130,14 +130,21 @@ export async function getDiagram(userId: string, diagramId: string) {
   return { ...d, latest };
 }
 
+const PIN_KEY_RE = /^[a-z0-9][a-z0-9-]{0,63}$/;
 const coord = z.number().refine((v) => Number.isFinite(v) && Math.abs(v) <= 1_000_000);
 const pinnedSchema = z
-  .record(z.string().regex(/^[a-z0-9][a-z0-9-]{0,63}$/), z.object({ x: coord, y: coord }).strict())
+  .record(z.string().regex(PIN_KEY_RE), z.object({ x: coord, y: coord }).strict())
   .refine((o) => Object.keys(o).length <= 2000);
 
 function parsePinned(positions: unknown): PinnedPositions {
-  const r = Array.isArray(positions) ? null : pinnedSchema.safeParse(positions);
-  if (!r || !r.success) throw new Error("위치 정보가 올바르지 않습니다");
+  const fail = () => new Error("위치 정보가 올바르지 않습니다");
+  if (typeof positions !== "object" || positions === null || Array.isArray(positions)) throw fail();
+  const proto = Object.getPrototypeOf(positions);
+  if (proto !== Object.prototype && proto !== null) throw fail();
+  // zod 는 __proto__ 키를 프로토타입에 대입해 조용히 버리므로, 원본 키를 먼저 직접 검사한다.
+  if (!Object.keys(positions).every((k) => PIN_KEY_RE.test(k))) throw fail();
+  const r = pinnedSchema.safeParse(positions);
+  if (!r.success) throw fail();
   return r.data;
 }
 

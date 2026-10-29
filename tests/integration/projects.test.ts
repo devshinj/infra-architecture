@@ -98,6 +98,7 @@ describe("projects", () => {
       { "Bad Key": { x: 1, y: 2 } },
       { "was-1": { x: 1, y: 2, z: 3 } },
       { "was-1": { x: 2_000_000, y: 0 } },
+      JSON.parse('{"__proto__":{"x":1,"y":2}}'),
     ];
     for (const b of bad) {
       await expect(savePinnedPositions(a, d.id, b as never)).rejects.toThrow("위치 정보가 올바르지 않습니다");
