@@ -9,6 +9,7 @@ export interface ClefClient {
   classifyIntent(
     input: string,
     context: { lastAssistant?: string },
+    signal?: AbortSignal,
   ): Promise<{ intent: Intent; confidence: number } | null>;
 }
 
@@ -25,6 +26,16 @@ const TIMEOUT_MS = 30_000;
 const RATE_DELAY = 1000;
 const RESTART_DELAYS = [5000, 15000, 45000];
 const MAX_RETRIES = 3;
+// classifyIntent 는 매 대화 턴 앞에서 돌므로 대기열·재시도를 포함해 3초 안에 끝낸다.
+const CLASSIFY_CAP_MS = 3000;
+
+interface RunOpts {
+  maxRetries: number;
+  retryOn429Only: boolean;
+  timeoutMs: number; // 요청 1건의 제한
+  capMs?: number; // 대기열 대기·재시도를 포함한 전체 제한
+  signal?: AbortSignal;
+}
 
 const INTENT_QUESTION = {
   intent: {
@@ -55,9 +66,12 @@ export function createClefClient(
   deps: {
     fetch?: typeof fetch;
     sleep?: (ms: number, signal?: AbortSignal) => Promise<void>;
+    classifyCapMs?: number;
   } = {},
 ): ClefClient {
   const doFetch = deps.fetch ?? fetch;
+  const baseUrl = cfg?.url.replace(/\/+$/, "");
+  const classifyCap = deps.classifyCapMs ?? CLASSIFY_CAP_MS;
   const sleep =
     deps.sleep ??
     ((ms: number, signal?: AbortSignal) =>
@@ -104,11 +118,15 @@ export function createClefClient(
     else active--;
   }
 
-  async function post(body: unknown, signal?: AbortSignal): Promise<Record<string, any>> {
+  async function post(
+    body: unknown,
+    timeoutMs: number,
+    signal?: AbortSignal,
+  ): Promise<Record<string, any>> {
     const c = cfg!;
-    const timeout = AbortSignal.timeout(TIMEOUT_MS);
+    const timeout = AbortSignal.timeout(timeoutMs);
     const combined = signal ? AbortSignal.any([signal, timeout]) : timeout;
-    const res = await doFetch(`${c.url}/v1/systemone`, {
+    const res = await doFetch(`${baseUrl}/v1/systemone`, {
       method: "POST",
       headers: { Authorization: `Bearer ${c.key}`, "Content-Type": "application/json" },
       body: JSON.stringify(body),
@@ -119,13 +137,18 @@ export function createClefClient(
     return json.answers ?? {};
   }
 
-  async function decide(
+  async function run(
     state: unknown,
     questions: Record<string, unknown>,
-    signal?: AbortSignal,
+    opts: RunOpts,
   ): Promise<Record<string, any>> {
     if (!cfg) throw new Error("Clef is not configured");
     const body = { model: "Cloudflare/clef-flash", state, questions };
+    const started = Date.now();
+    const signals: AbortSignal[] = [];
+    if (opts.signal) signals.push(opts.signal);
+    if (opts.capMs !== undefined) signals.push(AbortSignal.timeout(opts.capMs));
+    const signal = signals.length > 1 ? AbortSignal.any(signals) : signals[0];
     await acquire(signal);
     try {
       for (let retry = 0; ; retry++) {
@@ -134,21 +157,25 @@ export function createClefClient(
         let delay: number;
         let failure: Error;
         try {
-          return await post(body, signal);
+          return await post(body, opts.timeoutMs, signal);
         } catch (e) {
           if (signal?.aborted) throw abortError();
           if (e instanceof ClefHttpError) {
             if (e.status === 429) delay = RATE_DELAY;
-            else if (e.status === 502 || e.status === 503 || e.status === 504) delay = restartDelay;
+            else if (!opts.retryOn429Only && (e.status === 502 || e.status === 503 || e.status === 504))
+              delay = restartDelay;
             else throw e;
             failure = e;
+          } else if (opts.retryOn429Only) {
+            throw new Error("Clef request failed (connection error or timeout)");
           } else {
             // 연결 오류·타임아웃은 503 과 같게 취급한다. 원인 메시지는 주소를 담을 수 있어 버린다.
             delay = restartDelay;
             failure = new Error("Clef request failed (connection error or timeout)");
           }
         }
-        if (retry >= MAX_RETRIES) throw failure;
+        if (retry >= opts.maxRetries) throw failure;
+        if (opts.capMs !== undefined && Date.now() - started + delay >= opts.capMs) throw failure;
         await sleep(delay, signal);
       }
     } finally {
@@ -156,15 +183,35 @@ export function createClefClient(
     }
   }
 
+  function decide(
+    state: unknown,
+    questions: Record<string, unknown>,
+    signal?: AbortSignal,
+  ): Promise<Record<string, any>> {
+    return run(state, questions, {
+      maxRetries: MAX_RETRIES,
+      retryOn429Only: false,
+      timeoutMs: TIMEOUT_MS,
+      signal,
+    });
+  }
+
   async function classifyIntent(
     input: string,
     context: { lastAssistant?: string },
+    signal?: AbortSignal,
   ): Promise<{ intent: Intent; confidence: number } | null> {
     if (!cfg) return null;
     try {
       const prev = (context.lastAssistant ?? "").slice(0, 300);
       const state = `직전 AI 메시지: ${prev}\n사용자: ${input}`;
-      const answers = await decide(state, INTENT_QUESTION);
+      const answers = await run(state, INTENT_QUESTION, {
+        maxRetries: 1,
+        retryOn429Only: true,
+        timeoutMs: classifyCap,
+        capMs: classifyCap,
+        signal,
+      });
       const a = answers?.intent;
       if (!a || a.type !== "choice") return null;
       if (!INTENTS.includes(a.choice)) return null;
