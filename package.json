@@ -9,6 +9,7 @@
     "lint": "eslint .",
     "test": "vitest run --project node --project jsdom",
     "test:int": "vitest run --project integration",
+    "test:e2e": "playwright test",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate"
   },
