@@ -19,8 +19,8 @@ export const SYSTEM_PROMPT = `너는 인프라 아키텍처 구성도를 그리�
 {"op":"add_group","id":"영문-소문자-id","group_kind":"<GROUP_KIND>","label":"표시이름","parent":"상위 그룹 id 또는 null"}
 {"op":"add_node","id":"영문-소문자-id","kind":"<KIND>","label":"표시이름(예: WAS#1)","sub":"SW 또는 대수(예: Tomcat 10)","parent":"그룹 id 또는 null","attrs":{"sw":"...","hostname":null,"cpu":null,"ram":null,"ip":null}}
 {"op":"add_edge","id":"e-<from>-<to>","from":"노드 또는 그룹 id","to":"노드 또는 그룹 id","edge_kind":"<EDGE_KIND>","label":"프로토콜/포트(예: HTTPS 443)"}
-{"op":"update_node","id":"기존 노드 또는 그룹 id","label":"(선택)","sub":"(선택)","parent":"(선택)","attrs":{"바꿀 속성만":"값"}}
-{"op":"update_edge","id":"기존 연결 id","label":"(선택)","edge_kind":"(선택)"}
+{"op":"update_node","id":"was-1","attrs":{"ram":"32GB"}}
+{"op":"update_edge","id":"e-web-1-was-1","label":"HTTP 8080"}
 {"op":"remove_node","id":"기존 노드 id"}
 {"op":"remove_edge","id":"기존 연결 id"}
 
@@ -31,11 +31,13 @@ EDGE_KIND 허용값: ${EDGE_KIND_LIST}
 규칙:
 - id 는 영문 소문자·숫자·하이픈만 쓰고 ^[a-z0-9][a-z0-9-]{0,63}$ 형식이어야 한다. 노드·그룹·연결 id 는 서로 겹치면 안 된다.
 - 요청이 애매하면 가정하고 set_assumption 으로 그 가정을 먼저 밝힌다.
-- 이미 확정된 가정은 바꾸지 않는다. 확정(확정) 표시가 붙은 가정과 다른 값을 set_assumption 으로 내지 않는다.
+- 이미 확정된 가정은 바꾸지 않는다. 요약에 (확정) 표시가 붙은 가정은 set_assumption 으로 다시 내지 않는다.
 - 그룹을 먼저, 그 안의 노드를 다음, 연결은 양 끝 노드가 생긴 뒤에 출력한다.
 - 이중화 서버는 redundancy_group 그룹으로 묶고 label 에 VIP 를 적는다(예: "WAS VIP"). 2대 이상이면 몇 대든 하나의 redundancy_group 으로 묶는다.
 - AZ(가용 영역)는 az 그룹을 만들지 않는다. 대신 서브넷·노드의 attrs.az 속성(예: "az":"2a")으로 표시한다.
 - 외부 서비스는 external_service 그룹 안에 접점 노드(external_api/external_auth/external_pg)로 그린다.
+- 영역(그룹)의 이름·상위 영역은 바꿀 수 없다. 영역을 바꿔야 하면 say 로 알리고 노드만 수정한다.
+- k8s_cluster 는 그룹(group_kind)으로만 쓴다. 노드 kind 로 쓰지 않는다.
 - 사용자가 모르는 값(IP, hostname, 스펙)은 null 로 둔다. 지어내지 않는다.
 - 연결은 실제 요청 흐름 방향(호출하는 쪽 → 받는 쪽)으로.
 - edge_kind 는 동기 요청 request, 비동기·이벤트·웹훅 async, 복제·동기화 replication 이다. 모니터링·관리(Bastion, Prometheus 등) 연결은 aux 로 한다.
@@ -62,11 +64,11 @@ export const ANSWER_PROMPT = `너는 인프라 아키텍처 구성도 도구의 
 export function summarizeState(state: DiagramState): string {
   const lines: string[] = [];
   for (const g of Object.values(state.groups)) {
-    lines.push(`그룹 ${g.id} [${g.groupKind}] "${g.label}" parent=${g.parent ?? "-"}`);
+    lines.push(`그룹 ${g.id} [${g.groupKind}] ${JSON.stringify(g.label)} parent=${g.parent ?? "-"}`);
   }
   for (const n of Object.values(state.nodes)) {
     lines.push(
-      `노드 ${n.id} [${n.kind}] "${n.label}" sub="${n.sub ?? ""}" parent=${n.parent ?? "-"} attrs=${JSON.stringify(n.attrs ?? {})}`,
+      `노드 ${n.id} [${n.kind}] ${JSON.stringify(n.label)} sub=${JSON.stringify(n.sub ?? "")} parent=${n.parent ?? "-"} attrs=${JSON.stringify(n.attrs ?? {})}`,
     );
   }
   for (const e of Object.values(state.edges)) {
@@ -106,7 +108,8 @@ export function buildMessages(input: {
   history: { role: "user" | "assistant"; content: string }[];
 }): ChatMessage[] {
   const system = input.intent === "question" || input.intent === "other" ? ANSWER_PROMPT : SYSTEM_PROMPT;
-  const refs = input.mentions.length ? input.mentions.map((m) => `${m.id} ${m.label}`).join("\n") : "없음";
+  const labelOf = (id: string, fallback: string) => input.state.nodes[id]?.label ?? input.state.groups[id]?.label ?? fallback;
+  const refs = input.mentions.length ? input.mentions.map((m) => `${m.id} ${labelOf(m.id, m.label).replace(/\s+/g, " ")}`).join("\n") : "없음";
   const user = `현재 구성:\n${summarizeState(input.state)}\n\n참조 노드:\n${refs}\n\n요청: ${input.text}`;
   return [
     { role: "system", content: system },
