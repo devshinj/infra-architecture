@@ -33,7 +33,12 @@ export async function requestPasswordReset(email: string): Promise<void> {
     console.info("[reset-link]", link);
     return;
   }
-  await sendMail(email, "InfraSketch 비밀번호 재설정", `아래 링크에서 비밀번호를 재설정하세요 (1시간 안에 유효):\n${link}`);
+  try {
+    await sendMail(email, "InfraSketch 비밀번호 재설정", `아래 링크에서 비밀번호를 재설정하세요 (1시간 안에 유효):\n${link}`);
+  } catch (e) {
+    // 발송 실패가 계정 존재 여부로 드러나지 않게 삼킨다. 링크·토큰은 기록하지 않는다.
+    console.error("[reset-mail] 발송 실패:", e instanceof Error ? e.message : "unknown");
+  }
 }
 
 export async function resetPassword(

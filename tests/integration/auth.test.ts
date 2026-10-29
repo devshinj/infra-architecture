@@ -57,3 +57,20 @@ describe("auth", () => {
     expect((await resetPassword("nope", "newpass12")).ok).toBe(false);
   });
 });
+
+describe("reset mail failure", () => {
+  test("a failing mailer does not leak through requestPasswordReset", async () => {
+    vi.resetModules();
+    vi.doMock("@/env", async (orig) => ({ env: { ...(await orig<typeof import("@/env")>()).env, SMTP_HOST: "smtp.invalid" } }));
+    vi.doMock("@/server/auth/mailer", () => ({ sendMail: vi.fn().mockRejectedValue(new Error("smtp down")) }));
+    const errSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const { signup: su } = await import("@/server/auth/signup");
+    const { requestPasswordReset: req } = await import("@/server/auth/reset");
+    await su({ username: "jae", password: "password1", email: "a@b.co" });
+    await expect(req("a@b.co")).resolves.toBeUndefined();
+    expect(errSpy).toHaveBeenCalled();
+    expect(JSON.stringify(errSpy.mock.calls)).not.toContain("/reset/");
+    vi.doUnmock("@/env");
+    vi.doUnmock("@/server/auth/mailer");
+  });
+});
