@@ -222,6 +222,33 @@ describe("runChatTurn", () => {
     expect(saved!.state.nodes["client-web"]).toBeDefined();
   });
 
+  test("logs one server line per turn with skip reason counts (no message text)", async () => {
+    const ids = await makeOwnedDiagram();
+    const info = vi.spyOn(console, "info").mockImplementation(() => {});
+    try {
+      const lines = [
+        JSON.stringify({ op: "add_node", id: "a", kind: "load_balancer", label: "A", parent: null }),
+        JSON.stringify({ op: "add_node", id: "b", kind: "load_balancer", label: "B", parent: null }),
+        JSON.stringify({ op: "add_edge", from: "x-1", to: "y-1", edge_kind: "request" }),
+        JSON.stringify({ op: "warn", text: "위험" }),
+        "{not json",
+      ];
+      await turn(ids, "비밀 문장", { qwen: fakeQwen(lines.join("\n")), clef: fakeClef(null) });
+      const calls = info.mock.calls.filter((c) => c[0] === "[chat] skipped");
+      expect(calls).toHaveLength(1);
+      const payload = calls[0]![1] as { diagramId: string; counts: Record<string, number> };
+      expect(payload.diagramId).toBe(ids.diagramId);
+      expect(Object.values(payload.counts).reduce((a, b) => a + b, 0)).toBe(5);
+      expect(Object.entries(payload.counts).find(([k]) => k.startsWith("invalid add_node"))?.[1]).toBe(2);
+      expect(payload.counts["apply add_edge endpoint … not found"]).toBe(1);
+      expect(payload.counts["unknown_op warn"]).toBe(1);
+      expect(payload.counts["bad_json"]).toBe(1);
+      expect(JSON.stringify(calls)).not.toContain("비밀 문장");
+    } finally {
+      info.mockRestore();
+    }
+  });
+
   test("zero applied commands creates no version", async () => {
     const ids = await makeOwnedDiagram();
     await createVersion(ids.diagramId, emptyState(), { source: "import" });

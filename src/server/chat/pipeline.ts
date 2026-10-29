@@ -12,6 +12,7 @@ import type { ChatEvent, MessageMeta } from "./events";
 import { withDiagramLock } from "./lock";
 import { createMessage, listMessages } from "./messages";
 import { normalizeAiCommand } from "./normalize";
+import { createSkipTally, skipKey } from "./skips";
 import { buildMessages, parseMentions } from "./prompt";
 
 export interface ChatDeps {
@@ -104,7 +105,7 @@ async function lockedTurn(args: TurnArgs, deps: ChatDeps): Promise<void> {
   const says: string[] = [];
   let answer = "";
   let applied = 0;
-  let skipped = 0;
+  const tally = createSkipTally();
   let status: "complete" | "aborted" | "error" = "complete";
 
   if (intent === "history") {
@@ -116,8 +117,8 @@ async function lockedTurn(args: TurnArgs, deps: ChatDeps): Promise<void> {
     const messages = buildMessages({ intent, text: clean, state, mentions, history });
     emit({ t: "status", phase: "thinking" });
 
-    const skip = (reason: string) => {
-      skipped++;
+    const skip = (reason: string, key: string) => {
+      tally.add(key);
       emit({ t: "skip", reason: (SKIP_PREFIX + reason).slice(0, SKIP_MAX) });
     };
     const onLine = (raw: unknown) => {
@@ -127,22 +128,22 @@ async function lockedTurn(args: TurnArgs, deps: ChatDeps): Promise<void> {
         if (typeof text === "string" && text.trim() !== "") {
           says.push(text);
           emit({ t: "say", text });
-        } else skip("내용이 없는 안내 줄");
+        } else skip("내용이 없는 안내 줄", skipKey("empty_say"));
         return;
       }
       const op = opName(raw);
-      if (!KNOWN_OPS.has(op)) return skip(`지원하지 않는 명령(${op})`);
+      if (!KNOWN_OPS.has(op)) return skip(`지원하지 않는 명령(${op})`, skipKey("unknown_op", op));
       const parsed = parseCommand(normalizeAiCommand(raw));
-      if (!parsed.ok) return skip(`형식이 맞지 않는 명령(${op})`);
+      if (!parsed.ok) return skip(`형식이 맞지 않는 명령(${op})`, skipKey("invalid", op, parsed.error));
       const r = applyCommand(state, parsed.cmd);
-      if (!r.ok) return skip(`적용할 수 없는 명령(${op}) ${r.error}`);
+      if (!r.ok) return skip(`적용할 수 없는 명령(${op}) ${r.error}`, skipKey("apply", op, r.error));
       state = r.state;
       if (applied === 0) emit({ t: "status", phase: "drawing" });
       applied++;
       emit({ t: "cmd", cmd: parsed.cmd });
     };
     const parser = createJsonlParser(onLine, () => {
-      if (!signal.aborted) skip("읽을 수 없는 줄");
+      if (!signal.aborted) skip("읽을 수 없는 줄", skipKey("bad_json"));
     });
 
     // 답변 경로: <think> 를 지운 글만 보내고, 보낸 글 그대로 모아 저장한다(중단·오류여도).
@@ -181,6 +182,10 @@ async function lockedTurn(args: TurnArgs, deps: ChatDeps): Promise<void> {
     }
     answer = shown.trim();
   }
+
+  const skipped = tally.total();
+  // 왜 건너뛰었는지 서버 로그에 한 줄로 남긴다(사용자 글·키는 넣지 않는다).
+  if (skipped > 0) console.info("[chat] skipped", { diagramId, counts: tally.counts() });
 
   let version: number | null = null;
   if (applied > 0) {

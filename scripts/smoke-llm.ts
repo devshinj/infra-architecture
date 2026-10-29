@@ -30,6 +30,7 @@ async function main(): Promise<number> {
   const { createJsonlParser } = await import("../src/server/llm/jsonl");
   const { buildMessages } = await import("../src/server/chat/prompt");
   const { normalizeAiCommand } = await import("../src/server/chat/normalize");
+  const { createSkipTally, skipKey } = await import("../src/server/chat/skips");
   const { parseCommand } = await import("../src/domain/commands");
   const { applyCommand } = await import("../src/domain/apply");
   const { emptyState } = await import("../src/domain/types");
@@ -45,6 +46,7 @@ async function main(): Promise<number> {
   // (2) 구조 생성
   console.log("\n== 2. 구조 생성 ==");
   const rows: string[][] = [];
+  const reasons: { id: string; tally: ReturnType<typeof createSkipTally> }[] = [];
   if (!cfg.qwen) {
     console.log("Qwen 설정 없음(QWEN_CODER_KEY / QWEN_API_URL) - 건너뜀");
     failed = true;
@@ -58,20 +60,33 @@ async function main(): Promise<number> {
       let skipped = 0;
       let bad = 0;
       let firstMs: number | null = null;
+      const tally = createSkipTally();
+      reasons.push({ id, tally });
       const t0 = Date.now();
       const parser = createJsonlParser(
         (v) => {
-          if ((v as { op?: unknown } | null)?.op === "say") return; // 진행 안내 줄은 명령이 아니다
+          const rawOp = (v as { op?: unknown } | null)?.op;
+          if (rawOp === "say") return; // 진행 안내 줄은 명령이 아니다
+          const op = typeof rawOp === "string" ? rawOp.slice(0, 40) : "?";
           const p = parseCommand(normalizeAiCommand(v)); // 대화 경로와 같은 정규화
-          if (!p.ok) return void skipped++;
+          if (!p.ok) {
+            tally.add(skipKey("invalid", op, p.error), JSON.stringify(v));
+            return void skipped++;
+          }
           if (firstMs === null) firstMs = Date.now() - t0;
           const r = applyCommand(state, p.cmd);
           if (r.ok) {
             state = r.state;
             applied++;
-          } else skipped++;
+          } else {
+            tally.add(skipKey("apply", op, r.error), JSON.stringify(v));
+            skipped++;
+          }
         },
-        () => void bad++,
+        (text) => {
+          tally.add(skipKey("bad_json"), text);
+          bad++;
+        },
       );
       const messages = buildMessages({ intent: "structure_change", text: sc.prompt, state, mentions: [], history: [] });
       try {
@@ -100,6 +115,14 @@ async function main(): Promise<number> {
     console.log(
       formatTable(["시나리오", "첫 명령", "전체", "적용", "건너뜀", "깨진 줄", "노드", "연결", "종료"], rows),
     );
+    // 건너뜀·깨진 줄의 이유별 개수와 표본(모델 출력, 최대 3줄·120자).
+    for (const { id, tally } of reasons) {
+      if (tally.total() === 0) continue;
+      console.log(`\n[${id}] 건너뜀 이유`);
+      const counts = Object.entries(tally.counts()).sort((a, b) => b[1] - a[1]);
+      console.log(formatTable(["이유", "개수"], counts.map(([k, n]) => [k, String(n)])));
+      for (const line of tally.samples()) console.log(`  예: ${line}`);
+    }
   }
 
   // (3) 의도 분류
