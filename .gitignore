@@ -7,6 +7,8 @@
 # Node / Next.js
 node_modules/
 .next/
+.next-e2e/
+next-env.d.ts
 out/
 coverage/
 playwright-report/

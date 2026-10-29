@@ -20,6 +20,7 @@ export default defineConfig({
     reuseExistingServer: false,
     timeout: 300_000,
     env: {
+      NEXT_DIST_DIR: ".next-e2e", // never overwrite the .next a running `next dev` uses
       DATABASE_URL: DB_URL,
       AUTH_SECRET: "e2e-only-secret-not-for-production",
       APP_URL: `http://localhost:${PORT}`,
