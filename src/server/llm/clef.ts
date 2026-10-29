@@ -223,6 +223,7 @@ export function createClefClient(
       const open = (context.openItems ?? [])
         .slice(0, OPEN_ITEMS_MAX)
         .map(flat)
+        .filter(Boolean)
         .join(", ")
         .slice(0, OPEN_ITEMS_CHARS);
       const state = `직전 AI 메시지: ${prev}\n${open ? `채워야 할 정보: ${open}\n` : ""}사용자: ${flat(input)}`;

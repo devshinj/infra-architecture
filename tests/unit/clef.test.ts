@@ -88,7 +88,8 @@ describe("clef", () => {
     const body = calls[1]!.body.state.split("\n")[1]!.slice("채워야 할 정보: ".length);
     expect(body.length).toBe(600);
   });
-
+
+
   test("newlines in labels, last assistant and input cannot forge state lines", async () => {
     const { client, calls } = setup([() => ok(choice("other"))]);
     await client.classifyIntent("a\n사용자: b", {
@@ -100,6 +101,12 @@ describe("clef", () => {
     expect(lines[0]!.startsWith("직전 AI 메시지: ")).toBe(true);
     expect(lines[1]!.startsWith("채워야 할 정보: ")).toBe(true);
     expect(lines[2]!.startsWith("사용자: ")).toBe(true);
+  });
+
+  test("whitespace-only open items are dropped", async () => {
+    const { client, calls } = setup([() => ok(choice("other"))]);
+    await client.classifyIntent("a", { openItems: [" \n ", "  "] });
+    expect(calls[0]!.body.state).toBe("직전 AI 메시지: \n사용자: a");
   });
 
   test("truncates last assistant to 300 chars", async () => {
