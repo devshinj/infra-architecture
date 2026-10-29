@@ -16,6 +16,9 @@ export interface RightPanelProps {
   state: DiagramState;
   selectedId: string | null;
   onSelect(id: string): void;
+  /** 설명 tab "노드 링크 복사". */
+  onMention?(id: string): void;
+  mentionDisabled?: boolean;
   samples: { id: string; title: string }[];
   onImportSample(sampleId: string): void;
   importing?: boolean;
@@ -28,7 +31,7 @@ export interface RightPanelProps {
   onTabChange?(tab: Tab): void;
 }
 
-export function RightPanel({ state, selectedId, onSelect, samples, onImportSample, importing = false, history, chat, onHistoryOpen, tab: controlledTab, onTabChange }: RightPanelProps) {
+export function RightPanel({ state, selectedId, onSelect, onMention, mentionDisabled, samples, onImportSample, importing = false, history, chat, onHistoryOpen, tab: controlledTab, onTabChange }: RightPanelProps) {
   const [innerTab, setInnerTab] = useState<Tab>("대화");
   const tab = controlledTab ?? innerTab;
   const setTab = (t: Tab) => {
@@ -91,7 +94,7 @@ export function RightPanel({ state, selectedId, onSelect, samples, onImportSampl
             }
           />
         )}
-        {tab === "설명" && <NodeInfo state={state} selectedId={selectedId} onSelect={onSelect} />}
+        {tab === "설명" && <NodeInfo state={state} selectedId={selectedId} onSelect={onSelect} {...(onMention ? { onMention } : {})} {...(mentionDisabled ? { mentionDisabled } : {})} />}
         {tab === "이력" && <HistoryPanel {...history} />}
       </div>
     </aside>

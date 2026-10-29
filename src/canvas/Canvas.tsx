@@ -11,6 +11,7 @@ import type { GroupBoxData } from "./GroupBox";
 import type { NodeCardData, NodeVisualState } from "./NodeCard";
 import { outermostCollapsedAncestor, type DisplayGraph, type DisplayOptions } from "./display";
 import type { Layout } from "./layout";
+import { NodeMenu } from "./NodeMenu";
 import { nodeTypes } from "./nodeTypes";
 import { useDiagramView } from "./useDiagramView";
 
@@ -35,6 +36,8 @@ export interface CanvasProps {
   diffMarks?: DiffMarks;
   /** Changes when the shown diagram version/mode changes; the view is re-fitted. */
   fitKey?: string;
+  /** Right-click menu "대화에 참조 붙이기" on nodes and zones. Omit to turn the menu off. */
+  onMention?(id: string): void;
 }
 
 export const FAR_ZOOM = 0.6;
@@ -99,7 +102,7 @@ interface FlowProps extends CanvasProps {
   updated: Set<string>;
 }
 
-function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onPinnedChange, motion, layout, display, appearing, updated, diffMarks, fitKey }: FlowProps) {
+function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onPinnedChange, motion, layout, display, appearing, updated, diffMarks, fitKey, onMention }: FlowProps) {
   const far = useStore((s) => s.transform[2] < FAR_ZOOM);
   const selected = drawnId(state, options.collapsed, options.selectedId);
 
@@ -194,10 +197,19 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
     fitPending.current = false;
     void fitView();
   }, [nodes, fitView]);
+  const wrap = useRef<HTMLDivElement>(null);
+  const [menu, setMenu] = useState<{ id: string; x: number; y: number } | null>(null);
+  const closeMenu = useCallback(() => {
+    setMenu(null);
+    wrap.current?.focus({ preventScroll: true });
+  }, []);
+  useEffect(() => {
+    if (!onMention) setMenu(null);
+  }, [onMention]);
   const onNodesChange = useCallback((changes: NodeChange[]) => setNodes((ns) => applyNodeChanges(changes, ns)), []);
 
   return (
-    <div className="canvas__flow" data-zoom={far ? "far" : "near"}>
+    <div ref={wrap} tabIndex={-1} className="canvas__flow" data-zoom={far ? "far" : "near"}>
       <ReactFlow
         nodes={nodes}
         edges={[]}
@@ -215,6 +227,13 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
           if (node.type === "infra") onSelect(node.id);
         }}
         onPaneClick={() => onSelect(null)}
+        onNodeContextMenu={(e, node) => {
+          if (!onMention) return;
+          e.preventDefault();
+          const r = wrap.current?.getBoundingClientRect();
+          setMenu({ id: node.id, x: e.clientX - (r?.left ?? 0), y: e.clientY - (r?.top ?? 0) });
+        }}
+        onMoveStart={() => setMenu(null)}
         onNodeDragStop={(_, node) => {
           if (editMode && node.type === "infra") onPinnedChange({ ...pinned, [node.id]: { x: node.position.x, y: node.position.y } });
         }}
@@ -231,6 +250,7 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
           onSelect={onSelect}
         />
       </ReactFlow>
+      {menu && onMention && <NodeMenu x={menu.x} y={menu.y} onChoose={() => onMention(menu.id)} onClose={closeMenu} />}
     </div>
   );
 }

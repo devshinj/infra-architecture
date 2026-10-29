@@ -1,5 +1,5 @@
 import "@testing-library/jest-dom/vitest";
-import { act, cleanup, render, screen } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createRef } from "react";
 import { afterEach, expect, test, vi } from "vitest";
@@ -67,4 +67,13 @@ test("empty input and canSend=false do not send", async () => {
   await userEvent.type(b.box, "안녕{Enter}");
   expect(b.onSend).not.toHaveBeenCalled();
   expect(b.box).toHaveValue("안녕");
+});
+
+test("Enter with keyCode 229 (Safari IME composition) does not send", () => {
+  const { onSend, box } = setup();
+  fireEvent.change(box, { target: { value: "안녕" } });
+  fireEvent.keyDown(box, { key: "Enter", keyCode: 229 });
+  expect(onSend).not.toHaveBeenCalled();
+  fireEvent.keyDown(box, { key: "Enter", keyCode: 13 });
+  expect(onSend).toHaveBeenCalledWith("안녕");
 });

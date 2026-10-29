@@ -8,6 +8,9 @@ export interface NodeInfoProps {
   state: DiagramState;
   selectedId: string | null;
   onSelect(id: string): void;
+  /** Attach this node/group to the chat input. Omit to hide the button. */
+  onMention?(id: string): void;
+  mentionDisabled?: boolean;
 }
 
 const SPEC_FIELDS: [string, string][] = [["sw", "SW"], ["cpu", "CPU"], ["ram", "RAM"], ["disk", "디스크"], ["os", "OS"]];
@@ -38,7 +41,16 @@ function Fields({ title, fields, attrs }: { title: string; fields: [string, stri
   );
 }
 
-export function NodeInfo({ state, selectedId, onSelect }: NodeInfoProps) {
+function LinkButton({ id, onMention, disabled }: { id: string; onMention?: (id: string) => void; disabled?: boolean }) {
+  if (!onMention) return null;
+  return (
+    <button type="button" className={styles.linkBtn} disabled={disabled} onClick={() => onMention(id)}>
+      노드 링크 복사
+    </button>
+  );
+}
+
+export function NodeInfo({ state, selectedId, onSelect, onMention, mentionDisabled }: NodeInfoProps) {
   if (selectedId === null) return <p className={styles.empty}>캔버스에서 노드를 선택하면 설명이 여기에 표시돼요.</p>;
 
   const edge = state.edges[selectedId];
@@ -62,6 +74,7 @@ export function NodeInfo({ state, selectedId, onSelect }: NodeInfoProps) {
       <div className={styles.info}>
         <h2 className={styles.title}>{group.label}</h2>
         <p className={styles.kind}>{GROUP_KINDS.find((k) => k.kind === group.groupKind)?.labelKo ?? group.groupKind}</p>
+        <LinkButton id={group.id} onMention={onMention} disabled={mentionDisabled} />
       </div>
     );
   }
@@ -89,6 +102,7 @@ export function NodeInfo({ state, selectedId, onSelect }: NodeInfoProps) {
           <p className={styles.kind} data-testid="kind">{kindName(node.kind)}</p>
         </div>
       </header>
+      <LinkButton id={node.id} onMention={onMention} disabled={mentionDisabled} />
       <Fields title="스펙 · SW" fields={SPEC_FIELDS} attrs={node.attrs} />
       <Fields title="서버 정보" fields={SERVER_FIELDS} attrs={node.attrs} />
       <section className={styles.section}>

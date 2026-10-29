@@ -127,3 +127,16 @@
 [data-zoom="far"] .node__az,
 [data-zoom="far"] .edge-label { display: none; }
 .group--selected { outline: 1.5px solid var(--accent); outline-offset: 4px; }
+
+.canvas__flow { position: relative; }
+.canvas__flow:focus { outline: none; }
+.node-menu {
+  position: absolute; z-index: 30; min-width: 140px; padding: 4px;
+  background: var(--bg-node); border: 1px solid var(--line-node); border-radius: var(--radius-node);
+}
+.node-menu__item {
+  display: block; width: 100%; text-align: left; font: inherit; font-size: 12.5px;
+  color: var(--text-primary); background: transparent; border: 0; border-radius: 4px; padding: 6px 10px; cursor: pointer;
+}
+.node-menu__item:hover { background: var(--bg-canvas); }
+.node-menu__item:focus-visible { outline: 1.5px solid var(--text-secondary); outline-offset: -1px; }

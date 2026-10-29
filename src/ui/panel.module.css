@@ -39,3 +39,10 @@
 .actions { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 8px 10px; }
 .actions button { border-radius: 6px; }
 .actions button:disabled { opacity: 0.4; cursor: default; }
+.linkBtn {
+  align-self: flex-start; font: inherit; font-size: 12px; color: var(--text-primary); background: var(--bg-node);
+  border: 1px solid var(--line-node); border-radius: var(--radius-node); padding: 4px 10px; cursor: pointer;
+}
+.linkBtn:hover:not(:disabled) { border-color: var(--text-secondary); }
+.linkBtn:disabled { opacity: 0.5; cursor: default; }
+.linkBtn:focus-visible { outline: 1.5px solid var(--text-secondary); outline-offset: 2px; }

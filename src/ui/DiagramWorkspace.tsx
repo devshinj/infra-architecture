@@ -122,6 +122,22 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
   const locked = chat.busy;
   const mentionRef = useRef<MentionInputHandle>(null);
 
+  // Attach a node/group to the chat input: open the 대화 tab, then insert once the input has rendered.
+  const [pendingMention, setPendingMention] = useState<{ id: string; label: string } | null>(null);
+  const onMention = (id: string) => {
+    if (!live) return;
+    const label = shown.nodes[id]?.label ?? shown.groups[id]?.label ?? id;
+    setTab("대화");
+    setPendingMention({ id, label });
+  };
+  useEffect(() => {
+    if (!pendingMention || tab !== "대화") return;
+    const m = pendingMention;
+    setPendingMention(null);
+    mentionRef.current?.insertMention(m);
+    mentionRef.current?.focus();
+  }, [pendingMention, tab]);
+
   // AI server health: once on mount, again whenever a new error line shows up. A failed fetch counts as down.
   const [health, setHealth] = useState<LlmHealth | null>(null);
   const errorLines = chat.lines.filter((l) => l.kind === "error").length;
@@ -236,6 +252,7 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
             onAutoArrange={onAutoArrange}
             onEditModeChange={(v) => live && !locked && setEditMode(v)}
             onMotionChange={setMotion}
+            {...(live ? { onMention } : {})}
             {...(mode.kind === "compare" ? { diffMarks: mode.marks } : {})}
           />
         </div>
@@ -244,6 +261,8 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
         state={shown}
         selectedId={options.selectedId}
         onSelect={(id) => setOptions((o) => ({ ...o, selectedId: id }))}
+        onMention={onMention}
+        mentionDisabled={!live}
         samples={samples}
         onImportSample={importSample}
         importing={busy || locked}

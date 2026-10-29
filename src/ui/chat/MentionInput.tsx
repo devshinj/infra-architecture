@@ -104,7 +104,7 @@ export const MentionInput = forwardRef<MentionInputHandle, MentionInputProps>(fu
         aria-label="메시지 입력"
         onChange={(e) => update(e.target.value, live.current.chips)}
         onKeyDown={(e) => {
-          if (e.nativeEvent.isComposing) return; // Korean IME: Enter confirms the syllable
+          if (e.nativeEvent.isComposing || e.keyCode === 229) return; // Korean IME (229: Safari): Enter confirms the syllable
           if (e.key === "Enter" && !e.shiftKey) {
             e.preventDefault();
             submit();
