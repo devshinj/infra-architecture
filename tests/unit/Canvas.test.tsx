@@ -58,3 +58,13 @@ test("toolbar: auto-arrange only in edit mode, cleanup toggle updates options", 
   fireEvent.click(screen.getByRole("button", { name: "자동 정렬" }));
   expect(props.onAutoArrange).toHaveBeenCalled();
 });
+
+test("selecting a node inside a collapsed group highlights the group and keeps its neighbours undimmed", async () => {
+  const state = fx("s2");
+  const props = baseProps(state);
+  props.options = { ...props.options, collapsed: new Set(["was-pair"]), selectedId: "was-1" };
+  const { container } = render(<div style={{ width: 800, height: 600 }}><Canvas {...props} /></div>);
+  await waitFor(() => expect(container.querySelector('.react-flow__node-zone[data-id="was-pair"] .group--selected')).not.toBeNull());
+  expect(container.querySelector('.react-flow__node[data-id="web-1"] .node--dimmed')).toBeNull();
+  expect(container.querySelector('.react-flow__node[data-id="db-proxy"] .node--dimmed')).toBeNull();
+});

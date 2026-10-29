@@ -122,3 +122,4 @@
 [data-zoom="far"] .node__sub,
 [data-zoom="far"] .node__az,
 [data-zoom="far"] .edge-label { display: none; }
+.group--selected { outline: 1.5px solid var(--accent); outline-offset: 4px; }

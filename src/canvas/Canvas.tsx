@@ -9,7 +9,7 @@ import "./canvas.css";
 import { EdgeLayerPortal } from "./EdgeLayer";
 import type { GroupBoxData } from "./GroupBox";
 import type { NodeCardData, NodeVisualState } from "./NodeCard";
-import type { DisplayGraph, DisplayOptions } from "./display";
+import { outermostCollapsedAncestor, type DisplayGraph, type DisplayOptions } from "./display";
 import type { Layout } from "./layout";
 import { nodeTypes } from "./nodeTypes";
 import { useDiagramView } from "./useDiagramView";
@@ -44,19 +44,8 @@ const CLEANUP_TOGGLES: { key: ToggleKey; label: string }[] = [
 ];
 
 /** The id actually drawn for `id`: itself, or its outermost collapsed ancestor group. */
-function drawnId(state: DiagramState, display: DisplayGraph, id: string | null): string | null {
-  if (id === null) return null;
-  if (display.nodes[id] || display.groups[id]) return id;
-  let found: string | null = null;
-  const seen = new Set<string>();
-  let p = (state.nodes[id] ?? state.groups[id])?.parent ?? null;
-  while (p !== null && !seen.has(p)) {
-    seen.add(p);
-    if (display.groups[p]) found = p; // keeps overwriting, so the outermost visible ancestor wins
-    p = state.groups[p]?.parent ?? null;
-  }
-  return found;
-}
+const drawnId = (state: DiagramState, collapsed: Set<string>, id: string | null): string | null =>
+  id === null ? null : (outermostCollapsedAncestor(state, collapsed, id) ?? id);
 
 export function Canvas(props: CanvasProps) {
   const { state, pinned, editMode, options, onOptionsChange, onAutoArrange, motion } = props;
@@ -104,7 +93,7 @@ interface FlowProps extends CanvasProps {
 
 function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onPinnedChange, motion, layout, display, appearing, updated }: FlowProps) {
   const far = useStore((s) => s.transform[2] < FAR_ZOOM);
-  const selected = drawnId(state, display, options.selectedId);
+  const selected = drawnId(state, options.collapsed, options.selectedId);
 
   const computed = useMemo<Node[]>(() => {
     const neighbors = new Set<string>();
@@ -125,7 +114,7 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
     for (const lg of Object.values(layout.groups)) {
       const g = display.groups[lg.id];
       if (!g) continue;
-      const data: GroupBoxData = { label: g.label, groupKind: g.groupKind, collapsed: g.collapsed, hiddenCount: g.hiddenCount, onToggle: () => toggleGroup(g.id) };
+      const data: GroupBoxData = { label: g.label, groupKind: g.groupKind, collapsed: g.collapsed, hiddenCount: g.hiddenCount, selected: g.id === selected, onToggle: () => toggleGroup(g.id) };
       out.push({
         id: g.id,
         type: "zone",

@@ -51,21 +51,23 @@ export const defaultDisplayOptions = (state: DiagramState): DisplayOptions => ({
 
 const isBus = (n: DNode | undefined): boolean => n !== undefined && (n.kind === "stream" || n.kind === "queue");
 
+/** Outermost collapsed ancestor of an id (the one actually drawn), or null if visible as itself. */
+export function outermostCollapsedAncestor(state: DiagramState, collapsed: Set<string>, id: string): string | null {
+  let found: string | null = null;
+  const seen = new Set<string>();
+  let p = (state.nodes[id] ?? state.groups[id])?.parent ?? null;
+  while (p !== null && !seen.has(p)) {
+    seen.add(p);
+    if (collapsed.has(p) && state.groups[p]) found = p;
+    p = state.groups[p]?.parent ?? null;
+  }
+  return found;
+}
+
 export function buildDisplayGraph(state: DiagramState, opts: DisplayOptions): DisplayGraph {
   const parentOf = (id: string): string | null => (state.nodes[id] ?? state.groups[id])?.parent ?? null;
 
-  // Outermost collapsed ancestor of an id (the one actually drawn), or null if visible as itself.
-  const collapsedAncestor = (id: string): string | null => {
-    let found: string | null = null;
-    const seen = new Set<string>();
-    let p = parentOf(id);
-    while (p !== null && !seen.has(p)) {
-      seen.add(p);
-      if (opts.collapsed.has(p) && state.groups[p]) found = p;
-      p = state.groups[p]?.parent ?? null;
-    }
-    return found;
-  };
+  const collapsedAncestor = (id: string): string | null => outermostCollapsedAncestor(state, opts.collapsed, id);
 
   const groups: Record<string, DisplayGroup> = {};
   for (const g of Object.values(state.groups)) {
