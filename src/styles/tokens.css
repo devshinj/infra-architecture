@@ -29,6 +29,12 @@
   --edge-replication: #88AE93; /* 복제 */
   --edge-aux: #56657C; /* 관리·모니터링 */
 
+  /* 연결선 움직임 (빛 꼬리·패킷·광택) */
+  --motion-comet-tail: #C9D3E2; /* 빛 꼬리 바깥 */
+  --motion-comet-mid: #E9DDBF; /* 빛 꼬리 가운데 */
+  --motion-capsule: #E3C7AE; /* 비동기 패킷 */
+  --motion-sheen: #D5E9DB; /* 복제 광택 */
+
   /* 상태 배지 */
   --state-missing: #C9574A; /* 빠진 정보 */
   --state-warn: #D4AE6C; /* 경고 */
