@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import type { Command } from "@/domain/commands";
+import { missingReminder } from "@/domain/missing";
 import type { ChatEvent, MessageMeta } from "@/server/chat/events";
 
 export interface ChatLine {
@@ -103,6 +104,7 @@ export function useChatTurn(args: UseChatTurnArgs) {
             gotDone = true;
             const s = summary(ev, answerId !== null);
             if (s) push({ kind: "system", text: s });
+            if (ev.applied > 0 && ev.missing > 0) push({ kind: "system", text: missingReminder(ev.missing) });
             a.onDone(ev);
             break;
           }

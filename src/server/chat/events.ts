@@ -9,6 +9,8 @@ export interface MessageMeta {
   status?: "complete" | "aborted" | "error";
   mentions?: string[];
   says?: string[];
+  /** 차례 끝에 아직 비어 있는 필수 정보 수(적용된 변경이 있고 0보다 클 때만). */
+  missing?: number;
 }
 
 export type ChatEvent =
@@ -25,6 +27,7 @@ export type ChatEvent =
       status: "complete" | "aborted";
       applied: number;
       skipped: number;
+      missing: number;
       nodes: number;
       edges: number;
       assistantMessageId: string;

@@ -5,6 +5,7 @@ import { listMessages } from "@/server/chat/messages";
 import { NotFoundError, getDiagram } from "@/server/projects";
 import { SAMPLES } from "@/server/samples";
 import { DiagramWorkspace } from "@/ui/DiagramWorkspace";
+import { messagesToLines } from "@/ui/chat/lines";
 
 export default async function DiagramPage({ params }: { params: Promise<{ projectId: string; diagramId: string }> }) {
   const session = await auth();
@@ -18,12 +19,7 @@ export default async function DiagramPage({ params }: { params: Promise<{ projec
     throw e;
   }
   if (d.projectId !== projectId) notFound();
-  const initialChat = (await listMessages(d.id, 100)).map((m) => ({
-    id: m.id,
-    kind: m.role,
-    text: m.content,
-    meta: m.meta,
-  }));
+  const initialChat = messagesToLines(await listMessages(d.id, 100));
   return (
     <DiagramWorkspace
       key={d.id}

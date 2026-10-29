@@ -1,3 +1,4 @@
+import { computeMissing } from "@/domain/missing";
 import { applyCommand } from "@/domain/apply";
 import { COMMAND_OPS, parseCommand } from "@/domain/commands";
 import { emptyState, type DiagramState } from "@/domain/types";
@@ -94,7 +95,7 @@ async function lockedTurn(args: TurnArgs, deps: ChatDeps): Promise<void> {
     emit({ t: "start", messageId: userMsg.id, intent: null });
     emit({ t: "error", message: AI_UNAVAILABLE_MESSAGE });
     // 응답 메시지는 남기지 않는다. 클라이언트가 깨끗이 정리하도록 done 을 보낸다.
-    emit({ t: "done", version: null, status: "complete", applied: 0, skipped: 0, ...counts(), assistantMessageId: "" });
+    emit({ t: "done", version: null, status: "complete", applied: 0, skipped: 0, missing: computeMissing(state).count, ...counts(), assistantMessageId: "" });
     return;
   }
 
@@ -197,6 +198,7 @@ async function lockedTurn(args: TurnArgs, deps: ChatDeps): Promise<void> {
     });
     version = v.number;
   }
+  const missing = computeMissing(state).count;
   const content = [...says, ...(answer ? [answer] : [])].join("\n");
   const meta: MessageMeta = {
     ...(intent ? { intent } : {}),
@@ -205,6 +207,7 @@ async function lockedTurn(args: TurnArgs, deps: ChatDeps): Promise<void> {
     version,
     status,
     says,
+    ...(applied > 0 && missing > 0 ? { missing } : {}),
   };
   const assistant = await createMessage(diagramId, "assistant", content, meta);
   emit({
@@ -213,6 +216,7 @@ async function lockedTurn(args: TurnArgs, deps: ChatDeps): Promise<void> {
     status: status === "complete" ? "complete" : "aborted",
     applied,
     skipped,
+    missing,
     ...counts(),
     assistantMessageId: assistant.id,
   });

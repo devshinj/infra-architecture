@@ -359,6 +359,24 @@ describe("runChatTurn", () => {
     expect(msgs[1]).toMatchObject({ role: "assistant", content: answer, meta: { intent: "question", status: "complete" } });
   });
 
+  test("done carries the missing count and meta stores it when commands applied", async () => {
+    const ids = await makeOwnedDiagram();
+    const lines = [JSON.stringify({ op: "add_node", id: "was-1", kind: "was", label: "WAS#1", attrs: { hostname: "was-1" } })];
+    const { events } = await turn(ids, "WAS 하나 그려줘", { qwen: fakeQwen(lines.join("\n")), clef: fakeClef(null) });
+    expect(events.at(-1)).toMatchObject({ t: "done", applied: 1, missing: 6 });
+    const msgs = await listMessages(ids.diagramId);
+    expect(msgs[1]!.meta.missing).toBe(6);
+  });
+
+  test("answer-only turn stores no missing meta", async () => {
+    const ids = await makeOwnedDiagram();
+    await createVersion(ids.diagramId, s2, { source: "import" });
+    const { events } = await turn(ids, "WAS 는 몇 대야?", { qwen: fakeQwen("두 대예요."), clef: fakeClef({ intent: "question", confidence: 0.95 }) });
+    expect(events.at(-1)).toHaveProperty("missing");
+    const msgs = await listMessages(ids.diagramId);
+    expect(msgs[1]!.meta).not.toHaveProperty("missing");
+  });
+
   test("history intent replies fixed text and open_history", async () => {
     const ids = await makeOwnedDiagram();
     const { events } = await turn(ids, "어제 버전으로 되돌려줘", {

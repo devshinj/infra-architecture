@@ -20,7 +20,7 @@ function streamOf(chunks: string[], signal?: AbortSignal, hang = false): Respons
 }
 
 const done = (o: Partial<Extract<ChatEvent, { t: "done" }>> = {}): ChatEvent => ({
-  t: "done", version: 2, status: "complete", applied: 2, skipped: 1, nodes: 3, edges: 1, assistantMessageId: "m", ...o,
+  t: "done", version: 2, status: "complete", applied: 2, skipped: 1, nodes: 3, edges: 1, assistantMessageId: "m", missing: 0, ...o,
 });
 const add = (id: string): Command => ({ op: "add_node", id, kind: "server", label: id, parent: null });
 
@@ -126,4 +126,21 @@ test("unmount aborts the running turn", async () => {
   await waitFor(() => expect(sig).toBeDefined());
   h.unmount();
   expect(sig?.aborted).toBe(true);
+});
+
+test("reminder line follows the summary when missing > 0", async () => {
+  vi.stubGlobal("fetch", vi.fn(async () => streamOf([nd([done({ missing: 6 })])])));
+  const h = setup();
+  await act(() => h.result.current.send("x"));
+  expect(h.result.current.lines.slice(-2).map((l) => [l.kind, l.text])).toEqual([
+    ["system", "노드 3 · 연결 1 · 적용 2 · 건너뜀 1"],
+    ["system", "빠진 정보 6개가 있어요"],
+  ]);
+});
+
+test("no reminder when nothing was applied", async () => {
+  vi.stubGlobal("fetch", vi.fn(async () => streamOf([nd([done({ version: null, applied: 0, missing: 6 })])])));
+  const h = setup();
+  await act(() => h.result.current.send("x"));
+  expect(h.result.current.lines.some((l) => l.text.startsWith("빠진 정보"))).toBe(false);
 });
