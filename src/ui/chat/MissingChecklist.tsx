@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { type Dispatch, type SetStateAction, useEffect, useMemo, useRef, useState } from "react";
 
 import { computeMissing, type MissingItem } from "@/domain/missing";
 import type { DiagramState } from "@/domain/types";
@@ -22,10 +22,17 @@ export interface MissingChecklistProps {
   /** 같은 focusId 를 다시 가리킬 때 바꾼다(배지를 다시 눌렀을 때). */
   focusToken?: number;
   onSave(input: SaveFieldsDraft): Promise<{ ok: true } | { ok: false; message: string }>;
+  /** 초안과 펼침은 부모가 들고 있다: 탭을 옮겨 이 컴포넌트가 내려가도 남는다. */
+  drafts: ChecklistDrafts;
+  onDraftsChange: Dispatch<SetStateAction<ChecklistDrafts>>;
+  open: boolean;
+  onOpenChange(open: boolean): void;
 }
 
 // 대상별 초안. 모름은 사용자가 건드린 칸만 담고, 나머지는 서버 상태를 따른다.
-type Draft = { values: Record<string, string>; unknown: Record<string, boolean> };
+export type ChecklistDraft = { values: Record<string, string>; unknown: Record<string, boolean> };
+export type ChecklistDrafts = Record<string, ChecklistDraft>;
+type Draft = ChecklistDraft;
 type Block = { targetKind: "node" | "edge"; targetId: string; title: string; items: MissingItem[] };
 
 const EMPTY: Draft = { values: {}, unknown: {} };
@@ -53,11 +60,9 @@ function blocksOf(state: DiagramState, items: MissingItem[]): Block[] {
   return [...map.values()];
 }
 
-export function MissingChecklist({ state, busy, focusId, focusToken, onSave }: MissingChecklistProps) {
+export function MissingChecklist({ state, busy, focusId, focusToken, onSave, drafts, onDraftsChange: setDrafts, open, onOpenChange }: MissingChecklistProps) {
   const { items, count } = useMemo(() => computeMissing(state), [state]);
   const blocks = useMemo(() => blocksOf(state, items), [state, items]);
-  const [open, setOpen] = useState(false);
-  const [drafts, setDrafts] = useState<Record<string, Draft>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
   const [pendingFocus, setPendingFocus] = useState<string | null>(null);
@@ -73,12 +78,13 @@ export function MissingChecklist({ state, busy, focusId, focusToken, onSave }: M
     };
     setDrafts(keep);
     setErrors(keep);
-  }, [targetKey]);
+  }, [targetKey, setDrafts]);
 
   useEffect(() => {
     if (focusId === null) return;
-    setOpen(true);
+    onOpenChange(true);
     setPendingFocus(focusId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- 대상·토큰이 바뀔 때만 펼친다
   }, [focusId, focusToken]);
 
   useEffect(() => {
@@ -122,7 +128,7 @@ export function MissingChecklist({ state, busy, focusId, focusToken, onSave }: M
 
   return (
     <section className={styles.missing} aria-label="빠진 정보">
-      <button type="button" className={styles.missingHead} aria-expanded={open} onClick={() => setOpen((o) => !o)}>
+      <button type="button" className={styles.missingHead} aria-expanded={open} onClick={() => onOpenChange(!open)}>
         채워야 할 정보 (<span className={styles.missingCount}>{count}</span>)
       </button>
       {open && (

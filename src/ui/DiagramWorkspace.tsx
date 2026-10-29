@@ -24,7 +24,7 @@ import styles from "./app.module.css";
 import type { VersionRow } from "./HistoryPanel";
 import { type LlmHealth } from "./chat/ChatPanel";
 import type { MentionInputHandle } from "./chat/MentionInput";
-import { MissingChecklist, type MissingChecklistProps } from "./chat/MissingChecklist";
+import { type ChecklistDrafts, MissingChecklist, type MissingChecklistProps } from "./chat/MissingChecklist";
 import { type ChatLine, useChatTurn } from "./chat/useChatTurn";
 import { RightPanel, type Tab } from "./RightPanel";
 
@@ -196,6 +196,9 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
   // Badge click: open the 대화 tab checklist at that node. A fresh token re-triggers the same node.
   const [focus, setFocus] = useState<{ id: string; token: number } | null>(null);
   const focusSeq = useRef(0);
+  // Drafts and the expanded state live here: the 대화 tab (and the checklist) unmounts on tab switches.
+  const [checklistDrafts, setChecklistDrafts] = useState<ChecklistDrafts>({});
+  const [checklistOpen, setChecklistOpen] = useState(false);
   const onBadgeClick = (id: string) => {
     setTab("대화");
     focusSeq.current += 1;
@@ -348,6 +351,10 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
               focusId={focus?.id ?? null}
               {...(focus ? { focusToken: focus.token } : {})}
               onSave={saveFields}
+              drafts={checklistDrafts}
+              onDraftsChange={setChecklistDrafts}
+              open={checklistOpen}
+              onOpenChange={setChecklistOpen}
             />
           ),
           health,

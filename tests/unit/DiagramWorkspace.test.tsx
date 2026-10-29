@@ -1,6 +1,6 @@
 import "@testing-library/jest-dom/vitest";
 import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
-import { afterEach, expect, test, vi } from "vitest";
+import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
 const hookState = vi.hoisted(() => ({ busy: false, onCommand: null as null | ((c: unknown) => void) }));
 
@@ -11,11 +11,13 @@ vi.mock("@/app/(app)/actions", () => ({
   saveFieldsAction: vi.fn(async () => ({ ok: true, number: 2 })),
 }));
 vi.mock("@/canvas/Canvas", () => ({
-  Canvas: ({ state, onMention, onBadgeClick }: { state: { nodes: object }; onMention?: (id: string) => void; onBadgeClick?: (id: string) => void }) => (
+  Canvas: ({ state, onMention, onBadgeClick, onSelect }: { state: { nodes: object }; onMention?: (id: string) => void; onBadgeClick?: (id: string) => void; onSelect: (id: string | null) => void }) => (
     <div>
       <div data-testid="n">{Object.keys(state.nodes).join(",")}</div>
       {onMention && <button onClick={() => onMention("a")}>멘션a</button>}
       {onBadgeClick && <button onClick={() => onBadgeClick("a")}>배지a</button>}
+      <button onClick={() => onSelect("b")}>선택b</button>
+      <button onClick={() => onSelect(null)}>선택해제</button>
     </div>
   ),
 }));
@@ -31,6 +33,15 @@ import { emptyState } from "@/domain/types";
 import { DiagramWorkspace } from "@/ui/DiagramWorkspace";
 
 afterEach(cleanup);
+// jsdom 에는 scrollIntoView 가 없다: 테스트마다 끼우고 원래대로 돌려 둔다.
+const origScroll = Object.getOwnPropertyDescriptor(Element.prototype, "scrollIntoView");
+beforeEach(() => {
+  Element.prototype.scrollIntoView = vi.fn();
+});
+afterEach(() => {
+  if (origScroll) Object.defineProperty(Element.prototype, "scrollIntoView", origScroll);
+  else delete (Element.prototype as { scrollIntoView?: unknown }).scrollIntoView;
+});
 
 const mk = (n: number, ids: string[]) => ({
   number: n,
@@ -63,10 +74,10 @@ test("canvas mention opens the 대화 tab and inserts a chip for the node", () =
   expect(screen.getByRole("textbox")).toHaveFocus();
 });
 
+const web = (id: string) => [id, { id, kind: "web_server", label: id, parent: null, attrs: {} }];
+
 test("badge click opens the chat tab checklist at that node", async () => {
   hookState.busy = false;
-  Element.prototype.scrollIntoView = vi.fn();
-  const web = (id: string) => [id, { id, kind: "web_server", label: id, parent: null, attrs: {} }];
   const latest = { number: 1, state: { ...emptyState(), nodes: Object.fromEntries([web("a"), web("b")]) } };
   render(<DiagramWorkspace diagramId="d" name="n" latest={latest as never} initialPinned={{}} samples={[]} />);
   fireEvent.click(screen.getByRole("tab", { name: "설명" }));
@@ -86,4 +97,21 @@ test("badge click opens the chat tab checklist at that node", async () => {
     fireEvent.click(within(screen.getByRole("group", { name: "a" })).getByRole("button", { name: "저장" }));
   });
   expect(saveFieldsAction).toHaveBeenCalledWith("d", { targetKind: "node", targetId: "a", values: { hostname: "web-01" }, unknown: [] });
+});
+
+test("drafts survive leaving the 대화 tab", () => {
+  hookState.busy = false;
+  const latest = { number: 1, state: { ...emptyState(), nodes: Object.fromEntries([web("a"), web("b")]) } };
+  render(<DiagramWorkspace diagramId="d" name="n" latest={latest as never} initialPinned={{}} samples={[]} />);
+  fireEvent.click(screen.getByRole("button", { name: /채워야 할 정보/ }));
+  fireEvent.change(within(screen.getByRole("group", { name: "a" })).getByRole("textbox", { name: "호스트명" }), { target: { value: "web-01" } });
+  // 노드를 고르면 설명 탭으로 가고 체크리스트는 내려간다.
+  fireEvent.click(screen.getByRole("button", { name: "선택b" }));
+  expect(screen.getByRole("tab", { name: "설명" })).toHaveAttribute("aria-selected", "true");
+  expect(screen.queryByRole("button", { name: /채워야 할 정보/ })).not.toBeInTheDocument();
+  // 선택을 풀면 대화로 돌아오고, 펼침과 초안이 그대로다.
+  fireEvent.click(screen.getByRole("button", { name: "선택해제" }));
+  expect(screen.getByRole("tab", { name: "대화" })).toHaveAttribute("aria-selected", "true");
+  expect(screen.getByRole("button", { name: /채워야 할 정보/ })).toHaveAttribute("aria-expanded", "true");
+  expect(within(screen.getByRole("group", { name: "a" })).getByRole("textbox", { name: "호스트명" })).toHaveValue("web-01");
 });

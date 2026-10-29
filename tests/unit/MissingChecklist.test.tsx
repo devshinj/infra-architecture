@@ -1,14 +1,29 @@
 import "@testing-library/jest-dom/vitest";
 import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { useState } from "react";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
 import { type DiagramState, emptyState } from "@/domain/types";
-import { MissingChecklist, type MissingChecklistProps } from "@/ui/chat/MissingChecklist";
+import { type ChecklistDrafts, MissingChecklist as Controlled, type MissingChecklistProps } from "@/ui/chat/MissingChecklist";
+
+type OuterProps = Omit<MissingChecklistProps, "drafts" | "onDraftsChange" | "open" | "onOpenChange">;
+// 부모가 초안·펼침을 들고 있는 모양을 흉내 낸다.
+function MissingChecklist(p: OuterProps) {
+  const [drafts, setDrafts] = useState<ChecklistDrafts>({});
+  const [open, setOpen] = useState(false);
+  return <Controlled {...p} drafts={drafts} onDraftsChange={setDrafts} open={open} onOpenChange={setOpen} />;
+}
 
 afterEach(cleanup);
+// jsdom 에는 scrollIntoView 가 없다: 테스트마다 끼우고 원래대로 돌려 둔다.
+const origScroll = Object.getOwnPropertyDescriptor(Element.prototype, "scrollIntoView");
 beforeEach(() => {
   Element.prototype.scrollIntoView = vi.fn();
+});
+afterEach(() => {
+  if (origScroll) Object.defineProperty(Element.prototype, "scrollIntoView", origScroll);
+  else delete (Element.prototype as { scrollIntoView?: unknown }).scrollIntoView;
 });
 
 // web 은 hostname 만 비었고, db 는 cpu 가 모름이고 나머지는 비었다. 요청 연결은 라벨이 없다.
