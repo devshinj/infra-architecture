@@ -5,6 +5,8 @@ import { drizzle } from "drizzle-orm/postgres-js";
 import { migrate } from "drizzle-orm/postgres-js/migrator";
 import postgres from "postgres";
 
+import { startFakeLlm } from "./fake-llm";
+
 export const E2E_DB_URL = process.env.DATABASE_URL_TEST || "postgres://postgres:postgres@localhost:5433/infrasketch_test";
 
 export default async function globalSetup() {
@@ -19,4 +21,11 @@ export default async function globalSetup() {
   } finally {
     await admin.end();
   }
+  const fake = await startFakeLlm();
+  return async () => {
+    await new Promise<void>((resolve) => {
+      fake.closeAllConnections();
+      fake.close(() => resolve());
+    });
+  };
 }
