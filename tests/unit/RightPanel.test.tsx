@@ -45,3 +45,16 @@ test("selecting another node while on 이력 switches back to 설명 and deselec
   rerender(<RightPanel {...props(null)} />);
   expect(screen.getByRole("tab", { name: "대화" })).toHaveAttribute("aria-selected", "true");
 });
+
+test("controlled mode: selection change notifies the parent outside render, no console.error", () => {
+  const err = vi.spyOn(console, "error").mockImplementation(() => {});
+  const onTabChange = vi.fn();
+  const { rerender } = render(<RightPanel {...props(null)} tab="이력" onTabChange={onTabChange} />);
+  rerender(<RightPanel {...props("was-1")} tab="이력" onTabChange={onTabChange} />);
+  expect(onTabChange).toHaveBeenLastCalledWith("설명");
+  rerender(<RightPanel {...props("was-1")} tab="설명" onTabChange={onTabChange} />);
+  rerender(<RightPanel {...props(null)} tab="설명" onTabChange={onTabChange} />);
+  expect(onTabChange).toHaveBeenLastCalledWith("이력");
+  expect(err).not.toHaveBeenCalled();
+  err.mockRestore();
+});

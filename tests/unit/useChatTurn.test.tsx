@@ -103,3 +103,27 @@ test("events split across chunks are parsed", async () => {
   expect(h.onCommand).toHaveBeenCalledTimes(1);
   expect(h.onDone).toHaveBeenCalledTimes(1);
 });
+
+test("trailing line without newline, malformed line, and byte-split Korean are handled", async () => {
+  const e1 = JSON.stringify({ t: "say", text: "웹 서버를 놓을게요" }) + "\n";
+  const bytes = enc.encode("not json\n" + e1 + JSON.stringify(done()));
+  const i = bytes.indexOf(0xec) + 1; // inside the first multibyte char
+  vi.stubGlobal("fetch", vi.fn(async () => {
+    const body = new ReadableStream<Uint8Array>({ start(c) { c.enqueue(bytes.slice(0, i)); c.enqueue(bytes.slice(i)); c.close(); } });
+    return new Response(body, { status: 200 });
+  }));
+  const h = setup();
+  await act(() => h.result.current.send("x"));
+  expect(h.result.current.lines.map((l) => l.text)).toContain("웹 서버를 놓을게요");
+  expect(h.onDone).toHaveBeenCalledTimes(1);
+});
+
+test("unmount aborts the running turn", async () => {
+  let sig: AbortSignal | undefined;
+  vi.stubGlobal("fetch", vi.fn(async (_u: string, init: RequestInit) => { sig = init.signal ?? undefined; return streamOf([], sig, true); }));
+  const h = setup();
+  act(() => { void h.result.current.send("x"); });
+  await waitFor(() => expect(sig).toBeDefined());
+  h.unmount();
+  expect(sig?.aborted).toBe(true);
+});

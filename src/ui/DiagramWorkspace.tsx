@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useCallback, useMemo, useState, useTransition } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
 
 import {
   clearPinnedAction,
@@ -60,13 +60,6 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
   const [busy, startBusy] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
-  // The server re-renders with a newer version after import/restore: adopt it.
-  if (latest.number !== current.number) {
-    setCurrent(latest);
-    setOptions(optionsFor(latest.state));
-    setMode({ kind: "live" });
-  }
-
   const shown = useMemo<DiagramState>(() => {
     if (mode.kind === "view") return mode.state;
     if (mode.kind === "compare") return unionState(mode.state, current.state);
@@ -91,9 +84,20 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
   }, [diagramId]);
 
   // Live chat: each server-applied command is replayed on the live state so nodes appear one by one.
+  const adoptAfterChat = useRef(false);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
+  useEffect(() => { adoptAfterChat.current = false; }, [current.number]);
   const refreshFromServer = () => {
+    adoptAfterChat.current = true;
     router.refresh();
     loadVersions();
+  };
+  // After an interrupt the server saves the aborted version a moment later: refresh once more.
+  const refreshAfterInterrupt = () => {
+    refreshFromServer();
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = setTimeout(refreshFromServer, 1500);
   };
   const chat = useChatTurn({
     diagramId,
@@ -104,8 +108,15 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
       setTab("이력");
       loadVersions();
     },
-    onInterrupted: refreshFromServer,
+    onInterrupted: refreshAfterInterrupt,
   });
+  // The server re-renders with a newer version after import/restore/chat: adopt it, but never mid-turn
+  // (it would wipe the commands already streamed); the done-refresh brings the newer version later.
+  if (!chat.busy && latest.number !== current.number) {
+    setCurrent(latest);
+    setOptions((o) => (adoptAfterChat.current ? { ...optionsFor(latest.state), selectedId: o.selectedId, collapsed: o.collapsed } : optionsFor(latest.state)));
+    setMode({ kind: "live" });
+  }
   const locked = chat.busy; // no history view/compare/restore, edit mode or sample import while the AI answers
 
   const enter = (next: Mode, state: DiagramState) => {

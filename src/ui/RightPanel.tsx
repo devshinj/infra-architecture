@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import type { DiagramState } from "@/domain/types";
 
@@ -34,11 +34,13 @@ export function RightPanel({ state, selectedId, onSelect, samples, onImportSampl
     onTabChange?.(t);
   };
   const [before, setBefore] = useState<Tab | null>(null); // tab to return to when the selection clears
-  const [seenSelected, setSeenSelected] = useState<string | null>(selectedId);
+  const seenSelected = useRef<string | null>(selectedId);
 
   // Any new selection switches to 설명 (remembering the tab we left); clearing it returns there.
-  if (seenSelected !== selectedId) {
-    setSeenSelected(selectedId);
+  // Runs in an effect: setTab may notify the parent, which must not happen during render.
+  useEffect(() => {
+    if (seenSelected.current === selectedId) return;
+    seenSelected.current = selectedId;
     if (selectedId !== null) {
       if (tab !== "설명") {
         if (before === null) setBefore(tab);
@@ -48,7 +50,7 @@ export function RightPanel({ state, selectedId, onSelect, samples, onImportSampl
       setTab(before);
       setBefore(null);
     }
-  }
+  });
 
   const choose = (t: Tab) => {
     setTab(t);

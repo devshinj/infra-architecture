@@ -49,6 +49,7 @@ export function useChatTurn(args: UseChatTurnArgs) {
     argsRef.current = args;
   });
   const abortRef = useRef<AbortController | null>(null);
+  useEffect(() => () => abortRef.current?.abort(), []); // unmount frees the server lock
   const runningRef = useRef(false);
 
   const push = useCallback((line: Omit<ChatLine, "id"> & { id?: string }) => {
@@ -140,11 +141,13 @@ export function useChatTurn(args: UseChatTurnArgs) {
         let buf = "";
         const feed = (line: string) => {
           if (!line.trim()) return;
+          let ev: ChatEvent;
           try {
-            handle(JSON.parse(line) as ChatEvent);
+            ev = JSON.parse(line) as ChatEvent;
           } catch {
-            /* malformed line: ignore */
+            return; // malformed line: ignore
           }
+          handle(ev);
         };
         for (;;) {
           const { done, value } = await reader.read();
