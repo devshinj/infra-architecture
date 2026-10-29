@@ -81,3 +81,24 @@ test("a rejected layout shows a message instead of a blank canvas", async () => 
   render(<div style={{ width: 800, height: 600 }}><Canvas {...baseProps()} /></div>);
   expect(await screen.findByText("구성도를 배치하지 못했어요. 새로고침하거나 구성을 다시 확인해 주세요.")).toBeInTheDocument();
 });
+
+test("missing badge shows count and calls onBadgeClick without selecting", async () => {
+  const props = { ...baseProps(), onBadgeClick: vi.fn() };
+  const { container } = render(<div style={{ width: 800, height: 600 }}><Canvas {...props} /></div>);
+  const badge = await waitFor(() => {
+    const b = container.querySelector('.react-flow__node[data-id="was-1"] .node__badge');
+    expect(b).not.toBeNull();
+    return b as HTMLElement;
+  });
+  expect(badge).toHaveTextContent("6");
+  fireEvent.click(badge);
+  expect(props.onBadgeClick).toHaveBeenCalledWith("was-1");
+  expect(props.onSelect).not.toHaveBeenCalled();
+});
+
+test("no badge in compare mode", async () => {
+  const props = { ...baseProps(), diffMarks: { added: new Set<string>(), removed: new Set<string>(), changed: new Set(["was-1"]) } };
+  const { container } = render(<div style={{ width: 800, height: 600 }}><Canvas {...props} /></div>);
+  await waitFor(() => expect(container.querySelectorAll(".react-flow__node-infra").length).toBeGreaterThan(0));
+  expect(container.querySelector(".node__badge")).toBeNull();
+});

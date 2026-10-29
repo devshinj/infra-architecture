@@ -17,6 +17,8 @@ export interface NodeCardData extends Record<string, unknown> {
   az?: string;
   /** Compare mode marker. */
   diff?: "added" | "removed" | "changed";
+  /** Click on the missing badge; the click does not select the node. */
+  onBadgeClick?: () => void;
 }
 
 export function NodeCard({ data }: Pick<NodeProps, "data"> & Partial<NodeProps>) {
@@ -35,8 +37,20 @@ export function NodeCard({ data }: Pick<NodeProps, "data"> & Partial<NodeProps>)
           </span>
         )}
       </span>
-      {d.badge && (
-        <span className={`node__badge node__badge--${d.badge.kind}`}>{d.badge.kind === "missing" ? d.badge.count : "!"}</span>
+      {d.badge?.kind === "missing" ? (
+        <button
+          type="button"
+          className="node__badge node__badge--missing"
+          aria-label={`빠진 정보 ${d.badge.count ?? 0}개`}
+          onClick={(e) => {
+            e.stopPropagation();
+            d.onBadgeClick?.();
+          }}
+        >
+          {d.badge.count}
+        </button>
+      ) : (
+        d.badge && <span className={`node__badge node__badge--${d.badge.kind}`}>!</span>
       )}
       {d.state === "updated" && <span className="node__updated" />}
     </div>

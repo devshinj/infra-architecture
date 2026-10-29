@@ -23,6 +23,14 @@ test("missing badge shows count", () => {
   expect(screen.getByText("3")).toBeInTheDocument();
 });
 
+test("badge is a button with an accessible label", () => {
+  const onBadgeClick = vi.fn();
+  wrap(<NodeCard data={{ label: "DB", fullLabel: "DB", category: "data", state: "normal", badge: { kind: "missing", count: 3 }, onBadgeClick }} {...rfProps} />);
+  const btn = screen.getByRole("button", { name: "빠진 정보 3개" });
+  fireEvent.click(btn);
+  expect(onBadgeClick).toHaveBeenCalledOnce();
+});
+
 test("warn badge shows exclamation, az shown next to sub", () => {
   wrap(<NodeCard data={{ label: "A", fullLabel: "A", sub: "10.0.0.1", category: "compute", state: "updated", badge: { kind: "warn" }, az: "a" }} {...rfProps} />);
   expect(screen.getByText("!")).toBeInTheDocument();

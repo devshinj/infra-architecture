@@ -51,3 +51,10 @@ test("NodeInfo copy-link button is disabled when mentioning is off", () => {
   render(<NodeInfo state={fx("s2")} selectedId="was-1" onSelect={vi.fn()} onMention={vi.fn()} mentionDisabled />);
   expect(screen.getByRole("button", { name: "노드 링크 복사" })).toBeDisabled();
 });
+
+test("unknown attr shows 모름", () => {
+  const s = fx("s2");
+  s.nodes["was-1"] = { ...s.nodes["was-1"], attrs: { ...s.nodes["was-1"].attrs, ram: null }, unknown: ["ram"] };
+  render(<NodeInfo state={s} selectedId="was-1" onSelect={vi.fn()} />);
+  expect(screen.getByText("모름")).toBeInTheDocument();
+});

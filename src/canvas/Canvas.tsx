@@ -3,6 +3,7 @@ import "@xyflow/react/dist/style.css";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { categoryOf } from "@/domain/catalog";
+import { computeMissing } from "@/domain/missing";
 import type { DiagramState } from "@/domain/types";
 
 import "./canvas.css";
@@ -38,6 +39,8 @@ export interface CanvasProps {
   fitKey?: string;
   /** Right-click menu "대화에 참조 붙이기" on nodes and zones. Omit to turn the menu off. */
   onMention?(id: string): void;
+  /** Click on a node's missing-info badge (jump to the checklist). */
+  onBadgeClick?(nodeId: string): void;
 }
 
 export const FAR_ZOOM = 0.6;
@@ -102,9 +105,10 @@ interface FlowProps extends CanvasProps {
   updated: Set<string>;
 }
 
-function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onPinnedChange, motion, layout, display, appearing, updated, diffMarks, fitKey, onMention }: FlowProps) {
+function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onPinnedChange, motion, layout, display, appearing, updated, diffMarks, fitKey, onMention, onBadgeClick }: FlowProps) {
   const far = useStore((s) => s.transform[2] < FAR_ZOOM);
   const selected = drawnId(state, options.collapsed, options.selectedId);
+  const missingByNode = useMemo(() => computeMissing(state).byNode, [state]);
 
   const computed = useMemo<Node[]>(() => {
     const neighbors = new Set<string>();
@@ -163,6 +167,9 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
         state: visual,
         ...(az !== undefined && az !== null ? { az: String(az) } : {}),
         ...(diff ? { diff } : {}),
+        ...(!diffMarks && (missingByNode[ln.id] ?? 0) > 0
+          ? { badge: { kind: "missing" as const, count: missingByNode[ln.id] }, ...(onBadgeClick ? { onBadgeClick: () => onBadgeClick(ln.id) } : {}) }
+          : {}),
       };
       out.push({
         id: n.id,
@@ -177,7 +184,7 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
       });
     }
     return out;
-  }, [layout, display, selected, appearing, updated, editMode, options, onOptionsChange, diffMarks]);
+  }, [layout, display, selected, appearing, updated, editMode, options, onOptionsChange, diffMarks, missingByNode, onBadgeClick]);
 
   const [nodes, setNodes] = useState<Node[]>(computed);
   useEffect(() => setNodes(computed), [computed]);

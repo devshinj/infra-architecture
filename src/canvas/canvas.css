@@ -68,6 +68,8 @@
   font-weight: 600;
   line-height: 1;
 }
+button.node__badge { padding: 0; border: 0; font-family: inherit; cursor: pointer; }
+button.node__badge:focus-visible { outline: 1.5px solid var(--text-secondary); outline-offset: 2px; }
 .node__badge--missing { background: var(--state-missing); color: var(--text-primary); }
 .node__badge--warn { background: var(--state-warn); color: var(--bg-node); }
 

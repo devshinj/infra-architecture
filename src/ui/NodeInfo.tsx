@@ -16,12 +16,13 @@ export interface NodeInfoProps {
 const SPEC_FIELDS: [string, string][] = [["sw", "SW"], ["cpu", "CPU"], ["ram", "RAM"], ["disk", "디스크"], ["os", "OS"]];
 const SERVER_FIELDS: [string, string][] = [["hostname", "호스트명"], ["ip", "IP"], ["vip", "VIP"], ["az", "AZ"]];
 const MISSING = "미입력";
+const UNKNOWN = "모름";
 
 const kindName = (kind: DNode["kind"]) => NODE_KINDS.find((k) => k.kind === kind)?.labelKo ?? kind;
 const edgeKindName = (kind: string) => EDGE_KINDS.find((k) => k.kind === kind)?.label ?? kind;
 const nameOf = (state: DiagramState, id: string) => state.nodes[id]?.label ?? state.groups[id]?.label ?? id;
 
-function Fields({ title, fields, attrs }: { title: string; fields: [string, string][]; attrs: DNode["attrs"] }) {
+function Fields({ title, fields, attrs, unknown }: { title: string; fields: [string, string][]; attrs: DNode["attrs"]; unknown: string[] }) {
   return (
     <section className={styles.section}>
       <h3 className={styles.heading}>{title}</h3>
@@ -32,7 +33,7 @@ function Fields({ title, fields, attrs }: { title: string; fields: [string, stri
           return (
             <div key={key} className={styles.field}>
               <dt>{label}</dt>
-              <dd className={empty ? styles.missing : undefined}>{empty ? MISSING : String(v)}</dd>
+              <dd className={empty ? styles.missing : undefined}>{empty ? (unknown.includes(key) ? UNKNOWN : MISSING) : String(v)}</dd>
             </div>
           );
         })}
@@ -103,8 +104,8 @@ export function NodeInfo({ state, selectedId, onSelect, onMention, mentionDisabl
         </div>
       </header>
       <LinkButton id={node.id} onMention={onMention} disabled={mentionDisabled} />
-      <Fields title="스펙 · SW" fields={SPEC_FIELDS} attrs={node.attrs} />
-      <Fields title="서버 정보" fields={SERVER_FIELDS} attrs={node.attrs} />
+      <Fields title="스펙 · SW" fields={SPEC_FIELDS} attrs={node.attrs} unknown={node.unknown ?? []} />
+      <Fields title="서버 정보" fields={SERVER_FIELDS} attrs={node.attrs} unknown={node.unknown ?? []} />
       <section className={styles.section}>
         <h3 className={styles.heading}>연관관계</h3>
         {relations.length === 0 ? (
