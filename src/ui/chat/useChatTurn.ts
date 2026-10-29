@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import type { Command } from "@/domain/commands";
-import { missingReminder } from "@/domain/missing";
+import { computeMissing, missingReminder } from "@/domain/missing";
+import type { DiagramState } from "@/domain/types";
 import type { ChatEvent, MessageMeta } from "@/server/chat/events";
 
 export interface ChatLine {
@@ -23,6 +24,8 @@ export interface UseChatTurnArgs {
   onCommand(cmd: Command): void;
   onDone(e: DoneEvent): void;
   onOpenHistory(): void;
+  /** Live canvas state; used to compute the reminder when the user aborts (no `done` arrives). */
+  getState?(): DiagramState;
   /** The stream ended without `done` (user abort, network cut, error after commands): the saved version may differ from the canvas. */
   onInterrupted?(): void;
 }
@@ -165,7 +168,13 @@ export function useChatTurn(args: UseChatTurnArgs) {
         feed(buf);
         if (!gotDone && !errored) push({ kind: "error", text: GENERIC_ERROR });
       } catch (e) {
-        if (ctrl.signal.aborted || isAbort(e)) push({ kind: "system", text: "중단했어요." });
+        if (ctrl.signal.aborted || isAbort(e)) {
+          push({ kind: "system", text: "중단했어요." });
+          // The server stores meta.missing for an aborted turn; mirror the reload view from live state.
+          const st = cmds > 0 ? argsRef.current.getState?.() : undefined;
+          const n = st ? computeMissing(st).count : 0;
+          if (n > 0) push({ kind: "system", text: missingReminder(n) });
+        }
         else push({ kind: "error", text: GENERIC_ERROR });
       } finally {
         runningRef.current = false;

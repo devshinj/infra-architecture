@@ -115,6 +115,7 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
       loadVersions();
     },
     onInterrupted: refreshAfterInterrupt,
+    getState: () => current.state,
   });
   // The server re-renders with a newer version after import/restore/chat: adopt it, but never mid-turn
   // (it would wipe the commands already streamed); the done-refresh brings the newer version later.

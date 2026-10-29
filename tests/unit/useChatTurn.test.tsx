@@ -1,7 +1,9 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { afterEach, expect, test, vi } from "vitest";
 
+import { applyCommand } from "@/domain/apply";
 import type { Command } from "@/domain/commands";
+import { emptyState } from "@/domain/types";
 import type { ChatEvent } from "@/server/chat/events";
 import { useChatTurn } from "@/ui/chat/useChatTurn";
 
@@ -143,4 +145,30 @@ test("no reminder when nothing was applied", async () => {
   const h = setup();
   await act(() => h.result.current.send("x"));
   expect(h.result.current.lines.some((l) => l.text.startsWith("빠진 정보"))).toBe(false);
+});
+
+async function abortWith(events: ChatEvent[]) {
+  vi.stubGlobal("fetch", vi.fn(async (_u: string, init: RequestInit) => streamOf([nd(events)], init.signal ?? undefined, true)));
+  const state = applyCommand(emptyState(), { op: "add_node", id: "was-1", kind: "was", label: "WAS", parent: null }).state;
+  const onCommand = vi.fn();
+  const hook = renderHook(() =>
+    useChatTurn({ diagramId: "d1", initial: [], onCommand, onDone: vi.fn(), onOpenHistory: vi.fn(), getState: () => state }),
+  );
+  let p!: Promise<void>;
+  act(() => { p = hook.result.current.send("x"); });
+  await waitFor(() => expect(events.some((e) => e.t === "cmd") ? onCommand.mock.calls.length : 1).toBeGreaterThan(0));
+  await waitFor(() => expect(hook.result.current.busy).toBe(true));
+  act(() => hook.result.current.stop());
+  await act(() => p);
+  return hook.result.current.lines;
+}
+
+test("user abort after applied commands shows the reminder from live state", async () => {
+  const lines = await abortWith([{ t: "cmd", cmd: add("was-1") }]);
+  expect(lines.slice(-2).map((l) => l.text)).toEqual(["중단했어요.", "빠진 정보 7개가 있어요"]);
+});
+
+test("user abort with no applied commands shows no reminder", async () => {
+  const lines = await abortWith([{ t: "say", text: "그리는 중" }]);
+  expect(lines.at(-1)?.text).toBe("중단했어요.");
 });
