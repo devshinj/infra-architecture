@@ -1,6 +1,7 @@
 import "@testing-library/jest-dom/vitest";
 import { ReactFlowProvider } from "@xyflow/react";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { afterEach, expect, test, vi } from "vitest";
 
 import { GroupBox } from "@/canvas/GroupBox";
@@ -28,6 +29,16 @@ test("badge is a button with an accessible label", () => {
   wrap(<NodeCard data={{ label: "DB", fullLabel: "DB", category: "data", state: "normal", badge: { kind: "missing", count: 3 }, onBadgeClick }} {...rfProps} />);
   const btn = screen.getByRole("button", { name: "빠진 정보 3개" });
   fireEvent.click(btn);
+  expect(onBadgeClick).toHaveBeenCalledOnce();
+});
+
+test("badge button blocks RF drag/pan/keys and is keyboard activatable", async () => {
+  const onBadgeClick = vi.fn();
+  wrap(<NodeCard data={{ label: "DB", fullLabel: "DB", category: "data", state: "normal", badge: { kind: "missing", count: 2 }, onBadgeClick }} {...rfProps} />);
+  const btn = screen.getByRole("button", { name: "빠진 정보 2개" });
+  expect(btn).toHaveClass("nodrag", "nopan", "nokey");
+  btn.focus();
+  await userEvent.keyboard("{Enter}");
   expect(onBadgeClick).toHaveBeenCalledOnce();
 });
 

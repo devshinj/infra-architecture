@@ -40,7 +40,7 @@ export function NodeCard({ data }: Pick<NodeProps, "data"> & Partial<NodeProps>)
       {d.badge?.kind === "missing" ? (
         <button
           type="button"
-          className="node__badge node__badge--missing"
+          className="node__badge node__badge--missing nodrag nopan nokey"
           aria-label={`빠진 정보 ${d.badge.count ?? 0}개`}
           onClick={(e) => {
             e.stopPropagation();
