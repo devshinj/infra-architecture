@@ -30,9 +30,26 @@ function isRetryable(err: unknown): boolean {
 
 export function createQwenClient(
   cfg: { baseUrl: string; key: string; model: string },
-  deps: { fetch?: typeof fetch; sleep?: (ms: number) => Promise<void> } = {},
+  deps: {
+    fetch?: typeof fetch;
+    sleep?: (ms: number, signal?: AbortSignal) => Promise<void>;
+  } = {},
 ): QwenClient {
-  const sleep = deps.sleep ?? ((ms: number) => new Promise<void>((r) => setTimeout(r, ms)));
+  const sleep =
+    deps.sleep ??
+    ((ms: number, signal?: AbortSignal) =>
+      new Promise<void>((resolve, reject) => {
+        if (signal?.aborted) return reject(abortError());
+        const onAbort = () => {
+          clearTimeout(timer);
+          reject(abortError());
+        };
+        const timer = setTimeout(() => {
+          signal?.removeEventListener("abort", onAbort);
+          resolve();
+        }, ms);
+        signal?.addEventListener("abort", onAbort, { once: true });
+      }));
   const openai = new OpenAI({
     apiKey: cfg.key,
     baseURL: cfg.baseUrl,
@@ -77,7 +94,8 @@ export function createQwenClient(
       } catch (err) {
         if (signal.aborted || err instanceof OpenAI.APIUserAbortError) throw abortError();
         if (!received && isRetryable(err) && retry < RETRY_DELAYS.length) {
-          await sleep(RETRY_DELAYS[retry]!);
+          await sleep(RETRY_DELAYS[retry]!, signal);
+          if (signal.aborted) throw abortError();
           continue;
         }
         throw err;

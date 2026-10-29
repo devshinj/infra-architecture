@@ -154,4 +154,26 @@ describe("qwen client", () => {
     await expect(run(c).p).rejects.toBeTruthy();
     expect(c.calls()).toBe(1);
   });
+
+  test("abort during retry backoff rejects promptly without another request", async () => {
+    const ac = new AbortController();
+    let calls = 0;
+    const client = createQwenClient(cfg, {
+      fetch: (async () => {
+        calls++;
+        return errRes(503);
+      }) as typeof fetch,
+      sleep: (_ms, signal) =>
+        new Promise<void>((_res, rej) => {
+          signal?.addEventListener("abort", () =>
+            rej(new DOMException("aborted", "AbortError")),
+          );
+          setTimeout(() => ac.abort(), 5);
+        }),
+    });
+    await expect(
+      client.streamCompletion(msgs, { signal: ac.signal, onDelta: () => {} }),
+    ).rejects.toMatchObject({ name: "AbortError" });
+    expect(calls).toBe(1);
+  });
 });
