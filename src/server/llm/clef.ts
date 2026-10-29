@@ -1,11 +1,21 @@
 export type Intent = "structure_change" | "question" | "missing_info_answer" | "history" | "other";
 
+export interface ClefAnswer {
+  type?: string;
+  choice?: string;
+  confidence?: number;
+  probabilities?: Record<string, number>;
+  [key: string]: unknown;
+}
+
+export type ClefAnswers = Record<string, ClefAnswer | undefined>;
+
 export interface ClefClient {
   decide(
     state: unknown,
     questions: Record<string, unknown>,
     signal?: AbortSignal,
-  ): Promise<Record<string, any>>;
+  ): Promise<ClefAnswers>;
   classifyIntent(
     input: string,
     context: { lastAssistant?: string },
@@ -122,7 +132,7 @@ export function createClefClient(
     body: unknown,
     timeoutMs: number,
     signal?: AbortSignal,
-  ): Promise<Record<string, any>> {
+  ): Promise<ClefAnswers> {
     const c = cfg!;
     const timeout = AbortSignal.timeout(timeoutMs);
     const combined = signal ? AbortSignal.any([signal, timeout]) : timeout;
@@ -133,7 +143,7 @@ export function createClefClient(
       signal: combined,
     });
     if (!res.ok) throw new ClefHttpError(res.status);
-    const json = (await res.json()) as { answers?: Record<string, any> };
+    const json = (await res.json()) as { answers?: ClefAnswers };
     return json.answers ?? {};
   }
 
@@ -141,7 +151,7 @@ export function createClefClient(
     state: unknown,
     questions: Record<string, unknown>,
     opts: RunOpts,
-  ): Promise<Record<string, any>> {
+  ): Promise<ClefAnswers> {
     if (!cfg) throw new Error("Clef is not configured");
     const body = { model: "Cloudflare/clef-flash", state, questions };
     const started = Date.now();
@@ -187,7 +197,7 @@ export function createClefClient(
     state: unknown,
     questions: Record<string, unknown>,
     signal?: AbortSignal,
-  ): Promise<Record<string, any>> {
+  ): Promise<ClefAnswers> {
     return run(state, questions, {
       maxRetries: MAX_RETRIES,
       retryOn429Only: false,
@@ -214,7 +224,7 @@ export function createClefClient(
       });
       const a = answers?.intent;
       if (!a || a.type !== "choice") return null;
-      if (!INTENTS.includes(a.choice)) return null;
+      if (!INTENTS.includes(a.choice as Intent)) return null;
       const conf = Number(a.confidence);
       if (!Number.isFinite(conf)) return null;
       return { intent: a.choice as Intent, confidence: Math.min(1, Math.max(0, conf)) };
