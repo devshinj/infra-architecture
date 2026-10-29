@@ -10,7 +10,7 @@ import { getOwnedDiagram, NotFoundError } from "@/server/projects";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const BodySchema = z.object({ text: z.string().min(1).max(4000) });
+const BodySchema = z.object({ text: z.string().trim().min(1).max(4000) });
 
 const BAD_BODY = "메시지를 1~4000자로 입력해 주세요.";
 const NEED_LOGIN = "로그인이 필요해요.";
@@ -35,6 +35,9 @@ export async function POST(request: Request, ctx: { params: Promise<{ id: string
   const userId = session?.user?.id;
   if (!userId) return NextResponse.json({ error: NEED_LOGIN }, { status: 401 });
 
+  if (!(request.headers.get("content-type") ?? "").toLowerCase().startsWith("application/json")) {
+    return NextResponse.json({ error: BAD_BODY }, { status: 400 });
+  }
   let body: unknown;
   try {
     body = await request.json();

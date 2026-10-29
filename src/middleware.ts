@@ -2,13 +2,16 @@ import NextAuth from "next-auth";
 import { NextResponse } from "next/server";
 
 import { authConfig } from "./auth.config";
-import { isPublicPath } from "./middleware-paths";
+import { authDecision } from "./middleware-paths";
 
 const { auth } = NextAuth(authConfig);
 
 export default auth((req) => {
-  const { pathname } = req.nextUrl;
-  if (req.auth || isPublicPath(pathname)) return NextResponse.next();
+  const decision = authDecision(req.nextUrl.pathname, !!req.auth);
+  if (decision === "next") return NextResponse.next();
+  if (decision === "unauthorized") {
+    return NextResponse.json({ error: "로그인이 필요해요." }, { status: 401 });
+  }
   return NextResponse.redirect(new URL("/login", req.nextUrl.origin));
 });
 

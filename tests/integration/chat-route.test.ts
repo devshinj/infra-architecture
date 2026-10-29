@@ -98,16 +98,21 @@ describe("POST /api/diagrams/:id/chat", () => {
     expect(await r404.json()).toEqual({ error: "구성도를 찾을 수 없어요." });
 
     authMock.mockResolvedValue({ user: { id: ids.userId } });
-    for (const body of [{ text: "" }, { text: "a".repeat(4001) }, {}, { text: 3 }]) {
+    for (const body of [{ text: "" }, { text: "   " }, { text: "a".repeat(4001) }, {}, { text: 3 }]) {
       const r = await call(ids.diagramId, body);
       expect(r.status).toBe(400);
       expect(await r.json()).toEqual({ error: "메시지를 1~4000자로 입력해 주세요." });
     }
     const bad = await POST(
-      new Request("http://localhost/x", { method: "POST", body: "{nope" }),
+      new Request("http://localhost/x", { method: "POST", headers: { "content-type": "application/json" }, body: "{nope" }),
       { params: Promise.resolve({ id: ids.diagramId }) },
     );
     expect(bad.status).toBe(400);
+    const noType = await POST(
+      new Request("http://localhost/x", { method: "POST", headers: { "content-type": "text/plain" }, body: '{"text":"hi"}' }),
+      { params: Promise.resolve({ id: ids.diagramId }) },
+    );
+    expect(noType.status).toBe(400);
   });
 
   test("409 when a turn is already running", async () => {
@@ -126,15 +131,15 @@ describe("POST /api/diagrams/:id/chat", () => {
     expect(events.at(-1)!.t).toBe("done");
   });
 
-  test("client disconnect aborts the turn", async () => {
+  async function disconnectCase(how: "signal" | "cancel") {
     const ids = await makeOwnedDiagram();
     authMock.mockResolvedValue({ user: { id: ids.userId } });
     const long = Array.from({ length: 200 }, (_, i) =>
       JSON.stringify({ op: "add_node", id: `n-${i}`, kind: "web_server", label: `N${i}`, parent: null }),
-    ).join("\n");
+    ).join(String.fromCharCode(10));
     setChatDepsForTest({ qwen: qwenOf(long), clef });
     const ac = new AbortController();
-    const res = await call(ids.diagramId, { text: "많이" }, ac.signal);
+    const res = await call(ids.diagramId, { text: "많이" }, how === "signal" ? ac.signal : undefined);
     const reader = res.body!.getReader();
     const dec = new TextDecoder();
     let seen = "";
@@ -143,8 +148,8 @@ describe("POST /api/diagrams/:id/chat", () => {
       if (done) break;
       seen += dec.decode(value);
     }
-    ac.abort();
-    await reader.cancel().catch(() => {});
+    if (how === "signal") ac.abort();
+    else await reader.cancel();
     await vi.waitFor(
       async () => {
         const vs = await db.select().from(diagramVersions).where(eq(diagramVersions.diagramId, ids.diagramId));
@@ -152,5 +157,8 @@ describe("POST /api/diagrams/:id/chat", () => {
       },
       { timeout: 5000 },
     );
-  });
+  }
+
+  test("request signal abort aborts the turn", () => disconnectCase("signal"));
+  test("response reader cancel aborts the turn", () => disconnectCase("cancel"));
 });

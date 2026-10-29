@@ -22,3 +22,20 @@ describe("middleware matcher", () => {
     "/_next/static/x.js", "/favicon.ico", "/logo.png",
   ])("%s is public", (p) => expect(protectedPath(p)).toBe(false));
 });
+
+import { authDecision } from "@/middleware-paths";
+
+describe("authDecision", () => {
+  test("unauthenticated api -> 401", () => {
+    expect(authDecision("/api/diagrams/x/chat", false)).toBe("unauthorized");
+    expect(authDecision("/api/llm/health", false)).toBe("unauthorized");
+  });
+  test("unauthenticated page -> login redirect", () => {
+    expect(authDecision("/p/x/d/y", false)).toBe("redirect-login");
+  });
+  test("public and authed pass", () => {
+    expect(authDecision("/api/auth/session", false)).toBe("next");
+    expect(authDecision("/login", false)).toBe("next");
+    expect(authDecision("/api/diagrams/x/chat", true)).toBe("next");
+  });
+});
