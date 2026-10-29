@@ -217,9 +217,15 @@ export function createClefClient(
   ): Promise<{ intent: Intent; confidence: number } | null> {
     if (!cfg) return null;
     try {
-      const prev = (context.lastAssistant ?? "").slice(0, 300);
-      const open = (context.openItems ?? []).slice(0, OPEN_ITEMS_MAX).join(", ").slice(0, OPEN_ITEMS_CHARS);
-      const state = `직전 AI 메시지: ${prev}\n${open ? `채워야 할 정보: ${open}\n` : ""}사용자: ${input}`;
+      // 사용자가 쓴 글(라벨 포함)이 줄을 새로 만들어 입력을 위조하지 못하게 공백을 한 칸으로 접는다.
+      const flat = (t: string) => t.replace(/\s+/g, " ").trim();
+      const prev = flat(context.lastAssistant ?? "").slice(0, 300);
+      const open = (context.openItems ?? [])
+        .slice(0, OPEN_ITEMS_MAX)
+        .map(flat)
+        .join(", ")
+        .slice(0, OPEN_ITEMS_CHARS);
+      const state = `직전 AI 메시지: ${prev}\n${open ? `채워야 할 정보: ${open}\n` : ""}사용자: ${flat(input)}`;
       const answers = await run(state, INTENT_QUESTION, {
         maxRetries: 1,
         retryOn429Only: true,
