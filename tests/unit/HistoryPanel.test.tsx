@@ -32,3 +32,11 @@ test("selecting a version reveals view / restore / compare actions", async () =>
   expect(h.onRestore).toHaveBeenCalledWith(1);
   expect(h.onCompare).toHaveBeenCalledWith(1);
 });
+
+test("disabled prop disables view, restore and compare", async () => {
+  render(<HistoryPanel versions={versions} {...mk()} disabled />);
+  await userEvent.click(screen.getByText("가져오기"));
+  expect(screen.getByRole("button", { name: "이 버전 보기" })).toBeDisabled();
+  expect(screen.getByRole("button", { name: "이 버전으로 되돌리기" })).toBeDisabled();
+  expect(screen.getByRole("button", { name: "현재와 비교" })).toBeDisabled();
+});

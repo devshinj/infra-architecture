@@ -5,6 +5,8 @@ import { afterEach, expect, test, vi } from "vitest";
 
 import { RightPanel, type RightPanelProps } from "@/ui/RightPanel";
 
+import { emptyState } from "@/domain/types";
+
 import { fx } from "../fixtures/spike";
 
 afterEach(cleanup);
@@ -16,12 +18,13 @@ const props = (selectedId: string | null): RightPanelProps => ({
   samples: [{ id: "s1", title: "샘플 하나" }],
   onImportSample: vi.fn(),
   history: { versions: [], onView: vi.fn(), onRestore: vi.fn(), onCompare: vi.fn() },
+  chat: { lines: [], busy: false, phase: null, onSend: vi.fn(), onStop: vi.fn(), health: null, mentionRef: { current: null } },
 });
 
-test("chat tab shows the empty guidance and sample buttons", async () => {
-  const p = props(null);
+test("chat tab shows the sample buttons only for an empty diagram", async () => {
+  const p = { ...props(null), state: emptyState() };
   render(<RightPanel {...p} />);
-  expect(screen.getByText(/AI 대화는 곧 연결됩니다/)).toBeInTheDocument();
+  expect(screen.getByText("또는 샘플로 시작하기")).toBeInTheDocument();
   await userEvent.click(screen.getByRole("button", { name: "샘플 하나 불러오기" }));
   expect(p.onImportSample).toHaveBeenCalledWith("s1");
 });
@@ -57,4 +60,9 @@ test("controlled mode: selection change notifies the parent outside render, no c
   expect(onTabChange).toHaveBeenLastCalledWith("이력");
   expect(err).not.toHaveBeenCalled();
   err.mockRestore();
+});
+
+test("chat tab hides samples when the diagram has nodes", () => {
+  render(<RightPanel {...props(null)} />);
+  expect(screen.queryByText("또는 샘플로 시작하기")).not.toBeInTheDocument();
 });

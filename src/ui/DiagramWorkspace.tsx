@@ -19,6 +19,8 @@ import type { DiagramState } from "@/domain/types";
 
 import styles from "./app.module.css";
 import type { VersionRow } from "./HistoryPanel";
+import { type LlmHealth } from "./chat/ChatPanel";
+import type { MentionInputHandle } from "./chat/MentionInput";
 import { type ChatLine, useChatTurn } from "./chat/useChatTurn";
 import { RightPanel, type Tab } from "./RightPanel";
 
@@ -117,7 +119,33 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
     setOptions((o) => (adoptAfterChat.current ? { ...optionsFor(latest.state), selectedId: o.selectedId, collapsed: o.collapsed } : optionsFor(latest.state)));
     setMode({ kind: "live" });
   }
-  const locked = chat.busy; // no history view/compare/restore, edit mode or sample import while the AI answers
+  const locked = chat.busy;
+  const mentionRef = useRef<MentionInputHandle>(null);
+
+  // AI server health: once on mount, again whenever a new error line shows up. A failed fetch counts as down.
+  const [health, setHealth] = useState<LlmHealth | null>(null);
+  const errorLines = chat.lines.filter((l) => l.kind === "error").length;
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const r = await fetch("/api/llm/health");
+        const j = (await r.json()) as Partial<LlmHealth>;
+        if (!r.ok || typeof j.qwen !== "string") throw new Error("bad health");
+        if (alive) setHealth({ qwen: j.qwen, clef: typeof j.clef === "string" ? j.clef : "down" });
+      } catch {
+        if (alive) setHealth({ qwen: "down", clef: "down" });
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [errorLines]);
+  const sendChat = (text: string) => {
+    if (!live || chat.busy) return;
+    setEditMode(false);
+    void chat.send(text);
+  }; // no history view/compare/restore, edit mode or sample import while the AI answers
 
   const enter = (next: Mode, state: DiagramState) => {
     setMode(next);
@@ -228,6 +256,17 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
           onRestore: restore,
           onCompare: compare,
           viewing: mode.kind === "live" ? null : mode.number,
+          disabled: locked,
+        }}
+        chat={{
+          lines: chat.lines,
+          busy: chat.busy,
+          phase: chat.phase,
+          onSend: sendChat,
+          onStop: chat.stop,
+          health,
+          mentionRef,
+          ...(live ? {} : { disabledReason: "이전 버전을 보는 중에는 대화할 수 없어요." }),
         }}
       />
     </div>
