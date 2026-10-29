@@ -8,6 +8,13 @@
       "when": 1793254239593,
       "tag": "0000_condemned_sasquatch",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1793266181492,
+      "tag": "0001_legal_silver_surfer",
+      "breakpoints": true
     }
   ]
 }

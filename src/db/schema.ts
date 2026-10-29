@@ -1,5 +1,6 @@
 import { sql } from "drizzle-orm";
 import {
+  index,
   integer,
   jsonb,
   pgTable,
@@ -10,6 +11,7 @@ import {
 } from "drizzle-orm/pg-core";
 
 import type { DiagramState } from "@/domain/types";
+import type { MessageMeta } from "@/server/chat/events";
 
 const createdAt = () => timestamp("created_at", { withTimezone: true }).notNull().defaultNow();
 
@@ -60,6 +62,21 @@ export const diagrams = pgTable("diagrams", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+export type MessageRole = "user" | "assistant" | "system";
+
+export const messages = pgTable(
+  "messages",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    diagramId: uuid("diagram_id").notNull().references(() => diagrams.id, { onDelete: "cascade" }),
+    role: text("role").$type<MessageRole>().notNull(),
+    content: text("content").notNull(),
+    meta: jsonb("meta").$type<MessageMeta>().notNull().default(sql`'{}'::jsonb`),
+    createdAt: createdAt(),
+  },
+  (t) => [index("messages_diagram_created_idx").on(t.diagramId, t.createdAt)],
+);
+
 export type VersionSource = "import" | "restore" | "ai" | "form";
 export type VersionStatus = "complete" | "aborted";
 
@@ -73,6 +90,7 @@ export const diagramVersions = pgTable(
     source: text("source").$type<VersionSource>().notNull(),
     status: text("status").$type<VersionStatus>().notNull().default("complete"),
     restoredFrom: integer("restored_from"),
+    messageId: uuid("message_id").references(() => messages.id, { onDelete: "set null" }),
     createdAt: createdAt(),
   },
   (t) => [unique().on(t.diagramId, t.number)],

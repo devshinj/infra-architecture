@@ -3,11 +3,13 @@ import { and, desc, eq, sql } from "drizzle-orm";
 import { db } from "@/db/client";
 import { diagramVersions, type VersionSource, type VersionStatus } from "@/db/schema";
 import type { DiagramState } from "@/domain/types";
+import { createMessage } from "@/server/chat/messages";
 
 export interface CreateVersionOpts {
   source: VersionSource;
   status?: VersionStatus;
   restoredFrom?: number;
+  messageId?: string;
 }
 
 export async function createVersion(
@@ -31,6 +33,7 @@ export async function createVersion(
         source: opts.source,
         status: opts.status ?? "complete",
         restoredFrom: opts.restoredFrom ?? null,
+        messageId: opts.messageId ?? null,
       })
       .returning({ id: diagramVersions.id, number: diagramVersions.number });
     return row;
@@ -79,4 +82,14 @@ export async function restoreVersion(diagramId: string, number: number): Promise
     restoredFrom: number,
   });
   return { number: created };
+}
+
+/** 되돌리기 + 대화에 시스템 메시지를 남긴다. 소유권은 호출자가 확인한다. */
+export async function restoreVersionWithMessage(
+  diagramId: string,
+  number: number,
+): Promise<{ number: number }> {
+  const r = await restoreVersion(diagramId, number);
+  await createMessage(diagramId, "system", `v${number}로 되돌림 (새 버전 v${r.number})`);
+  return r;
 }

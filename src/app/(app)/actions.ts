@@ -21,7 +21,8 @@ import {
   type PinnedPositions,
 } from "@/server/projects";
 import { importSample, SAMPLES } from "@/server/samples";
-import { getVersion, listVersions, restoreVersion } from "@/server/versions";
+import { listMessages } from "@/server/chat/messages";
+import { getVersion, listVersions, restoreVersionWithMessage } from "@/server/versions";
 
 const DIAGRAM_ROUTE = "/p/[projectId]/d/[diagramId]";
 
@@ -133,7 +134,7 @@ export async function restoreVersionAction(diagramId: string, number: number): P
   return run(async (uid) => {
     await getOwnedDiagram(uid, diagramId);
     if ((await getVersion(diagramId, number)) === null) notFound();
-    const r = await restoreVersion(diagramId, number);
+    const r = await restoreVersionWithMessage(diagramId, number);
     refreshDiagram();
     return r;
   });
@@ -151,6 +152,14 @@ export async function listVersionsAction(diagramId: string) {
   return run(async (uid) => {
     await getOwnedDiagram(uid, diagramId);
     return listVersions(diagramId);
+  });
+}
+
+export async function listMessagesAction(diagramId: string) {
+  return run(async (uid) => {
+    await getOwnedDiagram(uid, diagramId);
+    const rows = await listMessages(diagramId, 100);
+    return rows.map((m) => ({ ...m, createdAt: m.createdAt.toISOString() }));
   });
 }
 
