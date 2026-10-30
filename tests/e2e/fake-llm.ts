@@ -4,7 +4,7 @@ import http from "node:http";
 import "./fake-env";
 
 import spike from "../../docs/superpowers/spike/spike-results.json";
-import { WARNING_PROMPT } from "../../src/server/chat/prompt";
+import { EXPLAIN_EDGE_PROMPT, EXPLAIN_NODE_PROMPT, WARNING_PROMPT } from "../../src/server/chat/prompt";
 import { convertSpikeScenario, type SpikeState } from "../../src/server/samples";
 import { FAKE_PORT } from "./fake-config";
 
@@ -74,6 +74,20 @@ function warningLines(messages: Msg[]): { lines: string[]; delay: number } {
   return { lines: ids.map((id) => JSON.stringify({ id, text: "가짜 경고 문구" })), delay: FAST_MS };
 }
 
+/** 설명 요청: 노드는 역할·ADR(사전 정의가 없을 때만 definition), 연결선은 네 항목. 다시 쓰기 요청이면 역할을 바꾼다. */
+function explainJson(messages: Msg[], kind: "node" | "edge"): string {
+  const user = [...messages].reverse().find((m) => m.role === "user")?.content ?? "";
+  if (kind === "edge") {
+    return JSON.stringify({ flow: "가짜 요청과 응답", method: "가짜 방식(동기)", why: "가짜 연결 이유", firewall: "가짜 방화벽 규칙" });
+  }
+  const out: Record<string, unknown> = {
+    role: user.includes("더 쉽게") ? "다시 쓴 역할" : "가짜 역할",
+    adr: { decision: "가짜 결정", reason: "가짜 이유", alternative: "가짜 대안", cost: "가짜 대가" },
+  };
+  if (!user.includes("사전 정의:")) out.definition = "가짜 정의입니다.";
+  return JSON.stringify(out);
+}
+
 function chunk(content: string | null, finish: string | null): string {
   const body = {
     id: "x",
@@ -111,7 +125,9 @@ export function startFakeLlm(): Promise<http.Server> {
         answers[key] =
           q?.type === "noul"
             ? { type: "noul", probability: exposed ? 0.95 : 0.1 }
-            : { type: "choice", choice: "structure_change", confidence: 0.95, probabilities: {} };
+            : q?.type === "score"
+              ? { type: "score", score: 0.5 }
+              : { type: "choice", choice: "structure_change", confidence: 0.95, probabilities: {} };
       }
       if (!("intent" in answers)) answers.intent = { type: "choice", choice: "structure_change", confidence: 0.95, probabilities: {} };
       return json(200, { answers });
@@ -119,7 +135,13 @@ export function startFakeLlm(): Promise<http.Server> {
     if (req.method === "POST" && url === "/v1/chat/completions") {
       const body = JSON.parse(await readBody(req)) as { messages: Msg[] };
       const isWarning = body.messages.some((m) => m.role === "system" && m.content === WARNING_PROMPT);
-      const { lines, delay } = isWarning ? warningLines(body.messages) : await linesFor(body.messages);
+      const sys = body.messages.find((m) => m.role === "system")?.content;
+      const explainKind = sys === EXPLAIN_NODE_PROMPT ? "node" : sys === EXPLAIN_EDGE_PROMPT ? "edge" : null;
+      const { lines, delay } = explainKind
+        ? { lines: [explainJson(body.messages, explainKind)], delay: FAST_MS }
+        : isWarning
+          ? warningLines(body.messages)
+          : await linesFor(body.messages);
       res.writeHead(200, { "Content-Type": "text/event-stream", "Cache-Control": "no-cache", Connection: "keep-alive" });
       let closed = false;
       res.on("close", () => (closed = true));

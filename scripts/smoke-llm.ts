@@ -25,6 +25,12 @@ const RISKY =
 const SAFE =
   "그룹 public [subnet_public]: 노드 lb(lb_l7)\n그룹 private [subnet_private]: 노드 was-1, was-2(was, 이중화), db-a(Active), db-s(Standby)\n연결: user->lb, lb->was-1, lb->was-2, was-*->db-a, db-a->db-s(복제)";
 
+// 스파이크(spike.mjs)의 설명 품질 비교 문장.
+const GOOD_EXPLANATION =
+  "Redis(Remote Dictionary Server)는 데이터를 디스크가 아닌 메모리에 저장해 빠른 읽기와 쓰기 속도를 제공하는 인메모리 키-값 저장소입니다.";
+const BAD_EXPLANATION =
+  "Redis는 BSD 라이선스 기반의 인메모리 데이터 구조 서버로서 String, Hash, List, Set, Sorted Set, Bitmap, HyperLogLog, Geospatial Index, Stream 등의 다양한 자료구조를 지원하며 RDB 스냅샷과 AOF 로그 기반의 영속성 메커니즘, Sentinel을 통한 고가용성, Cluster 모드를 통한 해시 슬롯 기반 샤딩, Lua 스크립팅, Pub/Sub 메시징, 트랜잭션(MULTI/EXEC) 및 낙관적 락(WATCH) 등을 제공하므로 다양한 워크로드에서 활용될 수 있는 범용적 솔루션입니다.";
+
 const sec = (ms: number) => (ms / 1000).toFixed(1) + "s";
 
 async function main(): Promise<number> {
@@ -212,6 +218,31 @@ async function main(): Promise<number> {
       crows.push([id, ...names.map((n) => String(ws.filter((w) => w.rule === n).length))]);
     }
     if (crows.length) console.log(formatTable(["시나리오", ...names], crows));
+  }
+
+  // (5) 설명 품질 판정: 스파이크의 쉬운/어려운 설명 두 문장으로 score 질문을 점검한다.
+  console.log("\n== 5. 설명 품질 판정 ==");
+  if (!cfg.clef) {
+    console.log("Clef 설정 없음(CLEF_API_KEY) - 건너뜀");
+    failed = true;
+  } else {
+    const { EXPLAIN_SCORE_QUESTION, scoreValue } = await import("../src/server/llm/clef");
+    const clef = createClefClient(cfg.clef);
+    const qrows: string[][] = [];
+    for (const [name, text] of [["쉬운 설명", GOOD_EXPLANATION], ["어려운 설명", BAD_EXPLANATION]] as const) {
+      try {
+        const answers = await clef.decide(`설명: ${JSON.stringify(text)}`, { q: EXPLAIN_SCORE_QUESTION }, AbortSignal.timeout(30_000));
+        const a = answers.q;
+        // 원본 응답은 키 목록만 출력한다(값은 출력하지 않는다).
+        const keys = a ? Object.keys(a).join(", ") : "(답 없음)";
+        const v = scoreValue(a);
+        qrows.push([name, keys, v === null ? "(읽을 수 없음)" : v.toFixed(2)]);
+      } catch (e) {
+        failed = true;
+        qrows.push([name, "-", `오류: ${(e as Error).name}`]);
+      }
+    }
+    console.log(formatTable(["설명", "원본 응답 키", "scoreValue"], qrows));
   }
 
   if (health.qwen !== "ok" || health.clef !== "ok") failed = true;
