@@ -59,3 +59,23 @@ test("double click resets", () => {
   fireEvent.doubleClick(sep);
   expect(onChange).toHaveBeenLastCalledWith(360);
 });
+
+test("second pointerdown mid-drag is ignored and unmount restores user-select", () => {
+  document.body.style.userSelect = "text";
+  const onChange = vi.fn();
+  const { unmount } = render(<PanelResizer width={400} min={320} max={720} defaultWidth={360} onChange={onChange} />);
+  const sep = screen.getByRole("separator", { name: "대화 패널 너비" });
+  fireEvent.pointerDown(sep, { clientX: 1000, pointerId: 1 });
+  // 두 번째 포인터는 끌기 시작점·이전 user-select 를 덮어쓰지 않는다.
+  fireEvent.pointerDown(sep, { clientX: 500, pointerId: 2 });
+  fireEvent.pointerMove(sep, { clientX: 950, pointerId: 1 });
+  expect(onChange).toHaveBeenLastCalledWith(450);
+  fireEvent.pointerUp(sep, { pointerId: 1 });
+  expect(document.body.style.userSelect).toBe("text");
+  // 끄는 중에 사라져도 user-select 를 되돌린다.
+  fireEvent.pointerDown(sep, { clientX: 1000, pointerId: 1 });
+  expect(document.body.style.userSelect).toBe("none");
+  unmount();
+  expect(document.body.style.userSelect).toBe("text");
+  document.body.style.userSelect = "";
+});

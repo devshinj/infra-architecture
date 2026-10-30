@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 
 import styles from "./app.module.css";
 
@@ -31,6 +31,14 @@ export function PanelResizer({ width, min, max, defaultWidth, onChange }: PanelR
     document.body.style.userSelect = prevSelect.current;
   };
 
+  // 끄는 중에 사라지면 user-select 를 되돌린다.
+  useEffect(
+    () => () => {
+      if (drag.current) document.body.style.userSelect = prevSelect.current;
+    },
+    [],
+  );
+
   return (
     <div
       role="separator"
@@ -43,6 +51,8 @@ export function PanelResizer({ width, min, max, defaultWidth, onChange }: PanelR
       className={styles.resizer}
       style={{ right: width }}
       onPointerDown={(e) => {
+        // 끄는 중에 들어온 다른 포인터는 무시한다(시작점·이전 user-select 를 덮어쓰지 않게).
+        if (drag.current) return;
         drag.current = { x: e.clientX, width };
         prevSelect.current = document.body.style.userSelect;
         document.body.style.userSelect = "none";
