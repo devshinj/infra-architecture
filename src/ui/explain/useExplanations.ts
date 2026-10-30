@@ -30,6 +30,8 @@ interface Entry {
   signature?: string;
   /** 요청할 때의 화면 서명. 서버 서명과 어긋나도 화면이 그대로면 다시 요청하지 않는다(무한 반복 방지). */
   requested: string;
+  /** 실패한 다시 쓰기의 요청 한 줄. 다시 시도할 때 그대로 보낸다. */
+  instruction?: string;
 }
 
 /** 사용자가 직접 부른 요청(다시 쓰기·다시 시도). 최신 여부와 상관없이 맨 앞에 선다. */
@@ -112,6 +114,10 @@ export function useExplanations({ diagramId, state, live, busy, selectedId, fetc
   const runningRef = useRef<string | null>(null);
   const ctrlRef = useRef<AbortController | null>(null);
   const termsRef = useRef<TermEntry[]>([]);
+  const entriesRef = useRef(entries);
+  useEffect(() => {
+    entriesRef.current = entries;
+  });
   const fetchRef = useRef(fetchImpl);
   useEffect(() => {
     fetchRef.current = fetchImpl;
@@ -199,6 +205,7 @@ export function useExplanations({ diagramId, state, live, busy, selectedId, fetc
         entry = { status: "error", message: FAIL, requested: job.sig };
       }
       if (ctrl.signal.aborted) return finish();
+      if (entry.status === "error" && job.instruction) entry.instruction = job.instruction;
       setEntries((e) => ({ ...e, [job.key]: entry }));
       if (entry.status === "ready" && entry.signature) {
         const sig = entry.signature;
@@ -260,8 +267,10 @@ export function useExplanations({ diagramId, state, live, busy, selectedId, fetc
   }, []);
   const retry = useCallback((kind: TargetKind, id: string) => {
     const key = keyOf(kind, id);
+    // 실패한 다시 쓰기면 같은 요청 한 줄로 다시 보낸다(없이 보내면 서버가 옛 캐시를 돌려준다).
+    const instruction = entriesRef.current[key]?.instruction;
     setEntries((e) => omit(e, key));
-    setRequests((r) => ({ ...r, [key]: { kind, id } }));
+    setRequests((r) => ({ ...r, [key]: { kind, id, ...(instruction ? { instruction } : {}) } }));
   }, []);
 
   return { get, rewrite, retry, terms };

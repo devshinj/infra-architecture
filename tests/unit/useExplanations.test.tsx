@@ -258,3 +258,19 @@ test("glossary definition shows at once while loading and on error without parti
   expect(result.current.get("node", "a")).toEqual({ status: "error", message: FAIL, partial: glossary });
 });
 
+test("retry after a failed rewrite re-sends the same instruction", async () => {
+  const s = mkState(["a"]);
+  const { posts, result } = setup({}, { state: s });
+  await waitFor(() => expect(posts).toHaveLength(1));
+  await answer(posts[0]!, ok(s, "node", "a", nodeEx("처음")));
+  act(() => result.current.rewrite("node", "a", "더 쉽게"));
+  await waitFor(() => expect(posts).toHaveLength(2));
+  await answer(posts[1]!, { ok: false, message: FAIL });
+  expect(result.current.get("node", "a").status).toBe("error");
+  act(() => result.current.retry("node", "a"));
+  await waitFor(() => expect(posts).toHaveLength(3));
+  expect(posts[2]!.body).toEqual({ targetKind: "node", targetId: "a", instruction: "더 쉽게" });
+  await answer(posts[2]!, ok(s, "node", "a", nodeEx("다시 쓴 글")));
+  // 다시 쓴 결과로 바뀐다.
+  expect(result.current.get("node", "a")).toMatchObject({ status: "ready", data: { definition: "다시 쓴 글" } });
+});
