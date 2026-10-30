@@ -46,8 +46,10 @@ test("warnings: chat line, badge, ignore, restore", async ({ page }) => {
   await cautionLines(page).first().click();
   await expect(page.getByRole("tab", { name: "설명" })).toHaveAttribute("aria-selected", "true");
   await expect(page.getByRole("heading", { name: "주의할 점" })).toBeVisible();
-  await expect(page.getByText("가짜 경고 문구").first()).toBeVisible();
-  await expect(page.getByText("경고", { exact: true }).first()).toBeVisible();
+  const cautions = page.locator("section").filter({ has: page.getByRole("heading", { name: "주의할 점" }) });
+  await expect(cautions.getByText("가짜 경고 문구").first()).toBeVisible();
+  await expect(cautions.getByText("경고", { exact: true }).first()).toBeVisible();
+  await expect(cautions.getByText("DB·캐시는 내부 구역에 두고 WAS 를 거쳐서만 접근하게 하세요.")).toBeVisible();
 
   // 의도된 구성: 한 번에 한 경고씩 옮겨진다.
   await page.getByRole("button", { name: "의도된 구성", exact: true }).first().click();
