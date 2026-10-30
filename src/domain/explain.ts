@@ -1,5 +1,5 @@
 import { NODE_KINDS } from "@/domain/catalog";
-import type { DNode } from "@/domain/types";
+import type { DiagramState, DNode } from "@/domain/types";
 
 // 끝의 버전: 구분자(공백·/·-·_) 뒤의 숫자("Tomcat 10")이거나 점이 든 숫자("Redis7.2").
 // 구분자 없이 붙은 숫자 하나("L4", "S3")는 이름의 일부라 남긴다.
@@ -27,4 +27,91 @@ export function termCandidates(node: DNode): { key: string; display: string }[] 
     out.push({ key, display });
   }
   return out;
+}
+
+export interface NodeExplanation {
+  kind: "node";
+  term: string; // 표시 용어
+  definition: string;
+  definitionSource: "glossary" | "ai";
+  reviewed: boolean; // 사전 항목의 검수 상태(ai 생성 직후 false)
+  why?: string; // 사전에 있으면
+  compare?: string; // 사전에 있으면
+  role: string;
+  adr: { decision: string; reason: string; alternative: string; cost: string };
+}
+
+export interface EdgeExplanation {
+  kind: "edge";
+  flow: string;
+  method: string;
+  why: string;
+  firewall: string;
+}
+
+/** 항목별 글자 수 상한(코드 포인트 기준). */
+export const LIMITS = { definition: 120, role: 150, adr: 80, why: 120, compare: 120, edge: 100 } as const;
+
+const len = (s: string | undefined): number => (s ? [...s].length : 0);
+
+/** 상한을 넘은 항목 이름 목록. 노드: definition, role, why, compare, adr.*; 연결: flow, method, why, firewall. */
+export function overLimit(e: NodeExplanation | EdgeExplanation): string[] {
+  const out: string[] = [];
+  const check = (name: string, value: string | undefined, max: number) => {
+    if (len(value) > max) out.push(name);
+  };
+  if (e.kind === "node") {
+    check("definition", e.definition, LIMITS.definition);
+    check("role", e.role, LIMITS.role);
+    check("why", e.why, LIMITS.why);
+    check("compare", e.compare, LIMITS.compare);
+    check("adr.decision", e.adr.decision, LIMITS.adr);
+    check("adr.reason", e.adr.reason, LIMITS.adr);
+    check("adr.alternative", e.adr.alternative, LIMITS.adr);
+    check("adr.cost", e.adr.cost, LIMITS.adr);
+  } else {
+    check("flow", e.flow, LIMITS.edge);
+    check("method", e.method, LIMITS.edge);
+    check("why", e.why, LIMITS.edge);
+    check("firewall", e.firewall, LIMITS.edge);
+  }
+  return out;
+}
+
+/** FNV-1a 32비트 → 8자리 16진수. 브라우저에서도 도는 순수 함수(crypto 불필요). */
+function fnv1a(s: string): string {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 0x01000193) >>> 0;
+  }
+  return h.toString(16).padStart(8, "0");
+}
+
+const attrText = (v: unknown): string | null => (typeof v === "string" || typeof v === "number" ? String(v) : null);
+
+/**
+ * 설명이 낡았는지 판단하는 내용 서명. 대상이 없으면 null.
+ * 노드: kind·label·sub·attrs.sw·attrs.version + 정렬한 연결 목록. 연결: edgeKind·label·양 끝 kind·label.
+ * cpu·ip 같은 다른 attrs 는 넣지 않는다.
+ */
+export function signatureOf(state: DiagramState, targetKind: "node" | "edge", id: string): string | null {
+  if (targetKind === "edge") {
+    const e = state.edges[id];
+    const from = e && state.nodes[e.from];
+    const to = e && state.nodes[e.to];
+    if (!e || !from || !to) return null;
+    return fnv1a(JSON.stringify([e.edgeKind, e.label ?? "", from.kind, from.label, to.kind, to.label]));
+  }
+  const n = state.nodes[id];
+  if (!n) return null;
+  const links: [string, string, string, string, string][] = [];
+  for (const e of Object.values(state.edges)) {
+    const dir = e.from === id ? "out" : e.to === id ? "in" : null;
+    if (!dir) continue;
+    const other = state.nodes[dir === "out" ? e.to : e.from];
+    links.push([e.edgeKind, dir, other?.id ?? "", other?.kind ?? "", other?.label ?? ""]);
+  }
+  links.sort((x, y) => (JSON.stringify(x) < JSON.stringify(y) ? -1 : 1));
+  return fnv1a(JSON.stringify([n.kind, n.label, n.sub ?? "", attrText(n.attrs.sw), attrText(n.attrs.version), links]));
 }

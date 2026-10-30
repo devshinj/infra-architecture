@@ -28,13 +28,14 @@ test("glossary key is unique per user but shared keys across users are allowed",
 });
 
 test("explanations cascade with the diagram", async () => {
+  const edgeData = { kind: "edge", flow: "f", method: "m", why: "w", firewall: "x" } as const;
   const { diagramId } = await makeOwnedDiagram();
   await db.insert(explanations).values({
     diagramId,
     targetKind: "node",
     targetId: "n1",
     signature: "sig",
-    data: { summary: "x" },
+    data: edgeData,
   });
   await expect(
     db.insert(explanations).values({
@@ -42,7 +43,7 @@ test("explanations cascade with the diagram", async () => {
       targetKind: "node",
       targetId: "n1",
       signature: "sig2",
-      data: {},
+      data: edgeData,
     }),
   ).rejects.toThrow();
 

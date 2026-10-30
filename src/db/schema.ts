@@ -11,6 +11,7 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 
+import type { EdgeExplanation, NodeExplanation } from "@/domain/explain";
 import type { DiagramState } from "@/domain/types";
 import type { MessageMeta } from "@/server/chat/events";
 
@@ -131,7 +132,7 @@ export const explanations = pgTable(
     targetKind: text("target_kind").$type<ExplanationTargetKind>().notNull(),
     targetId: text("target_id").notNull(),
     signature: text("signature").notNull(),
-    data: jsonb("data").$type<Record<string, unknown>>().notNull(),
+    data: jsonb("data").$type<NodeExplanation | EdgeExplanation>().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [unique().on(t.diagramId, t.targetKind, t.targetId)],
