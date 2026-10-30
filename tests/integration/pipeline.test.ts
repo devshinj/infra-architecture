@@ -661,7 +661,7 @@ describe("runChatTurn", () => {
       expect(msgs[1]!.meta).not.toHaveProperty("warnings");
     });
 
-    test("abort during checking saves an aborted version with code warnings and frees the lock", async () => {
+    test("abort during checking saves an aborted version with code warnings (no prior db_exposed) and frees the lock", async () => {
       const ids = await makeOwnedDiagram();
       const ctrl = new AbortController();
       const clef = spyClef();
@@ -684,6 +684,31 @@ describe("runChatTurn", () => {
       expect((await listMessages(ids.diagramId))[1]!.meta.status).toBe("aborted");
       const next = await turn(ids, "다시", { qwen: fakeQwen(JSON.stringify({ op: "say", text: "네" })), clef: fakeClef(null) });
       expect(next.events.at(-1)).toMatchObject({ t: "done", status: "complete" });
+    });
+
+    test("abort during checking keeps the previous db_exposed warning", async () => {
+      const ids = await makeOwnedDiagram();
+      const base = emptyState();
+      base.groups["priv"] = { id: "priv", groupKind: "subnet_private", label: "내부", parent: null };
+      base.nodes["db-9"] = { id: "db-9", kind: "db_rdb", label: "원장 DB", parent: "priv", attrs: {} };
+      base.warnings = [{ id: "db_exposed:db-9", rule: "db_exposed", nodeId: "db-9", level: "warn", text: "예전 노출 문구", guide: "g" }];
+      await createVersion(ids.diagramId, base, { source: "import" });
+      const ctrl = new AbortController();
+      const { events } = await turn(
+        ids,
+        "DB 그려줘",
+        { qwen: seqQwen(PUBLIC_DB_LINES.join("\n"), "never"), clef: spyClef() },
+        {
+          signal: ctrl.signal,
+          onEvent(e) {
+            if (e.t === "status" && e.phase === "checking") ctrl.abort();
+          },
+        },
+      );
+      expect(events.at(-1)).toMatchObject({ t: "done", status: "aborted" });
+      const saved = (await getLatestState(ids.diagramId))!.state.warnings!;
+      expect(saved.find((x) => x.id === "db_exposed:db-9")!.text).toBe("예전 노출 문구");
+      expect(of(events, "warnings").flatMap((w) => w.items.map((x) => x.id))).not.toContain("db_exposed:db-9");
     });
 
     test("turn time cap during checking saves aborted and emits the timeout error", async () => {

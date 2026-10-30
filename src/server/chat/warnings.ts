@@ -55,6 +55,16 @@ function levelOf(p: number | null): WarningLevel | null {
   return null;
 }
 
+/** 판정하지 않는 노드의 이전 db_exposed 경고를 그대로 이어 준다. */
+function carryExposed(nodes: DNode[], prev: Map<string, Warning>): Warning[] {
+  const out: Warning[] = [];
+  for (const n of nodes) {
+    const kept = prev.get(`${EXPOSED.rule}:${n.id}`);
+    if (kept) out.push(kept);
+  }
+  return out;
+}
+
 /**
  * Clef db_exposed 판정. 단계 전체가 capMs 안에 끝나고, 그때까지 끝난 판정만 쓴다.
  * 판정이 실패·시간 초과·읽을 수 없는 답이면 prev 의 같은 경고를 그대로 이어 간다(사라지거나 새 경고로 다시 알리지 않게).
@@ -68,10 +78,11 @@ async function judgeExposed(
   limit: number,
   capMs: number,
 ): Promise<Warning[]> {
-  const targets = Object.values(state.nodes)
-    .filter((n) => DATA_KINDS.includes(n.kind) && !flagged.has(n.id))
-    .slice(0, limit);
-  if (!targets.length) return [];
+  const eligible = Object.values(state.nodes).filter((n) => DATA_KINDS.includes(n.kind) && !flagged.has(n.id));
+  const targets = eligible.slice(0, limit);
+  // 이번 차례에 판정하지 않는 노드는 이전 판정을 그대로 이어 간다.
+  const carried = carryExposed(eligible.slice(limit), prev);
+  if (!targets.length) return carried;
   const question = { q: { type: "noul", instructions: EXPOSED.instructions } };
   // 바깥 signal 은 건드리지 않고 이 단계만 끝낸다(Qwen 단계는 이어서 돈다).
   const stage = new AbortController();
@@ -99,7 +110,7 @@ async function judgeExposed(
     clearTimeout(handle);
     stage.abort(); // 남은 리스너·요청 정리
   }
-  const out: Warning[] = [];
+  const out: Warning[] = [...carried];
   results.forEach((r, i) => {
     const node = targets[i]!;
     const p = r.status === "fulfilled" ? noulProbability(r.value?.q) : null;
@@ -189,17 +200,19 @@ export async function checkWarnings(
   const code = evaluateRules(state);
   let warnings = code;
 
-  if (!signal.aborted) {
-    const flagged = new Set(code.filter((w) => w.rule === "db_public").map((w) => w.nodeId));
-    let exposed: Warning[] = [];
+  const flagged = new Set(code.filter((w) => w.rule === "db_public").map((w) => w.nodeId));
+  let exposed: Warning[];
+  if (signal.aborted) {
+    // 중단된 차례는 판정을 건너뛰고 이전 db_exposed 를 이어 간다.
+    exposed = carryExposed(Object.values(state.nodes).filter((n) => DATA_KINDS.includes(n.kind) && !flagged.has(n.id)), prevById);
+  } else {
     try {
       exposed = await judgeExposed(state, flagged, prevById, deps.clef, signal, opts.clefLimit ?? CLEF_LIMIT, opts.clefCapMs ?? CLEF_CAP_MS);
     } catch {
-      exposed = [];
+      exposed = carryExposed(Object.values(state.nodes).filter((n) => DATA_KINDS.includes(n.kind) && !flagged.has(n.id)), prevById);
     }
-    // 판정 도중 중단되면 코드 규칙만 쓴다.
-    if (!signal.aborted) warnings = [...code, ...exposed.filter((w) => !code.some((c) => c.id === w.id))];
   }
+  warnings = [...code, ...exposed.filter((w) => !code.some((c) => c.id === w.id))];
 
   warnings = warnings.map((w) => {
     const t = prevById.get(w.id)?.text;
