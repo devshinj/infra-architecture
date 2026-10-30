@@ -1,0 +1,5 @@
+# 문서 사이트용 그래프는 앱 코드(src)와 설계 문서(docs)만 대상으로 한다
+/*
+!/src/
+!/docs/
+docs/superpowers/spike/

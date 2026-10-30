@@ -18,3 +18,9 @@ test-results/
 tsconfig.tsbuildinfo
 .omo/
 .serena/
+
+# graphify 산출물. 기준 그래프와 커뮤니티 이름만 올리고 나머지는 npm run docs:refresh 로 다시 만든다
+graphify-out/*
+!graphify-out/graph.json
+!graphify-out/.graphify_labels.json
+!graphify-out/.graphify_labels.json.sig
