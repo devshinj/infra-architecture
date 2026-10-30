@@ -294,31 +294,60 @@
 
 ---
 
-### Task 8: 체크리스트 접기와 노드 위치 보기
+### Task 8: 캔버스 구성 정보 카드 (2026-10-30 사용자 결정으로 범위 변경 — 체크리스트 접기·위치 보기 포함)
 
-**Files:** Modify `src/ui/chat/MissingChecklist.tsx`, `src/ui/DiagramWorkspace.tsx`, `src/canvas/Canvas.tsx`(포커스 API) · Test `tests/unit/MissingChecklist.test.tsx`, `tests/unit/Canvas.test.tsx`, `tests/unit/DiagramWorkspace.test.tsx`
+**사용자 결정:**
+- 가정 칩은 대화창에서 빼고 캔버스 카드로 옮긴다.
+- 빠진 정보 알림·입력은 캔버스 카드에서 한다. 대화창의 체크리스트와 답변의 "빠진 정보 N개" 안내 칩은 없앤다.
+- 새 경고는 그 답변 아래 칩 하나(`주의 N`)로만 알리고, 자세한 목록은 카드에 모은다.
 
-**Interfaces:**
-- `CanvasProps.focusRequest?: { id: string; token: number }` 가 바뀌면 그 노드(또는 연결의 도착 노드)를 아래처럼 보여 준다.
-  - 화면 가운데로 `duration: 500`(reducedMotion 0) 이동한다.
-  - zoom 은 지금 값을 유지하되 0.8 미만이면 0.8 로 한다.
-  - 노드에 `node--pulse` 클래스(1.6초 동안 은빛 링 2회, 금색 아님)를 준다.
-  - 선택은 바꾸지 않는다.
-- 체크리스트
-  - 각 대상 블록 머리 = 접기 버튼(`<이름> 항목 펼치기/접기`) + 제목 버튼(`<이름> 위치 보기`) + 남은 개수다.
-  - 블록 기본은 접힘이다. 배지 클릭이나 `focusId` 로 열린 블록은 펼침이다.
-  - 펼침 상태는 3A 의 drafts·open 처럼 DiagramWorkspace 에 둔다(탭 전환에도 유지).
-  - 제목 버튼을 누르면 `focusRequest` 를 보낸다.
-- 노드 이름이 바뀌면 블록 제목도 바뀐다(이미 상태에서 읽음, 테스트로 고정).
+**Files:** Create `src/ui/canvas/InfoCard.tsx`(+ css module) · Modify `src/ui/DiagramWorkspace.tsx`, `src/ui/chat/ChatPanel.tsx`, `src/ui/chat/useChatTurn.ts`, `src/ui/chat/lines.ts`, `src/ui/chat/MissingChecklist.tsx`(카드 안에서 재사용), `src/ui/chat/AssumptionChips.tsx`(카드 안에서 재사용), `src/canvas/Canvas.tsx`(focusRequest) · Test `tests/unit/InfoCard.test.tsx`, ChatPanel/useChatTurn/lines/MissingChecklist/Canvas/DiagramWorkspace 테스트, E2E 선택자(3A·3B·phase2)
+
+**결정:**
+- **카드 위치와 모양**
+  - 캔버스 왼쪽 아래, 사이드바 인셋 + `--panel-gap` 안쪽에 둔다.
+  - Task 6 의 유리 패널과 같은 칠(`--glass-*`, `--radius-panel`)이고, 너비 300px 다.
+- **접힌 상태(기본)**는 한 줄이다: `구성 정보 · 채워야 할 정보 N · 주의 M · 미확정 가정 K`.
+  - 0 인 항목은 숫자를 흐리게 한다.
+  - 줄 전체가 버튼이고, aria-label 은 `구성 정보 펼치기`/`접기` 다.
+- **펼친 상태**는 위로 열린다. 최대 높이는 캔버스 높이의 70% 이고 그 안에서 스크롤한다. 세 절이 있다.
+  1. `가정`: 기존 AssumptionChips 동작을 그대로 쓴다(대안 고르기 → 확정 + 대화로 조정 메시지).
+  2. `채워야 할 정보`: 기존 MissingChecklist 다. 아래를 더한다.
+     - 노드별 블록을 접고 펼친다. 기본은 접힘이다. 블록 머리는 분류 아이콘·이름·남은 개수다.
+     - 접기 버튼 aria-label 은 `<이름> 항목 펼치기`/`<이름> 항목 접기` 다.
+     - 제목 버튼(`<이름> 위치 보기`)을 누르면 캔버스가 그 노드로 이동해 은빛 링으로 강조한다. 선택은 하지 않는다.
+     - drafts·open·블록 펼침 상태는 DiagramWorkspace 에 둔다.
+  3. `주의`: mergeWarnings 의 active 목록이다. 항목을 누르면 그 노드를 선택한다(설명 탭 → 주의할 점에서 `의도된 구성`).
+- **배지와 카드의 관계**
+  - 빠진 정보 숫자 배지(Task 5)를 누르면 카드가 펼쳐지고, 그 노드 블록이 펼쳐져 첫 칸에 포커스가 간다.
+  - 3A 의 "대화 탭으로 전환"은 없앤다.
+- **대화창**
+  - 상단의 가정 칩·체크리스트를 없앤다.
+  - 답변 아래 칩에서 빠진 정보 칩을 뺀다(서버 meta.missing 은 그대로 둔다).
+  - 경고는 줄 대신 `주의 N` 칩 하나로 바꾼다. 칩을 누르면 카드가 펼쳐지고 주의 절로 스크롤된다.
+  - 요약 칩은 그대로다. reload(messagesToLines)도 같다.
+- **CanvasProps.focusRequest?: { id: string; token: number }** 가 바뀌면 아래처럼 보여 준다.
+  - 그 노드로 `duration: 500`(reducedMotion 0) 이동한다. zoom 은 유지하되 0.8 미만이면 0.8 로 한다.
+  - `node--pulse`(1.6초 은빛 링 2회, 금색 아님)를 준다. 선택은 바꾸지 않는다.
+  - 이 이동은 Task 3 카메라 규칙의 "사용자 이동"으로 치지 않는다.
+- 이력 보기·비교 모드에서는 카드가 읽기 전용이다(저장·확정 버튼 숨김).
+- 노드 이름이 바뀌면 블록 제목도 바뀐다(테스트로 고정).
 - [ ] **Step 1: 실패하는 테스트**
+  - `card collapsed line shows counts`
+  - `expands upward with three sections`
   - `blocks start collapsed, toggle expands`
-  - `badge focus expands that block`
+  - `badge click opens card at that node block and focuses first input`
   - `title click sends focus request without selecting`
+  - `warning item selects node`
   - `renamed node updates block title`
   - `canvas centers and pulses on focus request`
-  - `expanded blocks survive tab switch`
-- [ ] **Step 2:** → FAIL · **Step 3: 구현** · **Step 4:** PASS, `npm test`, E2E
-- [ ] **Step 5: Commit** `feat: 체크리스트 접기와 노드 위치 보기`
+  - `chat has no assumption chips, checklist or missing chip; warnings collapse to one 주의 N chip that opens the card`
+  - `read-only in history view`
+  - `drafts and expanded blocks survive tab switch and card collapse`
+- [ ] **Step 2:** → FAIL
+- [ ] **Step 3: 구현**(frontend-design 지침 참고, 토큰·결정 준수)
+- [ ] **Step 4:** PASS, `npm test`, `npx tsc --noEmit`, `npm run lint`, E2E(3A·3B·phase2 선택자를 의도 유지하며 갱신)
+- [ ] **Step 5: Commit** `feat: 캔버스 구성 정보 카드(가정·빠진 정보·주의)`
 
 ---
 
