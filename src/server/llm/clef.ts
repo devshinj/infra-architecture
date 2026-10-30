@@ -45,6 +45,46 @@ export function noulProbability(a: ClefAnswer | undefined): number | null {
   return null;
 }
 
+/** 설명 품질(난이도·장황함) 단계. 순서가 점수 0~2 다. */
+export const SCORE_CRITERIA = ["쉽고 간결함", "보통", "어렵거나 장황함"] as const;
+
+/** 설명 품질 검사 질문(스파이크 그대로). */
+export const EXPLAIN_SCORE_QUESTION = {
+  type: "score",
+  instructions:
+    "IT 비전공자가 이 설명을 읽고 바로 이해할 수 있는가? 전문용어가 풀이 없이 많거나 문장이 길고 장황할수록 높은 단계",
+  criteria: [...SCORE_CRITERIA],
+};
+
+/**
+ * Clef `score` 답에서 점수(0~2)를 읽는다.
+ * 실제 응답 모양이 스파이크 기록에 없어 세 모양을 받는다: score 숫자, criteria 이름별 probabilities 의 기대값, criteria 이름 choice.
+ * 그 밖의 모양이면 null 이다.
+ */
+export function scoreValue(a: ClefAnswer | undefined): number | null {
+  if (!a) return null;
+  const max = SCORE_CRITERIA.length - 1;
+  const clamp = (n: number) => Math.min(max, Math.max(0, n));
+  const num = (v: unknown): number | null => (typeof v === "number" && Number.isFinite(v) ? v : null);
+  const s = num(a.score);
+  if (s !== null) return clamp(s);
+  const probs = a.probabilities;
+  if (probs && typeof probs === "object") {
+    let sum = 0;
+    let found = false;
+    SCORE_CRITERIA.forEach((name, i) => {
+      const p = num(probs[name]);
+      if (p === null) return;
+      found = true;
+      sum += i * p;
+    });
+    if (found) return clamp(sum);
+  }
+  const i = SCORE_CRITERIA.indexOf(a.choice as (typeof SCORE_CRITERIA)[number]);
+  if (i >= 0) return i;
+  return null;
+}
+
 const INTENTS: readonly Intent[] = [
   "structure_change",
   "question",

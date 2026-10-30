@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 
-import { createClefClient, INTENT_MIN_CONFIDENCE, noulProbability } from "@/server/llm/clef";
+import { createClefClient, INTENT_MIN_CONFIDENCE, noulProbability, scoreValue } from "@/server/llm/clef";
 
 const cfg = { url: "http://clef.test", key: "k-secret", maxConcurrency: 2 };
 
@@ -339,5 +339,27 @@ describe("noulProbability", () => {
     expect(noulProbability({ probabilities: { maybe: 0.5 } })).toBeNull();
     expect(noulProbability({ choice: "maybe", confidence: 0.9 })).toBeNull();
     expect(noulProbability({ choice: "yes" })).toBeNull();
+  });
+});
+
+describe("scoreValue", () => {
+  test("scoreValue reads score, probabilities and choice", () => {
+    expect(scoreValue({ type: "score", score: 1.6 })).toBe(1.6);
+    // criteria 순서(쉽고 간결함 0, 보통 1, 어렵거나 장황함 2)의 기대값.
+    expect(scoreValue({ type: "score", probabilities: { "쉽고 간결함": 0.2, 보통: 0.5, "어렵거나 장황함": 0.3 } })).toBeCloseTo(1.1);
+    expect(scoreValue({ type: "score", choice: "어렵거나 장황함" })).toBe(2);
+    expect(scoreValue({ type: "score", choice: "쉽고 간결함", confidence: 0.9 })).toBe(0);
+    // score 가 숫자면 그것이 먼저다.
+    expect(scoreValue({ score: 0.4, choice: "보통" })).toBe(0.4);
+    // 0~2 로 자른다.
+    expect(scoreValue({ score: 3.5 })).toBe(2);
+    expect(scoreValue({ score: -1 })).toBe(0);
+    // 그 밖이면 null.
+    expect(scoreValue(undefined)).toBeNull();
+    expect(scoreValue({})).toBeNull();
+    expect(scoreValue({ score: "1" })).toBeNull();
+    expect(scoreValue({ score: Number.NaN })).toBeNull();
+    expect(scoreValue({ probabilities: { easy: 0.9 } })).toBeNull();
+    expect(scoreValue({ choice: "어려움" })).toBeNull();
   });
 });

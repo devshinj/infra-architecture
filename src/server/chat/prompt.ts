@@ -1,4 +1,5 @@
 import { EDGE_KINDS, GROUP_KINDS, NODE_KINDS } from "@/domain/catalog";
+import { LIMITS } from "@/domain/explain";
 import type { MissingItem } from "@/domain/missing";
 import { patternPromptBlock } from "@/domain/patterns";
 import type { DiagramState } from "@/domain/types";
@@ -150,5 +151,126 @@ export function buildMessages(input: {
     { role: "system", content: system },
     ...input.history.slice(-HISTORY_LIMIT).map((h) => ({ role: h.role, content: h.content })),
     { role: "user", content: user },
+  ];
+}
+
+// 설명 생성(§6.1~6.3). 글자 상한은 LIMITS 에서 가져와 검사와 프롬프트가 어긋나지 않게 한다.
+export const EXPLAIN_NODE_PROMPT = `너는 인프라 아키텍처 구성도 도구의 도우미다.
+구성도의 노드 하나를 IT 비전공자에게 설명하는 글을 쓴다.
+
+출력 형식:
+- JSON 객체 하나만 출력한다. 다른 글, 코드펜스, 설명 금지.
+- {"definition":"정의","role":"이 구성에서의 역할","adr":{"decision":"결정","reason":"이유","alternative":"대안","cost":"대가"}}
+- 사전 정의가 주어지면 definition 키는 쓰지 않는다.
+
+규칙:
+- definition: 정식 명칭·약어 풀이와 분류를 포함한 사전식 정의 한 문장, ${LIMITS.definition}자 이내.
+  예: "Redis(Remote Dictionary Server)는 데이터를 디스크가 아닌 메모리에 저장해 빠른 읽기와 쓰기 속도를 제공하는 인메모리 NoSQL 키-값(Key-Value) 데이터 구조 스토어입니다."
+- role: 일반론이 아니라 이 구성에서 이 노드가 맡은 역할, 1~2문장, ${LIMITS.role}자 이내.
+- adr: 이 노드를 이 자리에 둔 결정의 요약. decision(결정)·reason(이유)·alternative(대안)·cost(대가) 각 한 줄, 각 ${LIMITS.adr}자 이내.
+- 비유를 쓰지 않는다. 전문용어는 짧게 풀어 쓴다.
+- 한국어로 쓴다. 제품명(Redis, ALB, Tomcat 등)은 원어 그대로.
+- 주어진 구성에 없는 내용을 지어내지 않는다.`;
+
+export const EXPLAIN_EDGE_PROMPT = `너는 인프라 아키텍처 구성도 도구의 도우미다.
+구성도의 연결선 하나를 IT 비전공자에게 설명하는 글을 쓴다.
+
+출력 형식:
+- JSON 객체 하나만 출력한다. 다른 글, 코드펜스, 설명 금지.
+- {"flow":"무엇이 오가나","method":"방식","why":"왜 연결됐나","firewall":"방화벽 규칙"}
+
+규칙:
+- flow: 이 연결로 무엇(요청·데이터·이벤트)이 오가는지.
+- method: 프로토콜·포트와 동기/비동기 여부.
+- why: 이 구성에서 두 대상이 왜 연결됐는지.
+- firewall: 이 연결을 위해 어느 쪽에서 어느 쪽으로 어떤 포트를 열어야 하는지. 포트를 모르면 지어내지 말고 정해야 한다고 쓴다.
+- 각 항목은 한 문장, ${LIMITS.edge}자 이내.
+- 비유를 쓰지 않는다. 전문용어는 짧게 풀어 쓴다.
+- 한국어로 쓴다. 제품명(Redis, ALB, Tomcat 등)은 원어 그대로.
+- 주어진 구성에 없는 내용을 지어내지 않는다.`;
+
+const kindKo = (kind: string) => NODE_KINDS.find((k) => k.kind === kind)?.labelKo ?? kind;
+
+/** 노드·영역 한 개를 한 줄로. 사용자 글은 JSON.stringify 로 감싼다. */
+function describeEndpoint(state: DiagramState, id: string): string {
+  const n = state.nodes[id];
+  if (n) {
+    const sw = n.attrs.sw ?? null;
+    const version = n.attrs.version ?? null;
+    return `노드 ${n.id} [${n.kind}/${kindKo(n.kind)}] ${JSON.stringify(n.label)} sub=${JSON.stringify(n.sub ?? "")} sw=${JSON.stringify(sw)} version=${JSON.stringify(version)}`;
+  }
+  const g = state.groups[id];
+  return g ? `영역 ${g.id} [${g.groupKind}] ${JSON.stringify(g.label)}` : `없음 ${JSON.stringify(id)}`;
+}
+
+/** 대상의 상위 영역 줄(가까운 것부터). */
+function ancestorsOf(state: DiagramState, parent: string | null): string {
+  const out: string[] = [];
+  const seen = new Set<string>();
+  for (let cur = parent; cur && !seen.has(cur); ) {
+    seen.add(cur);
+    const g = state.groups[cur];
+    if (!g) break;
+    out.push(`${g.id} [${g.groupKind}] ${JSON.stringify(g.label)}`);
+    cur = g.parent;
+  }
+  return out.length ? out.join(" < ") : "없음(최상위)";
+}
+
+/** 대상과 이웃(상위 영역·연결 상대)만 담은 요약. */
+function explainContext(state: DiagramState, kind: "node" | "edge", id: string): string {
+  if (kind === "edge") {
+    const e = state.edges[id];
+    if (!e) return `대상 연결 ${JSON.stringify(id)}: 없음`;
+    const side = (end: string) => {
+      const parent = state.nodes[end]?.parent ?? state.groups[end]?.parent ?? null;
+      return `${describeEndpoint(state, end)} 상위 영역: ${ancestorsOf(state, parent)}`;
+    };
+    return [
+      `대상 연결 ${e.id} [${e.edgeKind}] ${JSON.stringify(e.label ?? "")}: ${e.from} -> ${e.to}`,
+      `보내는 쪽: ${side(e.from)}`,
+      `받는 쪽: ${side(e.to)}`,
+    ].join("\n");
+  }
+  const n = state.nodes[id];
+  if (!n) return `대상 노드 ${JSON.stringify(id)}: 없음`;
+  const lines = [`대상 ${describeEndpoint(state, id)}`, `상위 영역: ${ancestorsOf(state, n.parent)}`];
+  for (const e of Object.values(state.edges)) {
+    const how = `${e.id} [${e.edgeKind}] ${JSON.stringify(e.label ?? "")}`;
+    if (e.to === id && e.from !== id) lines.push(`들어오는 연결 ${how}: ${describeEndpoint(state, e.from)} -> 대상`);
+    else if (e.from === id && e.to !== id) lines.push(`나가는 연결 ${how}: 대상 -> ${describeEndpoint(state, e.to)}`);
+  }
+  return lines.join("\n");
+}
+
+/**
+ * 노드·연결 설명 요청. 사전 정의가 있으면 definition 을 쓰지 말라고 한다.
+ * instruction(다시 쓰기 요청)·problems(길이 초과·어려움 지적)가 있으면 이전 결과와 함께 다시 쓰라고 한다.
+ */
+export function buildExplainMessages(input: {
+  kind: "node" | "edge";
+  state: DiagramState;
+  id: string;
+  glossaryDefinition?: string;
+  instruction?: string;
+  previous?: object;
+  problems?: string[];
+}): ChatMessage[] {
+  const parts = [`현재 구성(대상과 이웃):\n${explainContext(input.state, input.kind, input.id)}`];
+  if (input.kind === "node" && input.glossaryDefinition) {
+    parts.push(`사전 정의: ${JSON.stringify(input.glossaryDefinition)}\n정의는 사전에 있으니 definition 키는 쓰지 않는다. 역할·ADR 은 이 정의와 어긋나지 않게 쓴다.`);
+  }
+  const problems = input.problems?.filter(Boolean) ?? [];
+  if (input.instruction || problems.length) {
+    const redo: string[] = [];
+    if (input.previous) redo.push(`이전 결과:\n${JSON.stringify(input.previous)}`);
+    if (problems.length) redo.push(`고칠 점:\n${problems.map((p) => `- ${p}`).join("\n")}`);
+    if (input.instruction) redo.push(`사용자 요청: ${JSON.stringify(input.instruction)}`);
+    redo.push(`위 내용을 반영해 ${input.previous ? "이전 결과를 " : ""}다시 써라. 같은 JSON 형식으로 출력한다.`);
+    parts.push(redo.join("\n\n"));
+  }
+  return [
+    { role: "system", content: input.kind === "node" ? EXPLAIN_NODE_PROMPT : EXPLAIN_EDGE_PROMPT },
+    { role: "user", content: parts.join("\n\n") },
   ];
 }
