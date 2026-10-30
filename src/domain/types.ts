@@ -5,11 +5,23 @@ export interface Group { id: string; groupKind: GroupKind; label: string; parent
 export interface DNode { id: string; kind: NodeKind; label: string; sub?: string; parent: string | null; attrs: Attrs; unknown?: string[] }
 export interface Edge { id: string; from: string; to: string; edgeKind: EdgeKind; label?: string; unknown?: string[] }
 export interface Assumption { key: string; value: string; confirmed: boolean }
+export type WarningLevel = "warn" | "check";
+export interface Warning {
+  id: string;
+  rule: string;
+  nodeId: string;
+  edgeId?: string;
+  level: WarningLevel;
+  text: string;
+  guide: string;
+}
 export interface DiagramState {
   groups: Record<string, Group>;
   nodes: Record<string, DNode>;
   edges: Record<string, Edge>;
   assumptions: Record<string, Assumption>;
+  warnings?: Warning[];
+  ignoredWarnings?: string[];
 }
 
 export const emptyState = (): DiagramState => ({ groups: {}, nodes: {}, edges: {}, assumptions: {} });
