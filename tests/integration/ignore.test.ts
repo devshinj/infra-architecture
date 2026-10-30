@@ -61,6 +61,16 @@ test("bad id is rejected", async () => {
   await expect(setWarningIgnoredFor(ids.userId, ids.diagramId, "x", true)).rejects.toBeInstanceOf(ValidationError);
 });
 
+test("non-boolean ignored is rejected without saving a version", async () => {
+  const ids = await setup();
+  await setWarningIgnoredFor(ids.userId, ids.diagramId, WID, true);
+  const before = await count(ids.diagramId);
+  for (const bad of ["x", 1, null, undefined]) {
+    await expect(setWarningIgnoredFor(ids.userId, ids.diagramId, WID, bad as unknown as boolean)).rejects.toBeInstanceOf(ValidationError);
+  }
+  expect(await count(ids.diagramId)).toBe(before);
+});
+
 test("busy while the chat lock is held", async () => {
   const ids = await setup();
   let release!: () => void;

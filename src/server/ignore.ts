@@ -21,6 +21,8 @@ export async function setWarningIgnoredFor(
     throw new ValidationError("경고를 찾을 수 없어요");
   }
 
+  if (typeof ignored !== "boolean") throw new ValidationError("의도된 구성 값이 올바르지 않아요");
+
   const locked = await withDiagramLock(diagramId, async () => {
     const latest = await getLatestState(diagramId);
     const before = latest?.state ?? emptyState();
