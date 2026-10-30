@@ -12,6 +12,8 @@ export interface AssumptionChipsProps {
   busy: boolean;
   onChoose(key: string, value: string): void;
   onConfirm(key: string): void;
+  /** 이력 보기·비교: 값만 보이고 고르기·확정은 없다. */
+  readOnly?: boolean;
 }
 
 const labelOf = (key: string) => ASSUMPTION_LABELS[key] ?? key;
@@ -24,7 +26,7 @@ function orderedKeys(assumptions: Record<string, Assumption>): string[] {
   return [...known, ...other];
 }
 
-export function AssumptionChips({ assumptions, busy, onChoose, onConfirm }: AssumptionChipsProps) {
+export function AssumptionChips({ assumptions, busy, onChoose, onConfirm, readOnly = false }: AssumptionChipsProps) {
   const [open, setOpen] = useState<string | null>(null);
   const root = useRef<HTMLUListElement>(null);
 
@@ -57,6 +59,15 @@ export function AssumptionChips({ assumptions, busy, onChoose, onConfirm }: Assu
         const a = assumptions[key]!;
         const isOpen = open === key;
         const choices = ASSUMPTION_CHOICES[key] ?? [];
+        if (readOnly)
+          return (
+            <li key={key} className={styles.assumptionItem}>
+              <span className={`${styles.assumptionChip} ${styles.assumptionStatic} ${a.confirmed ? styles.assumptionConfirmed : ""}`}>
+                {labelOf(key)}: {a.value}
+                {a.confirmed && <span className={styles.assumptionMark}>확정</span>}
+              </span>
+            </li>
+          );
         return (
           <li key={key} className={styles.assumptionItem}>
             <button

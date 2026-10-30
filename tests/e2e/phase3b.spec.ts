@@ -24,15 +24,18 @@ const send = async (page: Page, text: string) => {
 };
 const pubDb = (page: Page) => page.locator(".react-flow__node-infra").filter({ has: page.getByTitle("공개 DB") });
 const warnBadge = (page: Page) => pubDb(page).getByRole("button", { name: /^경고 \d+개$/ });
-const cautionLines = (page: Page) => page.getByText("주의: 가짜 경고 문구");
+// 대화에는 답변마다 `주의 N` 칩 하나만, 자세한 목록은 캔버스 구성 정보 카드의 주의 절에 있다.
+const cautionChips = (page: Page) => page.getByRole("button", { name: /^주의 \d+$/ });
+const cardToggle = (page: Page) => page.getByRole("button", { name: /^구성 정보 (펼치기|접기)$/ });
+const cardWarnings = (page: Page) => page.getByRole("region", { name: "주의" });
 const versionRows = (page: Page) => page.getByRole("listitem").filter({ has: page.getByRole("button", { name: /^v\d+/ }) });
 const warnCount = async (page: Page) => Number(/(\d+)개/.exec((await warnBadge(page).getAttribute("aria-label")) ?? "")![1]);
 
-test("warnings: chat line, badge, ignore, restore", async ({ page }) => {
+test("warnings: chat chip, card list, badge, ignore, restore", async ({ page }) => {
   await setup(page);
   await send(page, "공개DB 붙은 서비스");
   // 점검 중 단계(위험 요소 점검)는 아주 짧게 지나갈 수 있어 관찰을 요구하지 않는다. 결과 줄만 본다.
-  await expect(cautionLines(page).first()).toBeVisible({ timeout: 30_000 });
+  await expect(cautionChips(page).first()).toBeVisible({ timeout: 30_000 });
   await expect(page.getByText(SUMMARY)).toBeVisible();
 
   await expect(warnBadge(page)).toBeVisible({ timeout: 15_000 });
@@ -43,9 +46,12 @@ test("warnings: chat line, badge, ignore, restore", async ({ page }) => {
   await page.getByRole("button", { name: "빠진 정보 숫자" }).click();
   await expect(pubDb(page).getByRole("button", { name: /^빠진 정보 \d+개$/ })).toBeVisible();
 
-  // 경고 줄 클릭 → 설명 탭 주의할 점
+  // 주의 N 칩 → 카드가 펼쳐져 주의 절이 보인다. 항목 클릭 → 설명 탭 주의할 점
   await page.getByRole("tab", { name: "대화" }).click();
-  await cautionLines(page).first().click();
+  await cautionChips(page).first().click();
+  await expect(cardToggle(page)).toHaveAttribute("aria-expanded", "true");
+  await expect(cardWarnings(page).getByText("가짜 경고 문구").first()).toBeVisible();
+  await cardWarnings(page).getByRole("button", { name: /가짜 경고 문구/ }).first().click();
   await expect(page.getByRole("tab", { name: "설명" })).toHaveAttribute("aria-selected", "true");
   await expect(page.getByRole("heading", { name: "주의할 점" })).toBeVisible();
   const cautions = page.locator("section").filter({ has: page.getByRole("heading", { name: "주의할 점" }) });
@@ -65,12 +71,12 @@ test("warnings: chat line, badge, ignore, restore", async ({ page }) => {
 
   // 같은 DB 를 고치는 요청(경고 점검이 실제로 돈다)에도 무시한 경고의 새 줄은 생기지 않는다.
   await page.getByRole("tab", { name: "대화" }).click();
-  const before = await cautionLines(page).count();
+  const before = await cautionChips(page).count();
   await send(page, "공개DB 다시");
   await expect(page.getByText(SUMMARY)).toHaveCount(2, { timeout: 30_000 });
   // 진행 카드가 접힌 한 줄이 되면(위험 요소 점검까지 끝나면) 진행 단계 목록이 없다.
   await expect(page.getByRole("list", { name: "진행 단계" })).toHaveCount(0, { timeout: 30_000 });
-  await expect(cautionLines(page)).toHaveCount(before);
+  await expect(cautionChips(page)).toHaveCount(before);
 
   // 무시 직전 버전으로 되돌리면 배지가 다시 보인다.
   await page.getByRole("tab", { name: "이력" }).click();
@@ -83,8 +89,8 @@ test("warnings: chat line, badge, ignore, restore", async ({ page }) => {
   await expect(rows.first()).toContainText("되돌리기", { timeout: 15_000 });
   await expect(warnBadge(page)).toHaveAccessibleName(`경고 ${n}개`, { timeout: 15_000 });
 
-  // 새로고침 뒤에도 처음의 주의 줄이 남는다.
+  // 새로고침 뒤에도 처음의 주의 칩이 남는다.
   await page.reload();
   await page.getByRole("tab", { name: "대화" }).click();
-  await expect(cautionLines(page).first()).toBeVisible({ timeout: 15_000 });
+  await expect(cautionChips(page).first()).toBeVisible({ timeout: 15_000 });
 });

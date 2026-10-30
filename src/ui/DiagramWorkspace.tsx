@@ -25,8 +25,9 @@ import styles from "./app.module.css";
 import type { VersionRow } from "./HistoryPanel";
 import { type LlmHealth } from "./chat/ChatPanel";
 import type { MentionInputHandle } from "./chat/MentionInput";
-import { type ChecklistDrafts, MissingChecklist, type MissingChecklistProps } from "./chat/MissingChecklist";
+import type { ChecklistDrafts, ChecklistExpanded, MissingChecklistProps } from "./chat/MissingChecklist";
 import { type ChatLine, useChatTurn } from "./chat/useChatTurn";
+import { InfoCard } from "./canvas/InfoCard";
 import type { ExplanationProps } from "./explain/Explanation";
 import { type TargetKind, useExplanations } from "./explain/useExplanations";
 import { PANEL_DEFAULT, PANEL_MAX, PANEL_MIN, PanelResizer } from "./PanelResizer";
@@ -198,7 +199,6 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
       loadVersions();
     },
     onInterrupted: refreshAfterInterrupt,
-    getState: () => current.state,
   });
   // The server re-renders with a newer version after import/restore/chat: adopt it, but never mid-turn
   // (it would wipe the commands already streamed); the done-refresh brings the newer version later.
@@ -295,35 +295,45 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
     void confirmKey(key, a.value);
   };
 
-  // Badge click: open the 대화 tab checklist at that node. A fresh token re-triggers the same node.
-  const [focus, setFocus] = useState<{ id: string; token: number } | null>(null);
-  const focusSeq = useRef(0);
-  // Drafts and the expanded state live here: the 대화 tab (and the checklist) unmounts on tab switches.
+  // 구성 정보 카드(캔버스 왼쪽 아래). 초안·카드 펼침·블록 펼침은 여기 둔다: 카드를 접으면 내용이 내려간다.
+  const [cardOpen, setCardOpen] = useState(false);
   const [checklistDrafts, setChecklistDrafts] = useState<ChecklistDrafts>({});
-  const [checklistOpen, setChecklistOpen] = useState(false);
+  const [checklistExpanded, setChecklistExpanded] = useState<ChecklistExpanded>({});
+  // 배지 클릭: 카드를 펼치고 그 노드 블록을 펼쳐 첫 칸에 포커스한다. 새 토큰이면 같은 노드도 다시 간다.
+  const [focus, setFocus] = useState<{ id: string; token: number } | null>(null);
+  const seq = useRef(0);
+  // 대화의 주의 N 칩: 카드를 펼치고 주의 절로 스크롤한다.
+  const [warnScroll, setWarnScroll] = useState(0);
+  // 위치 보기: 캔버스가 그 노드로 이동해 강조한다(선택은 하지 않는다).
+  const [focusRequest, setFocusRequest] = useState<{ id: string; token: number } | undefined>(undefined);
   // Canvas 의 노드 계산 deps 에 들어가므로 정체성을 고정한다(setter·ref 만 쓴다).
   const onBadgeClick = useCallback((id: string) => {
-    setTab("대화");
-    focusSeq.current += 1;
-    setFocus({ id, token: focusSeq.current });
+    seq.current += 1;
+    setCardOpen(true);
+    setFocus({ id, token: seq.current });
   }, []);
-  // 경고 배지·대화 경고 줄: 그 노드를 고른다(설명 탭의 주의할 점으로 간다). Canvas memo deps 라 고정한다.
+  const changeCardOpen = (o: boolean) => {
+    setCardOpen(o);
+    if (!o) setFocus(null); // 다시 펼쳐도 옛 대상으로 뛰지 않는다
+  };
+  const openWarnings = () => {
+    setCardOpen(true);
+    setWarnScroll((n) => n + 1);
+  };
+  const locate = (id: string) => {
+    seq.current += 1;
+    setFocusRequest({ id, token: seq.current });
+  };
+  // 경고 배지·카드 주의 항목: 그 노드를 고른다(설명 탭의 주의할 점으로 간다). Canvas memo deps 라 고정한다.
   // 이미 선택된 노드면 selectedId 가 그대로라 RightPanel 이 탭을 바꾸지 않으므로 직접 설명 탭으로 보낸다.
   const selectedRef = useRef<string | null>(options.selectedId);
   useEffect(() => {
     selectedRef.current = options.selectedId;
   });
   const selectNode = useCallback((id: string) => {
-    if (selectedRef.current === id) {
-      setTab("설명");
-      setFocus(null); // onTabChange 와 같이: 대화로 돌아와도 옛 대상으로 뛰지 않는다
-    }
+    if (selectedRef.current === id) setTab("설명");
     setOptions((o) => ({ ...o, selectedId: id }));
   }, []);
-  const onTabChange = (t: Tab) => {
-    setTab(t);
-    if (t !== "대화") setFocus(null); // coming back to 대화 must not jump to the old target again
-  };
 
   // Form save = one version (source form); adopt it through the same server-state path as assumptions.
   const saveFields: MissingChecklistProps["onSave"] = async (input) => {
@@ -455,8 +465,30 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
             onEditModeChange={(v) => live && !locked && setEditMode(v)}
             onMotionChange={setMotion}
             onWarnBadgeClick={selectNode}
+            {...(focusRequest ? { focusRequest } : {})}
             {...(live ? { onMention, onBadgeClick } : {})}
             {...(mode.kind === "compare" ? { diffMarks: mode.marks } : {})}
+          />
+          <InfoCard
+            state={mode.kind === "view" ? mode.state : current.state}
+            readOnly={!live}
+            busy={locked}
+            open={cardOpen}
+            onOpenChange={changeCardOpen}
+            scrollToWarnings={warnScroll}
+            onChooseAssumption={(k, v) => void onChooseAssumption(k, v)}
+            onConfirmAssumption={onConfirmAssumption}
+            onSelectWarning={selectNode}
+            checklist={{
+              focusId: focus?.id ?? null,
+              ...(focus ? { focusToken: focus.token } : {}),
+              onSave: saveFields,
+              drafts: checklistDrafts,
+              onDraftsChange: setChecklistDrafts,
+              expanded: checklistExpanded,
+              onExpandedChange: setChecklistExpanded,
+              onLocate: locate,
+            }}
           />
         </div>
       </section>
@@ -472,7 +504,7 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
           onImportSample={importSample}
           importing={busy || locked}
           tab={tab}
-          onTabChange={onTabChange}
+          onTabChange={setTab}
           warningState={mode.kind === "compare" ? current.state : shown}
           onHistoryOpen={loadVersions}
           {...(explain ? { explain } : {})}
@@ -490,24 +522,7 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
             busy: chat.busy,
             onSend: sendChat,
             onStop: chat.stop,
-            onSelectNode: selectNode,
-            onOpenChecklist: () => setChecklistOpen(true),
-            assumptions: current.state.assumptions,
-            onChooseAssumption,
-            onConfirmAssumption,
-            checklist: (
-              <MissingChecklist
-                state={current.state}
-                busy={locked || !live}
-                focusId={focus?.id ?? null}
-                {...(focus ? { focusToken: focus.token } : {})}
-                onSave={saveFields}
-                drafts={checklistDrafts}
-                onDraftsChange={setChecklistDrafts}
-                open={checklistOpen}
-                onOpenChange={setChecklistOpen}
-              />
-            ),
+            onOpenWarnings: openWarnings,
             health,
             mentionRef,
             ...(live ? {} : { disabledReason: "이전 버전을 보는 중에는 대화할 수 없어요." }),

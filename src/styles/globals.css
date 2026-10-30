@@ -1,6 +1,8 @@
 @import "./tokens.css";
 
+/* 셸이 100vh 라 기본 여백(8px)이 있으면 문서가 16px 넘쳐, 카드 안 포커스·스크롤이 화면 전체를 밀어 올린다. */
 body {
+  margin: 0;
   background: var(--bg-canvas);
   color: var(--text-primary);
 }

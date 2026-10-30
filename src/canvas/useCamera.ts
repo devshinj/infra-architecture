@@ -26,6 +26,9 @@ export interface CameraInput {
 export const STREAM_FIT_GAP_MS = 600;
 export const STREAM_FIT_DURATION = 450;
 export const FINAL_FIT_DURATION = 600;
+export const FOCUS_DURATION = 500;
+/** 위치 보기: 줌은 그대로 두되 이보다 멀면 여기까지 당긴다. */
+export const FOCUS_MIN_ZOOM = 0.8;
 const PADDING = 0.1;
 const MIN_ZOOM = 0.2;
 const BOARD_MAX_ZOOM = 2;
@@ -56,6 +59,13 @@ export function fitViewport(b: Rect, size: { width: number; height: number }, in
   };
 }
 
+/** 위치 보기: `r` 의 가운데를 패널 사이 띠의 가운데에 둔다. 줌은 `zoom` 을 유지하되 FOCUS_MIN_ZOOM 아래면 올린다. */
+export function focusViewport(r: Rect, size: { width: number; height: number }, insets: Insets, zoom: number): Viewport {
+  const z = Math.max(FOCUS_MIN_ZOOM, zoom);
+  const vw = Math.max(1, size.width - insets.left - insets.right);
+  return { x: insets.left + vw / 2 - (r.x + r.width / 2) * z, y: size.height / 2 - (r.y + r.height / 2) * z, zoom: z };
+}
+
 function isVisible(r: Rect, vp: Viewport, size: { width: number; height: number }, insets: Insets): boolean {
   const left = r.x * vp.zoom + vp.x;
   const top = r.y * vp.zoom + vp.y;
@@ -75,9 +85,10 @@ const idsKey = (rects: Record<string, Rect>) => Object.keys(rects).sort().join("
  *   animated 450ms, never zooming in;
  * - end of a chat turn → one 600ms fit of everything (zoom-in allowed up to 1);
  * - a user pan/zoom during a turn stops auto fits until the turn ends (the final fit too);
+ * - focus(rect) (위치 보기) → 500ms centre on it; a programmatic move, never a user move;
  * - reduced motion → every move is instant.
  */
-export function useCamera(input: CameraInput): { onMoveStart(event: unknown): void } {
+export function useCamera(input: CameraInput): { onMoveStart(event: unknown): void; focus(r: Rect): void } {
   const latest = useRef(input);
   useEffect(() => {
     latest.current = input;
@@ -205,5 +216,11 @@ export function useCamera(input: CameraInput): { onMoveStart(event: unknown): vo
     s.timer = null;
   }, []);
 
-  return { onMoveStart };
+  const focus = useCallback((r: Rect) => {
+    const { size, insets, reducedMotion, getViewport, setViewport } = latest.current;
+    if (!(size.width > 0 && size.height > 0)) return;
+    setViewport(focusViewport(r, size, insets, getViewport().zoom), { duration: reducedMotion ? 0 : FOCUS_DURATION });
+  }, []);
+
+  return { onMoveStart, focus };
 }

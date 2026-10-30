@@ -63,24 +63,6 @@ test("log is a live region; mention tokens render as labels", () => {
   expect(log).not.toHaveTextContent("node:n1");
 });
 
-test("warning chip selects node", async () => {
-  const onSelectNode = vi.fn();
-  render(
-    <ChatPanel
-      {...base({
-        onSelectNode,
-        lines: [
-          { id: "w1", kind: "warning", text: "주의: 1대뿐이에요.", nodeId: "web-1", level: "warn", turn: "t" },
-          { id: "w2", kind: "warning", text: "확인해 보세요: 보일 수 있어요.", nodeId: "db-1", level: "check", turn: "t" },
-        ],
-      })}
-    />,
-  );
-  await userEvent.click(screen.getByRole("button", { name: "주의: 1대뿐이에요." }));
-  expect(onSelectNode).toHaveBeenCalledWith("web-1");
-  expect(screen.getByRole("button", { name: "확인해 보세요: 보일 수 있어요." }).closest("[data-kind]")).toHaveAttribute("data-level", "check");
-});
-
 const T = { turn: "t1", at: new Date("2026-10-30T14:07:00").getTime() };
 const card = (c: NonNullable<ChatLine["card"]>): ChatLine => ({ id: "c", kind: "card", text: "", card: c, ...T });
 const steps = () => within(screen.getByRole("list", { name: "진행 단계" })).getAllByRole("listitem");
@@ -123,40 +105,34 @@ test("aborted shows 중단됨", () => {
   expect(screen.queryByRole("list", { name: "진행 단계" })).not.toBeInTheDocument();
 });
 
-test("summary, missing and warning chips under the message", () => {
+test("chat has no assumption chips, checklist or missing chip; warnings collapse to one 주의 N chip that opens the card", async () => {
+  const onOpenWarnings = vi.fn();
   render(
     <ChatPanel
       {...base({
-        onSelectNode: vi.fn(),
-        onOpenChecklist: vi.fn(),
+        onOpenWarnings,
         lines: [
           card({ mode: "build", step: "checking", changes: 3, end: "done", nodes: 3, edges: 1 }),
           { id: "p", kind: "progress", text: "웹 서버를 놓을게요", ...T },
           { id: "s", kind: "summary", text: "노드 3 · 연결 1 · 적용 2 · 건너뜀 1", ...T },
-          { id: "m", kind: "missing", text: "빠진 정보 6개가 있어요", ...T },
-          { id: "w", kind: "warning", text: "주의: 1대뿐이에요.", nodeId: "web-1", level: "warn", ...T },
+          { id: "w", kind: "warning", text: "주의 2", ...T },
         ],
       })}
     />,
   );
   const ai = screen.getByRole("group", { name: "InfraSketch 메시지" });
   const chips = within(ai).getByRole("list", { name: "이번 차례 결과" });
-  expect(within(chips).getAllByRole("listitem").map((li) => li.textContent)).toEqual([
-    "노드 3 · 연결 1 · 적용 2 · 건너뜀 1",
-    "빠진 정보 6개가 있어요",
-    "주의: 1대뿐이에요.",
-  ]);
+  expect(within(chips).getAllByRole("listitem").map((li) => li.textContent)).toEqual(["노드 3 · 연결 1 · 적용 2 · 건너뜀 1", "주의 2"]);
   // 본문(say)은 칩 위에 있다.
   const body = within(ai).getByText("웹 서버를 놓을게요");
   expect(body.compareDocumentPosition(chips) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   expect(screen.getAllByRole("group", { name: "InfraSketch 메시지" })).toHaveLength(1);
-});
-
-test("missing chip opens checklist", async () => {
-  const onOpenChecklist = vi.fn();
-  render(<ChatPanel {...base({ onOpenChecklist, lines: [{ id: "m", kind: "missing", text: "빠진 정보 6개가 있어요", ...T }] })} />);
-  await userEvent.click(screen.getByRole("button", { name: "빠진 정보 6개가 있어요" }));
-  expect(onOpenChecklist).toHaveBeenCalledTimes(1);
+  // 가정 칩·체크리스트·빠진 정보 칩은 대화창에 없다.
+  expect(screen.queryByRole("list", { name: "AI가 세운 가정" })).not.toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: /채워야 할 정보/ })).not.toBeInTheDocument();
+  expect(screen.queryByText(/빠진 정보/)).not.toBeInTheDocument();
+  await userEvent.click(within(chips).getByRole("button", { name: "주의 2" }));
+  expect(onOpenWarnings).toHaveBeenCalledTimes(1);
 });
 
 test("system lines outside a turn stay a small centered note", () => {

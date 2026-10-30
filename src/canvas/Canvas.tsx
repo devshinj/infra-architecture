@@ -12,7 +12,7 @@ import { EdgeLayerPortal } from "./EdgeLayer";
 import type { GroupBoxData } from "./GroupBox";
 import type { NodeCardData, NodeVisualState } from "./NodeCard";
 import { outermostCollapsedAncestor, type DisplayGraph, type DisplayOptions } from "./display";
-import type { Layout } from "./layout";
+import type { Layout, Rect } from "./layout";
 import { NodeMenu } from "./NodeMenu";
 import { nodeTypes } from "./nodeTypes";
 import { prefersReducedMotion, unionRect, useCamera, type Insets, type Viewport } from "./useCamera";
@@ -45,13 +45,20 @@ export interface CanvasProps {
   cameraInsets?: Insets;
   /** Right-click menu "대화에 참조 붙이기" on nodes and zones. Omit to turn the menu off. */
   onMention?(id: string): void;
-  /** Click on a node's missing-info badge (jump to the checklist). */
+  /**
+   * 위치 보기: 바뀔 때마다(token) 그 노드(연결이면 양 끝)로 카메라를 옮기고 은빛 링으로 잠깐 강조한다.
+   * 선택은 바꾸지 않는다. 접힌 영역 안이면 그려진 바깥 영역으로 간다.
+   */
+  focusRequest?: { id: string; token: number };
+  /** Click on a node's missing-info badge (open the 구성 정보 card at that node). */
   onBadgeClick?(nodeId: string): void;
   /** Click on a node's warning badge (select the node → 설명 탭 주의할 점). */
   onWarnBadgeClick?(nodeId: string): void;
 }
 
 export const FAR_ZOOM = 0.6;
+/** 위치 보기 강조 시간(은빛 링 2회). canvas.css 의 node-pulse 와 맞춘다. */
+export const PULSE_MS = 1600;
 const NO_INSETS: Insets = { left: 0, right: 0 };
 const LAYOUT_FAILED_MESSAGE = "구성도를 배치하지 못했어요. 새로고침하거나 구성을 다시 확인해 주세요.";
 const EMPTY_MESSAGE = "아직 구성도가 비어 있어요. 오른쪽 대화에서 만들고 싶은 서비스를 설명하거나, 샘플을 불러와 보세요.";
@@ -115,11 +122,13 @@ interface FlowProps extends CanvasProps {
   updated: Set<string>;
 }
 
-function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onPinnedChange, motion, layout, display, appearing, updated, diffMarks, fitKey, streaming = false, cameraInsets = NO_INSETS, onMention, onBadgeClick, onWarnBadgeClick }: FlowProps) {
+function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onPinnedChange, motion, layout, display, appearing, updated, diffMarks, fitKey, streaming = false, cameraInsets = NO_INSETS, focusRequest, onMention, onBadgeClick, onWarnBadgeClick }: FlowProps) {
   const far = useStore((s) => s.transform[2] < FAR_ZOOM);
   const selected = drawnId(state, options.collapsed, options.selectedId);
   const missingByNode = useMemo(() => computeMissing(state).byNode, [state]);
   const warnByNode = useMemo(() => warningsByNode(mergeWarnings(state).active), [state]);
+  // 위치 보기 강조: 강조할 그려진 노드 id 와 토큰(같은 노드를 다시 눌러도 링이 처음부터 돈다).
+  const [pulse, setPulse] = useState<{ ids: Set<string>; token: number } | null>(null);
 
   const computed = useMemo<Node[]>(() => {
     const neighbors = new Set<string>();
@@ -178,6 +187,7 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
         state: visual,
         ...(az !== undefined && az !== null ? { az: String(az) } : {}),
         ...(diff ? { diff } : {}),
+        ...(pulse?.ids.has(ln.id) ? { pulse: pulse.token } : {}),
       };
       // 비교 모드에서는 배지를 모두 숨긴다.
       const missing = diffMarks || !options.showMissingBadges ? 0 : (missingByNode[ln.id] ?? 0);
@@ -200,7 +210,7 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
       });
     }
     return out;
-  }, [layout, display, selected, appearing, updated, editMode, options, onOptionsChange, diffMarks, missingByNode, warnByNode, onBadgeClick, onWarnBadgeClick]);
+  }, [layout, display, selected, appearing, updated, editMode, options, onOptionsChange, diffMarks, missingByNode, warnByNode, onBadgeClick, onWarnBadgeClick, pulse]);
 
   const [nodes, setNodes] = useState<Node[]>(computed);
   useEffect(() => setNodes(computed), [computed]);
@@ -222,6 +232,36 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
     getViewport,
     setViewport: applyViewport,
   });
+  // 위치 보기. 프로그램 이동이라 onMoveStart 에 null 이벤트로 와서 사용자 이동으로 치지 않는다.
+  // 다시 마운트돼도(빈 캔버스 → 그림) 이미 처리한 옛 요청으로 움직이지 않는다.
+  const focusToken = focusRequest?.token;
+  const handledFocus = useRef(focusToken);
+  useEffect(() => {
+    if (!focusRequest || handledFocus.current === focusRequest.token) return;
+    handledFocus.current = focusRequest.token;
+    const collapsed = options.collapsed;
+    const edge = state.edges[focusRequest.id];
+    const ends = edge ? [edge.from, edge.to] : [focusRequest.id];
+    const ids = new Set<string>();
+    const rects: Rect[] = [];
+    for (const end of ends) {
+      const d = drawnId(state, collapsed, end);
+      const r = d === null ? undefined : (layout.nodes[d] ?? layout.groups[d]);
+      if (!r || d === null) continue;
+      rects.push(r);
+      if (layout.nodes[d]) ids.add(d);
+    }
+    const target = unionRect(rects);
+    if (!target) return;
+    camera.focus(target);
+    setPulse({ ids, token: focusRequest.token });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- 새 요청(토큰)일 때만 움직인다
+  }, [focusToken]);
+  useEffect(() => {
+    if (!pulse) return;
+    const t = setTimeout(() => setPulse(null), PULSE_MS);
+    return () => clearTimeout(t);
+  }, [pulse]);
   const wrap = useRef<HTMLDivElement>(null);
   const [menu, setMenu] = useState<{ id: string; x: number; y: number } | null>(null);
   const closeMenu = useCallback(() => {

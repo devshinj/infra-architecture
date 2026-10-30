@@ -53,6 +53,21 @@
   animation: node-updated-hide 0.3s ease 3s forwards;
 }
 @keyframes node-updated-hide { to { opacity: 0; } }
+/* 위치 보기: 노드 바깥 은빛 링이 두 번 켜졌다 꺼진다(1.6초). 선택 링(금색)과 겹치지 않게 한 칸 더 바깥이다. */
+.node__pulse {
+  position: absolute;
+  inset: -8px;
+  border: 1.5px solid var(--focus-ring);
+  border-radius: calc(var(--radius-node) + 8px);
+  pointer-events: none;
+  opacity: 0;
+  animation: node-pulse 0.8s ease-in-out 2;
+}
+@keyframes node-pulse {
+  0% { opacity: 0; transform: scale(0.97); }
+  40% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.02); }
+}
 
 .node__badge {
   position: absolute;
@@ -118,6 +133,8 @@ button.node__badge:focus-visible { outline: 1.5px solid var(--text-secondary); o
 
 @media (prefers-reduced-motion: reduce) {
   .node--appearing { animation: none; }
+  /* 움직임 없이 강조 시간 동안 링만 보인다. */
+  .node__pulse { animation: none; opacity: 1; }
 }
 
 /* Canvas shell, toolbar, zoom detail levels */

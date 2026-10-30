@@ -100,6 +100,8 @@ test("가정 칩에서 대안을 고르면 확정되고 대화가 이어짐", as
   await setup(page);
   await buildS1(page);
 
+  // 가정 칩은 캔버스 구성 정보 카드에 있다.
+  await page.getByRole("button", { name: "구성 정보 펼치기" }).click();
   await page.getByRole("button", { name: /^규모: / }).click();
   await page.getByRole("group", { name: "규모 대안" }).getByRole("button", { name: "대규모(일 10만 명 이상)" }).click();
 

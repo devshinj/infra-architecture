@@ -1,9 +1,7 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { afterEach, expect, test, vi } from "vitest";
 
-import { applyCommand } from "@/domain/apply";
 import type { Command } from "@/domain/commands";
-import { emptyState } from "@/domain/types";
 import type { ChatEvent } from "@/server/chat/events";
 import { useChatTurn } from "@/ui/chat/useChatTurn";
 
@@ -131,29 +129,19 @@ test("unmount aborts the running turn", async () => {
   expect(sig?.aborted).toBe(true);
 });
 
-test("reminder line follows the summary when missing > 0", async () => {
+test("no missing-info line even when missing > 0 (the canvas card shows it)", async () => {
   vi.stubGlobal("fetch", vi.fn(async () => streamOf([nd([done({ missing: 6 })])])));
   const h = setup();
   await act(() => h.result.current.send("x"));
-  expect(h.result.current.lines.slice(-2).map((l) => [l.kind, l.text])).toEqual([
-    ["summary", "노드 3 · 연결 1 · 적용 2 · 건너뜀 1"],
-    ["missing", "빠진 정보 6개가 있어요"],
-  ]);
-});
-
-test("no reminder when nothing was applied", async () => {
-  vi.stubGlobal("fetch", vi.fn(async () => streamOf([nd([done({ version: null, applied: 0, missing: 6 })])])));
-  const h = setup();
-  await act(() => h.result.current.send("x"));
+  expect(h.result.current.lines.at(-1)).toMatchObject({ kind: "summary", text: "노드 3 · 연결 1 · 적용 2 · 건너뜀 1" });
   expect(h.result.current.lines.some((l) => l.text.startsWith("빠진 정보"))).toBe(false);
 });
 
 async function abortWith(events: ChatEvent[]) {
   vi.stubGlobal("fetch", vi.fn(async (_u: string, init: RequestInit) => streamOf([nd(events)], init.signal ?? undefined, true)));
-  const state = applyCommand(emptyState(), { op: "add_node", id: "was-1", kind: "was", label: "WAS", parent: null }).state;
   const onCommand = vi.fn();
   const hook = renderHook(() =>
-    useChatTurn({ diagramId: "d1", initial: [], onCommand, onDone: vi.fn(), onOpenHistory: vi.fn(), getState: () => state }),
+    useChatTurn({ diagramId: "d1", initial: [], onCommand, onDone: vi.fn(), onOpenHistory: vi.fn() }),
   );
   let p!: Promise<void>;
   act(() => { p = hook.result.current.send("x"); });
@@ -164,9 +152,10 @@ async function abortWith(events: ChatEvent[]) {
   return hook.result.current.lines;
 }
 
-test("user abort after applied commands shows the reminder from live state", async () => {
+test("user abort after applied commands ends with 중단했어요. and no reminder", async () => {
   const lines = await abortWith([{ t: "cmd", cmd: add("was-1") }]);
-  expect(lines.slice(-2).map((l) => l.text)).toEqual(["중단했어요.", "빠진 정보 7개가 있어요"]);
+  expect(lines.at(-1)?.text).toBe("중단했어요.");
+  expect(lines.some((l) => l.text.startsWith("빠진 정보"))).toBe(false);
 });
 
 test("user abort with no applied commands shows no reminder", async () => {
@@ -174,7 +163,7 @@ test("user abort with no applied commands shows no reminder", async () => {
   expect(lines.at(-1)?.text).toBe("중단했어요.");
 });
 
-test("warnings event adds lines after the summary and reminder", async () => {
+test("warnings event adds one 주의 N chip after the summary", async () => {
   const items = [
     { id: "spof:w", rule: "spof", nodeId: "w", level: "warn" as const, text: "1대뿐이에요.", guide: "g" },
     { id: "db_exposed:d", rule: "db_exposed", nodeId: "d", level: "check" as const, text: "보일 수 있어요.", guide: "g" },
@@ -182,13 +171,10 @@ test("warnings event adds lines after the summary and reminder", async () => {
   vi.stubGlobal("fetch", vi.fn(async () => streamOf([nd([{ t: "status", phase: "checking" }, { t: "warnings", items }, done({ missing: 6 })])])));
   const h = setup();
   await act(() => h.result.current.send("x"));
-  expect(h.result.current.lines.slice(-4).map((l) => [l.kind, l.text])).toEqual([
+  expect(h.result.current.lines.slice(-2).map((l) => [l.kind, l.text])).toEqual([
     ["summary", "노드 3 · 연결 1 · 적용 2 · 건너뜀 1"],
-    ["missing", "빠진 정보 6개가 있어요"],
-    ["warning", "주의: 1대뿐이에요."],
-    ["warning", "확인해 보세요: 보일 수 있어요."],
+    ["warning", "주의 2"],
   ]);
-  expect(h.result.current.lines.at(-2)).toMatchObject({ nodeId: "w", level: "warn" });
 });
 
 /** 이벤트를 하나씩 흘려보내는 응답. */

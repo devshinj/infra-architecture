@@ -2,7 +2,7 @@ import "@testing-library/jest-dom/vitest";
 import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
-const hookState = vi.hoisted(() => ({ busy: false, onCommand: null as null | ((c: unknown) => void), badgeFns: [] as unknown[], warnFns: [] as unknown[], lines: [] as unknown[], insets: [] as unknown[], turn: null as null | { onDone(): void; onInterrupted(): void } }));
+const hookState = vi.hoisted(() => ({ busy: false, onCommand: null as null | ((c: unknown) => void), badgeFns: [] as unknown[], warnFns: [] as unknown[], lines: [] as unknown[], insets: [] as unknown[], focus: [] as unknown[], turn: null as null | { onDone(): void; onInterrupted(): void } }));
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
 vi.mock("@/app/(app)/actions", () => ({
@@ -13,8 +13,9 @@ vi.mock("@/app/(app)/actions", () => ({
   listTermsAction: vi.fn(async () => []),
 }));
 vi.mock("@/canvas/Canvas", () => ({
-  Canvas: ({ state, fitKey, cameraInsets, onMention, onBadgeClick, onWarnBadgeClick, onSelect }: { state: { nodes: object }; fitKey?: string; cameraInsets?: unknown; onMention?: (id: string) => void; onBadgeClick?: (id: string) => void; onWarnBadgeClick?: (id: string) => void; onSelect: (id: string | null) => void }) => {
+  Canvas: ({ state, fitKey, cameraInsets, focusRequest, onMention, onBadgeClick, onWarnBadgeClick, onSelect }: { state: { nodes: object }; fitKey?: string; cameraInsets?: unknown; focusRequest?: unknown; onMention?: (id: string) => void; onBadgeClick?: (id: string) => void; onWarnBadgeClick?: (id: string) => void; onSelect: (id: string | null) => void }) => {
     hookState.insets.push(cameraInsets);
+    hookState.focus.push(focusRequest);
     hookState.badgeFns.push(onBadgeClick);
     hookState.warnFns.push(onWarnBadgeClick);
     return (
@@ -38,7 +39,7 @@ vi.mock("@/ui/chat/useChatTurn", () => ({
   },
 }));
 
-import { listVersionsAction, saveFieldsAction, setWarningIgnoredAction } from "@/app/(app)/actions";
+import { getVersionAction, listVersionsAction, saveFieldsAction, setWarningIgnoredAction } from "@/app/(app)/actions";
 import { emptyState } from "@/domain/types";
 import { DiagramWorkspace } from "@/ui/DiagramWorkspace";
 import { ShellProvider } from "@/ui/Shell";
@@ -87,21 +88,27 @@ test("canvas mention opens the 대화 tab and inserts a chip for the node", () =
 
 const web = (id: string) => [id, { id, kind: "web_server", label: id, parent: null, attrs: {} }];
 
-test("badge click opens the chat tab checklist at that node", async () => {
+const cardToggle = () => screen.getByRole("button", { name: /^구성 정보 (펼치기|접기)$/ });
+const two = () => ({ number: 1, state: { ...emptyState(), nodes: Object.fromEntries([web("a"), web("b")]) } });
+
+test("badge click opens card at that node block and focuses first input", async () => {
   hookState.busy = false;
-  const latest = { number: 1, state: { ...emptyState(), nodes: Object.fromEntries([web("a"), web("b")]) } };
-  render(<DiagramWorkspace diagramId="d" name="n" latest={latest as never} initialPinned={{}} samples={[]} />);
+  render(ui(two() as never));
   fireEvent.click(screen.getByRole("tab", { name: "설명" }));
+  expect(cardToggle()).toHaveAttribute("aria-expanded", "false");
   fireEvent.click(screen.getByRole("button", { name: "배지a" }));
-  expect(screen.getByRole("tab", { name: "대화" })).toHaveAttribute("aria-selected", "true");
-  expect(screen.getByRole("button", { name: /채워야 할 정보/ })).toHaveAttribute("aria-expanded", "true");
-  const a = screen.getByRole("group", { name: "a" });
-  const host = within(a).getByRole("textbox", { name: "호스트명" });
-  expect(host).toHaveFocus();
-  // 접고 같은 배지를 다시 눌러도 다시 펼쳐진다.
-  fireEvent.click(screen.getByRole("button", { name: /채워야 할 정보/ }));
+  // 대화 탭으로 가지 않는다.
+  expect(screen.getByRole("tab", { name: "설명" })).toHaveAttribute("aria-selected", "true");
+  expect(cardToggle()).toHaveAttribute("aria-expanded", "true");
+  expect(screen.getByRole("button", { name: "a 항목 접기" })).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "b 항목 펼치기" })).toBeInTheDocument();
+  expect(within(screen.getByRole("group", { name: "a" })).getByRole("textbox", { name: "호스트명" })).toHaveFocus();
+  // 카드를 접고 같은 배지를 다시 눌러도 다시 펼쳐진다.
+  fireEvent.click(cardToggle());
+  expect(cardToggle()).toHaveAttribute("aria-expanded", "false");
   fireEvent.click(screen.getByRole("button", { name: "배지a" }));
-  expect(screen.getByRole("button", { name: /채워야 할 정보/ })).toHaveAttribute("aria-expanded", "true");
+  expect(cardToggle()).toHaveAttribute("aria-expanded", "true");
+  expect(within(screen.getByRole("group", { name: "a" })).getByRole("textbox", { name: "호스트명" })).toHaveFocus();
   // 저장은 saveFieldsAction 으로 간다.
   fireEvent.change(within(screen.getByRole("group", { name: "a" })).getByRole("textbox", { name: "호스트명" }), { target: { value: "web-01" } });
   await act(async () => {
@@ -110,21 +117,74 @@ test("badge click opens the chat tab checklist at that node", async () => {
   expect(saveFieldsAction).toHaveBeenCalledWith("d", { targetKind: "node", targetId: "a", values: { hostname: "web-01" }, unknown: [] });
 });
 
-test("drafts survive leaving the 대화 tab", () => {
+test("title click sends focus request without selecting", () => {
   hookState.busy = false;
-  const latest = { number: 1, state: { ...emptyState(), nodes: Object.fromEntries([web("a"), web("b")]) } };
-  render(<DiagramWorkspace diagramId="d" name="n" latest={latest as never} initialPinned={{}} samples={[]} />);
-  fireEvent.click(screen.getByRole("button", { name: /채워야 할 정보/ }));
+  hookState.focus.length = 0;
+  render(ui(two() as never));
+  fireEvent.click(cardToggle());
+  fireEvent.click(screen.getByRole("button", { name: "b 위치 보기" }));
+  expect(hookState.focus.at(-1)).toEqual({ id: "b", token: expect.any(Number) });
+  const first = (hookState.focus.at(-1) as { token: number }).token;
+  // 선택하지 않으니 설명 탭으로 가지 않는다.
+  expect(screen.getByRole("tab", { name: "대화" })).toHaveAttribute("aria-selected", "true");
+  // 같은 노드를 다시 눌러도 새 토큰으로 다시 보낸다.
+  fireEvent.click(screen.getByRole("button", { name: "b 위치 보기" }));
+  expect((hookState.focus.at(-1) as { token: number }).token).toBeGreaterThan(first);
+});
+
+test("drafts and expanded blocks survive tab switch and card collapse", () => {
+  hookState.busy = false;
+  render(ui(two() as never));
+  fireEvent.click(cardToggle());
+  fireEvent.click(screen.getByRole("button", { name: "a 항목 펼치기" }));
   fireEvent.change(within(screen.getByRole("group", { name: "a" })).getByRole("textbox", { name: "호스트명" }), { target: { value: "web-01" } });
-  // 노드를 고르면 설명 탭으로 가고 체크리스트는 내려간다.
+  // 노드를 고르면 설명 탭으로 간다. 카드는 캔버스에 있어 그대로다.
   fireEvent.click(screen.getByRole("button", { name: "선택b" }));
   expect(screen.getByRole("tab", { name: "설명" })).toHaveAttribute("aria-selected", "true");
-  expect(screen.queryByRole("button", { name: /채워야 할 정보/ })).not.toBeInTheDocument();
-  // 선택을 풀면 대화로 돌아오고, 펼침과 초안이 그대로다.
-  fireEvent.click(screen.getByRole("button", { name: "선택해제" }));
-  expect(screen.getByRole("tab", { name: "대화" })).toHaveAttribute("aria-selected", "true");
-  expect(screen.getByRole("button", { name: /채워야 할 정보/ })).toHaveAttribute("aria-expanded", "true");
   expect(within(screen.getByRole("group", { name: "a" })).getByRole("textbox", { name: "호스트명" })).toHaveValue("web-01");
+  // 카드를 접었다 펴도 펼침과 초안이 남는다.
+  fireEvent.click(cardToggle());
+  expect(screen.queryByRole("group", { name: "a" })).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: "선택해제" }));
+  fireEvent.click(cardToggle());
+  expect(screen.getByRole("button", { name: "a 항목 접기" })).toBeInTheDocument();
+  expect(within(screen.getByRole("group", { name: "a" })).getByRole("textbox", { name: "호스트명" })).toHaveValue("web-01");
+  expect(screen.getByRole("textbox", { name: "호스트명" })).not.toHaveFocus();
+});
+
+test("주의 N chip opens the card at the warnings section", () => {
+  hookState.busy = false;
+  hookState.lines = [{ id: "w1", kind: "warning", text: "주의 1", turn: "t" }];
+  render(ui(solo(1) as never));
+  expect(cardToggle()).toHaveAttribute("aria-expanded", "false");
+  vi.mocked(Element.prototype.scrollIntoView).mockClear();
+  fireEvent.click(screen.getByRole("button", { name: "주의 1" }));
+  expect(cardToggle()).toHaveAttribute("aria-expanded", "true");
+  expect(vi.mocked(Element.prototype.scrollIntoView).mock.contexts.at(-1)).toBe(screen.getByRole("region", { name: "주의" }));
+  hookState.lines = [];
+});
+
+test("read-only card in history view", async () => {
+  hookState.busy = false;
+  const row = (number: number) => ({ number, source: "ai", status: "complete", restoredFrom: null, createdAt: new Date(0) });
+  vi.mocked(listVersionsAction).mockResolvedValue([row(1), row(2)] as never);
+  vi.mocked(getVersionAction).mockResolvedValue({ ...emptyState(), nodes: Object.fromEntries([web("a")]), assumptions: { scale: { key: "scale", value: "중규모(일 1만 명)", confirmed: false } } } as never);
+  render(ui({ number: 2, state: { ...emptyState(), nodes: Object.fromEntries([web("a"), web("b")]) } } as never));
+  await act(async () => {
+    fireEvent.click(screen.getByRole("tab", { name: "이력" }));
+  });
+  fireEvent.click(await screen.findByRole("button", { name: /v1/ }));
+  await act(async () => {
+    fireEvent.click(screen.getByRole("button", { name: "이 버전 보기" }));
+  });
+  fireEvent.click(cardToggle());
+  // 보는 버전의 내용이다(노드 a 만, 가정 하나).
+  expect(screen.queryByRole("group", { name: "b" })).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: "a 항목 펼치기" }));
+  expect(screen.queryByRole("button", { name: "저장" })).not.toBeInTheDocument();
+  expect(within(screen.getByRole("region", { name: "가정" })).queryByRole("button")).not.toBeInTheDocument();
+  expect(within(screen.getByRole("region", { name: "가정" })).getByText(/규모: 중규모/)).toBeInTheDocument();
+  vi.mocked(listVersionsAction).mockResolvedValue([]);
 });
 
 test("onBadgeClick keeps its identity across workspace re-renders (Canvas memo deps)", () => {
@@ -179,21 +239,20 @@ test("ignore buttons are disabled during a chat turn and action errors show as a
   expect(within(caution()).queryByRole("alert")).not.toBeInTheDocument();
 });
 
-test("warn badge or chat warning line for the already selected node still opens 설명", () => {
+test("warn badge or card warning item for the already selected node still opens 설명", () => {
   hookState.busy = false;
-  hookState.lines = [{ id: "w1", kind: "warning", text: "주의: b 1대뿐", nodeId: "b", level: "warn" }];
   render(ui(solo(1) as never));
   fireEvent.click(screen.getByRole("button", { name: "선택b" }));
   expect(screen.getByRole("tab", { name: "설명" })).toHaveAttribute("aria-selected", "true");
   fireEvent.click(screen.getByRole("tab", { name: "대화" }));
-  fireEvent.click(screen.getByRole("button", { name: "주의: b 1대뿐" }));
+  fireEvent.click(cardToggle());
+  fireEvent.click(within(screen.getByRole("region", { name: "주의" })).getByRole("button", { name: /1대뿐/ }));
   expect(screen.getByRole("tab", { name: "설명" })).toHaveAttribute("aria-selected", "true");
   expect(screen.getByRole("heading", { name: "주의할 점" })).toBeInTheDocument();
   fireEvent.click(screen.getByRole("tab", { name: "대화" }));
   fireEvent.click(screen.getByRole("button", { name: "경고배지b" }));
   expect(screen.getByRole("tab", { name: "설명" })).toHaveAttribute("aria-selected", "true");
   expect(screen.getByRole("heading", { name: "주의할 점" })).toBeInTheDocument();
-  hookState.lines = [];
 });
 
 test("selecting a node shows its explanation in 설명", async () => {

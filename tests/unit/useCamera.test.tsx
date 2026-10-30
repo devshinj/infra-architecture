@@ -173,3 +173,26 @@ test("a quick streaming true→false→true flip fits once at the end and drops 
   act(() => vi.advanceTimersByTime(2000));
   expect(r.durations()).toEqual([600]);
 });
+
+test("focus centres the rect in the strip, keeps zoom but at least 0.8, 500ms (0 when reduced)", () => {
+  const r = rig({ insets: { left: 200, right: 300 } });
+  r.setViewport.mockClear();
+  r.setVp({ x: 0, y: 0, zoom: 1.2 });
+  act(() => r.hook.result.current.focus(box(1000, 400)));
+  // 띠 너비 500, 가운데 x = 200 + 250. 노드 가운데 (1050, 425).
+  expect(r.setViewport).toHaveBeenLastCalledWith({ x: 450 - 1050 * 1.2, y: 300 - 425 * 1.2, zoom: 1.2 }, { duration: 500 });
+  r.setVp({ x: 0, y: 0, zoom: 0.5 });
+  r.update({ reducedMotion: true });
+  act(() => r.hook.result.current.focus(box(1000, 400)));
+  expect(r.setViewport).toHaveBeenLastCalledWith({ x: 450 - 1050 * 0.8, y: 300 - 425 * 0.8, zoom: 0.8 }, { duration: 0 });
+});
+
+test("focus during a turn is not a user move: the final fit still runs", () => {
+  const r = rig();
+  r.update({ streaming: true });
+  act(() => r.hook.result.current.focus(box(500, 500)));
+  r.hook.result.current.onMoveStart(null); // React Flow reports programmatic moves with a null event
+  r.setViewport.mockClear();
+  r.update({ streaming: false });
+  expect(r.durations()).toEqual([600]);
+});

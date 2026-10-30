@@ -3,11 +3,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import type { Command } from "@/domain/commands";
-import { computeMissing, missingReminder } from "@/domain/missing";
-import type { DiagramState, Warning, WarningLevel } from "@/domain/types";
+import type { Warning } from "@/domain/types";
 import type { ChatEvent, MessageMeta } from "@/server/chat/events";
 
-import { keepsCard, summaryText, warningLine } from "./lines";
+import { keepsCard, summaryText, warningsChip } from "./lines";
 
 /** 진행 카드의 단계. 답변 모드는 한 단계(`답변 작성 중`)뿐이다. */
 export type CardStep = "review" | "drawing" | "checking";
@@ -26,15 +25,12 @@ export interface ChatLine {
   /** React key. Initial lines use the server message id; progress lines are client-only. */
   id: string;
   /**
-   * card: 진행 카드 · progress: AI 안내(say) · summary/missing/warning: 차례 끝 칩.
+   * card: 진행 카드 · progress: AI 안내(say) · summary/warning: 차례 끝 칩(warning 은 `주의 N` 하나).
    * system: 안내 글(차례 밖이면 가운데 작은 글).
    */
-  kind: "user" | "assistant" | "system" | "progress" | "error" | "warning" | "card" | "summary" | "missing";
+  kind: "user" | "assistant" | "system" | "progress" | "error" | "warning" | "card" | "summary";
   text: string;
   meta?: MessageMeta;
-  /** kind "warning": 클릭하면 이 노드를 선택한다. */
-  nodeId?: string;
-  level?: WarningLevel;
   /** 같은 값의 줄은 한 AI 메시지로 묶인다(차례 id 또는 assistant 메시지 id). */
   turn?: string;
   /** 시각(ms). AI 메시지 머리 줄에 HH:mm 으로 보인다. */
@@ -51,8 +47,6 @@ export interface UseChatTurnArgs {
   onCommand(cmd: Command): void;
   onDone(e: DoneEvent): void;
   onOpenHistory(): void;
-  /** Live canvas state; used to compute the reminder when the user aborts (no `done` arrives). */
-  getState?(): DiagramState;
   /** The stream ended without `done` (user abort, network cut, error after commands): the saved version may differ from the canvas. */
   onInterrupted?(): void;
 }
@@ -107,9 +101,10 @@ export function useChatTurn(args: UseChatTurnArgs) {
       let errored = false;
       /** done 없이 끝남: 그린 게 있으면 중단됨으로 남기고, 없으면 카드를 치운다. */
       const endWithoutDone = (aborted: boolean) => (aborted || cmds > 0 ? patchCard((c) => ({ ...c, end: "aborted" })) : removeCard());
-      let warnings: Warning[] = []; // done 앞에 오지만 요약·빠진 정보 안내 줄 다음에 둔다
+      let warnings: Warning[] = []; // done 앞에 오지만 요약 칩 다음에 둔다
       const pushWarnings = () => {
-        for (const w of warnings) pushT(warningLine(w));
+        const chip = warningsChip(warnings);
+        if (chip) pushT(chip);
         warnings = [];
       };
 
@@ -158,7 +153,6 @@ export function useChatTurn(args: UseChatTurnArgs) {
             } else removeCard();
             const s = summaryText(ev, answerId !== null);
             if (s) pushT({ kind: "summary", text: s });
-            if (ev.applied > 0 && ev.missing > 0) pushT({ kind: "missing", text: missingReminder(ev.missing) });
             pushWarnings();
             a.onDone(ev);
             break;
@@ -227,10 +221,6 @@ export function useChatTurn(args: UseChatTurnArgs) {
         if (ctrl.signal.aborted || isAbort(e)) {
           if (!gotDone) endWithoutDone(true); // done 뒤의 중단은 완료 카드를 바꾸지 않는다
           pushT({ kind: "system", text: "중단했어요." });
-          // The server stores meta.missing for an aborted turn; mirror the reload view from live state.
-          const st = cmds > 0 ? argsRef.current.getState?.() : undefined;
-          const n = st ? computeMissing(st).count : 0;
-          if (n > 0) pushT({ kind: "missing", text: missingReminder(n) });
           pushWarnings();
         } else {
           endWithoutDone(false);

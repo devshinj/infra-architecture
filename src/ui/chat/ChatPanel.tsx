@@ -2,9 +2,6 @@
 
 import { type ReactNode, type RefObject, useEffect, useLayoutEffect, useRef, useState } from "react";
 
-import type { Assumption } from "@/domain/types";
-
-import { AssumptionChips } from "./AssumptionChips";
 import styles from "./chat.module.css";
 import { MentionInput, type MentionInputHandle } from "./MentionInput";
 import type { ChatLine, ProgressCard } from "./useChatTurn";
@@ -21,16 +18,8 @@ export interface ChatPanelProps {
   mentionRef: RefObject<MentionInputHandle | null>;
   /** Rendered under the conversation (sample list for an empty diagram). */
   footer?: ReactNode;
-  /** Assumption chips above the conversation; omitted = no chips. */
-  assumptions?: Record<string, Assumption>;
-  onChooseAssumption?(key: string, value: string): void;
-  onConfirmAssumption?(key: string): void;
-  /** 빠진 정보 체크리스트. 가정 칩과 함께 대화 위쪽에 둔다. */
-  checklist?: ReactNode;
-  /** 경고 칩 클릭: 그 노드를 선택한다. 없으면 경고 칩은 글로만 보인다. */
-  onSelectNode?(nodeId: string): void;
-  /** 빠진 정보 칩 클릭: 체크리스트를 펼친다. 없으면 칩은 글로만 보인다. */
-  onOpenChecklist?(): void;
+  /** `주의 N` 칩 클릭: 캔버스 구성 정보 카드를 펼쳐 주의 절로 간다. 없으면 칩은 글로만 보인다. */
+  onOpenWarnings?(): void;
 }
 
 const PLACEHOLDER = "만들고 싶은 서비스나 바꾸고 싶은 점을 말해 주세요. 노드를 오른쪽 클릭하면 참조를 붙일 수 있어요.";
@@ -63,8 +52,8 @@ const hhmm = (ms: number) => {
   return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
 };
 
-/** 차례 끝 결과 칩(요약·빠진 정보·경고). */
-const CHIP_KINDS = new Set<ChatLine["kind"]>(["summary", "missing", "warning"]);
+/** 차례 끝 결과 칩(요약·주의 N). */
+const CHIP_KINDS = new Set<ChatLine["kind"]>(["summary", "warning"]);
 
 /** 차례 밖의 줄은 하나씩, 같은 차례(turn)의 줄은 한 AI 메시지로 묶는다. */
 type Block = { kind: "line"; line: ChatLine } | { kind: "turn"; id: string; lines: ChatLine[] };
@@ -142,7 +131,7 @@ function CardView({ card }: { card: ProgressCard }) {
   );
 }
 
-export function ChatPanel({ lines, busy, onSend, onStop, health, disabledReason, mentionRef, footer, assumptions, onChooseAssumption, onConfirmAssumption, checklist, onSelectNode, onOpenChecklist }: ChatPanelProps) {
+export function ChatPanel({ lines, busy, onSend, onStop, health, disabledReason, mentionRef, footer, onOpenWarnings }: ChatPanelProps) {
   const list = useRef<HTMLDivElement>(null);
   const composer = useRef<HTMLDivElement>(null);
   const stopBtn = useRef<HTMLButtonElement>(null);
@@ -177,9 +166,9 @@ export function ChatPanel({ lines, busy, onSend, onStop, health, disabledReason,
   const down = health !== null && health.qwen !== "ok";
 
   const renderChip = (l: ChatLine) => {
-    const tone = l.kind === "summary" ? styles.chipSummary : l.kind === "missing" ? styles.chipMissing : styles.chipWarning;
-    const attrs = { "data-kind": l.kind, ...(l.level ? { "data-level": l.level } : {}) };
-    const onClick = l.kind === "warning" ? (onSelectNode && l.nodeId ? () => onSelectNode(l.nodeId!) : undefined) : l.kind === "missing" ? onOpenChecklist : undefined;
+    const tone = l.kind === "summary" ? styles.chipSummary : styles.chipWarning;
+    const attrs = { "data-kind": l.kind };
+    const onClick = l.kind === "warning" ? onOpenWarnings : undefined;
     return onClick ? (
       <button type="button" className={`${styles.result} ${tone}`} onClick={onClick} {...attrs}>
         {l.text}
@@ -243,19 +232,6 @@ export function ChatPanel({ lines, busy, onSend, onStop, health, disabledReason,
       {down && (
         <div className={styles.notice} role="status">
           {DOWN}
-        </div>
-      )}
-      {(assumptions || checklist) && (
-        <div className={styles.top}>
-          {assumptions && (
-            <AssumptionChips
-              assumptions={assumptions}
-              busy={blocked}
-              onChoose={(k, v) => onChooseAssumption?.(k, v)}
-              onConfirm={(k) => onConfirmAssumption?.(k)}
-            />
-          )}
-          {checklist}
         </div>
       )}
       <div

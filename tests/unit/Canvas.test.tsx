@@ -220,3 +220,47 @@ test("drag end does not toggle", async () => {
   fireEvent.click(el);
   expect(props.onSelect).not.toHaveBeenCalled();
 });
+
+test("canvas centers and pulses on focus request", async () => {
+  // jsdom 은 크기가 0 이라 카메라가 움직이지 않는다: 캔버스 크기와 움직임 줄이기를 흉내 낸다.
+  const ow = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "offsetWidth");
+  const oh = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "offsetHeight");
+  Object.defineProperty(HTMLElement.prototype, "offsetWidth", { configurable: true, get: () => 800 });
+  Object.defineProperty(HTMLElement.prototype, "offsetHeight", { configurable: true, get: () => 600 });
+  vi.stubGlobal("matchMedia", (q: string) => ({ matches: q.includes("reduce"), media: q, addEventListener() {}, removeEventListener() {}, addListener() {}, removeListener() {} }));
+  try {
+    const props = { ...baseProps(), cameraInsets: { left: 100, right: 200 } };
+    const { container, rerender } = render(<Canvas {...props} />);
+    await waitFor(() => expect(nodeEl(container, "was-1")).not.toBeNull());
+    const vpEl = container.querySelector(".react-flow__viewport") as HTMLElement;
+    const parse = () => {
+      const m = /translate\(([-\d.e]+)px, ?([-\d.e]+)px\) scale\(([-\d.e]+)\)/.exec(vpEl.style.transform)!;
+      return { x: Number(m[1]), y: Number(m[2]), zoom: Number(m[3]) };
+    };
+    await waitFor(() => expect(vpEl.style.transform).toMatch(/translate/));
+    rerender(<Canvas {...props} focusRequest={{ id: "was-1", token: 1 }} />);
+    const node = nodeEl(container, "was-1")!;
+    const pos = /translate\(([-\d.]+)px, ?([-\d.]+)px\)/.exec(node.style.transform)!;
+    const w = parseFloat(node.style.width), h = parseFloat(node.style.height);
+    await waitFor(() => {
+      const v = parse();
+      expect(v.zoom).toBeGreaterThanOrEqual(0.8);
+      // 노드 가운데가 패널 사이 띠(100..600)의 가운데 350, 높이 600 의 가운데 300 에 온다.
+      expect((Number(pos[1]) + w / 2) * v.zoom + v.x).toBeCloseTo(350, 0);
+      expect((Number(pos[2]) + h / 2) * v.zoom + v.y).toBeCloseTo(300, 0);
+    });
+    expect(node.querySelector(".node--pulse")).not.toBeNull();
+    expect(container.querySelectorAll(".node--pulse")).toHaveLength(1);
+    expect(props.onSelect).not.toHaveBeenCalled();
+    // 1.6초 뒤 강조가 사라진다.
+    await waitFor(() => expect(container.querySelector(".node--pulse")).toBeNull(), { timeout: 2500 });
+  } finally {
+    if (ow) Object.defineProperty(HTMLElement.prototype, "offsetWidth", ow);
+    if (oh) Object.defineProperty(HTMLElement.prototype, "offsetHeight", oh);
+    vi.unstubAllGlobals();
+    vi.stubGlobal("ResizeObserver", class { observe() {} unobserve() {} disconnect() {} });
+    class DM { m22 = 1; }
+    vi.stubGlobal("DOMMatrixReadOnly", DM);
+    vi.stubGlobal("DOMMatrix", DM);
+  }
+});

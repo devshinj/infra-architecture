@@ -1,13 +1,12 @@
 import type { MessageRole } from "@/db/schema";
-import { missingReminder } from "@/domain/missing";
 import type { Warning } from "@/domain/types";
 import type { MessageMeta } from "@/server/chat/events";
 
 import type { ChatLine } from "./useChatTurn";
 
-/** 경고 한 건의 대화 줄(id 는 호출하는 쪽이 정하거나 push 가 붙인다). */
-export function warningLine(w: Warning): Omit<ChatLine, "id"> {
-  return { kind: "warning", text: `${w.level === "check" ? "확인해 보세요" : "주의"}: ${w.text}`, nodeId: w.nodeId, level: w.level };
+/** 한 차례의 새 경고를 칩 하나(`주의 N`)로 알린다. 자세한 목록은 캔버스 구성 정보 카드에 있다. 없으면 null. */
+export function warningsChip(ws: readonly Warning[]): Omit<ChatLine, "id"> | null {
+  return ws.length > 0 ? { kind: "warning", text: `주의 ${ws.length}` } : null;
 }
 
 export interface TurnResult {
@@ -74,9 +73,9 @@ export function messagesToLines(rows: Row[]): ChatLine[] {
     if (answer.trim()) out.push({ id: m.id, kind: "assistant", text: answer, meta, ...t });
     const s = summaryText(r, answer.trim() !== "");
     if (s) out.push({ id: `${m.id}-summary`, kind: "summary", text: s, ...t });
-    const missing = meta.missing ?? 0;
-    if (missing > 0) out.push({ id: `${m.id}-missing`, kind: "missing", text: missingReminder(missing), ...t });
-    for (const w of meta.warnings ?? []) out.push({ id: `${m.id}-warn-${w.id}`, ...warningLine(w), ...t });
+    // 빠진 정보(meta.missing)는 대화에 줄을 두지 않는다: 캔버스 카드가 지금 상태로 보여 준다.
+    const chip = warningsChip(meta.warnings ?? []);
+    if (chip) out.push({ id: `${m.id}-warn`, ...chip, ...t });
   }
   return out;
 }
