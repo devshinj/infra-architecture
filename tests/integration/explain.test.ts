@@ -6,6 +6,7 @@ import { diagramVersions, explanations, glossaryTerms } from "@/db/schema";
 import { normalizeTerm, signatureOf, type NodeExplanation } from "@/domain/explain";
 import { emptyState, type DiagramState } from "@/domain/types";
 import { explainTarget, listSignatures } from "@/server/explain";
+import { findTerm, updateTerm } from "@/server/glossary";
 import type { ClefClient } from "@/server/llm/clef";
 import type { QwenClient } from "@/server/llm/qwen";
 import { NotFoundError } from "@/server/projects";
@@ -94,6 +95,28 @@ test("explainTarget round-trips through the cache table", async () => {
   expect(await rowsOf(ids.diagramId)).toHaveLength(3);
   const versions = await db.select().from(diagramVersions).where(eq(diagramVersions.diagramId, ids.diagramId));
   expect(versions).toHaveLength(1);
+});
+
+test("cached explanation shows the current glossary entry", async () => {
+  const ids = await setup();
+  const { qwen, calls } = fakeQwen();
+  const deps = { qwen, clef };
+  const first = await explainTarget(ids.userId, ids.diagramId, "node", "app", {}, deps);
+  expect(first.ok && first.explanation).toMatchObject({ definition: DEF, reviewed: false, definitionSource: "ai" });
+  const lb = await explainTarget(ids.userId, ids.diagramId, "node", "lb", {}, deps);
+  expect(lb.ok && lb.explanation).toMatchObject({ reviewed: false, definitionSource: "glossary" });
+  const n = calls.length;
+
+  const app = (await findTerm(ids.userId, ["varnishy"]))!;
+  await updateTerm(ids.userId, app.id, { definition: "Varnishy는 고친 정의입니다.", reviewed: true });
+  const l4 = (await findTerm(ids.userId, ["l4"]))!;
+  await updateTerm(ids.userId, l4.id, { reviewed: true, why: "고친 이유" });
+
+  const again = await explainTarget(ids.userId, ids.diagramId, "node", "app", {}, deps);
+  expect(again.ok && again.explanation).toMatchObject({ definition: "Varnishy는 고친 정의입니다.", reviewed: true, definitionSource: "ai", role: "요청을 받아 처리합니다." });
+  const lbAgain = await explainTarget(ids.userId, ids.diagramId, "node", "lb", {}, deps);
+  expect(lbAgain.ok && lbAgain.explanation).toMatchObject({ reviewed: true, why: "고친 이유", definitionSource: "glossary" });
+  expect(calls.length).toBe(n);
 });
 
 test("other user's diagram is not found", async () => {

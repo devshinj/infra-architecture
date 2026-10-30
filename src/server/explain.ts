@@ -121,12 +121,20 @@ function parseObject(text: string): Record<string, unknown> | null {
     .replace(/^```[a-zA-Z]*[ \t]*\r?\n?/, "")
     .replace(/\r?\n?```$/, "")
     .trim();
-  try {
-    const v: unknown = JSON.parse(body);
-    return v && typeof v === "object" && !Array.isArray(v) ? (v as Record<string, unknown>) : null;
-  } catch {
-    return null;
-  }
+  const read = (t: string): Record<string, unknown> | null => {
+    try {
+      const v: unknown = JSON.parse(t);
+      return v && typeof v === "object" && !Array.isArray(v) ? (v as Record<string, unknown>) : null;
+    } catch {
+      return null;
+    }
+  };
+  const whole = read(body);
+  if (whole) return whole;
+  // 앞뒤에 글이 붙었으면 첫 `{` 부터 마지막 `}` 까지만 읽는다.
+  const start = body.indexOf("{");
+  const end = body.lastIndexOf("}");
+  return start >= 0 && end > start ? read(body.slice(start, end + 1)) : null;
 }
 
 /** 비어 있지 않은 문자열이면 다듬어서, 아니면 null. */
@@ -283,7 +291,17 @@ export async function explainTarget(
   const cached = await repo.getCached(diagramId, targetKind, targetId);
   const fresh = cached && cached.signature === signature ? cached : null;
   if (fresh && !opts.force && !instruction) {
-    return { ok: true, explanation: fresh.data as Explanation, signature };
+    const data = fresh.data as Explanation;
+    const node = targetKind === "node" ? state.nodes[targetId] : undefined;
+    if (data.kind !== "node" || !node) return { ok: true, explanation: data, signature };
+    // 사전은 생성 뒤에 고쳐지거나 검수될 수 있어 지금 사전 값을 덮어 보여 준다(Qwen 은 부르지 않는다).
+    // 서명이 같으면 용어 후보도 같아 생성 때와 같은 항목을 찾는다. 항목이 없어졌으면 저장된 값 그대로다.
+    const current = await repo.findTerm(userId, termCandidates(node).map((c) => c.key));
+    if (!current) return { ok: true, explanation: data, signature };
+    const rest: NodeExplanation = { ...data };
+    delete rest.why;
+    delete rest.compare;
+    return { ok: true, explanation: { ...rest, ...glossaryPart(current, data.definitionSource) }, signature };
   }
 
   // 노드: 사전 조회. ensureSeeded 를 먼저 해야 시드와 같은 용어를 AI 가 새로 넣지 않는다.

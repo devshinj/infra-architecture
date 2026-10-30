@@ -174,11 +174,26 @@ describe("explainTarget", () => {
   test("cached explanation is returned when signature matches", async () => {
     const { repo, cache } = fakeRepo();
     const sig = signatureOf(sample(), "node", "lb")!;
-    const data = { kind: "node", term: "캐시된 것" };
+    const data = { kind: "node", term: "캐시된 것", definition: "옛 정의", definitionSource: "glossary", reviewed: false, why: "옛 이유", role: "역할", adr: ADR };
     cache.set("node:lb", { signature: sig, data });
     const { qwen, calls } = fakeQwen(nodeJson());
+    // 사전 값(용어·정의·검수·why·compare)은 지금 사전에서 덮어 쓴다. Qwen 은 부르지 않는다.
     const r = await explainTarget("u", "d", "node", "lb", {}, { qwen, clef: fakeClef().clef, repo });
-    expect(r).toEqual({ ok: true, explanation: data, signature: sig });
+    expect(r).toEqual({
+      ok: true,
+      explanation: { ...data, term: L4_ROW.term, definition: L4_DEF, reviewed: true, why: L4_ROW.why, compare: L4_ROW.compare },
+      signature: sig,
+    });
+    expect(calls).toHaveLength(0);
+
+    // 사전에서 항목이 없어졌으면 저장된 값 그대로다. 연결도 그대로다.
+    const gone = fakeRepo(sample(), []);
+    gone.cache.set("node:lb", { signature: sig, data });
+    expect(await explainTarget("u", "d", "node", "lb", {}, { qwen, clef: fakeClef().clef, repo: gone.repo })).toEqual({ ok: true, explanation: data, signature: sig });
+    const edgeSig = signatureOf(sample(), "edge", "e1")!;
+    const edgeData = { kind: "edge", flow: "f", method: "m", why: "w", firewall: "x" };
+    gone.cache.set("edge:e1", { signature: edgeSig, data: edgeData });
+    expect(await explainTarget("u", "d", "edge", "e1", {}, { qwen, clef: fakeClef().clef, repo: gone.repo })).toEqual({ ok: true, explanation: edgeData, signature: edgeSig });
     expect(calls).toHaveLength(0);
 
     // 서명이 다르면 다시 만든다.
@@ -285,6 +300,12 @@ describe("explainTarget", () => {
     const ok = await explainTarget("u", "d", "node", "was-1", {}, { qwen: fixed.qwen, clef: fakeClef().clef, repo });
     expect(fixed.calls).toHaveLength(2);
     expect(ok.ok).toBe(true);
+
+    // 앞뒤에 글이 붙으면 첫 { 부터 마지막 } 까지만 읽는다.
+    const prose = fakeQwen(`설명입니다:\n${nodeJson({ definition: TOMCAT_DEF })}\n이상입니다.`);
+    const fromProse = await explainTarget("u", "d", "node", "was-1", {}, { qwen: prose.qwen, clef: fakeClef().clef, repo: fakeRepo().repo });
+    expect(prose.calls).toHaveLength(1);
+    expect(fromProse.ok && (fromProse.explanation as NodeExplanation).definition).toBe(TOMCAT_DEF);
 
     // 사전 정의가 없으면 definition 도 필수다.
     const noDef = fakeQwen(nodeJson());
