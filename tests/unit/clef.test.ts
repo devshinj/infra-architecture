@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 
-import { createClefClient, INTENT_MIN_CONFIDENCE } from "@/server/llm/clef";
+import { createClefClient, INTENT_MIN_CONFIDENCE, noulProbability } from "@/server/llm/clef";
 
 const cfg = { url: "http://clef.test", key: "k-secret", maxConcurrency: 2 };
 
@@ -285,5 +285,27 @@ describe("clef", () => {
     await p1;
     await client.decide("s", {});
     expect(calls).toHaveLength(2);
+  });
+});
+
+describe("noulProbability", () => {
+  test("noulProbability reads probability, probabilities.yes, and yes/no choice", () => {
+    expect(noulProbability({ type: "noul", probability: 0.83 })).toBe(0.83);
+    expect(noulProbability({ type: "noul", probabilities: { yes: 0.6, no: 0.4 } })).toBe(0.6);
+    expect(noulProbability({ type: "noul", choice: "yes", confidence: 0.9 })).toBe(0.9);
+    expect(noulProbability({ type: "noul", choice: "no", confidence: 0.9 })).toBeCloseTo(0.1);
+    // 0~1 로 자른다.
+    expect(noulProbability({ probability: 1.4 })).toBe(1);
+    expect(noulProbability({ probability: -0.2 })).toBe(0);
+  });
+
+  test("unknown shape gives null", () => {
+    expect(noulProbability(undefined)).toBeNull();
+    expect(noulProbability({})).toBeNull();
+    expect(noulProbability({ probability: "0.9" })).toBeNull();
+    expect(noulProbability({ probability: Number.NaN })).toBeNull();
+    expect(noulProbability({ probabilities: { maybe: 0.5 } })).toBeNull();
+    expect(noulProbability({ choice: "maybe", confidence: 0.9 })).toBeNull();
+    expect(noulProbability({ choice: "yes" })).toBeNull();
   });
 });

@@ -13,7 +13,7 @@ interface Rule {
 }
 
 const PUBLIC_GROUPS = ["subnet_public", "dmz"];
-const DATA_KINDS = ["db_rdb", "db_nosql", "cache", "search", "db_proxy", "file_storage"];
+export const DATA_KINDS = ["db_rdb", "db_nosql", "cache", "search", "db_proxy", "file_storage"];
 const SPOF_KINDS = ["web_server", "was", "app_server", "db_rdb", "db_nosql", "lb_l4", "lb_l7"];
 
 /** 노드의 조상 그룹 종류들(순환 방어). */

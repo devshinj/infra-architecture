@@ -2,14 +2,17 @@ import { describe, expect, test } from "vitest";
 
 import { parseCommand } from "@/domain/commands";
 import { EDGE_KINDS, GROUP_KINDS, NODE_KINDS } from "@/domain/catalog";
+import { patternPromptBlock } from "@/domain/patterns";
 import { emptyState, type DiagramState } from "@/domain/types";
 import {
   ANSWER_PROMPT,
+  buildWarningMessages,
   buildMessages,
   HISTORY_LIMIT,
   parseMentions,
   summarizeState,
   SYSTEM_PROMPT,
+  WARNING_PROMPT,
 } from "@/server/chat/prompt";
 
 function sample(): DiagramState {
@@ -208,5 +211,31 @@ describe("buildMessages", () => {
     expect(b(null)).toBe(SYSTEM_PROMPT);
     expect(b("structure_change")).toBe(SYSTEM_PROMPT);
     expect(b("missing_info_answer")).toBe(SYSTEM_PROMPT);
+  });
+});
+
+describe("warning prompt", () => {
+  test("warning prompt lists ids and facts", () => {
+    const msgs = buildWarningMessages([
+      { id: "spof:was-1", rule: "spof", facts: "WAS#1이(가) 1대뿐이에요.\n노드 was-1 [was] \"WAS#1\"" },
+      { id: "db_exposed:db-1", rule: "db_exposed", facts: "DB 가 보여요." },
+    ]);
+    expect(msgs[0]).toEqual({ role: "system", content: WARNING_PROMPT });
+    expect(msgs).toHaveLength(2);
+    const user = msgs[1]!;
+    expect(user.role).toBe("user");
+    expect(user.content).toContain("spof:was-1");
+    expect(user.content).toContain("db_exposed:db-1");
+    expect(user.content).toContain("WAS#1이(가) 1대뿐이에요.");
+    expect(user.content).toContain("DB 가 보여요.");
+    // 사실 글의 줄바꿈은 접혀 경고 한 건이 한 줄이다.
+    expect(user.content.split("\n").filter((l) => l.includes("spof:was-1"))[0]).toContain('"WAS#1"');
+    for (const phrase of ["80자", "한 문장", "JSON Lines", '{"id":', "주어지지 않은 id"]) expect(WARNING_PROMPT).toContain(phrase);
+  });
+
+  test("pattern block is in SYSTEM_PROMPT", () => {
+    expect(SYSTEM_PROMPT).toContain(patternPromptBlock());
+    expect(SYSTEM_PROMPT.indexOf(patternPromptBlock())).toBeGreaterThan(SYSTEM_PROMPT.indexOf("질문이면 명령 없이"));
+    expect(SYSTEM_PROMPT).toContain("warn 과 report_missing 명령은 내지 않는다");
   });
 });

@@ -1,5 +1,6 @@
 import { EDGE_KINDS, GROUP_KINDS, NODE_KINDS } from "@/domain/catalog";
 import type { MissingItem } from "@/domain/missing";
+import { patternPromptBlock } from "@/domain/patterns";
 import type { DiagramState } from "@/domain/types";
 import type { Intent } from "@/server/llm/clef";
 import type { ChatMessage } from "@/server/llm/qwen";
@@ -53,7 +54,9 @@ EDGE_KIND 허용값: ${EDGE_KIND_LIST}
 - 사용자(client_*)에서 시작하는 진입 연결을 반드시 그린다.
 - warn 과 report_missing 명령은 내지 않는다. 위험 진단은 다른 단계가 맡는다.
 - 사용자가 채워야 할 정보의 값을 알려 주면 update_node(attrs) 또는 update_edge(label) 로 그 값만 반영한다. 노드·연결을 새로 만들지 않는다.
-- 사용자가 질문만 하면 구성은 건드리지 않는다. 질문이면 명령 없이 {"op":"say","text":"…"} 한두 문장으로만 답한다.`;
+- 사용자가 질문만 하면 구성은 건드리지 않는다. 질문이면 명령 없이 {"op":"say","text":"…"} 한두 문장으로만 답한다.
+
+${patternPromptBlock()}`;
 
 export const ANSWER_PROMPT = `너는 인프라 아키텍처 구성도 도구의 도우미다.
 사용자의 질문이나 말에 한국어로 답한다. 답할 때는 아래 "현재 구성" 요약을 근거로, 지금 그려진 구성도에 대해 설명한다.
@@ -64,6 +67,30 @@ export const ANSWER_PROMPT = `너는 인프라 아키텍처 구성도 도구의 
 - 제품명(Redis, ALB, Tomcat 등)은 원어 그대로 쓴다.
 - 구성에 없는 내용을 지어내지 않는다. 모르면 모른다고 말한다.
 - 사용자가 실제로는 구성을 바꿔 달라고 요청한 것이면, 지금은 답변 모드라 구성을 바꾸지 않았다고 짧게 알리고 "~추가해 줘"처럼 요청 형태로 다시 말해 달라고 안내한다.`;
+
+// 경고 문구 작성(새 경고만, 한 번의 호출). 형식이 틀린 줄은 서버가 정해진 문구로 바꾼다.
+export const WARNING_PROMPT = `너는 인프라 아키텍처 구성도 도구의 도우미다.
+구성도에서 찾은 위험 요소마다 사용자에게 보여 줄 경고 문구를 쓴다.
+
+출력 형식:
+- JSON Lines 로만 출력한다. 한 줄에 {"id":"주어진 id","text":"경고 문구"} 하나. 다른 글, 코드펜스, 설명 금지.
+
+규칙:
+- text 는 한국어 한 문장, 80자 이내로 쓴다.
+- 인프라를 잘 모르는 비전공자도 알 수 있게 쉬운 말로, 무엇이 왜 위험한지 쓴다.
+- 제품명(Redis, ALB, Tomcat 등)과 노드 이름은 원어 그대로 쓴다.
+- 주어진 id 마다 한 줄씩 쓴다. 주어지지 않은 id 를 만들지 않는다.
+- 주어진 사실에 없는 내용을 지어내지 않는다.`;
+
+/** 경고 문구 요청. facts 는 정해진 문구와 관련 노드 요약이다(공백을 접어 한 건이 한 줄이 되게 한다). */
+export function buildWarningMessages(items: { id: string; rule: string; facts: string }[]): ChatMessage[] {
+  const flat = (t: string) => t.replace(/\s+/g, " ").trim();
+  const lines = items.map((it) => `id=${JSON.stringify(it.id)} rule=${it.rule} 사실: ${flat(it.facts)}`);
+  return [
+    { role: "system", content: WARNING_PROMPT },
+    { role: "user", content: `경고 목록:\n${lines.join("\n")}` },
+  ];
+}
 
 export function summarizeState(state: DiagramState): string {
   const lines: string[] = [];
