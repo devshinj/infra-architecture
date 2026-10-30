@@ -34,7 +34,7 @@ vi.mock("@/ui/chat/useChatTurn", () => ({
   useChatTurn: (a: { onCommand: (c: unknown) => void; onDone(): void; onInterrupted(): void }) => {
     hookState.onCommand = a.onCommand;
     hookState.turn = a;
-    return { lines: hookState.lines, busy: hookState.busy, phase: null, send: vi.fn(), stop: vi.fn() };
+    return { lines: hookState.lines, busy: hookState.busy, send: vi.fn(), stop: vi.fn() };
   },
 }));
 

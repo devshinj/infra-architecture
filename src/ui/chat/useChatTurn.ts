@@ -14,8 +14,8 @@ export type CardStep = "review" | "drawing" | "checking";
 export interface ProgressCard {
   mode: "build" | "answer";
   step: CardStep;
-  /** 이번 차례에 그린 노드 수(add_node 마다 1). */
-  drawn: number;
+  /** 이번 차례에 적용된 변경 수(cmd 이벤트마다 1. 빈 영역 정리도 cmd 로 와서 구별하지 않는다). */
+  changes: number;
   /** 끝난 카드는 접힌 한 줄이 된다. */
   end?: "done" | "aborted";
   nodes?: number;
@@ -43,7 +43,6 @@ export interface ChatLine {
   card?: ProgressCard;
 }
 
-export type ChatPhase = "thinking" | "drawing" | "answering" | "checking";
 type DoneEvent = Extract<ChatEvent, { t: "done" }>;
 
 export interface UseChatTurnArgs {
@@ -71,7 +70,6 @@ const ANSWER_INTENTS = new Set(["question", "other"]);
 export function useChatTurn(args: UseChatTurnArgs) {
   const [lines, setLines] = useState<ChatLine[]>(args.initial);
   const [busy, setBusy] = useState(false);
-  const [phase, setPhase] = useState<ChatPhase | null>(null);
   const argsRef = useRef(args);
   useEffect(() => {
     argsRef.current = args;
@@ -92,14 +90,13 @@ export function useChatTurn(args: UseChatTurnArgs) {
       const ctrl = new AbortController();
       abortRef.current = ctrl;
       setBusy(true);
-      setPhase(null);
       // 서버 응답 전에 내 말풍선과 진행 카드를 바로 띄운다.
       const turn = nextId("t");
       const at = Date.now();
       const cardId = nextId("c");
       const pushT = (line: Omit<ChatLine, "id" | "turn" | "at">) => push({ ...line, turn, at });
       push({ kind: "user", text: trimmed, at });
-      push({ id: cardId, kind: "card", text: "", card: { mode: "build", step: "review", drawn: 0 }, turn, at });
+      push({ id: cardId, kind: "card", text: "", card: { mode: "build", step: "review", changes: 0 }, turn, at });
       const patchCard = (fn: (c: ProgressCard) => ProgressCard) =>
         setLines((ls) => ls.map((l) => (l.id === cardId && l.card ? { ...l, card: fn(l.card) } : l)));
       const removeCard = () => setLines((ls) => ls.filter((l) => l.id !== cardId));
@@ -123,7 +120,6 @@ export function useChatTurn(args: UseChatTurnArgs) {
             if (ev.intent && ANSWER_INTENTS.has(ev.intent)) patchCard((c) => ({ ...c, mode: "answer" }));
             break;
           case "status": {
-            setPhase(ev.phase);
             const p = ev.phase;
             patchCard((c) => (p === "answering" ? { ...c, mode: "answer" } : { ...c, step: p === "thinking" ? "review" : p }));
             break;
@@ -133,8 +129,7 @@ export function useChatTurn(args: UseChatTurnArgs) {
             break;
           case "cmd": {
             cmds++;
-            const added = ev.cmd.op === "add_node" ? 1 : 0;
-            patchCard((c) => ({ ...c, step: c.step === "review" ? "drawing" : c.step, drawn: c.drawn + added }));
+            patchCard((c) => ({ ...c, step: c.step === "review" ? "drawing" : c.step, changes: c.changes + 1 }));
             a.onCommand(ev.cmd);
             break;
           }
@@ -230,7 +225,7 @@ export function useChatTurn(args: UseChatTurnArgs) {
         }
       } catch (e) {
         if (ctrl.signal.aborted || isAbort(e)) {
-          endWithoutDone(true);
+          if (!gotDone) endWithoutDone(true); // done 뒤의 중단은 완료 카드를 바꾸지 않는다
           pushT({ kind: "system", text: "중단했어요." });
           // The server stores meta.missing for an aborted turn; mirror the reload view from live state.
           const st = cmds > 0 ? argsRef.current.getState?.() : undefined;
@@ -245,7 +240,6 @@ export function useChatTurn(args: UseChatTurnArgs) {
         runningRef.current = false;
         abortRef.current = null;
         setBusy(false);
-        setPhase(null);
         if (!gotDone && (ctrl.signal.aborted || cmds > 0)) argsRef.current.onInterrupted?.();
       }
     },
@@ -254,5 +248,5 @@ export function useChatTurn(args: UseChatTurnArgs) {
 
   const stop = useCallback(() => abortRef.current?.abort(), []);
 
-  return { lines, busy, phase, send, stop, pushLine: push };
+  return { lines, busy, send, stop, pushLine: push };
 }

@@ -58,7 +58,7 @@ export function messagesToLines(rows: Row[]): ChatLine[] {
       ...(meta.edges !== undefined ? { edges: meta.edges } : {}),
     };
     if (keepsCard(r)) {
-      const card: NonNullable<ChatLine["card"]> = { mode: "build", step: "checking", drawn: 0, end: r.status === "complete" ? "done" : "aborted" };
+      const card: NonNullable<ChatLine["card"]> = { mode: "build", step: "checking", changes: 0, end: r.status === "complete" ? "done" : "aborted" };
       if (r.nodes !== undefined) card.nodes = r.nodes;
       if (r.edges !== undefined) card.edges = r.edges;
       out.push({ id: `${m.id}-card`, kind: "card", text: "", card, ...t });

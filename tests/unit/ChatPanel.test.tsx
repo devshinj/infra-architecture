@@ -1,9 +1,11 @@
 import "@testing-library/jest-dom/vitest";
-import { cleanup, render, screen, within } from "@testing-library/react";
+import { act, cleanup, render, screen, within } from "@testing-library/react";
+import { createRef } from "react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, expect, test, vi } from "vitest";
 
 import { ChatPanel, type ChatPanelProps } from "@/ui/chat/ChatPanel";
+import type { MentionInputHandle } from "@/ui/chat/MentionInput";
 import type { ChatLine } from "@/ui/chat/useChatTurn";
 
 afterEach(cleanup);
@@ -84,7 +86,7 @@ const card = (c: NonNullable<ChatLine["card"]>): ChatLine => ({ id: "c", kind: "
 const steps = () => within(screen.getByRole("list", { name: "진행 단계" })).getAllByRole("listitem");
 
 test("own bubble sits apart from the AI message with its header", () => {
-  render(<ChatPanel {...base({ lines: [{ id: "u", kind: "user", text: "쇼핑몰 그려줘" }, card({ mode: "build", step: "review", drawn: 0 })], busy: true })} />);
+  render(<ChatPanel {...base({ lines: [{ id: "u", kind: "user", text: "쇼핑몰 그려줘" }, card({ mode: "build", step: "review", changes: 0 })], busy: true })} />);
   const own = screen.getByText("쇼핑몰 그려줘");
   expect(own).toHaveAttribute("data-kind", "user");
   const ai = screen.getByRole("group", { name: "InfraSketch 메시지" });
@@ -95,29 +97,29 @@ test("own bubble sits apart from the AI message with its header", () => {
 });
 
 test("progress card steps and node count update", () => {
-  const { rerender } = render(<ChatPanel {...base({ busy: true, lines: [card({ mode: "build", step: "review", drawn: 0 })] })} />);
-  expect(steps().map((li) => li.textContent)).toEqual(["구성 검토", "그리는 중 (노드 0개)", "위험 요소 점검", "완료"]);
+  const { rerender } = render(<ChatPanel {...base({ busy: true, lines: [card({ mode: "build", step: "review", changes: 0 })] })} />);
+  expect(steps().map((li) => li.textContent)).toEqual(["구성 검토", "그리는 중 (변경 0개)", "위험 요소 점검", "완료"]);
   expect(steps()[0]).toHaveAttribute("aria-current", "step");
-  rerender(<ChatPanel {...base({ busy: true, lines: [card({ mode: "build", step: "drawing", drawn: 4 })] })} />);
-  expect(steps()[1]).toHaveTextContent("그리는 중 (노드 4개)");
+  rerender(<ChatPanel {...base({ busy: true, lines: [card({ mode: "build", step: "drawing", changes: 4 })] })} />);
+  expect(steps()[1]).toHaveTextContent("그리는 중 (변경 4개)");
   expect(steps()[1]).toHaveAttribute("aria-current", "step");
   expect(steps()[0]).toHaveAttribute("data-state", "done");
-  rerender(<ChatPanel {...base({ busy: true, lines: [card({ mode: "build", step: "checking", drawn: 6 })] })} />);
+  rerender(<ChatPanel {...base({ busy: true, lines: [card({ mode: "build", step: "checking", changes: 6 })] })} />);
   expect(steps().map((li) => li.getAttribute("data-state"))).toEqual(["done", "done", "current", "todo"]);
-  rerender(<ChatPanel {...base({ lines: [card({ mode: "build", step: "checking", drawn: 6, end: "done", nodes: 6, edges: 5 })] })} />);
+  rerender(<ChatPanel {...base({ lines: [card({ mode: "build", step: "checking", changes: 6, end: "done", nodes: 6, edges: 5 })] })} />);
   expect(screen.queryByRole("list", { name: "진행 단계" })).not.toBeInTheDocument();
   expect(screen.getByText("완료 · 노드 6 · 연결 5")).toBeInTheDocument();
 });
 
 test("answer mode shows single step", () => {
-  render(<ChatPanel {...base({ busy: true, lines: [card({ mode: "answer", step: "review", drawn: 0 })] })} />);
+  render(<ChatPanel {...base({ busy: true, lines: [card({ mode: "answer", step: "review", changes: 0 })] })} />);
   expect(steps().map((li) => li.textContent)).toEqual(["답변 작성 중"]);
   expect(steps()[0]).toHaveAttribute("aria-current", "step");
 });
 
 test("aborted shows 중단됨", () => {
-  render(<ChatPanel {...base({ lines: [card({ mode: "build", step: "drawing", drawn: 2, end: "aborted" })] })} />);
-  expect(screen.getByText("중단됨")).toBeInTheDocument();
+  render(<ChatPanel {...base({ lines: [card({ mode: "build", step: "drawing", changes: 2, end: "aborted" })] })} />);
+  expect(within(screen.getByRole("log")).getByText("중단됨")).toBeInTheDocument();
   expect(screen.queryByRole("list", { name: "진행 단계" })).not.toBeInTheDocument();
 });
 
@@ -128,7 +130,7 @@ test("summary, missing and warning chips under the message", () => {
         onSelectNode: vi.fn(),
         onOpenChecklist: vi.fn(),
         lines: [
-          card({ mode: "build", step: "checking", drawn: 3, end: "done", nodes: 3, edges: 1 }),
+          card({ mode: "build", step: "checking", changes: 3, end: "done", nodes: 3, edges: 1 }),
           { id: "p", kind: "progress", text: "웹 서버를 놓을게요", ...T },
           { id: "s", kind: "summary", text: "노드 3 · 연결 1 · 적용 2 · 건너뜀 1", ...T },
           { id: "m", kind: "missing", text: "빠진 정보 6개가 있어요", ...T },
@@ -161,4 +163,56 @@ test("system lines outside a turn stay a small centered note", () => {
   render(<ChatPanel {...base({ lines: [{ id: "s", kind: "system", text: "v2 로 되돌렸어요." }] })} />);
   expect(screen.getByText("v2 로 되돌렸어요.")).toHaveAttribute("data-kind", "system");
   expect(screen.queryByRole("group", { name: "InfraSketch 메시지" })).not.toBeInTheDocument();
+});
+
+test("focus moves to 중단 when a turn starts and back to the input when it ends", async () => {
+  const mentionRef = createRef<MentionInputHandle>();
+  const p = base({ mentionRef });
+  const { rerender } = render(<ChatPanel {...p} />);
+  await userEvent.type(screen.getByRole("textbox"), "안녕{Enter}");
+  expect(p.onSend).toHaveBeenCalledWith("안녕");
+  rerender(<ChatPanel {...p} busy />);
+  expect(screen.getByRole("button", { name: "중단" })).toHaveFocus();
+  rerender(<ChatPanel {...p} busy={false} />);
+  expect(screen.getByRole("textbox")).toHaveFocus();
+});
+
+test("focus is not stolen back when the user moved elsewhere during the turn", async () => {
+  const mentionRef = createRef<MentionInputHandle>();
+  const p = base({ mentionRef });
+  const { rerender } = render(
+    <>
+      <button type="button">바깥</button>
+      <ChatPanel {...p} />
+    </>,
+  );
+  await userEvent.type(screen.getByRole("textbox"), "안녕{Enter}");
+  rerender(
+    <>
+      <button type="button">바깥</button>
+      <ChatPanel {...p} busy />
+    </>,
+  );
+  act(() => screen.getByRole("button", { name: "바깥" }).focus());
+  rerender(
+    <>
+      <button type="button">바깥</button>
+      <ChatPanel {...p} busy={false} />
+    </>,
+  );
+  expect(screen.getByRole("button", { name: "바깥" })).toHaveFocus();
+});
+
+test("card is not live; only step changes are announced", () => {
+  const { rerender } = render(<ChatPanel {...base({ busy: true, lines: [card({ mode: "build", step: "drawing", changes: 1 })] })} />);
+  const list = screen.getByRole("list", { name: "진행 단계" });
+  expect(list.closest("[aria-live]")).toHaveAttribute("aria-live", "off");
+  const status = screen.getByRole("status");
+  expect(status).toHaveTextContent(/^그리는 중$/);
+  rerender(<ChatPanel {...base({ busy: true, lines: [card({ mode: "build", step: "drawing", changes: 7 })] })} />);
+  expect(status).toHaveTextContent(/^그리는 중$/);
+  rerender(<ChatPanel {...base({ busy: true, lines: [card({ mode: "build", step: "checking", changes: 7 })] })} />);
+  expect(status).toHaveTextContent(/^위험 요소 점검$/);
+  rerender(<ChatPanel {...base({ lines: [card({ mode: "build", step: "checking", changes: 7, end: "done", nodes: 3, edges: 2 })] })} />);
+  expect(status).toHaveTextContent(/^완료$/);
 });

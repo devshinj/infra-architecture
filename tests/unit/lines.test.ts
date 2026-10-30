@@ -69,7 +69,7 @@ test("reload renders the same structure with a collapsed done card", () => {
     ["card", ""],
     ["summary", "중단됨 · 노드 4 · 연결 2 · 적용 1 · 건너뜀 0"],
   ]);
-  expect(lines[1]!.card).toEqual({ mode: "build", step: "checking", drawn: 0, end: "done", nodes: 3, edges: 2 });
+  expect(lines[1]!.card).toEqual({ mode: "build", step: "checking", changes: 0, end: "done", nodes: 3, edges: 2 });
   expect(lines[8]!.card).toMatchObject({ end: "aborted" });
   // 한 메시지의 줄은 한 차례로 묶이고 시각을 가진다.
   expect(lines.slice(1, 6).every((l) => l.turn === "a1" && l.at === at.getTime())).toBe(true);

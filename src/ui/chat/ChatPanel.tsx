@@ -103,11 +103,18 @@ type StepState = "done" | "current" | "todo";
 function stepRows(card: ProgressCard): { key: string; label: string; state: StepState }[] {
   if (card.mode === "answer") return [{ key: "answer", label: "답변 작성 중", state: "current" }];
   const at = BUILD_STEPS.indexOf(card.step);
-  const label = { review: "구성 검토", drawing: `그리는 중 (노드 ${card.drawn}개)`, checking: "위험 요소 점검" };
+  const label = { review: "구성 검토", drawing: `그리는 중 (변경 ${card.changes}개)`, checking: "위험 요소 점검" };
   return [
     ...BUILD_STEPS.map((s, i) => ({ key: s, label: label[s], state: (i < at ? "done" : i === at ? "current" : "todo") as StepState })),
     { key: "done", label: "완료", state: "todo" as const },
   ];
+}
+
+/** 스크린 리더에 알릴 단계 이름(변경 수 없이). 단계가 바뀔 때만 글이 바뀐다. */
+function stepName(card: ProgressCard): string {
+  if (card.end) return card.end === "done" ? "완료" : "중단됨";
+  if (card.mode === "answer") return "답변 작성 중";
+  return { review: "구성 검토", drawing: "그리는 중", checking: "위험 요소 점검" }[card.step];
 }
 
 /** 진행 카드: 진행 중이면 단계 목록, 끝나면 접힌 한 줄(`완료 · 노드 N · 연결 M` / `중단됨`). */
@@ -138,6 +145,7 @@ function CardView({ card }: { card: ProgressCard }) {
 export function ChatPanel({ lines, busy, onSend, onStop, health, disabledReason, mentionRef, footer, assumptions, onChooseAssumption, onConfirmAssumption, checklist, onSelectNode, onOpenChecklist }: ChatPanelProps) {
   const list = useRef<HTMLDivElement>(null);
   const composer = useRef<HTMLDivElement>(null);
+  const stopBtn = useRef<HTMLButtonElement>(null);
   const stick = useRef(true);
   const [hasContent, setHasContent] = useState(false);
 
@@ -146,12 +154,18 @@ export function ChatPanel({ lines, busy, onSend, onStop, health, disabledReason,
     if (el && stick.current) el.scrollTop = el.scrollHeight;
   }, [lines]);
 
-  // 보내는 동안 입력칸이 비활성이라 포커스를 잃는다. 입력칸에서 보냈으면 끝난 뒤 되돌려 준다.
+  // 보내는 동안 입력칸·보내기가 비활성이라 포커스를 잃는다. 입력칸에서 보냈으면 차례 동안은 중단 버튼에,
+  // 끝나면(중단 버튼이 사라져 포커스가 갈 곳을 잃었을 때만) 입력칸에 둔다.
   const refocus = useRef(false);
   useEffect(() => {
-    if (busy || !refocus.current) return;
+    if (!refocus.current) return;
+    if (busy) {
+      stopBtn.current?.focus();
+      return;
+    }
     refocus.current = false;
-    mentionRef.current?.focus();
+    const a = document.activeElement;
+    if (!a || a === document.body || composer.current?.contains(a)) mentionRef.current?.focus();
   }, [busy, mentionRef]);
   const send = (text: string) => {
     refocus.current = !!composer.current?.contains(document.activeElement);
@@ -159,6 +173,7 @@ export function ChatPanel({ lines, busy, onSend, onStop, health, disabledReason,
   };
 
   const blocked = busy || !!disabledReason;
+  const lastCard = lines.findLast((l) => l.kind === "card" && l.card)?.card;
   const down = health !== null && health.qwen !== "ok";
 
   const renderChip = (l: ChatLine) => {
@@ -206,7 +221,10 @@ export function ChatPanel({ lines, busy, onSend, onStop, health, disabledReason,
           )}
         </div>
         <div className={styles.aiBody}>
-          {ls.map((l) => (l.kind === "card" && l.card ? <CardView key={l.id} card={l.card} /> : null))}
+          {/* 카드는 변경마다 바뀌므로 읽지 않는다. 단계 변화는 아래 상태 줄이 알린다. */}
+          <div aria-live="off" className={styles.cardSlot}>
+            {ls.map((l) => (l.kind === "card" && l.card ? <CardView key={l.id} card={l.card} /> : null))}
+          </div>
           {body.map((l) => renderLine(l, true))}
           {chips.length > 0 && (
             <ul className={styles.results} aria-label="이번 차례 결과">
@@ -255,6 +273,9 @@ export function ChatPanel({ lines, busy, onSend, onStop, health, disabledReason,
         {toBlocks(lines).map((b) => (b.kind === "line" ? renderLine(b.line, false) : renderTurn(b.id, b.lines)))}
         {footer}
       </div>
+      <div role="status" className={styles.srOnly}>
+        {lastCard ? stepName(lastCard) : ""}
+      </div>
       <div ref={composer} className={styles.composer}>
         {disabledReason && <p className={styles.reason}>{disabledReason}</p>}
         <MentionInput
@@ -267,7 +288,7 @@ export function ChatPanel({ lines, busy, onSend, onStop, health, disabledReason,
         />
         <div className={styles.actions}>
           {busy && (
-            <button type="button" className={styles.btn} onClick={onStop}>
+            <button ref={stopBtn} type="button" className={styles.btn} onClick={onStop}>
               중단
             </button>
           )}
