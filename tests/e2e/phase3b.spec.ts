@@ -31,7 +31,7 @@ const warnCount = async (page: Page) => Number(/(\d+)개/.exec((await warnBadge(
 test("warnings: chat line, badge, ignore, restore", async ({ page }) => {
   await setup(page);
   await send(page, "공개DB 붙은 서비스");
-  // 점검 중 상태(위험 요소 점검 중…)는 아주 짧게 지나갈 수 있어 관찰을 요구하지 않는다. 결과 줄만 본다.
+  // 점검 중 단계(위험 요소 점검)는 아주 짧게 지나갈 수 있어 관찰을 요구하지 않는다. 결과 줄만 본다.
   await expect(cautionLines(page).first()).toBeVisible({ timeout: 30_000 });
   await expect(page.getByText(SUMMARY)).toBeVisible();
 
@@ -68,7 +68,8 @@ test("warnings: chat line, badge, ignore, restore", async ({ page }) => {
   const before = await cautionLines(page).count();
   await send(page, "공개DB 다시");
   await expect(page.getByText(SUMMARY)).toHaveCount(2, { timeout: 30_000 });
-  await expect(page.getByText("위험 요소 점검 중…")).toHaveCount(0, { timeout: 30_000 });
+  // 진행 카드가 접힌 한 줄이 되면(위험 요소 점검까지 끝나면) 진행 단계 목록이 없다.
+  await expect(page.getByRole("list", { name: "진행 단계" })).toHaveCount(0, { timeout: 30_000 });
   await expect(cautionLines(page)).toHaveCount(before);
 
   // 무시 직전 버전으로 되돌리면 배지가 다시 보인다.

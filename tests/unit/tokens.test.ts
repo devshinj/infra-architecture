@@ -140,3 +140,17 @@ test("glass panels fall back to an opaque background without backdrop-filter", (
   expect(block).toMatch(/@supports not \(\(backdrop-filter: blur\(1px\)\)/);
   expect(block).toContain(".sidebar, .panel { background: var(--bg-sidebar); }");
 });
+
+test("chat bubbles and progress dots follow the restrained spec", () => {
+  const css = read("src/ui/chat/chat.module.css");
+  const user = rule(css, ".user");
+  expect(user).toContain("background: var(--bg-panel-raised)");
+  expect(user).toContain("border-radius: 12px 12px 4px 12px");
+  expect(user).toContain("max-width: 85%");
+  expect(rule(css, ".mono")).toContain("border: 1px solid var(--line-node)");
+  expect(css).toMatch(/\.dots span \{[^}]*animation: dot 1\.2s/);
+  // 움직임 줄이기: 점 애니메이션이 없다.
+  expect(css).toMatch(/@media \(prefers-reduced-motion: reduce\) \{ \.dots span \{ animation: none;/);
+  expect(css).not.toContain("var(--accent)");
+  expect(css).not.toMatch(/gradient|box-shadow/);
+});

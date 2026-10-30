@@ -115,6 +115,14 @@ test("reload keeps the reminder line", async ({ page }) => {
   await page.reload();
   await page.getByRole("tab", { name: "대화" }).click();
   await expect(page.getByText(REMINDER)).toBeVisible({ timeout: 15_000 });
+  // 다시 불러와도 같은 모양: 접힌 완료 카드와 요약 칩.
+  await expect(page.getByText(/^완료 · 노드 \d+ · 연결 \d+$/)).toBeVisible();
+  await expect(page.getByText(/노드 \d+ · 연결 \d+ · 적용 \d+ · 건너뜀 \d+/)).toBeVisible();
+  // 빠진 정보 칩을 누르면 체크리스트가 펼쳐진다.
+  const head = page.getByRole("button", { name: /^채워야 할 정보 \(\d+\)/ });
+  await expect(head).toHaveAttribute("aria-expanded", "false");
+  await page.getByRole("button", { name: REMINDER }).click();
+  await expect(head).toHaveAttribute("aria-expanded", "true");
   // 켠 설정은 브라우저에 기억된다.
   await expect(was1Badge(page)).toBeVisible({ timeout: 15_000 });
 });

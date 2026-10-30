@@ -1,20 +1,19 @@
 "use client";
 
-import { type ReactNode, type RefObject, useLayoutEffect, useRef, useState } from "react";
+import { type ReactNode, type RefObject, useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import type { Assumption } from "@/domain/types";
 
 import { AssumptionChips } from "./AssumptionChips";
 import styles from "./chat.module.css";
 import { MentionInput, type MentionInputHandle } from "./MentionInput";
-import type { ChatLine, ChatPhase } from "./useChatTurn";
+import type { ChatLine, ProgressCard } from "./useChatTurn";
 
 export type LlmHealth = { qwen: string; clef: string };
 
 export interface ChatPanelProps {
   lines: ChatLine[];
   busy: boolean;
-  phase: ChatPhase | null;
   onSend(text: string): void;
   onStop(): void;
   health: LlmHealth | null;
@@ -28,11 +27,12 @@ export interface ChatPanelProps {
   onConfirmAssumption?(key: string): void;
   /** 빠진 정보 체크리스트. 가정 칩과 함께 대화 위쪽에 둔다. */
   checklist?: ReactNode;
-  /** 경고 줄 클릭: 그 노드를 선택한다. 없으면 경고 줄은 글로만 보인다. */
+  /** 경고 칩 클릭: 그 노드를 선택한다. 없으면 경고 칩은 글로만 보인다. */
   onSelectNode?(nodeId: string): void;
+  /** 빠진 정보 칩 클릭: 체크리스트를 펼친다. 없으면 칩은 글로만 보인다. */
+  onOpenChecklist?(): void;
 }
 
-const PHASE_LABEL: Record<ChatPhase, string> = { thinking: "구성 검토 중…", drawing: "그리는 중…", answering: "답변 작성 중…", checking: "위험 요소 점검 중…" };
 const PLACEHOLDER = "만들고 싶은 서비스나 바꾸고 싶은 점을 말해 주세요. 노드를 오른쪽 클릭하면 참조를 붙일 수 있어요.";
 const DOWN = "AI 서버에 연결할 수 없어요. 잠시 뒤 다시 시도하거나 관리자에게 문의해 주세요.";
 const NEAR_BOTTOM = 40;
@@ -57,8 +57,87 @@ function renderText(text: string): ReactNode[] {
   return out;
 }
 
-export function ChatPanel({ lines, busy, phase, onSend, onStop, health, disabledReason, mentionRef, footer, assumptions, onChooseAssumption, onConfirmAssumption, checklist, onSelectNode }: ChatPanelProps) {
+const pad = (n: number) => String(n).padStart(2, "0");
+const hhmm = (ms: number) => {
+  const d = new Date(ms);
+  return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+};
+
+/** 차례 끝 결과 칩(요약·빠진 정보·경고). */
+const CHIP_KINDS = new Set<ChatLine["kind"]>(["summary", "missing", "warning"]);
+
+/** 차례 밖의 줄은 하나씩, 같은 차례(turn)의 줄은 한 AI 메시지로 묶는다. */
+type Block = { kind: "line"; line: ChatLine } | { kind: "turn"; id: string; lines: ChatLine[] };
+function toBlocks(lines: ChatLine[]): Block[] {
+  const out: Block[] = [];
+  for (const l of lines) {
+    const last = out.at(-1);
+    if (l.turn === undefined) out.push({ kind: "line", line: l });
+    else if (last?.kind === "turn" && last.id === l.turn) last.lines.push(l);
+    else out.push({ kind: "turn", id: l.turn, lines: [l] });
+  }
+  return out;
+}
+
+function Check() {
+  return (
+    <svg className={styles.stepIcon} viewBox="0 0 12 12" aria-hidden="true">
+      <path d="M2.5 6.2 5 8.5l4.5-5" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function Dots() {
+  return (
+    <span className={styles.dots} aria-hidden="true">
+      <span />
+      <span />
+      <span />
+    </span>
+  );
+}
+
+const BUILD_STEPS = ["review", "drawing", "checking"] as const;
+type StepState = "done" | "current" | "todo";
+
+function stepRows(card: ProgressCard): { key: string; label: string; state: StepState }[] {
+  if (card.mode === "answer") return [{ key: "answer", label: "답변 작성 중", state: "current" }];
+  const at = BUILD_STEPS.indexOf(card.step);
+  const label = { review: "구성 검토", drawing: `그리는 중 (노드 ${card.drawn}개)`, checking: "위험 요소 점검" };
+  return [
+    ...BUILD_STEPS.map((s, i) => ({ key: s, label: label[s], state: (i < at ? "done" : i === at ? "current" : "todo") as StepState })),
+    { key: "done", label: "완료", state: "todo" as const },
+  ];
+}
+
+/** 진행 카드: 진행 중이면 단계 목록, 끝나면 접힌 한 줄(`완료 · 노드 N · 연결 M` / `중단됨`). */
+function CardView({ card }: { card: ProgressCard }) {
+  if (card.end) {
+    const done = card.end === "done";
+    const counts = card.nodes !== undefined && card.edges !== undefined ? ` · 노드 ${card.nodes} · 연결 ${card.edges}` : "";
+    return (
+      <div className={`${styles.card} ${styles.cardEnded}`} data-end={card.end}>
+        {done ? <Check /> : <span className={`${styles.stepIcon} ${styles.stop}`} aria-hidden="true" />}
+        <span>{done ? `완료${counts}` : "중단됨"}</span>
+      </div>
+    );
+  }
+  return (
+    <ol className={styles.card} aria-label="진행 단계">
+      {stepRows(card).map((r) => (
+        <li key={r.key} className={styles.step} data-state={r.state} {...(r.state === "current" ? { "aria-current": "step" as const } : {})}>
+          {r.state === "done" ? <Check /> : <span className={styles.stepIcon} aria-hidden="true" />}
+          <span>{r.label}</span>
+          {r.state === "current" && <Dots />}
+        </li>
+      ))}
+    </ol>
+  );
+}
+
+export function ChatPanel({ lines, busy, onSend, onStop, health, disabledReason, mentionRef, footer, assumptions, onChooseAssumption, onConfirmAssumption, checklist, onSelectNode, onOpenChecklist }: ChatPanelProps) {
   const list = useRef<HTMLDivElement>(null);
+  const composer = useRef<HTMLDivElement>(null);
   const stick = useRef(true);
   const [hasContent, setHasContent] = useState(false);
 
@@ -67,8 +146,79 @@ export function ChatPanel({ lines, busy, phase, onSend, onStop, health, disabled
     if (el && stick.current) el.scrollTop = el.scrollHeight;
   }, [lines]);
 
+  // 보내는 동안 입력칸이 비활성이라 포커스를 잃는다. 입력칸에서 보냈으면 끝난 뒤 되돌려 준다.
+  const refocus = useRef(false);
+  useEffect(() => {
+    if (busy || !refocus.current) return;
+    refocus.current = false;
+    mentionRef.current?.focus();
+  }, [busy, mentionRef]);
+  const send = (text: string) => {
+    refocus.current = !!composer.current?.contains(document.activeElement);
+    onSend(text);
+  };
+
   const blocked = busy || !!disabledReason;
   const down = health !== null && health.qwen !== "ok";
+
+  const renderChip = (l: ChatLine) => {
+    const tone = l.kind === "summary" ? styles.chipSummary : l.kind === "missing" ? styles.chipMissing : styles.chipWarning;
+    const attrs = { "data-kind": l.kind, ...(l.level ? { "data-level": l.level } : {}) };
+    const onClick = l.kind === "warning" ? (onSelectNode && l.nodeId ? () => onSelectNode(l.nodeId!) : undefined) : l.kind === "missing" ? onOpenChecklist : undefined;
+    return onClick ? (
+      <button type="button" className={`${styles.result} ${tone}`} onClick={onClick} {...attrs}>
+        {l.text}
+      </button>
+    ) : (
+      <span className={`${styles.result} ${tone}`} {...attrs}>
+        {l.text}
+      </span>
+    );
+  };
+
+  /** 말풍선·본문 한 줄. inTurn: AI 메시지 안의 줄(안내 글은 왼쪽 작은 글, 밖이면 가운데). */
+  const renderLine = (l: ChatLine, inTurn: boolean) => {
+    if (CHIP_KINDS.has(l.kind)) return <div key={l.id}>{renderChip(l)}</div>;
+    const cls = l.kind === "system" && inTurn ? styles.note : styles[l.kind];
+    return (
+      <p key={l.id} className={`${styles.line} ${cls}`} data-kind={l.kind}>
+        {renderText(l.text)}
+      </p>
+    );
+  };
+
+  /** AI 메시지: 머리 줄(IS · InfraSketch · 시각) → 진행 카드 → 본문 → 결과 칩 줄. */
+  const renderTurn = (id: string, ls: ChatLine[]) => {
+    const at = ls.find((l) => l.at !== undefined)?.at;
+    const body = ls.filter((l) => l.kind !== "card" && !CHIP_KINDS.has(l.kind));
+    const chips = ls.filter((l) => CHIP_KINDS.has(l.kind));
+    return (
+      <div key={id} className={styles.ai} role="group" aria-label="InfraSketch 메시지">
+        <div className={styles.aiHead}>
+          <span className={styles.mono} aria-hidden="true">
+            IS
+          </span>
+          <span className={styles.aiName}>InfraSketch</span>
+          {at !== undefined && (
+            <time className={styles.aiTime} dateTime={new Date(at).toISOString()} suppressHydrationWarning>
+              {hhmm(at)}
+            </time>
+          )}
+        </div>
+        <div className={styles.aiBody}>
+          {ls.map((l) => (l.kind === "card" && l.card ? <CardView key={l.id} card={l.card} /> : null))}
+          {body.map((l) => renderLine(l, true))}
+          {chips.length > 0 && (
+            <ul className={styles.results} aria-label="이번 차례 결과">
+              {chips.map((l) => (
+                <li key={l.id}>{renderChip(l)}</li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className={styles.chat}>
@@ -102,36 +252,17 @@ export function ChatPanel({ lines, busy, phase, onSend, onStop, health, disabled
           stick.current = el.scrollHeight - el.scrollTop - el.clientHeight <= NEAR_BOTTOM;
         }}
       >
-        {lines.map((l) =>
-          l.kind === "warning" ? (
-            <p key={l.id} className={`${styles.line} ${styles.warning}`} data-kind={l.kind} data-level={l.level}>
-              {onSelectNode && l.nodeId ? (
-                <button type="button" className={styles.warningBtn} onClick={() => onSelectNode(l.nodeId!)}>
-                  {l.text}
-                </button>
-              ) : (
-                l.text
-              )}
-            </p>
-          ) : (
-            <p key={l.id} className={`${styles.line} ${styles[l.kind]}`} data-kind={l.kind}>
-              {renderText(l.text)}
-            </p>
-          ),
-        )}
+        {toBlocks(lines).map((b) => (b.kind === "line" ? renderLine(b.line, false) : renderTurn(b.id, b.lines)))}
         {footer}
       </div>
-      <div className={styles.phase} aria-live="polite">
-        {busy && phase ? PHASE_LABEL[phase] : ""}
-      </div>
-      <div className={styles.composer}>
+      <div ref={composer} className={styles.composer}>
         {disabledReason && <p className={styles.reason}>{disabledReason}</p>}
         <MentionInput
           ref={mentionRef}
           placeholder={PLACEHOLDER}
           canSend={!blocked}
-          disabled={!!disabledReason}
-          onSend={onSend}
+          disabled={blocked}
+          onSend={send}
           onContentChange={setHasContent}
         />
         <div className={styles.actions}>

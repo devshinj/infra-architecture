@@ -248,6 +248,7 @@ async function lockedTurn(args: TurnArgs, deps: ChatDeps): Promise<void> {
     says,
     ...(applied > 0 && missing > 0 ? { missing } : {}),
     ...(fresh.length > 0 ? { warnings: fresh } : {}),
+    ...counts(),
   };
   const assistant = await createMessage(diagramId, "assistant", content, meta);
   if (fresh.length > 0) emit({ t: "warnings", items: fresh });

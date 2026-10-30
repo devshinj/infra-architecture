@@ -14,6 +14,9 @@ export interface MessageMeta {
   missing?: number;
   /** 이번 차례에 새로 생긴(무시하지 않은) 경고. 있을 때만. */
   warnings?: Warning[];
+  /** 차례 끝 구성도의 노드·연결 수(다시 불러올 때 요약 칩·완료 카드에 쓴다). */
+  nodes?: number;
+  edges?: number;
 }
 
 export type ChatEvent =

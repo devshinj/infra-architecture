@@ -18,7 +18,7 @@ const props = (selectedId: string | null): RightPanelProps => ({
   samples: [{ id: "s1", title: "샘플 하나" }],
   onImportSample: vi.fn(),
   history: { versions: [], onView: vi.fn(), onRestore: vi.fn(), onCompare: vi.fn() },
-  chat: { lines: [], busy: false, phase: null, onSend: vi.fn(), onStop: vi.fn(), health: null, mentionRef: { current: null } },
+  chat: { lines: [], busy: false, onSend: vi.fn(), onStop: vi.fn(), health: null, mentionRef: { current: null } },
 });
 
 test("chat tab shows the sample buttons only for an empty diagram", async () => {

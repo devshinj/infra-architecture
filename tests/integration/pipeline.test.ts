@@ -219,6 +219,8 @@ describe("runChatTurn", () => {
       { op: "add_edge", id: "e-client-web-was-1", from: "client-web", to: "was-1", edge_kind: "request" },
     ]);
     expect(events.at(-1)).toMatchObject({ t: "done", applied: 3, skipped: 0, nodes: 2, edges: 1 });
+    // 다시 불러올 때 요약 칩·완료 카드가 쓰는 수도 메타에 남는다.
+    expect((await listMessages(ids.diagramId))[1]!.meta).toMatchObject({ nodes: 2, edges: 1 });
     const saved = await getLatestState(ids.diagramId);
     expect(saved!.state.nodes["client-web"]).toBeDefined();
   });

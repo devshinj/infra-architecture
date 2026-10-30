@@ -488,10 +488,10 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
           chat={{
             lines: chat.lines,
             busy: chat.busy,
-            phase: chat.phase,
             onSend: sendChat,
             onStop: chat.stop,
             onSelectNode: selectNode,
+            onOpenChecklist: () => setChecklistOpen(true),
             assumptions: current.state.assumptions,
             onChooseAssumption,
             onConfirmAssumption,

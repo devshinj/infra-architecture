@@ -1,21 +1,48 @@
 /* 대화 탭. 토큰 색만 사용하고 강조색은 쓰지 않는다. */
 .chat { display: flex; flex-direction: column; height: 100%; min-height: 0; }
 .notice { margin: 12px 12px 0; padding: 8px 10px; font-size: 12.5px; line-height: 1.5; color: var(--text-primary); border: 1px solid var(--state-missing); border-radius: var(--radius-node); }
-.log { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding: 14px 12px; }
+.log { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; padding: 14px 12px; }
 .line { margin: 0; font-size: 13px; line-height: 1.6; white-space: pre-wrap; word-break: break-word; color: var(--text-primary); }
-.user { align-self: flex-end; max-width: 88%; padding: 7px 10px; background: var(--bg-panel-raised); border: 1px solid var(--line-node); border-radius: var(--radius-node); }
-.assistant { align-self: flex-start; max-width: 96%; }
-.progress { font-size: 12px; color: var(--text-secondary); }
-.system { font-size: 11.5px; color: var(--text-secondary); }
+/* 내 말풍선: 오른쪽, 채움만(테두리 없음), 오른쪽 아래 모서리만 각지게. */
+.user { align-self: flex-end; max-width: 85%; padding: 7px 12px; background: var(--bg-panel-raised); border-radius: 12px 12px 4px 12px; }
+/* 차례 밖 안내(되돌림 등): 가운데 작은 회색 글. */
+.system { align-self: center; max-width: 90%; text-align: center; font-size: 11.5px; color: var(--text-secondary); }
 .error { font-size: 12.5px; color: var(--text-primary); border: 1px solid var(--state-missing); border-radius: var(--radius-node); padding: 6px 10px; }
-/* 경고 줄: 테두리만 --state-warn(확인 필요는 기본 선). 누르면 그 노드를 고른다. */
-.warning { font-size: 12.5px; border: 1px solid var(--state-warn); border-radius: var(--radius-node); padding: 6px 10px; }
-.warning[data-level="check"] { border-color: var(--line-node); }
-.warningBtn { font: inherit; text-align: left; color: var(--text-primary); background: transparent; border: 0; padding: 0; cursor: pointer; }
-.warningBtn:hover { text-decoration: underline; }
-.warningBtn:focus-visible { outline: 1.5px solid var(--text-secondary); outline-offset: 2px; }
+/* AI 메시지: 말풍선 없이 정돈된 글. 머리 줄 아래 본문·카드·칩은 이름 열에 맞춘다. */
+.ai { align-self: stretch; display: flex; flex-direction: column; gap: 6px; }
+.aiHead { display: flex; align-items: center; gap: 8px; min-height: 20px; }
+.mono { flex: none; display: inline-grid; place-items: center; width: 20px; height: 20px; box-sizing: border-box; border: 1px solid var(--line-node); border-radius: 3px; font-size: 9px; font-weight: 700; letter-spacing: 0.04em; line-height: 1; color: var(--text-primary); text-transform: uppercase; }
+.aiName { font-size: 12px; font-weight: 600; color: var(--text-primary); }
+.aiTime { font-size: 11px; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+.aiBody { display: flex; flex-direction: column; gap: 6px; padding-left: 28px; min-width: 0; }
+.assistant, .progress { color: var(--text-primary); }
+.note { font-size: 12px; color: var(--text-secondary); }
+/* 진행 카드: 단계 목록. 지난 단계는 체크, 지금 단계는 점 3개. 강조색은 쓰지 않는다. */
+.card { align-self: flex-start; min-width: 200px; box-sizing: border-box; margin: 0; padding: 7px 10px; list-style: none; display: flex; flex-direction: column; gap: 3px; border: 1px solid var(--line-node); border-radius: var(--radius-node); font-size: 12px; line-height: 1.5; }
+.step { display: flex; align-items: center; gap: 6px; color: var(--text-secondary); }
+.step[data-state="current"] { color: var(--text-primary); }
+.step[data-state="todo"] { opacity: 0.55; }
+.stepIcon { flex: none; width: 12px; height: 12px; }
+.cardEnded { flex-direction: row; align-items: center; gap: 6px; min-width: 0; padding: 3px 10px; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+.stop { box-sizing: border-box; border: 1.5px solid currentColor; border-radius: 2px; transform: scale(0.67); }
+.dots { display: inline-flex; gap: 3px; margin-left: 2px; }
+.dots span { width: 3px; height: 3px; border-radius: 50%; background: currentColor; opacity: 0.25; animation: dot 1.2s ease-in-out infinite; }
+.dots span:nth-child(2) { animation-delay: 0.2s; }
+.dots span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes dot { 0%, 100% { opacity: 0.25; } 40% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .dots span { animation: none; opacity: 0.6; } }
+/* 차례 끝 결과 칩 줄: 요약은 조용한 글, 빠진 정보·경고는 누를 수 있는 작은 칩. */
+.results { margin: 2px 0 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.result { font: inherit; font-size: 11.5px; line-height: 1.45; text-align: left; color: var(--text-primary); background: transparent; border: 1px solid var(--line-node); border-radius: var(--radius-node); padding: 2px 8px; }
+button.result { cursor: pointer; }
+button.result:hover { border-color: var(--text-secondary); }
+button.result:focus-visible { outline: 1.5px solid var(--text-secondary); outline-offset: 2px; }
+.chipSummary { border-color: transparent; padding-left: 0; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+.chipMissing { border-color: var(--state-missing); }
+/* 경고: 테두리만 --state-warn(확인 필요는 기본 선). 누르면 그 노드를 고른다. */
+.chipWarning { border-color: var(--state-warn); }
+.chipWarning[data-level="check"] { border-color: var(--line-node); }
 .ref { color: var(--text-primary); background: var(--line-node); border-radius: 4px; padding: 0 5px; font-size: 12px; }
-.phase { min-height: 18px; padding: 0 12px 4px; font-size: 11.5px; color: var(--text-secondary); }
 .composer { display: flex; flex-direction: column; gap: 8px; padding: 10px 12px 12px; border-top: 1px solid var(--line-node); }
 .reason { margin: 0; font-size: 12px; color: var(--text-secondary); }
 .mention { display: flex; flex-direction: column; gap: 6px; }
