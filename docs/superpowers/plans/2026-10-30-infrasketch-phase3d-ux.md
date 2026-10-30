@@ -350,5 +350,40 @@
 
 ---
 
+### Task 10: 재정렬(버튼+대화)과 영역이 노드 감싸기 (사용자 추가 요청, 2026-10-30 — Task 9 보다 먼저)
+
+**Files:** Modify `src/canvas/Canvas.tsx`(도구 모음), `src/canvas/layout.ts`, `src/server/llm/clef.ts`(의도), `src/server/chat/pipeline.ts`, `src/server/chat/events.ts`, `src/ui/chat/useChatTurn.ts`, `src/ui/DiagramWorkspace.tsx` · Test `tests/unit/layout.test.ts`, `tests/unit/clef.test.ts`, `tests/integration/pipeline.test.ts`, `tests/unit/useChatTurn.test.tsx`, `tests/unit/DiagramWorkspace.test.tsx`
+
+**결정(사용자 선택):**
+- **재정렬은 버튼과 대화 둘 다 지원한다.**
+  - 도구 모음의 `자동 정렬` 은 편집 모드가 아니어도 누를 수 있다. 동작은 지금처럼 고정 위치를 해제하고 자동 배치한다.
+  - 대화:
+    - Clef 의도에 `layout`("구성도 배치·정렬·정리만 다시 해 달라는 요청(노드·연결은 그대로)")을 추가한다.
+    - `layout` 으로 분류되면 서버는 AI(Qwen)를 부르지 않고 다음을 한다.
+      - 응답 문구 `구성도를 다시 정렬했어요.` 를 say 로 보낸다.
+      - 새 이벤트 `{t:"relayout"}` 를 보낸다.
+      - assistant 메시지를 저장하고, 버전은 만들지 않는다.
+    - 클라이언트는 `relayout` 을 받으면 버튼과 같은 동작(고정 위치 해제 → 자동 배치 → 화면 맞춤)을 한다.
+  - 확신도 0.6 미만이면 지금처럼 일반 경로다.
+- **영역은 안의 노드를 항상 감싼다.**
+  - 편집 모드에서 노드를 옮기면(고정 위치), 그 노드의 부모 영역과 모든 상위 영역 상자를 다시 계산한다. 자식 노드·하위 영역의 경계 상자에 기존 GROUP_PAD 여백과 머리 높이를 더한 크기다.
+  - 영역은 늘어날 수도, 줄어들 수도 있다.
+  - 고정되지 않은 형제 노드의 위치는 그대로 둔다.
+  - 소속 변경(다른 영역으로 옮김)은 하지 않는다.
+  - 연결선 경로는 기존 규칙(고정 노드가 끼면 꺾은선)을 따른다.
+  - 겹침 검사(overlap.ts)는 이 경우 영역끼리 겹칠 수 있음을 허용한다. 사용자가 옮긴 결과라서다. 자동 배치 결과에서는 여전히 0 이다.
+- [ ] **Step 1: 실패하는 테스트**
+  - `pinned node outside its group grows the group and ancestors`
+  - `pinned node moved inward shrinks the group`
+  - `unpinned layout unchanged`
+  - `layout intent skips qwen and emits relayout`(통합)
+  - `relayout event clears pins and re-lays out`
+  - `auto arrange button enabled outside edit mode`
+  - clef 기준 문구에 layout 이 있다
+- [ ] **Step 2:** → FAIL · **Step 3: 구현** · **Step 4:** PASS, `npm test`, `npm run test:int`, `npx tsc --noEmit`, `npm run lint`, E2E
+- [ ] **Step 5: Commit** `feat: 대화·버튼 재정렬과 영역이 노드 감싸기`
+
+---
+
 ## 실행 순서
-Task 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 → 9. 3과 6은 `insets` 로 연결된다. 3은 0 으로 두고, 6에서 실제 값을 넘긴다.
+Task 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 → 10 → 9. 3과 6은 `insets` 로 연결된다. 3은 0 으로 두고, 6에서 실제 값을 넘긴다.
