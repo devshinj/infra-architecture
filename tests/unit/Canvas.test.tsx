@@ -32,7 +32,7 @@ vi.mock("@/canvas/layout", async (orig) => {
 });
 
 const baseProps = (state = fx("s2")): CanvasProps => {
-  const options: CanvasOptions = { ...defaultDisplayOptions(state), hoverLabels: true };
+  const options: CanvasOptions = { ...defaultDisplayOptions(state), hoverLabels: true, showMissingBadges: false };
   return {
     state, pinned: {}, editMode: false, options, motion: false,
     onOptionsChange: vi.fn(), onSelect: vi.fn(), onPinnedChange: vi.fn(), onAutoArrange: vi.fn(),
@@ -82,8 +82,25 @@ test("a rejected layout shows a message instead of a blank canvas", async () => 
   expect(await screen.findByText("구성도를 배치하지 못했어요. 새로고침하거나 구성을 다시 확인해 주세요.")).toBeInTheDocument();
 });
 
+const withMissing = (p: CanvasProps): CanvasProps => ({ ...p, options: { ...p.options, showMissingBadges: true } });
+
+test("missing badges hidden by default", async () => {
+  const { container } = render(<div style={{ width: 800, height: 600 }}><Canvas {...baseProps()} /></div>);
+  await waitFor(() => expect(container.querySelectorAll(".react-flow__node-infra").length).toBeGreaterThan(0));
+  expect(container.querySelector(".node__badge")).toBeNull();
+});
+
+test("toggle shows them and is remembered", async () => {
+  const props = baseProps();
+  render(<div style={{ width: 800, height: 600 }}><Canvas {...props} /></div>);
+  const btn = screen.getByRole("button", { name: "빠진 정보 숫자" });
+  expect(btn).toHaveAttribute("aria-pressed", "false");
+  fireEvent.click(btn);
+  expect(props.onOptionsChange).toHaveBeenCalledWith(expect.objectContaining({ showMissingBadges: true }));
+});
+
 test("missing badge shows count and calls onBadgeClick without selecting", async () => {
-  const props = { ...baseProps(), onBadgeClick: vi.fn() };
+  const props = { ...withMissing(baseProps()), onBadgeClick: vi.fn() };
   const { container } = render(<div style={{ width: 800, height: 600 }}><Canvas {...props} /></div>);
   const badge = await waitFor(() => {
     const b = container.querySelector('.react-flow__node[data-id="was-1"] .node__badge');
@@ -107,7 +124,7 @@ const exposed = (nodeId: string) => ({ id: `db_exposed:${nodeId}`, rule: "db_exp
 const nodeEl = (c: HTMLElement, id: string) => c.querySelector(`.react-flow__node[data-id="${id}"]`) as HTMLElement | null;
 
 test("warn and missing badges side by side", async () => {
-  const props = baseProps({ ...fx("s2"), warnings: [exposed("was-1")] });
+  const props = withMissing(baseProps({ ...fx("s2"), warnings: [exposed("was-1")] }));
   const { container } = render(<div style={{ width: 800, height: 600 }}><Canvas {...props} /></div>);
   const node = await waitFor(() => {
     const n = nodeEl(container, "was-1");
@@ -118,6 +135,14 @@ test("warn and missing badges side by side", async () => {
   const badges = [...node.querySelectorAll(".node__badge")];
   expect(badges.map((b) => b.getAttribute("aria-label"))).toEqual(["경고 1개", "빠진 정보 6개"]);
   expect(badges[0]).toHaveClass("node__badge--pair");
+});
+
+test("warn badge unaffected", async () => {
+  const props = baseProps({ ...fx("s2"), warnings: [exposed("was-1")] });
+  const { container } = render(<div style={{ width: 800, height: 600 }}><Canvas {...props} /></div>);
+  await waitFor(() => expect(nodeEl(container, "was-1")?.querySelector(".node__badge--warn") ?? null).not.toBeNull());
+  expect([...nodeEl(container, "was-1")!.querySelectorAll(".node__badge")].map((b) => b.getAttribute("aria-label"))).toEqual(["경고 1개"]);
+  expect(nodeEl(container, "was-1")!.querySelector(".node__badge--warn")).not.toHaveClass("node__badge--pair");
 });
 
 test("warn badge selects the node", async () => {
@@ -142,6 +167,7 @@ test("no badges in compare mode", async () => {
 
 test("ignored warning has no badge", async () => {
   const props = baseProps({ ...fx("s2"), warnings: [exposed("was-1")], ignoredWarnings: ["db_exposed:was-1"] });
+  props.options = { ...props.options, showMissingBadges: true };
   const { container } = render(<div style={{ width: 800, height: 600 }}><Canvas {...props} /></div>);
   await waitFor(() => expect(nodeEl(container, "was-1")?.querySelector(".node__badge") ?? null).not.toBeNull());
   expect(container.querySelector(".node__badge--warn")).toBeNull();

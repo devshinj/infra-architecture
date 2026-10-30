@@ -18,7 +18,7 @@ import { nodeTypes } from "./nodeTypes";
 import { prefersReducedMotion, unionRect, useCamera, type Insets, type Viewport } from "./useCamera";
 import { useDiagramView } from "./useDiagramView";
 
-export type CanvasOptions = DisplayOptions & { hoverLabels: boolean };
+export type CanvasOptions = DisplayOptions & { hoverLabels: boolean; showMissingBadges: boolean };
 export type DiffMarks = { added: Set<string>; removed: Set<string>; changed: Set<string> };
 type Pinned = Record<string, { x: number; y: number }>;
 
@@ -56,12 +56,13 @@ const NO_INSETS: Insets = { left: 0, right: 0 };
 const LAYOUT_FAILED_MESSAGE = "구성도를 배치하지 못했어요. 새로고침하거나 구성을 다시 확인해 주세요.";
 const EMPTY_MESSAGE = "아직 구성도가 비어 있어요. 오른쪽 대화에서 만들고 싶은 서비스를 설명하거나, 샘플을 불러와 보세요.";
 
-type ToggleKey = "hideAux" | "busSimplify" | "hoverLabels" | "mergeDuplicates";
+type ToggleKey = "hideAux" | "busSimplify" | "hoverLabels" | "mergeDuplicates" | "showMissingBadges";
 const CLEANUP_TOGGLES: { key: ToggleKey; label: string }[] = [
   { key: "hideAux", label: "보조 연결 숨김" },
   { key: "busSimplify", label: "이벤트 버스 단순화" },
   { key: "hoverLabels", label: "연결 라벨: 마우스 올릴 때만" },
   { key: "mergeDuplicates", label: "중복 선 병합" },
+  { key: "showMissingBadges", label: "빠진 정보 숫자" },
 ];
 
 /** The id actually drawn for `id`: itself, or its outermost collapsed ancestor group. */
@@ -179,7 +180,7 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
         ...(diff ? { diff } : {}),
       };
       // 비교 모드에서는 배지를 모두 숨긴다.
-      const missing = diffMarks ? 0 : (missingByNode[ln.id] ?? 0);
+      const missing = diffMarks || !options.showMissingBadges ? 0 : (missingByNode[ln.id] ?? 0);
       const warn = diffMarks ? 0 : (warnByNode[ln.id] ?? 0);
       if (missing > 0 || warn > 0) {
         data.badges = { ...(missing > 0 ? { missing } : {}), ...(warn > 0 ? { warn } : {}) };

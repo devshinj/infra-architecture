@@ -51,7 +51,7 @@ test("clicking outside closes the menu", () => {
 
 const baseProps = (): CanvasProps => {
   const state = fx("s2");
-  const options: CanvasOptions = { ...defaultDisplayOptions(state), hoverLabels: true };
+  const options: CanvasOptions = { ...defaultDisplayOptions(state), hoverLabels: true, showMissingBadges: false };
   return {
     state, pinned: {}, editMode: false, options, motion: false,
     onOptionsChange: vi.fn(), onSelect: vi.fn(), onPinnedChange: vi.fn(), onAutoArrange: vi.fn(),

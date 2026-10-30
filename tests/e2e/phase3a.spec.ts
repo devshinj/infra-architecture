@@ -48,6 +48,10 @@ async function buildAndSave(page: Page) {
   const total = Number(REMINDER.exec(await page.getByText(REMINDER).innerText())![1]);
   expect(total).toBeGreaterThan(2);
 
+  // 빠진 정보 숫자는 기본으로 꺼져 있다: 먼저 켠다.
+  await expect(was1(page)).toBeVisible();
+  await expect(was1Badge(page)).toHaveCount(0);
+  await page.getByRole("button", { name: "빠진 정보 숫자" }).click();
   await expect(was1Badge(page)).toBeVisible();
   const k = await badgeCount(page);
   expect(k).toBeGreaterThanOrEqual(2);
@@ -105,8 +109,12 @@ test("reload keeps the reminder line", async ({ page }) => {
   await setup(page);
   await buildS1(page);
   await expect(page.getByText(REMINDER)).toBeVisible({ timeout: 15_000 });
+  await page.getByRole("button", { name: "빠진 정보 숫자" }).click();
+  await expect(was1Badge(page)).toBeVisible();
 
   await page.reload();
   await page.getByRole("tab", { name: "대화" }).click();
   await expect(page.getByText(REMINDER)).toBeVisible({ timeout: 15_000 });
+  // 켠 설정은 브라우저에 기억된다.
+  await expect(was1Badge(page)).toBeVisible({ timeout: 15_000 });
 });

@@ -38,7 +38,9 @@ test("warnings: chat line, badge, ignore, restore", async ({ page }) => {
   await expect(warnBadge(page)).toBeVisible({ timeout: 15_000 });
   const n = await warnCount(page);
   expect(n).toBeGreaterThanOrEqual(1);
-  // 빠진 정보 배지가 있으면 함께 보인다(DB 의 필수 속성 미입력).
+  // 숫자 배지는 기본 꺼짐이고 경고 배지는 그대로다. 켜면 함께 보인다(DB 의 필수 속성 미입력).
+  await expect(pubDb(page).getByRole("button", { name: /^빠진 정보 \d+개$/ })).toHaveCount(0);
+  await page.getByRole("button", { name: "빠진 정보 숫자" }).click();
   await expect(pubDb(page).getByRole("button", { name: /^빠진 정보 \d+개$/ })).toBeVisible();
 
   // 경고 줄 클릭 → 설명 탭 주의할 점

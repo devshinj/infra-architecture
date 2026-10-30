@@ -58,7 +58,10 @@ const unionState = (old: DiagramState, cur: DiagramState): DiagramState => ({
 
 const PANEL_WIDTH_KEY = "infrasketch.panelWidth";
 
-const optionsFor = (state: DiagramState): CanvasOptions => ({ ...defaultDisplayOptions(state), hoverLabels: true });
+const MISSING_BADGES_KEY = "infrasketch.showMissingBadges";
+
+// showMissingBadges 는 브라우저 설정이라 여기서는 항상 끈 값이고, 실제 값은 아래 showMissing 상태가 덮어쓴다.
+const optionsFor = (state: DiagramState): CanvasOptions => ({ ...defaultDisplayOptions(state), hoverLabels: true, showMissingBadges: false });
 
 export function DiagramWorkspace({ diagramId, name, latest, initialPinned, samples, initialChat = [] }: DiagramWorkspaceProps) {
   const router = useRouter();
@@ -117,6 +120,29 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
       /* 저장 실패는 이번 방문에만 영향 */
     }
   };
+  // 빠진 정보 숫자 배지: 기본 끔. 첫 렌더는 기본값, 마운트 뒤 localStorage 를 읽는다.
+  const [showMissing, setShowMissing] = useState(false);
+  useEffect(() => {
+    try {
+      if (window.localStorage.getItem(MISSING_BADGES_KEY) === "1") setShowMissing(true);
+    } catch {
+      /* 저장소를 못 읽으면 끈 채로 */
+    }
+  }, []);
+  const canvasOptions = useMemo<CanvasOptions>(() => ({ ...options, showMissingBadges: showMissing }), [options, showMissing]);
+  const changeOptions = useCallback(
+    (o: CanvasOptions) => {
+      setOptions(o);
+      if (o.showMissingBadges === showMissing) return;
+      setShowMissing(o.showMissingBadges);
+      try {
+        window.localStorage.setItem(MISSING_BADGES_KEY, o.showMissingBadges ? "1" : "0");
+      } catch {
+        /* 저장 실패는 이번 방문에만 영향 */
+      }
+    },
+    [showMissing],
+  );
   const [tab, setTab] = useState<Tab>("대화");
   const fail = (e: unknown) => setError(e instanceof Error ? e.message : "처리하지 못했어요");
   const run = (fn: () => Promise<void>) =>
@@ -409,11 +435,11 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
             state={shown}
             pinned={live ? pinned : {}}
             editMode={live && !locked && editMode}
-            options={options}
+            options={canvasOptions}
             motion={motion}
             fitKey={`${board}:${mode.kind}:${mode.kind === "live" ? "" : mode.number}`}
             streaming={live && chat.busy}
-            onOptionsChange={setOptions}
+            onOptionsChange={changeOptions}
             onSelect={(id) => setOptions((o) => ({ ...o, selectedId: id }))}
             onPinnedChange={live ? onPinnedChange : () => {}}
             onAutoArrange={onAutoArrange}
