@@ -22,6 +22,7 @@ import {
 } from "@/server/projects";
 import { confirmAssumptionFor } from "@/server/assumptions";
 import { saveFieldsFor, type SaveFieldsInput } from "@/server/fields";
+import { setWarningIgnoredFor } from "@/server/ignore";
 import { importSample, SAMPLES } from "@/server/samples";
 import { listMessages } from "@/server/chat/messages";
 import { getVersion, listVersions, restoreVersionWithMessage } from "@/server/versions";
@@ -183,6 +184,18 @@ export async function saveFieldsAction(
 ): Promise<ActionResult<{ number: number | null }>> {
   return runResult(async (uid) => {
     const r = await saveFieldsFor(uid, diagramId, input);
+    refreshDiagram();
+    return r;
+  });
+}
+
+export async function setWarningIgnoredAction(
+  diagramId: string,
+  warningId: string,
+  ignored: boolean,
+): Promise<ActionResult<{ number: number | null }>> {
+  return runResult(async (uid) => {
+    const r = await setWarningIgnoredFor(uid, diagramId, warningId, ignored);
     refreshDiagram();
     return r;
   });
