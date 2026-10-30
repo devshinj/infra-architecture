@@ -38,7 +38,7 @@ test("selecting activates 설명 and clearing returns to the previous tab", () =
   expect(screen.getByRole("tab", { name: "대화" })).toHaveAttribute("aria-selected", "true");
 });
 
-test("selecting another node while on 이력 switches back to 설명 and deselect restores the first tab", async () => {
+test("selecting another node while on 이력 switches back to 설명 and deselect stays on the manually chosen tab", async () => {
   const { rerender } = render(<RightPanel {...props(null)} />);
   rerender(<RightPanel {...props("was-1")} />);
   await userEvent.click(screen.getByRole("tab", { name: "이력" }));
@@ -46,7 +46,15 @@ test("selecting another node while on 이력 switches back to 설명 and deselec
   rerender(<RightPanel {...props("was-2")} />);
   expect(screen.getByRole("tab", { name: "설명" })).toHaveAttribute("aria-selected", "true");
   rerender(<RightPanel {...props(null)} />);
-  expect(screen.getByRole("tab", { name: "대화" })).toHaveAttribute("aria-selected", "true");
+  expect(screen.getByRole("tab", { name: "이력" })).toHaveAttribute("aria-selected", "true");
+});
+
+test("manual tab choice after selecting keeps that tab when the selection clears", async () => {
+  const { rerender } = render(<RightPanel {...props(null)} />);
+  rerender(<RightPanel {...props("was-1")} />);
+  await userEvent.click(screen.getByRole("tab", { name: "이력" }));
+  rerender(<RightPanel {...props(null)} />);
+  expect(screen.getByRole("tab", { name: "이력" })).toHaveAttribute("aria-selected", "true");
 });
 
 test("controlled mode: selection change notifies the parent outside render, no console.error", () => {

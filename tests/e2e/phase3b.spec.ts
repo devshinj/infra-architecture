@@ -77,8 +77,6 @@ test("warnings: chat line, badge, ignore, restore", async ({ page }) => {
   expect(idx).toBeGreaterThan(0);
   await rows.nth(idx + 1).getByRole("button").first().click();
   await rows.nth(idx + 1).getByRole("button", { name: "이 버전으로 되돌리기" }).click();
-  // 되돌린 뒤 패널이 대화 탭으로 돌아가므로 이력 탭을 다시 연다.
-  await page.getByRole("tab", { name: "이력" }).click();
   await expect(rows.first()).toContainText("되돌리기", { timeout: 15_000 });
   await expect(warnBadge(page)).toHaveAccessibleName(`경고 ${n}개`, { timeout: 15_000 });
 

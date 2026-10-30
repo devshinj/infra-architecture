@@ -62,6 +62,7 @@ export function RightPanel({ state, selectedId, onSelect, onMention, mentionDisa
   });
 
   const choose = (t: Tab) => {
+    setBefore(null); // 직접 고른 탭이 우선이다. 선택이 풀려도 그 탭에 남는다.
     setTab(t);
     if (t === "이력") onHistoryOpen?.();
   };
