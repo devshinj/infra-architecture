@@ -54,7 +54,18 @@ export function AssumptionChips({ assumptions, busy, onChoose, onConfirm, readOn
   if (keys.length === 0) return null;
 
   return (
-    <ul ref={root} className={styles.assumptions} aria-label="AI가 세운 가정">
+    <ul
+      ref={root}
+      className={styles.assumptions}
+      aria-label="AI가 세운 가정"
+      onKeyDown={(e) => {
+        // 열린 대안 메뉴의 Escape 는 메뉴만 닫는다(감싼 구성 정보 카드까지 접지 않는다).
+        if (e.key === "Escape" && open !== null) {
+          e.stopPropagation();
+          setOpen(null);
+        }
+      }}
+    >
       {keys.map((key) => {
         const a = assumptions[key]!;
         const isOpen = open === key;

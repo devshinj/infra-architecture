@@ -45,6 +45,7 @@ function Card(p: Outer) {
       onConfirmAssumption={p.onConfirmAssumption ?? vi.fn()}
       onSelectWarning={p.onSelectWarning ?? vi.fn()}
       {...(p.scrollToWarnings !== undefined ? { scrollToWarnings: p.scrollToWarnings } : {})}
+      {...(p.onMeasure ? { onMeasure: p.onMeasure } : {})}
       checklist={{ focusId: null, onSave: p.onSave ?? (async () => ({ ok: true })), drafts, onDraftsChange: setDrafts, expanded, onExpandedChange: setExpanded, onLocate: vi.fn() }}
     />
   );
@@ -129,4 +130,39 @@ test("read-only in history view", async () => {
   // 위치 보기·주의 항목은 그대로 쓸 수 있다.
   expect(screen.getByRole("button", { name: "웹1 위치 보기" })).toBeEnabled();
   expect(within(screen.getByRole("region", { name: "주의" })).getByRole("button", { name: /1대뿐/ })).toBeEnabled();
+});
+
+test("toggle is described by the visible counts line", () => {
+  render(<Card />);
+  expect(toggle()).toHaveAccessibleDescription("구성 정보 · 채워야 할 정보 1 · 주의 1 · 미확정 가정 1");
+});
+
+test("scroll request moves focus to the first warning item", () => {
+  const { rerender } = render(<Card open scrollToWarnings={0} />);
+  rerender(<Card open scrollToWarnings={1} />);
+  expect(within(screen.getByRole("region", { name: "주의" })).getByRole("button", { name: /1대뿐/ })).toHaveFocus();
+});
+
+test("Escape inside the open card collapses it and returns focus to the toggle", async () => {
+  render(<Card open />);
+  await userEvent.click(screen.getByRole("button", { name: "웹1 항목 펼치기" }));
+  screen.getByRole("textbox", { name: "호스트명" }).focus();
+  await userEvent.keyboard("{Escape}");
+  expect(toggle()).toHaveAttribute("aria-expanded", "false");
+  expect(toggle()).toHaveFocus();
+});
+
+test("Escape on an open assumption menu closes only the menu", async () => {
+  render(<Card open />);
+  await userEvent.click(screen.getByRole("button", { name: /^규모: 소규모/ }));
+  expect(screen.getByRole("group", { name: "규모 대안" })).toBeInTheDocument();
+  await userEvent.keyboard("{Escape}");
+  expect(screen.queryByRole("group", { name: "규모 대안" })).not.toBeInTheDocument();
+  expect(toggle()).toHaveAttribute("aria-expanded", "true");
+});
+
+test("reports its size for the camera", () => {
+  const onMeasure = vi.fn();
+  render(<Card onMeasure={onMeasure} />);
+  expect(onMeasure).toHaveBeenCalledWith({ width: expect.any(Number), height: expect.any(Number), lineHeight: expect.any(Number) });
 });

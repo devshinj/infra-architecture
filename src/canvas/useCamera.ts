@@ -3,8 +3,12 @@ import { useCallback, useEffect, useRef } from "react";
 import type { Rect } from "./layout";
 
 export type Viewport = { x: number; y: number; zoom: number };
-/** Screen pixels covered by floating panels on each side; fits use the strip between them. */
-export type Insets = { left: number; right: number };
+/**
+ * Screen pixels covered by floating panels: left/right panels, and the collapsed 구성 정보 card along the bottom.
+ * Fits use the box between them. `card` is the open card's footprint (from `left` and the bottom edge, gaps included);
+ * only 위치 보기 avoids it.
+ */
+export type Insets = { left: number; right: number; bottom?: number; card?: { width: number; height: number } };
 
 export interface CameraInput {
   /** Changes when a different board is shown (version view, compare, another diagram): fit at once. */
@@ -29,6 +33,8 @@ export const FINAL_FIT_DURATION = 600;
 export const FOCUS_DURATION = 500;
 /** 위치 보기: 줌은 그대로 두되 이보다 멀면 여기까지 당긴다. */
 export const FOCUS_MIN_ZOOM = 0.8;
+/** 열린 카드 오른쪽 빈 곳이 이보다 좁으면 카드 위쪽에 둔다. */
+export const FOCUS_SIDE_MIN = 360;
 const PADDING = 0.1;
 const MIN_ZOOM = 0.2;
 const BOARD_MAX_ZOOM = 2;
@@ -48,7 +54,7 @@ export function unionRect(rects: Iterable<Rect>): Rect | null {
 /** The viewport that frames `b` in the strip between the insets, zoom clamped to [MIN_ZOOM, maxZoom]. */
 export function fitViewport(b: Rect, size: { width: number; height: number }, insets: Insets, maxZoom: number): Viewport {
   const vw = Math.max(1, size.width - insets.left - insets.right);
-  const vh = size.height;
+  const vh = Math.max(1, size.height - (insets.bottom ?? 0));
   // Same padding factor as React Flow's fitView (bounds × (1 + padding)).
   const fit = Math.min(vw / Math.max(1, b.width * (1 + PADDING)), vh / Math.max(1, b.height * (1 + PADDING)));
   const zoom = Math.max(MIN_ZOOM, Math.min(maxZoom, fit));
@@ -59,17 +65,30 @@ export function fitViewport(b: Rect, size: { width: number; height: number }, in
   };
 }
 
-/** 위치 보기: `r` 의 가운데를 패널 사이 띠의 가운데에 둔다. 줌은 `zoom` 을 유지하되 FOCUS_MIN_ZOOM 아래면 올린다. */
+/**
+ * 위치 보기: `r` 의 가운데를 보이는 빈 곳의 가운데에 둔다. 줌은 `zoom` 을 유지하되 FOCUS_MIN_ZOOM 아래면 올린다.
+ * 카드가 열려 있으면 카드를 피한다: 카드 오른쪽이 FOCUS_SIDE_MIN 이상이면 그쪽, 아니면 카드 위쪽.
+ */
 export function focusViewport(r: Rect, size: { width: number; height: number }, insets: Insets, zoom: number): Viewport {
   const z = Math.max(FOCUS_MIN_ZOOM, zoom);
-  const vw = Math.max(1, size.width - insets.left - insets.right);
-  return { x: insets.left + vw / 2 - (r.x + r.width / 2) * z, y: size.height / 2 - (r.y + r.height / 2) * z, zoom: z };
+  let x1 = insets.left;
+  const x2 = size.width - insets.right;
+  let y2 = size.height - (insets.bottom ?? 0);
+  const card = insets.card;
+  if (card) {
+    const side = insets.left + card.width;
+    if (x2 - side >= FOCUS_SIDE_MIN) x1 = side;
+    else y2 = Math.min(y2, size.height - card.height);
+  }
+  const cx = (x1 + Math.max(x1 + 1, x2)) / 2;
+  const cy = Math.max(1, y2) / 2;
+  return { x: cx - (r.x + r.width / 2) * z, y: cy - (r.y + r.height / 2) * z, zoom: z };
 }
 
 function isVisible(r: Rect, vp: Viewport, size: { width: number; height: number }, insets: Insets): boolean {
   const left = r.x * vp.zoom + vp.x;
   const top = r.y * vp.zoom + vp.y;
-  return left >= insets.left && top >= 0 && left + r.width * vp.zoom <= size.width - insets.right && top + r.height * vp.zoom <= size.height;
+  return left >= insets.left && top >= 0 && left + r.width * vp.zoom <= size.width - insets.right && top + r.height * vp.zoom <= size.height - (insets.bottom ?? 0);
 }
 
 export function prefersReducedMotion(): boolean {
@@ -123,7 +142,7 @@ export function useCamera(input: CameraInput): { onMoveStart(event: unknown): vo
         const vw = Math.max(1, size.width - insets.left - insets.right);
         v.zoom = cur;
         v.x = insets.left + vw / 2 - (b.x + b.width / 2) * cur;
-        v.y = size.height / 2 - (b.y + b.height / 2) * cur;
+        v.y = Math.max(1, size.height - (insets.bottom ?? 0)) / 2 - (b.y + b.height / 2) * cur;
       }
     }
     setViewport(v, { duration: reducedMotion ? 0 : duration });

@@ -25,6 +25,8 @@ export interface MissingChecklistProps {
   focusId: string | null;
   /** 같은 focusId 를 다시 가리킬 때 바꾼다(배지를 다시 눌렀을 때). */
   focusToken?: number;
+  /** 포커스 요청을 처리했다: 부모가 요청을 지워 다시 마운트돼도 포커스를 빼앗지 않게 한다. */
+  onFocusHandled?(): void;
   onSave(input: SaveFieldsDraft): Promise<{ ok: true } | { ok: false; message: string }>;
   /** 초안과 블록 펼침은 부모가 들고 있다: 카드를 접어 이 컴포넌트가 내려가도 남는다. */
   drafts: ChecklistDrafts;
@@ -89,7 +91,7 @@ function Chevron({ open }: { open: boolean }) {
   );
 }
 
-export function MissingChecklist({ state, busy, readOnly = false, focusId, focusToken, onSave, drafts, onDraftsChange: setDrafts, expanded, onExpandedChange: setExpanded, onLocate }: MissingChecklistProps) {
+export function MissingChecklist({ state, busy, readOnly = false, focusId, focusToken, onFocusHandled, onSave, drafts, onDraftsChange: setDrafts, expanded, onExpandedChange: setExpanded, onLocate }: MissingChecklistProps) {
   const { items } = useMemo(() => computeMissing(state), [state]);
   const blocks = useMemo(() => blocksOf(state, items), [state, items]);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -126,6 +128,8 @@ export function MissingChecklist({ state, busy, readOnly = false, focusId, focus
     el.scrollIntoView?.({ block: "nearest" });
     const first = el.querySelector<HTMLInputElement>('input[type="text"]:not(:disabled)') ?? el.querySelector<HTMLInputElement>("input");
     first?.focus();
+    onFocusHandled?.();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- 펼침·대상이 바뀔 때만 포커스한다
   }, [expanded, pendingFocus]);
 
   if (items.length === 0) return null;

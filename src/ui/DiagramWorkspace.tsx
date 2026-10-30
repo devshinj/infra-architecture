@@ -27,7 +27,7 @@ import { type LlmHealth } from "./chat/ChatPanel";
 import type { MentionInputHandle } from "./chat/MentionInput";
 import type { ChecklistDrafts, ChecklistExpanded, MissingChecklistProps } from "./chat/MissingChecklist";
 import { type ChatLine, useChatTurn } from "./chat/useChatTurn";
-import { InfoCard } from "./canvas/InfoCard";
+import { type CardMeasure, InfoCard } from "./canvas/InfoCard";
 import type { ExplanationProps } from "./explain/Explanation";
 import { type TargetKind, useExplanations } from "./explain/useExplanations";
 import { PANEL_DEFAULT, PANEL_MAX, PANEL_MIN, PanelResizer } from "./PanelResizer";
@@ -61,6 +61,10 @@ const unionState = (old: DiagramState, cur: DiagramState): DiagramState => ({
 const PANEL_WIDTH_KEY = "infrasketch.panelWidth";
 
 const MISSING_BADGES_KEY = "infrasketch.showMissingBadges";
+
+/** 구성 정보 카드의 접힌 줄 높이·카드 너비(재기 전 기본값, infoCard.module.css 와 맞춘다). */
+const CARD_LINE_HEIGHT = 42;
+const CARD_WIDTH = 300;
 
 // showMissingBadges 는 브라우저 설정이라 여기서는 항상 끈 값이고, 실제 값은 아래 showMissing 상태가 덮어쓴다.
 const optionsFor = (state: DiagramState): CanvasOptions => ({ ...defaultDisplayOptions(state), hoverLabels: true, showMissingBadges: false });
@@ -119,7 +123,20 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
   const panelMax = workspaceW > 0 ? Math.max(PANEL_MIN, Math.min(PANEL_MAX, workspaceW - insetLeft - 2 * PANEL_GAP - 360)) : PANEL_MAX;
   const shownPanelWidth = Math.min(panelWidth, panelMax);
   const insetRight = PANEL_GAP + shownPanelWidth + PANEL_GAP;
-  const cameraInsets = useMemo(() => ({ left: insetLeft, right: insetRight }), [insetLeft, insetRight]);
+  // 아래: 접힌 구성 정보 카드 줄(+ 위아래 여백)은 늘 비운다. 카드가 열려 있으면 위치 보기가 카드를 피한다.
+  const [cardOpen, setCardOpen] = useState(false);
+  const [cardSize, setCardSize] = useState<CardMeasure | null>(null);
+  const onCardMeasure = useCallback(
+    (m: CardMeasure) => setCardSize((p) => (p && p.width === m.width && p.height === m.height && p.lineHeight === m.lineHeight ? p : m)),
+    [],
+  );
+  const insetBottom = PANEL_GAP + (cardSize?.lineHeight || CARD_LINE_HEIGHT) + PANEL_GAP;
+  const cardW = cardOpen ? (cardSize?.width || CARD_WIDTH) + PANEL_GAP : 0;
+  const cardH = cardOpen ? PANEL_GAP + (cardSize?.height || 0) + PANEL_GAP : 0;
+  const cameraInsets = useMemo(
+    () => ({ left: insetLeft, right: insetRight, bottom: insetBottom, ...(cardW > 0 ? { card: { width: cardW, height: cardH } } : {}) }),
+    [insetLeft, insetRight, insetBottom, cardW, cardH],
+  );
   const changePanelWidth = (w: number) => {
     setPanelWidth(w);
     try {
@@ -295,8 +312,7 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
     void confirmKey(key, a.value);
   };
 
-  // 구성 정보 카드(캔버스 왼쪽 아래). 초안·카드 펼침·블록 펼침은 여기 둔다: 카드를 접으면 내용이 내려간다.
-  const [cardOpen, setCardOpen] = useState(false);
+  // 구성 정보 카드(캔버스 왼쪽 아래). 초안·카드 펼침(위)·블록 펼침은 여기 둔다: 카드를 접으면 내용이 내려간다.
   const [checklistDrafts, setChecklistDrafts] = useState<ChecklistDrafts>({});
   const [checklistExpanded, setChecklistExpanded] = useState<ChecklistExpanded>({});
   // 배지 클릭: 카드를 펼치고 그 노드 블록을 펼쳐 첫 칸에 포커스한다. 새 토큰이면 같은 노드도 다시 간다.
@@ -479,9 +495,11 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
             onChooseAssumption={(k, v) => void onChooseAssumption(k, v)}
             onConfirmAssumption={onConfirmAssumption}
             onSelectWarning={selectNode}
+            onMeasure={onCardMeasure}
             checklist={{
               focusId: focus?.id ?? null,
               ...(focus ? { focusToken: focus.token } : {}),
+              onFocusHandled: () => setFocus(null),
               onSave: saveFields,
               drafts: checklistDrafts,
               onDraftsChange: setChecklistDrafts,

@@ -1,7 +1,7 @@
 import { act, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
-import { useCamera, type CameraInput, type Viewport } from "@/canvas/useCamera";
+import { fitViewport, focusViewport, useCamera, type CameraInput, type Viewport } from "@/canvas/useCamera";
 import type { Rect } from "@/canvas/layout";
 
 beforeEach(() => vi.useFakeTimers());
@@ -195,4 +195,34 @@ test("focus during a turn is not a user move: the final fit still runs", () => {
   r.setViewport.mockClear();
   r.update({ streaming: false });
   expect(r.durations()).toEqual([600]);
+});
+
+test("board and final fits keep a bottom margin of at least the collapsed card footprint", () => {
+  const tall: Rect = { x: 0, y: 0, width: 100, height: 2000 };
+  const v = fitViewport(tall, SIZE, { left: 0, right: 0, bottom: 66 }, 2);
+  expect((tall.y + tall.height) * v.zoom + v.y).toBeLessThanOrEqual(SIZE.height - 66 + 0.001);
+  const r = rig({ rects: { a: tall }, insets: { left: 0, right: 0, bottom: 66 } });
+  const first = r.vp();
+  expect((tall.y + tall.height) * first.zoom + first.y).toBeLessThanOrEqual(SIZE.height - 66 + 0.001);
+  r.update({ streaming: true });
+  r.update({ streaming: false });
+  const fin = r.vp();
+  expect((tall.y + tall.height) * fin.zoom + fin.y).toBeLessThanOrEqual(SIZE.height - 66 + 0.001);
+});
+
+test("focus with the card open lands right of the card on a wide strip, above it on a narrow one", () => {
+  const r = box(1000, 400); // centre (1050, 425)
+  const card = { width: 312, height: 400 }; // 열린 카드가 차지하는 폭(사이 여백 포함)·높이(위아래 여백 포함)
+  // 넓음: 카드 오른쪽 512..1100(588px)의 가운데 806, 세로는 0..734 의 가운데 367.
+  const wide = focusViewport(r, { width: 1400, height: 800 }, { left: 200, right: 300, bottom: 66, card }, 1);
+  expect(1050 + wide.x).toBeCloseTo(806);
+  expect(425 + wide.y).toBeCloseTo(367);
+  // 좁음: 카드 오른쪽이 188px 라 띠 200..700 의 가운데 450, 카드 위 0..400 의 가운데 200.
+  const narrow = focusViewport(r, { width: 1000, height: 800 }, { left: 200, right: 300, bottom: 66, card }, 1);
+  expect(1050 + narrow.x).toBeCloseTo(450);
+  expect(425 + narrow.y).toBeCloseTo(200);
+  // 카드가 닫혀 있으면 아래 여백만 뺀 띠의 가운데.
+  const closed = focusViewport(r, { width: 1400, height: 800 }, { left: 200, right: 300, bottom: 66 }, 1);
+  expect(1050 + closed.x).toBeCloseTo(650);
+  expect(425 + closed.y).toBeCloseTo(367);
 });

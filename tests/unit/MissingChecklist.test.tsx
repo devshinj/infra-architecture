@@ -184,6 +184,14 @@ test("focusId expands that block and focuses its first input", () => {
   expect(within(block("디비")).getByRole("textbox", { name: "RAM" })).toHaveFocus();
 });
 
+test("focus request is reported as handled once consumed", () => {
+  const onFocusHandled = vi.fn();
+  const { rerender, props } = setup();
+  rerender(<MissingChecklist {...props} focusId="db" onFocusHandled={onFocusHandled} />);
+  expect(within(block("디비")).getByRole("textbox", { name: "RAM" })).toHaveFocus();
+  expect(onFocusHandled).toHaveBeenCalledTimes(1);
+});
+
 test("edge title falls back to a group's label when an endpoint is a group", async () => {
   const state: DiagramState = {
     ...emptyState(),

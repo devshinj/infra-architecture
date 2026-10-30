@@ -310,14 +310,20 @@ test("fit padding accounts for floating panels", () => {
   hookState.insets.length = 0;
   render(ui(mk(1, ["a"])));
   // 왼쪽: 여백 12 + 사이드바 240 + 여백 12, 오른쪽: 여백 12 + 패널 360 + 여백 12
-  expect(hookState.insets.at(-1)).toEqual({ left: 264, right: 384 });
+  // 아래: 여백 12 + 접힌 구성 정보 카드 줄 42 + 여백 12
+  expect(hookState.insets.at(-1)).toEqual({ left: 264, right: 384, bottom: 66 });
   fireEvent.keyDown(screen.getByRole("separator", { name: "대화 패널 너비" }), { key: "ArrowLeft" });
-  expect(hookState.insets.at(-1)).toEqual({ left: 264, right: 400 });
+  expect(hookState.insets.at(-1)).toEqual({ left: 264, right: 400, bottom: 66 });
+  // 카드를 펼치면 카메라가 피할 장애물(카드 폭 300 + 여백 12)이 함께 간다.
+  fireEvent.click(screen.getByRole("button", { name: "구성 정보 펼치기" }));
+  expect(hookState.insets.at(-1)).toMatchObject({ left: 264, right: 400, bottom: 66, card: { width: 312 } });
+  fireEvent.click(screen.getByRole("button", { name: "구성 정보 접기" }));
+  expect(hookState.insets.at(-1)).toEqual({ left: 264, right: 400, bottom: 66 });
   cleanup();
   // 접힌 사이드바(레일 56)
   window.localStorage.setItem("infrasketch.sidebarCollapsed", "1");
   render(<ShellProvider>{ui(mk(1, ["a"]))}</ShellProvider>);
-  expect(hookState.insets.at(-1)).toEqual({ left: 80, right: 400 });
+  expect(hookState.insets.at(-1)).toEqual({ left: 80, right: 400, bottom: 66 });
   // 캔버스 도구 모음이 패널에 가리지 않게 같은 값을 CSS 변수로 넘긴다.
   const ws = screen.getByRole("complementary", { name: "오른쪽 패널" }).closest("[data-workspace]") as HTMLElement;
   expect(ws.style.getPropertyValue("--canvas-inset-left")).toBe("80px");

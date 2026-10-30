@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useId, useLayoutEffect, useMemo, useRef } from "react";
 
 import { computeMissing } from "@/domain/missing";
 import type { DiagramState, Warning } from "@/domain/types";
@@ -26,7 +26,11 @@ export interface InfoCardProps {
   onConfirmAssumption(key: string): void;
   /** 주의 항목 클릭: 그 노드를 선택한다(설명 탭 → 주의할 점). */
   onSelectWarning(nodeId: string): void;
+  /** 카드 크기(px): 카메라가 접힌 줄 높이만큼 아래를 비우고, 열린 카드는 위치 보기에서 피한다. */
+  onMeasure?(m: CardMeasure): void;
 }
+
+export type CardMeasure = { width: number; height: number; lineHeight: number };
 
 const LEVEL_LABEL: Record<Warning["level"], string> = { warn: "경고", check: "확인 필요" };
 
@@ -50,36 +54,72 @@ function Chevron({ open }: { open: boolean }) {
  * 캔버스 왼쪽 아래의 구성 정보 카드. 접히면 한 줄(채워야 할 정보·주의·미확정 가정 수),
  * 펼치면 위로 열려 가정 → 채워야 할 정보 → 주의 세 절을 보인다.
  */
-export function InfoCard({ state, readOnly, busy, open, onOpenChange, scrollToWarnings, checklist, onChooseAssumption, onConfirmAssumption, onSelectWarning }: InfoCardProps) {
+export function InfoCard({ state, readOnly, busy, open, onOpenChange, scrollToWarnings, checklist, onChooseAssumption, onConfirmAssumption, onSelectWarning, onMeasure }: InfoCardProps) {
   const miss = useMemo(() => computeMissing(state), [state]);
   const missing = miss.count;
   const warnings = useMemo(() => mergeWarnings(state).active, [state]);
   const assumptionCount = Object.keys(state.assumptions).length;
   const unconfirmed = Object.values(state.assumptions).filter((a) => !a.confirmed).length;
   const warningsRef = useRef<HTMLElement>(null);
+  const warnHeadRef = useRef<HTMLHeadingElement>(null);
+  const cardRef = useRef<HTMLElement>(null);
+  const toggleRef = useRef<HTMLButtonElement>(null);
+  const countsId = useId();
+  const hidden = Object.keys(state.nodes).length === 0 && assumptionCount === 0;
 
-  // 주의 N 칩: 새 토큰이 오면 한 번만 주의 절로 간다(접었다 펴도 다시 뛰지 않는다).
+  // 주의 N 칩: 새 토큰이 오면 한 번만 주의 절로 가서 첫 항목(없으면 제목)에 포커스한다(접었다 펴도 다시 뛰지 않는다).
   const handled = useRef(scrollToWarnings);
   useEffect(() => {
     if (!open || scrollToWarnings === handled.current) return;
     handled.current = scrollToWarnings;
     // nearest: 카드 안에서만 움직이고 바깥(셸)은 끌어 올리지 않는다.
     warningsRef.current?.scrollIntoView?.({ block: "nearest" });
+    const first = warningsRef.current?.querySelector<HTMLButtonElement>("button") ?? warnHeadRef.current;
+    first?.focus({ preventScroll: true });
   }, [open, scrollToWarnings]);
 
-  if (Object.keys(state.nodes).length === 0 && assumptionCount === 0) return null;
+  // 크기 알림: 펼침·내용·줄바꿈으로 바뀌면 다시 잰다.
+  useLayoutEffect(() => {
+    const el = cardRef.current;
+    const t = toggleRef.current;
+    if (!el || !t || !onMeasure) return;
+    const report = () => onMeasure({ width: el.offsetWidth, height: el.offsetHeight, lineHeight: t.offsetHeight });
+    report();
+    if (typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(report);
+    ro.observe(el);
+    ro.observe(t);
+    return () => ro.disconnect();
+  }, [onMeasure, hidden, open]);
+
+  if (hidden) return null;
+
+  // Escape: 카드 안에서 누르면 접고 접기 줄로 포커스를 돌린다(가정 대안 메뉴가 열려 있으면 메뉴가 먼저 닫힌다).
+  const onKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key !== "Escape" || !open) return;
+    e.preventDefault();
+    onOpenChange(false);
+    toggleRef.current?.focus();
+  };
 
   return (
-    <aside className={styles.card} data-open={open || undefined} aria-label="구성 정보">
-      <button type="button" className={styles.toggle} aria-expanded={open} aria-controls="info-card-body" aria-label={`구성 정보 ${open ? "접기" : "펼치기"}`} onClick={() => onOpenChange(!open)}>
-        <span className={styles.line}>
-          <span className={styles.title}>구성 정보</span>
-          <span className={styles.sep} aria-hidden="true"> · </span>
-          <span>채워야 할 정보 <Count n={missing} /></span>
-          <span className={styles.sep} aria-hidden="true"> · </span>
-          <span>주의 <Count n={warnings.length} /></span>
-          <span className={styles.sep} aria-hidden="true"> · </span>
-          <span>미확정 가정 <Count n={unconfirmed} /></span>
+    <aside ref={cardRef} className={styles.card} data-open={open || undefined} aria-label="구성 정보" onKeyDown={onKeyDown}>
+      <button
+        ref={toggleRef}
+        type="button"
+        className={styles.toggle}
+        aria-expanded={open}
+        aria-controls="info-card-body"
+        aria-label={`구성 정보 ${open ? "접기" : "펼치기"}`}
+        aria-describedby={countsId}
+        onClick={() => onOpenChange(!open)}
+      >
+        {/* 좁으면 항목 사이에서 줄을 바꾼다(숫자를 말줄임으로 자르지 않는다). */}
+        <span id={countsId} className={styles.line}>
+          <span className={styles.title}>구성 정보</span>{" "}
+          <span className={styles.seg}>· 채워야 할 정보 <Count n={missing} /></span>{" "}
+          <span className={styles.seg}>· 주의 <Count n={warnings.length} /></span>{" "}
+          <span className={styles.seg}>· 미확정 가정 <Count n={unconfirmed} /></span>
         </span>
         <Chevron open={open} />
       </button>
@@ -104,7 +144,7 @@ export function InfoCard({ state, readOnly, busy, open, onOpenChange, scrollToWa
             )}
           </section>
           <section ref={warningsRef} className={styles.section} aria-label="주의">
-            <h3 className={styles.heading}>
+            <h3 ref={warnHeadRef} tabIndex={-1} className={styles.heading}>
               주의 <Count n={warnings.length} />
             </h3>
             {warnings.length > 0 ? (
