@@ -146,3 +146,30 @@ test("does nothing until the canvas has a size", () => {
   r.update({ size: SIZE });
   expect(r.setViewport).toHaveBeenCalledTimes(1);
 });
+
+test("first board while streaming never zooms past 1", () => {
+  const r = rig({ streaming: true, rects: { a: box(0, 0) } });
+  expect(r.setViewport).toHaveBeenCalledTimes(1);
+  expect(r.vp().zoom).toBeLessThanOrEqual(1);
+});
+
+test("unmount with a pending fit cancels it", () => {
+  const r = rig();
+  r.update({ streaming: true });
+  r.update({ rects: { ...r.props().rects, b: box(5000, 0) } }); // throttled → timer
+  r.setViewport.mockClear();
+  r.hook.unmount();
+  act(() => vi.advanceTimersByTime(2000));
+  expect(r.setViewport).not.toHaveBeenCalled();
+});
+
+test("a quick streaming true→false→true flip fits once at the end and drops the pending fit", () => {
+  const r = rig();
+  r.update({ streaming: true });
+  r.update({ rects: { ...r.props().rects, b: box(5000, 0) } }); // throttled → timer
+  r.setViewport.mockClear();
+  r.update({ streaming: false });
+  r.update({ streaming: true });
+  act(() => vi.advanceTimersByTime(2000));
+  expect(r.durations()).toEqual([600]);
+});

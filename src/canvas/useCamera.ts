@@ -46,7 +46,8 @@ export function unionRect(rects: Iterable<Rect>): Rect | null {
 export function fitViewport(b: Rect, size: { width: number; height: number }, insets: Insets, maxZoom: number): Viewport {
   const vw = Math.max(1, size.width - insets.left - insets.right);
   const vh = size.height;
-  const fit = Math.min(vw / Math.max(1, b.width * (1 + 2 * PADDING)), vh / Math.max(1, b.height * (1 + 2 * PADDING)));
+  // Same padding factor as React Flow's fitView (bounds × (1 + padding)).
+  const fit = Math.min(vw / Math.max(1, b.width * (1 + PADDING)), vh / Math.max(1, b.height * (1 + PADDING)));
   const zoom = Math.max(MIN_ZOOM, Math.min(maxZoom, fit));
   return {
     x: insets.left + vw / 2 - (b.x + b.width / 2) * zoom,
@@ -69,7 +70,7 @@ const idsKey = (rects: Record<string, Rect>) => Object.keys(rects).sort().join("
 
 /**
  * Camera rules while a diagram is shown:
- * - board change → fit at once;
+ * - board change → fit at once (max zoom 2, or 1 if it happens mid-turn);
  * - new nodes → fit only when one is off-screen, at most every 600ms (changes in between are batched),
  *   animated 450ms, never zooming in;
  * - end of a chat turn → one 600ms fit of everything (zoom-in allowed up to 1);
@@ -170,7 +171,8 @@ export function useCamera(input: CameraInput): { onMoveStart(event: unknown): vo
     }
     if (s.boardPending && sizeReady) {
       s.boardPending = false;
-      apply(BOARD_MAX_ZOOM, 0, false);
+      // A board that first appears mid-turn (the first node on an empty canvas) must not start zoomed in.
+      apply(s.streaming ? FINAL_MAX_ZOOM : BOARD_MAX_ZOOM, 0, false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- helpers read refs only
   }, [boardKey, key, sizeReady]);

@@ -143,6 +143,12 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
     router.refresh();
     loadVersions();
   };
+  // Import/restore bring a new board: stop treating the next adoption as the after-chat refresh.
+  const expectNewBoard = () => {
+    adoptAfterChat.current = false;
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = null;
+  };
   // After an interrupt the server saves the aborted version a moment later: refresh once more.
   const refreshAfterInterrupt = () => {
     refreshFromServer();
@@ -226,6 +232,7 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
   const sendChat = (text: string) => {
     if (!live || chat.busy) return;
     setEditMode(false);
+    adoptAfterChat.current = false;
     void chat.send(text);
   }; // no history view/compare/restore, edit mode or sample import while the AI answers
 
@@ -345,6 +352,7 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
   const restore = (number: number) =>
     !locked &&
     run(async () => {
+      expectNewBoard();
       await restoreVersionAction(diagramId, number);
       loadVersions();
     });
@@ -352,6 +360,7 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
   const importSample = (sampleId: string) =>
     !locked &&
     run(async () => {
+      expectNewBoard();
       await importSampleAction(diagramId, sampleId);
       await clearPinnedAction(diagramId);
       setPinned({});

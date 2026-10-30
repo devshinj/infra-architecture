@@ -2,7 +2,7 @@ import "@testing-library/jest-dom/vitest";
 import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
-const hookState = vi.hoisted(() => ({ busy: false, onCommand: null as null | ((c: unknown) => void), badgeFns: [] as unknown[], warnFns: [] as unknown[], lines: [] as unknown[] }));
+const hookState = vi.hoisted(() => ({ busy: false, onCommand: null as null | ((c: unknown) => void), badgeFns: [] as unknown[], warnFns: [] as unknown[], lines: [] as unknown[], turn: null as null | { onDone(): void; onInterrupted(): void } }));
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
 vi.mock("@/app/(app)/actions", () => ({
@@ -13,12 +13,13 @@ vi.mock("@/app/(app)/actions", () => ({
   listTermsAction: vi.fn(async () => []),
 }));
 vi.mock("@/canvas/Canvas", () => ({
-  Canvas: ({ state, onMention, onBadgeClick, onWarnBadgeClick, onSelect }: { state: { nodes: object }; onMention?: (id: string) => void; onBadgeClick?: (id: string) => void; onWarnBadgeClick?: (id: string) => void; onSelect: (id: string | null) => void }) => {
+  Canvas: ({ state, fitKey, onMention, onBadgeClick, onWarnBadgeClick, onSelect }: { state: { nodes: object }; fitKey?: string; onMention?: (id: string) => void; onBadgeClick?: (id: string) => void; onWarnBadgeClick?: (id: string) => void; onSelect: (id: string | null) => void }) => {
     hookState.badgeFns.push(onBadgeClick);
     hookState.warnFns.push(onWarnBadgeClick);
     return (
     <div>
       <div data-testid="n">{Object.keys(state.nodes).join(",")}</div>
+      <div data-testid="fit">{fitKey}</div>
       {onMention && <button onClick={() => onMention("a")}>멘션a</button>}
       {onBadgeClick && <button onClick={() => onBadgeClick("a")}>배지a</button>}
       {onWarnBadgeClick && <button onClick={() => onWarnBadgeClick("b")}>경고배지b</button>}
@@ -29,13 +30,14 @@ vi.mock("@/canvas/Canvas", () => ({
   },
 }));
 vi.mock("@/ui/chat/useChatTurn", () => ({
-  useChatTurn: (a: { onCommand: (c: unknown) => void }) => {
+  useChatTurn: (a: { onCommand: (c: unknown) => void; onDone(): void; onInterrupted(): void }) => {
     hookState.onCommand = a.onCommand;
+    hookState.turn = a;
     return { lines: hookState.lines, busy: hookState.busy, phase: null, send: vi.fn(), stop: vi.fn() };
   },
 }));
 
-import { saveFieldsAction, setWarningIgnoredAction } from "@/app/(app)/actions";
+import { listVersionsAction, saveFieldsAction, setWarningIgnoredAction } from "@/app/(app)/actions";
 import { emptyState } from "@/domain/types";
 import { DiagramWorkspace } from "@/ui/DiagramWorkspace";
 
@@ -249,4 +251,37 @@ test("invalid stored value is ignored", () => {
     r.unmount();
   }
   window.localStorage.clear();
+});
+
+test("sample import after an interrupted turn refits the canvas at once", async () => {
+  hookState.busy = false;
+  const props = { diagramId: "d", name: "n", initialPinned: {}, samples: [{ id: "s", title: "샘플" }] };
+  const { rerender } = render(<DiagramWorkspace {...props} latest={mk(1, []) as never} />);
+  act(() => hookState.turn!.onInterrupted()); // no new version arrives for this turn
+  const before = screen.getByTestId("fit").textContent;
+  await act(async () => {
+    fireEvent.click(screen.getByRole("button", { name: "샘플 불러오기" }));
+  });
+  rerender(<DiagramWorkspace {...props} latest={mk(2, ["x"]) as never} />);
+  expect(screen.getByTestId("n")).toHaveTextContent("x");
+  expect(screen.getByTestId("fit").textContent).not.toBe(before);
+});
+
+test("restore while live refits the canvas at once, even after a turn that saved nothing", async () => {
+  hookState.busy = false;
+  const row = (number: number) => ({ number, source: "ai", status: "complete", restoredFrom: null, createdAt: new Date(0) });
+  vi.mocked(listVersionsAction).mockResolvedValue([row(1), row(2)] as never);
+  const { rerender } = render(ui(mk(2, ["a"])));
+  act(() => hookState.turn!.onDone()); // the turn ends without a new version
+  const before = screen.getByTestId("fit").textContent;
+  await act(async () => {
+    fireEvent.click(screen.getByRole("tab", { name: "이력" }));
+  });
+  fireEvent.click(await screen.findByRole("button", { name: /v1/ }));
+  await act(async () => {
+    fireEvent.click(screen.getByRole("button", { name: "이 버전으로 되돌리기" }));
+  });
+  rerender(ui(mk(3, ["a"])));
+  expect(screen.getByTestId("fit").textContent).not.toBe(before);
+  vi.mocked(listVersionsAction).mockResolvedValue([]);
 });
