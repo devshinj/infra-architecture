@@ -10,6 +10,7 @@ vi.mock("@/app/(app)/actions", () => ({
   listVersionsAction: vi.fn(async () => []), restoreVersionAction: vi.fn(), savePinnedAction: vi.fn(),
   saveFieldsAction: vi.fn(async () => ({ ok: true, number: 2 })),
   setWarningIgnoredAction: vi.fn(async () => ({ ok: true, number: 2 })),
+  listTermsAction: vi.fn(async () => []),
 }));
 vi.mock("@/canvas/Canvas", () => ({
   Canvas: ({ state, onMention, onBadgeClick, onWarnBadgeClick, onSelect }: { state: { nodes: object }; onMention?: (id: string) => void; onBadgeClick?: (id: string) => void; onWarnBadgeClick?: (id: string) => void; onSelect: (id: string | null) => void }) => {
@@ -189,6 +190,37 @@ test("warn badge or chat warning line for the already selected node still opens 
   expect(screen.getByRole("tab", { name: "설명" })).toHaveAttribute("aria-selected", "true");
   expect(screen.getByRole("heading", { name: "주의할 점" })).toBeInTheDocument();
   hookState.lines = [];
+});
+
+test("selecting a node shows its explanation in 설명", async () => {
+  hookState.busy = false;
+  const posts: unknown[] = [];
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async (url: string, init?: RequestInit) => {
+      if (url === "/api/diagrams/d/explain" && (init?.method ?? "GET") === "GET") return new Response("{}", { status: 200 });
+      if (url === "/api/diagrams/d/explain") {
+        const body = JSON.parse(String(init!.body)) as { targetId: string };
+        posts.push(body);
+        const explanation = {
+          kind: "node", term: "서버", definition: `${body.targetId} 의 정의`, definitionSource: "glossary", reviewed: true,
+          role: "역할", adr: { decision: "결정", reason: "이유", alternative: "대안", cost: "대가" },
+        };
+        return new Response(JSON.stringify({ ok: true, explanation, signature: "x" }), { status: 200 });
+      }
+      return new Response(JSON.stringify({ qwen: "ok", clef: "ok" }), { status: 200 });
+    }),
+  );
+  try {
+    render(ui({ number: 1, state: { ...emptyState(), nodes: Object.fromEntries([web("a"), web("b")]) } } as never));
+    fireEvent.click(screen.getByRole("button", { name: "선택b" }));
+    expect(screen.getByRole("tab", { name: "설명" })).toHaveAttribute("aria-selected", "true");
+    expect(await screen.findByText("b 의 정의")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "이 구성에서의 역할" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "다시 쓰기" })).toBeEnabled();
+  } finally {
+    vi.unstubAllGlobals();
+  }
 });
 
 // ---- 대화 패널 너비 ----

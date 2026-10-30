@@ -22,6 +22,7 @@ import {
 } from "@/server/projects";
 import { confirmAssumptionFor } from "@/server/assumptions";
 import { saveFieldsFor, type SaveFieldsInput } from "@/server/fields";
+import { ensureSeeded, listTerms } from "@/server/glossary";
 import { setWarningIgnoredFor } from "@/server/ignore";
 import { importSample, SAMPLES } from "@/server/samples";
 import { listMessages } from "@/server/chat/messages";
@@ -213,6 +214,15 @@ export async function clearPinnedAction(diagramId: string): Promise<void> {
   return run(async (uid) => {
     await clearPinnedPositions(uid, diagramId);
     refreshDiagram();
+  });
+}
+
+/** 설명 본문의 용어 풀이에 쓰는 로그인 사용자의 사전(비어 있으면 시드를 먼저 복사한다). */
+export async function listTermsAction(): Promise<{ key: string; term: string; definition: string }[]> {
+  return run(async (uid) => {
+    await ensureSeeded(uid);
+    const rows = await listTerms(uid);
+    return rows.map((r) => ({ key: r.key, term: r.term, definition: r.definition }));
   });
 }
 

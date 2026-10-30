@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 
 import type { DiagramState } from "@/domain/types";
 
+import type { ExplanationProps } from "./explain/Explanation";
 import styles from "./app.module.css";
 import { ChatPanel, type ChatPanelProps } from "./chat/ChatPanel";
 import { HistoryPanel, type HistoryPanelProps } from "./HistoryPanel";
@@ -33,9 +34,11 @@ export interface RightPanelProps {
   cautions?: Pick<NodeInfoProps, "onIgnoreWarning" | "ignoreDisabled" | "ignoreError">;
   /** 주의할 점을 계산할 상태(비교 모드는 합친 그림이 아니라 현재 상태). 없으면 state. */
   warningState?: DiagramState;
+  /** 선택한 노드·연결의 설명. 없으면 설명 절을 그리지 않는다. */
+  explain?: ExplanationProps;
 }
 
-export function RightPanel({ state, selectedId, onSelect, onMention, mentionDisabled, samples, onImportSample, importing = false, history, chat, onHistoryOpen, tab: controlledTab, onTabChange, cautions, warningState }: RightPanelProps) {
+export function RightPanel({ state, selectedId, onSelect, onMention, mentionDisabled, samples, onImportSample, importing = false, history, chat, onHistoryOpen, tab: controlledTab, onTabChange, cautions, warningState, explain }: RightPanelProps) {
   const [innerTab, setInnerTab] = useState<Tab>("대화");
   const tab = controlledTab ?? innerTab;
   const setTab = (t: Tab) => {
@@ -99,7 +102,7 @@ export function RightPanel({ state, selectedId, onSelect, onMention, mentionDisa
             }
           />
         )}
-        {tab === "설명" && <NodeInfo state={state} selectedId={selectedId} onSelect={onSelect} {...(onMention ? { onMention } : {})} {...(mentionDisabled ? { mentionDisabled } : {})} {...cautions} {...(warningState ? { warningState } : {})} />}
+        {tab === "설명" && <NodeInfo state={state} selectedId={selectedId} onSelect={onSelect} {...(onMention ? { onMention } : {})} {...(mentionDisabled ? { mentionDisabled } : {})} {...cautions} {...(warningState ? { warningState } : {})} {...(explain ? { explain } : {})} />}
         {tab === "이력" && <HistoryPanel {...history} />}
       </div>
     </aside>

@@ -27,6 +27,8 @@ import { type LlmHealth } from "./chat/ChatPanel";
 import type { MentionInputHandle } from "./chat/MentionInput";
 import { type ChecklistDrafts, MissingChecklist, type MissingChecklistProps } from "./chat/MissingChecklist";
 import { type ChatLine, useChatTurn } from "./chat/useChatTurn";
+import type { ExplanationProps } from "./explain/Explanation";
+import { type TargetKind, useExplanations } from "./explain/useExplanations";
 import { PANEL_DEFAULT, PANEL_MAX, PANEL_MIN, PanelResizer } from "./PanelResizer";
 import { RightPanel, type Tab } from "./RightPanel";
 
@@ -164,6 +166,22 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
     setMode({ kind: "live" });
   }
   const locked = chat.busy;
+
+  // 설명: 대화가 끝나거나 구성도를 열면 낡은 노드를 차례로 만든다. 이력 보기·비교에서는 멈춘다.
+  const explanations = useExplanations({ diagramId, state: shown, live, busy: chat.busy, selectedId: options.selectedId });
+  const selId = options.selectedId;
+  const selKind: TargetKind | null = selId === null ? null : shown.nodes[selId] ? "node" : shown.edges[selId] ? "edge" : null;
+  let explain: ExplanationProps | undefined;
+  if (selId !== null && selKind !== null) {
+    const { rewrite, retry } = explanations;
+    explain = {
+      ...explanations.get(selKind, selId),
+      terms: explanations.terms,
+      target: selKind,
+      busy: locked,
+      ...(live ? { onRewrite: (instruction: string) => rewrite(selKind, selId, instruction), onRetry: () => retry(selKind, selId) } : {}),
+    };
+  }
   const mentionRef = useRef<MentionInputHandle>(null);
 
   // Attach a node/group to the chat input: open the 대화 tab, then insert once the input has rendered.
@@ -407,6 +425,7 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
         onTabChange={onTabChange}
         warningState={mode.kind === "compare" ? current.state : shown}
         onHistoryOpen={loadVersions}
+        {...(explain ? { explain } : {})}
         {...(live ? { cautions: { onIgnoreWarning, ignoreDisabled: locked || warnSaving, ignoreError: warnError } } : {})}
         history={{
           versions,
