@@ -48,6 +48,20 @@ async function linesFor(messages: Msg[]): Promise<{ lines: string[]; delay: numb
       lines: [JSON.stringify({ op: "update_node", id, attrs: { ram: "32GB" } }), JSON.stringify({ op: "say", text: "RAM 을 32GB 로 바꿨어요." })],
     };
   }
+  // 구조 가정 변경: 새 영역(IDC)을 만들고, 유지할 노드를 옮긴 뒤, 남은 AWS 영역을 지우고, 남은 노드를 다시 잇는다.
+  if (request.includes("가정 변경: 환경")) {
+    return {
+      delay,
+      lines: [
+        JSON.stringify({ op: "add_group", id: "idc-main", group_kind: "idc", label: "사내 IDC", parent: null }),
+        JSON.stringify({ op: "update_node", id: "was-1", parent: "idc-main" }),
+        JSON.stringify({ op: "update_node", id: "db-rdb", parent: "idc-main" }),
+        JSON.stringify({ op: "remove_group", id: "aws-region" }),
+        JSON.stringify({ op: "add_edge", id: "e-idc-was-db", from: "was-1", to: "db-rdb", edge_kind: "request", label: "TCP 3306" }),
+        JSON.stringify({ op: "say", text: "사내 IDC 구성으로 바꿨어요." }),
+      ],
+    };
+  }
   // 경고 E2E: "공개DB 다시" 는 같은 DB 를 고쳐(명령 1개 이상 적용) 경고 점검이 다시 돌게 한다. "공개DB" 보다 먼저 맞춘다.
   if (request.includes("공개DB 다시")) {
     return { lines: [JSON.stringify({ op: "update_node", id: "pubdb", attrs: { version: "8.0" } }), JSON.stringify({ op: "say", text: "DB 를 고쳤어요." })], delay };
