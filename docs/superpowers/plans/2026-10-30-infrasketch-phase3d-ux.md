@@ -86,9 +86,9 @@
   - SYSTEM_PROMPT
     - 명령 목록에 `{"op":"remove_group","id":"기존 영역 id"}` 를 추가한다.
     - `update_node` 예시에 `"parent":"새 영역 id"` 를 추가한다.
-    - 규칙 추가: `- 환경(environment)이나 배포 방식(deploy) 가정이 바뀌면, 새 가정에 맞지 않는 영역은 remove_group 으로, 노드는 remove_node 로 먼저 지운다. 새 구성에서도 쓰는 노드(WAS·DB 등)는 지우지 말고 update_node 의 parent 로 새 영역에 옮긴다.`
-    - "영역 이름·상위 영역은 바꿀 수 없다" 규칙은 유지한다(삭제는 가능).
-  - 가정 칩 메시지(`DiagramWorkspace.tsx`): 키가 `environment`·`deploy` 면 `가정 변경: <라벨> → <값>. 이 가정에 맞지 않는 영역·노드는 지우고, 계속 쓰는 노드는 새 영역으로 옮겨 구성을 다시 맞춰 줘.` 로 보낸다. 그 밖의 키는 기존 문구를 쓴다.
+    - 규칙 추가(2026-10-30 사용자 결정으로 순서 수정): ① 새 영역을 add_group 으로 만든다 ② 계속 쓰는 노드는 update_node 의 parent 로 옮긴다 ③ 그 뒤 남은 노드는 remove_node, 영역은 remove_group 으로 지운다(remove_group 은 안의 노드까지 지우므로 옮기기 먼저). 정확한 문구는 src/server/chat/prompt.ts 가 기준이다.
+    - "영역 이름·상위 영역은 바꿀 수 없다" 규칙은 원문 그대로 유지한다.
+  - 가정 칩 메시지(`src/domain/assumptions.ts` assumptionChangeMessage): 키가 `environment`·`deploy` 면 `가정 변경: <라벨> → <값>. 새 가정에 맞는 영역을 먼저 만들고, 계속 쓰는 노드는 새 영역으로 옮긴 뒤, 남은 맞지 않는 노드·영역을 지워 구성을 다시 맞춰 줘.` 로 보낸다. 그 밖의 키는 기존 문구를 쓴다.
 - [ ] **Step 1: 실패하는 테스트**
   - `remove_group removes descendants and touching edges`
   - `remove_group unknown id fails`
