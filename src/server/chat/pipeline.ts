@@ -1,5 +1,5 @@
 import { computeMissing } from "@/domain/missing";
-import { applyCommand } from "@/domain/apply";
+import { applyCommand, pruneEmptyGroups } from "@/domain/apply";
 import { COMMAND_OPS, parseCommand } from "@/domain/commands";
 import { emptyState, type DiagramState, type Warning } from "@/domain/types";
 import { INTENT_MIN_CONFIDENCE, type ClefClient, type Intent } from "@/server/llm/clef";
@@ -76,6 +76,18 @@ const KNOWN_OPS: ReadonlySet<string> = new Set(COMMAND_OPS);
 const SKIP_PREFIX = "건너뜀: ";
 const SKIP_MAX = 120;
 
+/** 정리로 사라진 그룹 id 를 깊은 것부터(자식이 부모보다 먼저) 돌려준다. */
+function prunedOrder(before: DiagramState, after: DiagramState): string[] {
+  const depth = (id: string) => {
+    let d = 0;
+    for (let p = before.groups[id]?.parent ?? null; p !== null; p = before.groups[p]?.parent ?? null) d++;
+    return d;
+  };
+  return Object.keys(before.groups)
+    .filter((id) => !Object.hasOwn(after.groups, id))
+    .sort((a, b) => depth(b) - depth(a));
+}
+
 async function lockedTurn(args: TurnArgs, deps: ChatDeps): Promise<void> {
   const { diagramId, emit } = args;
   const timeout = AbortSignal.timeout(deps.turnTimeoutMs ?? TURN_TIMEOUT_MS);
@@ -83,6 +95,7 @@ async function lockedTurn(args: TurnArgs, deps: ChatDeps): Promise<void> {
 
   const latest = await getLatestState(diagramId);
   let state: DiagramState = latest?.state ?? emptyState();
+  const turnStartState = state;
   const prevWarnings = latest?.state.warnings; // 차례 시작 상태의 경고
   const history = (await listMessages(diagramId, HISTORY_FETCH))
     .filter((m) => m.role === "user" || m.role === "assistant")
@@ -202,6 +215,10 @@ async function lockedTurn(args: TurnArgs, deps: ChatDeps): Promise<void> {
   let version: number | null = null;
   let fresh: Warning[] = [];
   if (applied > 0) {
+    // 이번 차례에 비게 된 영역을 지운다. 클라이언트도 같은 명령으로 맞추도록 안쪽부터 보낸다.
+    const pruned = pruneEmptyGroups(turnStartState, state);
+    for (const id of prunedOrder(state, pruned)) emit({ t: "cmd", cmd: { op: "remove_group", id } });
+    state = pruned;
     // 변경이 있었던 차례만 점검한다. 중단·오류면 이미 중단된 신호로 불러 코드 규칙만 받는다.
     if (status === "complete") emit({ t: "status", phase: "checking" });
     const checkSignal = status === "complete" ? signal : AbortSignal.abort();

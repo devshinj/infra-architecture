@@ -17,7 +17,7 @@ import {
 import { Canvas, type CanvasOptions, type DiffMarks } from "@/canvas/Canvas";
 import { defaultDisplayOptions } from "@/canvas/display";
 import { applyCommand } from "@/domain/apply";
-import { ASSUMPTION_LABELS, confirmAssumption } from "@/domain/assumptions";
+import { assumptionChangeMessage, confirmAssumption } from "@/domain/assumptions";
 import { diffStates } from "@/domain/diff";
 import type { DiagramState } from "@/domain/types";
 
@@ -243,7 +243,7 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
   };
   const onChooseAssumption = async (key: string, value: string) => {
     if (!live || chat.busy) return;
-    if (await confirmKey(key, value)) sendChat(`가정 변경: ${ASSUMPTION_LABELS[key] ?? key} → ${value}. 이 가정에 맞게 구성을 조정해 줘.`);
+    if (await confirmKey(key, value)) sendChat(assumptionChangeMessage(key, value));
   };
   const onConfirmAssumption = (key: string) => {
     const a = current.state.assumptions[key];

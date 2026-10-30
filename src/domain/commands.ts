@@ -20,6 +20,7 @@ export const commandSchema = z.discriminatedUnion("op", [
   z.object({ op: z.literal("update_edge"), id, label: z.string().optional(), edge_kind: edgeKind.optional() }),
   z.object({ op: z.literal("remove_node"), id }),
   z.object({ op: z.literal("remove_edge"), id }),
+  z.object({ op: z.literal("remove_group"), id }),
   z.object({ op: z.literal("set_assumption"), key: z.string().min(1), value: z.string() }),
 ]);
 

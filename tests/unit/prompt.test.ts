@@ -36,7 +36,7 @@ describe("SYSTEM_PROMPT", () => {
   });
 
   test("lists every op and the schema's id rule", () => {
-    for (const op of ["say", "set_assumption", "add_group", "add_node", "add_edge", "update_node", "update_edge", "remove_node", "remove_edge"]) {
+    for (const op of ["say", "set_assumption", "add_group", "add_node", "add_edge", "update_node", "update_edge", "remove_node", "remove_edge", "remove_group"]) {
       expect(SYSTEM_PROMPT).toContain(`"op":"${op}"`);
     }
     expect(SYSTEM_PROMPT).toContain("^[a-z0-9][a-z0-9-]{0,63}$");
@@ -76,6 +76,15 @@ describe("SYSTEM_PROMPT examples", () => {
     expect(lines.find((l) => l.startsWith("KIND 허용값:"))).not.toContain("k8s_cluster");
     expect(lines.find((l) => l.startsWith("GROUP_KIND 허용값:"))).toContain("k8s_cluster");
     expect(SYSTEM_PROMPT).toContain("영역(그룹)의 이름·상위 영역은 바꿀 수 없다");
+  });
+
+  test("remove_group, update_node parent example and the structural-assumption rule", () => {
+    const lines = SYSTEM_PROMPT.split("\n");
+    expect(lines).toContain('{"op":"remove_group","id":"기존 영역 id"}');
+    expect(lines.some((l) => l.startsWith('{"op":"update_node"') && l.includes('"parent":"새 영역 id"'))).toBe(true);
+    expect(lines).toContain(
+      "- 환경(environment)이나 배포 방식(deploy) 가정이 바뀌면, 새 가정에 맞지 않는 영역은 remove_group 으로, 노드는 remove_node 로 먼저 지운다. 새 구성에서도 쓰는 노드(WAS·DB 등)는 지우지 말고 update_node 의 parent 로 새 영역에 옮긴다.",
+    );
   });
 });
 

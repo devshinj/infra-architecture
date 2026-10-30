@@ -22,3 +22,14 @@ export const ASSUMPTION_CHOICES: Record<string, string[]> = {
 export function confirmAssumption(state: DiagramState, key: string, value: string): DiagramState {
   return { ...state, assumptions: { ...state.assumptions, [key]: { key, value, confirmed: true } } };
 }
+
+/** Keys whose change reshapes the zones (not just node counts or links). */
+const STRUCTURAL_KEYS: ReadonlySet<string> = new Set(["environment", "deploy"]);
+
+/** The chat message sent after choosing another value on an assumption chip. */
+export function assumptionChangeMessage(key: string, value: string): string {
+  const head = `가정 변경: ${ASSUMPTION_LABELS[key] ?? key} → ${value}.`;
+  return STRUCTURAL_KEYS.has(key)
+    ? `${head} 이 가정에 맞지 않는 영역·노드는 지우고, 계속 쓰는 노드는 새 영역으로 옮겨 구성을 다시 맞춰 줘.`
+    : `${head} 이 가정에 맞게 구성을 조정해 줘.`;
+}

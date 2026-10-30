@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 
 import { EDGE_KINDS, GROUP_KINDS, NODE_KINDS, categoryOf } from "@/domain/catalog";
-import { parseCommand } from "@/domain/commands";
+import { COMMAND_OPS, parseCommand } from "@/domain/commands";
 
 describe("parseCommand", () => {
   test("parses add_node with snake_case wire fields", () => {
@@ -13,6 +13,11 @@ describe("parseCommand", () => {
     expect(r.ok).toBe(false);
   });
   test("rejects bad id", () => expect(parseCommand({ op: "remove_node", id: "WAS 1" }).ok).toBe(false));
+  test("parses remove_group and lists it in COMMAND_OPS", () => {
+    expect(parseCommand({ op: "remove_group", id: "aws-region" })).toEqual({ ok: true, cmd: { op: "remove_group", id: "aws-region" } });
+    expect(parseCommand({ op: "remove_group" }).ok).toBe(false);
+    expect(COMMAND_OPS).toContain("remove_group");
+  });
 });
 
 describe("catalog", () => {
