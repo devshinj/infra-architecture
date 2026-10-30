@@ -166,6 +166,8 @@ test("scrollbar tokens and thin themed scrollbars; the app shell never scrolls t
   expect(tokens).toContain("--scrollbar-thumb: rgba(154, 167, 186, 0.28);");
   expect(tokens).toContain("--scrollbar-thumb-hover: rgba(154, 167, 186, 0.5);");
   const globals = read("src/styles/globals.css");
+  // 표준 속성은 웹킷 규칙을 못 쓰는 엔진에서만(Chrome 121+ 는 둘이 함께면 웹킷 규칙을 무시한다).
+  expect(globals).toMatch(/@supports not selector\(::-webkit-scrollbar\) \{[^@]*scrollbar-width: thin;[^@]*scrollbar-color: var\(--scrollbar-thumb\) transparent;/);
   expect(globals).toContain("scrollbar-width: thin;");
   expect(globals).toContain("scrollbar-color: var(--scrollbar-thumb) transparent;");
   expect(globals).toMatch(/::-webkit-scrollbar \{[^}]*width: 8px;/);

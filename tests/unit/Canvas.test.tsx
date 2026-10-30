@@ -419,3 +419,22 @@ test("전체 보기 fits", async () => {
     vi.stubGlobal("DOMMatrix", DM);
   }
 });
+
+test("보기 popover closes when focus leaves it, but not for focus moving inside", () => {
+  render(<div><Canvas {...baseProps(emptyState())} /><button type="button">바깥</button></div>);
+  const open = screen.getByRole("button", { name: "보기" });
+  fireEvent.click(open);
+  const pop = screen.getByRole("dialog", { name: "보기 옵션" });
+  const boxes = within(pop).getAllByRole("checkbox");
+  // 안에서 안으로, 그리고 버튼으로 옮겨도 열려 있다.
+  fireEvent.focusOut(boxes[0]!, { relatedTarget: boxes[1]! });
+  fireEvent.focusOut(boxes[0]!, { relatedTarget: open });
+  expect(screen.getByRole("dialog", { name: "보기 옵션" })).toBeInTheDocument();
+  // 바깥 요소로 나가면 닫힌다.
+  fireEvent.focusOut(boxes[1]!, { relatedTarget: screen.getByRole("button", { name: "바깥" }) });
+  expect(screen.queryByRole("dialog", { name: "보기 옵션" })).not.toBeInTheDocument();
+  // Esc 는 여전히 포커스를 버튼으로 돌린다.
+  fireEvent.click(open);
+  fireEvent.keyDown(document, { key: "Escape" });
+  expect(open).toHaveFocus();
+});

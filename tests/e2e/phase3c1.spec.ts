@@ -77,6 +77,20 @@ test("no page-level scroll", async ({ page }) => {
   const d = await overflow();
   expect(d.doc).toBeLessThanOrEqual(0);
   expect(d.wide).toBeLessThanOrEqual(0);
+  // 구성도를 불러온 화면: 보기 팝오버를 연 채로, 구성 정보 카드를 펼친 채로도 문서가 넘치지 않는다.
+  await page.getByPlaceholder(PLACEHOLDER).fill("결제랑 카카오 로그인 붙는 쇼핑몰");
+  await page.getByRole("button", { name: "보내기" }).click();
+  await expect(nodes(page)).toHaveCount(S1_NODE_COUNT, { timeout: 30_000 });
+  await expect(page.getByText(/노드 \d+ · 연결 \d+ · 적용 \d+ · 건너뜀 \d+/)).toBeVisible({ timeout: 30_000 });
+  expect((await overflow()).doc).toBeLessThanOrEqual(0);
+  await page.getByRole("button", { name: "보기", exact: true }).click();
+  await expect(page.getByRole("dialog", { name: "보기 옵션" })).toBeVisible();
+  expect((await overflow()).doc).toBeLessThanOrEqual(0);
+  await page.keyboard.press("Escape");
+  await page.getByRole("button", { name: "구성 정보 펼치기" }).click();
+  await expect(page.getByRole("button", { name: "구성 정보 접기" })).toBeVisible();
+  expect((await overflow()).doc).toBeLessThanOrEqual(0);
+  expect((await overflow()).wide).toBeLessThanOrEqual(0);
   await page.getByRole("link", { name: "용어 사전" }).first().click();
   await page.waitForURL(/\/glossary/);
   const g = await overflow();

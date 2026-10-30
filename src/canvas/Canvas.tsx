@@ -109,11 +109,19 @@ function usePopover(firstItem: string) {
     const onDown = (e: MouseEvent) => {
       if (!root.current?.contains(e.target as globalThis.Node)) setOpen(false);
     };
+    // 키보드로 포커스가 팝오버 밖(버튼 포함 root 바깥)으로 나가면 닫는다. 창 전환처럼 relatedTarget 이 없으면 그대로 둔다.
+    const onOut = (e: FocusEvent) => {
+      const to = e.relatedTarget as globalThis.Node | null;
+      if (to && !root.current?.contains(to)) setOpen(false);
+    };
+    const el = root.current;
     document.addEventListener("keydown", onKey);
     document.addEventListener("mousedown", onDown);
+    el?.addEventListener("focusout", onOut);
     return () => {
       document.removeEventListener("keydown", onKey);
       document.removeEventListener("mousedown", onDown);
+      el?.removeEventListener("focusout", onOut);
     };
   }, [open, firstItem]);
   return { open, setOpen, root, trigger };

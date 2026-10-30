@@ -8,9 +8,12 @@ body {
 }
 
 /* 스크롤이 필요한 모든 영역(대화·구성 정보·패널·사이드바 트리·용어 사전·이력)에 얇은 테마 스크롤바를 쓴다. */
-* {
-  scrollbar-width: thin;
-  scrollbar-color: var(--scrollbar-thumb) transparent;
+/* Chrome 121+ 는 scrollbar-width/color 가 있으면 ::-webkit-scrollbar 를 무시한다. 웹킷 규칙을 쓸 수 있는 엔진(Chromium·Safari)은 그것을, 못 쓰는 엔진(Firefox)은 표준 속성을 쓴다. */
+@supports not selector(::-webkit-scrollbar) {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--scrollbar-thumb) transparent;
+  }
 }
 *::-webkit-scrollbar {
   width: 8px;
