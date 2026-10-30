@@ -43,8 +43,8 @@ EDGE_KIND 허용값: ${EDGE_KIND_LIST}
 - 이중화 서버는 redundancy_group 그룹으로 묶고 label 에 VIP 를 적는다(예: "WAS VIP"). 2대 이상이면 몇 대든 하나의 redundancy_group 으로 묶는다.
 - AZ(가용 영역)는 az 그룹을 만들지 않는다. 대신 서브넷·노드의 attrs.az 속성(예: "az":"2a")으로 표시한다.
 - 외부 서비스는 external_service 그룹 안에 접점 노드(external_api/external_auth/external_pg)로 그린다.
-- 영역(그룹)의 이름·상위 영역은 바꿀 수 없다(지우는 것은 remove_group 으로 할 수 있다). 영역을 바꿔야 하면 say 로 알리고 노드만 수정한다.
-- 환경(environment)이나 배포 방식(deploy) 가정이 바뀌면, 새 가정에 맞지 않는 영역은 remove_group 으로, 노드는 remove_node 로 먼저 지운다. 새 구성에서도 쓰는 노드(WAS·DB 등)는 지우지 말고 update_node 의 parent 로 새 영역에 옮긴다.
+- 영역(그룹)의 이름·상위 영역은 바꿀 수 없다. 영역을 바꿔야 하면 say 로 알리고 노드만 수정한다.
+- 환경(environment)이나 배포 방식(deploy) 가정이 바뀌면 이 순서로 바꾼다: ① 새 가정에 맞는 영역을 add_group 으로 만든다 ② 새 구성에서도 쓰는 노드(WAS·DB 등)는 지우지 말고 update_node 의 parent 로 새 영역에 옮긴다 ③ 그 뒤에 남은 맞지 않는 노드는 remove_node, 영역은 remove_group 으로 지운다. remove_group 은 안의 노드까지 지우므로 옮길 노드를 먼저 옮긴다.
 - k8s_cluster 는 그룹(group_kind)으로만 쓴다. 노드 kind 로 쓰지 않는다.
 - 사용자가 모르는 값(IP, hostname, 스펙)은 null 로 둔다. 지어내지 않는다.
 - 연결은 실제 요청 흐름 방향(호출하는 쪽 → 받는 쪽)으로.

@@ -83,8 +83,10 @@ describe("SYSTEM_PROMPT examples", () => {
     expect(lines).toContain('{"op":"remove_group","id":"기존 영역 id"}');
     expect(lines.some((l) => l.startsWith('{"op":"update_node"') && l.includes('"parent":"새 영역 id"'))).toBe(true);
     expect(lines).toContain(
-      "- 환경(environment)이나 배포 방식(deploy) 가정이 바뀌면, 새 가정에 맞지 않는 영역은 remove_group 으로, 노드는 remove_node 로 먼저 지운다. 새 구성에서도 쓰는 노드(WAS·DB 등)는 지우지 말고 update_node 의 parent 로 새 영역에 옮긴다.",
+      "- 환경(environment)이나 배포 방식(deploy) 가정이 바뀌면 이 순서로 바꾼다: ① 새 가정에 맞는 영역을 add_group 으로 만든다 ② 새 구성에서도 쓰는 노드(WAS·DB 등)는 지우지 말고 update_node 의 parent 로 새 영역에 옮긴다 ③ 그 뒤에 남은 맞지 않는 노드는 remove_node, 영역은 remove_group 으로 지운다. remove_group 은 안의 노드까지 지우므로 옮길 노드를 먼저 옮긴다.",
     );
+    // 영역 이름·상위 영역 규칙은 삭제를 권하지 않는다(지우고 다시 만들면 안의 노드가 사라진다).
+    expect(lines).toContain("- 영역(그룹)의 이름·상위 영역은 바꿀 수 없다. 영역을 바꿔야 하면 say 로 알리고 노드만 수정한다.");
   });
 });
 

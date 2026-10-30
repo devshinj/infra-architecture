@@ -30,6 +30,6 @@ const STRUCTURAL_KEYS: ReadonlySet<string> = new Set(["environment", "deploy"]);
 export function assumptionChangeMessage(key: string, value: string): string {
   const head = `가정 변경: ${ASSUMPTION_LABELS[key] ?? key} → ${value}.`;
   return STRUCTURAL_KEYS.has(key)
-    ? `${head} 이 가정에 맞지 않는 영역·노드는 지우고, 계속 쓰는 노드는 새 영역으로 옮겨 구성을 다시 맞춰 줘.`
+    ? `${head} 새 가정에 맞는 영역을 먼저 만들고, 계속 쓰는 노드는 새 영역으로 옮긴 뒤, 남은 맞지 않는 노드·영역을 지워 구성을 다시 맞춰 줘.`
     : `${head} 이 가정에 맞게 구성을 조정해 줘.`;
 }

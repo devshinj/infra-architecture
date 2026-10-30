@@ -634,6 +634,39 @@ describe("runChatTurn", () => {
     expect(events.at(-1)).toMatchObject({ t: "done", applied: lines.length });
   });
 
+  test("moving a node out before remove_group keeps it and its attrs", async () => {
+    const ids = await makeOwnedDiagram();
+    const base = applyCommands(emptyState(), [
+      { op: "add_group", id: "aws-region", group_kind: "cloud_region", label: "AWS 서울 리전", parent: null },
+      { op: "add_group", id: "vpc", group_kind: "vpc", label: "서비스 VPC", parent: "aws-region" },
+      { op: "add_group", id: "priv", group_kind: "subnet_private", label: "내부 구역", parent: "vpc" },
+      { op: "add_node", id: "client", kind: "client_web", label: "사용자", parent: null },
+      { op: "add_node", id: "alb", kind: "lb_l7", label: "ALB", parent: "vpc" },
+      { op: "add_node", id: "was-1", kind: "was", label: "WAS#1", parent: "priv", attrs: { ip: "10.0.1.5" } },
+      { op: "add_edge", from: "client", to: "alb", edge_kind: "request" },
+      { op: "add_edge", from: "alb", to: "was-1", edge_kind: "request" },
+    ] as Parameters<typeof applyCommands>[1]);
+    expect(base.errors).toEqual([]);
+    await createVersion(ids.diagramId, base.state, { source: "import" });
+    const lines = [
+      { op: "add_group", id: "idc", group_kind: "idc", label: "사내 IDC", parent: null },
+      { op: "update_node", id: "was-1", parent: "idc" },
+      { op: "remove_group", id: "aws-region" },
+      { op: "add_node", id: "l4", kind: "lb_l4", label: "L4", parent: "idc" },
+      { op: "add_edge", from: "client", to: "l4", edge_kind: "request" },
+      { op: "add_edge", from: "l4", to: "was-1", edge_kind: "request" },
+    ].map((l) => JSON.stringify(l));
+    const { events } = await turn(ids, "가정 변경: 환경 → 사내 IDC", { qwen: fakeQwen(lines.join("\n")), clef: fakeClef(null) });
+
+    expect(of(events, "skip")).toEqual([]);
+    const st = (await getLatestState(ids.diagramId))!.state;
+    expect(Object.keys(st.groups)).toEqual(["idc"]);
+    expect(st.nodes["was-1"]).toMatchObject({ parent: "idc", attrs: { ip: "10.0.1.5" } });
+    expect(st.nodes.alb).toBeUndefined();
+    expect(Object.keys(st.edges).sort()).toEqual(["e-client-l4", "e-l4-was-1"]);
+    expect(events.at(-1)).toMatchObject({ t: "done", applied: lines.length });
+  });
+
   describe("warning check", () => {
     const PUBLIC_DB_LINES = [
       JSON.stringify({ op: "add_group", id: "pub", group_kind: "subnet_public", label: "공개", parent: null }),
