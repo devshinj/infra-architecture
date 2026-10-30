@@ -2,7 +2,7 @@ import "@testing-library/jest-dom/vitest";
 import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
-const hookState = vi.hoisted(() => ({ busy: false, onCommand: null as null | ((c: unknown) => void) }));
+const hookState = vi.hoisted(() => ({ busy: false, onCommand: null as null | ((c: unknown) => void), badgeFns: [] as unknown[] }));
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
 vi.mock("@/app/(app)/actions", () => ({
@@ -11,7 +11,9 @@ vi.mock("@/app/(app)/actions", () => ({
   saveFieldsAction: vi.fn(async () => ({ ok: true, number: 2 })),
 }));
 vi.mock("@/canvas/Canvas", () => ({
-  Canvas: ({ state, onMention, onBadgeClick, onSelect }: { state: { nodes: object }; onMention?: (id: string) => void; onBadgeClick?: (id: string) => void; onSelect: (id: string | null) => void }) => (
+  Canvas: ({ state, onMention, onBadgeClick, onSelect }: { state: { nodes: object }; onMention?: (id: string) => void; onBadgeClick?: (id: string) => void; onSelect: (id: string | null) => void }) => {
+    hookState.badgeFns.push(onBadgeClick);
+    return (
     <div>
       <div data-testid="n">{Object.keys(state.nodes).join(",")}</div>
       {onMention && <button onClick={() => onMention("a")}>멘션a</button>}
@@ -19,7 +21,8 @@ vi.mock("@/canvas/Canvas", () => ({
       <button onClick={() => onSelect("b")}>선택b</button>
       <button onClick={() => onSelect(null)}>선택해제</button>
     </div>
-  ),
+    );
+  },
 }));
 vi.mock("@/ui/chat/useChatTurn", () => ({
   useChatTurn: (a: { onCommand: (c: unknown) => void }) => {
@@ -114,4 +117,15 @@ test("drafts survive leaving the 대화 tab", () => {
   expect(screen.getByRole("tab", { name: "대화" })).toHaveAttribute("aria-selected", "true");
   expect(screen.getByRole("button", { name: /채워야 할 정보/ })).toHaveAttribute("aria-expanded", "true");
   expect(within(screen.getByRole("group", { name: "a" })).getByRole("textbox", { name: "호스트명" })).toHaveValue("web-01");
+});
+
+test("onBadgeClick keeps its identity across workspace re-renders (Canvas memo deps)", () => {
+  hookState.busy = false;
+  hookState.badgeFns.length = 0;
+  render(ui(mk(1, ["a"])));
+  fireEvent.click(screen.getByRole("button", { name: "선택b" }));
+  fireEvent.click(screen.getByRole("tab", { name: "설명" }));
+  fireEvent.click(screen.getByRole("button", { name: "배지a" }));
+  expect(hookState.badgeFns.length).toBeGreaterThan(2);
+  expect(new Set(hookState.badgeFns).size).toBe(1);
 });

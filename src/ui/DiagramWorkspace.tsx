@@ -200,11 +200,12 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
   // Drafts and the expanded state live here: the 대화 tab (and the checklist) unmounts on tab switches.
   const [checklistDrafts, setChecklistDrafts] = useState<ChecklistDrafts>({});
   const [checklistOpen, setChecklistOpen] = useState(false);
-  const onBadgeClick = (id: string) => {
+  // Canvas 의 노드 계산 deps 에 들어가므로 정체성을 고정한다(setter·ref 만 쓴다).
+  const onBadgeClick = useCallback((id: string) => {
     setTab("대화");
     focusSeq.current += 1;
     setFocus({ id, token: focusSeq.current });
-  };
+  }, []);
   const onTabChange = (t: Tab) => {
     setTab(t);
     if (t !== "대화") setFocus(null); // coming back to 대화 must not jump to the old target again
