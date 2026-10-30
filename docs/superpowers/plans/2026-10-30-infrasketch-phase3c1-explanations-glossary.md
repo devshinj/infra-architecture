@@ -462,6 +462,67 @@ tests/e2e/fake-llm.ts           (수정) 설명 프롬프트·score 응답
 
 ---
 
+### Task 10: 영역 구분 — 명도 3단 층 (사용자 추가 요청, 2026-10-30 — Task 1 보다 먼저 실행)
+
+**Files:**
+- Modify: `src/styles/tokens.css`, `src/ui/app.module.css`, `src/ui/panel.module.css`, `src/ui/chat/chat.module.css`, 그 밖에 오른쪽 패널·사이드바 안에서 `--bg-canvas`/`--bg-node` 를 바탕으로 쓰는 css
+- Modify: `docs/superpowers/specs/2026-10-29-infra-architecture-visualizer-design.md` §5.2.2 토큰 표(새 토큰 3개 추가)
+- Test: `tests/unit/tokens.test.ts`(새)
+
+**결정(사용자 선택: 명도 3단 층):**
+- 새 토큰 세 개를 만든다.
+  - `--bg-sidebar: #121A27`: 프로젝트 사이드바 바탕
+  - `--bg-panel: #212E42`: 오른쪽 대화·설명·이력 패널 바탕
+  - `--bg-panel-raised: #2A3A52`: 패널 위의 입력칸·말풍선·카드·메뉴처럼 패널보다 한 단 떠 있는 면
+- 영역 경계선은 `--line-shell: #2C3A50` 로 둔다. 사이드바 오른쪽, 패널 왼쪽, 탭 아래에 쓴다.
+- 캔버스 `--bg-canvas`, 노드 `--bg-node` 와 영역·연결선 토큰은 바꾸지 않는다.
+- 패널·사이드바 안에서 지금 `--bg-node` 로 칠한 면은 대비가 사라지므로 바꾼다. 사이드바는 `--bg-node` 를 유지하고, 패널은 `--bg-panel-raised` 로 바꾼다.
+- 대화창 글자 대비는 `--text-primary` / `--text-secondary` 그대로 유지한다. 대비가 나빠지는 곳이 없는지 확인한다.
+- 글로우·그라데이션·그림자 금지, `--accent` 용도 제한은 그대로다.
+
+- [ ] **Step 1: 실패하는 테스트**
+  - `tokens.css defines the shell tokens with exact values`(파일을 읽어 네 값 확인)
+  - `sidebar, panel and canvas use different background tokens`(app.module.css 의 `.sidebar`·`.panel`·`.shell` 규칙 문자열 검사)
+- [ ] **Step 2:** → FAIL
+- [ ] **Step 3: 구현.** 색을 직접 쓰지 않고 토큰만 쓴다. 스펙 §5.2.2 토큰 표에 새 토큰과 용도를 추가한다.
+- [ ] **Step 4:** PASS, `npm test`, `npm run lint`, `npm run build`, `npm run test:e2e`(시각 변경만이라 기존 E2E 유지)
+- [ ] **Step 5: Commit** `style: 사이드바·캔버스·패널 명도 3단 구분`
+
+---
+
+### Task 11: 대화 패널 너비 조절 (사용자 추가 요청, 2026-10-30 — Task 10 다음, Task 1 보다 먼저)
+
+**Files:**
+- Create: `src/ui/PanelResizer.tsx`
+- Modify: `src/ui/DiagramWorkspace.tsx`(또는 오른쪽 패널 너비를 정하는 레이아웃 css/컴포넌트), `src/ui/app.module.css`
+- Test: `tests/unit/PanelResizer.test.tsx`, `tests/unit/DiagramWorkspace.test.tsx`(추가)
+
+**결정(사용자 선택: 끌어서 조절 + 기억):**
+- 오른쪽 패널 왼쪽 경계에 손잡이를 둔다: `role="separator"`, `aria-orientation="vertical"`, `aria-label="대화 패널 너비"`, `aria-valuemin/max/now`, `tabIndex=0`, 커서 `col-resize`.
+- 범위는 최소 320px, 최대 720px 이고 기본은 지금 너비다.
+  - 화면이 좁아 캔버스가 360px 보다 좁아지면 그만큼 최대를 줄인다.
+- 끌기는 pointer 이벤트(pointerdown 에 setPointerCapture)를 쓴다. 끄는 동안 글자 선택을 막는다.
+- 키보드: ←/→ 로 16px, Shift 를 함께 누르면 64px 씩 움직인다(← 가 넓힘 — 패널이 오른쪽에 있으므로). Home 은 최소, End 는 최대다.
+- 더블클릭하면 기본 너비로 돌아간다.
+- 기억: `localStorage["infrasketch.panelWidth"]` 에 저장한다(브라우저별, 구성도 공통). 잘못된 값이면 무시한다.
+  - SSR 하이드레이션 불일치가 없도록 첫 렌더는 기본 너비로 하고, 마운트 뒤에 읽는다.
+- 손잡이는 평소 투명한 4px 영역이다. 호버·포커스 때 `--line-shell` 보다 밝은 `--text-secondary` 선이 보인다(글로우 금지).
+- 너비가 바뀌면 캔버스가 화면 맞춤을 다시 하지 않는다. React Flow 가 크기 변화를 자연스럽게 받는다.
+
+- [ ] **Step 1: 실패하는 테스트**
+  - `drag changes width within 320–720`
+  - `keyboard arrows step 16, shift 64, home/end`
+  - `double click resets`
+  - `width is saved and restored from localStorage after mount`
+  - `invalid stored value is ignored`
+  - `separator has aria values`
+- [ ] **Step 2:** → FAIL
+- [ ] **Step 3: 구현**
+- [ ] **Step 4:** PASS, `npm test`, `npx tsc --noEmit`, `npm run lint`, `npm run test:e2e`
+- [ ] **Step 5: Commit** `feat: 대화 패널 너비 조절`
+
+---
+
 ## 3C-2 로 넘기는 것
 - §6.8 노드에 대해 물어보기: 노드별 질문 입력 → 대화 영역에 새 대화 세션을 추가하고, 그 노드의 메타정보·설명을 근거로 답한다(구성 변경 없음).
 - 세션 목록 모양·전환·저장 방식은 3C-2 계획에서 정한다.
