@@ -65,3 +65,12 @@ test("no duplicate keys", () => {
     }
   }
 });
+
+test("PG(결제대행) does not take the bare pg alias; DB 중계 makes no read/write split claim", () => {
+  const pg = GLOSSARY_SEED.find((e) => e.term === "PG(결제대행)")!;
+  expect(pg.aliases).not.toContain("pg");
+  // external_pg 노드는 종류 이름으로 여전히 찾는다.
+  expect(pg.aliases).toContain(normalizeTerm("외부결제(PG)"));
+  const proxy = GLOSSARY_SEED.find((e) => e.term === "DB 중계(Proxy)")!;
+  expect(proxy.definition).not.toMatch(/읽기|쓰기|나눠/);
+});

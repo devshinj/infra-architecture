@@ -469,7 +469,7 @@ export const GLOSSARY_SEED: GlossarySeedEntry[] = [
     fullName: "Database Proxy",
     category: "데이터 / 연결 관리",
     definition:
-      "DB 중계(Database Proxy)는 애플리케이션과 데이터베이스 사이에서 연결을 모아 관리하고 읽기·쓰기 요청을 알맞은 DB로 나눠 보내는 중계 서버입니다.",
+      "DB 중계(Database Proxy)는 애플리케이션과 데이터베이스 사이에서 연결을 모아 관리하고 요청을 DB로 전달하는 중계 서버입니다.",
     why: "DB 연결 수를 줄이고, DB가 바뀌거나 장애가 나도 애플리케이션 설정을 고치지 않아도 됩니다.",
     compare: "애플리케이션이 DB에 직접 붙으면 단순하고, 중계를 두면 연결 관리와 장애 전환을 한곳에 맡깁니다.",
     aliases: ["db중계", "dbproxy", "databaseproxy", "proxysql", "pgbouncer", "rdsproxy", "maxscale"],
@@ -524,6 +524,6 @@ export const GLOSSARY_SEED: GlossarySeedEntry[] = [
       "PG(Payment Gateway, 결제대행)는 온라인 상점을 대신해 신용카드사·은행과 결제 승인과 정산을 처리해 주는 전자결제 대행 서비스입니다.",
     why: "상점이 카드사마다 따로 계약하고 연동하지 않아도 여러 결제 수단을 한 번에 받을 수 있습니다.",
     compare: "간편결제는 사용자가 고르는 결제 수단이고, PG는 그 결제를 상점 대신 승인하고 정산하는 중계자입니다.",
-    aliases: ["pg", "결제대행", "paymentgateway", "외부결제(pg)", "외부결제", "전자결제"],
+    aliases: ["결제대행", "paymentgateway", "외부결제(pg)", "외부결제", "전자결제"],
   },
 ];
