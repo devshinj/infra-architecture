@@ -68,6 +68,9 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
   const [editMode, setEditMode] = useState(false);
   const [motion, setMotion] = useState(true);
   const [mode, setMode] = useState<Mode>({ kind: "live" });
+  // 캔버스 판 번호: 가져오기·복원 등으로 새 판이 오면 바뀌어 화면을 다시 맞춘다. 대화가 끝나고 저장된 판을
+  // 받아올 때는 같은 판이므로 그대로 둔다(끝날 때 맞춤·사용자 이동을 덮지 않게).
+  const [board, setBoard] = useState(0);
   const [versions, setVersions] = useState<VersionRow[]>([]);
   const [busy, startBusy] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -162,6 +165,7 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
   // (it would wipe the commands already streamed); the done-refresh brings the newer version later.
   if (!chat.busy && latest.number !== current.number) {
     setCurrent(latest);
+    if (!adoptAfterChat.current) setBoard((n) => n + 1);
     setOptions((o) => (adoptAfterChat.current ? { ...optionsFor(latest.state), selectedId: o.selectedId, collapsed: o.collapsed } : optionsFor(latest.state)));
     setMode({ kind: "live" });
   }
@@ -398,7 +402,8 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
             editMode={live && !locked && editMode}
             options={options}
             motion={motion}
-            fitKey={`${current.number}:${mode.kind}:${mode.kind === "live" ? "" : mode.number}`}
+            fitKey={`${board}:${mode.kind}:${mode.kind === "live" ? "" : mode.number}`}
+            streaming={live && chat.busy}
             onOptionsChange={setOptions}
             onSelect={(id) => setOptions((o) => ({ ...o, selectedId: id }))}
             onPinnedChange={live ? onPinnedChange : () => {}}

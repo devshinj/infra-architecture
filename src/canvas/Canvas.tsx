@@ -15,6 +15,7 @@ import { outermostCollapsedAncestor, type DisplayGraph, type DisplayOptions } fr
 import type { Layout } from "./layout";
 import { NodeMenu } from "./NodeMenu";
 import { nodeTypes } from "./nodeTypes";
+import { prefersReducedMotion, unionRect, useCamera, type Insets, type Viewport } from "./useCamera";
 import { useDiagramView } from "./useDiagramView";
 
 export type CanvasOptions = DisplayOptions & { hoverLabels: boolean };
@@ -38,6 +39,10 @@ export interface CanvasProps {
   diffMarks?: DiffMarks;
   /** Changes when the shown diagram version/mode changes; the view is re-fitted. */
   fitKey?: string;
+  /** A chat turn is assembling the diagram: the camera follows calmly (see useCamera). */
+  streaming?: boolean;
+  /** Pixels covered by floating panels on each side; fits frame the strip between them. */
+  cameraInsets?: Insets;
   /** Right-click menu "대화에 참조 붙이기" on nodes and zones. Omit to turn the menu off. */
   onMention?(id: string): void;
   /** Click on a node's missing-info badge (jump to the checklist). */
@@ -47,6 +52,7 @@ export interface CanvasProps {
 }
 
 export const FAR_ZOOM = 0.6;
+const NO_INSETS: Insets = { left: 0, right: 0 };
 const LAYOUT_FAILED_MESSAGE = "구성도를 배치하지 못했어요. 새로고침하거나 구성을 다시 확인해 주세요.";
 const EMPTY_MESSAGE = "아직 구성도가 비어 있어요. 오른쪽 대화에서 만들고 싶은 서비스를 설명하거나, 샘플을 불러와 보세요.";
 
@@ -108,7 +114,7 @@ interface FlowProps extends CanvasProps {
   updated: Set<string>;
 }
 
-function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onPinnedChange, motion, layout, display, appearing, updated, diffMarks, fitKey, onMention, onBadgeClick, onWarnBadgeClick }: FlowProps) {
+function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onPinnedChange, motion, layout, display, appearing, updated, diffMarks, fitKey, streaming = false, cameraInsets = NO_INSETS, onMention, onBadgeClick, onWarnBadgeClick }: FlowProps) {
   const far = useStore((s) => s.transform[2] < FAR_ZOOM);
   const selected = drawnId(state, options.collapsed, options.selectedId);
   const missingByNode = useMemo(() => computeMissing(state).byNode, [state]);
@@ -198,21 +204,23 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
   const [nodes, setNodes] = useState<Node[]>(computed);
   useEffect(() => setNodes(computed), [computed]);
 
-  // Re-fit when the version/mode or the set of drawn nodes changes (not on selection or pin changes).
-  const { fitView } = useReactFlow();
-  const drawnKey = `${fitKey ?? ""}|${Object.keys(layout.nodes).sort().join(",")}`;
-  const lastKey = useRef(drawnKey);
-  const fitPending = useRef(false);
-  useEffect(() => {
-    if (lastKey.current === drawnKey) return;
-    lastKey.current = drawnKey;
-    fitPending.current = true;
-  }, [drawnKey]);
-  useEffect(() => {
-    if (!fitPending.current) return;
-    fitPending.current = false;
-    void fitView();
-  }, [nodes, fitView]);
+  // Camera: fit on board change, follow new nodes calmly while a turn streams (see useCamera).
+  const { getViewport, setViewport } = useReactFlow();
+  const width = useStore((s) => s.width);
+  const height = useStore((s) => s.height);
+  const bounds = useMemo(() => unionRect([...Object.values(layout.nodes), ...Object.values(layout.groups)]), [layout]);
+  const applyViewport = useCallback((v: Viewport, o: { duration: number }) => void setViewport(v, o), [setViewport]);
+  const camera = useCamera({
+    boardKey: fitKey ?? "",
+    rects: layout.nodes,
+    bounds,
+    size: { width, height },
+    insets: cameraInsets,
+    streaming,
+    reducedMotion: prefersReducedMotion(),
+    getViewport,
+    setViewport: applyViewport,
+  });
   const wrap = useRef<HTMLDivElement>(null);
   const [menu, setMenu] = useState<{ id: string; x: number; y: number } | null>(null);
   const closeMenu = useCallback(() => {
@@ -235,7 +243,6 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
         nodesConnectable={false}
         elementsSelectable
         deleteKeyCode={null}
-        fitView
         minZoom={0.2}
         maxZoom={2}
         proOptions={{ hideAttribution: true }}
@@ -250,7 +257,10 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
           const r = wrap.current?.getBoundingClientRect();
           setMenu({ id: node.id, x: e.clientX - (r?.left ?? 0), y: e.clientY - (r?.top ?? 0) });
         }}
-        onMoveStart={() => setMenu(null)}
+        onMoveStart={(e) => {
+          setMenu(null);
+          camera.onMoveStart(e);
+        }}
         onNodeDragStop={(_, node) => {
           if (editMode && node.type === "infra") onPinnedChange({ ...pinned, [node.id]: { x: node.position.x, y: node.position.y } });
         }}
