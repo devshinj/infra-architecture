@@ -30,6 +30,7 @@ import { type ChatLine, useChatTurn } from "./chat/useChatTurn";
 import type { ExplanationProps } from "./explain/Explanation";
 import { type TargetKind, useExplanations } from "./explain/useExplanations";
 import { PANEL_DEFAULT, PANEL_MAX, PANEL_MIN, PanelResizer } from "./PanelResizer";
+import { PANEL_GAP, useShell } from "./Shell";
 import { RightPanel, type Tab } from "./RightPanel";
 
 type Pinned = Record<string, { x: number; y: number }>;
@@ -109,9 +110,15 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
-  // 캔버스가 360px 보다 좁아지지 않게 최대를 줄인다(너비를 모르면 줄이지 않는다).
-  const panelMax = workspaceW > 0 ? Math.max(PANEL_MIN, Math.min(PANEL_MAX, workspaceW - 360)) : PANEL_MAX;
+  // 떠 있는 패널이 가리는 좌우 폭(패널 바깥 여백 + 너비 + 안쪽 숨 쉴 여백). 캔버스 맞춤은 그 사이 띠에 한다.
+  // 사이드바를 접거나 패널 너비를 바꿔도 카메라는 움직이지 않고, 다음 맞춤부터 새 값을 쓴다.
+  const { sidebarExtent } = useShell();
+  const insetLeft = sidebarExtent + PANEL_GAP;
+  // 보이는 캔버스 띠가 360px 보다 좁아지지 않게 최대를 줄인다(너비를 모르면 줄이지 않는다).
+  const panelMax = workspaceW > 0 ? Math.max(PANEL_MIN, Math.min(PANEL_MAX, workspaceW - insetLeft - 2 * PANEL_GAP - 360)) : PANEL_MAX;
   const shownPanelWidth = Math.min(panelWidth, panelMax);
+  const insetRight = PANEL_GAP + shownPanelWidth + PANEL_GAP;
+  const cameraInsets = useMemo(() => ({ left: insetLeft, right: insetRight }), [insetLeft, insetRight]);
   const changePanelWidth = (w: number) => {
     setPanelWidth(w);
     try {
@@ -413,7 +420,8 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
     <div
       ref={workspaceRef}
       className={styles.workspace}
-      style={{ gridTemplateColumns: `minmax(0, 1fr) ${shownPanelWidth}px` }}
+      data-workspace=""
+      style={{ "--canvas-inset-left": `${insetLeft}px`, "--canvas-inset-right": `${insetRight}px` } as React.CSSProperties}
     >
       <section className={styles.center} aria-label={name}>
         {banner && (
@@ -439,6 +447,7 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
             motion={motion}
             fitKey={`${board}:${mode.kind}:${mode.kind === "live" ? "" : mode.number}`}
             streaming={live && chat.busy}
+            cameraInsets={cameraInsets}
             onOptionsChange={changeOptions}
             onSelect={(id) => setOptions((o) => ({ ...o, selectedId: id }))}
             onPinnedChange={live ? onPinnedChange : () => {}}
@@ -451,58 +460,60 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
           />
         </div>
       </section>
-      <PanelResizer width={shownPanelWidth} min={PANEL_MIN} max={panelMax} defaultWidth={PANEL_DEFAULT} onChange={changePanelWidth} />
-      <RightPanel
-        state={shown}
-        selectedId={options.selectedId}
-        onSelect={(id) => setOptions((o) => ({ ...o, selectedId: id }))}
-        onMention={onMention}
-        mentionDisabled={!live}
-        samples={samples}
-        onImportSample={importSample}
-        importing={busy || locked}
-        tab={tab}
-        onTabChange={onTabChange}
-        warningState={mode.kind === "compare" ? current.state : shown}
-        onHistoryOpen={loadVersions}
-        {...(explain ? { explain } : {})}
-        {...(live ? { cautions: { onIgnoreWarning, ignoreDisabled: locked || warnSaving, ignoreError: warnError } } : {})}
-        history={{
-          versions,
-          onView: view,
-          onRestore: restore,
-          onCompare: compare,
-          viewing: mode.kind === "live" ? null : mode.number,
-          disabled: locked,
-        }}
-        chat={{
-          lines: chat.lines,
-          busy: chat.busy,
-          phase: chat.phase,
-          onSend: sendChat,
-          onStop: chat.stop,
-          onSelectNode: selectNode,
-          assumptions: current.state.assumptions,
-          onChooseAssumption,
-          onConfirmAssumption,
-          checklist: (
-            <MissingChecklist
-              state={current.state}
-              busy={locked || !live}
-              focusId={focus?.id ?? null}
-              {...(focus ? { focusToken: focus.token } : {})}
-              onSave={saveFields}
-              drafts={checklistDrafts}
-              onDraftsChange={setChecklistDrafts}
-              open={checklistOpen}
-              onOpenChange={setChecklistOpen}
-            />
-          ),
-          health,
-          mentionRef,
-          ...(live ? {} : { disabledReason: "이전 버전을 보는 중에는 대화할 수 없어요." }),
-        }}
-      />
+      <PanelResizer width={shownPanelWidth} min={PANEL_MIN} max={panelMax} defaultWidth={PANEL_DEFAULT} onChange={changePanelWidth} offset={PANEL_GAP} />
+      <div className={styles.panelDock} style={{ width: shownPanelWidth }}>
+        <RightPanel
+          state={shown}
+          selectedId={options.selectedId}
+          onSelect={(id) => setOptions((o) => ({ ...o, selectedId: id }))}
+          onMention={onMention}
+          mentionDisabled={!live}
+          samples={samples}
+          onImportSample={importSample}
+          importing={busy || locked}
+          tab={tab}
+          onTabChange={onTabChange}
+          warningState={mode.kind === "compare" ? current.state : shown}
+          onHistoryOpen={loadVersions}
+          {...(explain ? { explain } : {})}
+          {...(live ? { cautions: { onIgnoreWarning, ignoreDisabled: locked || warnSaving, ignoreError: warnError } } : {})}
+          history={{
+            versions,
+            onView: view,
+            onRestore: restore,
+            onCompare: compare,
+            viewing: mode.kind === "live" ? null : mode.number,
+            disabled: locked,
+          }}
+          chat={{
+            lines: chat.lines,
+            busy: chat.busy,
+            phase: chat.phase,
+            onSend: sendChat,
+            onStop: chat.stop,
+            onSelectNode: selectNode,
+            assumptions: current.state.assumptions,
+            onChooseAssumption,
+            onConfirmAssumption,
+            checklist: (
+              <MissingChecklist
+                state={current.state}
+                busy={locked || !live}
+                focusId={focus?.id ?? null}
+                {...(focus ? { focusToken: focus.token } : {})}
+                onSave={saveFields}
+                drafts={checklistDrafts}
+                onDraftsChange={setChecklistDrafts}
+                open={checklistOpen}
+                onOpenChange={setChecklistOpen}
+              />
+            ),
+            health,
+            mentionRef,
+            ...(live ? {} : { disabledReason: "이전 버전을 보는 중에는 대화할 수 없어요." }),
+          }}
+        />
+      </div>
     </div>
   );
 }

@@ -2,7 +2,7 @@ import "@testing-library/jest-dom/vitest";
 import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
-const hookState = vi.hoisted(() => ({ busy: false, onCommand: null as null | ((c: unknown) => void), badgeFns: [] as unknown[], warnFns: [] as unknown[], lines: [] as unknown[], turn: null as null | { onDone(): void; onInterrupted(): void } }));
+const hookState = vi.hoisted(() => ({ busy: false, onCommand: null as null | ((c: unknown) => void), badgeFns: [] as unknown[], warnFns: [] as unknown[], lines: [] as unknown[], insets: [] as unknown[], turn: null as null | { onDone(): void; onInterrupted(): void } }));
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
 vi.mock("@/app/(app)/actions", () => ({
@@ -13,7 +13,8 @@ vi.mock("@/app/(app)/actions", () => ({
   listTermsAction: vi.fn(async () => []),
 }));
 vi.mock("@/canvas/Canvas", () => ({
-  Canvas: ({ state, fitKey, onMention, onBadgeClick, onWarnBadgeClick, onSelect }: { state: { nodes: object }; fitKey?: string; onMention?: (id: string) => void; onBadgeClick?: (id: string) => void; onWarnBadgeClick?: (id: string) => void; onSelect: (id: string | null) => void }) => {
+  Canvas: ({ state, fitKey, cameraInsets, onMention, onBadgeClick, onWarnBadgeClick, onSelect }: { state: { nodes: object }; fitKey?: string; cameraInsets?: unknown; onMention?: (id: string) => void; onBadgeClick?: (id: string) => void; onWarnBadgeClick?: (id: string) => void; onSelect: (id: string | null) => void }) => {
+    hookState.insets.push(cameraInsets);
     hookState.badgeFns.push(onBadgeClick);
     hookState.warnFns.push(onWarnBadgeClick);
     return (
@@ -40,6 +41,7 @@ vi.mock("@/ui/chat/useChatTurn", () => ({
 import { listVersionsAction, saveFieldsAction, setWarningIgnoredAction } from "@/app/(app)/actions";
 import { emptyState } from "@/domain/types";
 import { DiagramWorkspace } from "@/ui/DiagramWorkspace";
+import { ShellProvider } from "@/ui/Shell";
 
 afterEach(cleanup);
 // jsdom 에는 scrollIntoView 가 없다: 테스트마다 끼우고 원래대로 돌려 둔다.
@@ -227,19 +229,40 @@ test("selecting a node shows its explanation in 설명", async () => {
 
 // ---- 대화 패널 너비 ----
 const KEY = "infrasketch.panelWidth";
-const panelCols = (c: HTMLElement) => (c.firstElementChild as HTMLElement).style.gridTemplateColumns;
+// 떠 있는 패널의 너비(패널을 감싼 자리 잡기 상자의 인라인 너비).
+const panelCols = (c: HTMLElement) => (within(c).getByRole("complementary", { name: "오른쪽 패널" }).parentElement as HTMLElement).style.width;
 
 test("width is saved and restored from localStorage after mount", () => {
   window.localStorage.clear();
   const first = render(ui(mk(1, ["a"])));
-  expect(panelCols(first.container)).toBe("minmax(0, 1fr) 360px");
+  expect(panelCols(first.container)).toBe("360px");
   fireEvent.keyDown(screen.getByRole("separator", { name: "대화 패널 너비" }), { key: "ArrowLeft" });
   expect(window.localStorage.getItem(KEY)).toBe("376");
-  expect(panelCols(first.container)).toBe("minmax(0, 1fr) 376px");
+  expect(panelCols(first.container)).toBe("376px");
   first.unmount();
   window.localStorage.setItem(KEY, "500");
   const second = render(ui(mk(1, ["a"])));
-  expect(panelCols(second.container)).toBe("minmax(0, 1fr) 500px");
+  expect(panelCols(second.container)).toBe("500px");
+  window.localStorage.clear();
+});
+
+test("fit padding accounts for floating panels", () => {
+  window.localStorage.clear();
+  hookState.insets.length = 0;
+  render(ui(mk(1, ["a"])));
+  // 왼쪽: 여백 12 + 사이드바 240 + 여백 12, 오른쪽: 여백 12 + 패널 360 + 여백 12
+  expect(hookState.insets.at(-1)).toEqual({ left: 264, right: 384 });
+  fireEvent.keyDown(screen.getByRole("separator", { name: "대화 패널 너비" }), { key: "ArrowLeft" });
+  expect(hookState.insets.at(-1)).toEqual({ left: 264, right: 400 });
+  cleanup();
+  // 접힌 사이드바(레일 56)
+  window.localStorage.setItem("infrasketch.sidebarCollapsed", "1");
+  render(<ShellProvider>{ui(mk(1, ["a"]))}</ShellProvider>);
+  expect(hookState.insets.at(-1)).toEqual({ left: 80, right: 400 });
+  // 캔버스 도구 모음이 패널에 가리지 않게 같은 값을 CSS 변수로 넘긴다.
+  const ws = screen.getByRole("complementary", { name: "오른쪽 패널" }).closest("[data-workspace]") as HTMLElement;
+  expect(ws.style.getPropertyValue("--canvas-inset-left")).toBe("80px");
+  expect(ws.style.getPropertyValue("--canvas-inset-right")).toBe("400px");
   window.localStorage.clear();
 });
 
@@ -247,7 +270,7 @@ test("invalid stored value is ignored", () => {
   for (const bad of ["abc", "100", "9999", ""]) {
     window.localStorage.setItem(KEY, bad);
     const r = render(ui(mk(1, ["a"])));
-    expect(panelCols(r.container)).toBe("minmax(0, 1fr) 360px");
+    expect(panelCols(r.container)).toBe("360px");
     r.unmount();
   }
   window.localStorage.clear();

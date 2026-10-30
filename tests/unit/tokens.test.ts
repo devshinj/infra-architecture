@@ -23,14 +23,35 @@ test("tokens.css defines the shell tokens with exact values", () => {
   expect(css).toMatch(/--bg-node:\s*#223147;/);
 });
 
-test("sidebar, panel and canvas use different background tokens", () => {
+test("glass panel tokens have exact values", () => {
+  const css = read("src/styles/tokens.css");
+  expect(css).toContain("--glass-bg: rgba(18, 26, 39, 0.78);");
+  expect(css).toContain("--glass-line: rgba(232, 235, 238, 0.08);");
+  expect(css).toContain("--glass-highlight: rgba(208, 218, 232, 0.42);");
+  expect(css).toContain("--glass-blur: 14px;");
+  expect(css).toContain("--radius-panel: 14px;");
+  expect(css).toContain("--panel-gap: 12px;");
+});
+
+test("sidebar and panel float as glass over the full-bleed canvas", () => {
   const css = read("src/ui/app.module.css");
-  expect(rule(css, ".sidebar")).toContain("background: var(--bg-sidebar)");
-  expect(rule(css, ".panel")).toContain("background: var(--bg-panel)");
   expect(rule(css, ".shell")).toContain("background: var(--bg-canvas)");
-  expect(rule(css, ".sidebar")).toContain("var(--line-shell)");
-  expect(rule(css, ".panel")).toContain("var(--line-shell)");
-  expect(rule(css, ".tabs")).toContain("var(--line-shell)");
+  for (const sel of [".sidebar", ".panel"]) {
+    const r = rule(css, sel);
+    expect(r, sel).toContain("background: var(--glass-bg)");
+    expect(r, sel).toContain("backdrop-filter: blur(var(--glass-blur))");
+    expect(r, sel).toContain("border: 1px solid var(--glass-line)");
+    expect(r, sel).toContain("border-top-color: var(--glass-highlight)");
+    expect(r, sel).toContain("border-radius: var(--radius-panel)");
+  }
+  expect(rule(css, ".sidebar")).toContain("position: absolute");
+  expect(rule(css, ".panelDock")).toContain("position: absolute");
+  expect(css).not.toMatch(/box-shadow|gradient/);
+  // 알약 탭: 선택은 bg-panel-raised 채움 + text-primary
+  expect(rule(css, ".tab")).toContain("border-radius: 999px");
+  const sel = css.match(/\.tab\[aria-selected="true"\] \{([^}]*)\}/)![1];
+  expect(sel).toContain("background: var(--bg-panel-raised)");
+  expect(sel).toContain("color: var(--text-primary)");
 });
 
 test("surfaces raised above the panel use bg-panel-raised, not bg-node", () => {

@@ -1,22 +1,47 @@
 /* App shell, sidebar, right panel, workspace. Tokens only. */
-.shell { display: grid; grid-template-columns: 240px minmax(0, 1fr); height: 100vh; background: var(--bg-canvas); color: var(--text-primary); }
-.main { min-width: 0; min-height: 0; }
-.emptyState { height: 100%; display: grid; place-content: center; text-align: center; gap: 8px; padding: 24px; }
+/* 캔버스가 바탕 전체를 채우고, 사이드바·오른쪽 패널은 사방 --panel-gap 을 두고 유리 판으로 떠 있다. */
+.shell { position: relative; height: 100vh; overflow: hidden; background: var(--bg-canvas); color: var(--text-primary); }
+.main { position: absolute; inset: 0; min-width: 0; min-height: 0; }
+/* 캔버스가 아닌 화면은 떠 있는 사이드바 오른쪽에서 시작한다(--shell-inset-left 는 Shell.tsx 가 준다). */
+.emptyState { height: 100%; display: grid; place-content: center; text-align: center; gap: 8px; padding: 24px; padding-left: calc(var(--shell-inset-left, 0px) + 24px); }
 .emptyState h1 { margin: 0; font-size: 16px; font-weight: 600; }
 .emptyState p { margin: 0; font-size: 13px; color: var(--text-secondary); }
 
-.sidebar { display: flex; flex-direction: column; min-height: 0; border-right: 1px solid var(--line-shell); background: var(--bg-sidebar); }
-.brand { margin: 0; padding: 14px 16px 10px; font-size: 14px; font-weight: 600; }
+.sidebar {
+  position: absolute; top: var(--panel-gap); bottom: var(--panel-gap); left: var(--panel-gap); z-index: 40; width: 240px;
+  display: flex; flex-direction: column; min-height: 0;
+  background: var(--glass-bg); backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-line); border-top-color: var(--glass-highlight); border-radius: var(--radius-panel);
+}
+.sideHead { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 8px 8px 16px; }
+.brand { margin: 0; font-size: 14px; font-weight: 600; letter-spacing: -0.01em; }
+.iconBtn, .railBtn {
+  flex: none; display: grid; place-items: center; width: 32px; height: 32px; padding: 0;
+  color: var(--text-secondary); background: transparent; border: 0; border-radius: 8px; cursor: pointer; text-decoration: none;
+}
+.iconBtn:hover, .railBtn:hover { color: var(--text-primary); background: var(--bg-panel-raised); }
+.railBtn { width: 36px; height: 36px; }
+.railBtnActive { color: var(--text-primary); background: var(--bg-panel-raised); }
+.railBtn:focus-visible { outline: 1.5px solid var(--text-secondary); outline-offset: 2px; }
+/* 접힌 레일: 아이콘 버튼만 세로로. */
+.rail { width: 56px; align-items: center; gap: 4px; padding: 9px 0; }
+.railFoot { position: relative; margin-top: auto; }
+.accountPop {
+  position: absolute; left: calc(100% + 10px); bottom: 0; z-index: 30; min-width: 160px;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 8px 8px 12px; font-size: 12.5px;
+  background: var(--bg-panel-raised); border: 1px solid var(--line-node); border-radius: var(--radius-node);
+}
+.accountPop span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .tree { flex: 1; min-height: 0; overflow-y: auto; margin: 0; padding: 0 8px; list-style: none; }
 .subtree { margin: 0; padding: 0; list-style: none; }
 .row { display: flex; align-items: center; gap: 2px; border-radius: var(--radius-node); position: relative; }
-.row:hover { background: var(--bg-node); }
+.row:hover { background: var(--bg-panel-raised); }
 .rowMain {
   flex: 1; min-width: 0; text-align: left; font: inherit; font-size: 13px; color: var(--text-primary);
   background: transparent; border: 0; padding: 7px 8px; cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .diagramRow { margin-left: 14px; }
-.current { background: var(--bg-node); font-weight: 600; }
+.current { background: var(--bg-panel-raised); font-weight: 600; }
 .menuBtn {
   flex: none; font: inherit; font-size: 14px; line-height: 1; color: var(--text-secondary); background: transparent;
   border: 0; border-radius: 4px; padding: 4px 6px; cursor: pointer;
@@ -28,7 +53,7 @@
 }
 .menu button { font: inherit; font-size: 12.5px; color: var(--text-primary); background: transparent; border: 0; text-align: left; padding: 6px 8px; border-radius: 4px; cursor: pointer; }
 .menu button:hover { background: var(--bg-canvas); }
-.sideFoot { padding: 8px; border-top: 1px solid var(--line-shell); display: flex; flex-direction: column; gap: 8px; }
+.sideFoot { padding: 8px; border-top: 1px solid var(--glass-line); display: flex; flex-direction: column; gap: 8px; }
 .user { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 12px; color: var(--text-secondary); padding: 0 4px; }
 .user span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .btn {
@@ -40,7 +65,7 @@
 .linkBtn { font: inherit; font-size: 12px; color: var(--text-secondary); background: transparent; border: 0; cursor: pointer; padding: 2px 4px; }
 .linkBtn:hover { color: var(--text-primary); }
 .sideLink { font-size: 12.5px; color: var(--text-secondary); text-decoration: none; padding: 4px; border-radius: 4px; }
-.sideLinkActive { color: var(--text-primary); background: var(--bg-node); font-weight: 600; }
+.sideLinkActive { color: var(--text-primary); background: var(--bg-panel-raised); font-weight: 600; }
 .sideLink:hover { color: var(--text-primary); }
 .sideLink:focus-visible { outline: 1.5px solid var(--text-secondary); outline-offset: 2px; }
 .sidebar button:focus-visible, .panel button:focus-visible, .banner button:focus-visible, .dialog button:focus-visible, .dialog input:focus-visible { outline: 1.5px solid var(--text-secondary); outline-offset: 2px; }
@@ -54,15 +79,22 @@
 .dialogActions { display: flex; justify-content: flex-end; gap: 8px; }
 .error { color: var(--state-missing); font-size: 12px; }
 
-.workspace { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) 360px; height: 100%; min-height: 0; }
-/* 오른쪽 패널 왼쪽 경계의 너비 조절 손잡이: 평소 투명, 호버·포커스에서만 선이 보인다. 위치(right)는 인라인으로 준다. */
-.resizer { position: absolute; top: 0; bottom: 0; width: 4px; margin-right: -2px; z-index: 5; cursor: col-resize; background: transparent; touch-action: none; outline: none; }
+.workspace { position: relative; height: 100%; min-height: 0; }
+/* 떠 있는 패널 왼쪽 가장자리의 너비 조절 손잡이: 평소 투명, 호버·포커스에서만 선이 보인다. 위치(right)는 인라인으로 준다. */
+.resizer {
+  position: absolute; top: calc(var(--panel-gap) + var(--radius-panel)); bottom: calc(var(--panel-gap) + var(--radius-panel));
+  width: 4px; margin-right: -2px; z-index: 45; border-radius: 2px; cursor: col-resize; background: transparent; touch-action: none; outline: none;
+}
 .resizer:hover, .resizer:focus-visible { background: var(--text-secondary); }
-.center { position: relative; min-width: 0; min-height: 0; display: flex; flex-direction: column; }
+/* 캔버스는 작업 영역 전체(떠 있는 패널 밑까지)를 채운다. */
+.center { position: absolute; inset: 0; min-width: 0; min-height: 0; display: flex; flex-direction: column; }
+.panelDock { position: absolute; top: var(--panel-gap); bottom: var(--panel-gap); right: var(--panel-gap); z-index: 40; display: flex; min-height: 0; }
 .canvasWrap { flex: 1; min-height: 0; position: relative; }
+/* 보기·비교·오류 띠: 떠 있는 패널 사이의 보이는 캔버스 폭에 맞춘다. */
 .banner {
   display: flex; align-items: center; gap: 12px; padding: 8px 14px; font-size: 12.5px;
-  background: var(--bg-node); border-bottom: 1px solid var(--line-node); color: var(--text-primary);
+  margin: var(--panel-gap) var(--canvas-inset-right, 0px) 0 var(--canvas-inset-left, 0px);
+  background: var(--bg-node); border: 1px solid var(--line-node); border-radius: var(--radius-zone); color: var(--text-primary);
 }
 .banner button { font: inherit; font-size: 12px; color: var(--text-primary); background: transparent; border: 1px solid var(--line-node); border-radius: 6px; padding: 3px 9px; cursor: pointer; }
 .legend { display: flex; gap: 12px; margin-left: auto; font-size: 11.5px; color: var(--text-secondary); }
@@ -72,15 +104,25 @@
 .swChanged { border-color: var(--accent); }
 .swRemoved { border: 1.5px dashed var(--state-missing); }
 
-.panel { display: flex; flex-direction: column; min-height: 0; border-left: 1px solid var(--line-shell); background: var(--bg-panel); }
-.tabs { display: flex; border-bottom: 1px solid var(--line-shell); }
+.panel {
+  flex: 1; display: flex; flex-direction: column; min-width: 0; min-height: 0; overflow: hidden;
+  background: var(--glass-bg); backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-line); border-top-color: var(--glass-highlight); border-radius: var(--radius-panel);
+}
+/* 알약 탭 */
+.tabs { display: flex; gap: 4px; padding: 8px; border-bottom: 1px solid var(--glass-line); }
 .tab {
   flex: 1; font: inherit; font-size: 13px; color: var(--text-secondary); background: transparent; border: 0;
-  border-bottom: 2px solid transparent; padding: 11px 0; cursor: pointer;
+  border-radius: 999px; padding: 6px 0; cursor: pointer;
 }
-.tab[aria-selected="true"] { color: var(--text-primary); border-bottom-color: var(--text-primary); }
+.tab:hover { color: var(--text-primary); }
+.tab[aria-selected="true"] { background: var(--bg-panel-raised); color: var(--text-primary); font-weight: 600; }
 .panelBody { flex: 1; min-height: 0; overflow-y: auto; }
 .chatEmpty { padding: 16px; display: flex; flex-direction: column; gap: 14px; }
 .chatEmpty p { margin: 0; font-size: 13px; line-height: 1.6; color: var(--text-secondary); }
 .samples { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 8px; }
 .sample { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 13px; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .tab, .iconBtn, .railBtn { transition: background-color 0.15s, color 0.15s; }
+}

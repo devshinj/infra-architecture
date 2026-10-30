@@ -15,6 +15,12 @@
   --bg-panel-raised: #2A3A52; /* 패널 위 입력칸·말풍선·카드·메뉴 */
   --line-shell: #2C3A50; /* 영역 경계선 */
 
+  /* 떠 있는 유리 패널 — 캔버스 위 사이드바·오른쪽 패널. 그림자 없이 반투명·1px 선으로 층을 나눈다. */
+  --glass-bg: rgba(18, 26, 39, 0.78); /* 패널 칠 */
+  --glass-line: rgba(232, 235, 238, 0.08); /* 패널 테두리·안쪽 구분선 */
+  --glass-highlight: rgba(208, 218, 232, 0.42); /* 패널 머리 은빛 선 */
+  --glass-blur: 14px; /* 뒤 캔버스 흐림 */
+
   /* 텍스트 */
   --text-primary: #E8EBEE; /* 노드 이름 등 */
   --text-secondary: #9AA7BA; /* 부제, 영역 이름 */
@@ -67,4 +73,8 @@
   /* 반경 */
   --radius-node: 6px;
   --radius-zone: 8px;
+  --radius-panel: 14px; /* 떠 있는 패널 */
+
+  /* 간격 */
+  --panel-gap: 12px; /* 떠 있는 패널과 화면 가장자리 사이 */
 }
