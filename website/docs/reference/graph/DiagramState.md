@@ -1,15 +1,15 @@
 ---
 title: "DiagramState"
-sidebar_position: 23
+sidebar_position: 38
 sidebar_label: "핵심 노드: DiagramState"
 ---
 # DiagramState
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> God node · 27 connections · `src/domain/types.ts`
+> God node · 36 connections · `src/domain/types.ts`
 
-**Community:** [빠진 정보 계산과 표시](빠진_정보_계산과_표시.md)
+**Community:** [구성도 상태 타입](구성도_상태_타입.md)
 
 ## Connections by Relation
 
@@ -18,33 +18,37 @@ sidebar_label: "핵심 노드: DiagramState"
 
 ### imports
 - (app)/actions.ts `EXTRACTED`
-- pipeline.ts `EXTRACTED`
+- server/explain.ts `EXTRACTED`
 - DiagramWorkspace.tsx `EXTRACTED`
+- pipeline.ts `EXTRACTED`
 - projects.ts `EXTRACTED`
 - Canvas.tsx `EXTRACTED`
+- prompt.ts `EXTRACTED`
 - samples.ts `EXTRACTED`
 - schema.ts `EXTRACTED`
-- versions.ts `EXTRACTED`
 - NodeInfo.tsx `EXTRACTED`
-- missing.ts `EXTRACTED`
-- prompt.ts `EXTRACTED`
+- domain/explain.ts `EXTRACTED`
+- useExplanations.ts `EXTRACTED`
+- versions.ts `EXTRACTED`
+- chat/warnings.ts `EXTRACTED`
 - useChatTurn.ts `EXTRACTED`
+- missing.ts `EXTRACTED`
+- domain/warnings.ts `EXTRACTED`
 - display.ts `EXTRACTED`
 - useDiagramView.ts `EXTRACTED`
-- fields.ts `EXTRACTED`
-- MissingChecklist.tsx `EXTRACTED`
 - RightPanel.tsx `EXTRACTED`
-- apply.ts `EXTRACTED`
-- domain/assumptions.ts `EXTRACTED`
-- diff.ts `EXTRACTED`
+- *…and 6 more `imports` connection(s) not listed (lowest-degree first to go)*
 
 ### references
 - CanvasProps `EXTRACTED`
 - RightPanelProps `EXTRACTED`
-- MissingChecklistProps `EXTRACTED`
 - NodeInfoProps `EXTRACTED`
+- MissingChecklistProps `EXTRACTED`
+- .getLatestState() `EXTRACTED`
+- Rule `EXTRACTED`
 - DiagramWorkspaceProps `EXTRACTED`
 - .getState() `EXTRACTED`
+- UseExplanationsInput `EXTRACTED`
 
 ---
 

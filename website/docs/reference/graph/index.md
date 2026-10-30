@@ -11,47 +11,63 @@ sidebar_label: "개요"
 
 [인터랙티브 그래프 열기](pathname:///graph/graph.html) — 노드를 끌고 확대해서 전체 연결을 볼 수 있습니다.
 
-**631 nodes · 1572 edges · 20 communities**
+**840 nodes · 2182 edges · 36 communities**
 
 ---
 
 ## Communities
 (sorted by size, largest first)
 
-- [서버 액션과 작업 화면](서버_액션과_작업_화면.md) — 93 nodes
-- [React Flow 캔버스](React_Flow_캔버스.md) — 68 nodes
-- [연결선 렌더링과 패널](연결선_렌더링과_패널.md) — 59 nodes
-- [인증과 외부 라이브러리](인증과_외부_라이브러리.md) — 56 nodes
-- [가정과 대화 패널 UI](가정과_대화_패널_UI.md) — 55 nodes
-- [DB와 메시지 저장](DB와_메시지_저장.md) — 42 nodes
-- [설계 문서와 계획](설계_문서와_계획.md) — 40 nodes
-- [빠진 정보 계산과 표시](빠진_정보_계산과_표시.md) — 38 nodes
-- [ELK 배치와 겹침 검사](ELK_배치와_겹침_검사.md) — 35 nodes
-- [AI 서버 설정과 상태 점검](AI_서버_설정과_상태_점검.md) — 33 nodes
-- [명령 적용과 샘플](명령_적용과_샘플.md) — 27 nodes
-- [대화 스트리밍 API](대화_스트리밍_API.md) — 15 nodes
-- [프롬프트와 노드 참조](프롬프트와_노드_참조.md) — 13 nodes
-- [대화 응답 문구와 스트림 정리](대화_응답_문구와_스트림_정리.md) — 12 nodes
-- [명령 스키마](명령_스키마.md) — 11 nodes
-- [건너뜀 집계](건너뜀_집계.md) — 11 nodes
-- [Clef 의도 분류](Clef_의도_분류.md) — 9 nodes
-- [속성 정규화](속성_정규화.md) — 7 nodes
-- [대화 의존성 인터페이스](대화_의존성_인터페이스.md) — 6 nodes
+- [서버 액션과 작업 화면](서버_액션과_작업_화면.md) — 101 nodes
+- [대화 파이프라인과 저장](대화_파이프라인과_저장.md) — 82 nodes
+- [DB 스키마와 인증](DB_스키마와_인증.md) — 49 nodes
+- [오른쪽 패널과 설명 화면](오른쪽_패널과_설명_화면.md) — 49 nodes
+- [대화 이벤트와 빠진 정보 체크리스트](대화_이벤트와_빠진_정보_체크리스트.md) — 48 nodes
+- [경고 규칙과 점검](경고_규칙과_점검.md) — 41 nodes
+- [가정과 대화 패널 UI](가정과_대화_패널_UI.md) — 38 nodes
+- [설계 문서와 계획](설계_문서와_계획.md) — 38 nodes
+- [설명 생성과 품질 검사](설명_생성과_품질_검사.md) — 34 nodes
+- [명령 적용과 샘플](명령_적용과_샘플.md) — 33 nodes
+- [ELK 자동 배치와 꺾은선](ELK_자동_배치와_꺾은선.md) — 22 nodes
+- [노드 종류 목록과 명령 스키마](노드_종류_목록과_명령_스키마.md) — 22 nodes
+- [프롬프트와 구성 패턴](프롬프트와_구성_패턴.md) — 21 nodes
+- [표시 그래프와 버전 비교](표시_그래프와_버전_비교.md) — 18 nodes
+- [연결선 구간 묶음](연결선_구간_묶음.md) — 18 nodes
+- [환경 변수와 AI 상태 점검](환경_변수와_AI_상태_점검.md) — 16 nodes
+- [캔버스 이벤트](캔버스_이벤트.md) — 15 nodes
+- [용어 사전 저장과 시드](용어_사전_저장과_시드.md) — 15 nodes
+- [노드 카드와 아이콘](노드_카드와_아이콘.md) — 14 nodes
+- [설명 요청 차례](설명_요청_차례.md) — 14 nodes
+- [캔버스 옵션과 노드 메뉴](캔버스_옵션과_노드_메뉴.md) — 14 nodes
+- [Clef 질문과 응답 타입](Clef_질문과_응답_타입.md) — 13 nodes
+- [연결선 그리기](연결선_그리기.md) — 13 nodes
+- [미들웨어와 로그인 경로](미들웨어와_로그인_경로.md) — 13 nodes
+- [연결선 개발용 화면](연결선_개발용_화면.md) — 13 nodes
+- [설명 모양·길이·서명](설명_모양·길이·서명.md) — 12 nodes
+- [설명 API](설명_API.md) — 12 nodes
+- [흐름 애니메이션](흐름_애니메이션.md) — 12 nodes
+- [3C-1 계획 작업 목록](3C-1_계획_작업_목록.md) — 10 nodes
+- [Qwen 클라이언트](Qwen_클라이언트.md) — 8 nodes
+- [겹침 검사](겹침_검사.md) — 8 nodes
+- [Clef 호출과 동시성](Clef_호출과_동시성.md) — 8 nodes
+- [글자 폭 계산](글자_폭_계산.md) — 6 nodes
+- [3C-1단계 계획](3C-1단계_계획.md) — 5 nodes
+- [구성도 상태 타입](구성도_상태_타입.md) — 4 nodes
 - [라우트 재수출](라우트_재수출.md) — 1 nodes
 
 ## God Nodes
 (most connected concepts — the load-bearing abstractions)
 
+- [DiagramState](DiagramState.md) — 36 connections
 - [InfraSketch 설계 문서](InfraSketch_설계_문서.md) — 34 connections
-- [DiagramState](DiagramState.md) — 27 connections
-- [getOwnedDiagram()](getOwnedDiagram.md) — 24 connections
-- [DiagramWorkspace()](DiagramWorkspace.md) — 22 connections
-- [lockedTurn()](lockedTurn.md) — 20 connections
-- [createVersion()](createVersion.md) — 14 connections
-- [useChatTurn()](useChatTurn.md) — 14 connections
-- [computeMissing()](computeMissing.md) — 14 connections
-- [run()](run.md) — 13 connections
-- [emptyState()](emptyState.md) — 13 connections
+- [getOwnedDiagram()](getOwnedDiagram.md) — 27 connections
+- [DiagramWorkspace()](DiagramWorkspace.md) — 25 connections
+- [explainTarget()](explainTarget.md) — 23 connections
+- [lockedTurn()](lockedTurn.md) — 21 connections
+- [ValidationError](ValidationError.md) — 19 connections
+- [auth](auth.md) — 18 connections
+- [createVersion()](createVersion.md) — 17 connections
+- [run()](run.md) — 15 connections
 
 ---
 
