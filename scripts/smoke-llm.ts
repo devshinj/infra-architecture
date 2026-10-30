@@ -20,6 +20,11 @@ const INTENTS: [string, string][] = [
   ["고마워", "other"],
 ];
 
+const RISKY =
+  "그룹 public [subnet_public]: 노드 lb(lb_l7), was-1(was), db-1(db_rdb, MySQL)\n연결: user->lb, lb->was-1, was-1->db-1, internet->db-1 (관리용 3306 직접 접속)";
+const SAFE =
+  "그룹 public [subnet_public]: 노드 lb(lb_l7)\n그룹 private [subnet_private]: 노드 was-1, was-2(was, 이중화), db-a(Active), db-s(Standby)\n연결: user->lb, lb->was-1, lb->was-2, was-*->db-a, db-a->db-s(복제)";
+
 const sec = (ms: number) => (ms / 1000).toFixed(1) + "s";
 
 async function main(): Promise<number> {
@@ -38,6 +43,7 @@ async function main(): Promise<number> {
 
   const cfg = llmConfig();
   let failed = false;
+  const built: Record<string, ReturnType<typeof emptyState>> = {};
 
   // (1) 상태 확인
   const health = await checkLlmHealth({ config: cfg });
@@ -101,6 +107,7 @@ async function main(): Promise<number> {
           onDelta: (d) => parser.push(d),
         });
         parser.end();
+        built[id] = state;
         rows.push([
           id,
           firstMs === null ? "-" : sec(firstMs),
@@ -166,6 +173,45 @@ async function main(): Promise<number> {
     }
     console.log(formatTable(["문장(문맥 있음)", "기대", "결과", "신뢰도", "시간", "일치"], crows));
     console.log(`문맥 있음 ${accuracy(coks)}`);
+  }
+
+  // (4) 경고 판정: Clef noul 두 상태 + s1·s2 코드 규칙 개수
+  console.log("\n== 4. 경고 판정 ==");
+  if (!cfg.clef) {
+    console.log("Clef 설정 없음(CLEF_API_KEY) - noul 판정 건너뜀");
+    failed = true;
+  } else {
+    const { noulProbability } = await import("../src/server/llm/clef");
+    const { RULES } = await import("../src/domain/warnings");
+    const instructions = RULES.find((r) => r.rule === "db_exposed")!.instructions!;
+    const clef = createClefClient(cfg.clef);
+    const nrows: string[][] = [];
+    for (const [name, state] of [["위험", RISKY], ["안전", SAFE]] as const) {
+      try {
+        const answers = await clef.decide(state, { q: { type: "noul", instructions } }, AbortSignal.timeout(30_000));
+        const a = answers.q;
+        // 원본 응답은 키 목록만 출력한다(값은 출력하지 않는다).
+        const keys = a ? Object.keys(a).join(", ") : "(답 없음)";
+        const p = noulProbability(a);
+        nrows.push([name, keys, p === null ? "(읽을 수 없음)" : p.toFixed(2)]);
+      } catch (e) {
+        failed = true;
+        nrows.push([name, "-", `오류: ${(e as Error).name}`]);
+      }
+    }
+    console.log(formatTable(["상태", "원본 응답 키", "noul 확률"], nrows));
+  }
+  {
+    const { evaluateRules, RULES } = await import("../src/domain/warnings");
+    const names = RULES.filter((r) => !r.instructions).map((r) => r.rule);
+    const crows: string[][] = [];
+    for (const id of ["s1", "s2"]) {
+      const st = built[id];
+      if (!st) continue;
+      const ws = evaluateRules(st);
+      crows.push([id, ...names.map((n) => String(ws.filter((w) => w.rule === n).length))]);
+    }
+    if (crows.length) console.log(formatTable(["시나리오", ...names], crows));
   }
 
   if (health.qwen !== "ok" || health.clef !== "ok") failed = true;
