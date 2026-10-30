@@ -19,6 +19,8 @@ export interface NodeInfoProps {
   ignoreDisabled?: boolean;
   /** 마지막 저장 실패 문구. */
   ignoreError?: string | null;
+  /** 경고를 계산할 상태. 비교 모드는 합친 그림 대신 현재 상태를 준다. 없으면 state. */
+  warningState?: DiagramState;
 }
 
 type CautionProps = Pick<NodeInfoProps, "onIgnoreWarning" | "ignoreDisabled" | "ignoreError">;
@@ -113,10 +115,10 @@ function Cautions({ active, ignored, onIgnoreWarning, ignoreDisabled, ignoreErro
   );
 }
 
-export function NodeInfo({ state, selectedId, onSelect, onMention, mentionDisabled, ...caution }: NodeInfoProps) {
+export function NodeInfo({ state, selectedId, onSelect, onMention, mentionDisabled, warningState, ...caution }: NodeInfoProps) {
   if (selectedId === null) return <p className={styles.empty}>캔버스에서 노드를 선택하면 설명이 여기에 표시돼요.</p>;
 
-  const warnings = mergeWarnings(state);
+  const warnings = mergeWarnings(warningState ?? state);
   const pick = (f: (w: Warning) => boolean) => ({ active: warnings.active.filter(f), ignored: warnings.ignored.filter(f) });
 
   const edge = state.edges[selectedId];

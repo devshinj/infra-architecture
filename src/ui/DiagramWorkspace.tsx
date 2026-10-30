@@ -51,8 +51,6 @@ const unionState = (old: DiagramState, cur: DiagramState): DiagramState => ({
   nodes: { ...old.nodes, ...cur.nodes },
   edges: { ...old.edges, ...cur.edges },
   assumptions: cur.assumptions,
-  ...(cur.warnings ? { warnings: cur.warnings } : {}),
-  ...(cur.ignoredWarnings ? { ignoredWarnings: cur.ignoredWarnings } : {}),
 });
 
 const optionsFor = (state: DiagramState): CanvasOptions => ({ ...defaultDisplayOptions(state), hoverLabels: true });
@@ -210,7 +208,18 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
     setFocus({ id, token: focusSeq.current });
   }, []);
   // 경고 배지·대화 경고 줄: 그 노드를 고른다(설명 탭의 주의할 점으로 간다). Canvas memo deps 라 고정한다.
-  const selectNode = useCallback((id: string) => setOptions((o) => ({ ...o, selectedId: id })), []);
+  // 이미 선택된 노드면 selectedId 가 그대로라 RightPanel 이 탭을 바꾸지 않으므로 직접 설명 탭으로 보낸다.
+  const selectedRef = useRef<string | null>(options.selectedId);
+  useEffect(() => {
+    selectedRef.current = options.selectedId;
+  });
+  const selectNode = useCallback((id: string) => {
+    if (selectedRef.current === id) {
+      setTab("설명");
+      setFocus(null); // onTabChange 와 같이: 대화로 돌아와도 옛 대상으로 뛰지 않는다
+    }
+    setOptions((o) => ({ ...o, selectedId: id }));
+  }, []);
   const onTabChange = (t: Tab) => {
     setTab(t);
     if (t !== "대화") setFocus(null); // coming back to 대화 must not jump to the old target again
@@ -231,6 +240,7 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
   // 의도된 구성 / 다시 경고 = 한 버전. 체크리스트와 같은 서버 상태 채택 경로를 쓴다.
   const [warnSaving, setWarnSaving] = useState(false);
   const [warnError, setWarnError] = useState<string | null>(null);
+  useEffect(() => setWarnError(null), [options.selectedId]); // 오류 문구는 그 선택에만 붙는다
   const onIgnoreWarning = async (id: string, ignored: boolean) => {
     if (!live || chat.busy || warnSaving) return;
     setWarnSaving(true);
@@ -352,6 +362,7 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
         importing={busy || locked}
         tab={tab}
         onTabChange={onTabChange}
+        warningState={mode.kind === "compare" ? current.state : shown}
         onHistoryOpen={loadVersions}
         {...(live ? { cautions: { onIgnoreWarning, ignoreDisabled: locked || warnSaving, ignoreError: warnError } } : {})}
         history={{

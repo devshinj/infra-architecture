@@ -1,5 +1,8 @@
 import { GROUP_PAD, type Layout, type Rect } from "./layout";
 
+/** 나란히 놓인 경고 배지 중심이 노드 오른쪽 위 모서리에서 왼쪽으로 떨어진 거리(canvas.css .node__badge--pair). */
+export const PAIR_BADGE_OFFSET = 18;
+
 const grow = (r: Rect, d: number): Rect => ({ x: r.x - d, y: r.y - d, width: r.width + 2 * d, height: r.height + 2 * d });
 
 // Strict intersection: rects that only touch along an edge do not collide.
@@ -50,11 +53,13 @@ export function findOverlaps(l: Layout, opts: { ring: number; badge: number } = 
     }
   }
 
+  // 모서리 배지(빠진 정보·경고 단독)와 그 왼쪽에 나란히 놓이는 경고 배지(PAIR_BADGE_OFFSET) 두 원을 본다.
   for (const n of nodes) {
-    const cx = n.x + n.width;
     const cy = n.y;
-    for (const m of nodes) {
-      if (m.id !== n.id && circleHitsRect(cx, cy, opts.badge, m)) out.push(`${n.id}×${m.id}`);
+    for (const cx of [n.x + n.width, n.x + n.width - PAIR_BADGE_OFFSET]) {
+      for (const m of nodes) {
+        if (m.id !== n.id && circleHitsRect(cx, cy, opts.badge, m)) out.push(`${n.id}×${m.id}`);
+      }
     }
   }
 

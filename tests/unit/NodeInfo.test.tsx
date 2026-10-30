@@ -165,3 +165,12 @@ test("edge selection shows its warning", () => {
   expect(within(sec).queryByText(/1대뿐/)).not.toBeInTheDocument();
   expect(within(sec).getByRole("button", { name: "의도된 구성" })).toBeInTheDocument();
 });
+
+test("warningState (compare view) decides 주의할 점 instead of the drawn state", () => {
+  const cur = { ...emptyState(), nodes: { w: { id: "w", kind: "web_server", label: "웹", parent: null, attrs: {} } }, ignoredWarnings: ["spof:w"] } as never;
+  render(<NodeInfo state={risky()} warningState={cur} selectedId="w" onSelect={vi.fn()} />);
+  const sec = cautionSection();
+  expect(within(sec).getByRole("heading", { name: "의도된 구성으로 표시함" })).toBeInTheDocument();
+  expect(within(sec).queryByText("외부에서 보일 수 있어요.")).not.toBeInTheDocument();
+  expect(within(sec).queryByText("경고")).not.toBeInTheDocument();
+});

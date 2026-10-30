@@ -31,9 +31,11 @@ export interface RightPanelProps {
   onTabChange?(tab: Tab): void;
   /** 설명 탭 주의할 점의 의도된 구성 / 다시 경고. 없으면 버튼을 숨긴다. */
   cautions?: Pick<NodeInfoProps, "onIgnoreWarning" | "ignoreDisabled" | "ignoreError">;
+  /** 주의할 점을 계산할 상태(비교 모드는 합친 그림이 아니라 현재 상태). 없으면 state. */
+  warningState?: DiagramState;
 }
 
-export function RightPanel({ state, selectedId, onSelect, onMention, mentionDisabled, samples, onImportSample, importing = false, history, chat, onHistoryOpen, tab: controlledTab, onTabChange, cautions }: RightPanelProps) {
+export function RightPanel({ state, selectedId, onSelect, onMention, mentionDisabled, samples, onImportSample, importing = false, history, chat, onHistoryOpen, tab: controlledTab, onTabChange, cautions, warningState }: RightPanelProps) {
   const [innerTab, setInnerTab] = useState<Tab>("대화");
   const tab = controlledTab ?? innerTab;
   const setTab = (t: Tab) => {
@@ -96,7 +98,7 @@ export function RightPanel({ state, selectedId, onSelect, onMention, mentionDisa
             }
           />
         )}
-        {tab === "설명" && <NodeInfo state={state} selectedId={selectedId} onSelect={onSelect} {...(onMention ? { onMention } : {})} {...(mentionDisabled ? { mentionDisabled } : {})} {...cautions} />}
+        {tab === "설명" && <NodeInfo state={state} selectedId={selectedId} onSelect={onSelect} {...(onMention ? { onMention } : {})} {...(mentionDisabled ? { mentionDisabled } : {})} {...cautions} {...(warningState ? { warningState } : {})} />}
         {tab === "이력" && <HistoryPanel {...history} />}
       </div>
     </aside>

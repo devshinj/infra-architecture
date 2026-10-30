@@ -3,7 +3,7 @@ import { expect, test } from "vitest";
 import { buildDisplayGraph, defaultDisplayOptions } from "@/canvas/display";
 import { elbowRoute } from "@/canvas/elbow";
 import { layoutDiagram, type Layout, type Rect } from "@/canvas/layout";
-import { findOverlaps } from "@/canvas/overlap";
+import { findOverlaps, PAIR_BADGE_OFFSET } from "@/canvas/overlap";
 import { textWidth, truncate } from "@/canvas/text";
 import { applyCommand, applyCommands } from "@/domain/apply";
 import type { Command } from "@/domain/commands";
@@ -279,4 +279,15 @@ test("text helpers", () => {
   expect(textWidth("ab", 10)).toBeCloseTo(11.6);
   expect(truncate("가나다라마", 40, 12)).toBe("가나…");
   expect(truncate("가나", 40, 12)).toBe("가나");
+});
+
+test("findOverlaps also checks the paired warning badge left of the corner badge", () => {
+  const n = { id: "n", x: 0, y: 100, width: 160, height: 40, parent: null };
+  // 모서리 원(160,100)에서는 멀고, 나란히 놓인 경고 원(160-18, 100)에는 걸리는 바로 위 노드.
+  const m = { id: "m", x: 125, y: 60, width: 15, height: 35, parent: null };
+  const l = { nodes: { n, m }, groups: {}, edges: [] } as unknown as Layout;
+  expect(160 - PAIR_BADGE_OFFSET).toBe(142);
+  expect(findOverlaps(l, { ring: 0, badge: 8 })).toEqual(["n×m"]);
+  // 경고 원 없이 모서리 원만 보던 예전 검사로는 안 걸린다.
+  expect(findOverlaps({ ...l, nodes: { n, m: { ...m, x: 100 } } } as unknown as Layout, { ring: 0, badge: 8 })).toEqual([]);
 });

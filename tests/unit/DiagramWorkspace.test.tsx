@@ -2,7 +2,7 @@ import "@testing-library/jest-dom/vitest";
 import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
-const hookState = vi.hoisted(() => ({ busy: false, onCommand: null as null | ((c: unknown) => void), badgeFns: [] as unknown[], warnFns: [] as unknown[] }));
+const hookState = vi.hoisted(() => ({ busy: false, onCommand: null as null | ((c: unknown) => void), badgeFns: [] as unknown[], warnFns: [] as unknown[], lines: [] as unknown[] }));
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
 vi.mock("@/app/(app)/actions", () => ({
@@ -20,6 +20,7 @@ vi.mock("@/canvas/Canvas", () => ({
       <div data-testid="n">{Object.keys(state.nodes).join(",")}</div>
       {onMention && <button onClick={() => onMention("a")}>멘션a</button>}
       {onBadgeClick && <button onClick={() => onBadgeClick("a")}>배지a</button>}
+      {onWarnBadgeClick && <button onClick={() => onWarnBadgeClick("b")}>경고배지b</button>}
       <button onClick={() => onSelect("b")}>선택b</button>
       <button onClick={() => onSelect(null)}>선택해제</button>
     </div>
@@ -29,7 +30,7 @@ vi.mock("@/canvas/Canvas", () => ({
 vi.mock("@/ui/chat/useChatTurn", () => ({
   useChatTurn: (a: { onCommand: (c: unknown) => void }) => {
     hookState.onCommand = a.onCommand;
-    return { lines: [], busy: hookState.busy, phase: null, send: vi.fn(), stop: vi.fn() };
+    return { lines: hookState.lines, busy: hookState.busy, phase: null, send: vi.fn(), stop: vi.fn() };
   },
 }));
 
@@ -167,4 +168,25 @@ test("ignore buttons are disabled during a chat turn and action errors show as a
     fireEvent.click(within(caution()).getByRole("button", { name: "의도된 구성" }));
   });
   expect(within(caution()).getByRole("alert")).toHaveTextContent("경고를 찾을 수 없어요");
+  // 선택이 바뀌면 오류 문구는 지운다.
+  fireEvent.click(screen.getByRole("button", { name: "선택해제" }));
+  fireEvent.click(screen.getByRole("button", { name: "선택b" }));
+  expect(within(caution()).queryByRole("alert")).not.toBeInTheDocument();
+});
+
+test("warn badge or chat warning line for the already selected node still opens 설명", () => {
+  hookState.busy = false;
+  hookState.lines = [{ id: "w1", kind: "warning", text: "주의: b 1대뿐", nodeId: "b", level: "warn" }];
+  render(ui(solo(1) as never));
+  fireEvent.click(screen.getByRole("button", { name: "선택b" }));
+  expect(screen.getByRole("tab", { name: "설명" })).toHaveAttribute("aria-selected", "true");
+  fireEvent.click(screen.getByRole("tab", { name: "대화" }));
+  fireEvent.click(screen.getByRole("button", { name: "주의: b 1대뿐" }));
+  expect(screen.getByRole("tab", { name: "설명" })).toHaveAttribute("aria-selected", "true");
+  expect(screen.getByRole("heading", { name: "주의할 점" })).toBeInTheDocument();
+  fireEvent.click(screen.getByRole("tab", { name: "대화" }));
+  fireEvent.click(screen.getByRole("button", { name: "경고배지b" }));
+  expect(screen.getByRole("tab", { name: "설명" })).toHaveAttribute("aria-selected", "true");
+  expect(screen.getByRole("heading", { name: "주의할 점" })).toBeInTheDocument();
+  hookState.lines = [];
 });
