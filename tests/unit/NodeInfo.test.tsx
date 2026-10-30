@@ -174,3 +174,14 @@ test("warningState (compare view) decides 주의할 점 instead of the drawn sta
   expect(within(sec).queryByText("외부에서 보일 수 있어요.")).not.toBeInTheDocument();
   expect(within(sec).queryByText("경고")).not.toBeInTheDocument();
 });
+
+test("NodeInfo forwards explain: node explanation precedes 스펙 and 주의할 점, edge shows edge slots", () => {
+  const { container, rerender } = render(<NodeInfo state={fx("s2")} selectedId="was-1" onSelect={vi.fn()} explain={{ status: "loading", terms: [] }} />);
+  const heads = [...container.querySelectorAll("h3")].map((h) => h.textContent);
+  expect(heads.indexOf("정의")).toBeGreaterThanOrEqual(0);
+  expect(heads.indexOf("정의")).toBeLessThan(heads.indexOf("스펙 · SW"));
+  const cautions = heads.indexOf("주의할 점");
+  if (cautions >= 0) expect(heads.indexOf("결정 기록(ADR)")).toBeLessThan(cautions);
+  rerender(<NodeInfo state={fx("s2")} selectedId="e-was-1-db-proxy" onSelect={vi.fn()} explain={{ status: "loading", terms: [] }} />);
+  expect(screen.getByText("방화벽 규칙")).toBeInTheDocument();
+});

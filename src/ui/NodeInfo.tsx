@@ -4,6 +4,8 @@ import { FIELD_LABELS, isEmpty } from "@/domain/missing";
 import type { DiagramState, DNode, Warning } from "@/domain/types";
 import { mergeWarnings } from "@/domain/warnings";
 
+import { Explanation, type ExplanationProps } from "./explain/Explanation";
+
 import styles from "./panel.module.css";
 
 export interface NodeInfoProps {
@@ -21,6 +23,8 @@ export interface NodeInfoProps {
   ignoreError?: string | null;
   /** 경고를 계산할 상태. 비교 모드는 합친 그림 대신 현재 상태를 준다. 없으면 state. */
   warningState?: DiagramState;
+  /** 설명 패널 데이터. 없으면 설명 절을 그리지 않는다. */
+  explain?: ExplanationProps;
 }
 
 type CautionProps = Pick<NodeInfoProps, "onIgnoreWarning" | "ignoreDisabled" | "ignoreError">;
@@ -115,7 +119,7 @@ function Cautions({ active, ignored, onIgnoreWarning, ignoreDisabled, ignoreErro
   );
 }
 
-export function NodeInfo({ state, selectedId, onSelect, onMention, mentionDisabled, warningState, ...caution }: NodeInfoProps) {
+export function NodeInfo({ state, selectedId, onSelect, onMention, mentionDisabled, warningState, explain, ...caution }: NodeInfoProps) {
   if (selectedId === null) return <p className={styles.empty}>캔버스에서 노드를 선택하면 설명이 여기에 표시돼요.</p>;
 
   const warnings = mergeWarnings(warningState ?? state);
@@ -132,6 +136,7 @@ export function NodeInfo({ state, selectedId, onSelect, onMention, mentionDisabl
           <div className={styles.field}><dt>도착</dt><dd>{nameOf(state, edge.to)}</dd></div>
           <div className={styles.field}><dt>라벨</dt><dd className={isEmpty(edge.label) ? styles.missing : undefined}>{isEmpty(edge.label) ? (edge.unknown?.includes("label") ? UNKNOWN : MISSING) : edge.label}</dd></div>
         </dl>
+        {explain && <Explanation target="edge" {...explain} />}
         <Cautions {...pick((w) => w.edgeId === edge.id)} {...caution} />
       </div>
     );
@@ -177,6 +182,7 @@ export function NodeInfo({ state, selectedId, onSelect, onMention, mentionDisabl
         </div>
       </header>
       <LinkButton id={node.id} onMention={onMention} disabled={mentionDisabled} />
+      {explain && <Explanation {...explain} />}
       <Cautions {...pick((w) => w.nodeId === node.id)} {...caution} />
       <Fields title="스펙 · SW" fields={SPEC_FIELDS} attrs={node.attrs} unknown={node.unknown ?? []} />
       <Fields title="서버 정보" fields={SERVER_FIELDS} attrs={node.attrs} unknown={node.unknown ?? []} />
