@@ -38,6 +38,17 @@ export function termCandidates(node: DNode): TermCandidate[] {
   return out;
 }
 
+/** 화면이 받아 두는 사전 항목(용어 풀이 + 설명 패널에서 사전 정의를 바로 보이는 데 쓴다). */
+export interface TermEntry {
+  key: string;
+  term: string;
+  definition: string;
+  aliases: string[];
+  reviewed: boolean;
+  why: string;
+  compare: string;
+}
+
 /**
  * 후보 key 순서대로 사전 항목을 고른다(서버 findTerm 과 화면이 같은 규칙을 쓴다).
  * 한 key 에 key 일치와 alias 일치가 함께 있으면 key 일치가 이긴다.

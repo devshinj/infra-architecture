@@ -87,15 +87,15 @@ function Retry({ message, onRetry, busy }: { message?: string; onRetry?: () => v
 
 const ADR_LABELS = ["결정", "이유", "대안", "대가"] as const;
 
-function NodeBody({ d, terms }: { d: NodeExplanation; terms: GlossaryTerm[] }) {
-  const own = normalizeTerm(d.term);
-  const adr = [d.adr.decision, d.adr.reason, d.adr.alternative, d.adr.cost];
+/** 정의(+미검수)와 사전에 있으면 필요한 이유·비교. 다 만든 설명과, 만드는 중·실패 때 사전 정의에 같이 쓴다. */
+function DefinitionPart({ d, terms }: { d: Partial<NodeExplanation> & { definition: string }; terms: GlossaryTerm[] }) {
+  const own = d.term ? normalizeTerm(d.term) : undefined;
   return (
     <>
       <Section title="정의">
         <p className={styles.explainText}>
           <TermText text={d.definition} terms={terms} exclude={own} />
-          {!d.reviewed && <span className={styles.unreviewed}>미검수</span>}
+          {d.reviewed === false && <span className={styles.unreviewed}>미검수</span>}
         </p>
       </Section>
       {d.why && (
@@ -108,6 +108,15 @@ function NodeBody({ d, terms }: { d: NodeExplanation; terms: GlossaryTerm[] }) {
           <p className={styles.explainText}><TermText text={d.compare} terms={terms} /></p>
         </Section>
       )}
+    </>
+  );
+}
+
+function NodeBody({ d, terms }: { d: NodeExplanation; terms: GlossaryTerm[] }) {
+  const adr = [d.adr.decision, d.adr.reason, d.adr.alternative, d.adr.cost];
+  return (
+    <>
+      <DefinitionPart d={d} terms={terms} />
       <Section title="이 구성에서의 역할">
         <p className={styles.explainText}><TermText text={d.role} terms={terms} /></p>
       </Section>
@@ -147,10 +156,15 @@ function EdgeBody({ d, terms }: { d: EdgeExplanation; terms: GlossaryTerm[] }) {
 export function Explanation({ status, data, partial, message, terms, onRewrite, onRetry, busy, target }: ExplanationProps) {
   if (status === "idle") return null;
 
+  const isEdge = (data?.kind ?? target) === "edge";
+  // 노드의 사전 정의(만드는 중·실패 때 받아 둔 것).
+  const known = !isEdge && partial?.definition ? { ...partial, definition: partial.definition } : null;
+
   if (status === "loading") {
-    const slots = (data?.kind ?? target) === "edge" ? ["무엇이 오가나", "방식", "왜 연결됐나", "방화벽 규칙"] : ["정의", "이 구성에서의 역할", "결정 기록(ADR)"];
+    const slots = isEdge ? ["무엇이 오가나", "방식", "왜 연결됐나", "방화벽 규칙"] : known ? ["이 구성에서의 역할", "결정 기록(ADR)"] : ["정의", "이 구성에서의 역할", "결정 기록(ADR)"];
     return (
       <div className={styles.explain} aria-busy="true">
+        {known && <DefinitionPart d={known} terms={terms} />}
         {slots.map((s) => (
           <Section key={s} title={s}>
             <p className={styles.missing}>{LOADING}</p>
@@ -163,12 +177,8 @@ export function Explanation({ status, data, partial, message, terms, onRewrite, 
   if (status === "error") {
     return (
       <div className={styles.explain}>
-        {partial?.definition && (
-          <Section title="정의">
-            <p className={styles.explainText}>{partial.definition}</p>
-          </Section>
-        )}
-        <Section title={partial?.definition ? "이 구성에서의 역할" : "설명"}>
+        {known && <DefinitionPart d={known} terms={terms} />}
+        <Section title={known ? "이 구성에서의 역할" : "설명"}>
           <Retry message={message} onRetry={onRetry} busy={busy} />
         </Section>
       </div>

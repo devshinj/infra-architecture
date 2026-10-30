@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { notFound, redirect } from "next/navigation";
 
 import { auth, signOut } from "@/auth";
+import type { TermEntry } from "@/domain/explain";
 import type { DiagramState } from "@/domain/types";
 import {
   clearPinnedPositions,
@@ -218,12 +219,23 @@ export async function clearPinnedAction(diagramId: string): Promise<void> {
   });
 }
 
-/** 설명 본문의 용어 풀이에 쓰는 로그인 사용자의 사전(비어 있으면 시드를 먼저 복사한다). */
-export async function listTermsAction(): Promise<{ key: string; term: string; definition: string }[]> {
+/**
+ * 설명 본문의 용어 풀이와, 설명을 만드는 동안 사전 정의를 바로 보이는 데 쓰는 로그인 사용자의 사전
+ * (비어 있으면 시드를 먼저 복사한다).
+ */
+export async function listTermsAction(): Promise<TermEntry[]> {
   return run(async (uid) => {
     await ensureSeeded(uid);
     const rows = await listTerms(uid);
-    return rows.map((r) => ({ key: r.key, term: r.term, definition: r.definition }));
+    return rows.map((r) => ({
+      key: r.key,
+      term: r.term,
+      definition: r.definition,
+      aliases: r.aliases,
+      reviewed: r.reviewed,
+      why: r.why,
+      compare: r.compare,
+    }));
   });
 }
 

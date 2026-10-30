@@ -48,6 +48,29 @@ test("loading text", () => {
   expect(screen.getAllByText("설명을 만드는 중…").length).toBeGreaterThanOrEqual(3);
 });
 
+test("loading shows the glossary definition at once; role and ADR wait", () => {
+  render(
+    <Explanation
+      status="loading"
+      partial={{ term: "Redis", definition: "메모리 저장소입니다.", definitionSource: "glossary", reviewed: false, why: "빠르게 읽으려고", compare: "디스크 DB 보다 빠릅니다." }}
+      terms={[]}
+    />,
+  );
+  const heads = screen.getAllByRole("heading", { level: 3 }).map((h) => h.textContent);
+  expect(heads).toEqual(["정의", "필요한 이유", "비교", "이 구성에서의 역할", "결정 기록(ADR)"]);
+  expect(screen.getByText("메모리 저장소입니다.")).toBeInTheDocument();
+  expect(screen.getByText("미검수")).toBeInTheDocument();
+  expect(screen.getByText("빠르게 읽으려고")).toBeInTheDocument();
+  expect(screen.getAllByText("설명을 만드는 중…")).toHaveLength(2);
+});
+
+test("error shows 미검수 with an unreviewed partial definition", () => {
+  const { rerender } = render(<Explanation status="error" partial={{ definition: "사전 정의입니다.", reviewed: false }} message="x" terms={[]} />);
+  expect(screen.getByText("미검수")).toBeInTheDocument();
+  rerender(<Explanation status="error" partial={{ definition: "사전 정의입니다.", reviewed: true }} message="x" terms={[]} />);
+  expect(screen.queryByText("미검수")).not.toBeInTheDocument();
+});
+
 test("error shows partial definition, message and retry", async () => {
   const onRetry = vi.fn();
   render(<Explanation status="error" partial={{ definition: "사전 정의입니다." }} message="설명을 만들지 못했어요." terms={[]} onRetry={onRetry} />);

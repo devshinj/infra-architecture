@@ -3,11 +3,18 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { listTermsAction } from "@/app/(app)/actions";
-import { normalizeTerm, signatureOf, type EdgeExplanation, type NodeExplanation } from "@/domain/explain";
+import {
+  normalizeTerm,
+  pickTerm,
+  signatureOf,
+  termCandidates,
+  type EdgeExplanation,
+  type NodeExplanation,
+  type TermEntry,
+} from "@/domain/explain";
 import type { DiagramState } from "@/domain/types";
 
 import type { ExplanationProps } from "./Explanation";
-import type { GlossaryTerm } from "./TermText";
 
 export type TargetKind = "node" | "edge";
 
@@ -101,10 +108,10 @@ export function useExplanations({ diagramId, state, live, busy, selectedId, fetc
   const [entries, setEntries] = useState<Record<string, Entry>>({});
   const [requests, setRequests] = useState<Record<string, Request>>({});
   const [running, setRunning] = useState<Job | null>(null);
-  const [terms, setTerms] = useState<GlossaryTerm[]>([]);
+  const [terms, setTerms] = useState<TermEntry[]>([]);
   const runningRef = useRef<string | null>(null);
   const ctrlRef = useRef<AbortController | null>(null);
-  const termsRef = useRef<GlossaryTerm[]>([]);
+  const termsRef = useRef<TermEntry[]>([]);
   const fetchRef = useRef(fetchImpl);
   useEffect(() => {
     fetchRef.current = fetchImpl;
@@ -208,20 +215,43 @@ export function useExplanations({ diagramId, state, live, busy, selectedId, fetc
 
   const queued = useMemo(() => new Set(queue.map((j) => j.key)), [queue]);
 
+  /** 받아 둔 사전에서 찾은 노드의 정의 부분(서버 findTerm 과 같은 후보·순서). 없으면 undefined. */
+  const glossaryOf = useCallback(
+    (kind: TargetKind, id: string): Partial<NodeExplanation> | undefined => {
+      const node = kind === "node" ? state.nodes[id] : undefined;
+      const t = node ? pickTerm(terms, termCandidates(node).map((c) => c.key)) : null;
+      if (!t) return undefined;
+      return {
+        term: t.term,
+        definition: t.definition,
+        definitionSource: "glossary",
+        reviewed: t.reviewed,
+        ...(t.why ? { why: t.why } : {}),
+        ...(t.compare ? { compare: t.compare } : {}),
+      };
+    },
+    [state, terms],
+  );
+
   const get = useCallback(
     (kind: TargetKind, id: string): ExplanationView => {
       const key = keyOf(kind, id);
-      if (running?.key === key) return { status: "loading" };
+      // 만드는 동안에도 사전에 있는 정의는 바로 보인다(§6.6). 역할·ADR 만 기다린다.
+      const loading = (): ExplanationView => {
+        const partial = glossaryOf(kind, id);
+        return partial ? { status: "loading", partial } : { status: "loading" };
+      };
+      if (running?.key === key) return loading();
       const sig = signatureOf(state, kind, id);
       const e = entries[key];
       if (e && sig !== null && fresh(e, sig)) {
-        return e.status === "ready"
-          ? { status: "ready", data: e.data }
-          : { status: "error", message: e.message, ...(e.partial ? { partial: e.partial } : {}) };
+        if (e.status === "ready") return { status: "ready", data: e.data };
+        const partial = e.partial ?? glossaryOf(kind, id);
+        return { status: "error", message: e.message, ...(partial ? { partial } : {}) };
       }
-      return queued.has(key) ? { status: "loading" } : { status: "idle" };
+      return queued.has(key) ? loading() : { status: "idle" };
     },
-    [state, entries, running, queued],
+    [state, entries, running, queued, glossaryOf],
   );
 
   // 정체성을 고정한다(setter 만 쓴다).

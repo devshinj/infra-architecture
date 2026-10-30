@@ -1,8 +1,18 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
+const REDIS_TERM = vi.hoisted(() => ({
+  key: "redis",
+  term: "Redis",
+  definition: "메모리 저장소",
+  aliases: ["elasticache"],
+  reviewed: false,
+  why: "빠르게 읽으려고",
+  compare: "",
+}));
+
 vi.mock("@/app/(app)/actions", () => ({
-  listTermsAction: vi.fn(async () => [{ key: "redis", term: "Redis", definition: "메모리 저장소" }]),
+  listTermsAction: vi.fn(async () => [REDIS_TERM]),
 }));
 
 import { listTermsAction } from "@/app/(app)/actions";
@@ -96,7 +106,7 @@ test("only stale targets are queued", async () => {
   await flush();
   // a 는 저장 서명과 같고, 연결은 선택되지 않았다.
   expect(posts).toHaveLength(2);
-  expect(result.current.terms).toEqual([{ key: "redis", term: "Redis", definition: "메모리 저장소" }]);
+  expect(result.current.terms).toEqual([REDIS_TERM]);
 });
 
 test("clicked node jumps the queue without duplicates", async () => {
@@ -230,3 +240,21 @@ test("unmount aborts the in-flight request", async () => {
   unmount();
   expect(posts[0]!.signal.aborted).toBe(true);
 });
+
+test("glossary definition shows at once while loading and on error without partial", async () => {
+  const s = mkState(["a", "b", "c"]);
+  s.nodes.a = { ...s.nodes.a!, attrs: { sw: "Redis 7.2" } };
+  // 별칭으로도 찾는다(서버 findTerm 과 같은 순서).
+  s.nodes.b = { ...s.nodes.b!, sub: "ElastiCache" };
+  const { posts, result } = setup({}, { state: s });
+  await waitFor(() => expect(result.current.terms).toHaveLength(1));
+  await waitFor(() => expect(posts).toHaveLength(1));
+  const glossary = { term: "Redis", definition: "메모리 저장소", definitionSource: "glossary", reviewed: false, why: "빠르게 읽으려고" };
+  expect(result.current.get("node", "a")).toEqual({ status: "loading", partial: glossary });
+  expect(result.current.get("node", "b")).toEqual({ status: "loading", partial: glossary });
+  // 사전에 없는 노드·연결은 그대로.
+  expect(result.current.get("node", "c")).toEqual({ status: "loading" });
+  await answer(posts[0]!, { error: "서버 오류" }, 500);
+  expect(result.current.get("node", "a")).toEqual({ status: "error", message: FAIL, partial: glossary });
+});
+
