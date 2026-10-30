@@ -4,15 +4,20 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import type { Command } from "@/domain/commands";
 import { computeMissing, missingReminder } from "@/domain/missing";
-import type { DiagramState } from "@/domain/types";
+import type { DiagramState, Warning, WarningLevel } from "@/domain/types";
 import type { ChatEvent, MessageMeta } from "@/server/chat/events";
+
+import { warningLine } from "./lines";
 
 export interface ChatLine {
   /** React key. Initial lines use the server message id; progress lines are client-only. */
   id: string;
-  kind: "user" | "assistant" | "system" | "progress" | "error";
+  kind: "user" | "assistant" | "system" | "progress" | "error" | "warning";
   text: string;
   meta?: MessageMeta;
+  /** kind "warning": 클릭하면 이 노드를 선택한다. */
+  nodeId?: string;
+  level?: WarningLevel;
 }
 
 export type ChatPhase = "thinking" | "drawing" | "answering" | "checking";
@@ -75,6 +80,11 @@ export function useChatTurn(args: UseChatTurnArgs) {
       let gotDone = false;
       let cmds = 0;
       let errored = false;
+      let warnings: Warning[] = []; // done 앞에 오지만 요약·빠진 정보 안내 줄 다음에 둔다
+      const pushWarnings = () => {
+        for (const w of warnings) push(warningLine(w));
+        warnings = [];
+      };
 
       const handle = (ev: ChatEvent) => {
         const a = argsRef.current;
@@ -100,6 +110,9 @@ export function useChatTurn(args: UseChatTurnArgs) {
             }
             break;
           }
+          case "warnings":
+            warnings = ev.items;
+            break;
           case "open_history":
             a.onOpenHistory();
             break;
@@ -108,6 +121,7 @@ export function useChatTurn(args: UseChatTurnArgs) {
             const s = summary(ev, answerId !== null);
             if (s) push({ kind: "system", text: s });
             if (ev.applied > 0 && ev.missing > 0) push({ kind: "system", text: missingReminder(ev.missing) });
+            pushWarnings();
             a.onDone(ev);
             break;
           }
@@ -174,6 +188,7 @@ export function useChatTurn(args: UseChatTurnArgs) {
           const st = cmds > 0 ? argsRef.current.getState?.() : undefined;
           const n = st ? computeMissing(st).count : 0;
           if (n > 0) push({ kind: "system", text: missingReminder(n) });
+          pushWarnings();
         }
         else push({ kind: "error", text: GENERIC_ERROR });
       } finally {

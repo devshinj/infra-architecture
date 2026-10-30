@@ -7,7 +7,7 @@ import type { DiagramState } from "@/domain/types";
 import styles from "./app.module.css";
 import { ChatPanel, type ChatPanelProps } from "./chat/ChatPanel";
 import { HistoryPanel, type HistoryPanelProps } from "./HistoryPanel";
-import { NodeInfo } from "./NodeInfo";
+import { NodeInfo, type NodeInfoProps } from "./NodeInfo";
 
 export type Tab = "대화" | "설명" | "이력";
 const TABS: Tab[] = ["대화", "설명", "이력"];
@@ -29,9 +29,11 @@ export interface RightPanelProps {
   /** Optional controlled tab (e.g. the chat switches to 이력 on `open_history`). Uncontrolled when omitted. */
   tab?: Tab;
   onTabChange?(tab: Tab): void;
+  /** 설명 탭 주의할 점의 의도된 구성 / 다시 경고. 없으면 버튼을 숨긴다. */
+  cautions?: Pick<NodeInfoProps, "onIgnoreWarning" | "ignoreDisabled" | "ignoreError">;
 }
 
-export function RightPanel({ state, selectedId, onSelect, onMention, mentionDisabled, samples, onImportSample, importing = false, history, chat, onHistoryOpen, tab: controlledTab, onTabChange }: RightPanelProps) {
+export function RightPanel({ state, selectedId, onSelect, onMention, mentionDisabled, samples, onImportSample, importing = false, history, chat, onHistoryOpen, tab: controlledTab, onTabChange, cautions }: RightPanelProps) {
   const [innerTab, setInnerTab] = useState<Tab>("대화");
   const tab = controlledTab ?? innerTab;
   const setTab = (t: Tab) => {
@@ -94,7 +96,7 @@ export function RightPanel({ state, selectedId, onSelect, onMention, mentionDisa
             }
           />
         )}
-        {tab === "설명" && <NodeInfo state={state} selectedId={selectedId} onSelect={onSelect} {...(onMention ? { onMention } : {})} {...(mentionDisabled ? { mentionDisabled } : {})} />}
+        {tab === "설명" && <NodeInfo state={state} selectedId={selectedId} onSelect={onSelect} {...(onMention ? { onMention } : {})} {...(mentionDisabled ? { mentionDisabled } : {})} {...cautions} />}
         {tab === "이력" && <HistoryPanel {...history} />}
       </div>
     </aside>

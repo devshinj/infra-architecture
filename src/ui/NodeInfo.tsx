@@ -1,7 +1,8 @@
 import { CategoryIcon } from "@/canvas/icons";
 import { categoryOf, EDGE_KINDS, GROUP_KINDS, NODE_KINDS } from "@/domain/catalog";
 import { FIELD_LABELS, isEmpty } from "@/domain/missing";
-import type { DiagramState, DNode } from "@/domain/types";
+import type { DiagramState, DNode, Warning } from "@/domain/types";
+import { mergeWarnings } from "@/domain/warnings";
 
 import styles from "./panel.module.css";
 
@@ -12,7 +13,15 @@ export interface NodeInfoProps {
   /** Attach this node/group to the chat input. Omit to hide the button. */
   onMention?(id: string): void;
   mentionDisabled?: boolean;
+  /** 경고를 의도된 구성으로 표시(true)·다시 경고(false). 없으면(이력 보기 등) 버튼을 숨긴다. */
+  onIgnoreWarning?(id: string, ignored: boolean): void;
+  /** 대화 차례 중·저장 중에는 버튼을 막는다. */
+  ignoreDisabled?: boolean;
+  /** 마지막 저장 실패 문구. */
+  ignoreError?: string | null;
 }
+
+type CautionProps = Pick<NodeInfoProps, "onIgnoreWarning" | "ignoreDisabled" | "ignoreError">;
 
 const SPEC_FIELDS: [string, string][] = [["sw", "SW"], ["cpu", "CPU"], ["ram", "RAM"], ["disk", "디스크"], ["os", "OS"]];
 const SERVER_FIELDS: [string, string][] = [["hostname", "호스트명"], ["ip", "IP"], ["vip", "VIP"], ["az", "AZ"]];
@@ -52,8 +61,63 @@ function LinkButton({ id, onMention, disabled }: { id: string; onMention?: (id: 
   );
 }
 
-export function NodeInfo({ state, selectedId, onSelect, onMention, mentionDisabled }: NodeInfoProps) {
+const LEVEL_LABEL: Record<Warning["level"], string> = { warn: "경고", check: "확인 필요" };
+
+/** 주의할 점: 지금 걸린 경고와, 의도된 구성으로 표시한 경고. 둘 다 없으면 절이 없다. */
+function Cautions({ active, ignored, onIgnoreWarning, ignoreDisabled, ignoreError }: { active: Warning[]; ignored: Warning[] } & CautionProps) {
+  if (active.length === 0 && ignored.length === 0) return null;
+  return (
+    <section className={styles.section}>
+      <h3 className={styles.heading}>주의할 점</h3>
+      {ignoreError && onIgnoreWarning && (
+        <p className={styles.cautionError} role="alert">
+          {ignoreError}
+        </p>
+      )}
+      {active.length > 0 && (
+        <ul className={styles.cautions}>
+          {active.map((w) => (
+            <li key={w.id} className={styles.caution}>
+              <span className={styles.level} data-level={w.level}>
+                {LEVEL_LABEL[w.level]}
+              </span>
+              <p className={styles.cautionText}>{w.text}</p>
+              <p className={styles.cautionGuide}>{w.guide}</p>
+              {onIgnoreWarning && (
+                <button type="button" className={styles.linkBtn} disabled={ignoreDisabled} onClick={() => onIgnoreWarning(w.id, true)}>
+                  의도된 구성
+                </button>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+      {ignored.length > 0 && (
+        <>
+          <h4 className={styles.subheading}>의도된 구성으로 표시함</h4>
+          <ul className={styles.cautions}>
+            {ignored.map((w) => (
+              <li key={w.id} className={`${styles.caution} ${styles.cautionIgnored}`}>
+                <p className={styles.cautionText}>{w.text}</p>
+                {onIgnoreWarning && (
+                  <button type="button" className={styles.linkBtn} disabled={ignoreDisabled} onClick={() => onIgnoreWarning(w.id, false)}>
+                    다시 경고
+                  </button>
+                )}
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+    </section>
+  );
+}
+
+export function NodeInfo({ state, selectedId, onSelect, onMention, mentionDisabled, ...caution }: NodeInfoProps) {
   if (selectedId === null) return <p className={styles.empty}>캔버스에서 노드를 선택하면 설명이 여기에 표시돼요.</p>;
+
+  const warnings = mergeWarnings(state);
+  const pick = (f: (w: Warning) => boolean) => ({ active: warnings.active.filter(f), ignored: warnings.ignored.filter(f) });
 
   const edge = state.edges[selectedId];
   if (edge) {
@@ -66,6 +130,7 @@ export function NodeInfo({ state, selectedId, onSelect, onMention, mentionDisabl
           <div className={styles.field}><dt>도착</dt><dd>{nameOf(state, edge.to)}</dd></div>
           <div className={styles.field}><dt>라벨</dt><dd className={isEmpty(edge.label) ? styles.missing : undefined}>{isEmpty(edge.label) ? (edge.unknown?.includes("label") ? UNKNOWN : MISSING) : edge.label}</dd></div>
         </dl>
+        <Cautions {...pick((w) => w.edgeId === edge.id)} {...caution} />
       </div>
     );
   }
@@ -110,6 +175,7 @@ export function NodeInfo({ state, selectedId, onSelect, onMention, mentionDisabl
         </div>
       </header>
       <LinkButton id={node.id} onMention={onMention} disabled={mentionDisabled} />
+      <Cautions {...pick((w) => w.nodeId === node.id)} {...caution} />
       <Fields title="스펙 · SW" fields={SPEC_FIELDS} attrs={node.attrs} unknown={node.unknown ?? []} />
       <Fields title="서버 정보" fields={SERVER_FIELDS} attrs={node.attrs} unknown={node.unknown ?? []} />
       {otherFields.length > 0 && <Fields title="기타 정보" fields={otherFields} attrs={node.attrs} unknown={node.unknown ?? []} />}

@@ -72,6 +72,8 @@ button.node__badge { padding: 0; border: 0; font-family: inherit; cursor: pointe
 button.node__badge:focus-visible { outline: 1.5px solid var(--text-secondary); outline-offset: 2px; }
 .node__badge--missing { background: var(--state-missing); color: var(--text-primary); }
 .node__badge--warn { background: var(--state-warn); color: var(--bg-node); }
+/* 빠진 정보 배지와 함께면 그 왼쪽에 나란히(노드 윗변 안쪽이라 겹침 검사의 모서리 반지름을 넘지 않는다). */
+.node__badge--pair { right: 18px; }
 
 .group {
   box-sizing: border-box;

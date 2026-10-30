@@ -20,13 +20,13 @@ test("selected node shows accent ring outside and full label in title", () => {
 });
 
 test("missing badge shows count", () => {
-  wrap(<NodeCard data={{ label: "DB", fullLabel: "DB", category: "data", state: "normal", badge: { kind: "missing", count: 3 } }} {...rfProps} />);
+  wrap(<NodeCard data={{ label: "DB", fullLabel: "DB", category: "data", state: "normal", badges: { missing: 3 } }} {...rfProps} />);
   expect(screen.getByText("3")).toBeInTheDocument();
 });
 
 test("badge is a button with an accessible label", () => {
   const onBadgeClick = vi.fn();
-  wrap(<NodeCard data={{ label: "DB", fullLabel: "DB", category: "data", state: "normal", badge: { kind: "missing", count: 3 }, onBadgeClick }} {...rfProps} />);
+  wrap(<NodeCard data={{ label: "DB", fullLabel: "DB", category: "data", state: "normal", badges: { missing: 3 }, onBadgeClick }} {...rfProps} />);
   const btn = screen.getByRole("button", { name: "빠진 정보 3개" });
   fireEvent.click(btn);
   expect(onBadgeClick).toHaveBeenCalledOnce();
@@ -34,7 +34,7 @@ test("badge is a button with an accessible label", () => {
 
 test("badge button blocks RF drag/pan/keys and is keyboard activatable", async () => {
   const onBadgeClick = vi.fn();
-  wrap(<NodeCard data={{ label: "DB", fullLabel: "DB", category: "data", state: "normal", badge: { kind: "missing", count: 2 }, onBadgeClick }} {...rfProps} />);
+  wrap(<NodeCard data={{ label: "DB", fullLabel: "DB", category: "data", state: "normal", badges: { missing: 2 }, onBadgeClick }} {...rfProps} />);
   const btn = screen.getByRole("button", { name: "빠진 정보 2개" });
   expect(btn).toHaveClass("nodrag", "nopan", "nokey");
   btn.focus();
@@ -43,10 +43,21 @@ test("badge button blocks RF drag/pan/keys and is keyboard activatable", async (
 });
 
 test("warn badge shows exclamation, az shown next to sub", () => {
-  wrap(<NodeCard data={{ label: "A", fullLabel: "A", sub: "10.0.0.1", category: "compute", state: "updated", badge: { kind: "warn" }, az: "a" }} {...rfProps} />);
+  wrap(<NodeCard data={{ label: "A", fullLabel: "A", sub: "10.0.0.1", category: "compute", state: "updated", badges: { warn: 1 }, az: "a" }} {...rfProps} />);
   expect(screen.getByText("!")).toBeInTheDocument();
   expect(screen.getByText("AZ a")).toBeInTheDocument();
   expect(screen.getByTitle("A")).toHaveClass("node--updated");
+});
+
+test("warn badge is a nodrag button with label", () => {
+  const onWarnBadgeClick = vi.fn();
+  wrap(<NodeCard data={{ label: "DB", fullLabel: "DB", category: "data", state: "normal", badges: { warn: 2 }, onWarnBadgeClick }} {...rfProps} />);
+  const btn = screen.getByRole("button", { name: "경고 2개" });
+  expect(btn).toHaveTextContent("!");
+  expect(btn).toHaveClass("nodrag", "nopan", "nokey", "node__badge--warn");
+  expect(btn).not.toHaveClass("node__badge--pair");
+  fireEvent.click(btn);
+  expect(onWarnBadgeClick).toHaveBeenCalledOnce();
 });
 
 test("collapsed group shows hidden count and expand action", () => {

@@ -1,8 +1,14 @@
 import type { MessageRole } from "@/db/schema";
 import { missingReminder } from "@/domain/missing";
+import type { Warning } from "@/domain/types";
 import type { MessageMeta } from "@/server/chat/events";
 
 import type { ChatLine } from "./useChatTurn";
+
+/** 경고 한 건의 대화 줄(id 는 호출하는 쪽이 정하거나 push 가 붙인다). */
+export function warningLine(w: Warning): Omit<ChatLine, "id"> {
+  return { kind: "warning", text: `${w.level === "check" ? "확인해 보세요" : "주의"}: ${w.text}`, nodeId: w.nodeId, level: w.level };
+}
 
 type Row = { id: string; role: MessageRole; content: string; meta: MessageMeta };
 
@@ -14,6 +20,9 @@ export function messagesToLines(rows: Row[]): ChatLine[] {
     const missing = m.meta.missing ?? 0;
     if (m.role === "assistant" && missing > 0) {
       out.push({ id: `${m.id}-missing`, kind: "system", text: missingReminder(missing) });
+    }
+    if (m.role === "assistant") {
+      for (const w of m.meta.warnings ?? []) out.push({ id: `${m.id}-warn-${w.id}`, ...warningLine(w) });
     }
   }
   return out;

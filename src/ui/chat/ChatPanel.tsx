@@ -28,6 +28,8 @@ export interface ChatPanelProps {
   onConfirmAssumption?(key: string): void;
   /** 빠진 정보 체크리스트. 가정 칩과 함께 대화 위쪽에 둔다. */
   checklist?: ReactNode;
+  /** 경고 줄 클릭: 그 노드를 선택한다. 없으면 경고 줄은 글로만 보인다. */
+  onSelectNode?(nodeId: string): void;
 }
 
 const PHASE_LABEL: Record<ChatPhase, string> = { thinking: "구성 검토 중…", drawing: "그리는 중…", answering: "답변 작성 중…", checking: "위험 요소 점검 중…" };
@@ -55,7 +57,7 @@ function renderText(text: string): ReactNode[] {
   return out;
 }
 
-export function ChatPanel({ lines, busy, phase, onSend, onStop, health, disabledReason, mentionRef, footer, assumptions, onChooseAssumption, onConfirmAssumption, checklist }: ChatPanelProps) {
+export function ChatPanel({ lines, busy, phase, onSend, onStop, health, disabledReason, mentionRef, footer, assumptions, onChooseAssumption, onConfirmAssumption, checklist, onSelectNode }: ChatPanelProps) {
   const list = useRef<HTMLDivElement>(null);
   const stick = useRef(true);
   const [hasContent, setHasContent] = useState(false);
@@ -100,11 +102,23 @@ export function ChatPanel({ lines, busy, phase, onSend, onStop, health, disabled
           stick.current = el.scrollHeight - el.scrollTop - el.clientHeight <= NEAR_BOTTOM;
         }}
       >
-        {lines.map((l) => (
-          <p key={l.id} className={`${styles.line} ${styles[l.kind]}`} data-kind={l.kind}>
-            {renderText(l.text)}
-          </p>
-        ))}
+        {lines.map((l) =>
+          l.kind === "warning" ? (
+            <p key={l.id} className={`${styles.line} ${styles.warning}`} data-kind={l.kind} data-level={l.level}>
+              {onSelectNode && l.nodeId ? (
+                <button type="button" className={styles.warningBtn} onClick={() => onSelectNode(l.nodeId!)}>
+                  {l.text}
+                </button>
+              ) : (
+                l.text
+              )}
+            </p>
+          ) : (
+            <p key={l.id} className={`${styles.line} ${styles[l.kind]}`} data-kind={l.kind}>
+              {renderText(l.text)}
+            </p>
+          ),
+        )}
         {footer}
       </div>
       <div className={styles.phase} aria-live="polite">

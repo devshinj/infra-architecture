@@ -172,3 +172,20 @@ test("user abort with no applied commands shows no reminder", async () => {
   const lines = await abortWith([{ t: "say", text: "그리는 중" }]);
   expect(lines.at(-1)?.text).toBe("중단했어요.");
 });
+
+test("warnings event adds lines after the summary and reminder", async () => {
+  const items = [
+    { id: "spof:w", rule: "spof", nodeId: "w", level: "warn" as const, text: "1대뿐이에요.", guide: "g" },
+    { id: "db_exposed:d", rule: "db_exposed", nodeId: "d", level: "check" as const, text: "보일 수 있어요.", guide: "g" },
+  ];
+  vi.stubGlobal("fetch", vi.fn(async () => streamOf([nd([{ t: "status", phase: "checking" }, { t: "warnings", items }, done({ missing: 6 })])])));
+  const h = setup();
+  await act(() => h.result.current.send("x"));
+  expect(h.result.current.lines.slice(-4).map((l) => [l.kind, l.text])).toEqual([
+    ["system", "노드 3 · 연결 1 · 적용 2 · 건너뜀 1"],
+    ["system", "빠진 정보 6개가 있어요"],
+    ["warning", "주의: 1대뿐이에요."],
+    ["warning", "확인해 보세요: 보일 수 있어요."],
+  ]);
+  expect(h.result.current.lines.at(-2)).toMatchObject({ nodeId: "w", level: "warn" });
+});

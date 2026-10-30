@@ -102,3 +102,47 @@ test("no badge in compare mode", async () => {
   await waitFor(() => expect(container.querySelectorAll(".react-flow__node-infra").length).toBeGreaterThan(0));
   expect(container.querySelector(".node__badge")).toBeNull();
 });
+
+const exposed = (nodeId: string) => ({ id: `db_exposed:${nodeId}`, rule: "db_exposed", nodeId, level: "warn" as const, text: "외부에서 보여요", guide: "g" });
+const nodeEl = (c: HTMLElement, id: string) => c.querySelector(`.react-flow__node[data-id="${id}"]`) as HTMLElement | null;
+
+test("warn and missing badges side by side", async () => {
+  const props = baseProps({ ...fx("s2"), warnings: [exposed("was-1")] });
+  const { container } = render(<div style={{ width: 800, height: 600 }}><Canvas {...props} /></div>);
+  const node = await waitFor(() => {
+    const n = nodeEl(container, "was-1");
+    expect(n).not.toBeNull();
+    expect(n!.querySelector(".node__badge--warn")).not.toBeNull();
+    return n!;
+  });
+  const badges = [...node.querySelectorAll(".node__badge")];
+  expect(badges.map((b) => b.getAttribute("aria-label"))).toEqual(["경고 1개", "빠진 정보 6개"]);
+  expect(badges[0]).toHaveClass("node__badge--pair");
+});
+
+test("warn badge selects the node", async () => {
+  const onWarnBadgeClick = vi.fn();
+  const props = { ...baseProps({ ...fx("s2"), warnings: [exposed("was-1")] }), onWarnBadgeClick };
+  const { container } = render(<div style={{ width: 800, height: 600 }}><Canvas {...props} /></div>);
+  const badge = await waitFor(() => {
+    const b = nodeEl(container, "was-1")?.querySelector(".node__badge--warn") ?? null;
+    expect(b).not.toBeNull();
+    return b as HTMLElement;
+  });
+  fireEvent.click(badge);
+  expect(onWarnBadgeClick).toHaveBeenCalledWith("was-1");
+});
+
+test("no badges in compare mode", async () => {
+  const props = { ...baseProps({ ...fx("s2"), warnings: [exposed("was-1")] }), diffMarks: { added: new Set<string>(), removed: new Set<string>(), changed: new Set<string>() } };
+  const { container } = render(<div style={{ width: 800, height: 600 }}><Canvas {...props} /></div>);
+  await waitFor(() => expect(container.querySelectorAll(".react-flow__node-infra").length).toBeGreaterThan(0));
+  expect(container.querySelector(".node__badge")).toBeNull();
+});
+
+test("ignored warning has no badge", async () => {
+  const props = baseProps({ ...fx("s2"), warnings: [exposed("was-1")], ignoredWarnings: ["db_exposed:was-1"] });
+  const { container } = render(<div style={{ width: 800, height: 600 }}><Canvas {...props} /></div>);
+  await waitFor(() => expect(nodeEl(container, "was-1")?.querySelector(".node__badge") ?? null).not.toBeNull());
+  expect(container.querySelector(".node__badge--warn")).toBeNull();
+});

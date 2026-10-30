@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { categoryOf } from "@/domain/catalog";
 import { computeMissing } from "@/domain/missing";
 import type { DiagramState } from "@/domain/types";
+import { mergeWarnings, warningsByNode } from "@/domain/warnings";
 
 import "./canvas.css";
 import { EdgeLayerPortal } from "./EdgeLayer";
@@ -41,6 +42,8 @@ export interface CanvasProps {
   onMention?(id: string): void;
   /** Click on a node's missing-info badge (jump to the checklist). */
   onBadgeClick?(nodeId: string): void;
+  /** Click on a node's warning badge (select the node → 설명 탭 주의할 점). */
+  onWarnBadgeClick?(nodeId: string): void;
 }
 
 export const FAR_ZOOM = 0.6;
@@ -105,10 +108,11 @@ interface FlowProps extends CanvasProps {
   updated: Set<string>;
 }
 
-function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onPinnedChange, motion, layout, display, appearing, updated, diffMarks, fitKey, onMention, onBadgeClick }: FlowProps) {
+function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onPinnedChange, motion, layout, display, appearing, updated, diffMarks, fitKey, onMention, onBadgeClick, onWarnBadgeClick }: FlowProps) {
   const far = useStore((s) => s.transform[2] < FAR_ZOOM);
   const selected = drawnId(state, options.collapsed, options.selectedId);
   const missingByNode = useMemo(() => computeMissing(state).byNode, [state]);
+  const warnByNode = useMemo(() => warningsByNode(mergeWarnings(state).active), [state]);
 
   const computed = useMemo<Node[]>(() => {
     const neighbors = new Set<string>();
@@ -167,10 +171,15 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
         state: visual,
         ...(az !== undefined && az !== null ? { az: String(az) } : {}),
         ...(diff ? { diff } : {}),
-        ...(!diffMarks && (missingByNode[ln.id] ?? 0) > 0
-          ? { badge: { kind: "missing" as const, count: missingByNode[ln.id] }, ...(onBadgeClick ? { onBadgeClick: () => onBadgeClick(ln.id) } : {}) }
-          : {}),
       };
+      // 비교 모드에서는 배지를 모두 숨긴다.
+      const missing = diffMarks ? 0 : (missingByNode[ln.id] ?? 0);
+      const warn = diffMarks ? 0 : (warnByNode[ln.id] ?? 0);
+      if (missing > 0 || warn > 0) {
+        data.badges = { ...(missing > 0 ? { missing } : {}), ...(warn > 0 ? { warn } : {}) };
+        if (missing > 0 && onBadgeClick) data.onBadgeClick = () => onBadgeClick(ln.id);
+        if (warn > 0 && onWarnBadgeClick) data.onWarnBadgeClick = () => onWarnBadgeClick(ln.id);
+      }
       out.push({
         id: n.id,
         type: "infra",
@@ -184,7 +193,7 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
       });
     }
     return out;
-  }, [layout, display, selected, appearing, updated, editMode, options, onOptionsChange, diffMarks, missingByNode, onBadgeClick]);
+  }, [layout, display, selected, appearing, updated, editMode, options, onOptionsChange, diffMarks, missingByNode, warnByNode, onBadgeClick, onWarnBadgeClick]);
 
   const [nodes, setNodes] = useState<Node[]>(computed);
   useEffect(() => setNodes(computed), [computed]);

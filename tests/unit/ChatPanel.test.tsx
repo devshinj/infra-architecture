@@ -70,3 +70,26 @@ test("log is a live region; mention tokens render as labels", () => {
   expect(log).toHaveTextContent("API 서버 늘려줘");
   expect(log).not.toHaveTextContent("node:n1");
 });
+
+test("checking phase label", () => {
+  render(<ChatPanel {...base({ busy: true, phase: "checking" })} />);
+  expect(screen.getByText("위험 요소 점검 중…")).toBeInTheDocument();
+});
+
+test("warning line click selects node", async () => {
+  const onSelectNode = vi.fn();
+  render(
+    <ChatPanel
+      {...base({
+        onSelectNode,
+        lines: [
+          { id: "w1", kind: "warning", text: "주의: 1대뿐이에요.", nodeId: "web-1", level: "warn" },
+          { id: "w2", kind: "warning", text: "확인해 보세요: 보일 수 있어요.", nodeId: "db-1", level: "check" },
+        ],
+      })}
+    />,
+  );
+  await userEvent.click(screen.getByRole("button", { name: "주의: 1대뿐이에요." }));
+  expect(onSelectNode).toHaveBeenCalledWith("web-1");
+  expect(screen.getByRole("button", { name: "확인해 보세요: 보일 수 있어요." }).closest("[data-kind]")).toHaveAttribute("data-level", "check");
+});

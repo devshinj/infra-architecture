@@ -12,6 +12,7 @@ import {
   restoreVersionAction,
   saveFieldsAction,
   savePinnedAction,
+  setWarningIgnoredAction,
 } from "@/app/(app)/actions";
 import { Canvas, type CanvasOptions, type DiffMarks } from "@/canvas/Canvas";
 import { defaultDisplayOptions } from "@/canvas/display";
@@ -50,6 +51,8 @@ const unionState = (old: DiagramState, cur: DiagramState): DiagramState => ({
   nodes: { ...old.nodes, ...cur.nodes },
   edges: { ...old.edges, ...cur.edges },
   assumptions: cur.assumptions,
+  ...(cur.warnings ? { warnings: cur.warnings } : {}),
+  ...(cur.ignoredWarnings ? { ignoredWarnings: cur.ignoredWarnings } : {}),
 });
 
 const optionsFor = (state: DiagramState): CanvasOptions => ({ ...defaultDisplayOptions(state), hoverLabels: true });
@@ -206,6 +209,8 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
     focusSeq.current += 1;
     setFocus({ id, token: focusSeq.current });
   }, []);
+  // 경고 배지·대화 경고 줄: 그 노드를 고른다(설명 탭의 주의할 점으로 간다). Canvas memo deps 라 고정한다.
+  const selectNode = useCallback((id: string) => setOptions((o) => ({ ...o, selectedId: id })), []);
   const onTabChange = (t: Tab) => {
     setTab(t);
     if (t !== "대화") setFocus(null); // coming back to 대화 must not jump to the old target again
@@ -220,6 +225,24 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
       return { ok: true };
     } catch {
       return { ok: false, message: "저장하지 못했어요. 다시 시도해 주세요." };
+    }
+  };
+
+  // 의도된 구성 / 다시 경고 = 한 버전. 체크리스트와 같은 서버 상태 채택 경로를 쓴다.
+  const [warnSaving, setWarnSaving] = useState(false);
+  const [warnError, setWarnError] = useState<string | null>(null);
+  const onIgnoreWarning = async (id: string, ignored: boolean) => {
+    if (!live || chat.busy || warnSaving) return;
+    setWarnSaving(true);
+    setWarnError(null);
+    try {
+      const r = await setWarningIgnoredAction(diagramId, id, ignored);
+      if (!r.ok) setWarnError(r.error);
+      else if (r.number !== null) refreshFromServer();
+    } catch {
+      setWarnError("저장하지 못했어요. 다시 시도해 주세요.");
+    } finally {
+      setWarnSaving(false);
     }
   };
 
@@ -312,6 +335,7 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
             onAutoArrange={onAutoArrange}
             onEditModeChange={(v) => live && !locked && setEditMode(v)}
             onMotionChange={setMotion}
+            onWarnBadgeClick={selectNode}
             {...(live ? { onMention, onBadgeClick } : {})}
             {...(mode.kind === "compare" ? { diffMarks: mode.marks } : {})}
           />
@@ -329,6 +353,7 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
         tab={tab}
         onTabChange={onTabChange}
         onHistoryOpen={loadVersions}
+        {...(live ? { cautions: { onIgnoreWarning, ignoreDisabled: locked || warnSaving, ignoreError: warnError } } : {})}
         history={{
           versions,
           onView: view,
@@ -343,6 +368,7 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
           phase: chat.phase,
           onSend: sendChat,
           onStop: chat.stop,
+          onSelectNode: selectNode,
           assumptions: current.state.assumptions,
           onChooseAssumption,
           onConfirmAssumption,

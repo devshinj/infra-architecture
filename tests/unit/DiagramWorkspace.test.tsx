@@ -2,17 +2,19 @@ import "@testing-library/jest-dom/vitest";
 import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
-const hookState = vi.hoisted(() => ({ busy: false, onCommand: null as null | ((c: unknown) => void), badgeFns: [] as unknown[] }));
+const hookState = vi.hoisted(() => ({ busy: false, onCommand: null as null | ((c: unknown) => void), badgeFns: [] as unknown[], warnFns: [] as unknown[] }));
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
 vi.mock("@/app/(app)/actions", () => ({
   clearPinnedAction: vi.fn(), getVersionAction: vi.fn(), importSampleAction: vi.fn(),
   listVersionsAction: vi.fn(async () => []), restoreVersionAction: vi.fn(), savePinnedAction: vi.fn(),
   saveFieldsAction: vi.fn(async () => ({ ok: true, number: 2 })),
+  setWarningIgnoredAction: vi.fn(async () => ({ ok: true, number: 2 })),
 }));
 vi.mock("@/canvas/Canvas", () => ({
-  Canvas: ({ state, onMention, onBadgeClick, onSelect }: { state: { nodes: object }; onMention?: (id: string) => void; onBadgeClick?: (id: string) => void; onSelect: (id: string | null) => void }) => {
+  Canvas: ({ state, onMention, onBadgeClick, onWarnBadgeClick, onSelect }: { state: { nodes: object }; onMention?: (id: string) => void; onBadgeClick?: (id: string) => void; onWarnBadgeClick?: (id: string) => void; onSelect: (id: string | null) => void }) => {
     hookState.badgeFns.push(onBadgeClick);
+    hookState.warnFns.push(onWarnBadgeClick);
     return (
     <div>
       <div data-testid="n">{Object.keys(state.nodes).join(",")}</div>
@@ -31,7 +33,7 @@ vi.mock("@/ui/chat/useChatTurn", () => ({
   },
 }));
 
-import { saveFieldsAction } from "@/app/(app)/actions";
+import { saveFieldsAction, setWarningIgnoredAction } from "@/app/(app)/actions";
 import { emptyState } from "@/domain/types";
 import { DiagramWorkspace } from "@/ui/DiagramWorkspace";
 
@@ -122,10 +124,47 @@ test("drafts survive leaving the 대화 tab", () => {
 test("onBadgeClick keeps its identity across workspace re-renders (Canvas memo deps)", () => {
   hookState.busy = false;
   hookState.badgeFns.length = 0;
+  hookState.warnFns.length = 0;
   render(ui(mk(1, ["a"])));
   fireEvent.click(screen.getByRole("button", { name: "선택b" }));
   fireEvent.click(screen.getByRole("tab", { name: "설명" }));
   fireEvent.click(screen.getByRole("button", { name: "배지a" }));
   expect(hookState.badgeFns.length).toBeGreaterThan(2);
   expect(new Set(hookState.badgeFns).size).toBe(1);
+  expect(new Set(hookState.warnFns).size).toBe(1);
+  expect(hookState.warnFns[0]).toBeTypeOf("function");
+});
+
+const solo = (n: number, ignored?: string[]) => ({
+  number: n,
+  state: { ...emptyState(), nodes: Object.fromEntries([web("b")]), ...(ignored ? { ignoredWarnings: ignored } : {}) },
+});
+const caution = () => screen.getByRole("heading", { name: "주의할 점" }).closest("section")!;
+
+test("ignore saves via action and the warning moves to the ignored list after adoption", async () => {
+  hookState.busy = false;
+  const { rerender } = render(ui(solo(1) as never));
+  fireEvent.click(screen.getByRole("button", { name: "선택b" }));
+  await act(async () => {
+    fireEvent.click(within(caution()).getByRole("button", { name: "의도된 구성" }));
+  });
+  expect(setWarningIgnoredAction).toHaveBeenCalledWith("d", "spof:b", true);
+  rerender(ui(solo(2, ["spof:b"]) as never));
+  expect(within(caution()).getByRole("heading", { name: "의도된 구성으로 표시함" })).toBeInTheDocument();
+  expect(within(caution()).getByRole("button", { name: "다시 경고" })).toBeEnabled();
+  expect(within(caution()).queryByRole("button", { name: "의도된 구성" })).not.toBeInTheDocument();
+});
+
+test("ignore buttons are disabled during a chat turn and action errors show as an alert", async () => {
+  hookState.busy = true;
+  const { rerender } = render(ui(solo(1) as never));
+  fireEvent.click(screen.getByRole("button", { name: "선택b" }));
+  expect(within(caution()).getByRole("button", { name: "의도된 구성" })).toBeDisabled();
+  hookState.busy = false;
+  rerender(ui(solo(1) as never));
+  vi.mocked(setWarningIgnoredAction).mockResolvedValueOnce({ ok: false, error: "경고를 찾을 수 없어요" });
+  await act(async () => {
+    fireEvent.click(within(caution()).getByRole("button", { name: "의도된 구성" }));
+  });
+  expect(within(caution()).getByRole("alert")).toHaveTextContent("경고를 찾을 수 없어요");
 });

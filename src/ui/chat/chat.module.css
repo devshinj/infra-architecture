@@ -8,6 +8,12 @@
 .progress { font-size: 12px; color: var(--text-secondary); }
 .system { font-size: 11.5px; color: var(--text-secondary); }
 .error { font-size: 12.5px; color: var(--text-primary); border: 1px solid var(--state-missing); border-radius: var(--radius-node); padding: 6px 10px; }
+/* 경고 줄: 테두리만 --state-warn(확인 필요는 기본 선). 누르면 그 노드를 고른다. */
+.warning { font-size: 12.5px; border: 1px solid var(--state-warn); border-radius: var(--radius-node); padding: 6px 10px; }
+.warning[data-level="check"] { border-color: var(--line-node); }
+.warningBtn { font: inherit; text-align: left; color: var(--text-primary); background: transparent; border: 0; padding: 0; cursor: pointer; }
+.warningBtn:hover { text-decoration: underline; }
+.warningBtn:focus-visible { outline: 1.5px solid var(--text-secondary); outline-offset: 2px; }
 .ref { color: var(--text-primary); background: var(--line-node); border-radius: 4px; padding: 0 5px; font-size: 12px; }
 .phase { min-height: 18px; padding: 0 12px 4px; font-size: 11.5px; color: var(--text-secondary); }
 .composer { display: flex; flex-direction: column; gap: 8px; padding: 10px 12px 12px; border-top: 1px solid var(--line-node); }

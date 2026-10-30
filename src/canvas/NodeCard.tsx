@@ -13,16 +13,21 @@ export interface NodeCardData extends Record<string, unknown> {
   sub?: string;
   category: Category;
   state: NodeVisualState;
-  badge?: { kind: "missing" | "warn"; count?: number };
+  /** 빠진 정보 수와 경고 수. 둘 다 있으면 경고 "!" 가 빠진 정보 배지 왼쪽에 나란히 놓인다. */
+  badges?: { missing?: number; warn?: number };
   az?: string;
   /** Compare mode marker. */
   diff?: "added" | "removed" | "changed";
   /** Click on the missing badge; the click does not select the node. */
   onBadgeClick?: () => void;
+  /** Click on the warning badge (selects the node: 설명 탭의 주의할 점). */
+  onWarnBadgeClick?: () => void;
 }
 
 export function NodeCard({ data }: Pick<NodeProps, "data"> & Partial<NodeProps>) {
   const d = data as NodeCardData;
+  const missing = d.badges?.missing ?? 0;
+  const warn = d.badges?.warn ?? 0;
   return (
     <div className={`node node--${d.state}${d.diff ? ` node--diff-${d.diff}` : ""}`} title={d.fullLabel} data-category={d.category}>
       <span className="node__icon" style={{ "--cat": `var(--cat-${d.category})` } as React.CSSProperties}>
@@ -37,20 +42,31 @@ export function NodeCard({ data }: Pick<NodeProps, "data"> & Partial<NodeProps>)
           </span>
         )}
       </span>
-      {d.badge?.kind === "missing" ? (
+      {warn > 0 && (
+        <button
+          type="button"
+          className={`node__badge node__badge--warn${missing > 0 ? " node__badge--pair" : ""} nodrag nopan nokey`}
+          aria-label={`경고 ${warn}개`}
+          onClick={(e) => {
+            e.stopPropagation();
+            d.onWarnBadgeClick?.();
+          }}
+        >
+          !
+        </button>
+      )}
+      {missing > 0 && (
         <button
           type="button"
           className="node__badge node__badge--missing nodrag nopan nokey"
-          aria-label={`빠진 정보 ${d.badge.count ?? 0}개`}
+          aria-label={`빠진 정보 ${missing}개`}
           onClick={(e) => {
             e.stopPropagation();
             d.onBadgeClick?.();
           }}
         >
-          {d.badge.count}
+          {missing}
         </button>
-      ) : (
-        d.badge && <span className={`node__badge node__badge--${d.badge.kind}`}>!</span>
       )}
       {d.state === "updated" && <span className="node__updated" />}
     </div>

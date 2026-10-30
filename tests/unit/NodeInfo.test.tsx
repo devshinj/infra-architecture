@@ -101,3 +101,67 @@ test("기타 정보 is omitted when every required key is already in the other s
   render(<NodeInfo state={solo("web_server", {})} selectedId="n1" onSelect={vi.fn()} />);
   expect(screen.queryByRole("heading", { name: "기타 정보" })).not.toBeInTheDocument();
 });
+
+const risky = (o: { ignored?: string[] } = {}) => ({
+  ...emptyState(),
+  nodes: {
+    c: { id: "c", kind: "client_web", label: "사용자", parent: null, attrs: {} },
+    w: { id: "w", kind: "web_server", label: "웹", parent: null, attrs: {} },
+  },
+  edges: { e1: { id: "e1", from: "c", to: "w", edgeKind: "request" } },
+  warnings: [{ id: "db_exposed:w", rule: "db_exposed", nodeId: "w", level: "check", text: "외부에서 보일 수 있어요.", guide: "내부에 두세요." }],
+  ...(o.ignored ? { ignoredWarnings: o.ignored } : {}),
+}) as never;
+
+const cautionSection = () => screen.getByRole("heading", { name: "주의할 점" }).closest("section")!;
+
+test("주의할 점 lists text, guide and level", () => {
+  render(<NodeInfo state={risky()} selectedId="w" onSelect={vi.fn()} />);
+  const sec = cautionSection();
+  expect(within(sec).getByText("웹이(가) 1대뿐이라 멈추면 서비스도 멈춰요.")).toBeInTheDocument();
+  expect(within(sec).getByText("같은 역할 서버를 2대 이상 두고 이중화 묶음(VIP)으로 묶으세요.")).toBeInTheDocument();
+  expect(within(sec).getByText("외부에서 보일 수 있어요.")).toBeInTheDocument();
+  expect(within(sec).getAllByText("경고")).toHaveLength(2); // spof, no_firewall
+  expect(within(sec).getAllByText("확인 필요")).toHaveLength(1);
+  // 콜백이 없으면(이력 보기 등) 버튼을 숨긴다.
+  expect(within(sec).queryByRole("button", { name: "의도된 구성" })).not.toBeInTheDocument();
+});
+
+test("no 주의할 점 section without warnings", () => {
+  render(<NodeInfo state={risky()} selectedId="c" onSelect={vi.fn()} />);
+  expect(screen.queryByRole("heading", { name: "주의할 점" })).not.toBeInTheDocument();
+});
+
+test("의도된 구성 calls onIgnoreWarning(id, true)", async () => {
+  const onIgnoreWarning = vi.fn();
+  render(<NodeInfo state={risky()} selectedId="w" onSelect={vi.fn()} onIgnoreWarning={onIgnoreWarning} />);
+  const item = screen.getByText("웹이(가) 1대뿐이라 멈추면 서비스도 멈춰요.").closest("li")!;
+  await userEvent.click(within(item).getByRole("button", { name: "의도된 구성" }));
+  expect(onIgnoreWarning).toHaveBeenCalledWith("spof:w", true);
+});
+
+test("ignore buttons are disabled while busy and an error is shown as an alert", () => {
+  render(<NodeInfo state={risky()} selectedId="w" onSelect={vi.fn()} onIgnoreWarning={vi.fn()} ignoreDisabled ignoreError="경고를 찾을 수 없어요" />);
+  for (const b of screen.getAllByRole("button", { name: "의도된 구성" })) expect(b).toBeDisabled();
+  expect(screen.getByRole("alert")).toHaveTextContent("경고를 찾을 수 없어요");
+});
+
+test("ignored list shows 다시 경고", async () => {
+  const onIgnoreWarning = vi.fn();
+  render(<NodeInfo state={risky({ ignored: ["spof:w"] })} selectedId="w" onSelect={vi.fn()} onIgnoreWarning={onIgnoreWarning} />);
+  const sec = cautionSection();
+  const sub = within(sec).getByRole("heading", { name: "의도된 구성으로 표시함" });
+  const ignoredList = sub.nextElementSibling as HTMLElement;
+  expect(within(ignoredList).getByText("웹이(가) 1대뿐이라 멈추면 서비스도 멈춰요.")).toBeInTheDocument();
+  await userEvent.click(within(ignoredList).getByRole("button", { name: "다시 경고" }));
+  expect(onIgnoreWarning).toHaveBeenCalledWith("spof:w", false);
+  expect(within(sec).getAllByRole("button", { name: "의도된 구성" })).toHaveLength(2);
+});
+
+test("edge selection shows its warning", () => {
+  render(<NodeInfo state={risky()} selectedId="e1" onSelect={vi.fn()} onIgnoreWarning={vi.fn()} />);
+  const sec = cautionSection();
+  expect(within(sec).getByText("사용자에서 웹(으)로 바로 들어와요.")).toBeInTheDocument();
+  expect(within(sec).queryByText(/1대뿐/)).not.toBeInTheDocument();
+  expect(within(sec).getByRole("button", { name: "의도된 구성" })).toBeInTheDocument();
+});
