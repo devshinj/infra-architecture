@@ -1,6 +1,6 @@
 import { applyNodeChanges, Background, ReactFlow, ReactFlowProvider, useReactFlow, useStore, type Node, type NodeChange } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from "react";
 
 import { categoryOf } from "@/domain/catalog";
 import { computeMissing } from "@/domain/missing";
@@ -58,6 +58,10 @@ export interface CanvasProps {
   onBadgeClick?(nodeId: string): void;
   /** Click on a node's warning badge (select the node → 설명 탭 주의할 점). */
   onWarnBadgeClick?(nodeId: string): void;
+  /** 빈 화면의 `샘플 불러오기` 목록. 비었거나 onImportSample 이 없으면 버튼을 그리지 않는다. */
+  samples?: { id: string; title: string }[];
+  onImportSample?(sampleId: string): void;
+  importing?: boolean;
 }
 
 export const FAR_ZOOM = 0.6;
@@ -65,7 +69,7 @@ export const FAR_ZOOM = 0.6;
 export const PULSE_MS = 1600;
 const NO_INSETS: Insets = { left: 0, right: 0 };
 const LAYOUT_FAILED_MESSAGE = "구성도를 배치하지 못했어요. 새로고침하거나 구성을 다시 확인해 주세요.";
-const EMPTY_MESSAGE = "아직 구성도가 비어 있어요. 오른쪽 대화에서 만들고 싶은 서비스를 설명하거나, 샘플을 불러와 보세요.";
+const EMPTY_MESSAGE = "아직 구성도가 비어 있어요. 오른쪽 대화에서 만들고 싶은 서비스를 설명해 보세요.";
 
 type ToggleKey = "hideAux" | "busSimplify" | "hoverLabels" | "mergeDuplicates" | "showMissingBadges";
 const CLEANUP_TOGGLES: { key: ToggleKey; label: string }[] = [
@@ -79,6 +83,64 @@ const CLEANUP_TOGGLES: { key: ToggleKey; label: string }[] = [
 /** The id actually drawn for `id`: itself, or its outermost collapsed ancestor group. */
 const drawnId = (state: DiagramState, collapsed: Set<string>, id: string | null): string | null =>
   id === null ? null : (outermostCollapsedAncestor(state, collapsed, id) ?? id);
+
+/** 빈 화면의 작은 텍스트 버튼 + 팝오버 목록. Esc·바깥 클릭으로 닫고, 고르면 닫으며 가져온다. */
+function SamplePicker({ samples, onImport, disabled }: { samples: { id: string; title: string }[]; onImport(id: string): void; disabled: boolean }) {
+  const [open, setOpen] = useState(false);
+  const root = useRef<HTMLDivElement>(null);
+  const trigger = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    root.current?.querySelector<HTMLElement>('[role="menuitem"]')?.focus();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      setOpen(false);
+      trigger.current?.focus();
+    };
+    const onDown = (e: MouseEvent) => {
+      if (!root.current?.contains(e.target as globalThis.Node)) setOpen(false);
+    };
+    document.addEventListener("keydown", onKey);
+    document.addEventListener("mousedown", onDown);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.removeEventListener("mousedown", onDown);
+    };
+  }, [open]);
+  const move = (e: ReactKeyboardEvent<HTMLUListElement>) => {
+    if (e.key !== "ArrowDown" && e.key !== "ArrowUp") return;
+    e.preventDefault();
+    const items = [...e.currentTarget.querySelectorAll<HTMLElement>('[role="menuitem"]')];
+    const at = items.indexOf(document.activeElement as HTMLElement);
+    items[(at + (e.key === "ArrowDown" ? 1 : -1) + items.length) % items.length]?.focus();
+  };
+  return (
+    <div ref={root} className="canvas__samples">
+      <button ref={trigger} type="button" className="canvas__sample-btn" aria-haspopup="menu" aria-expanded={open} disabled={disabled} onClick={() => setOpen((v) => !v)}>
+        샘플 불러오기
+      </button>
+      {open && (
+        <ul className="canvas__sample-list" role="menu" aria-label="샘플" onKeyDown={move}>
+          {samples.map((s) => (
+            <li key={s.id} role="none">
+              <button
+                type="button"
+                role="menuitem"
+                className="node-menu__item"
+                onClick={() => {
+                  setOpen(false);
+                  onImport(s.id);
+                }}
+              >
+                {s.title}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
 
 export function Canvas(props: CanvasProps) {
   const { state, pinned, editMode, options, onOptionsChange, onAutoArrange, autoArrangeDisabled = false, motion } = props;
@@ -105,7 +167,12 @@ export function Canvas(props: CanvasProps) {
         ))}
       </div>
       {empty ? (
-        <p className="canvas__empty">{EMPTY_MESSAGE}</p>
+        <div className="canvas__empty">
+          <p>{EMPTY_MESSAGE}</p>
+          {props.samples && props.samples.length > 0 && props.onImportSample && (
+            <SamplePicker samples={props.samples} onImport={props.onImportSample} disabled={props.importing ?? false} />
+          )}
+        </div>
       ) : !view.layout && view.layoutFailed ? (
         <p className="canvas__empty" role="alert">{LAYOUT_FAILED_MESSAGE}</p>
       ) : (

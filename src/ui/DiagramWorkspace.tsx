@@ -488,6 +488,9 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
             onEditModeChange={(v) => live && !locked && setEditMode(v)}
             onMotionChange={setMotion}
             onWarnBadgeClick={selectNode}
+            samples={samples}
+            onImportSample={importSample}
+            importing={busy || locked}
             {...(focusRequest ? { focusRequest } : {})}
             {...(live ? { onMention, onBadgeClick } : {})}
             {...(mode.kind === "compare" ? { diffMarks: mode.marks } : {})}
@@ -525,9 +528,6 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
           onSelect={(id) => setOptions((o) => ({ ...o, selectedId: id }))}
           onMention={onMention}
           mentionDisabled={!live}
-          samples={samples}
-          onImportSample={importSample}
-          importing={busy || locked}
           tab={tab}
           onTabChange={setTab}
           warningState={mode.kind === "compare" ? current.state : shown}

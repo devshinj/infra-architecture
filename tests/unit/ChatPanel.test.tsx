@@ -192,3 +192,42 @@ test("card is not live; only step changes are announced", () => {
   rerender(<ChatPanel {...base({ lines: [card({ mode: "build", step: "checking", changes: 7, end: "done", nodes: 3, edges: 2 })] })} />);
   expect(status).toHaveTextContent(/^완료$/);
 });
+
+const GREETING = "안녕하세요, InfraSketch예요. 만들고 싶은 서비스를 말씀해 주시면 인프라 구성도를 바로 그려 드릴게요.";
+const EXAMPLES = ["결제와 카카오 로그인이 붙는 쇼핑몰", "사내 IDC에 WEB-WAS-DB 이중화", "AWS EKS 위 MSA와 Kafka", "하루 10만 명이 쓰는 예약 서비스"];
+
+test("empty diagram shows greeting, guide and example chips", () => {
+  render(<ChatPanel {...base({ emptyDiagram: true })} />);
+  const g = screen.getByRole("group", { name: "InfraSketch 메시지" });
+  expect(within(g).getByText("InfraSketch")).toBeInTheDocument();
+  expect(within(g).getByText("IS")).toBeInTheDocument();
+  expect(within(g).getByText(GREETING)).toBeInTheDocument();
+  expect(within(g).getByText("이렇게 말하면 더 정확해요")).toBeInTheDocument();
+  for (const t of ["무엇을 만드는지 (예: 쇼핑몰, 예약 서비스)", "어디에 올리는지 (클라우드, 사내 IDC)", "대략 사용자 수 (예: 하루 1만 명)", "붙일 외부 서비스 (결제, 소셜 로그인, 문자)"]) {
+    expect(within(g).getByText(t)).toBeInTheDocument();
+  }
+  for (const e of EXAMPLES) expect(within(g).getByRole("button", { name: e })).toBeInTheDocument();
+});
+
+test("chip fills the input without sending", async () => {
+  const p = base({ emptyDiagram: true, mentionRef: createRef<MentionInputHandle>() });
+  render(<ChatPanel {...p} />);
+  await userEvent.click(screen.getByRole("button", { name: EXAMPLES[2]! }));
+  const box = screen.getByRole("textbox");
+  expect(box).toHaveValue(EXAMPLES[2]);
+  expect(box).toHaveFocus();
+  expect(p.onSend).not.toHaveBeenCalled();
+  expect(screen.getByRole("button", { name: "보내기" })).toBeEnabled();
+});
+
+test("greeting disappears after the first message and when the diagram has nodes", () => {
+  const line: ChatLine = { id: "1", kind: "user", text: "쇼핑몰" };
+  const { rerender } = render(<ChatPanel {...base({ emptyDiagram: true })} />);
+  expect(screen.getByText(GREETING)).toBeInTheDocument();
+  rerender(<ChatPanel {...base({ emptyDiagram: true, lines: [line] })} />);
+  expect(screen.queryByText(GREETING)).not.toBeInTheDocument();
+  rerender(<ChatPanel {...base({ emptyDiagram: false })} />);
+  expect(screen.queryByText(GREETING)).not.toBeInTheDocument();
+  rerender(<ChatPanel {...base()} />);
+  expect(screen.queryByText(GREETING)).not.toBeInTheDocument();
+});

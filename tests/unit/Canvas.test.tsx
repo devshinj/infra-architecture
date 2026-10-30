@@ -54,6 +54,29 @@ test("empty diagram shows guidance", () => {
   expect(screen.getByText(/아직 구성도가 비어 있어요/)).toBeInTheDocument();
 });
 
+test("canvas empty state offers 샘플 불러오기", async () => {
+  const onImportSample = vi.fn();
+  const samples = [{ id: "s1", title: "샘플 하나" }, { id: "s2", title: "샘플 둘" }];
+  const { rerender } = render(<Canvas {...baseProps(emptyState())} samples={samples} onImportSample={onImportSample} />);
+  const open = screen.getByRole("button", { name: "샘플 불러오기" });
+  expect(open).toHaveAttribute("aria-expanded", "false");
+  fireEvent.click(open);
+  expect(open).toHaveAttribute("aria-expanded", "true");
+  fireEvent.keyDown(document, { key: "Escape" });
+  expect(screen.queryByRole("menuitem", { name: "샘플 하나" })).not.toBeInTheDocument();
+  fireEvent.click(open);
+  fireEvent.mouseDown(document.body);
+  expect(screen.queryByRole("menuitem", { name: "샘플 하나" })).not.toBeInTheDocument();
+  fireEvent.click(open);
+  fireEvent.click(screen.getByRole("menuitem", { name: "샘플 둘" }));
+  expect(onImportSample).toHaveBeenCalledWith("s2");
+  expect(screen.queryByRole("menuitem", { name: "샘플 둘" })).not.toBeInTheDocument();
+  rerender(<Canvas {...baseProps(emptyState())} samples={samples} onImportSample={onImportSample} importing />);
+  expect(screen.getByRole("button", { name: "샘플 불러오기" })).toBeDisabled();
+  rerender(<Canvas {...baseProps(emptyState())} />);
+  expect(screen.queryByRole("button", { name: "샘플 불러오기" })).not.toBeInTheDocument();
+});
+
 test("auto arrange button enabled outside edit mode", () => {
   const props = baseProps(emptyState());
   const { rerender } = render(<Canvas {...props} />);

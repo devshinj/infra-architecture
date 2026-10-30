@@ -178,3 +178,16 @@ button.node__badge:focus-visible { outline: 1.5px solid var(--text-secondary); o
 }
 .node-menu__item:hover { background: var(--bg-canvas); }
 .node-menu__item:focus-visible { outline: 1.5px solid var(--text-secondary); outline-offset: -1px; }
+.canvas__empty p { margin: 0; }
+.canvas__samples { position: relative; margin-top: 10px; display: inline-block; }
+.canvas__sample-btn {
+  font: inherit; font-size: 12.5px; color: var(--text-secondary); background: transparent; border: 0; padding: 2px 4px;
+  text-decoration: underline; text-underline-offset: 3px; cursor: pointer;
+}
+.canvas__sample-btn:hover:not(:disabled) { color: var(--text-primary); }
+.canvas__sample-btn:disabled { opacity: 0.4; cursor: default; }
+.canvas__sample-btn:focus-visible { outline: 1.5px solid var(--text-secondary); outline-offset: 2px; }
+.canvas__sample-list {
+  position: absolute; z-index: 30; top: 100%; left: 50%; transform: translateX(-50%); margin: 6px 0 0; padding: 4px; list-style: none; min-width: 200px; text-align: left;
+  background: var(--bg-node); border: 1px solid var(--line-node); border-radius: var(--radius-node);
+}

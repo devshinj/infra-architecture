@@ -118,10 +118,6 @@
 .tab:hover { color: var(--text-primary); }
 .tab[aria-selected="true"] { background: var(--bg-panel-raised); color: var(--text-primary); font-weight: 600; }
 .panelBody { flex: 1; min-height: 0; overflow-y: auto; }
-.chatEmpty { padding: 16px; display: flex; flex-direction: column; gap: 14px; }
-.chatEmpty p { margin: 0; font-size: 13px; line-height: 1.6; color: var(--text-secondary); }
-.samples { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 8px; }
-.sample { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 13px; }
 
 @media (prefers-reduced-motion: no-preference) {
   .tab, .iconBtn, .railBtn { transition: background-color 0.15s, color 0.15s; }

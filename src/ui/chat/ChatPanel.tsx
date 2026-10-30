@@ -16,7 +16,9 @@ export interface ChatPanelProps {
   health: LlmHealth | null;
   disabledReason?: string;
   mentionRef: RefObject<MentionInputHandle | null>;
-  /** Rendered under the conversation (sample list for an empty diagram). */
+  /** 구성도에 노드가 없다. 대화 기록도 없으면 고정 인사말과 가이드를 보인다(저장·전송 없음). */
+  emptyDiagram?: boolean;
+  /** Rendered under the conversation. */
   footer?: ReactNode;
   /** `주의 N` 칩 클릭: 캔버스 구성 정보 카드를 펼쳐 주의 절로 간다. 없으면 칩은 글로만 보인다. */
   onOpenWarnings?(): void;
@@ -25,6 +27,11 @@ export interface ChatPanelProps {
 const PLACEHOLDER = "만들고 싶은 서비스나 바꾸고 싶은 점을 말해 주세요. 노드를 오른쪽 클릭하면 참조를 붙일 수 있어요.";
 const DOWN = "AI 서버에 연결할 수 없어요. 잠시 뒤 다시 시도하거나 관리자에게 문의해 주세요.";
 const NEAR_BOTTOM = 40;
+
+const GREETING = "안녕하세요, InfraSketch예요. 만들고 싶은 서비스를 말씀해 주시면 인프라 구성도를 바로 그려 드릴게요.";
+const GUIDE_TITLE = "이렇게 말하면 더 정확해요";
+const GUIDE_ITEMS = ["무엇을 만드는지 (예: 쇼핑몰, 예약 서비스)", "어디에 올리는지 (클라우드, 사내 IDC)", "대략 사용자 수 (예: 하루 1만 명)", "붙일 외부 서비스 (결제, 소셜 로그인, 문자)"];
+const EXAMPLES = ["결제와 카카오 로그인이 붙는 쇼핑몰", "사내 IDC에 WEB-WAS-DB 이중화", "AWS EKS 위 MSA와 Kafka", "하루 10만 명이 쓰는 예약 서비스"];
 
 const TOKEN = /@\[([^\]]*)\]\(node:([^)]+)\)/g;
 
@@ -131,7 +138,7 @@ function CardView({ card }: { card: ProgressCard }) {
   );
 }
 
-export function ChatPanel({ lines, busy, onSend, onStop, health, disabledReason, mentionRef, footer, onOpenWarnings }: ChatPanelProps) {
+export function ChatPanel({ lines, busy, onSend, onStop, health, disabledReason, mentionRef, emptyDiagram = false, footer, onOpenWarnings }: ChatPanelProps) {
   const list = useRef<HTMLDivElement>(null);
   const composer = useRef<HTMLDivElement>(null);
   const stopBtn = useRef<HTMLButtonElement>(null);
@@ -227,6 +234,36 @@ export function ChatPanel({ lines, busy, onSend, onStop, health, disabledReason,
     );
   };
 
+  /** 시작 인사: AI 메시지와 같은 모양. 예시 칩은 입력칸만 채우고 보내지 않는다. */
+  const renderGreeting = () => (
+    <div className={styles.ai} role="group" aria-label="InfraSketch 메시지">
+      <div className={styles.aiHead}>
+        <span className={styles.mono} aria-hidden="true">
+          IS
+        </span>
+        <span className={styles.aiName}>InfraSketch</span>
+      </div>
+      <div className={styles.aiBody}>
+        <p className={styles.line}>{GREETING}</p>
+        <p className={styles.guideTitle}>{GUIDE_TITLE}</p>
+        <ul className={styles.guide}>
+          {GUIDE_ITEMS.map((t) => (
+            <li key={t}>{t}</li>
+          ))}
+        </ul>
+        <ul className={styles.examples} aria-label="예시 질문">
+          {EXAMPLES.map((t) => (
+            <li key={t}>
+              <button type="button" className={`${styles.result} ${styles.example}`} disabled={blocked} onClick={() => mentionRef.current?.setText(t)}>
+                {t}
+              </button>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  );
+
   return (
     <div className={styles.chat}>
       {down && (
@@ -246,6 +283,7 @@ export function ChatPanel({ lines, busy, onSend, onStop, health, disabledReason,
           stick.current = el.scrollHeight - el.scrollTop - el.clientHeight <= NEAR_BOTTOM;
         }}
       >
+        {emptyDiagram && lines.length === 0 && renderGreeting()}
         {toBlocks(lines).map((b) => (b.kind === "line" ? renderLine(b.line, false) : renderTurn(b.id, b.lines)))}
         {footer}
       </div>

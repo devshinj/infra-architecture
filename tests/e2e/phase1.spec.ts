@@ -19,8 +19,8 @@ async function newProject(page: Page, name: string) {
 }
 
 async function importSample(page: Page, title: string) {
-  await page.getByRole("tab", { name: "대화" }).click();
-  await page.getByRole("button", { name: `${title} 불러오기` }).click();
+  await page.getByRole("button", { name: "샘플 불러오기" }).click();
+  await page.getByRole("menuitem", { name: title }).click();
 }
 
 test("가입 → 프로젝트·구성도 → 샘플 → 선택 → 편집 이동 → 되돌리기", async ({ page }) => {
