@@ -180,8 +180,14 @@ test("NodeInfo forwards explain: node explanation precedes 스펙 and 주의할 
   const heads = [...container.querySelectorAll("h3")].map((h) => h.textContent);
   expect(heads.indexOf("정의")).toBeGreaterThanOrEqual(0);
   expect(heads.indexOf("정의")).toBeLessThan(heads.indexOf("스펙 · SW"));
-  const cautions = heads.indexOf("주의할 점");
-  if (cautions >= 0) expect(heads.indexOf("결정 기록(ADR)")).toBeLessThan(cautions);
+  expect(heads).not.toContain("주의할 점");
   rerender(<NodeInfo state={fx("s2")} selectedId="e-was-1-db-proxy" onSelect={vi.fn()} explain={{ status: "loading", terms: [] }} />);
   expect(screen.getByText("방화벽 규칙")).toBeInTheDocument();
+});
+
+test("explanation precedes 주의할 점 when warnings exist", () => {
+  const { container } = render(<NodeInfo state={risky()} selectedId="w" onSelect={vi.fn()} explain={{ status: "loading", terms: [] }} />);
+  const heads = [...container.querySelectorAll("h3")].map((h) => h.textContent);
+  expect(heads).toContain("주의할 점");
+  expect(heads.indexOf("결정 기록(ADR)")).toBeLessThan(heads.indexOf("주의할 점"));
 });

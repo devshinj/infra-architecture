@@ -80,3 +80,8 @@ test("edge four fields", () => {
   for (const l of ["무엇이 오가나", "방식", "왜 연결됐나", "방화벽 규칙"]) expect(screen.getByText(l)).toBeInTheDocument();
   expect(screen.getByText("443 허용")).toBeInTheDocument();
 });
+
+test("busy disables retry", () => {
+  render(<Explanation status="error" message="x" terms={[]} onRetry={vi.fn()} busy />);
+  expect(screen.getByRole("button", { name: "다시 시도" })).toBeDisabled();
+});

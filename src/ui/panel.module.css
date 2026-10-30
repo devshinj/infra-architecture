@@ -73,3 +73,11 @@
 .rewriteInput:disabled { opacity: 0.5; }
 .explain :global(abbr.term) { text-decoration: underline dotted; text-underline-offset: 3px; cursor: help; }
 .explain :global(abbr.term):focus-visible { outline: 1.5px solid var(--text-secondary); outline-offset: 1px; }
+/* 용어 풀이: 포커스·호버에 한 줄 풀이를 보인다(title 은 보조용으로 남김). */
+.explain :global(abbr.term) { position: relative; }
+.explain :global(abbr.term):hover::after,
+.explain :global(abbr.term):focus-visible::after {
+  content: attr(data-def); position: absolute; left: 0; top: calc(100% + 4px); z-index: 10; width: max-content; max-width: 220px;
+  padding: 4px 8px; font-size: 11.5px; line-height: 1.5; font-style: normal; text-decoration: none; white-space: normal;
+  color: var(--text-primary); background: var(--bg-panel-raised); border: 1px solid var(--line-node); border-radius: var(--radius-node);
+}

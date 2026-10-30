@@ -68,7 +68,7 @@ function Rewrite({ onRewrite, busy }: { onRewrite: (instruction: string) => void
   );
 }
 
-function Retry({ message, onRetry }: { message?: string; onRetry?: () => void }) {
+function Retry({ message, onRetry, busy }: { message?: string; onRetry?: () => void; busy?: boolean }) {
   return (
     <>
       {message && (
@@ -77,7 +77,7 @@ function Retry({ message, onRetry }: { message?: string; onRetry?: () => void })
         </p>
       )}
       {onRetry && (
-        <button type="button" className={styles.linkBtn} onClick={onRetry}>
+        <button type="button" className={styles.linkBtn} disabled={busy} onClick={onRetry}>
           다시 시도
         </button>
       )}
@@ -169,7 +169,7 @@ export function Explanation({ status, data, partial, message, terms, onRewrite, 
           </Section>
         )}
         <Section title={partial?.definition ? "이 구성에서의 역할" : "설명"}>
-          <Retry message={message} onRetry={onRetry} />
+          <Retry message={message} onRetry={onRetry} busy={busy} />
         </Section>
       </div>
     );

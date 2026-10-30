@@ -18,13 +18,13 @@ export function TermText({ text, terms, exclude }: { text: string; terms: Glossa
   const byText = new Map<string, GlossaryTerm>();
   for (const t of usable) if (!byText.has(t.term.toLowerCase())) byText.set(t.term.toLowerCase(), t);
   const pattern = [...byText.keys()].sort((a, b) => b.length - a.length).map(escapeRe).join("|");
-  const parts = text.split(new RegExp(`(${pattern})`, "i"));
+  const parts = text.split(new RegExp(`(?<![A-Za-z0-9])(${pattern})(?![A-Za-z0-9])`, "i"));
   return (
     <>
       {parts.map((part, i) => {
         const hit = i % 2 === 1 ? byText.get(part.toLowerCase()) : undefined;
         return hit ? (
-          <abbr key={i} className="term" title={hit.definition} tabIndex={0}>
+          <abbr key={i} className="term" title={hit.definition} data-def={hit.definition} tabIndex={0}>
             {part}
           </abbr>
         ) : (
