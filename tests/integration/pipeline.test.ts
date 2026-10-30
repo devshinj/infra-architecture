@@ -22,6 +22,7 @@ import { makeOwnedDiagram } from "./helpers";
 const BUSY = "다른 응답을 처리하고 있어요. 끝난 뒤 다시 보내 주세요.";
 const NO_AI = "AI 서버에 연결할 수 없어요. 잠시 뒤 다시 시도하거나 관리자에게 문의해 주세요.";
 const HISTORY_TEXT = "변경 이력은 오른쪽 '이력' 탭에서 보고 되돌릴 수 있어요.";
+const LAYOUT_TEXT = "구성도를 다시 정렬했어요.";
 const TIMEOUT_TEXT = "응답 시간이 너무 길어 중단했어요.";
 const GENERIC_ERR = "응답을 처리하지 못했어요. 잠시 뒤 다시 시도해 주세요.";
 
@@ -392,6 +393,30 @@ describe("runChatTurn", () => {
     const msgs = await listMessages(ids.diagramId);
     expect(msgs[1]).toMatchObject({ role: "assistant", content: HISTORY_TEXT, meta: { intent: "history" } });
     expect(await versions(ids.diagramId)).toHaveLength(0);
+  });
+
+  test("layout intent skips qwen and emits relayout", async () => {
+    const ids = await makeOwnedDiagram();
+    await createVersion(ids.diagramId, s2, { source: "import" });
+    const { events } = await turn(ids, "구성도 좀 정리해줘", {
+      qwen: neverQwen,
+      clef: fakeClef({ intent: "layout", confidence: 0.8 }),
+    });
+    expect(events.map((e) => e.t)).toEqual(["start", "say", "relayout", "done"]);
+    expect(of(events, "start")[0]).toMatchObject({ intent: "layout" });
+    expect(of(events, "say")[0]!.text).toBe(LAYOUT_TEXT);
+    expect(events.at(-1)).toMatchObject({ t: "done", version: null, status: "complete", applied: 0 });
+    const msgs = await listMessages(ids.diagramId);
+    expect(msgs[1]).toMatchObject({ role: "assistant", content: LAYOUT_TEXT, meta: { intent: "layout", says: [LAYOUT_TEXT] } });
+    expect(await versions(ids.diagramId)).toHaveLength(1);
+  });
+
+  test("low-confidence layout intent takes the normal path", async () => {
+    const ids = await makeOwnedDiagram();
+    const qwen = fakeQwen(JSON.stringify({ op: "say", text: "그대로 둘게요" }));
+    const { events } = await turn(ids, "정리", { qwen, clef: fakeClef({ intent: "layout", confidence: 0.5 }) });
+    expect(qwen.calls).toHaveLength(1);
+    expect(events.some((e) => e.t === "relayout")).toBe(false);
   });
 
   test("confirmed assumption change from the model is skipped", async () => {

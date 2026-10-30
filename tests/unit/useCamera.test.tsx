@@ -48,6 +48,22 @@ test("version switch fits immediately", () => {
   expect(r.durations()).toEqual([0]);
 });
 
+test("a fit request fits at once, waiting until the new layout is settled", () => {
+  const r = rig({ fitRequest: 0, settled: true });
+  r.setViewport.mockClear();
+  // 고정 위치를 풀어 배치가 다시 도는 동안(settled false)은 옛 배치에 맞추지 않는다.
+  r.update({ fitRequest: 1, settled: false });
+  expect(r.setViewport).not.toHaveBeenCalled();
+  r.update({ settled: true, rects: { a: box(3000, 900) } });
+  expect(r.setViewport).toHaveBeenCalledTimes(1);
+  expect(r.durations()).toEqual([0]);
+  expect(r.vp()).toEqual(fitViewport(box(3000, 900), SIZE, { left: 0, right: 0 }, 2));
+  // 이미 배치가 같으면(고정 위치가 없던 경우) 바로 맞춘다.
+  r.setViewport.mockClear();
+  r.update({ fitRequest: 2 });
+  expect(r.setViewport).toHaveBeenCalledTimes(1);
+});
+
 test("no fit when new nodes are already visible", () => {
   const r = rig({ rects: { a: box(0, 0), b: box(3000, 0) } });
   r.setViewport.mockClear();

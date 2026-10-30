@@ -29,8 +29,9 @@ function setup() {
   const onDone = vi.fn();
   const onOpenHistory = vi.fn();
   const onInterrupted = vi.fn();
-  const hook = renderHook(() => useChatTurn({ diagramId: "d1", initial: [], onCommand, onDone, onOpenHistory, onInterrupted }));
-  return { ...hook, onCommand, onDone, onOpenHistory, onInterrupted };
+  const onRelayout = vi.fn();
+  const hook = renderHook(() => useChatTurn({ diagramId: "d1", initial: [], onCommand, onDone, onOpenHistory, onInterrupted, onRelayout }));
+  return { ...hook, onCommand, onDone, onOpenHistory, onInterrupted, onRelayout };
 }
 
 afterEach(() => vi.unstubAllGlobals());
@@ -45,6 +46,19 @@ test("cmd events are forwarded in order and say lines appear as progress", async
   expect(h.onCommand.mock.calls.map((c) => c[0].id)).toEqual(["a", "b"]);
   expect(h.result.current.lines.map((l) => l.kind)).toEqual(["user", "card", "progress", "summary"]);
   expect(h.result.current.busy).toBe(false);
+});
+
+test("relayout event calls onRelayout; the no-change card is dropped", async () => {
+  vi.stubGlobal("fetch", vi.fn(async () => streamOf([nd([
+    { t: "start", messageId: "m", intent: "layout" }, { t: "say", text: "구성도를 다시 정렬했어요." },
+    { t: "relayout" }, done({ version: null, applied: 0, skipped: 0 }),
+  ])])));
+  const h = setup();
+  await act(() => h.result.current.send("정리해줘"));
+  expect(h.onRelayout).toHaveBeenCalledTimes(1);
+  expect(h.onCommand).not.toHaveBeenCalled();
+  // 이력 요청 차례처럼 카드는 치우고 안내 줄과 요약 칩만 남는다.
+  expect(h.result.current.lines.map((l) => l.kind)).toEqual(["user", "progress", "summary"]);
 });
 
 test("done adds the summary line and calls onDone", async () => {

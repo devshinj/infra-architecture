@@ -47,6 +47,8 @@ export interface UseChatTurnArgs {
   onCommand(cmd: Command): void;
   onDone(e: DoneEvent): void;
   onOpenHistory(): void;
+  /** 대화로 재정렬을 요청함(`relayout`): 자동 정렬 버튼과 같은 동작을 한다. */
+  onRelayout?(): void;
   /** The stream ended without `done` (user abort, network cut, error after commands): the saved version may differ from the canvas. */
   onInterrupted?(): void;
 }
@@ -144,6 +146,9 @@ export function useChatTurn(args: UseChatTurnArgs) {
             break;
           case "open_history":
             a.onOpenHistory();
+            break;
+          case "relayout":
+            a.onRelayout?.();
             break;
           case "done": {
             gotDone = true;

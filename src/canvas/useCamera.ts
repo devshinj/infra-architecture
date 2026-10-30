@@ -23,6 +23,10 @@ export interface CameraInput {
   /** A chat turn is assembling the diagram. */
   streaming: boolean;
   reducedMotion: boolean;
+  /** Changes to ask for one full fit at once (자동 정렬·대화 재정렬). It waits until `settled`. */
+  fitRequest?: number;
+  /** False while the layout for the current inputs is still being computed (default true). */
+  settled?: boolean;
   getViewport(): Viewport;
   setViewport(v: Viewport, opts: { duration: number }): void;
 }
@@ -105,6 +109,7 @@ const idsKey = (rects: Record<string, Rect>) => Object.keys(rects).sort().join("
  * - end of a chat turn → one 600ms fit of everything (zoom-in allowed up to 1);
  * - a user pan/zoom during a turn stops auto fits until the turn ends (the final fit too);
  * - focus(rect) (위치 보기) → 500ms centre on it; a programmatic move, never a user move;
+ * - fitRequest change (re-arrange) → fit at once like a board change, once the new layout is settled;
  * - reduced motion → every move is instant.
  */
 export function useCamera(input: CameraInput): { onMoveStart(event: unknown): void; focus(r: Rect): void } {
@@ -122,6 +127,8 @@ export function useCamera(input: CameraInput): { onMoveStart(event: unknown): vo
     timer: null as ReturnType<typeof setTimeout> | null,
     userMoved: false,
     streaming: input.streaming,
+    fitRequest: input.fitRequest,
+    fitPending: false,
   });
 
   const ready = () => latest.current.size.width > 0 && latest.current.size.height > 0;
@@ -206,6 +213,23 @@ export function useCamera(input: CameraInput): { onMoveStart(event: unknown): vo
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- helpers read refs only
   }, [boardKey, key, sizeReady]);
+
+  // Re-arrange: the pins were dropped, so wait for that layout before fitting.
+  const { fitRequest, settled = true } = input;
+  useEffect(() => {
+    const s = st.current;
+    if (s.fitRequest !== fitRequest) {
+      s.fitRequest = fitRequest;
+      s.fitPending = true;
+    }
+    if (s.fitPending && settled && sizeReady) {
+      s.fitPending = false;
+      clearTimer();
+      s.pending.clear();
+      apply(s.streaming ? FINAL_MAX_ZOOM : BOARD_MAX_ZOOM, 0, false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- helpers read refs only
+  }, [fitRequest, settled, sizeReady]);
 
   // Turn start / end.
   useEffect(() => {

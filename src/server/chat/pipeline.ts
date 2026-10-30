@@ -31,6 +31,7 @@ export type ChatTurnResult = { status: "ok" } | { status: "busy" };
 export { BUSY_MESSAGE };
 export const AI_UNAVAILABLE_MESSAGE = "AI 서버에 연결할 수 없어요. 잠시 뒤 다시 시도하거나 관리자에게 문의해 주세요.";
 export const HISTORY_REPLY = "변경 이력은 오른쪽 '이력' 탭에서 보고 되돌릴 수 있어요.";
+export const LAYOUT_REPLY = "구성도를 다시 정렬했어요.";
 export const TIMEOUT_MESSAGE = "응답 시간이 너무 길어 중단했어요.";
 export const GENERIC_ERROR_MESSAGE = "응답을 처리하지 못했어요. 잠시 뒤 다시 시도해 주세요.";
 
@@ -137,6 +138,11 @@ async function lockedTurn(args: TurnArgs, deps: ChatDeps): Promise<void> {
     says.push(HISTORY_REPLY);
     emit({ t: "say", text: HISTORY_REPLY });
     emit({ t: "open_history" });
+  } else if (intent === "layout") {
+    // 배치는 클라이언트가 한다. 구성은 그대로라 AI 를 부르지 않고 버전도 만들지 않는다.
+    says.push(LAYOUT_REPLY);
+    emit({ t: "say", text: LAYOUT_REPLY });
+    emit({ t: "relayout" });
   } else {
     const answerMode = intent === "question" || intent === "other";
     const messages = buildMessages({ intent, text: clean, state, mentions, history, missing: openMissing });

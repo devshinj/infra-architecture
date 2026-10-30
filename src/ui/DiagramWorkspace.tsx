@@ -80,6 +80,8 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
   // 캔버스 판 번호: 가져오기·복원 등으로 새 판이 오면 바뀌어 화면을 다시 맞춘다. 대화가 끝나고 저장된 판을
   // 받아올 때는 같은 판이므로 그대로 둔다(끝날 때 맞춤·사용자 이동을 덮지 않게).
   const [board, setBoard] = useState(0);
+  // 자동 정렬(버튼·대화)마다 바뀌어, 새 배치가 나오면 화면을 한 번 맞춘다.
+  const [arranged, setArranged] = useState(0);
   const [versions, setVersions] = useState<VersionRow[]>([]);
   const [busy, startBusy] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -216,6 +218,7 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
       loadVersions();
     },
     onInterrupted: refreshAfterInterrupt,
+    onRelayout: () => onAutoArrange(),
   });
   // The server re-renders with a newer version after import/restore/chat: adopt it, but never mid-turn
   // (it would wipe the commands already streamed); the done-refresh brings the newer version later.
@@ -430,8 +433,10 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
     setPinned(p);
     savePinnedAction(diagramId, p).then((r) => (r.ok ? setError(null) : setError(r.error)), fail);
   };
+  // 고정 위치를 풀고 자동 배치한 뒤 화면을 맞춘다(버튼·대화 재정렬 공통). 버튼은 이력 보기·비교 중에 막힌다.
   const onAutoArrange = () => {
     setPinned({});
+    setArranged((n) => n + 1);
     clearPinnedAction(diagramId).catch(fail);
   };
 
@@ -478,6 +483,8 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
             onSelect={(id) => setOptions((o) => ({ ...o, selectedId: id }))}
             onPinnedChange={live ? onPinnedChange : () => {}}
             onAutoArrange={onAutoArrange}
+            autoArrangeDisabled={!live}
+            fitRequest={arranged}
             onEditModeChange={(v) => live && !locked && setEditMode(v)}
             onMotionChange={setMotion}
             onWarnBadgeClick={selectNode}

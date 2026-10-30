@@ -31,6 +31,10 @@ export interface CanvasProps {
   onSelect(id: string | null): void;
   onPinnedChange(p: Pinned): void;
   onAutoArrange(): void;
+  /** 자동 정렬 버튼을 막는다(이력 보기·비교). 편집 모드와는 상관없다. */
+  autoArrangeDisabled?: boolean;
+  /** 바뀔 때마다 새 배치가 나온 뒤 화면 전체를 한 번 맞춘다(자동 정렬·대화 재정렬). */
+  fitRequest?: number;
   motion: boolean;
   /** Toolbar toggles; the parent owns editMode / motion. */
   onEditModeChange(v: boolean): void;
@@ -77,7 +81,7 @@ const drawnId = (state: DiagramState, collapsed: Set<string>, id: string | null)
   id === null ? null : (outermostCollapsedAncestor(state, collapsed, id) ?? id);
 
 export function Canvas(props: CanvasProps) {
-  const { state, pinned, editMode, options, onOptionsChange, onAutoArrange, motion } = props;
+  const { state, pinned, editMode, options, onOptionsChange, onAutoArrange, autoArrangeDisabled = false, motion } = props;
   const view = useDiagramView(state, pinned, options);
   const empty = Object.keys(state.nodes).length === 0 && Object.keys(state.groups).length === 0;
   const flip = (key: ToggleKey) => onOptionsChange({ ...options, [key]: !options[key] });
@@ -88,7 +92,7 @@ export function Canvas(props: CanvasProps) {
         <button type="button" aria-pressed={editMode} onClick={() => props.onEditModeChange(!editMode)}>
           편집 모드
         </button>
-        <button type="button" disabled={!editMode} onClick={onAutoArrange}>
+        <button type="button" disabled={autoArrangeDisabled} onClick={onAutoArrange}>
           자동 정렬
         </button>
         <button type="button" aria-pressed={motion} onClick={() => props.onMotionChange(!motion)}>
@@ -107,7 +111,7 @@ export function Canvas(props: CanvasProps) {
       ) : (
         view.layout && (
           <ReactFlowProvider>
-            <Flow {...props} layout={view.layout} display={view.display} appearing={view.appearing} updated={view.updated} />
+            <Flow {...props} layout={view.layout} settled={view.settled} display={view.display} appearing={view.appearing} updated={view.updated} />
           </ReactFlowProvider>
         )
       )}
@@ -117,12 +121,13 @@ export function Canvas(props: CanvasProps) {
 
 interface FlowProps extends CanvasProps {
   layout: Layout;
+  settled: boolean;
   display: DisplayGraph;
   appearing: Set<string>;
   updated: Set<string>;
 }
 
-function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onPinnedChange, motion, layout, display, appearing, updated, diffMarks, fitKey, streaming = false, cameraInsets = NO_INSETS, focusRequest, onMention, onBadgeClick, onWarnBadgeClick }: FlowProps) {
+function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onPinnedChange, motion, layout, settled, fitRequest, display, appearing, updated, diffMarks, fitKey, streaming = false, cameraInsets = NO_INSETS, focusRequest, onMention, onBadgeClick, onWarnBadgeClick }: FlowProps) {
   const far = useStore((s) => s.transform[2] < FAR_ZOOM);
   const selected = drawnId(state, options.collapsed, options.selectedId);
   const missingByNode = useMemo(() => computeMissing(state).byNode, [state]);
@@ -228,6 +233,8 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
     size: { width, height },
     insets: cameraInsets,
     streaming,
+    fitRequest,
+    settled,
     reducedMotion: prefersReducedMotion(),
     getViewport,
     setViewport: applyViewport,

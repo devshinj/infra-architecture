@@ -2,19 +2,21 @@ import "@testing-library/jest-dom/vitest";
 import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
-const hookState = vi.hoisted(() => ({ busy: false, onCommand: null as null | ((c: unknown) => void), badgeFns: [] as unknown[], warnFns: [] as unknown[], lines: [] as unknown[], insets: [] as unknown[], focus: [] as unknown[], turn: null as null | { onDone(): void; onInterrupted(): void } }));
+const hookState = vi.hoisted(() => ({ busy: false, onCommand: null as null | ((c: unknown) => void), badgeFns: [] as unknown[], warnFns: [] as unknown[], lines: [] as unknown[], insets: [] as unknown[], focus: [] as unknown[], turn: null as null | { onDone(): void; onInterrupted(): void; onRelayout?(): void }, pinned: [] as unknown[], fitRequest: [] as unknown[] }));
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
 vi.mock("@/app/(app)/actions", () => ({
-  clearPinnedAction: vi.fn(), getVersionAction: vi.fn(), importSampleAction: vi.fn(),
+  clearPinnedAction: vi.fn(async () => undefined), getVersionAction: vi.fn(), importSampleAction: vi.fn(),
   listVersionsAction: vi.fn(async () => []), restoreVersionAction: vi.fn(), savePinnedAction: vi.fn(),
   saveFieldsAction: vi.fn(async () => ({ ok: true, number: 2 })),
   setWarningIgnoredAction: vi.fn(async () => ({ ok: true, number: 2 })),
   listTermsAction: vi.fn(async () => []),
 }));
 vi.mock("@/canvas/Canvas", () => ({
-  Canvas: ({ state, fitKey, cameraInsets, focusRequest, onMention, onBadgeClick, onWarnBadgeClick, onSelect }: { state: { nodes: object }; fitKey?: string; cameraInsets?: unknown; focusRequest?: unknown; onMention?: (id: string) => void; onBadgeClick?: (id: string) => void; onWarnBadgeClick?: (id: string) => void; onSelect: (id: string | null) => void }) => {
+  Canvas: ({ state, pinned, fitRequest, onAutoArrange, fitKey, cameraInsets, focusRequest, onMention, onBadgeClick, onWarnBadgeClick, onSelect }: { state: { nodes: object }; pinned: unknown; fitRequest?: unknown; onAutoArrange(): void; fitKey?: string; cameraInsets?: unknown; focusRequest?: unknown; onMention?: (id: string) => void; onBadgeClick?: (id: string) => void; onWarnBadgeClick?: (id: string) => void; onSelect: (id: string | null) => void }) => {
     hookState.insets.push(cameraInsets);
+    hookState.pinned.push(pinned);
+    hookState.fitRequest.push(fitRequest);
     hookState.focus.push(focusRequest);
     hookState.badgeFns.push(onBadgeClick);
     hookState.warnFns.push(onWarnBadgeClick);
@@ -26,20 +28,21 @@ vi.mock("@/canvas/Canvas", () => ({
       {onBadgeClick && <button onClick={() => onBadgeClick("a")}>배지a</button>}
       {onWarnBadgeClick && <button onClick={() => onWarnBadgeClick("b")}>경고배지b</button>}
       <button onClick={() => onSelect("b")}>선택b</button>
+      <button onClick={onAutoArrange}>자동정렬</button>
       <button onClick={() => onSelect(null)}>선택해제</button>
     </div>
     );
   },
 }));
 vi.mock("@/ui/chat/useChatTurn", () => ({
-  useChatTurn: (a: { onCommand: (c: unknown) => void; onDone(): void; onInterrupted(): void }) => {
+  useChatTurn: (a: { onCommand: (c: unknown) => void; onDone(): void; onInterrupted(): void; onRelayout?(): void }) => {
     hookState.onCommand = a.onCommand;
     hookState.turn = a;
     return { lines: hookState.lines, busy: hookState.busy, send: vi.fn(), stop: vi.fn() };
   },
 }));
 
-import { getVersionAction, listVersionsAction, saveFieldsAction, setWarningIgnoredAction } from "@/app/(app)/actions";
+import { clearPinnedAction, getVersionAction, listVersionsAction, saveFieldsAction, setWarningIgnoredAction } from "@/app/(app)/actions";
 import { emptyState } from "@/domain/types";
 import { DiagramWorkspace } from "@/ui/DiagramWorkspace";
 import { ShellProvider } from "@/ui/Shell";
@@ -73,6 +76,26 @@ test("newer server state is not adopted while busy, then adopted after", () => {
   hookState.busy = false;
   rerender(ui(mk(2, ["a", "x"])));
   expect(screen.getByTestId("n")).toHaveTextContent("a,x");
+});
+
+test("relayout event clears pins and re-lays out", () => {
+  hookState.busy = false;
+  vi.mocked(clearPinnedAction).mockClear();
+  hookState.pinned.length = 0;
+  hookState.fitRequest.length = 0;
+  render(<DiagramWorkspace diagramId="d" name="n" latest={mk(1, ["a"]) as never} initialPinned={{ a: { x: 5, y: 5 } }} samples={[]} />);
+  expect(hookState.pinned.at(-1)).toEqual({ a: { x: 5, y: 5 } });
+  const before = hookState.fitRequest.at(-1) as number;
+  act(() => hookState.turn!.onRelayout!());
+  expect(hookState.pinned.at(-1)).toEqual({});
+  expect(clearPinnedAction).toHaveBeenCalledWith("d");
+  // 화면 맞춤 요청이 새로 간다.
+  const after = hookState.fitRequest.at(-1) as number;
+  expect(after).not.toBe(before);
+  // 버튼도 같은 동작을 한다.
+  fireEvent.click(screen.getByRole("button", { name: "자동정렬" }));
+  expect(clearPinnedAction).toHaveBeenCalledTimes(2);
+  expect(hookState.fitRequest.at(-1)).not.toBe(after);
 });
 
 test("canvas mention opens the 대화 tab and inserts a chip for the node", () => {

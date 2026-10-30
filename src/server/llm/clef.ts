@@ -1,4 +1,4 @@
-export type Intent = "structure_change" | "question" | "missing_info_answer" | "history" | "other";
+export type Intent = "structure_change" | "question" | "missing_info_answer" | "history" | "layout" | "other";
 
 export interface ClefAnswer {
   type?: string;
@@ -90,6 +90,7 @@ const INTENTS: readonly Intent[] = [
   "question",
   "missing_info_answer",
   "history",
+  "layout",
   "other",
 ];
 const TIMEOUT_MS = 30_000;
@@ -120,6 +121,7 @@ const INTENT_QUESTION = {
       missing_info_answer:
         "채워야 할 정보에 대한 값만 알려 주는 답(예: '4코어 16기가', '10.0.2.11, 10.0.2.12', 'RAM 은 32GB'). 새 노드·연결을 만들라는 말이 없으면 이것",
       history: "이전 버전으로 되돌리기나 변경 이력 요청",
+      layout: "구성도 배치·정렬·정리만 다시 해 달라는 요청(노드·연결은 그대로)",
       other: "그 밖의 대화",
     },
   },

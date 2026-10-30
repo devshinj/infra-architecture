@@ -16,6 +16,8 @@ export interface DiagramView {
   layout: Layout | null;
   /** True when the layout engine rejected; with no previous layout the canvas has nothing to draw. */
   layoutFailed: boolean;
+  /** True once `layout` was computed for the current state, options and pins (false while ELK runs). */
+  settled: boolean;
   display: DisplayGraph;
   appearing: Set<string>;
   updated: Set<string>;
@@ -38,7 +40,8 @@ export function useDiagramView(state: DiagramState, pinned: Pinned, opts: Displa
     [state, hideAux, busSimplify, mergeDuplicates, selectedId, collapsedKey],
   );
   /* eslint-enable react-hooks/exhaustive-deps */
-  const [baseLayout, setBaseLayout] = useState<Layout | null>(null);
+  const [base, setBase] = useState<{ layout: Layout; display: DisplayGraph; pinnedKey: string } | null>(null);
+  const baseLayout = base?.layout ?? null;
   const [layoutFailed, setLayoutFailed] = useState(false);
   const [appearing, setAppearing] = useState<Set<string>>(() => new Set());
   const [updated, setUpdated] = useState<Set<string>>(() => new Set());
@@ -48,7 +51,7 @@ export function useDiagramView(state: DiagramState, pinned: Pinned, opts: Displa
     layoutDiagram(layoutDisplay, JSON.parse(pinnedKey) as Pinned)
       .then((l) => {
         if (cancelled) return;
-        setBaseLayout(l);
+        setBase({ layout: l, display: layoutDisplay, pinnedKey });
         setLayoutFailed(false);
       })
       .catch((err) => {
@@ -94,5 +97,6 @@ export function useDiagramView(state: DiagramState, pinned: Pinned, opts: Displa
   }, [state]);
   useEffect(() => () => timers.current.forEach(clearTimeout), []);
 
-  return { layout, layoutFailed, display, appearing, updated };
+  const settled = base !== null && base.display === layoutDisplay && base.pinnedKey === pinnedKey;
+  return { layout, layoutFailed, settled, display, appearing, updated };
 }

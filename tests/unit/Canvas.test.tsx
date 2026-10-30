@@ -54,15 +54,19 @@ test("empty diagram shows guidance", () => {
   expect(screen.getByText(/아직 구성도가 비어 있어요/)).toBeInTheDocument();
 });
 
-test("toolbar: auto-arrange only in edit mode, cleanup toggle updates options", () => {
+test("auto arrange button enabled outside edit mode", () => {
   const props = baseProps(emptyState());
   const { rerender } = render(<Canvas {...props} />);
-  expect(screen.getByRole("button", { name: "자동 정렬" })).toBeDisabled();
+  fireEvent.click(screen.getByRole("button", { name: "자동 정렬" }));
+  expect(props.onAutoArrange).toHaveBeenCalledTimes(1);
   fireEvent.click(screen.getByRole("button", { name: "보조 연결 숨김" }));
   expect(props.onOptionsChange).toHaveBeenCalledWith(expect.objectContaining({ hideAux: false }));
   rerender(<Canvas {...props} editMode />);
   fireEvent.click(screen.getByRole("button", { name: "자동 정렬" }));
-  expect(props.onAutoArrange).toHaveBeenCalled();
+  expect(props.onAutoArrange).toHaveBeenCalledTimes(2);
+  // 이력 보기·비교 화면처럼 정렬할 수 없는 곳에서는 막는다.
+  rerender(<Canvas {...props} autoArrangeDisabled />);
+  expect(screen.getByRole("button", { name: "자동 정렬" })).toBeDisabled();
 });
 
 test("selecting a node inside a collapsed group highlights the group and keeps its neighbours undimmed", async () => {

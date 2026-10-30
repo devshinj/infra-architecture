@@ -28,6 +28,7 @@ export type ChatEvent =
   | { t: "answer"; delta: string } // 질문 답변 글(ANSWER_PROMPT)
   | { t: "warnings"; items: Warning[] } // 새 경고만, done 앞
   | { t: "open_history" }
+  | { t: "relayout" } // 고정 위치를 풀고 다시 배치(구성도 재정렬 요청)
   | {
       t: "done";
       version: number | null;
