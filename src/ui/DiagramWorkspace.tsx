@@ -27,6 +27,7 @@ import { type LlmHealth } from "./chat/ChatPanel";
 import type { MentionInputHandle } from "./chat/MentionInput";
 import { type ChecklistDrafts, MissingChecklist, type MissingChecklistProps } from "./chat/MissingChecklist";
 import { type ChatLine, useChatTurn } from "./chat/useChatTurn";
+import { PANEL_DEFAULT, PANEL_MAX, PANEL_MIN, PanelResizer } from "./PanelResizer";
 import { RightPanel, type Tab } from "./RightPanel";
 
 type Pinned = Record<string, { x: number; y: number }>;
@@ -53,6 +54,8 @@ const unionState = (old: DiagramState, cur: DiagramState): DiagramState => ({
   assumptions: cur.assumptions,
 });
 
+const PANEL_WIDTH_KEY = "infrasketch.panelWidth";
+
 const optionsFor = (state: DiagramState): CanvasOptions => ({ ...defaultDisplayOptions(state), hoverLabels: true });
 
 export function DiagramWorkspace({ diagramId, name, latest, initialPinned, samples, initialChat = [] }: DiagramWorkspaceProps) {
@@ -74,6 +77,41 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
   }, [mode, current.state]);
 
   const live = mode.kind === "live";
+
+  // 대화 패널 너비: 첫 렌더는 기본값(하이드레이션 일치), 마운트 뒤 localStorage 를 읽는다. 캔버스는 다시 맞추지 않는다.
+  const workspaceRef = useRef<HTMLDivElement>(null);
+  const [panelWidth, setPanelWidth] = useState(PANEL_DEFAULT);
+  const [workspaceW, setWorkspaceW] = useState(0);
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem(PANEL_WIDTH_KEY);
+      const n = raw === null ? NaN : Number(raw);
+      if (Number.isFinite(n) && n >= PANEL_MIN && n <= PANEL_MAX) setPanelWidth(Math.round(n));
+    } catch {
+      /* 저장소를 못 읽으면 기본 너비 */
+    }
+  }, []);
+  useEffect(() => {
+    const el = workspaceRef.current;
+    if (!el) return;
+    const measure = () => setWorkspaceW(el.clientWidth);
+    measure();
+    if (typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  // 캔버스가 360px 보다 좁아지지 않게 최대를 줄인다(너비를 모르면 줄이지 않는다).
+  const panelMax = workspaceW > 0 ? Math.max(PANEL_MIN, Math.min(PANEL_MAX, workspaceW - 360)) : PANEL_MAX;
+  const shownPanelWidth = Math.min(panelWidth, panelMax);
+  const changePanelWidth = (w: number) => {
+    setPanelWidth(w);
+    try {
+      window.localStorage.setItem(PANEL_WIDTH_KEY, String(w));
+    } catch {
+      /* 저장 실패는 이번 방문에만 영향 */
+    }
+  };
   const [tab, setTab] = useState<Tab>("대화");
   const fail = (e: unknown) => setError(e instanceof Error ? e.message : "처리하지 못했어요");
   const run = (fn: () => Promise<void>) =>
@@ -315,7 +353,11 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
         : null;
 
   return (
-    <div className={styles.workspace}>
+    <div
+      ref={workspaceRef}
+      className={styles.workspace}
+      style={{ gridTemplateColumns: `minmax(0, 1fr) ${shownPanelWidth}px` }}
+    >
       <section className={styles.center} aria-label={name}>
         {banner && (
           <div className={styles.banner} role="status">
@@ -351,6 +393,7 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
           />
         </div>
       </section>
+      <PanelResizer width={shownPanelWidth} min={PANEL_MIN} max={panelMax} defaultWidth={PANEL_DEFAULT} onChange={changePanelWidth} />
       <RightPanel
         state={shown}
         selectedId={options.selectedId}

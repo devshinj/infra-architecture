@@ -190,3 +190,31 @@ test("warn badge or chat warning line for the already selected node still opens 
   expect(screen.getByRole("heading", { name: "주의할 점" })).toBeInTheDocument();
   hookState.lines = [];
 });
+
+// ---- 대화 패널 너비 ----
+const KEY = "infrasketch.panelWidth";
+const panelCols = (c: HTMLElement) => (c.firstElementChild as HTMLElement).style.gridTemplateColumns;
+
+test("width is saved and restored from localStorage after mount", () => {
+  window.localStorage.clear();
+  const first = render(ui(mk(1, ["a"])));
+  expect(panelCols(first.container)).toBe("minmax(0, 1fr) 360px");
+  fireEvent.keyDown(screen.getByRole("separator", { name: "대화 패널 너비" }), { key: "ArrowLeft" });
+  expect(window.localStorage.getItem(KEY)).toBe("376");
+  expect(panelCols(first.container)).toBe("minmax(0, 1fr) 376px");
+  first.unmount();
+  window.localStorage.setItem(KEY, "500");
+  const second = render(ui(mk(1, ["a"])));
+  expect(panelCols(second.container)).toBe("minmax(0, 1fr) 500px");
+  window.localStorage.clear();
+});
+
+test("invalid stored value is ignored", () => {
+  for (const bad of ["abc", "100", "9999", ""]) {
+    window.localStorage.setItem(KEY, bad);
+    const r = render(ui(mk(1, ["a"])));
+    expect(panelCols(r.container)).toBe("minmax(0, 1fr) 360px");
+    r.unmount();
+  }
+  window.localStorage.clear();
+});

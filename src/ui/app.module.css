@@ -50,7 +50,10 @@
 .dialogActions { display: flex; justify-content: flex-end; gap: 8px; }
 .error { color: var(--state-missing); font-size: 12px; }
 
-.workspace { display: grid; grid-template-columns: minmax(0, 1fr) 360px; height: 100%; min-height: 0; }
+.workspace { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) 360px; height: 100%; min-height: 0; }
+/* 오른쪽 패널 왼쪽 경계의 너비 조절 손잡이: 평소 투명, 호버·포커스에서만 선이 보인다. 위치(right)는 인라인으로 준다. */
+.resizer { position: absolute; top: 0; bottom: 0; width: 4px; margin-right: -2px; z-index: 5; cursor: col-resize; background: transparent; touch-action: none; outline: none; }
+.resizer:hover, .resizer:focus-visible { background: var(--text-secondary); }
 .center { position: relative; min-width: 0; min-height: 0; display: flex; flex-direction: column; }
 .canvasWrap { flex: 1; min-height: 0; position: relative; }
 .banner {
