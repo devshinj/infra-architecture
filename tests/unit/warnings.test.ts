@@ -46,6 +46,21 @@ test("confirmed 이중화 없음 turns spof off", () => {
   expect(ids(s)).not.toContain("spof:w");
 });
 
+test("any other redundancy assumption value turns spof off, confirmed or not", () => {
+  for (const confirmed of [false, true]) {
+    const s = build([node("w", "was", "WAS")]);
+    s.assumptions.redundancy = { key: "redundancy", value: "웹/WAS/DB 이중화 및 멀티 AZ", confirmed };
+    expect(ids(s)).not.toContain("spof:w");
+  }
+});
+
+test("client to k8s_ingress or bastion is a legitimate entry, no no_firewall", () => {
+  for (const kind of ["k8s_ingress", "bastion"] as const) {
+    const s = build([node("c", "client_web", "사용자"), node("t", kind, "진입점")], [], [["e1", "c", "t", "request"]]);
+    expect(evaluateRules(s).some((x) => x.rule === "no_firewall")).toBe(false);
+  }
+});
+
 test("client to was directly warns with edge id, client to lb does not", () => {
   const direct = build([node("c", "client_web", "사용자"), node("w", "was", "WAS")], [], [["e1", "c", "w", "request"]]);
   const w = evaluateRules(direct).find((x) => x.rule === "no_firewall")!;

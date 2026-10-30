@@ -96,7 +96,8 @@ export function evaluateRules(state: DiagramState): Warning[] {
   }
 
   const redundancy = state.assumptions.redundancy;
-  const spofOff = !!redundancy && redundancy.confirmed && redundancy.value === "이중화 없음";
+  // 이중화 가정이 없거나 "이중화 없음"(미확정)일 때만 켠다. 확정된 "이중화 없음"(의도)이나 다른 값(이중화됨)이면 끈다.
+  const spofOff = !!redundancy && !(redundancy.value === "이중화 없음" && !redundancy.confirmed);
   if (!spofOff) {
     const spof = ruleOf("spof");
     for (const n of nodes) {
@@ -112,6 +113,8 @@ export function evaluateRules(state: DiagramState): Warning[] {
     if (!from || !to) continue;
     const fc = categoryOf(from.kind);
     const tc = categoryOf(to.kind);
+    // 인그레스·배스천은 정당한 진입점이다.
+    if (to.kind === "k8s_ingress" || to.kind === "bastion") continue;
     if ((fc === "client" || fc === "external") && (tc === "compute" || tc === "data")) out.push(make(state, noFw, to, e));
   }
 
