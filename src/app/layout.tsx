@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
-import { IBM_Plex_Sans_KR } from "next/font/google";
+import localFont from "next/font/local";
 
 import "../styles/globals.css";
 
-const plexSansKR = IBM_Plex_Sans_KR({
-  weight: ["400", "500", "600"],
+const suit = localFont({
+  src: "./fonts/SUIT-Variable.woff2",
+  weight: "100 900",
   display: "swap",
-  preload: false,
 });
 
 export const metadata: Metadata = {
@@ -21,7 +21,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko">
-      <body className={plexSansKR.className}>{children}</body>
+      <body className={suit.className}>{children}</body>
     </html>
   );
 }

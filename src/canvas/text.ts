@@ -1,4 +1,4 @@
-// Width estimate for IBM Plex Sans KR: Hangul / CJK / fullwidth glyphs are 1em, everything else ~0.58em.
+// Width estimate for SUIT Variable (ratios unchanged from the former IBM Plex Sans KR estimate, not re-measured): Hangul / CJK / fullwidth glyphs are 1em, everything else ~0.58em.
 const WIDE: [number, number][] = [
   [0x1100, 0x11ff], // Hangul Jamo
   [0x2e80, 0x303f], // CJK radicals, symbols & punctuation
