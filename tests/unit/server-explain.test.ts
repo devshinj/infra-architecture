@@ -16,7 +16,7 @@ function sample(): DiagramState {
   const s = emptyState();
   s.groups.vpc = { id: "vpc", groupKind: "vpc", label: "서비스 VPC", parent: null };
   s.nodes.lb = { id: "lb", kind: "lb_l4", label: "L4", parent: "vpc", attrs: {} };
-  s.nodes["was-1"] = { id: "was-1", kind: "was", label: "WAS#1", sub: "Tomcat 10", parent: "vpc", attrs: {} };
+  s.nodes["was-1"] = { id: "was-1", kind: "was", label: "WAS#1", parent: "vpc", attrs: { sw: "Tomcat 10" } };
   s.nodes.zz = { id: "zz", kind: "cache", label: "관계없는 캐시", parent: null, attrs: {} };
   s.edges.e1 = { id: "e1", from: "lb", to: "was-1", edgeKind: "request", label: "HTTP 8080" };
   return s;
@@ -165,10 +165,39 @@ describe("explainTarget", () => {
     expect(r.explanation).toMatchObject({ kind: "node", term: "Tomcat 10", definition: TOMCAT_DEF, definitionSource: "ai", reviewed: false });
     expect((r.explanation as NodeExplanation).why).toBeUndefined();
     expect(userOf(calls[0]!)).not.toContain("definition 키는 쓰지 않는다");
+    // 정의할 용어(쓴 후보)를 이름으로 알려 준다.
+    expect(userOf(calls[0]!)).toContain(`정의할 용어: ${JSON.stringify("Tomcat 10")}`);
     const wasKo = NODE_KINDS.find((k) => k.kind === "was")!.labelKo;
     expect(repo.addAiTerm).toHaveBeenCalledWith("u", { term: "Tomcat 10", category: wasKo, definition: TOMCAT_DEF, why: "", compare: "" });
     expect(log.indexOf("seed")).toBeLessThan(log.indexOf("addAiTerm"));
     expect(glossary.at(-1)).toMatchObject({ source: "ai", reviewed: false });
+  });
+
+  test("sub-derived AI definition is used for the node only, not added to the glossary", async () => {
+    const s = sample();
+    s.nodes.adm = { id: "adm", kind: "batch_server", label: "관리 도구", sub: "Admin", parent: null, attrs: {} };
+    const { repo, cache, glossary } = fakeRepo(s);
+    const def = "Admin(관리 도구)은 운영자가 서비스 설정을 바꾸는 내부용 애플리케이션입니다.";
+    const { qwen, calls } = fakeQwen(nodeJson({ definition: def }));
+    const r = await explainTarget("u", "d", "node", "adm", {}, { qwen, clef: fakeClef().clef, repo });
+    expect(r.ok && r.explanation).toMatchObject({ kind: "node", term: "Admin", definition: def, definitionSource: "ai", reviewed: false });
+    expect(userOf(calls[0]!)).toContain(`정의할 용어: ${JSON.stringify("Admin")}`);
+    expect(repo.addAiTerm).not.toHaveBeenCalled();
+    expect(glossary).toHaveLength(1);
+    expect(cache.has("node:adm")).toBe(true);
+  });
+
+  test("kind-derived AI definition is added unreviewed; glossary hit names no term", async () => {
+    const { repo } = fakeRepo();
+    const { qwen, calls } = fakeQwen(nodeJson({ definition: "캐시(Cache)는 자주 쓰는 데이터를 가까이 두는 저장소입니다." }));
+    const cacheKo = NODE_KINDS.find((k) => k.kind === "cache")!.labelKo;
+    await explainTarget("u", "d", "node", "zz", {}, { qwen, clef: fakeClef().clef, repo });
+    expect(userOf(calls[0]!)).toContain(`정의할 용어: ${JSON.stringify(cacheKo)}`);
+    expect(repo.addAiTerm).toHaveBeenCalledWith("u", expect.objectContaining({ term: cacheKo }));
+
+    const hit = fakeQwen(nodeJson());
+    await explainTarget("u", "d", "node", "lb", {}, { qwen: hit.qwen, clef: fakeClef().clef, repo });
+    expect(userOf(hit.calls[0]!)).not.toContain("정의할 용어");
   });
 
   test("cached explanation is returned when signature matches", async () => {

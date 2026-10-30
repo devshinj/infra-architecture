@@ -11,22 +11,43 @@ export function normalizeTerm(s: string): string {
   return s.trim().toLowerCase().replace(TRAILING_VERSION, "").replace(SEPARATORS, "");
 }
 
+/** 용어 후보가 나온 자리. sub 는 SW 이름이 아닐 수 있어(대수·"Multi-AZ" 등) AI 정의를 사전에 넣지 않는다. */
+export type TermOrigin = "sw" | "sub" | "kind";
+
+export interface TermCandidate {
+  key: string;
+  display: string;
+  origin: TermOrigin;
+}
+
 /** 노드에서 사전을 찾아볼 용어 후보. attrs.sw → sub → 종류 한국어 이름 순, 빈 값·중복 key 제외. */
-export function termCandidates(node: DNode): { key: string; display: string }[] {
+export function termCandidates(node: DNode): TermCandidate[] {
   const sw = node.attrs.sw;
-  const raw = [
-    typeof sw === "string" || typeof sw === "number" ? String(sw) : "",
-    node.sub ?? "",
-    NODE_KINDS.find((k) => k.kind === node.kind)?.labelKo ?? "",
+  const raw: [string, TermOrigin][] = [
+    [typeof sw === "string" || typeof sw === "number" ? String(sw) : "", "sw"],
+    [node.sub ?? "", "sub"],
+    [NODE_KINDS.find((k) => k.kind === node.kind)?.labelKo ?? "", "kind"],
   ];
-  const out: { key: string; display: string }[] = [];
-  for (const r of raw) {
+  const out: TermCandidate[] = [];
+  for (const [r, origin] of raw) {
     const display = r.trim();
     const key = normalizeTerm(display);
     if (!key || out.some((c) => c.key === key)) continue;
-    out.push({ key, display });
+    out.push({ key, display, origin });
   }
   return out;
+}
+
+/**
+ * 후보 key 순서대로 사전 항목을 고른다(서버 findTerm 과 화면이 같은 규칙을 쓴다).
+ * 한 key 에 key 일치와 alias 일치가 함께 있으면 key 일치가 이긴다.
+ */
+export function pickTerm<T extends { key: string; aliases: string[] }>(rows: T[], keys: string[]): T | null {
+  for (const k of keys) {
+    const hit = rows.find((r) => r.key === k) ?? rows.find((r) => r.aliases.includes(k));
+    if (hit) return hit;
+  }
+  return null;
 }
 
 export interface NodeExplanation {

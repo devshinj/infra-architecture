@@ -252,6 +252,8 @@ export function buildExplainMessages(input: {
   state: DiagramState;
   id: string;
   glossaryDefinition?: string;
+  /** 사전에 없을 때 정의할 용어. */
+  term?: string;
   instruction?: string;
   previous?: object;
   problems?: string[];
@@ -259,6 +261,8 @@ export function buildExplainMessages(input: {
   const parts = [`현재 구성(대상과 이웃):\n${explainContext(input.state, input.kind, input.id)}`];
   if (input.kind === "node" && input.glossaryDefinition) {
     parts.push(`사전 정의: ${JSON.stringify(input.glossaryDefinition)}\n정의는 사전에 있으니 definition 키는 쓰지 않는다. 역할·ADR 은 이 정의와 어긋나지 않게 쓴다.`);
+  } else if (input.kind === "node" && input.term) {
+    parts.push(`정의할 용어: ${JSON.stringify(input.term)}\ndefinition 은 이 용어의 사전식 정의다.`);
   }
   const problems = input.problems?.filter(Boolean) ?? [];
   if (input.instruction || problems.length) {

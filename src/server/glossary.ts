@@ -2,7 +2,7 @@ import { and, asc, eq, ilike, or, sql } from "drizzle-orm";
 
 import { db } from "@/db/client";
 import { glossaryTerms } from "@/db/schema";
-import { normalizeTerm } from "@/domain/explain";
+import { normalizeTerm, pickTerm } from "@/domain/explain";
 import { GLOSSARY_SEED } from "@/domain/glossary-seed";
 import { NotFoundError, ValidationError } from "@/server/projects";
 
@@ -54,12 +54,7 @@ export async function findTerm(userId: string, keys: string[]): Promise<Glossary
         or(sql`${glossaryTerms.key} = any(${arr})`, sql`jsonb_exists_any(${glossaryTerms.aliases}, ${arr})`),
       ),
     );
-  for (const k of wanted) {
-    // 한 key 에 key 일치와 alias 일치가 함께 있으면 key 일치가 이긴다.
-    const hit = rows.find((r) => r.key === k) ?? rows.find((r) => r.aliases.includes(k));
-    if (hit) return hit;
-  }
-  return null;
+  return pickTerm(rows, wanted);
 }
 
 const escapeLike = (s: string) => s.replace(/[\\%_]/g, (c) => `\\${c}`);

@@ -9,6 +9,7 @@ import {
   signatureOf,
   termCandidates,
   type EdgeExplanation,
+  type TermCandidate,
   type NodeExplanation,
 } from "@/domain/explain";
 import type { DiagramState } from "@/domain/types";
@@ -306,7 +307,7 @@ export async function explainTarget(
 
   // 노드: 사전 조회. ensureSeeded 를 먼저 해야 시드와 같은 용어를 AI 가 새로 넣지 않는다.
   let row: GlossaryRow | null = null;
-  let candidate: { key: string; display: string } | undefined;
+  let candidate: TermCandidate | undefined;
   const node = targetKind === "node" ? state.nodes[targetId]! : null;
   if (node) {
     await repo.ensureSeeded(userId);
@@ -321,8 +322,16 @@ export async function explainTarget(
   const { qwen } = deps;
   if (!qwen) return fail();
 
-  const base = { kind: targetKind, state, id: targetId, glossaryDefinition: row?.definition, instruction };
   const needDefinition = !!node && !row;
+  // 사전에 없으면 정의할 용어(쓴 후보)를 이름으로 알려 준다.
+  const base = {
+    kind: targetKind,
+    state,
+    id: targetId,
+    glossaryDefinition: row?.definition,
+    term: needDefinition ? candidate?.display : undefined,
+    instruction,
+  };
 
   /** 설명 모양으로 조립한다. AI 정의 노드의 용어는 사전에 넣기 전 후보 이름을 쓴다. */
   const assemble = (d: Draft, termRow: GlossaryRow | null, source: NodeExplanation["definitionSource"]): Explanation => {
@@ -364,8 +373,9 @@ export async function explainTarget(
   }
 
   let finalRow = row;
-  if (node && !row && candidate) {
+  if (node && !row && candidate && candidate.origin !== "sub") {
     // AI 정의는 미검수로 사전에 넣는다. 같은 용어가 이미 있으면 그 항목을 쓴다.
+    // sub 에서 온 용어는 SW 이름이 아닐 수 있어 이 노드 설명에만 쓰고 사전에 넣지 않는다.
     finalRow = await repo.addAiTerm(userId, {
       term: candidate.display,
       category: kindKo(node.kind),

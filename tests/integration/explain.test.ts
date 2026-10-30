@@ -17,7 +17,7 @@ import { makeOwnedDiagram } from "./helpers";
 function sample(): DiagramState {
   const s = emptyState();
   s.nodes.lb = { id: "lb", kind: "lb_l4", label: "L4", parent: null, attrs: {} };
-  s.nodes.app = { id: "app", kind: "batch_server", label: "배치", sub: "Varnishy 3", parent: null, attrs: {} };
+  s.nodes.app = { id: "app", kind: "batch_server", label: "배치", parent: null, attrs: { sw: "Varnishy 3" } };
   s.edges.e1 = { id: "e1", from: "lb", to: "app", edgeKind: "request", label: "HTTP 8080" };
   return s;
 }
@@ -139,4 +139,17 @@ test("listSignatures", async () => {
     "node:lb": signatureOf(sample(), "node", "lb"),
     "edge:e1": signatureOf(sample(), "edge", "e1"),
   });
+});
+
+test("sub-derived AI definition is not added to the glossary", async () => {
+  const ids = await makeOwnedDiagram();
+  const s = emptyState();
+  s.nodes.adm = { id: "adm", kind: "batch_server", label: "관리", sub: "Varnishy Admin", parent: null, attrs: {} };
+  await createVersion(ids.diagramId, s, { source: "import" });
+  const { qwen, calls } = fakeQwen();
+  const r = await explainTarget(ids.userId, ids.diagramId, "node", "adm", {}, { qwen, clef });
+  expect(r.ok && r.explanation).toMatchObject({ term: "Varnishy Admin", definition: DEF, definitionSource: "ai", reviewed: false });
+  expect(calls[0]).toContain(`정의할 용어: ${JSON.stringify("Varnishy Admin")}`);
+  expect(await findTerm(ids.userId, ["Varnishy Admin"])).toBeNull();
+  expect(await rowsOf(ids.diagramId)).toHaveLength(1);
 });

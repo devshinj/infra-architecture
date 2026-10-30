@@ -29,15 +29,15 @@ const node = (over: Partial<DNode>): DNode => ({
 
 test("candidates prefer sw then sub then kind name", () => {
   expect(termCandidates(node({ sub: "Redis", attrs: { sw: "Redis 7.2" } }))).toEqual([
-    { key: "redis", display: "Redis 7.2" },
-    { key: "캐시", display: "캐시" },
+    { key: "redis", display: "Redis 7.2", origin: "sw" },
+    { key: "캐시", display: "캐시", origin: "kind" },
   ]);
   expect(termCandidates(node({ kind: "was", sub: "Tomcat", attrs: { sw: "Apache Tomcat 10" } }))).toEqual([
-    { key: "apachetomcat", display: "Apache Tomcat 10" },
-    { key: "tomcat", display: "Tomcat" },
-    { key: "was", display: "WAS" },
+    { key: "apachetomcat", display: "Apache Tomcat 10", origin: "sw" },
+    { key: "tomcat", display: "Tomcat", origin: "sub" },
+    { key: "was", display: "WAS", origin: "kind" },
   ]);
   expect(termCandidates(node({ kind: "lb_l4", sub: "  ", attrs: { sw: null } }))).toEqual([
-    { key: "l4로드밸런서", display: "L4 로드밸런서" },
+    { key: "l4로드밸런서", display: "L4 로드밸런서", origin: "kind" },
   ]);
 });
