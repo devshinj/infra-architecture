@@ -224,7 +224,7 @@ AI 는 아래 `kind` 중에서만 노드를 만든다(없는 종류는 `generic`
 | `bg.panel-raised` | `#2A3A52` | 패널 위 입력칸·말풍선·카드·메뉴 |
 | `line.shell` | `#2C3A50` | 영역 경계선 (사이드바 오른쪽, 패널 왼쪽, 탭 아래) |
 | `text.primary` | `#E8EBEE` | 노드 이름 등 |
-| `text.secondary` | `#8D9AAD` | 부제, 영역 이름 |
+| `text.secondary` | `#9AA7BA` | 부제, 영역 이름 (모든 바탕에서 4.5:1 이상, 패널 위 카드 `#2A3A52` 에서 4.72:1) |
 | `accent` | `#D4AE6C` | 흐름 점·선택·방금 수정됨 (유일한 강조) |
 | `cat.client` | `#A5B2C2` | 사용자 |
 | `cat.network` | `#86AED3` | 네트워크·진입 |

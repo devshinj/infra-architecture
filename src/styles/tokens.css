@@ -17,7 +17,7 @@
 
   /* 텍스트 */
   --text-primary: #E8EBEE; /* 노드 이름 등 */
-  --text-secondary: #8D9AAD; /* 부제, 영역 이름 */
+  --text-secondary: #9AA7BA; /* 부제, 영역 이름 */
 
   /* 강조 (유일한 강조색 — 흐름 점·선택·방금 수정됨) */
   --accent: #D4AE6C;
