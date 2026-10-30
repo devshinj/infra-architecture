@@ -14,6 +14,7 @@ import {
   renameDiagramAction,
   renameProjectAction,
 } from "@/app/(app)/actions";
+import { LogoMark } from "@/ui/brand/Logo";
 
 import styles from "./app.module.css";
 import { useShell } from "./Shell";
@@ -233,7 +234,10 @@ export function Sidebar({ projects, userName }: { projects: SidebarProject[]; us
     <>
       <nav className={styles.sidebar} aria-label="프로젝트">
         <div className={styles.sideHead}>
-          <h1 className={styles.brand}>InfraSketch</h1>
+          <h1 className={styles.brand}>
+            <LogoMark size={18} />
+            InfraSketch
+          </h1>
           <button
             ref={toggleRef}
             type="button"
