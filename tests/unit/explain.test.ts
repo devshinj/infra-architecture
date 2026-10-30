@@ -68,6 +68,26 @@ describe("signatureOf", () => {
   });
 });
 
+describe("signatureOf with group endpoints", () => {
+  const withZone = (label: string): DiagramState => {
+    const s = makeState();
+    s.groups.z = { id: "z", groupKind: "dmz", label, parent: null };
+    s.edges.ez = { id: "ez", from: "z", to: "a", edgeKind: "request" };
+    return s;
+  };
+  test("edge to a group is explainable and follows the group label", () => {
+    const base = signatureOf(withZone("DMZ"), "edge", "ez");
+    expect(base).not.toBeNull();
+    expect(signatureOf(withZone("내부망"), "edge", "ez")).not.toBe(base);
+    const dangling = withZone("DMZ");
+    delete dangling.groups.z;
+    expect(signatureOf(dangling, "edge", "ez")).toBeNull();
+  });
+  test("node signature changes when its zone neighbour is renamed", () => {
+    expect(signatureOf(withZone("내부망"), "node", "a")).not.toBe(signatureOf(withZone("DMZ"), "node", "a"));
+  });
+});
+
 describe("overLimit", () => {
   const node = (over: Partial<NodeExplanation> = {}): NodeExplanation => ({
     kind: "node", term: "t", definition: "d", definitionSource: "ai", reviewed: false, role: "r",

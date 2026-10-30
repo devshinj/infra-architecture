@@ -90,28 +90,40 @@ function fnv1a(s: string): string {
 
 const attrText = (v: unknown): string | null => (typeof v === "string" || typeof v === "number" ? String(v) : null);
 
+/** 연결 끝점: 노드(kind·label) 또는 영역(group·groupKind·label). 둘 다 없으면 null(끊어진 연결). */
+function endpointOf(state: DiagramState, id: string): [string, string] | null {
+  const n = state.nodes[id];
+  if (n) return [n.kind, n.label];
+  const g = state.groups[id];
+  if (g) return [`group:${g.groupKind}`, g.label];
+  return null;
+}
+
 /**
  * 설명이 낡았는지 판단하는 내용 서명. 대상이 없으면 null.
  * 노드: kind·label·sub·attrs.sw·attrs.version + 정렬한 연결 목록. 연결: edgeKind·label·양 끝 kind·label.
- * cpu·ip 같은 다른 attrs 는 넣지 않는다.
+ * 연결 끝은 노드이거나 영역일 수 있다. cpu·ip 같은 다른 attrs 는 넣지 않는다.
  */
 export function signatureOf(state: DiagramState, targetKind: "node" | "edge", id: string): string | null {
   if (targetKind === "edge") {
     const e = state.edges[id];
-    const from = e && state.nodes[e.from];
-    const to = e && state.nodes[e.to];
-    if (!e || !from || !to) return null;
-    return fnv1a(JSON.stringify([e.edgeKind, e.label ?? "", from.kind, from.label, to.kind, to.label]));
+    if (!e) return null;
+    const from = endpointOf(state, e.from);
+    const to = endpointOf(state, e.to);
+    if (!from || !to) return null;
+    return fnv1a(JSON.stringify([e.edgeKind, e.label ?? "", ...from, ...to]));
   }
   const n = state.nodes[id];
   if (!n) return null;
-  const links: [string, string, string, string, string][] = [];
+  const links: { text: string }[] = [];
   for (const e of Object.values(state.edges)) {
     const dir = e.from === id ? "out" : e.to === id ? "in" : null;
     if (!dir) continue;
-    const other = state.nodes[dir === "out" ? e.to : e.from];
-    links.push([e.edgeKind, dir, other?.id ?? "", other?.kind ?? "", other?.label ?? ""]);
+    const otherId = dir === "out" ? e.to : e.from;
+    const other = endpointOf(state, otherId) ?? ["", ""];
+    const entry = [e.edgeKind, dir, otherId, ...other];
+    links.push({ text: JSON.stringify(entry) });
   }
-  links.sort((x, y) => (JSON.stringify(x) < JSON.stringify(y) ? -1 : 1));
-  return fnv1a(JSON.stringify([n.kind, n.label, n.sub ?? "", attrText(n.attrs.sw), attrText(n.attrs.version), links]));
+  const sorted = links.map((l) => l.text).sort((x, y) => (x < y ? -1 : x > y ? 1 : 0));
+  return fnv1a(`[${JSON.stringify(n.kind)},${JSON.stringify(n.label)},${JSON.stringify(n.sub ?? "")},${JSON.stringify(attrText(n.attrs.sw))},${JSON.stringify(attrText(n.attrs.version))},[${sorted.join(",")}]]`);
 }
