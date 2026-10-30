@@ -46,7 +46,7 @@ const without = <T,>(rec: Record<string, T>, id: string): Record<string, T> => {
 
 function blocksOf(state: DiagramState, items: MissingItem[]): Block[] {
   const map = new Map<string, Block>();
-  const nameOf = (id: string) => state.nodes[id]?.label ?? id;
+  const nameOf = (id: string) => state.nodes[id]?.label ?? state.groups[id]?.label ?? id;
   for (const it of items) {
     let b = map.get(it.targetId);
     if (!b) {

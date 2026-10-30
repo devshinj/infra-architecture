@@ -146,3 +146,15 @@ test("focusId expands and focuses the first input of that target", () => {
   expect(header()).toHaveAttribute("aria-expanded", "true");
   expect(within(block("디비")).getByRole("textbox", { name: "RAM" })).toHaveFocus();
 });
+
+test("edge title falls back to a group's label when an endpoint is a group", async () => {
+  const state: DiagramState = {
+    ...emptyState(),
+    groups: { g1: { id: "g1", groupKind: "zone", label: "DMZ", parent: null } },
+    nodes: { web: { id: "web", kind: "web_server", label: "웹1", parent: null, attrs: full } },
+    edges: { e1: { id: "e1", from: "g1", to: "web", edgeKind: "request" } },
+  };
+  setup({ state });
+  await userEvent.click(header());
+  expect(block("DMZ → 웹1")).toBeInTheDocument();
+});
