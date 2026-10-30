@@ -133,3 +133,10 @@ test("canvas.css paints zones and nodes with the agreed mixes and no side stripe
   expect(css).toContain("color-mix(in srgb, var(--cat) 38%, var(--line-node))");
   expect(css).not.toMatch(/border-left:/);
 });
+
+test("glass panels fall back to an opaque background without backdrop-filter", () => {
+  const css = read("src/ui/app.module.css");
+  const block = css.slice(css.indexOf("@supports not"));
+  expect(block).toMatch(/@supports not \(\(backdrop-filter: blur\(1px\)\)/);
+  expect(block).toContain(".sidebar, .panel { background: var(--bg-sidebar); }");
+});

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useParams, usePathname, useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 
 import {
   createDiagramAction,
@@ -17,6 +17,8 @@ import {
 
 import styles from "./app.module.css";
 import { useShell } from "./Shell";
+
+const ACCOUNT_POP_ID = "sidebar-account";
 
 export interface SidebarProject {
   id: string;
@@ -43,6 +45,41 @@ export function Sidebar({ projects, userName }: { projects: SidebarProject[]; us
   const shell = useShell();
   const [account, setAccount] = useState(false);
   const glossaryCurrent = pathname === "/glossary";
+
+  // 접기·펼치기 버튼은 바뀌는 순간 사라진다: 사용자가 누른 경우에만 짝 버튼으로 포커스를 옮긴다(마운트 뒤 복원은 제외).
+  const toggleRef = useRef<HTMLButtonElement>(null);
+  const focusToggle = useRef(false);
+  const setShellCollapsed = (v: boolean) => {
+    focusToggle.current = true;
+    setAccount(false);
+    shell.setCollapsed(v);
+  };
+  useEffect(() => {
+    if (!focusToggle.current) return;
+    focusToggle.current = false;
+    toggleRef.current?.focus();
+  }, [shell.collapsed]);
+
+  // 레일의 계정 팝오버: Esc 는 닫고 계정 버튼으로 포커스를 돌려준다. 바깥을 누르면 닫는다.
+  const accountWrap = useRef<HTMLDivElement>(null);
+  const accountBtn = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    if (!account) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      setAccount(false);
+      accountBtn.current?.focus();
+    };
+    const onDown = (e: PointerEvent) => {
+      if (!accountWrap.current?.contains(e.target as Node)) setAccount(false);
+    };
+    document.addEventListener("keydown", onKey);
+    document.addEventListener("pointerdown", onDown);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.removeEventListener("pointerdown", onDown);
+    };
+  }, [account]);
 
   const toggle = (id: string) =>
     setCollapsed((s) => {
@@ -148,31 +185,43 @@ export function Sidebar({ projects, userName }: { projects: SidebarProject[]; us
 
   const dialogView = dialog && <DialogView dialog={dialog} onClose={() => setDialog(null)} />;
 
+  const glossaryLink = (rail: boolean) => (
+    <Link
+      href="/glossary"
+      className={rail ? `${styles.railBtn} ${glossaryCurrent ? styles.railBtnActive : ""}` : `${styles.sideLink} ${glossaryCurrent ? styles.sideLinkActive : ""}`}
+      aria-current={glossaryCurrent ? "page" : undefined}
+      {...(rail ? { "aria-label": "용어 사전", title: "용어 사전" } : {})}
+    >
+      {rail ? <IconBook /> : "용어 사전"}
+    </Link>
+  );
+  const accountRow = (
+    <>
+      <span>{userName}</span>
+      <form action={logoutAction}>
+        <button type="submit" className={styles.linkBtn}>로그아웃</button>
+      </form>
+    </>
+  );
+
   if (shell.collapsed) {
     return (
       <>
         <nav className={`${styles.sidebar} ${styles.rail}`} aria-label="프로젝트">
-          <RailButton label="프로젝트 영역 펼치기" onClick={() => shell.setCollapsed(false)}><IconExpand /></RailButton>
+          <RailButton label="프로젝트 영역 펼치기" expanded={false} buttonRef={toggleRef} onClick={() => setShellCollapsed(false)}><IconExpand /></RailButton>
           <RailButton label="새 프로젝트" onClick={newProject}><IconPlus /></RailButton>
-          <Link
-            href="/glossary"
-            className={`${styles.railBtn} ${glossaryCurrent ? styles.railBtnActive : ""}`}
-            aria-label="용어 사전"
-            title="용어 사전"
-            aria-current={glossaryCurrent ? "page" : undefined}
-          >
-            <IconBook />
-          </Link>
-          <div className={styles.railFoot}>
-            <RailButton label="계정" expanded={account} onClick={() => setAccount((v) => !v)}><IconUser /></RailButton>
-            {account && (
-              <div className={styles.accountPop} onKeyDown={(e) => e.key === "Escape" && setAccount(false)}>
-                <span>{userName}</span>
-                <form action={logoutAction}>
-                  <button type="submit" className={styles.linkBtn}>로그아웃</button>
-                </form>
-              </div>
-            )}
+          {glossaryLink(true)}
+          <div className={styles.railFoot} ref={accountWrap}>
+            <RailButton
+              label="계정"
+              expanded={account}
+              controls={account ? ACCOUNT_POP_ID : undefined}
+              buttonRef={accountBtn}
+              onClick={() => setAccount((v) => !v)}
+            >
+              <IconUser />
+            </RailButton>
+            {account && <div id={ACCOUNT_POP_ID} className={styles.accountPop}>{accountRow}</div>}
           </div>
         </nav>
         {dialogView}
@@ -186,13 +235,15 @@ export function Sidebar({ projects, userName }: { projects: SidebarProject[]; us
         <div className={styles.sideHead}>
           <h1 className={styles.brand}>InfraSketch</h1>
           <button
+            ref={toggleRef}
             type="button"
             className={styles.iconBtn}
             aria-label="프로젝트 영역 접기"
             title="프로젝트 영역 접기"
+            aria-expanded={true}
             onClick={() => {
               setMenu(null);
-              shell.setCollapsed(true);
+              setShellCollapsed(true);
             }}
           >
             <IconCollapse />
@@ -241,18 +292,9 @@ export function Sidebar({ projects, userName }: { projects: SidebarProject[]; us
           </p>
         )}
         <div className={styles.sideFoot}>
-          <Link
-            href="/glossary"
-            className={`${styles.sideLink} ${glossaryCurrent ? styles.sideLinkActive : ""}`}
-            aria-current={glossaryCurrent ? "page" : undefined}
-          >용어 사전</Link>
+          {glossaryLink(false)}
           <button type="button" className={styles.btn} onClick={newProject}>새 프로젝트</button>
-          <div className={styles.user}>
-            <span>{userName}</span>
-            <form action={logoutAction}>
-              <button type="submit" className={styles.linkBtn}>로그아웃</button>
-            </form>
-          </div>
+          <div className={styles.user}>{accountRow}</div>
         </div>
       </nav>
       {dialogView}
@@ -260,16 +302,23 @@ export function Sidebar({ projects, userName }: { projects: SidebarProject[]; us
   );
 }
 
-
-
-function RailButton({ label, onClick, expanded, children }: { label: string; onClick(): void; expanded?: boolean; children: React.ReactNode }) {
+function RailButton({ label, onClick, expanded, controls, buttonRef, children }: {
+  label: string;
+  onClick(): void;
+  expanded?: boolean;
+  controls?: string | undefined;
+  buttonRef?: React.Ref<HTMLButtonElement>;
+  children: React.ReactNode;
+}) {
   return (
     <button
+      ref={buttonRef}
       type="button"
       className={styles.railBtn}
       aria-label={label}
       title={label}
       {...(expanded === undefined ? {} : { "aria-expanded": expanded })}
+      {...(controls ? { "aria-controls": controls } : {})}
       onClick={onClick}
     >
       {children}

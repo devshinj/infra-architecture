@@ -94,3 +94,41 @@ test("rail buttons have labels", () => {
   window.localStorage.clear();
   path = "/";
 });
+
+test("toggling keeps keyboard focus on the counterpart button, but not on restore", () => {
+  window.localStorage.setItem(COLLAPSE_KEY, "1");
+  render(shell());
+  // 마운트 뒤 복원은 포커스를 옮기지 않는다.
+  expect(document.activeElement).toBe(document.body);
+  const expand = screen.getByRole("button", { name: "프로젝트 영역 펼치기" });
+  expect(expand).toHaveAttribute("aria-expanded", "false");
+  fireEvent.click(expand);
+  const collapse = screen.getByRole("button", { name: "프로젝트 영역 접기" });
+  expect(collapse).toHaveAttribute("aria-expanded", "true");
+  expect(document.activeElement).toBe(collapse);
+  fireEvent.click(collapse);
+  expect(document.activeElement).toBe(screen.getByRole("button", { name: "프로젝트 영역 펼치기" }));
+  window.localStorage.clear();
+});
+
+test("account popover closes on Esc (focus back) and on outside click", () => {
+  window.localStorage.setItem(COLLAPSE_KEY, "1");
+  render(shell());
+  const btn = screen.getByRole("button", { name: "계정" });
+  expect(btn).toHaveAttribute("aria-expanded", "false");
+  fireEvent.click(btn);
+  expect(btn).toHaveAttribute("aria-expanded", "true");
+  const pop = document.getElementById(btn.getAttribute("aria-controls")!)!;
+  expect(pop).toHaveTextContent("재석");
+  // 계정 버튼에 포커스가 있어도 Esc 로 닫힌다.
+  btn.focus();
+  fireEvent.keyDown(btn, { key: "Escape" });
+  expect(screen.queryByRole("button", { name: "로그아웃" })).not.toBeInTheDocument();
+  expect(document.activeElement).toBe(btn);
+  fireEvent.click(btn);
+  fireEvent.pointerDown(screen.getByRole("button", { name: "로그아웃" }));
+  expect(screen.getByRole("button", { name: "로그아웃" })).toBeInTheDocument();
+  fireEvent.pointerDown(document.body);
+  expect(screen.queryByRole("button", { name: "로그아웃" })).not.toBeInTheDocument();
+  window.localStorage.clear();
+});

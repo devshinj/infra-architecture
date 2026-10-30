@@ -126,3 +126,8 @@
 @media (prefers-reduced-motion: no-preference) {
   .tab, .iconBtn, .railBtn { transition: background-color 0.15s, color 0.15s; }
 }
+
+/* 흐림을 못 그리는 브라우저: 반투명 칠 대신 불투명한 사이드바 바탕으로 글자를 읽히게 한다. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .sidebar, .panel { background: var(--bg-sidebar); }
+}
