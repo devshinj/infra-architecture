@@ -1,5 +1,6 @@
 import { sql } from "drizzle-orm";
 import {
+  boolean,
   index,
   integer,
   jsonb,
@@ -94,4 +95,44 @@ export const diagramVersions = pgTable(
     createdAt: createdAt(),
   },
   (t) => [unique().on(t.diagramId, t.number)],
+);
+
+export type GlossarySource = "seed" | "ai";
+
+// 사용자별 용어 사전. key 는 정규화된 키이고 aliases 도 정규화 키들이다.
+export const glossaryTerms = pgTable(
+  "glossary_terms",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    key: text("key").notNull(),
+    term: text("term").notNull(),
+    fullName: text("full_name").notNull(),
+    category: text("category").notNull(),
+    definition: text("definition").notNull(),
+    why: text("why").notNull(),
+    compare: text("compare").notNull(),
+    aliases: jsonb("aliases").$type<string[]>().notNull().default(sql`'[]'::jsonb`),
+    reviewed: boolean("reviewed").notNull().default(false),
+    source: text("source").$type<GlossarySource>().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [unique().on(t.userId, t.key)],
+);
+
+export type ExplanationTargetKind = "node" | "edge";
+
+// 노드·엣지 설명 캐시. signature 가 바뀌면 다시 만든다. data 형태는 설명 도메인 타입이 정한다.
+export const explanations = pgTable(
+  "explanations",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    diagramId: uuid("diagram_id").notNull().references(() => diagrams.id, { onDelete: "cascade" }),
+    targetKind: text("target_kind").$type<ExplanationTargetKind>().notNull(),
+    targetId: text("target_id").notNull(),
+    signature: text("signature").notNull(),
+    data: jsonb("data").$type<Record<string, unknown>>().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [unique().on(t.diagramId, t.targetKind, t.targetId)],
 );

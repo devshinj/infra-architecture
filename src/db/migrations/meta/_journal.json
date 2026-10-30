@@ -15,6 +15,13 @@
       "when": 1793266181492,
       "tag": "0001_legal_silver_surfer",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1793333017712,
+      "tag": "0002_panoramic_maddog",
+      "breakpoints": true
     }
   ]
 }
