@@ -1,7 +1,7 @@
 import { computeMissing } from "@/domain/missing";
 import { applyCommand } from "@/domain/apply";
 import { COMMAND_OPS, parseCommand } from "@/domain/commands";
-import { emptyState, type DiagramState } from "@/domain/types";
+import { emptyState, type DiagramState, type Warning } from "@/domain/types";
 import { INTENT_MIN_CONFIDENCE, type ClefClient, type Intent } from "@/server/llm/clef";
 import { createJsonlParser } from "@/server/llm/jsonl";
 import { createThinkStripper } from "@/server/llm/think";
@@ -14,6 +14,7 @@ import { BUSY_MESSAGE } from "./busy";
 import { withDiagramLock } from "./lock";
 import { createMessage, listMessages } from "./messages";
 import { normalizeAiCommand } from "./normalize";
+import { checkWarnings } from "./warnings";
 import { createSkipTally, skipKey } from "./skips";
 import { buildMessages, parseMentions } from "./prompt";
 
@@ -198,7 +199,15 @@ async function lockedTurn(args: TurnArgs, deps: ChatDeps): Promise<void> {
   if (skipped > 0) console.info("[chat] skipped", { diagramId, counts: tally.counts() });
 
   let version: number | null = null;
+  let fresh: Warning[] = [];
   if (applied > 0) {
+    // 변경이 있었던 차례만 점검한다. 중단·오류면 이미 중단된 신호로 불러 코드 규칙만 받는다.
+    const prev = state.warnings;
+    if (status === "complete") emit({ t: "status", phase: "checking" });
+    const checkSignal = status === "complete" ? signal : AbortSignal.abort();
+    const checked = await checkWarnings(state, prev, { clef: deps.clef, qwen: deps.qwen }, checkSignal);
+    state = { ...state, warnings: checked.warnings };
+    fresh = checked.fresh;
     const v = await createVersion(diagramId, state, {
       source: "ai",
       status: status === "complete" ? "complete" : "aborted",
@@ -216,8 +225,10 @@ async function lockedTurn(args: TurnArgs, deps: ChatDeps): Promise<void> {
     status,
     says,
     ...(applied > 0 && missing > 0 ? { missing } : {}),
+    ...(fresh.length > 0 ? { warnings: fresh } : {}),
   };
   const assistant = await createMessage(diagramId, "assistant", content, meta);
+  if (fresh.length > 0) emit({ t: "warnings", items: fresh });
   emit({
     t: "done",
     version,

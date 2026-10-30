@@ -15,7 +15,7 @@ export interface ChatLine {
   meta?: MessageMeta;
 }
 
-export type ChatPhase = "thinking" | "drawing" | "answering";
+export type ChatPhase = "thinking" | "drawing" | "answering" | "checking";
 type DoneEvent = Extract<ChatEvent, { t: "done" }>;
 
 export interface UseChatTurnArgs {

@@ -30,7 +30,7 @@ export interface ChatPanelProps {
   checklist?: ReactNode;
 }
 
-const PHASE_LABEL: Record<ChatPhase, string> = { thinking: "구성 검토 중…", drawing: "그리는 중…", answering: "답변 작성 중…" };
+const PHASE_LABEL: Record<ChatPhase, string> = { thinking: "구성 검토 중…", drawing: "그리는 중…", answering: "답변 작성 중…", checking: "위험 요소 점검 중…" };
 const PLACEHOLDER = "만들고 싶은 서비스나 바꾸고 싶은 점을 말해 주세요. 노드를 오른쪽 클릭하면 참조를 붙일 수 있어요.";
 const DOWN = "AI 서버에 연결할 수 없어요. 잠시 뒤 다시 시도하거나 관리자에게 문의해 주세요.";
 const NEAR_BOTTOM = 40;

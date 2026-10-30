@@ -150,7 +150,7 @@ describe("runChatTurn", () => {
     const start = of(events, "start")[0]!;
     expect(start.intent).toBe("structure_change");
     expect(events[0]).toBe(start);
-    expect(of(events, "status").map((e) => e.phase)).toEqual(["thinking", "drawing"]);
+    expect(of(events, "status").map((e) => e.phase)).toEqual(["thinking", "drawing", "checking"]);
     expect(of(events, "say").map((e) => e.text)).toEqual(["구성을 그리는 중…"]);
     expect(of(events, "cmd")).toHaveLength(S2_CMDS);
     expect(of(events, "skip")).toHaveLength(0);
@@ -172,7 +172,7 @@ describe("runChatTurn", () => {
     const vs = await versions(ids.diagramId);
     expect(vs).toHaveLength(2);
     expect(vs[1]).toMatchObject({ number: 2, source: "ai", status: "complete", messageId: start.messageId });
-    expect(vs[1]!.state).toEqual(s2);
+    expect(vs[1]!.state).toEqual({ ...s2, warnings: [] });
 
     const msgs = await listMessages(ids.diagramId);
     expect(msgs.map((m) => m.role)).toEqual(["user", "assistant"]);
@@ -286,7 +286,7 @@ describe("runChatTurn", () => {
     // 보낸 cmd 를 시작 상태에 다시 적용하면 저장된 상태와 같다
     const replay = applyCommands(emptyState(), of(events, "cmd").map((e) => e.cmd));
     expect(replay.errors).toEqual([]);
-    expect(vs[0]!.state).toEqual(replay.state);
+    expect(vs[0]!.state).toEqual({ ...replay.state, warnings: [] });
     const msgs = await listMessages(ids.diagramId);
     expect(msgs[1]!.meta).toMatchObject({ status: "aborted", applied: 3, version: 1 });
 
@@ -553,7 +553,7 @@ describe("runChatTurn", () => {
     const vs = await versions(ids.diagramId);
     expect(vs).toHaveLength(1);
     expect(vs[0]).toMatchObject({ status: "complete", source: "ai" });
-    expect(vs[0]!.state).toEqual(s2);
+    expect(vs[0]!.state).toEqual({ ...s2, warnings: [] });
     const msgs = await listMessages(ids.diagramId);
     expect(msgs[1]!.meta).toMatchObject({ status: "complete", applied: S2_CMDS, version: 1 });
   });
@@ -587,5 +587,112 @@ describe("runChatTurn", () => {
     expect(user).toContain("e-was-1-db-1 label(프로토콜/포트)");
     expect(user).not.toContain("was-1 ip(IP)");
     expect(user.indexOf("채워야 할 정보:")).toBeLessThan(user.indexOf("요청: RAM 은 16GB"));
+  });
+
+  describe("warning check", () => {
+    const PUBLIC_DB_LINES = [
+      JSON.stringify({ op: "add_group", id: "pub", group_kind: "subnet_public", label: "공개", parent: null }),
+      JSON.stringify({ op: "add_node", id: "db-1", kind: "db_rdb", label: "DB", parent: "pub" }),
+    ];
+    const TEMPLATE = "DB이(가) 공개 구역에 있어요.";
+
+    /** 첫 호출은 명령 줄, 둘째 호출(경고 문구)은 문구 줄을 흘리는 가짜 Qwen. */
+    function seqQwen(first: string, second: string): QwenClient & { calls: ChatMessage[][] } {
+      const a = fakeQwen(first);
+      const b = fakeQwen(second);
+      const calls: ChatMessage[][] = [];
+      let n = 0;
+      return {
+        calls,
+        streamCompletion(messages, o) {
+          calls.push(messages);
+          return (n++ === 0 ? a : b).streamCompletion(messages, o);
+        },
+      };
+    }
+
+    function spyClef() {
+      const clef = fakeClef(null);
+      const decide = vi.fn(async () => null as never);
+      return Object.assign(clef, { decide });
+    }
+
+    test("turn saves warnings into the version and emits fresh ones before done", async () => {
+      const ids = await makeOwnedDiagram();
+      const text = JSON.stringify({ id: "db_public:db-1", text: "DB 가 공개 구역에 있어 위험해요." });
+      const { events } = await turn(ids, "DB 그려줘", { qwen: seqQwen(PUBLIC_DB_LINES.join("\n"), text), clef: spyClef() });
+
+      const idx = (t: string) => events.findIndex((e) => e.t === t);
+      expect(events.some((e) => e.t === "status" && e.phase === "checking")).toBe(true);
+      expect(idx("warnings")).toBeGreaterThan(idx("status"));
+      expect(events.at(-1)!.t).toBe("done");
+      expect(idx("warnings")).toBe(events.length - 2);
+      const w = of(events, "warnings")[0]!;
+      expect(w.items.map((x) => x.id).sort()).toEqual(["db_public:db-1", "spof:db-1"]);
+      expect(w.items.find((x) => x.id === "db_public:db-1")!.text).toBe("DB 가 공개 구역에 있어 위험해요.");
+
+      const latest = await getLatestState(ids.diagramId);
+      expect(latest!.state.warnings).toEqual(w.items);
+      expect(Object.keys(latest!.state.nodes)).toEqual(["db-1"]);
+      const msgs = await listMessages(ids.diagramId);
+      expect(msgs[1]!.meta.warnings).toEqual(w.items);
+    });
+
+    test("ignored warning is not announced again", async () => {
+      const ids = await makeOwnedDiagram();
+      const base = { ...emptyState(), ignoredWarnings: ["db_public:db-1"] };
+      await createVersion(ids.diagramId, base, { source: "import" });
+      const { events } = await turn(ids, "DB 그려줘", { qwen: seqQwen(PUBLIC_DB_LINES.join("\n"), ""), clef: spyClef() });
+      expect(of(events, "warnings")[0]!.items.map((x) => x.id)).toEqual(["spof:db-1"]);
+      const latest = await getLatestState(ids.diagramId);
+      expect(latest!.state.warnings?.map((x) => x.id).sort()).toEqual(["db_public:db-1", "spof:db-1"]);
+      expect(latest!.state.ignoredWarnings).toEqual(["db_public:db-1"]);
+      const msgs = await listMessages(ids.diagramId);
+      expect(msgs[1]!.meta.warnings?.map((x) => x.id)).toEqual(["spof:db-1"]);
+    });
+
+    test("code-only fresh warnings are skipped when all are ignored", async () => {
+      const ids = await makeOwnedDiagram();
+      const base = { ...emptyState(), ignoredWarnings: ["db_public:db-1", "spof:db-1"] };
+      await createVersion(ids.diagramId, base, { source: "import" });
+      const { events } = await turn(ids, "DB 그려줘", { qwen: seqQwen(PUBLIC_DB_LINES.join("\n"), ""), clef: spyClef() });
+      expect(of(events, "warnings")).toHaveLength(0);
+      const msgs = await listMessages(ids.diagramId);
+      expect(msgs[1]!.meta).not.toHaveProperty("warnings");
+    });
+
+    test("answer-only turn does not check", async () => {
+      const ids = await makeOwnedDiagram();
+      await createVersion(ids.diagramId, s2, { source: "import" });
+      const clef = Object.assign(fakeClef({ intent: "question", confidence: 0.95 }), { decide: vi.fn(async () => null as never) });
+      const { events } = await turn(ids, "몇 대야?", { qwen: fakeQwen("두 대예요."), clef });
+      expect(events.some((e) => e.t === "status" && e.phase === "checking")).toBe(false);
+      expect(of(events, "warnings")).toHaveLength(0);
+      expect(clef.decide).not.toHaveBeenCalled();
+      expect(await versions(ids.diagramId)).toHaveLength(1);
+    });
+
+    test("abort skips AI checks and keeps code warnings", async () => {
+      const ids = await makeOwnedDiagram();
+      const ctrl = new AbortController();
+      const clef = spyClef();
+      const { events } = await turn(
+        ids,
+        "DB 그려줘",
+        { qwen: seqQwen([...PUBLIC_DB_LINES, JSON.stringify({ op: "say", text: "끝" })].join("\n"), "never"), clef },
+        {
+          signal: ctrl.signal,
+          onEvent(e) {
+            if (e.t === "cmd" && e.cmd.op === "add_node") ctrl.abort();
+          },
+        },
+      );
+      expect(events.at(-1)).toMatchObject({ t: "done", status: "aborted", applied: 2 });
+      expect(clef.decide).not.toHaveBeenCalled();
+      const latest = await getLatestState(ids.diagramId);
+      expect(latest!.state.warnings!.map((x) => x.id).sort()).toEqual(["db_public:db-1", "spof:db-1"]);
+      expect(latest!.state.warnings!.find((x) => x.id === "db_public:db-1")!.text).toBe(TEMPLATE);
+      expect(of(events, "status").some((e) => e.phase === "checking")).toBe(false);
+    });
   });
 });
