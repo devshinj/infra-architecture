@@ -429,3 +429,64 @@ test("add_node during a turn flies a dot from the progress card to the placed no
     hookState.busy = false;
   }
 });
+
+test("missing-info badge click also moves the camera to that node (same path as 위치 보기)", () => {
+  hookState.busy = false;
+  hookState.focus.length = 0;
+  render(ui(two() as never));
+  fireEvent.click(screen.getByRole("button", { name: "배지a" }));
+  expect(cardToggle()).toHaveAttribute("aria-expanded", "true");
+  expect(hookState.focus.at(-1)).toEqual({ id: "a", token: expect.any(Number) });
+  const first = (hookState.focus.at(-1) as { token: number }).token;
+  fireEvent.click(screen.getByRole("button", { name: "배지a" }));
+  expect((hookState.focus.at(-1) as { token: number }).token).toBeGreaterThan(first);
+  // 선택하지 않는다(설명 탭으로 가지 않는다).
+  expect(screen.getByRole("tab", { name: "대화" })).toHaveAttribute("aria-selected", "true");
+});
+
+test("a selection that the chat removed or the adopted state no longer has is cleared", () => {
+  hookState.busy = true;
+  const { rerender } = render(ui(two() as never));
+  fireEvent.click(screen.getByRole("button", { name: "선택b" }));
+  expect(screen.getByRole("tab", { name: "설명" })).toHaveAttribute("aria-selected", "true");
+  // 대화가 선택된 노드를 지우면 선택이 풀린다(흐림이 남지 않는다).
+  act(() => hookState.onCommand!({ op: "remove_node", id: "b" }));
+  expect(screen.getByTestId("n")).toHaveTextContent(/^a$/);
+  expect(screen.getByRole("tab", { name: "대화" })).toHaveAttribute("aria-selected", "true");
+  // 대화 뒤 저장된 판을 받을 때도 없는 선택은 버린다.
+  hookState.busy = false;
+  fireEvent.click(screen.getByRole("button", { name: "선택b" }));
+  act(() => hookState.turn!.onDone());
+  rerender(ui(mk(2, ["a"]) as never));
+  expect(screen.getByRole("tab", { name: "대화" })).toHaveAttribute("aria-selected", "true");
+});
+
+test("queued fly dots are dropped when the turn ends or is interrupted", () => {
+  for (const end of ["onDone", "onInterrupted"] as const) {
+    hookState.busy = true;
+    hookState.lines = [{ id: "c", kind: "card", text: "", card: { mode: "build", step: "drawing", changes: 1 }, turn: "t1", at: 0 }];
+    vi.stubGlobal("matchMedia", () => ({ matches: false, addEventListener() {}, removeEventListener() {} }));
+    const orig = Element.prototype.getBoundingClientRect;
+    Element.prototype.getBoundingClientRect = function (this: Element) {
+      const r = this.hasAttribute("data-fly-origin")
+        ? { left: 900, top: 200, width: 12, height: 12 }
+        : this.getAttribute("role") === "log"
+          ? { left: 800, top: 0, width: 400, height: 800 }
+          : { left: 0, top: 0, width: 0, height: 0 };
+      return { ...r, x: r.left, y: r.top, right: r.left + r.width, bottom: r.top + r.height, toJSON: () => r } as DOMRect;
+    };
+    try {
+      render(ui(mk(1, ["a"])));
+      act(() => hookState.onCommand!({ op: "add_node", id: "b", kind: "server", label: "b", parent: null }));
+      act(() => hookState.turn![end]());
+      act(() => hookState.placed!(() => ({ x: 300, y: 400 })));
+      expect(document.querySelectorAll("[data-fly-dot]")).toHaveLength(0);
+    } finally {
+      cleanup();
+      Element.prototype.getBoundingClientRect = orig;
+      vi.unstubAllGlobals();
+      hookState.lines = [];
+      hookState.busy = false;
+    }
+  }
+});

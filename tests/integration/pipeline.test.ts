@@ -4,6 +4,7 @@ import { describe, expect, test, vi } from "vitest";
 import { db } from "@/db/client";
 import { diagramVersions } from "@/db/schema";
 import { applyCommands } from "@/domain/apply";
+import { assumptionChangeMessage } from "@/domain/assumptions";
 import { computeMissing } from "@/domain/missing";
 import type { DiagramState } from "@/domain/types";
 import { emptyState } from "@/domain/types";
@@ -409,6 +410,17 @@ describe("runChatTurn", () => {
     const msgs = await listMessages(ids.diagramId);
     expect(msgs[1]).toMatchObject({ role: "assistant", content: LAYOUT_TEXT, meta: { intent: "layout", says: [LAYOUT_TEXT] } });
     expect(await versions(ids.diagramId)).toHaveLength(1);
+  });
+
+  test("assumption-change message is a structure change without asking Clef", async () => {
+    const ids = await makeOwnedDiagram();
+    const qwen = fakeQwen(JSON.stringify({ op: "say", text: "맞춰 볼게요" }));
+    const clef = fakeClef({ intent: "layout", confidence: 0.99 });
+    const { events } = await turn(ids, assumptionChangeMessage("environment", "사내 IDC"), { qwen, clef });
+    expect(clef.calls).toHaveLength(0);
+    expect(qwen.calls).toHaveLength(1);
+    expect(of(events, "start")[0]).toMatchObject({ intent: "structure_change" });
+    expect(events.some((e) => e.t === "relayout")).toBe(false);
   });
 
   test("low-confidence layout intent takes the normal path", async () => {

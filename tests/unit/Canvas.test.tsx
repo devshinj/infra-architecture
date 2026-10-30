@@ -250,6 +250,20 @@ test("drag end does not toggle", async () => {
   expect(props.onSelect).not.toHaveBeenCalled();
 });
 
+test("위치 보기 on a node dimmed by another selection lifts it out of the dim while it pulses", async () => {
+  const props = baseProps();
+  props.options = { ...props.options, selectedId: "web-1" };
+  const { container, rerender } = render(<div style={{ width: 800, height: 600 }}><Canvas {...props} /></div>);
+  await waitFor(() => expect(container.querySelector(".node--dimmed")).not.toBeNull());
+  const dimmedId = container.querySelector(".node--dimmed")!.closest(".react-flow__node")!.getAttribute("data-id")!;
+  rerender(<div style={{ width: 800, height: 600 }}><Canvas {...props} focusRequest={{ id: dimmedId, token: 1 }} /></div>);
+  await waitFor(() => expect(nodeEl(container, dimmedId)!.querySelector(".node--pulse")).not.toBeNull());
+  expect(nodeEl(container, dimmedId)!.querySelector(".node--dimmed")).toBeNull();
+  expect(props.onSelect).not.toHaveBeenCalled();
+  // 강조가 끝나면 다시 흐려진다.
+  await waitFor(() => expect(nodeEl(container, dimmedId)!.querySelector(".node--dimmed")).not.toBeNull(), { timeout: 2500 });
+});
+
 test("canvas centers and pulses on focus request", async () => {
   // jsdom 은 크기가 0 이라 카메라가 움직이지 않는다: 캔버스 크기와 움직임 줄이기를 흉내 낸다.
   const ow = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "offsetWidth");

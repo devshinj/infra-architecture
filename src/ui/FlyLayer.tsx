@@ -129,6 +129,8 @@ export function useFly({ motion, chatVisible }: FlyOptions): {
   layerRef: RefObject<FlyLayerHandle | null>;
   queue(id: string): void;
   placed(locate: Locate): void;
+  /** 기다리던 출발점을 버린다(차례 끝·중단·구성도 바뀜): 나중 배치에서 끝난 카드에서 날지 않게. */
+  clear(): void;
 } {
   const layerRef = useRef<FlyLayerHandle>(null);
   const pending = useRef(new Map<string, Point>());
@@ -150,5 +152,6 @@ export function useFly({ motion, chatVisible }: FlyOptions): {
       layerRef.current?.launch(from, () => locate(id));
     }
   }, []);
-  return { layerRef, queue, placed };
+  const clear = useCallback(() => pending.current.clear(), []);
+  return { layerRef, queue, placed, clear };
 }

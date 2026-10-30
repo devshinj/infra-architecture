@@ -48,7 +48,7 @@ test("cmd events are forwarded in order and say lines appear as progress", async
   expect(h.result.current.busy).toBe(false);
 });
 
-test("relayout event calls onRelayout; the no-change card is dropped", async () => {
+test("relayout event calls onRelayout; the no-change card and chip are dropped", async () => {
   vi.stubGlobal("fetch", vi.fn(async () => streamOf([nd([
     { t: "start", messageId: "m", intent: "layout" }, { t: "say", text: "구성도를 다시 정렬했어요." },
     { t: "relayout" }, done({ version: null, applied: 0, skipped: 0 }),
@@ -57,8 +57,8 @@ test("relayout event calls onRelayout; the no-change card is dropped", async () 
   await act(() => h.result.current.send("정리해줘"));
   expect(h.onRelayout).toHaveBeenCalledTimes(1);
   expect(h.onCommand).not.toHaveBeenCalled();
-  // 이력 요청 차례처럼 카드는 치우고 안내 줄과 요약 칩만 남는다.
-  expect(h.result.current.lines.map((l) => l.kind)).toEqual(["user", "progress", "summary"]);
+  // 카드는 치우고 안내 줄만 남는다("변경 사항이 없어요." 칩은 정렬 안내와 어긋나 두지 않는다).
+  expect(h.result.current.lines.map((l) => l.kind)).toEqual(["user", "progress"]);
 });
 
 test("done adds the summary line and calls onDone", async () => {

@@ -95,4 +95,14 @@ test("no page-level scroll", async ({ page }) => {
   await page.waitForURL(/\/glossary/);
   const g = await overflow();
   expect(g.doc).toBeLessThanOrEqual(0);
+  // 용어 목록은 끝까지 스크롤된다: 마지막 용어의 아래 끝이 화면 안에 들어온다.
+  const last = page.getByRole("heading", { name: "용어 사전", level: 1 }).locator("xpath=..").locator("ul > li").last();
+  await expect(last).toBeAttached();
+  const bottom = await last.evaluate((li) => {
+    let el: HTMLElement | null = li.parentElement;
+    while (el && !(el.scrollHeight > el.clientHeight && getComputedStyle(el).overflowY === "auto")) el = el.parentElement;
+    if (el) el.scrollTop = el.scrollHeight;
+    return { li: li.getBoundingClientRect().bottom, view: innerHeight };
+  });
+  expect(bottom.li).toBeLessThanOrEqual(bottom.view);
 });

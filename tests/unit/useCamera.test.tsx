@@ -203,6 +203,29 @@ test("focus centres the rect in the strip, keeps zoom but at least 0.8, 500ms (0
   expect(r.setViewport).toHaveBeenLastCalledWith({ x: 450 - 1050 * 0.8, y: 300 - 425 * 0.8, zoom: 0.8 }, { duration: 0 });
 });
 
+test("focus cancels a scheduled stream fit so it cannot pull the camera away", () => {
+  const r = rig({ rects: { a: box(0, 0) } });
+  r.update({ streaming: true });
+  act(() => vi.advanceTimersByTime(1000));
+  r.update({ rects: { ...r.props().rects, b: box(2400, 0) } }); // off-screen → fit now
+  act(() => vi.advanceTimersByTime(100));
+  r.update({ rects: { ...r.props().rects, c: box(4000, 0) } }); // throttled → scheduled
+  r.setViewport.mockClear();
+  act(() => r.hook.result.current.focus(box(500, 500)));
+  expect(r.durations()).toEqual([500]);
+  act(() => vi.advanceTimersByTime(2000));
+  expect(r.durations()).toEqual([500]);
+});
+
+test("a failed layout drops the pending fit request: a later settle does not fit by surprise", () => {
+  const r = rig({ fitRequest: 0, settled: true });
+  r.setViewport.mockClear();
+  r.update({ fitRequest: 1, settled: false });
+  r.update({ layoutFailed: true });
+  r.update({ layoutFailed: false, settled: true });
+  expect(r.setViewport).not.toHaveBeenCalled();
+});
+
 test("focus during a turn is not a user move: the final fit still runs", () => {
   const r = rig();
   r.update({ streaming: true });

@@ -59,6 +59,8 @@ const unionState = (old: DiagramState, cur: DiagramState): DiagramState => ({
   assumptions: cur.assumptions,
 });
 
+const hasId = (s: DiagramState, id: string) => id in s.nodes || id in s.edges || id in s.groups;
+
 const PANEL_WIDTH_KEY = "infrasketch.panelWidth";
 
 const MISSING_BADGES_KEY = "infrasketch.showMissingBadges";
@@ -174,6 +176,8 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
   const [tab, setTab] = useState<Tab>("대화");
   // 대화 차례의 add_node: 진행 카드의 현재 단계 점에서 그 노드로 빛점이 날아간다(배치가 끝나 좌표가 나오면).
   const fly = useFly({ motion, chatVisible: tab === "대화" });
+  const clearFly = fly.clear;
+  useEffect(() => clearFly(), [diagramId, board, clearFly]); // 다른 구성도·새 판: 기다리던 빛점을 버린다
   const fail = (e: unknown) => setError(e instanceof Error ? e.message : "처리하지 못했어요");
   const run = (fn: () => Promise<void>) =>
     startBusy(async () => {
@@ -215,15 +219,24 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
     diagramId,
     initial: initialChat,
     onCommand: (cmd) => {
+      const next = applyCommand(current.state, cmd).state;
       setCurrent((c) => ({ number: c.number, state: applyCommand(c.state, cmd).state }));
+      // 선택한 노드·연결·영역을 대화가 지우면(빈 영역 정리 포함) 선택을 푼다: 흐림이 남지 않게.
+      setOptions((o) => (o.selectedId !== null && !hasId(next, o.selectedId) ? { ...o, selectedId: null } : o));
       if (cmd.op === "add_node" && live && !current.state.nodes[cmd.id]) fly.queue(cmd.id);
     },
-    onDone: refreshFromServer,
+    onDone: () => {
+      fly.clear();
+      refreshFromServer();
+    },
     onOpenHistory: () => {
       setTab("이력");
       loadVersions();
     },
-    onInterrupted: refreshAfterInterrupt,
+    onInterrupted: () => {
+      fly.clear();
+      refreshAfterInterrupt();
+    },
     onRelayout: () => onAutoArrange(),
   });
   // The server re-renders with a newer version after import/restore/chat: adopt it, but never mid-turn
@@ -231,7 +244,11 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
   if (!chat.busy && latest.number !== current.number) {
     setCurrent(latest);
     if (!adoptAfterChat.current) setBoard((n) => n + 1);
-    setOptions((o) => (adoptAfterChat.current ? { ...optionsFor(latest.state), selectedId: o.selectedId, collapsed: o.collapsed } : optionsFor(latest.state)));
+    setOptions((o) =>
+      adoptAfterChat.current
+        ? { ...optionsFor(latest.state), selectedId: o.selectedId !== null && hasId(latest.state, o.selectedId) ? o.selectedId : null, collapsed: o.collapsed }
+        : optionsFor(latest.state),
+    );
     setMode({ kind: "live" });
   }
   const locked = chat.busy;
@@ -332,10 +349,12 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
   // 위치 보기: 캔버스가 그 노드로 이동해 강조한다(선택은 하지 않는다).
   const [focusRequest, setFocusRequest] = useState<{ id: string; token: number } | undefined>(undefined);
   // Canvas 의 노드 계산 deps 에 들어가므로 정체성을 고정한다(setter·ref 만 쓴다).
+  // 위치 보기와 같은 길로 카메라도 그 노드로 옮긴다(열린 카드를 피해 가운데에 둔다).
   const onBadgeClick = useCallback((id: string) => {
     seq.current += 1;
     setCardOpen(true);
     setFocus({ id, token: seq.current });
+    setFocusRequest({ id, token: seq.current });
   }, []);
   const changeCardOpen = (o: boolean) => {
     setCardOpen(o);
@@ -539,6 +558,7 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
           onTabChange={setTab}
           warningState={mode.kind === "compare" ? current.state : shown}
           onHistoryOpen={loadVersions}
+          live={live}
           {...(explain ? { explain } : {})}
           {...(live ? { cautions: { onIgnoreWarning, ignoreDisabled: locked || warnSaving, ignoreError: warnError } } : {})}
           history={{

@@ -101,6 +101,7 @@ export function useChatTurn(args: UseChatTurnArgs) {
       let gotDone = false;
       let cmds = 0;
       let errored = false;
+      let intent: string | null = null;
       /** done 없이 끝남: 그린 게 있으면 중단됨으로 남기고, 없으면 카드를 치운다. */
       const endWithoutDone = (aborted: boolean) => (aborted || cmds > 0 ? patchCard((c) => ({ ...c, end: "aborted" })) : removeCard());
       let warnings: Warning[] = []; // done 앞에 오지만 요약 칩 다음에 둔다
@@ -114,6 +115,7 @@ export function useChatTurn(args: UseChatTurnArgs) {
         const a = argsRef.current;
         switch (ev.t) {
           case "start":
+            intent = ev.intent;
             if (ev.intent && ANSWER_INTENTS.has(ev.intent)) patchCard((c) => ({ ...c, mode: "answer" }));
             break;
           case "status": {
@@ -156,7 +158,7 @@ export function useChatTurn(args: UseChatTurnArgs) {
               const end = ev.status === "aborted" ? "aborted" : "done";
               patchCard((c) => ({ ...c, end, nodes: ev.nodes, edges: ev.edges }));
             } else removeCard();
-            const s = summaryText(ev, answerId !== null);
+            const s = summaryText(ev, answerId !== null, intent);
             if (s) pushT({ kind: "summary", text: s });
             pushWarnings();
             a.onDone(ev);

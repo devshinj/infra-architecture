@@ -27,6 +27,8 @@ export interface CameraInput {
   fitRequest?: number;
   /** False while the layout for the current inputs is still being computed (default true). */
   settled?: boolean;
+  /** True when the last layout run failed: a pending fitRequest is dropped (its layout will not come). */
+  layoutFailed?: boolean;
   getViewport(): Viewport;
   setViewport(v: Viewport, opts: { duration: number }): void;
 }
@@ -108,7 +110,7 @@ const idsKey = (rects: Record<string, Rect>) => Object.keys(rects).sort().join("
  *   animated 450ms, never zooming in;
  * - end of a chat turn → one 600ms fit of everything (zoom-in allowed up to 1);
  * - a user pan/zoom during a turn stops auto fits until the turn ends (the final fit too);
- * - focus(rect) (위치 보기) → 500ms centre on it; a programmatic move, never a user move;
+ * - focus(rect) (위치 보기) → 500ms centre on it, cancelling a scheduled stream fit; a programmatic move, never a user move;
  * - fitRequest change (re-arrange) → fit at once like a board change, once the new layout is settled;
  * - reduced motion → every move is instant.
  */
@@ -215,12 +217,16 @@ export function useCamera(input: CameraInput): { onMoveStart(event: unknown): vo
   }, [boardKey, key, sizeReady]);
 
   // Re-arrange: the pins were dropped, so wait for that layout before fitting.
-  const { fitRequest, settled = true } = input;
+  const { fitRequest, settled = true, layoutFailed = false } = input;
   useEffect(() => {
     const s = st.current;
     if (s.fitRequest !== fitRequest) {
       s.fitRequest = fitRequest;
       s.fitPending = true;
+    }
+    if (layoutFailed) {
+      s.fitPending = false;
+      return;
     }
     if (s.fitPending && settled && sizeReady) {
       s.fitPending = false;
@@ -229,7 +235,7 @@ export function useCamera(input: CameraInput): { onMoveStart(event: unknown): vo
       apply(s.streaming ? FINAL_MAX_ZOOM : BOARD_MAX_ZOOM, 0, false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- helpers read refs only
-  }, [fitRequest, settled, sizeReady]);
+  }, [fitRequest, settled, layoutFailed, sizeReady]);
 
   // Turn start / end.
   useEffect(() => {
@@ -262,6 +268,9 @@ export function useCamera(input: CameraInput): { onMoveStart(event: unknown): vo
   const focus = useCallback((r: Rect) => {
     const { size, insets, reducedMotion, getViewport, setViewport } = latest.current;
     if (!(size.width > 0 && size.height > 0)) return;
+    // A scheduled stream fit must not pull the camera off the focus target.
+    clearTimer();
+    st.current.pending.clear();
     setViewport(focusViewport(r, size, insets, getViewport().zoom), { duration: reducedMotion ? 0 : FOCUS_DURATION });
   }, []);
 

@@ -60,19 +60,20 @@ describe("clef", () => {
     expect(q.options).toBeUndefined();
     expect(q.instructions).toBe("인프라 구성도 도구에서 사용자가 입력한 문장의 의도");
     expect(q.criteria).toEqual({
-      structure_change: "구성도에 노드/연결/영역을 추가·삭제·수정해 달라는 요청",
+      structure_change:
+        "구성도에 노드/연결/영역을 추가·삭제·수정하거나, 노드를 다른 영역으로 옮기거나, 필요 없는 것을 정리(삭제)해 달라는 요청",
       question: "용어·구성에 대한 질문이나 설명 요청",
       missing_info_answer:
         "채워야 할 정보에 대한 값만 알려 주는 답(예: '4코어 16기가', '10.0.2.11, 10.0.2.12', 'RAM 은 32GB'). 새 노드·연결을 만들라는 말이 없으면 이것",
       history: "이전 버전으로 되돌리기나 변경 이력 요청",
-      layout: "구성도 배치·정렬·정리만 다시 해 달라는 요청(노드·연결은 그대로)",
+      layout: "노드·연결·영역을 하나도 바꾸지 않고 화면 배치만 다시 해 달라는 요청(예: 자동 정렬, 보기 좋게 다시 배치)",
       other: "그 밖의 대화",
     });
   });
 
   test("layout is an accepted intent", async () => {
     const { client } = setup([() => ok(choice("layout"))]);
-    expect(await client.classifyIntent("구성도 좀 정리해줘", {})).toMatchObject({ intent: "layout" });
+    expect(await client.classifyIntent("보기 좋게 다시 배치해 줘", {})).toMatchObject({ intent: "layout" });
   });
 
   test("state includes open items line when given", async () => {

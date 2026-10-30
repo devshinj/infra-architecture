@@ -138,3 +138,16 @@ test("unmount cancels running dots", () => {
   expect(() => vi.advanceTimersByTime(FLY_MS)).not.toThrow();
   expect(dots()).toHaveLength(0);
 });
+
+test("clear drops queued origins so a later settle launches nothing", () => {
+  render(<Harness />);
+  act(() => {
+    fly!.queue("a");
+    fly!.queue("b");
+    fly!.clear();
+    fly!.placed(locateAll);
+  });
+  expect(dots()).toHaveLength(0);
+  fire(["c"]);
+  expect(dots()).toHaveLength(1);
+});

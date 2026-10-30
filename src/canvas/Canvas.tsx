@@ -254,7 +254,7 @@ export function Canvas(props: CanvasProps) {
       ) : (
         view.layout && (
           <ReactFlowProvider>
-            <Flow {...props} fitRequest={(props.fitRequest ?? 0) + fitTick} layout={view.layout} settled={view.settled} display={view.display} appearing={view.appearing} updated={view.updated} />
+            <Flow {...props} fitRequest={(props.fitRequest ?? 0) + fitTick} layout={view.layout} settled={view.settled} layoutFailed={view.layoutFailed} display={view.display} appearing={view.appearing} updated={view.updated} />
           </ReactFlowProvider>
         )
       )}
@@ -265,12 +265,13 @@ export function Canvas(props: CanvasProps) {
 interface FlowProps extends CanvasProps {
   layout: Layout;
   settled: boolean;
+  layoutFailed: boolean;
   display: DisplayGraph;
   appearing: Set<string>;
   updated: Set<string>;
 }
 
-function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onPinnedChange, motion, layout, settled, fitRequest, display, appearing, updated, diffMarks, fitKey, streaming = false, cameraInsets = NO_INSETS, focusRequest, onMention, onBadgeClick, onWarnBadgeClick, onPlaced }: FlowProps) {
+function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onPinnedChange, motion, layout, settled, layoutFailed, fitRequest, display, appearing, updated, diffMarks, fitKey, streaming = false, cameraInsets = NO_INSETS, focusRequest, onMention, onBadgeClick, onWarnBadgeClick, onPlaced }: FlowProps) {
   const far = useStore((s) => s.transform[2] < FAR_ZOOM);
   const selected = drawnId(state, options.collapsed, options.selectedId);
   const missingByNode = useMemo(() => computeMissing(state).byNode, [state]);
@@ -322,7 +323,8 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
       if (!n) continue;
       let visual: NodeVisualState = "normal";
       if (ln.id === selected) visual = "selected";
-      else if (selected !== null && !neighbors.has(ln.id)) visual = "dimmed";
+      // 위치 보기로 강조 중인 노드는 흐리지 않는다(흐린 노드 안에서는 링이 보이지 않는다).
+      else if (selected !== null && !neighbors.has(ln.id) && !pulse?.ids.has(ln.id)) visual = "dimmed";
       else if (appearing.has(ln.id)) visual = "appearing";
       else if (updated.has(ln.id)) visual = "updated";
       const az = n.attrs.az;
@@ -378,6 +380,7 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
     streaming,
     fitRequest,
     settled,
+    layoutFailed,
     reducedMotion: prefersReducedMotion(),
     getViewport,
     setViewport: applyViewport,

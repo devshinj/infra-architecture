@@ -28,6 +28,11 @@ test("no sample list in chat; greeting only for an empty diagram", () => {
   expect(screen.queryByText(/안녕하세요, InfraSketch예요/)).not.toBeInTheDocument();
 });
 
+test("no greeting while viewing an old empty version (chat disabled)", () => {
+  render(<RightPanel {...props(null)} state={emptyState()} live={false} />);
+  expect(screen.queryByText(/안녕하세요, InfraSketch예요/)).not.toBeInTheDocument();
+});
+
 test("selecting activates 설명 and clearing returns to the previous tab", () => {
   const { rerender } = render(<RightPanel {...props(null)} />);
   expect(screen.getByRole("tab", { name: "대화" })).toHaveAttribute("aria-selected", "true");

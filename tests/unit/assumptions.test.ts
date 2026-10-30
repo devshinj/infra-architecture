@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 
-import { ASSUMPTION_CHOICES, ASSUMPTION_LABELS, assumptionChangeMessage, confirmAssumption } from "@/domain/assumptions";
+import { ASSUMPTION_CHOICES, ASSUMPTION_LABELS, assumptionChangeMessage, confirmAssumption, isAssumptionChangeMessage } from "@/domain/assumptions";
 import { emptyState } from "@/domain/types";
 
 test("confirmAssumption sets confirmed and does not mutate input", () => {
@@ -27,4 +27,13 @@ test("assumption change message: structural keys ask to remove and move", () => 
     "가정 변경: 규모 → 대규모(일 10만 명 이상). 이 가정에 맞게 구성을 조정해 줘.",
   );
   expect(assumptionChangeMessage("custom", "x")).toBe("가정 변경: custom → x. 이 가정에 맞게 구성을 조정해 줘.");
+});
+
+test("isAssumptionChangeMessage recognises every generated message and nothing else", () => {
+  for (const key of ["environment", "deploy", "scale", "custom"]) {
+    expect(isAssumptionChangeMessage(assumptionChangeMessage(key, "x"))).toBe(true);
+  }
+  expect(isAssumptionChangeMessage("  가정 변경: 환경 → 사내 IDC.")).toBe(true);
+  expect(isAssumptionChangeMessage("구성도 좀 정리해줘")).toBe(false);
+  expect(isAssumptionChangeMessage("환경 가정 변경: 해 줘")).toBe(false);
 });

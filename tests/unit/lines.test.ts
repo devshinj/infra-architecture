@@ -72,3 +72,15 @@ test("reload renders the same structure with a collapsed done card", () => {
   expect(lines[6]!.turn).toBe("a2");
   expect(new Set(lines.map((l) => l.id)).size).toBe(lines.length);
 });
+
+test("reload of a layout reply has no 변경 사항이 없어요. chip", () => {
+  const text = "구성도를 다시 정렬했어요.";
+  const lines = messagesToLines([
+    { id: "u1", role: "user", content: "보기 좋게 다시 배치해 줘", meta: {} },
+    { id: "a1", role: "assistant", content: text, meta: { intent: "layout", applied: 0, skipped: 0, version: null, status: "complete", says: [text] } },
+  ]);
+  expect(lines.map((l) => [l.kind, l.text])).toEqual([
+    ["user", "보기 좋게 다시 배치해 줘"],
+    ["progress", text],
+  ]);
+});

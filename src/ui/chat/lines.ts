@@ -18,9 +18,14 @@ export interface TurnResult {
   edges?: number;
 }
 
-/** 차례 끝 요약 칩 글. 바뀐 것도 답도 없으면 "변경 사항이 없어요.", 답만 한 차례면 없음. */
-export function summaryText(r: TurnResult, hadAnswer: boolean): string | null {
-  if (r.version === null && r.applied === 0 && r.status === "complete") return hadAnswer ? null : "변경 사항이 없어요.";
+/**
+ * 차례 끝 요약 칩 글. 바뀐 것도 답도 없으면 "변경 사항이 없어요.", 답만 한 차례면 없음.
+ * 재정렬(layout) 차례는 "다시 정렬했어요" 안내와 어긋나므로 칩을 두지 않는다.
+ */
+export function summaryText(r: TurnResult, hadAnswer: boolean, intent?: string | null): string | null {
+  if (r.version === null && r.applied === 0 && r.status === "complete") {
+    return hadAnswer || intent === "layout" ? null : "변경 사항이 없어요.";
+  }
   const counts = `적용 ${r.applied} · 건너뜀 ${r.skipped}`;
   const base = r.nodes === undefined || r.edges === undefined ? counts : `노드 ${r.nodes} · 연결 ${r.edges} · ${counts}`;
   return r.status === "aborted" ? `중단됨 · ${base}` : base;
@@ -71,7 +76,7 @@ export function messagesToLines(rows: Row[]): ChatLine[] {
       answer = m.content.slice(joined.length).replace(/^\n/, "");
     }
     if (answer.trim()) out.push({ id: m.id, kind: "assistant", text: answer, meta, ...t });
-    const s = summaryText(r, answer.trim() !== "");
+    const s = summaryText(r, answer.trim() !== "", meta.intent);
     if (s) out.push({ id: `${m.id}-summary`, kind: "summary", text: s, ...t });
     // 빠진 정보(meta.missing)는 대화에 줄을 두지 않는다: 캔버스 카드가 지금 상태로 보여 준다.
     const chip = warningsChip(meta.warnings ?? []);

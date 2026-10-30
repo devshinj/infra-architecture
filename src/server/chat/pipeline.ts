@@ -2,7 +2,7 @@ import { computeMissing } from "@/domain/missing";
 import { applyCommand, pruneEmptyGroups } from "@/domain/apply";
 import { COMMAND_OPS, parseCommand } from "@/domain/commands";
 import { emptyState, type DiagramState, type Warning } from "@/domain/types";
-import { INTENT_MIN_CONFIDENCE, type ClefClient, type Intent } from "@/server/llm/clef";
+import type { ClefClient, Intent } from "@/server/llm/clef";
 import { createJsonlParser } from "@/server/llm/jsonl";
 import { createThinkStripper } from "@/server/llm/think";
 import type { QwenClient } from "@/server/llm/qwen";
@@ -12,6 +12,7 @@ import { createVersion, getLatestState } from "@/server/versions";
 import type { ChatEvent, MessageMeta } from "./events";
 import { BUSY_MESSAGE } from "./busy";
 import { withDiagramLock } from "./lock";
+import { resolveIntent } from "./intent";
 import { createMessage, listMessages } from "./messages";
 import { normalizeAiCommand } from "./normalize";
 import { checkWarnings } from "./warnings";
@@ -123,9 +124,9 @@ async function lockedTurn(args: TurnArgs, deps: ChatDeps): Promise<void> {
     const e = state.edges[m.targetId];
     return e ? `${nameOf(e.from)} → ${nameOf(e.to)} ${m.label}` : `${m.targetId} ${m.label}`;
   });
-  const classified = await deps.clef.classifyIntent(clean, { lastAssistant, openItems }, signal);
-  const intent: Intent | null =
-    classified && classified.confidence >= INTENT_MIN_CONFIDENCE ? classified.intent : null;
+  const intent: Intent | null = await resolveIntent(args.text, () =>
+    deps.clef.classifyIntent(clean, { lastAssistant, openItems }, signal),
+  );
   emit({ t: "start", messageId: userMsg.id, intent });
 
   const says: string[] = [];
