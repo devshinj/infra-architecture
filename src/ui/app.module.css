@@ -1,6 +1,6 @@
 /* App shell, sidebar, right panel, workspace. Tokens only. */
 /* 캔버스가 바탕 전체를 채우고, 사이드바·오른쪽 패널은 사방 --panel-gap 을 두고 유리 판으로 떠 있다. */
-.shell { position: relative; height: 100vh; overflow: hidden; background: var(--bg-canvas); color: var(--text-primary); }
+.shell { position: fixed; inset: 0; overflow: hidden; background: var(--bg-canvas); color: var(--text-primary); }
 .main { position: absolute; inset: 0; min-width: 0; min-height: 0; }
 /* 캔버스가 아닌 화면은 떠 있는 사이드바 오른쪽에서 시작한다(--shell-inset-left 는 Shell.tsx 가 준다). */
 .emptyState { height: 100%; display: grid; place-content: center; text-align: center; gap: 8px; padding: 24px; padding-left: calc(var(--shell-inset-left, 0px) + 24px); }

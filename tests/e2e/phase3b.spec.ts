@@ -43,7 +43,9 @@ test("warnings: chat chip, card list, badge, ignore, restore", async ({ page }) 
   expect(n).toBeGreaterThanOrEqual(1);
   // 숫자 배지는 기본 꺼짐이고 경고 배지는 그대로다. 켜면 함께 보인다(DB 의 필수 속성 미입력).
   await expect(pubDb(page).getByRole("button", { name: /^빠진 정보 \d+개$/ })).toHaveCount(0);
-  await page.getByRole("button", { name: "빠진 정보 숫자" }).click();
+  await page.getByRole("button", { name: "보기", exact: true }).click();
+  await page.getByRole("checkbox", { name: "빠진 정보 숫자" }).click();
+  await page.keyboard.press("Escape");
   await expect(pubDb(page).getByRole("button", { name: /^빠진 정보 \d+개$/ })).toBeVisible();
 
   // 주의 N 칩 → 카드가 펼쳐져 주의 절이 보인다. 항목 클릭 → 설명 탭 주의할 점

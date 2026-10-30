@@ -24,6 +24,10 @@
   /* 위치 보기 강조 링(은빛, 금색 --accent 아님) */
   --focus-ring: #C9D3E2;
 
+  /* 얇은 테마 스크롤바(스크롤 영역 전체) */
+  --scrollbar-thumb: rgba(154, 167, 186, 0.28);
+  --scrollbar-thumb-hover: rgba(154, 167, 186, 0.5);
+
   /* 대화에서 캔버스로 날아가는 빛점(은빛 단색 원, glass-highlight 보다 밝게) */
   --fly-dot: #DCE3EE;
 

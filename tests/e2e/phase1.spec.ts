@@ -43,7 +43,7 @@ test("가입 → 프로젝트·구성도 → 샘플 → 선택 → 편집 이동
   await expect(page.locator(".edge--dim").first()).toBeVisible();
 
   // 편집 모드에서 드래그 → 새로고침 후 위치 유지
-  await page.getByRole("button", { name: "편집 모드" }).click();
+  await page.getByRole("button", { name: "위치 옮기기" }).click();
   const was = page.locator(".react-flow__node-infra", { has: page.getByTitle("WAS#1") });
   const before = (await was.boundingBox())!;
   const cx = before.x + before.width / 2;

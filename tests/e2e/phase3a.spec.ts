@@ -52,7 +52,9 @@ async function buildAndSave(page: Page) {
   // 빠진 정보 숫자는 기본으로 꺼져 있다: 먼저 켠다.
   await expect(was1(page)).toBeVisible();
   await expect(was1Badge(page)).toHaveCount(0);
-  await page.getByRole("button", { name: "빠진 정보 숫자" }).click();
+  await page.getByRole("button", { name: "보기", exact: true }).click();
+  await page.getByRole("checkbox", { name: "빠진 정보 숫자" }).click();
+  await page.keyboard.press("Escape");
   await expect(was1Badge(page)).toBeVisible();
   const k = await badgeCount(page);
   expect(k).toBeGreaterThanOrEqual(2);
@@ -116,7 +118,9 @@ test("reload: no reminder line in chat, the card keeps the count", async ({ page
   await buildS1(page);
   await expect.poll(() => cardTotal(page), { timeout: 15_000 }).toBeGreaterThan(2);
   const total = await cardTotal(page);
-  await page.getByRole("button", { name: "빠진 정보 숫자" }).click();
+  await page.getByRole("button", { name: "보기", exact: true }).click();
+  await page.getByRole("checkbox", { name: "빠진 정보 숫자" }).click();
+  await page.keyboard.press("Escape");
   await expect(was1Badge(page)).toBeVisible();
 
   await page.reload();

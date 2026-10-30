@@ -160,3 +160,17 @@ test("chat bubbles and progress dots follow the restrained spec", () => {
   expect(css).not.toContain("var(--accent)");
   expect(css).not.toMatch(/gradient|box-shadow/);
 });
+
+test("scrollbar tokens and thin themed scrollbars; the app shell never scrolls the page", () => {
+  const tokens = read("src/styles/tokens.css");
+  expect(tokens).toContain("--scrollbar-thumb: rgba(154, 167, 186, 0.28);");
+  expect(tokens).toContain("--scrollbar-thumb-hover: rgba(154, 167, 186, 0.5);");
+  const globals = read("src/styles/globals.css");
+  expect(globals).toContain("scrollbar-width: thin;");
+  expect(globals).toContain("scrollbar-color: var(--scrollbar-thumb) transparent;");
+  expect(globals).toMatch(/::-webkit-scrollbar \{[^}]*width: 8px;/);
+  expect(globals).toMatch(/::-webkit-scrollbar-thumb \{[^}]*border-radius:/);
+  expect(globals).toMatch(/::-webkit-scrollbar-thumb:hover \{[^}]*var\(--scrollbar-thumb-hover\)/);
+  // 셸은 화면에 고정돼 문서 높이에 보태지지 않는다.
+  expect(rule(read("src/ui/app.module.css"), ".shell")).toMatch(/position: fixed;\s*inset: 0;[^}]*overflow: hidden;/);
+});

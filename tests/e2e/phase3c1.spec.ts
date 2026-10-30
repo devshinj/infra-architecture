@@ -70,3 +70,15 @@ test("explanations and glossary", async ({ page }) => {
   await expect(definition.getByText(SEED_DEFINITION)).toBeVisible({ timeout: 30_000 });
   await expect(definition.getByText("미검수")).toHaveCount(0);
 });
+
+test("no page-level scroll", async ({ page }) => {
+  await setup(page);
+  const overflow = () => page.evaluate(() => ({ doc: document.scrollingElement!.scrollHeight - innerHeight, wide: document.scrollingElement!.scrollWidth - innerWidth }));
+  const d = await overflow();
+  expect(d.doc).toBeLessThanOrEqual(0);
+  expect(d.wide).toBeLessThanOrEqual(0);
+  await page.getByRole("link", { name: "용어 사전" }).first().click();
+  await page.waitForURL(/\/glossary/);
+  const g = await overflow();
+  expect(g.doc).toBeLessThanOrEqual(0);
+});

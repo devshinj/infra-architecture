@@ -1,5 +1,5 @@
 import "@testing-library/jest-dom/vitest";
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeAll, expect, test, vi } from "vitest";
 
 import * as layoutMod from "@/canvas/layout";
@@ -82,7 +82,8 @@ test("auto arrange button enabled outside edit mode", () => {
   const { rerender } = render(<Canvas {...props} />);
   fireEvent.click(screen.getByRole("button", { name: "자동 정렬" }));
   expect(props.onAutoArrange).toHaveBeenCalledTimes(1);
-  fireEvent.click(screen.getByRole("button", { name: "보조 연결 숨김" }));
+  fireEvent.click(screen.getByRole("button", { name: "보기" }));
+  fireEvent.click(screen.getByRole("checkbox", { name: "보조 연결 숨기기" }));
   expect(props.onOptionsChange).toHaveBeenCalledWith(expect.objectContaining({ hideAux: false }));
   rerender(<Canvas {...props} editMode />);
   fireEvent.click(screen.getByRole("button", { name: "자동 정렬" }));
@@ -120,8 +121,9 @@ test("missing badges hidden by default", async () => {
 test("toggle shows them and is remembered", async () => {
   const props = baseProps();
   render(<div style={{ width: 800, height: 600 }}><Canvas {...props} /></div>);
-  const btn = screen.getByRole("button", { name: "빠진 정보 숫자" });
-  expect(btn).toHaveAttribute("aria-pressed", "false");
+  fireEvent.click(screen.getByRole("button", { name: "보기" }));
+  const btn = screen.getByRole("checkbox", { name: "빠진 정보 숫자" });
+  expect(btn).not.toBeChecked();
   fireEvent.click(btn);
   expect(props.onOptionsChange).toHaveBeenCalledWith(expect.objectContaining({ showMissingBadges: true }));
 });
@@ -317,5 +319,103 @@ test("onPlaced locates drawn nodes on screen, not hidden or off-strip ones", asy
     expect(locate!("web-1")).toBeNull();
   } finally {
     Element.prototype.getBoundingClientRect = orig;
+  }
+});
+
+const toolbar = () => screen.getByRole("toolbar", { name: "캔버스 도구" });
+
+test("toolbar has three groups with labels", () => {
+  render(<Canvas {...baseProps(emptyState())} />);
+  const groups = within(toolbar()).getAllByRole("group");
+  expect(groups.map((g) => g.getAttribute("aria-label"))).toEqual(["보기", "편집", "화면"]);
+  expect(within(groups[0]!).getByRole("button", { name: "보기" })).toBeInTheDocument();
+  expect(within(groups[1]!).getAllByRole("button").map((b) => b.textContent)).toEqual(["위치 옮기기", "자동 정렬"]);
+  expect(within(groups[2]!).getAllByRole("button").map((b) => b.textContent)).toEqual(["전체 보기", "흐름 표시"]);
+  // 아이콘은 SVG 이고 이모지가 아니다.
+  for (const b of within(toolbar()).getAllByRole("button")) expect(b.querySelector("svg")).not.toBeNull();
+  expect(toolbar().querySelectorAll('[role="separator"]')).toHaveLength(2);
+});
+
+test("보기 popover lists options with descriptions and closes on Esc/outside", () => {
+  const props = baseProps(emptyState());
+  render(<Canvas {...props} />);
+  const open = screen.getByRole("button", { name: "보기" });
+  expect(open).toHaveAttribute("aria-haspopup", "dialog");
+  expect(open).toHaveAttribute("aria-expanded", "false");
+  expect(screen.queryByRole("dialog", { name: "보기 옵션" })).not.toBeInTheDocument();
+  fireEvent.click(open);
+  const pop = screen.getByRole("dialog", { name: "보기 옵션" });
+  expect(open).toHaveAttribute("aria-expanded", "true");
+  const rows: [string, string][] = [
+    ["보조 연결 숨기기", "관리·모니터링 선을 감춰요"],
+    ["메시지 연결 단순화", "큐·스트림을 거치는 연결을 묶어서 보여요"],
+    ["중복 연결 합치기", "같은 두 곳 사이의 여러 선을 하나로 보여요"],
+    ["연결 이름은 마우스를 올릴 때만", "캔버스를 깔끔하게 보여요"],
+    ["빠진 정보 숫자", "노드마다 채워야 할 정보 개수를 보여요"],
+  ];
+  expect(within(pop).getAllByRole("checkbox")).toHaveLength(rows.length);
+  for (const [name, desc] of rows) {
+    expect(within(pop).getByRole("checkbox", { name })).toHaveAccessibleDescription(desc);
+  }
+  // 옵션 값이 체크 상태에 반영된다.
+  expect(within(pop).getByRole("checkbox", { name: "연결 이름은 마우스를 올릴 때만" })).toBeChecked();
+  expect(within(pop).getByRole("checkbox", { name: "빠진 정보 숫자" })).not.toBeChecked();
+  fireEvent.click(within(pop).getByRole("checkbox", { name: "중복 연결 합치기" }));
+  expect(props.onOptionsChange).toHaveBeenCalledWith(expect.objectContaining({ mergeDuplicates: !props.options.mergeDuplicates }));
+  // Esc: 닫히고 포커스가 버튼으로 돌아간다.
+  fireEvent.keyDown(document, { key: "Escape" });
+  expect(screen.queryByRole("dialog", { name: "보기 옵션" })).not.toBeInTheDocument();
+  expect(open).toHaveFocus();
+  // 바깥 클릭.
+  fireEvent.click(open);
+  expect(screen.getByRole("dialog", { name: "보기 옵션" })).toBeInTheDocument();
+  fireEvent.mouseDown(document.body);
+  expect(screen.queryByRole("dialog", { name: "보기 옵션" })).not.toBeInTheDocument();
+  // 팝오버 안 클릭은 닫지 않는다.
+  fireEvent.click(open);
+  fireEvent.mouseDown(screen.getByRole("dialog", { name: "보기 옵션" }));
+  expect(screen.getByRole("dialog", { name: "보기 옵션" })).toBeInTheDocument();
+});
+
+test("위치 옮기기 and 흐름 표시 expose aria-pressed", () => {
+  const props = baseProps(emptyState());
+  const { rerender } = render(<Canvas {...props} />);
+  expect(screen.getByRole("button", { name: "위치 옮기기" })).toHaveAttribute("aria-pressed", "false");
+  expect(screen.getByRole("button", { name: "흐름 표시" })).toHaveAttribute("aria-pressed", "false");
+  fireEvent.click(screen.getByRole("button", { name: "위치 옮기기" }));
+  expect(props.onEditModeChange).toHaveBeenCalledWith(true);
+  fireEvent.click(screen.getByRole("button", { name: "흐름 표시" }));
+  expect(props.onMotionChange).toHaveBeenCalledWith(true);
+  rerender(<Canvas {...props} editMode motion />);
+  expect(screen.getByRole("button", { name: "위치 옮기기" })).toHaveAttribute("aria-pressed", "true");
+  expect(screen.getByRole("button", { name: "흐름 표시" })).toHaveAttribute("aria-pressed", "true");
+});
+
+test("전체 보기 fits", async () => {
+  const ow = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "offsetWidth");
+  const oh = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "offsetHeight");
+  Object.defineProperty(HTMLElement.prototype, "offsetWidth", { configurable: true, get: () => 800 });
+  Object.defineProperty(HTMLElement.prototype, "offsetHeight", { configurable: true, get: () => 600 });
+  vi.stubGlobal("matchMedia", (q: string) => ({ matches: q.includes("reduce"), media: q, addEventListener() {}, removeEventListener() {}, addListener() {}, removeListener() {} }));
+  try {
+    const props = baseProps();
+    const { container, rerender } = render(<Canvas {...props} />);
+    await waitFor(() => expect(nodeEl(container, "was-1")).not.toBeNull());
+    const vpEl = container.querySelector(".react-flow__viewport") as HTMLElement;
+    await waitFor(() => expect(vpEl.style.transform).toMatch(/translate/));
+    const fitted = vpEl.style.transform;
+    // 위치 보기로 카메라를 옮겨 놓는다.
+    rerender(<Canvas {...props} focusRequest={{ id: "was-1", token: 1 }} />);
+    await waitFor(() => expect(vpEl.style.transform).not.toBe(fitted));
+    fireEvent.click(screen.getByRole("button", { name: "전체 보기" }));
+    await waitFor(() => expect(vpEl.style.transform).toBe(fitted));
+  } finally {
+    if (ow) Object.defineProperty(HTMLElement.prototype, "offsetWidth", ow);
+    if (oh) Object.defineProperty(HTMLElement.prototype, "offsetHeight", oh);
+    vi.unstubAllGlobals();
+    vi.stubGlobal("ResizeObserver", class { observe() {} unobserve() {} disconnect() {} });
+    class DM { m22 = 1; }
+    vi.stubGlobal("DOMMatrixReadOnly", DM);
+    vi.stubGlobal("DOMMatrix", DM);
   }
 });
