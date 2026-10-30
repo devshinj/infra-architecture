@@ -34,7 +34,8 @@ export interface MissingItem {
 
 const labelOf = (key: string) => FIELD_LABELS[key] ?? key;
 
-const isEmpty = (v: unknown) => v === undefined || v === null || (typeof v === "string" && v.trim() === "");
+/** 빈 칸 판정: undefined·null·공백뿐인 문자열. 배지와 설명 패널이 같은 기준을 쓴다. */
+export const isEmpty = (v: unknown) => v === undefined || v === null || (typeof v === "string" && v.trim() === "");
 
 function requiredKeysForNode(node: DNode): string[] {
   return NODE_KINDS.find((k) => k.kind === node.kind)?.requiredAttrs.slice() ?? [];

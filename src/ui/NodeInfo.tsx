@@ -1,5 +1,6 @@
 import { CategoryIcon } from "@/canvas/icons";
 import { categoryOf, EDGE_KINDS, GROUP_KINDS, NODE_KINDS } from "@/domain/catalog";
+import { FIELD_LABELS, isEmpty } from "@/domain/missing";
 import type { DiagramState, DNode } from "@/domain/types";
 
 import styles from "./panel.module.css";
@@ -29,7 +30,7 @@ function Fields({ title, fields, attrs, unknown }: { title: string; fields: [str
       <dl className={styles.fields}>
         {fields.map(([key, label]) => {
           const v = attrs[key];
-          const empty = v === undefined || v === null || v === "";
+          const empty = isEmpty(v);
           return (
             <div key={key} className={styles.field}>
               <dt>{label}</dt>
@@ -63,7 +64,7 @@ export function NodeInfo({ state, selectedId, onSelect, onMention, mentionDisabl
         <dl className={styles.fields}>
           <div className={styles.field}><dt>출발</dt><dd>{nameOf(state, edge.from)}</dd></div>
           <div className={styles.field}><dt>도착</dt><dd>{nameOf(state, edge.to)}</dd></div>
-          <div className={styles.field}><dt>라벨</dt><dd className={edge.label ? undefined : styles.missing}>{edge.label || MISSING}</dd></div>
+          <div className={styles.field}><dt>라벨</dt><dd className={isEmpty(edge.label) ? styles.missing : undefined}>{isEmpty(edge.label) ? (edge.unknown?.includes("label") ? UNKNOWN : MISSING) : edge.label}</dd></div>
         </dl>
       </div>
     );
@@ -90,6 +91,11 @@ export function NodeInfo({ state, selectedId, onSelect, onMention, mentionDisabl
       const otherId = incoming ? e.from : e.to;
       return { id: e.id, otherId, text: `${incoming ? "←" : "→"} ${edgeKindName(e.edgeKind)}${e.label ? ` · ${e.label}` : ""}` };
     });
+  // 서버·스펙 두 구역에 없는 필수 칸은 따로 모아 보여 준다.
+  const shown = new Set([...SPEC_FIELDS, ...SERVER_FIELDS].map(([k]) => k));
+  const otherFields: [string, string][] = (NODE_KINDS.find((k) => k.kind === node.kind)?.requiredAttrs ?? [])
+    .filter((k) => !shown.has(k))
+    .map((k) => [k, FIELD_LABELS[k] ?? k]);
   const chips = [...new Set(relations.map((r) => r.otherId))].filter((id) => state.nodes[id]);
 
   return (
@@ -106,6 +112,7 @@ export function NodeInfo({ state, selectedId, onSelect, onMention, mentionDisabl
       <LinkButton id={node.id} onMention={onMention} disabled={mentionDisabled} />
       <Fields title="스펙 · SW" fields={SPEC_FIELDS} attrs={node.attrs} unknown={node.unknown ?? []} />
       <Fields title="서버 정보" fields={SERVER_FIELDS} attrs={node.attrs} unknown={node.unknown ?? []} />
+      {otherFields.length > 0 && <Fields title="기타 정보" fields={otherFields} attrs={node.attrs} unknown={node.unknown ?? []} />}
       <section className={styles.section}>
         <h3 className={styles.heading}>연관관계</h3>
         {relations.length === 0 ? (

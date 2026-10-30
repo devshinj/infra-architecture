@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 
-import { computeMissing, missingReminder, requiredKeysFor } from "@/domain/missing";
+import { computeMissing, isEmpty, missingReminder, requiredKeysFor } from "@/domain/missing";
 import { emptyState, type DiagramState } from "@/domain/types";
 
 const withNode = (attrs: Record<string, string | number | null>, unknown?: string[]): DiagramState => ({
@@ -86,4 +86,9 @@ test("requiredKeysFor returns the target's keys or null", () => {
   expect(requiredKeysFor(s, "edge", "x")).toEqual([]);
   expect(requiredKeysFor(s, "node", "nope")).toBeNull();
   expect(requiredKeysFor(s, "edge", "nope")).toBeNull();
+});
+
+test("isEmpty treats undefined, null and whitespace-only strings as empty", () => {
+  expect([undefined, null, "", "  	"].every(isEmpty)).toBe(true);
+  expect(["a", 0, " x "].some(isEmpty)).toBe(false);
 });
