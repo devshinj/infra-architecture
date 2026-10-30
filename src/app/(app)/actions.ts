@@ -22,10 +22,11 @@ import {
 } from "@/server/projects";
 import { confirmAssumptionFor } from "@/server/assumptions";
 import { saveFieldsFor, type SaveFieldsInput } from "@/server/fields";
-import { ensureSeeded, listTerms } from "@/server/glossary";
+import { ensureSeeded, listTerms, updateTerm, type GlossaryRow, type TermPatch } from "@/server/glossary";
 import { setWarningIgnoredFor } from "@/server/ignore";
 import { importSample, SAMPLES } from "@/server/samples";
 import { listMessages } from "@/server/chat/messages";
+import type { GlossaryItem } from "@/ui/glossary/GlossaryPage";
 import { getVersion, listVersions, restoreVersionWithMessage } from "@/server/versions";
 
 const DIAGRAM_ROUTE = "/p/[projectId]/d/[diagramId]";
@@ -223,6 +224,49 @@ export async function listTermsAction(): Promise<{ key: string; term: string; de
     await ensureSeeded(uid);
     const rows = await listTerms(uid);
     return rows.map((r) => ({ key: r.key, term: r.term, definition: r.definition }));
+  });
+}
+
+const toItem = (r: GlossaryRow): GlossaryItem => ({
+  id: r.id,
+  key: r.key,
+  term: r.term,
+  fullName: r.fullName,
+  category: r.category,
+  definition: r.definition,
+  why: r.why,
+  compare: r.compare,
+  source: r.source,
+  reviewed: r.reviewed,
+});
+
+/** 용어 사전 화면용 전체 행(비어 있으면 시드를 먼저 복사한다). */
+export async function listGlossaryAction(): Promise<GlossaryItem[]> {
+  return run(async (uid) => {
+    await ensureSeeded(uid);
+    return (await listTerms(uid)).map(toItem);
+  });
+}
+
+type TextPatch = Pick<TermPatch, "term" | "fullName" | "category" | "definition" | "why" | "compare">;
+
+/** 내용만 고친다(검수 상태는 그대로). 길이 오류는 데이터로 돌려준다. */
+export async function updateTermAction(id: string, patch: TextPatch): Promise<ActionResult<{ term: GlossaryItem }>> {
+  return runResult(async (uid) => {
+    await ensureSeeded(uid);
+    const { term, fullName, category, definition, why, compare } = patch;
+    const row = await updateTerm(uid, id, { term, fullName, category, definition, why, compare });
+    revalidatePath("/glossary");
+    return { term: toItem(row) };
+  });
+}
+
+export async function setTermReviewedAction(id: string, reviewed: boolean): Promise<ActionResult<{ term: GlossaryItem }>> {
+  return runResult(async (uid) => {
+    await ensureSeeded(uid);
+    const row = await updateTerm(uid, id, { reviewed });
+    revalidatePath("/glossary");
+    return { term: toItem(row) };
   });
 }
 

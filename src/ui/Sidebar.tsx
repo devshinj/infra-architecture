@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
@@ -186,6 +187,7 @@ export function Sidebar({ projects, userName }: { projects: SidebarProject[]; us
         </p>
       )}
       <div className={styles.sideFoot}>
+        <Link href="/glossary" className={styles.sideLink}>용어 사전</Link>
         <button type="button" className={styles.btn} onClick={newProject}>새 프로젝트</button>
         <div className={styles.user}>
           <span>{userName}</span>
