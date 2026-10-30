@@ -29,8 +29,8 @@ export function NodeCard({ data }: Pick<NodeProps, "data"> & Partial<NodeProps>)
   const missing = d.badges?.missing ?? 0;
   const warn = d.badges?.warn ?? 0;
   return (
-    <div className={`node node--${d.state}${d.diff ? ` node--diff-${d.diff}` : ""}`} title={d.fullLabel} data-category={d.category}>
-      <span className="node__icon" style={{ "--cat": `var(--cat-${d.category})` } as React.CSSProperties}>
+    <div className={`node node--${d.state}${d.diff ? ` node--diff-${d.diff}` : ""}`} title={d.fullLabel} data-category={d.category} style={{ "--cat": `var(--cat-${d.category})` } as React.CSSProperties}>
+      <span className="node__icon">
         <CategoryIcon category={d.category} />
       </span>
       <span className="node__text">

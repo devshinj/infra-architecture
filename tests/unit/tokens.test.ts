@@ -59,3 +59,56 @@ test("text-secondary reaches 4.5:1 on every surface and stays dimmer than text-p
   }
   expect(contrast(token("text-primary"), token("bg-panel-raised"))).toBeGreaterThan(contrast(secondary, token("bg-panel-raised")) * 1.5);
 });
+
+// ---- 캔버스 구역·노드 색 구분 (P3D Task 4) ----
+const TINTS: Record<string, string> = {
+  region: "#5B7BA0", vpc: "#4F7FB8", public: "#3F93A8", private: "#6874B8", dmz: "#B08B4F",
+  k8s: "#4E9A8E", external: "#A9765E", redundancy: "#7F95B5", onprem: "#7A8696",
+};
+
+// sRGB 공간에서 a 를 pct% 만큼 b 에 섞는다(color-mix in srgb 와 같다).
+function mix(a: string, pct: number, b: string): string {
+  const ch = (h: string, i: number) => parseInt(h.slice(i, i + 2), 16);
+  return "#" + [1, 3, 5].map((i) => Math.round((ch(a, i) * pct) / 100 + (ch(b, i) * (100 - pct)) / 100).toString(16).padStart(2, "0")).join("");
+}
+
+test("zone tint tokens have exact values", () => {
+  const css = read("src/styles/tokens.css");
+  for (const [name, hex] of Object.entries(TINTS)) {
+    expect(css, name).toContain(`--zone-tint-${name}: ${hex};`);
+  }
+});
+
+test("each group kind maps to a tint token", async () => {
+  const { GROUP_KINDS } = await import("@/domain/catalog");
+  const css = read("src/styles/tokens.css");
+  for (const g of GROUP_KINDS) {
+    expect(g.tintToken, g.kind).toMatch(/^--zone-tint-/);
+    expect(css, g.kind).toContain(`${g.tintToken}:`);
+  }
+  const t = (k: string) => GROUP_KINDS.find((g) => g.kind === k)!.tintToken;
+  expect(t("idc")).toBe("--zone-tint-onprem");
+  expect(t("onprem_zone")).toBe("--zone-tint-onprem");
+  expect(t("cloud_region")).toBe("--zone-tint-region");
+});
+
+test("zone tag text contrast on tag background is at least 4.5:1", () => {
+  const css = read("src/styles/tokens.css");
+  const token = (name: string) => css.match(new RegExp(`--${name}:[ ]*(#[0-9A-Fa-f]{6});`))![1];
+  for (const [name, hex] of Object.entries(TINTS)) {
+    const bg = mix(hex, 22, token("bg-canvas"));
+    const fg = mix(hex, 55, token("text-primary"));
+    expect(contrast(fg, bg), name).toBeGreaterThanOrEqual(4.5);
+  }
+});
+
+test("canvas.css paints zones and nodes with the agreed mixes and no side stripe", () => {
+  const css = read("src/canvas/canvas.css");
+  expect(css).toContain("color-mix(in srgb, var(--tint) 7%, transparent)");
+  expect(css).toContain("color-mix(in srgb, var(--tint) 45%, var(--line-node))");
+  expect(css).toContain("color-mix(in srgb, var(--tint) 22%, var(--bg-canvas))");
+  expect(css).toContain("color-mix(in srgb, var(--tint) 55%, var(--text-primary))");
+  expect(css).toContain("color-mix(in srgb, var(--cat) 26%, var(--bg-node))");
+  expect(css).toContain("color-mix(in srgb, var(--cat) 38%, var(--line-node))");
+  expect(css).not.toMatch(/border-left:/);
+});

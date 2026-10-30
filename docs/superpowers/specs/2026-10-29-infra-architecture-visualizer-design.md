@@ -244,6 +244,12 @@ AI 는 아래 `kind` 중에서만 노드를 만든다(없는 종류는 `generic`
 | `zone.redundancy` | 테두리 `#536986` 짧은 점선 | 이중화 묶음 |
 | `zone.external` | 테두리 `#82695B` 점선 | 외부 서비스 상자 |
 | `radius.node` / `radius.zone` | 6 / 8 | |
+| `zone-tint.region` / `.vpc` | `#5B7BA0` / `#4F7FB8` | 영역 색조(칠 7%·테두리 45%·이름 태그 22%/55% 혼합) |
+| `zone-tint.public` / `.private` | `#3F93A8` / `#6874B8` | 공개(청록) / 내부(남색) |
+| `zone-tint.dmz` / `.k8s` | `#B08B4F` / `#4E9A8E` | DMZ(황동) / 쿠버네티스 |
+| `zone-tint.external` / `.redundancy` / `.onprem` | `#A9765E` / `#7F95B5` / `#7A8696` | 외부(구리) / 이중화 / IDC·온프레미스 |
+
+노드는 분류색을 더 진하게 쓴다: 아이콘 원 `cat` 26%+`bg-node`, 테두리 `cat` 38%+`line-node`. 장식용 세로 띠는 쓰지 않는다.
 
 - 토큰은 CSS 변수 한 곳에서 정의하고, 컴포넌트에는 색을 직접 쓰지 않는다.
 - 설명 패널, 대화창 같은 UI 크롬도 같은 토큰을 쓴다. 세부는 구현 중에 다듬는다.

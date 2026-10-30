@@ -53,6 +53,17 @@
   --zone-redundancy: #536986; /* 이중화 묶음 (짧은 점선) */
   --zone-external: #82695B; /* 외부 서비스 상자 (점선) */
 
+  /* 영역 색조 — 구역 칠·테두리·이름 태그의 바탕색 (옅게 섞어 쓴다) */
+  --zone-tint-region: #5B7BA0; /* 클라우드 리전 */
+  --zone-tint-vpc: #4F7FB8; /* VPC */
+  --zone-tint-public: #3F93A8; /* 공개 구역(청록) */
+  --zone-tint-private: #6874B8; /* 내부 구역(남색) */
+  --zone-tint-dmz: #B08B4F; /* DMZ(황동) */
+  --zone-tint-k8s: #4E9A8E; /* 쿠버네티스 클러스터 */
+  --zone-tint-external: #A9765E; /* 외부 서비스(구리) */
+  --zone-tint-redundancy: #7F95B5; /* 이중화 묶음 */
+  --zone-tint-onprem: #7A8696; /* IDC·온프레미스 */
+
   /* 반경 */
   --radius-node: 6px;
   --radius-zone: 8px;
