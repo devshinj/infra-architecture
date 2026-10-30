@@ -11,10 +11,12 @@ export interface ClefAnswer {
 export type ClefAnswers = Record<string, ClefAnswer | undefined>;
 
 export interface ClefClient {
+  /** opts 를 주면 대기열·재시도를 포함한 전체 제한(capMs)과 재시도 횟수를 바꾼다. */
   decide(
     state: unknown,
     questions: Record<string, unknown>,
     signal?: AbortSignal,
+    opts?: { capMs?: number; maxRetries?: number },
   ): Promise<ClefAnswers>;
   classifyIntent(
     input: string,
@@ -219,11 +221,13 @@ export function createClefClient(
     state: unknown,
     questions: Record<string, unknown>,
     signal?: AbortSignal,
+    opts: { capMs?: number; maxRetries?: number } = {},
   ): Promise<ClefAnswers> {
     return run(state, questions, {
-      maxRetries: MAX_RETRIES,
+      maxRetries: opts.maxRetries ?? MAX_RETRIES,
       retryOn429Only: false,
       timeoutMs: TIMEOUT_MS,
+      capMs: opts.capMs,
       signal,
     });
   }

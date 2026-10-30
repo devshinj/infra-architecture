@@ -267,6 +267,38 @@ describe("clef", () => {
     });
   });
 
+  describe("decide budget", () => {
+    const hang = (init?: RequestInit) =>
+      new Promise<Response>((_, reject) => {
+        init?.signal?.addEventListener("abort", () => reject(new DOMException("a", "AbortError")));
+      });
+
+    test("maxRetries 0 -> one fetch, no sleep", async () => {
+      const { client, calls, sleeps } = setup([() => err(503)]);
+      await expect(client.decide("s", {}, undefined, { maxRetries: 0 })).rejects.toThrow();
+      expect(calls).toHaveLength(1);
+      expect(sleeps).toEqual([]);
+    });
+
+    test("capMs ends a hung fetch and the queue wait", async () => {
+      const { client } = setup([hang], 1);
+      const t = Date.now();
+      const r = await Promise.allSettled([
+        client.decide("a", {}, undefined, { capMs: 50, maxRetries: 0 }),
+        client.decide("b", {}, undefined, { capMs: 50, maxRetries: 0 }),
+      ]);
+      expect(r.map((x) => x.status)).toEqual(["rejected", "rejected"]);
+      expect(Date.now() - t).toBeLessThan(1000);
+    });
+
+    test("without opts decide still retries", async () => {
+      const { client, calls, sleeps } = setup([() => err(503), () => ok({ q: { probability: 0.1 } })]);
+      expect(await client.decide("s", {})).toEqual({ q: { probability: 0.1 } });
+      expect(calls).toHaveLength(2);
+      expect(sleeps).toEqual([5000]);
+    });
+  });
+
   test("aborting a queued waiter removes it and the slot is reused", async () => {
     let releaseFirst!: () => void;
     const first = (): Promise<Response> =>

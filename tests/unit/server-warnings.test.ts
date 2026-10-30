@@ -19,13 +19,14 @@ const build = (
   edges: Object.fromEntries(edges.map(([id, from, to, edgeKind]) => [id, { id, from, to, edgeKind }])),
 });
 
-/** 판정을 돌려주는 가짜 Clef. probOf 가 null 이면 실패(reject)한다. */
-function fakeClef(probOf: (state: string) => number | null = () => 0) {
-  const calls: Array<{ state: string; questions: Record<string, unknown> }> = [];
+/** 판정을 돌려주는 가짜 Clef. probOf 가 null 이면 실패(reject)하고, "hang" 이면 signal 도 무시하고 끝나지 않는다. */
+function fakeClef(probOf: (state: string) => number | null | "hang" = () => 0) {
+  const calls: Array<{ state: string; questions: Record<string, unknown>; opts?: { capMs?: number; maxRetries?: number } }> = [];
   const clef: ClefClient = {
-    decide: vi.fn(async (state: unknown, questions: Record<string, unknown>): Promise<ClefAnswers> => {
-      calls.push({ state: state as string, questions });
+    decide: vi.fn(async (state: unknown, questions: Record<string, unknown>, _signal?: AbortSignal, opts?: { capMs?: number; maxRetries?: number }): Promise<ClefAnswers> => {
+      calls.push({ state: state as string, questions, opts });
       const p = probOf(state as string);
+      if (p === "hang") return new Promise<ClefAnswers>(() => {});
       if (p === null) throw new Error("Clef is not configured");
       return { q: { type: "noul", probability: p } };
     }),
@@ -93,6 +94,36 @@ describe("checkWarnings", () => {
     expect(byId(r.warnings, "db_exposed:a")!.guide).toBe(RULES.find((x) => x.rule === "db_exposed")!.guide);
   });
 
+  test("clef stage ends at the cap and qwen still runs", async () => {
+    // 혼자인 WAS(spof) + 판정이 끝나지 않는 DB 와 바로 끝나는 캐시.
+    const s = build([node("w", "was", "WAS"), node("db", "db_nosql", "느린 DB"), node("c", "search", "빠른 검색")]);
+    const { clef, calls } = fakeClef((state) => (state.includes("느린") ? "hang" : 0.9));
+    const { qwen, calls: qwenCalls } = fakeQwen('{"id":"spof:w","text":"WAS 가 한 대뿐이에요."}');
+    const started = Date.now();
+    const r = await checkWarnings(s, undefined, { clef, qwen }, live(), { clefCapMs: 40 });
+    expect(Date.now() - started).toBeLessThan(1000);
+    for (const c of calls) {
+      expect(c.opts?.maxRetries).toBe(0);
+      expect(c.opts?.capMs).toBeGreaterThan(0);
+      expect(c.opts!.capMs!).toBeLessThanOrEqual(40);
+    }
+    expect(r.warnings.map((w) => w.id).sort()).toEqual(["db_exposed:c", "spof:db", "spof:w"]);
+    expect(qwenCalls).toHaveLength(1);
+    expect(byId(r.warnings, "spof:w")!.text).toBe("WAS 가 한 대뿐이에요.");
+  });
+
+  test("failed judgment keeps the previous db_exposed warning", async () => {
+    const s = build([node("db-1", "search", "검색")]);
+    const prevW: Warning = { id: "db_exposed:db-1", rule: "db_exposed", nodeId: "db-1", level: "check", text: "예전 판정", guide: "g" };
+    const gone: Warning = { id: "db_exposed:old", rule: "db_exposed", nodeId: "old", level: "warn", text: "지운 노드", guide: "g" };
+    for (const probOf of [() => null, () => "hang" as const]) {
+      const r = await checkWarnings(s, [prevW, gone], { clef: fakeClef(probOf).clef, qwen: null }, live(), { clefCapMs: 20 });
+      expect(byId(r.warnings, "db_exposed:db-1")).toEqual(prevW);
+      expect(byId(r.warnings, "db_exposed:old")).toBeUndefined();
+      expect(r.fresh).toEqual([]);
+    }
+  });
+
   test("clef is called at most 5 times", async () => {
     const nodes = Array.from({ length: 12 }, (_, i) => node(`db-${i}`, "db_rdb", `DB${i}`));
     // 공개 구역에 둔 DB 는 이미 db_public 이라 판정 대상이 아니다.
@@ -143,6 +174,11 @@ describe("checkWarnings", () => {
     test("81 chars", async () => {
       expect(await run(JSON.stringify({ id: "spof:w", text: "가".repeat(81) }))).toBe(tpl());
       expect(await run(JSON.stringify({ id: "spof:w", text: "가".repeat(80) }))).toBe("가".repeat(80));
+    });
+    test("control or separator chars", async () => {
+      for (const bad of ["경고\u0007 문구", "경고\u2028문구", "경고\u2029문구", "경고\t문구"]) {
+        expect(await run(JSON.stringify({ id: "spof:w", text: bad }))).toBe(tpl());
+      }
     });
     test("unknown id", async () => {
       expect(await run('{"id":"spof:zz","text":"다른 경고 문구예요."}')).toBe(tpl());
