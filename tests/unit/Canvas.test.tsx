@@ -146,3 +146,51 @@ test("ignored warning has no badge", async () => {
   await waitFor(() => expect(nodeEl(container, "was-1")?.querySelector(".node__badge") ?? null).not.toBeNull());
   expect(container.querySelector(".node__badge--warn")).toBeNull();
 });
+
+test("clicking the selected node again clears selection", async () => {
+  const props = baseProps();
+  props.options = { ...props.options, selectedId: "was-1" };
+  const { container } = render(<div style={{ width: 800, height: 600 }}><Canvas {...props} /></div>);
+  await waitFor(() => expect(nodeEl(container, "was-1")).not.toBeNull());
+  fireEvent.click(nodeEl(container, "was-1")!);
+  expect(props.onSelect).toHaveBeenCalledWith(null);
+  fireEvent.click(nodeEl(container, "web-1")!);
+  expect(props.onSelect).toHaveBeenLastCalledWith("web-1");
+});
+
+test("clicking a group background clears selection, the fold button does not", async () => {
+  const props = baseProps();
+  props.options = { ...props.options, selectedId: "was-1" };
+  const { container } = render(<div style={{ width: 800, height: 600 }}><Canvas {...props} /></div>);
+  const zone = await waitFor(() => {
+    const z = container.querySelector('.react-flow__node-zone[data-id="was-pair"]');
+    expect(z).not.toBeNull();
+    return z as HTMLElement;
+  });
+  fireEvent.click(zone);
+  expect(props.onSelect).toHaveBeenCalledWith(null);
+  vi.mocked(props.onSelect).mockClear();
+  fireEvent.click(zone.querySelector(".group__toggle")!);
+  expect(props.onOptionsChange).toHaveBeenCalled();
+  expect(props.onSelect).not.toHaveBeenCalled();
+});
+
+test("drag end does not toggle", async () => {
+  const props = { ...baseProps(), editMode: true };
+  props.options = { ...props.options, selectedId: "was-1" };
+  const { container } = render(<div style={{ width: 800, height: 600 }}><Canvas {...props} /></div>);
+  await waitFor(() => expect(nodeEl(container, "was-1")).not.toBeNull());
+  const el = nodeEl(container, "was-1")!;
+  const win = el.ownerDocument.defaultView as unknown as typeof globalThis;
+  const fire = (target: EventTarget, type: string, x: number, y: number) => {
+    const ev = new win.MouseEvent(type, { bubbles: true, cancelable: true, clientX: x, clientY: y, button: 0, buttons: type === "mouseup" ? 0 : 1 });
+    Object.defineProperty(ev, "view", { value: win });
+    target.dispatchEvent(ev);
+  };
+  fire(el, "mousedown", 10, 10);
+  fire(win.document, "mousemove", 60, 60);
+  fire(win.document, "mousemove", 80, 80);
+  fire(win.document, "mouseup", 80, 80);
+  fireEvent.click(el);
+  expect(props.onSelect).not.toHaveBeenCalled();
+});

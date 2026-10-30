@@ -240,7 +240,8 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
         maxZoom={2}
         proOptions={{ hideAttribution: true }}
         onNodeClick={(_, node) => {
-          if (node.type === "infra") onSelect(node.id);
+          if (node.type === "zone") onSelect(null);
+          else if (node.type === "infra") onSelect(node.id === selected ? null : node.id);
         }}
         onPaneClick={() => onSelect(null)}
         onNodeContextMenu={(e, node) => {

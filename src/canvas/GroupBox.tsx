@@ -23,7 +23,10 @@ export function GroupBox({ data }: Pick<NodeProps, "data"> & Partial<NodeProps>)
     <div className={cls} style={style} data-group-kind={d.groupKind}>
       <div className="group__head">
         <span className="group__name" title={d.label}>{d.label}</span>
-        <button type="button" className="group__toggle nodrag nopan" onClick={d.onToggle}>
+        <button type="button" className="group__toggle nodrag nopan" onClick={(e) => {
+            e.stopPropagation();
+            d.onToggle();
+          }}>
           {toggleLabel}
         </button>
       </div>
