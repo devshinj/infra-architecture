@@ -414,5 +414,104 @@
 
 ---
 
+### Task 11: 빈 구성도 시작 경험 — 인사말·가이드·예시 질문 (사용자 추가 요청, 2026-10-30)
+
+**Files:** Modify `src/ui/chat/ChatPanel.tsx`, `src/ui/RightPanel.tsx`(샘플 footer 제거), `src/canvas/Canvas.tsx`(빈 화면 안내), `src/ui/DiagramWorkspace.tsx` · Test ChatPanel/RightPanel/Canvas/DiagramWorkspace 테스트, E2E(phase1 의 샘플 불러오기 경로 갱신)
+
+**결정(사용자 선택):**
+- 대화 기록이 없고 구성도가 비어 있으면, 대화창에 고정 인사말과 가이드를 보여 준다. AI 호출과 DB 저장은 없다.
+  - 모양은 Task 7 의 AI 메시지(`IS` · `InfraSketch`)와 같다.
+  - 인사말: `안녕하세요, InfraSketch예요. 만들고 싶은 서비스를 말씀해 주시면 인프라 구성도를 바로 그려 드릴게요.`
+  - 가이드 제목: `이렇게 말하면 더 정확해요`
+  - 가이드 항목 4줄: `무엇을 만드는지 (예: 쇼핑몰, 예약 서비스)` / `어디에 올리는지 (클라우드, 사내 IDC)` / `대략 사용자 수 (예: 하루 1만 명)` / `붙일 외부 서비스 (결제, 소셜 로그인, 문자)`
+  - 예시 질문 칩 4개: `결제와 카카오 로그인이 붙는 쇼핑몰` / `사내 IDC에 WEB-WAS-DB 이중화` / `AWS EKS 위 MSA와 Kafka` / `하루 10만 명이 쓰는 예약 서비스`
+  - 칩을 누르면 입력칸에 그 문장이 채워지고 포커스가 간다. 바로 보내지는 않는다.
+  - 첫 메시지를 보내면 인사말은 사라진다.
+- 대화창의 `샘플로 시작하기` 목록을 없앤다.
+  - 캔버스 빈 화면 안내 아래에 작은 텍스트 버튼 `샘플 불러오기` 를 둔다.
+  - 누르면 작은 목록(팝오버)에서 고른다. 기존 importSample 흐름을 그대로 쓴다.
+- [ ] **Step 1: 실패하는 테스트**
+  - `empty diagram shows greeting, guide and example chips`
+  - `chip fills the input without sending`
+  - `greeting disappears after the first message`
+  - `no sample list in chat`
+  - `canvas empty state offers 샘플 불러오기`
+- [ ] **Step 2:** → FAIL · **Step 3: 구현** · **Step 4:** PASS, `npm test`, E2E(phase1 샘플 경로를 새 버튼으로)
+- [ ] **Step 5: Commit** `feat: 빈 구성도 인사말과 예시 질문`
+
+---
+
+### Task 12: 대화에서 캔버스로 날아가는 빛점 (사용자 추가 요청, 2026-10-30)
+
+**Files:** Create `src/ui/FlyLayer.tsx` · Modify `src/ui/DiagramWorkspace.tsx`, `src/ui/chat/ChatPanel.tsx`(진행 카드 위치 노출), `src/canvas/Canvas.tsx`(노드 화면 좌표 조회) · Test `tests/unit/FlyLayer.test.tsx`
+
+**결정(사용자 선택: 진행 카드에서 노드로 날아가는 빛점, 요란하지 않게):**
+- 대화 차례 중 `add_node` 가 적용되면 빛점을 날린다.
+  - 출발점은 진행 카드의 현재 단계 점이다.
+  - 도착점은 캔버스에서 그 노드가 처음 그려지는 화면 좌표의 중심이다.
+- 빛점 모양
+  - 지름 6px 원, 색 `--glass-highlight` 보다 밝은 은빛(새 토큰 `--fly-dot: #DCE3EE`)
+  - 꼬리는 없고, 0.5초 동안 부드러운 2차 곡선(위로 약간 휘는)을 따라 이동한다.
+  - 끝 0.1초는 페이드아웃한다.
+  - 도착 직전 노드의 기존 등장 애니메이션이 시작되도록 맞춘다(등장을 늦추지는 않음).
+- 동시에 최대 3개다. 더 들어오면 건너뛴다.
+- 노드 좌표를 모르면(접힌 영역 안, 화면 밖) 날리지 않는다.
+- 사이드바가 접혔거나 대화 패널이 대화 탭이 아니면 출발점이 없으므로 날리지 않는다.
+- `prefers-reduced-motion` 이거나 캔버스 `흐름 표시`(움직임) 가 꺼져 있으면 날리지 않는다.
+- 레이어는 `position: fixed; pointer-events: none` 이고, 패널과 캔버스 위에 둔다.
+- 글로우·그림자 금지(단색 원).
+- [ ] **Step 1: 실패하는 테스트**
+  - `add_node during a turn launches one dot from card to node`
+  - `max 3 concurrent dots, extras skipped`
+  - `no dot when reduced motion or motion off`
+  - `no dot when target unknown or chat tab hidden`
+  - `layer never captures pointer events`
+- [ ] **Step 2:** → FAIL · **Step 3: 구현** · **Step 4:** PASS, `npm test`, E2E
+- [ ] **Step 5: Commit** `feat: 대화에서 캔버스로 날아가는 빛점`
+
+---
+
+### Task 13: 도구 모음 정리와 스크롤 정리 (사용자 추가 요청, 2026-10-30)
+
+**Files:** Modify `src/canvas/Canvas.tsx`, `src/canvas/canvas.css`, `src/styles/globals.css`, `src/ui/app.module.css`, `src/ui/chat/chat.module.css`, `src/ui/glossary/glossary.module.css`, 필요 시 레이아웃 컨테이너 · Test Canvas 테스트, `tests/unit/tokens.test.ts`, E2E 선택자
+
+**결정(사용자 선택: 세 묶음 + 보기 옵션 팝오버):**
+- 도구 모음은 세 묶음이다. 묶음 사이 구분선을 두고, 아이콘(SVG, 이모지 아님)과 라벨을 함께 쓴다.
+  1. `보기 ▾` 를 누르면 팝오버 `보기 옵션` 이 열린다. 항목마다 체크와 한 줄 설명이 있다.
+
+     | 체크 | 설명 |
+     | --- | --- |
+     | `보조 연결 숨기기` | `관리·모니터링 선을 감춰요` |
+     | `메시지 연결 단순화` | `큐·스트림을 거치는 연결을 묶어서 보여요` |
+     | `중복 연결 합치기` | `같은 두 곳 사이의 여러 선을 하나로 보여요` |
+     | `연결 이름은 마우스를 올릴 때만` | `캔버스를 깔끔하게 보여요` |
+     | `빠진 정보 숫자` | `노드마다 채워야 할 정보 개수를 보여요` |
+
+     - Esc·바깥 클릭으로 닫고, 포커스는 버튼으로 돌아간다.
+  2. 편집 묶음
+     - `위치 옮기기`(편집 모드 토글, aria-pressed)
+     - `자동 정렬`(Task 10: 항상 누를 수 있음)
+  3. 화면 묶음
+     - `전체 보기`(화면 맞춤, Task 3 카메라 규칙의 사용자 동작)
+     - `흐름 표시`(움직임 토글, aria-pressed)
+- 기존 내부 옵션 키(hideAux 등)는 그대로 두고 표시 라벨만 바꾼다. E2E·테스트 선택자도 함께 바꾼다.
+- 스크롤
+  - 앱 셸 전체(body·html·(app) 영역)에 페이지 스크롤이 생기지 않게 레이아웃 넘침 원인을 찾아 고친다(100vh·여백·테두리 합산 등).
+  - 스크롤이 필요한 영역(대화 목록, 구성 정보 카드, 오른쪽 패널 본문, 사이드바 트리, 용어 사전, 이력)에는 얇은 테마 스크롤바를 쓴다.
+    - `scrollbar-width: thin`, `scrollbar-color: var(--scrollbar-thumb) transparent`
+    - WebKit 스크롤바: 너비 8px, 둥근 thumb, 호버 시 밝게
+    - 새 토큰: `--scrollbar-thumb: rgba(154, 167, 186, 0.28)`, `--scrollbar-thumb-hover: rgba(154, 167, 186, 0.5)`
+- [ ] **Step 1: 실패하는 테스트**
+  - `toolbar has three groups with labels`
+  - `보기 popover lists options with descriptions and closes on Esc/outside`
+  - `위치 옮기기 and 흐름 표시 expose aria-pressed`
+  - `전체 보기 fits`
+  - 토큰 값
+  - `no page-level scroll`(E2E: 구성도 화면에서 `document.scrollingElement.scrollHeight <= innerHeight`)
+- [ ] **Step 2:** → FAIL · **Step 3: 구현**(frontend-design 지침 참고) · **Step 4:** PASS, `npm test`, `npm run lint`, E2E
+- [ ] **Step 5: Commit** `feat: 도구 모음 정리와 테마 스크롤바`
+
+---
+
 ## 실행 순서
-Task 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 → 10 → 9. 3과 6은 `insets` 로 연결된다. 3은 0 으로 두고, 6에서 실제 값을 넘긴다.
+Task 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 → 10 → 11 → 12 → 13 → 9. 3과 6은 `insets` 로 연결된다. 3은 0 으로 두고, 6에서 실제 값을 넘긴다.
