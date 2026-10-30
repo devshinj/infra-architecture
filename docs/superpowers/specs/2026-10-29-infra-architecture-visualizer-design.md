@@ -233,6 +233,7 @@ AI 는 아래 `kind` 중에서만 노드를 만든다(없는 종류는 `generic`
 | `glass.line` | `rgba(232, 235, 238, 0.08)` | 떠 있는 패널 테두리·안쪽 구분선 |
 | `glass.highlight` | `rgba(208, 218, 232, 0.42)` | 패널 머리 위쪽 1px 은빛 선 (`accent` 아님) |
 | `glass.blur` | `14px` | 패널 뒤 캔버스 흐림 |
+| `fly-dot` | `#DCE3EE` | 대화 진행 카드에서 새 노드로 날아가는 6px 빛점 (은빛 단색, 글로우·그림자 없음) |
 | `radius.panel` | `14px` | 떠 있는 패널 |
 | `panel-gap` | `12px` | 떠 있는 패널과 화면 가장자리 사이 |
 | `text.primary` | `#E8EBEE` | 노드 이름 등 |

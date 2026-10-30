@@ -28,6 +28,7 @@ import type { MentionInputHandle } from "./chat/MentionInput";
 import type { ChecklistDrafts, ChecklistExpanded, MissingChecklistProps } from "./chat/MissingChecklist";
 import { type ChatLine, useChatTurn } from "./chat/useChatTurn";
 import { type CardMeasure, InfoCard } from "./canvas/InfoCard";
+import { FlyLayer, useFly } from "./FlyLayer";
 import type { ExplanationProps } from "./explain/Explanation";
 import { type TargetKind, useExplanations } from "./explain/useExplanations";
 import { PANEL_DEFAULT, PANEL_MAX, PANEL_MIN, PanelResizer } from "./PanelResizer";
@@ -171,6 +172,8 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
     [showMissing],
   );
   const [tab, setTab] = useState<Tab>("대화");
+  // 대화 차례의 add_node: 진행 카드의 현재 단계 점에서 그 노드로 빛점이 날아간다(배치가 끝나 좌표가 나오면).
+  const fly = useFly({ motion, chatVisible: tab === "대화" });
   const fail = (e: unknown) => setError(e instanceof Error ? e.message : "처리하지 못했어요");
   const run = (fn: () => Promise<void>) =>
     startBusy(async () => {
@@ -211,7 +214,10 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
   const chat = useChatTurn({
     diagramId,
     initial: initialChat,
-    onCommand: (cmd) => setCurrent((c) => ({ number: c.number, state: applyCommand(c.state, cmd).state })),
+    onCommand: (cmd) => {
+      setCurrent((c) => ({ number: c.number, state: applyCommand(c.state, cmd).state }));
+      if (cmd.op === "add_node" && live && !current.state.nodes[cmd.id]) fly.queue(cmd.id);
+    },
     onDone: refreshFromServer,
     onOpenHistory: () => {
       setTab("이력");
@@ -491,6 +497,7 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
             samples={samples}
             onImportSample={importSample}
             importing={busy || locked}
+            onPlaced={fly.placed}
             {...(focusRequest ? { focusRequest } : {})}
             {...(live ? { onMention, onBadgeClick } : {})}
             {...(mode.kind === "compare" ? { diffMarks: mode.marks } : {})}
@@ -554,6 +561,7 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
           }}
         />
       </div>
+      <FlyLayer ref={fly.layerRef} />
     </div>
   );
 }

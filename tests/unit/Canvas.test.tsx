@@ -291,3 +291,31 @@ test("canvas centers and pulses on focus request", async () => {
     vi.stubGlobal("DOMMatrix", DM);
   }
 });
+
+test("onPlaced locates drawn nodes on screen, not hidden or off-strip ones", async () => {
+  const props = baseProps(fx("s2"));
+  props.options = { ...props.options, collapsed: new Set(["was-pair"]) };
+  let locate: ((id: string) => { x: number; y: number } | null) | null = null;
+  props.onPlaced = (l) => {
+    locate = l;
+  };
+  const orig = Element.prototype.getBoundingClientRect;
+  let box = { left: -1e6, top: -1e6, width: 2e6, height: 2e6 };
+  Element.prototype.getBoundingClientRect = function (this: Element) {
+    const r = this.classList.contains("canvas__flow") ? box : { left: 0, top: 0, width: 0, height: 0 };
+    return { ...r, x: r.left, y: r.top, right: r.left + r.width, bottom: r.top + r.height, toJSON: () => r } as DOMRect;
+  };
+  try {
+    render(<div style={{ width: 800, height: 600 }}><Canvas {...props} /></div>);
+    await waitFor(() => expect(locate).not.toBeNull());
+    const p = locate!("web-1");
+    expect(p).not.toBeNull();
+    expect(Number.isFinite(p!.x) && Number.isFinite(p!.y)).toBe(true);
+    expect(locate!("was-1")).toBeNull(); // 접힌 영역 안
+    expect(locate!("nope")).toBeNull();
+    box = { left: 1e7, top: 1e7, width: 10, height: 10 }; // 화면 밖
+    expect(locate!("web-1")).toBeNull();
+  } finally {
+    Element.prototype.getBoundingClientRect = orig;
+  }
+});

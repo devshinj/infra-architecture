@@ -2,7 +2,7 @@ import "@testing-library/jest-dom/vitest";
 import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
-const hookState = vi.hoisted(() => ({ busy: false, onCommand: null as null | ((c: unknown) => void), badgeFns: [] as unknown[], warnFns: [] as unknown[], lines: [] as unknown[], insets: [] as unknown[], focus: [] as unknown[], turn: null as null | { onDone(): void; onInterrupted(): void; onRelayout?(): void }, pinned: [] as unknown[], fitRequest: [] as unknown[] }));
+const hookState = vi.hoisted(() => ({ busy: false, onCommand: null as null | ((c: unknown) => void), badgeFns: [] as unknown[], warnFns: [] as unknown[], lines: [] as unknown[], insets: [] as unknown[], focus: [] as unknown[], turn: null as null | { onDone(): void; onInterrupted(): void; onRelayout?(): void }, pinned: [] as unknown[], fitRequest: [] as unknown[], placed: null as null | ((locate: (id: string) => { x: number; y: number } | null) => void) }));
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
 vi.mock("@/app/(app)/actions", () => ({
@@ -13,8 +13,9 @@ vi.mock("@/app/(app)/actions", () => ({
   listTermsAction: vi.fn(async () => []),
 }));
 vi.mock("@/canvas/Canvas", () => ({
-  Canvas: ({ state, pinned, fitRequest, onAutoArrange, fitKey, cameraInsets, focusRequest, onMention, onBadgeClick, onWarnBadgeClick, onSelect, onImportSample }: { onImportSample?: (id: string) => void; state: { nodes: object }; pinned: unknown; fitRequest?: unknown; onAutoArrange(): void; fitKey?: string; cameraInsets?: unknown; focusRequest?: unknown; onMention?: (id: string) => void; onBadgeClick?: (id: string) => void; onWarnBadgeClick?: (id: string) => void; onSelect: (id: string | null) => void }) => {
+  Canvas: ({ state, pinned, fitRequest, onAutoArrange, fitKey, cameraInsets, focusRequest, onMention, onBadgeClick, onWarnBadgeClick, onSelect, onImportSample, onPlaced }: { onPlaced?: (l: (id: string) => { x: number; y: number } | null) => void; onImportSample?: (id: string) => void; state: { nodes: object }; pinned: unknown; fitRequest?: unknown; onAutoArrange(): void; fitKey?: string; cameraInsets?: unknown; focusRequest?: unknown; onMention?: (id: string) => void; onBadgeClick?: (id: string) => void; onWarnBadgeClick?: (id: string) => void; onSelect: (id: string | null) => void }) => {
     hookState.insets.push(cameraInsets);
+    hookState.placed = onPlaced ?? null;
     hookState.pinned.push(pinned);
     hookState.fitRequest.push(fitRequest);
     hookState.focus.push(focusRequest);
@@ -396,4 +397,35 @@ test("restore while live refits the canvas at once, even after a turn that saved
   rerender(ui(mk(3, ["a"])));
   expect(screen.getByTestId("fit").textContent).not.toBe(before);
   vi.mocked(listVersionsAction).mockResolvedValue([]);
+});
+
+test("add_node during a turn flies a dot from the progress card to the placed node, only on the 대화 tab", () => {
+  hookState.busy = true;
+  hookState.lines = [{ id: "c", kind: "card", text: "", card: { mode: "build", step: "drawing", changes: 1 }, turn: "t1", at: 0 }];
+  vi.stubGlobal("matchMedia", () => ({ matches: false, addEventListener() {}, removeEventListener() {} }));
+  const orig = Element.prototype.getBoundingClientRect;
+  Element.prototype.getBoundingClientRect = function (this: Element) {
+    const r = this.hasAttribute("data-fly-origin")
+      ? { left: 900, top: 200, width: 12, height: 12 }
+      : this.getAttribute("role") === "log"
+        ? { left: 800, top: 0, width: 400, height: 800 }
+        : { left: 0, top: 0, width: 0, height: 0 };
+    return { ...r, x: r.left, y: r.top, right: r.left + r.width, bottom: r.top + r.height, toJSON: () => r } as DOMRect;
+  };
+  try {
+    render(ui(mk(1, ["a"])));
+    act(() => hookState.onCommand!({ op: "add_node", id: "b", kind: "server", label: "b", parent: null }));
+    act(() => hookState.placed!(() => ({ x: 300, y: 400 })));
+    expect(document.querySelectorAll("[data-fly-dot]")).toHaveLength(1);
+    // 대화 탭이 아니면 출발점이 없다
+    fireEvent.click(screen.getByRole("tab", { name: "설명" }));
+    act(() => hookState.onCommand!({ op: "add_node", id: "c", kind: "server", label: "c", parent: null }));
+    act(() => hookState.placed!(() => ({ x: 300, y: 400 })));
+    expect(document.querySelectorAll("[data-fly-dot]")).toHaveLength(1);
+  } finally {
+    Element.prototype.getBoundingClientRect = orig;
+    vi.unstubAllGlobals();
+    hookState.lines = [];
+    hookState.busy = false;
+  }
 });

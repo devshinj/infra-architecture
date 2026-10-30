@@ -93,6 +93,15 @@ test("progress card steps and node count update", () => {
   expect(screen.getByText("완료 · 노드 6 · 연결 5")).toBeInTheDocument();
 });
 
+test("only the current step dot is the fly-dot origin", () => {
+  const { container, rerender } = render(<ChatPanel {...base({ busy: true, lines: [card({ mode: "build", step: "drawing", changes: 1 })] })} />);
+  const origins = container.querySelectorAll("[data-fly-origin]");
+  expect(origins).toHaveLength(1);
+  expect(steps()[1]).toContainElement(origins[0] as HTMLElement);
+  rerender(<ChatPanel {...base({ lines: [card({ mode: "build", step: "checking", changes: 6, end: "done", nodes: 6, edges: 5 })] })} />);
+  expect(container.querySelectorAll("[data-fly-origin]")).toHaveLength(0);
+});
+
 test("answer mode shows single step", () => {
   render(<ChatPanel {...base({ busy: true, lines: [card({ mode: "answer", step: "review", changes: 0 })] })} />);
   expect(steps().map((li) => li.textContent)).toEqual(["답변 작성 중"]);

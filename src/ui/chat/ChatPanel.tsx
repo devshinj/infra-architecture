@@ -2,6 +2,8 @@
 
 import { type ReactNode, type RefObject, useEffect, useLayoutEffect, useRef, useState } from "react";
 
+import { FLY_ORIGIN_ATTR } from "../FlyLayer";
+
 import styles from "./chat.module.css";
 import { MentionInput, type MentionInputHandle } from "./MentionInput";
 import type { ChatLine, ProgressCard } from "./useChatTurn";
@@ -129,7 +131,12 @@ function CardView({ card }: { card: ProgressCard }) {
     <ol className={styles.card} aria-label="진행 단계">
       {stepRows(card).map((r) => (
         <li key={r.key} className={styles.step} data-state={r.state} {...(r.state === "current" ? { "aria-current": "step" as const } : {})}>
-          {r.state === "done" ? <Check /> : <span className={styles.stepIcon} aria-hidden="true" />}
+          {r.state === "done" ? (
+            <Check />
+          ) : (
+            // 현재 단계 점: 대화에서 캔버스로 날아가는 빛점의 출발점(FlyLayer).
+            <span className={styles.stepIcon} aria-hidden="true" {...(r.state === "current" ? { [FLY_ORIGIN_ATTR]: "" } : {})} />
+          )}
           <span>{r.label}</span>
           {r.state === "current" && <Dots />}
         </li>

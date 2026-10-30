@@ -62,6 +62,11 @@ export interface CanvasProps {
   samples?: { id: string; title: string }[];
   onImportSample?(sampleId: string): void;
   importing?: boolean;
+  /**
+   * 배치가 끝날 때마다(settled) 노드의 화면 중심을 묻는 함수를 넘긴다(대화의 빛점 도착점).
+   * 접힌 영역 안이거나 보이는 캔버스 띠(패널이 가린 곳 제외) 밖이면 null. 함수는 늘 최신 배치·카메라로 계산한다.
+   */
+  onPlaced?(locate: (id: string) => { x: number; y: number } | null): void;
 }
 
 export const FAR_ZOOM = 0.6;
@@ -194,7 +199,7 @@ interface FlowProps extends CanvasProps {
   updated: Set<string>;
 }
 
-function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onPinnedChange, motion, layout, settled, fitRequest, display, appearing, updated, diffMarks, fitKey, streaming = false, cameraInsets = NO_INSETS, focusRequest, onMention, onBadgeClick, onWarnBadgeClick }: FlowProps) {
+function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onPinnedChange, motion, layout, settled, fitRequest, display, appearing, updated, diffMarks, fitKey, streaming = false, cameraInsets = NO_INSETS, focusRequest, onMention, onBadgeClick, onWarnBadgeClick, onPlaced }: FlowProps) {
   const far = useStore((s) => s.transform[2] < FAR_ZOOM);
   const selected = drawnId(state, options.collapsed, options.selectedId);
   const missingByNode = useMemo(() => computeMissing(state).byNode, [state]);
@@ -288,7 +293,7 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
   useEffect(() => setNodes(computed), [computed]);
 
   // Camera: fit on board change, follow new nodes calmly while a turn streams (see useCamera).
-  const { getViewport, setViewport } = useReactFlow();
+  const { getViewport, setViewport, flowToScreenPosition } = useReactFlow();
   const width = useStore((s) => s.width);
   const height = useStore((s) => s.height);
   const bounds = useMemo(() => unionRect([...Object.values(layout.nodes), ...Object.values(layout.groups)]), [layout]);
@@ -337,6 +342,26 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
     return () => clearTimeout(t);
   }, [pulse]);
   const wrap = useRef<HTMLDivElement>(null);
+  // 빛점 도착점: 배치가 끝나면 알린다. locate 는 날아가는 동안 프레임마다 불리므로 최신 값을 ref 로 읽는다.
+  const latest = useRef({ layout, display, cameraInsets, onPlaced });
+  useEffect(() => {
+    latest.current = { layout, display, cameraInsets, onPlaced };
+  });
+  const locate = useCallback(
+    (id: string) => {
+      const { layout: l, display: d, cameraInsets: ins } = latest.current;
+      const r = l.nodes[id];
+      const box = wrap.current?.getBoundingClientRect();
+      if (!r || !d.nodes[id] || !box) return null;
+      const p = flowToScreenPosition({ x: r.x + r.width / 2, y: r.y + r.height / 2 });
+      const visible = p.x >= box.left + ins.left && p.x <= box.right - ins.right && p.y >= box.top && p.y <= box.bottom - (ins.bottom ?? 0);
+      return visible ? p : null;
+    },
+    [flowToScreenPosition],
+  );
+  useEffect(() => {
+    if (settled) latest.current.onPlaced?.(locate);
+  }, [layout, settled, locate]);
   const [menu, setMenu] = useState<{ id: string; x: number; y: number } | null>(null);
   const closeMenu = useCallback(() => {
     setMenu(null);

@@ -23,6 +23,12 @@ test("tokens.css defines the shell tokens with exact values", () => {
   expect(css).toMatch(/--bg-node:\s*#223147;/);
 });
 
+test("fly dot token is a silver brighter than the glass highlight", () => {
+  const css = read("src/styles/tokens.css");
+  expect(css).toContain("--fly-dot: #DCE3EE;");
+  expect(read("docs/superpowers/specs/2026-10-29-infra-architecture-visualizer-design.md")).toMatch(/\| `fly-dot` \| `#DCE3EE` \|/);
+});
+
 test("glass panel tokens have exact values", () => {
   const css = read("src/styles/tokens.css");
   expect(css).toContain("--glass-bg: rgba(18, 26, 39, 0.78);");
