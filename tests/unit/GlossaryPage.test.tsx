@@ -10,7 +10,7 @@ vi.mock("@/app/(app)/actions", () => ({
   setTermReviewedAction: (...a: unknown[]) => setTermReviewedAction(...a),
 }));
 
-import type { GlossaryItem } from "@/ui/glossary/GlossaryPage";
+import type { GlossaryItem } from "@/domain/glossary-types";
 import { GlossaryPage } from "@/ui/glossary/GlossaryPage";
 
 beforeEach(() => {
@@ -79,4 +79,32 @@ test("검수 완료 toggles badge", async () => {
   expect(setTermReviewedAction).toHaveBeenCalledWith("1", true);
   expect(await screen.findByRole("button", { name: "검수 취소" })).toBeInTheDocument();
   expect(screen.queryByText("미검수")).not.toBeInTheDocument();
+});
+
+test("drafts are kept per item and save clears them", async () => {
+  render(<GlossaryPage initial={items} />);
+  await userEvent.click(screen.getByRole("button", { name: /Redis/ }));
+  await userEvent.type(screen.getByLabelText("정의"), " 추가");
+  await userEvent.click(screen.getByRole("button", { name: /Nginx/ }));
+  expect(screen.getByLabelText("정의")).toHaveValue("요청을 받아 넘기는 서버입니다.");
+  expect(screen.getAllByText("수정 중")).toHaveLength(1);
+  await userEvent.click(screen.getByRole("button", { name: /Redis/ }));
+  expect(screen.getByLabelText("정의")).toHaveValue("메모리에 데이터를 두는 저장소입니다. 추가");
+
+  updateTermAction.mockResolvedValueOnce({ ok: false, error: "오류" });
+  await userEvent.click(screen.getByRole("button", { name: "저장" }));
+  expect(await screen.findByRole("alert")).toBeInTheDocument();
+  expect(screen.getByText("수정 중")).toBeInTheDocument();
+
+  updateTermAction.mockResolvedValueOnce({ ok: true, term: { ...items[0]!, definition: "메모리에 데이터를 두는 저장소입니다. 추가" } });
+  await userEvent.click(screen.getByRole("button", { name: "저장" }));
+  await vi.waitFor(() => expect(screen.queryByText("수정 중")).not.toBeInTheDocument());
+});
+
+test("thrown errors show the generic message", async () => {
+  setTermReviewedAction.mockRejectedValueOnce(new Error("boom"));
+  render(<GlossaryPage initial={items} />);
+  await userEvent.click(screen.getByRole("button", { name: /Redis/ }));
+  await userEvent.click(screen.getByRole("button", { name: "검수 완료" }));
+  expect(await screen.findByRole("alert")).toHaveTextContent("처리하지 못했어요");
 });

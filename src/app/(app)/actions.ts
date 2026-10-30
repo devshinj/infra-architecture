@@ -22,11 +22,11 @@ import {
 } from "@/server/projects";
 import { confirmAssumptionFor } from "@/server/assumptions";
 import { saveFieldsFor, type SaveFieldsInput } from "@/server/fields";
-import { ensureSeeded, listTerms, updateTerm, type GlossaryRow, type TermPatch } from "@/server/glossary";
+import { ensureSeeded, listTerms, updateTerm, type TermPatch } from "@/server/glossary";
 import { setWarningIgnoredFor } from "@/server/ignore";
 import { importSample, SAMPLES } from "@/server/samples";
 import { listMessages } from "@/server/chat/messages";
-import type { GlossaryItem } from "@/ui/glossary/GlossaryPage";
+import { toGlossaryItem, type GlossaryItem } from "@/domain/glossary-types";
 import { getVersion, listVersions, restoreVersionWithMessage } from "@/server/versions";
 
 const DIAGRAM_ROUTE = "/p/[projectId]/d/[diagramId]";
@@ -227,24 +227,11 @@ export async function listTermsAction(): Promise<{ key: string; term: string; de
   });
 }
 
-const toItem = (r: GlossaryRow): GlossaryItem => ({
-  id: r.id,
-  key: r.key,
-  term: r.term,
-  fullName: r.fullName,
-  category: r.category,
-  definition: r.definition,
-  why: r.why,
-  compare: r.compare,
-  source: r.source,
-  reviewed: r.reviewed,
-});
-
 /** 용어 사전 화면용 전체 행(비어 있으면 시드를 먼저 복사한다). */
 export async function listGlossaryAction(): Promise<GlossaryItem[]> {
   return run(async (uid) => {
     await ensureSeeded(uid);
-    return (await listTerms(uid)).map(toItem);
+    return (await listTerms(uid)).map(toGlossaryItem);
   });
 }
 
@@ -257,7 +244,7 @@ export async function updateTermAction(id: string, patch: TextPatch): Promise<Ac
     const { term, fullName, category, definition, why, compare } = patch;
     const row = await updateTerm(uid, id, { term, fullName, category, definition, why, compare });
     revalidatePath("/glossary");
-    return { term: toItem(row) };
+    return { term: toGlossaryItem(row) };
   });
 }
 
@@ -266,7 +253,7 @@ export async function setTermReviewedAction(id: string, reviewed: boolean): Prom
     await ensureSeeded(uid);
     const row = await updateTerm(uid, id, { reviewed });
     revalidatePath("/glossary");
-    return { term: toItem(row) };
+    return { term: toGlossaryItem(row) };
   });
 }
 

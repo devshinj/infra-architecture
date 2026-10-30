@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, usePathname, useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
 import {
@@ -32,6 +32,7 @@ type MenuAction = "newDiagram" | "rename" | "duplicate" | "delete";
 
 export function Sidebar({ projects, userName }: { projects: SidebarProject[]; userName: string }) {
   const router = useRouter();
+  const pathname = usePathname();
   const params = useParams<{ projectId?: string; diagramId?: string }>();
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   const [menu, setMenu] = useState<string | null>(null);
@@ -187,7 +188,11 @@ export function Sidebar({ projects, userName }: { projects: SidebarProject[]; us
         </p>
       )}
       <div className={styles.sideFoot}>
-        <Link href="/glossary" className={styles.sideLink}>용어 사전</Link>
+        <Link
+          href="/glossary"
+          className={`${styles.sideLink} ${pathname === "/glossary" ? styles.sideLinkActive : ""}`}
+          aria-current={pathname === "/glossary" ? "page" : undefined}
+        >용어 사전</Link>
         <button type="button" className={styles.btn} onClick={newProject}>새 프로젝트</button>
         <div className={styles.user}>
           <span>{userName}</span>

@@ -4,20 +4,9 @@ import { useState, useTransition } from "react";
 
 import { setTermReviewedAction, updateTermAction, type ActionResult } from "@/app/(app)/actions";
 
-import styles from "./glossary.module.css";
+import type { GlossaryItem } from "@/domain/glossary-types";
 
-export interface GlossaryItem {
-  id: string;
-  key: string;
-  term: string;
-  fullName: string;
-  category: string;
-  definition: string;
-  why: string;
-  compare: string;
-  source: "seed" | "ai";
-  reviewed: boolean;
-}
+import styles from "./glossary.module.css";
 
 const FIELDS = [
   ["term", "용어", false],
@@ -44,7 +33,7 @@ export function GlossaryPage({ initial }: { initial: GlossaryItem[] }) {
   const [q, setQ] = useState("");
   const [unreviewedOnly, setUnreviewedOnly] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [draft, setDraft] = useState<Draft | null>(null);
+  const [drafts, setDrafts] = useState<Record<string, Draft>>({});
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
 
@@ -56,27 +45,49 @@ export function GlossaryPage({ initial }: { initial: GlossaryItem[] }) {
   );
   const selected = items.find((t) => t.id === selectedId) ?? null;
 
+  const draft = selected ? (drafts[selected.id] ?? toDraft(selected)) : null;
+  // 저장된 값과 다른 입력이 남은 항목. 입력은 항목별로 보존한다.
+  const editing = (t: GlossaryItem) => {
+    const d = drafts[t.id];
+    return !!d && FIELDS.some(([k]) => d[k] !== t[k]);
+  };
+  const setField = (id: string, base: Draft, key: FieldKey, value: string) =>
+    setDrafts((m) => ({ ...m, [id]: { ...(m[id] ?? base), [key]: value } }));
+
   const select = (t: GlossaryItem) => {
     setSelectedId(t.id);
-    setDraft(toDraft(t));
     setError(null);
   };
 
-  const apply = (r: ActionResult<{ term: GlossaryItem }>, resetDraft: boolean) => {
+  const apply = (r: ActionResult<{ term: GlossaryItem }>, clearDraft: boolean) => {
     if (!r.ok) {
       setError(r.error);
       return;
     }
     setError(null);
     setItems((all) => all.map((t) => (t.id === r.term.id ? r.term : t)));
-    if (resetDraft) setDraft(toDraft(r.term));
+    if (clearDraft) {
+      setDrafts((m) => {
+        const rest = { ...m };
+        delete rest[r.term.id];
+        return rest;
+      });
+    }
   };
 
+  const attempt = (call: () => Promise<ActionResult<{ term: GlossaryItem }>>, clearDraft: boolean) =>
+    start(async () => {
+      try {
+        apply(await call(), clearDraft);
+      } catch {
+        setError("처리하지 못했어요. 잠시 후 다시 시도해 주세요.");
+      }
+    });
   const save = () => {
-    if (selected && draft) start(async () => apply(await updateTermAction(selected.id, draft), true));
+    if (selected && draft) attempt(() => updateTermAction(selected.id, draft), true);
   };
   const toggleReviewed = () => {
-    if (selected) start(async () => apply(await setTermReviewedAction(selected.id, !selected.reviewed), false));
+    if (selected) attempt(() => setTermReviewedAction(selected.id, !selected.reviewed), false);
   };
 
   return (
@@ -108,6 +119,7 @@ export function GlossaryPage({ initial }: { initial: GlossaryItem[] }) {
                     <strong>{t.term}</strong>
                     {t.category && <span className={styles.meta}>{t.category}</span>}
                     {!t.reviewed && <span className={styles.badge}>미검수</span>}
+                    {editing(t) && <span className={styles.badge}>수정 중</span>}
                     <span className={styles.meta}>{t.source === "seed" ? "초기" : "AI"}</span>
                   </span>
                   <p className={styles.snippet}>{t.definition}</p>
@@ -129,9 +141,9 @@ export function GlossaryPage({ initial }: { initial: GlossaryItem[] }) {
               <label key={key}>
                 {label}
                 {multiline ? (
-                  <textarea value={draft[key]} onChange={(e) => setDraft({ ...draft, [key]: e.target.value })} />
+                  <textarea value={draft[key]} onChange={(e) => setField(selected.id, draft, key, e.target.value)} />
                 ) : (
-                  <input value={draft[key]} onChange={(e) => setDraft({ ...draft, [key]: e.target.value })} />
+                  <input value={draft[key]} onChange={(e) => setField(selected.id, draft, key, e.target.value)} />
                 )}
               </label>
             ))}
