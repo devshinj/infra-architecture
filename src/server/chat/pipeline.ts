@@ -83,6 +83,7 @@ async function lockedTurn(args: TurnArgs, deps: ChatDeps): Promise<void> {
 
   const latest = await getLatestState(diagramId);
   let state: DiagramState = latest?.state ?? emptyState();
+  const prevWarnings = latest?.state.warnings; // 차례 시작 상태의 경고
   const history = (await listMessages(diagramId, HISTORY_FETCH))
     .filter((m) => m.role === "user" || m.role === "assistant")
     .map((m) => ({ role: m.role as "user" | "assistant", content: m.content }));
@@ -202,10 +203,14 @@ async function lockedTurn(args: TurnArgs, deps: ChatDeps): Promise<void> {
   let fresh: Warning[] = [];
   if (applied > 0) {
     // 변경이 있었던 차례만 점검한다. 중단·오류면 이미 중단된 신호로 불러 코드 규칙만 받는다.
-    const prev = state.warnings;
     if (status === "complete") emit({ t: "status", phase: "checking" });
     const checkSignal = status === "complete" ? signal : AbortSignal.abort();
-    const checked = await checkWarnings(state, prev, { clef: deps.clef, qwen: deps.qwen }, checkSignal);
+    const checked = await checkWarnings(state, prevWarnings, { clef: deps.clef, qwen: deps.qwen }, checkSignal);
+    // 점검 중 중단·시간 초과면 버전·메타·done 모두 중단됨으로 따른다.
+    if (status === "complete" && signal.aborted) {
+      status = "aborted";
+      if (timeout.aborted && !args.signal.aborted) emit({ t: "error", message: TIMEOUT_MESSAGE });
+    }
     state = { ...state, warnings: checked.warnings };
     fresh = checked.fresh;
     const v = await createVersion(diagramId, state, {

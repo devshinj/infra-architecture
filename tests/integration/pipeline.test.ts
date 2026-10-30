@@ -661,6 +661,45 @@ describe("runChatTurn", () => {
       expect(msgs[1]!.meta).not.toHaveProperty("warnings");
     });
 
+    test("abort during checking saves an aborted version with code warnings and frees the lock", async () => {
+      const ids = await makeOwnedDiagram();
+      const ctrl = new AbortController();
+      const clef = spyClef();
+      const { events } = await turn(
+        ids,
+        "DB 그려줘",
+        { qwen: seqQwen(PUBLIC_DB_LINES.join("\n"), "never"), clef },
+        {
+          signal: ctrl.signal,
+          onEvent(e) {
+            if (e.t === "status" && e.phase === "checking") ctrl.abort();
+          },
+        },
+      );
+      expect(of(events, "error")).toHaveLength(0);
+      expect(events.at(-1)).toMatchObject({ t: "done", status: "aborted", applied: 2 });
+      const vs = await versions(ids.diagramId);
+      expect(vs[0]).toMatchObject({ status: "aborted" });
+      expect((await getLatestState(ids.diagramId))!.state.warnings!.find((x) => x.id === "db_public:db-1")!.text).toBe(TEMPLATE);
+      expect((await listMessages(ids.diagramId))[1]!.meta.status).toBe("aborted");
+      const next = await turn(ids, "다시", { qwen: fakeQwen(JSON.stringify({ op: "say", text: "네" })), clef: fakeClef(null) });
+      expect(next.events.at(-1)).toMatchObject({ t: "done", status: "complete" });
+    });
+
+    test("turn time cap during checking saves aborted and emits the timeout error", async () => {
+      const ids = await makeOwnedDiagram();
+      const clef = fakeClef(null);
+      clef.decide = vi.fn((_t, _q, sig: AbortSignal) => new Promise<never>((_r, rej) => sig.addEventListener("abort", () => rej(abortError()), { once: true })));
+      const { events } = await turn(
+        ids,
+        "DB 그려줘",
+        { qwen: fakeQwen(JSON.stringify({ op: "add_node", id: "db-1", kind: "db_rdb", label: "DB", parent: null })), clef, turnTimeoutMs: 400 },
+      );
+      expect(of(events, "error").map((e) => e.message)).toEqual([TIMEOUT_TEXT]);
+      expect(events.at(-1)).toMatchObject({ t: "done", status: "aborted", applied: 1 });
+      expect((await versions(ids.diagramId))[0]).toMatchObject({ status: "aborted" });
+    });
+
     test("answer-only turn does not check", async () => {
       const ids = await makeOwnedDiagram();
       await createVersion(ids.diagramId, s2, { source: "import" });
