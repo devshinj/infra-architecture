@@ -1,11 +1,7 @@
-import { and, eq } from "drizzle-orm";
-
-import { db } from "@/db/client";
-import { explanations } from "@/db/schema";
-import type { NodeExplanation } from "@/domain/explain";
 import { computeMissing } from "@/domain/missing";
 import type { DiagramState } from "@/domain/types";
 import type { Intent } from "@/server/llm/clef";
+import { cachedNodeExplanation } from "@/server/explain";
 import { createThinkStripper } from "@/server/llm/think";
 import { getOwnedDiagram, NotFoundError, ValidationError } from "@/server/projects";
 import { getLatestState } from "@/server/versions";
@@ -45,15 +41,6 @@ interface AskArgs {
 
 const hasNode = (state: DiagramState | undefined, nodeId: string) => !!state && Object.hasOwn(state.nodes, nodeId);
 
-/** 그 노드의 저장된 설명(있으면). 만들지는 않는다. */
-async function cachedExplanation(diagramId: string, nodeId: string): Promise<NodeExplanation | undefined> {
-  const [row] = await db
-    .select({ data: explanations.data })
-    .from(explanations)
-    .where(and(eq(explanations.diagramId, diagramId), eq(explanations.targetKind, "node"), eq(explanations.targetId, nodeId)));
-  return row?.data.kind === "node" ? row.data : undefined;
-}
-
 /**
  * 노드 하나에 대해 묻는 차례(§6.8). 구성도는 바꾸지 않고 버전도 만들지 않는다.
  * 구성도 대화와 같은 잠금을 써서 한 구성도에 한 차례만 돈다.
@@ -68,7 +55,7 @@ export async function runAskTurn(args: AskArgs, deps: ChatDeps): Promise<AskTurn
     if (!session) throw new NotFoundError();
     if (session.nodeId !== args.nodeId) throw new ValidationError("세션의 노드와 맞지 않아요");
   }
-  const emit = guardEmit(args.emit);
+  const emit = guardEmit(args.emit, "ask");
   const gone = (): AskTurnResult => {
     emit({ t: "error", message: NODE_GONE_MESSAGE });
     return { status: "gone" };
@@ -86,7 +73,6 @@ export async function runAskTurn(args: AskArgs, deps: ChatDeps): Promise<AskTurn
 
 async function lockedAsk(args: AskArgs, existing: SessionRow | null, deps: ChatDeps): Promise<"ok" | "gone"> {
   const { diagramId, nodeId, emit } = args;
-  const { signal, timeout } = turnSignals(args.signal, deps);
 
   // 잠금을 기다리는 사이 구성도 대화가 노드를 지웠을 수 있어 다시 읽는다.
   const state = (await getLatestState(diagramId))?.state;
@@ -99,7 +85,24 @@ async function lockedAsk(args: AskArgs, existing: SessionRow | null, deps: ChatD
     emit({ t: "session", session: { id, nodeId, nodeLabel, title, updatedAt: updatedAt.toISOString() } });
   }
   const sessionId = session.id;
-  const history = existing
+  // 예상치 못한 예외로 끝나도 세션 순서(최근 이어감)는 갱신한다.
+  try {
+    return await askInSession(args, state, sessionId, existing !== null, deps);
+  } finally {
+    await touchSession(sessionId).catch((err) => console.error("ask touch session failed", err));
+  }
+}
+
+async function askInSession(
+  args: AskArgs,
+  state: DiagramState,
+  sessionId: string,
+  followUp: boolean,
+  deps: ChatDeps,
+): Promise<"ok"> {
+  const { diagramId, nodeId, emit } = args;
+  const { signal, timeout } = turnSignals(args.signal, deps);
+  const history = followUp
     ? (await listMessages(diagramId, HISTORY_FETCH, sessionId))
         .filter((m) => m.role === "user" || m.role === "assistant")
         .map((m) => ({ role: m.role as "user" | "assistant", content: m.content }))
@@ -123,7 +126,6 @@ async function lockedAsk(args: AskArgs, existing: SessionRow | null, deps: ChatD
     emit({ t: "start", messageId: userMsg.id, intent: null });
     emit({ t: "error", message: AI_UNAVAILABLE_MESSAGE });
     emit(done("complete", ""));
-    await touchSession(sessionId);
     return "ok";
   }
 
@@ -144,11 +146,10 @@ async function lockedAsk(args: AskArgs, existing: SessionRow | null, deps: ChatD
     const meta: MessageMeta = { intent, handoff: true, says: [HANDOFF_REPLY] };
     const assistant = await createMessage(diagramId, "assistant", HANDOFF_REPLY, meta, sessionId);
     emit(done("complete", assistant.id));
-    await touchSession(sessionId);
     return "ok";
   }
 
-  const explanation = await cachedExplanation(diagramId, nodeId);
+  const explanation = await cachedNodeExplanation(args.userId, diagramId, state, nodeId);
   const messages = buildAskMessages({ state, nodeId, explanation, history, text: args.text });
   emit({ t: "status", phase: "thinking" });
 
@@ -175,7 +176,7 @@ async function lockedAsk(args: AskArgs, existing: SessionRow | null, deps: ChatD
     if (signal.aborted) throw new DOMException("The operation was aborted.", "AbortError");
     stripper.end();
   } catch (err) {
-    status = streamFailure(err, { outer: args.signal, signal, timeout }, emit);
+    status = streamFailure(err, { outer: args.signal, signal, timeout }, emit, "ask");
   }
 
   const meta: MessageMeta = {
@@ -189,6 +190,5 @@ async function lockedAsk(args: AskArgs, existing: SessionRow | null, deps: ChatD
   };
   const assistant = await createMessage(diagramId, "assistant", shown.trim(), meta, sessionId);
   emit(done(status === "complete" ? "complete" : "aborted", assistant.id));
-  await touchSession(sessionId);
   return "ok";
 }

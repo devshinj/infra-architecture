@@ -61,13 +61,13 @@ export async function runChatTurn(args: TurnArgs, deps: ChatDeps): Promise<ChatT
 }
 
 /** 전송이 끊겨 emit 이 던져도 차례는 끝까지 돌아 버전·메시지를 저장하게 감싼다. */
-export function guardEmit(emit: (e: ChatEvent) => void): (e: ChatEvent) => void {
+export function guardEmit(emit: (e: ChatEvent) => void, label = "chat"): (e: ChatEvent) => void {
   let emitFailed = false;
   return (e) => {
     try {
       emit(e);
     } catch (err) {
-      if (!emitFailed) console.error("chat emit failed", err);
+      if (!emitFailed) console.error(`${label} emit failed`, err);
       emitFailed = true;
     }
   };
@@ -84,12 +84,13 @@ export function streamFailure(
   err: unknown,
   s: { outer: AbortSignal; signal: AbortSignal; timeout: AbortSignal },
   emit: (e: ChatEvent) => void,
+  label = "chat",
 ): "aborted" | "error" {
   if (s.signal.aborted) {
     if (s.timeout.aborted && !s.outer.aborted) emit({ t: "error", message: TIMEOUT_MESSAGE });
     return "aborted";
   }
-  console.error("chat turn failed", err);
+  console.error(`${label} turn failed`, err);
   emit({ t: "error", message: GENERIC_ERROR_MESSAGE });
   return "error";
 }

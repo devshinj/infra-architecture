@@ -9,9 +9,10 @@ import { emptyState, type DiagramState } from "@/domain/types";
 import { HANDOFF_REPLY, NODE_GONE_MESSAGE, runAskTurn } from "@/server/chat/ask";
 import type { ChatEvent } from "@/server/chat/events";
 import { listMessages } from "@/server/chat/messages";
-import { runChatTurn, type ChatDeps } from "@/server/chat/pipeline";
+import { runChatTurn, TIMEOUT_MESSAGE, type ChatDeps } from "@/server/chat/pipeline";
 import { ASK_PROMPT } from "@/server/chat/prompt";
 import { getSession } from "@/server/chat/sessions";
+import { addAiTerm } from "@/server/glossary";
 import type { ClefClient, Intent } from "@/server/llm/clef";
 import type { ChatMessage, QwenClient } from "@/server/llm/qwen";
 import { NotFoundError, ValidationError } from "@/server/projects";
@@ -188,6 +189,58 @@ describe("runAskTurn", () => {
     const qwen = fakeQwen("답");
     await ask(ids, { text: "뭐야?" }, { qwen, clef: question });
     expect(qwen.calls[0]![1]!.content).toContain("정의: Tomcat은 자바 웹 서버입니다.");
+  });
+
+  async function insertExplanation(diagramId: string, signature: string) {
+    const data: NodeExplanation = {
+      kind: "node",
+      term: "Tomcat",
+      definition: "저장된 Tomcat 정의입니다.",
+      definitionSource: "ai",
+      reviewed: false,
+      role: "요청을 처리합니다.",
+      adr: { decision: "둔다", reason: "필요", alternative: "없음", cost: "운영" },
+    };
+    await db.insert(explanations).values({ diagramId, targetKind: "node", targetId: "was-1", signature, data });
+  }
+
+  test("stale cached explanation is not used", async () => {
+    const ids = await seeded();
+    const old = sample();
+    old.nodes["was-1"]!.attrs = { sw: "Jetty" };
+    await insertExplanation(ids.diagramId, signatureOf(old, "node", "was-1")!);
+    const qwen = fakeQwen("답");
+    await ask(ids, { text: "뭐야?" }, { qwen, clef: question });
+    const user = qwen.calls[0]![1]!.content;
+    expect(user).toContain("설명:\n없음");
+    expect(user).not.toContain("저장된 Tomcat 정의입니다.");
+  });
+
+  test("glossary definition overlays the cached explanation like the panel", async () => {
+    const ids = await seeded();
+    await insertExplanation(ids.diagramId, signatureOf(sample(), "node", "was-1")!);
+    await addAiTerm(ids.userId, { term: "Tomcat", category: "WAS", definition: "사전에 고쳐 둔 Tomcat 정의입니다." });
+    const qwen = fakeQwen("답");
+    await ask(ids, { text: "뭐야?" }, { qwen, clef: question });
+    const user = qwen.calls[0]![1]!.content;
+    expect(user).toContain("정의: 사전에 고쳐 둔 Tomcat 정의입니다.");
+    expect(user).toContain("역할: 요청을 처리합니다.");
+  });
+
+  test("turn time cap aborts with the timeout error and keeps the session", async () => {
+    const ids = await seeded();
+    const hang: QwenClient = {
+      async streamCompletion(_m, { signal }) {
+        return new Promise((_r, reject) => signal.addEventListener("abort", () => reject(abortError()), { once: true }));
+      },
+    };
+    const { events } = await ask(ids, { text: "오래 걸리는 질문" }, { qwen: hang, clef: question, turnTimeoutMs: 50 });
+    expect(of(events, "error")).toEqual([{ t: "error", message: TIMEOUT_MESSAGE }]);
+    expect(events.at(-1)).toMatchObject({ t: "done", status: "aborted", version: null });
+    const [row] = await sessionsOf(ids.diagramId);
+    const stored = await listMessages(ids.diagramId, 100, row!.id);
+    expect(stored[0]).toMatchObject({ role: "user", content: "오래 걸리는 질문" });
+    expect(stored[1]).toMatchObject({ role: "assistant", meta: { status: "aborted" } });
   });
 
   test("follow-up reuses the session and passes session history only", async () => {
