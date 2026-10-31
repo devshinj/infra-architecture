@@ -64,7 +64,7 @@ async function buildAndSave(page: Page) {
   await was1Badge(page).click();
   await expect(page.getByRole("tab", { name: "설명" })).toHaveAttribute("aria-selected", "true");
   await expect(cardToggle(page)).toHaveAttribute("aria-expanded", "true");
-  const block = page.getByRole("group", { name: "WAS #1" });
+  const block = page.getByRole("group", { name: "WAS #1", exact: true }); // 노드 래퍼도 "WAS #1 · …" 이름의 group 이다
   await expect(block.getByRole("button", { name: "WAS #1 항목 접기" })).toBeVisible();
   await expect(block.locator('input[type="text"]').first()).toBeFocused();
   expect(await cardTotal(page)).toBe(total);

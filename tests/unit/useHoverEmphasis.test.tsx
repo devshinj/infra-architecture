@@ -42,12 +42,39 @@ test("leave clears an applied hover and reset clears everything", () => {
   act(() => result.current.enter("a"));
   tick(120);
   act(() => result.current.leave("a"));
+  tick(120);
   expect(result.current.hoverId).toBeNull();
   act(() => result.current.enter("b"));
   tick(120);
   expect(result.current.hoverId).toBe("b");
   act(() => result.current.reset());
   expect(result.current.hoverId).toBeNull();
+});
+
+test("leave clears only after the same delay", () => {
+  const { result } = renderHook(() => useHoverEmphasis());
+  act(() => result.current.enter("a"));
+  tick(120);
+  act(() => result.current.leave("a"));
+  tick(119);
+  expect(result.current.hoverId).toBe("a");
+  tick(1);
+  expect(result.current.hoverId).toBeNull();
+});
+
+test("moving to an adjacent node keeps the emphasis until the next one applies", () => {
+  const { result } = renderHook(() => useHoverEmphasis());
+  act(() => result.current.enter("a"));
+  tick(120);
+  // React Flow 는 leave(a) 를 enter(b) 보다 먼저 보낸다: 그 사이에 강조가 풀렸다 다시 걸리지 않는다.
+  act(() => result.current.leave("a"));
+  act(() => result.current.enter("b"));
+  for (let i = 0; i < 119; i += 17) {
+    tick(17);
+    expect(result.current.hoverId).toBe("a");
+  }
+  tick(1);
+  expect(result.current.hoverId).toBe("b");
 });
 
 test("unmount cancels a pending hover", () => {

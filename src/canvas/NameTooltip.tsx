@@ -1,3 +1,4 @@
+import { useStore } from "@xyflow/react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 const SHOW_DELAY_MS = 300;
@@ -82,9 +83,12 @@ export function useNameTooltip(enabled: boolean) {
   return { open: open && enabled, set };
 }
 
+/** 말풍선. 캔버스 확대를 거꾸로 되돌려(1/zoom) 어느 확대에서나 화면에서 14px 이름 / 11px 보조로 읽힌다. 열려 있는 동안만 확대를 구독한다. */
 export function NameTooltip({ id, label, sub }: { id: string; label: string; sub?: string }) {
+  const zoom = useStore((s) => s.transform[2]);
+  const scale = zoom > 0 ? 1 / zoom : 1;
   return (
-    <span id={id} role="tooltip" className="name-tooltip">
+    <span id={id} role="tooltip" className="name-tooltip" style={{ "--tip-scale": String(scale) } as React.CSSProperties}>
       <span className="name-tooltip__label">{label}</span>
       {sub && <span className="name-tooltip__sub">{sub}</span>}
     </span>

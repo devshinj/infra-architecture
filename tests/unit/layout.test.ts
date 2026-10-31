@@ -2,7 +2,7 @@ import { expect, test } from "vitest";
 
 import { buildDisplayGraph, defaultDisplayOptions } from "@/canvas/display";
 import { elbowRoute } from "@/canvas/elbow";
-import { GROUP_PAD, layoutDiagram, type Layout, type Rect } from "@/canvas/layout";
+import { CONTENT_WIDTH, GROUP_PAD, SUB_PX, azChipWidth, layoutDiagram, type Layout, type Rect } from "@/canvas/layout";
 import { findOverlaps, PAIR_BADGE_OFFSET } from "@/canvas/overlap";
 import { textWidth, truncate } from "@/canvas/text";
 import { applyCommand, applyCommands } from "@/domain/apply";
@@ -349,6 +349,42 @@ test("text helpers", () => {
   expect(textWidth("ab", 10)).toBeCloseTo(11.6);
   expect(truncate("가나다라마", 40, 12)).toBe("가나…");
   expect(truncate("가나", 40, 12)).toBe("가나");
+});
+
+test("uppercase and wide Latin glyphs are estimated wide, never under the 0.58em base", () => {
+  // 대문자·m·w 는 0.58em 보다 넓게 그려진다: 적게 재면 CSS 가 말풍선 없이 자른다.
+  expect(textWidth("ABC", 10)).toBeGreaterThanOrEqual(3 * 7);
+  expect(textWidth("MW", 10)).toBeGreaterThanOrEqual(2 * 9);
+  expect(textWidth("mw", 10)).toBeGreaterThanOrEqual(2 * 9);
+  expect(textWidth("ABC", 10)).toBeGreaterThan(textWidth("abc", 10));
+});
+
+test("a sub sharing its row with the AZ chip truncates earlier, so the node is marked truncated", async () => {
+  // 칩이 없으면 들어가는 길이, 칩만큼 빼면 넘치는 길이의 보조 글자.
+  const sub = "m5.xlarge-dedicated-hst";
+  const chip = azChipWidth("2a");
+  expect(textWidth(sub, SUB_PX)).toBeLessThanOrEqual(CONTENT_WIDTH);
+  expect(textWidth(sub, SUB_PX)).toBeGreaterThan(CONTENT_WIDTH - chip);
+  const base = fx("s2");
+  const { az: _az, ...noAz } = base.nodes["was-1"].attrs;
+  void _az;
+  const plain: DiagramState = { ...base, nodes: { ...base.nodes, "was-1": { ...base.nodes["was-1"], sub, attrs: noAz } } };
+  const withAz: DiagramState = { ...base, nodes: { ...base.nodes, "was-1": { ...base.nodes["was-1"], sub, attrs: { ...base.nodes["was-1"].attrs, az: "2a" } } } };
+  expect((await lay(plain)).nodes["was-1"].displaySub).toBe(sub);
+  const l = await lay(withAz);
+  const shown = l.nodes["was-1"].displaySub!;
+  expect(shown).not.toBe(sub);
+  expect(shown.endsWith("…")).toBe(true);
+  // 줄 전체(보조 글자 + 칩)가 노드 글자 칸에 든다.
+  expect(textWidth(shown, SUB_PX) + chip).toBeLessThanOrEqual(l.nodes["was-1"].width - 42 - 18);
+});
+
+test("a short sub with an AZ chip widens the node to fit the whole row", async () => {
+  const base = fx("s2");
+  const st: DiagramState = { ...base, nodes: { ...base.nodes, "was-1": { ...base.nodes["was-1"], label: "W", sub: "t3.large", attrs: { ...base.nodes["was-1"].attrs, az: "2a" } } } };
+  const l = await lay(st);
+  expect(l.nodes["was-1"].displaySub).toBe("t3.large");
+  expect(l.nodes["was-1"].width).toBeGreaterThanOrEqual(textWidth("t3.large", SUB_PX) + azChipWidth("2a") + 42 + 18);
 });
 
 test("findOverlaps also checks the paired warning badge left of the corner badge", () => {

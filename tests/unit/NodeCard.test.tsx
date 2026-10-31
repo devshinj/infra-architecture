@@ -1,5 +1,7 @@
 import "@testing-library/jest-dom/vitest";
-import { ReactFlowProvider } from "@xyflow/react";
+import { ReactFlowProvider, useStoreApi } from "@xyflow/react";
+import { useLayoutEffect } from "react";
+import { readFileSync } from "node:fs";
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
@@ -240,6 +242,38 @@ describe("name tooltip", () => {
     hoverCard();
     wait(500);
     expect(screen.queryByRole("tooltip")).toBeNull();
+  });
+
+  test.each([0.5, 1.5])("tooltip counter-scales so it reads at a constant size at zoom %s", (zoom) => {
+    // 캔버스 확대 비율을 바꾸는 도우미: React Flow 저장소의 transform 을 직접 둔다.
+    function ZoomAt({ z }: { z: number }) {
+      const store = useStoreApi();
+      useLayoutEffect(() => store.setState({ transform: [0, 0, z] }), [store, z]);
+      return null;
+    }
+    render(
+      <ReactFlowProvider>
+        <ZoomAt z={zoom} />
+        <div className="react-flow__node" tabIndex={0}>
+          <NodeCard data={truncatedData} {...rfProps} />
+        </div>
+      </ReactFlowProvider>,
+    );
+    hoverCard();
+    wait(300);
+    const tip = screen.getByRole("tooltip");
+    const scale = Number(tip.style.getPropertyValue("--tip-scale"));
+    // 화면 크기 = CSS 크기 × 확대 × 역확대 = 그대로(14px 이름 / 11px 보조).
+    expect(scale * zoom).toBeCloseTo(1);
+    expect(14 * zoom * scale).toBeCloseTo(14);
+    expect(11 * zoom * scale).toBeCloseTo(11);
+  });
+
+  test("tooltip CSS applies the counter-scale from its bottom centre", () => {
+    const css = readFileSync("src/canvas/canvas.css", "utf8");
+    const rule = css.match(/\.name-tooltip \{([^}]*)\}/)![1];
+    expect(rule).toMatch(/transform:\s*translateX\(-50%\) scale\(var\(--tip-scale, 1\)\)/);
+    expect(rule).toMatch(/transform-origin:\s*50% 100%/);
   });
 
   test("truncated node has no title attribute, untruncated keeps it", () => {

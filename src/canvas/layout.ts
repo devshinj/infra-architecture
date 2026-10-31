@@ -1,6 +1,8 @@
 import ELK from "elkjs/lib/elk.bundled.js";
 import type { ElkExtendedEdge, ElkNode } from "elkjs/lib/elk-api";
 
+import type { DNode } from "@/domain/types";
+
 import type { DisplayGraph } from "./display";
 import { elbowRoute } from "./elbow";
 import { textWidth, truncate } from "./text";
@@ -42,8 +44,17 @@ const BASE_OPTIONS: Record<string, string> = {
 };
 const GROUP_PADDING = `[top=${GROUP_PAD.top},left=${GROUP_PAD.side},bottom=${GROUP_PAD.bottom},right=${GROUP_PAD.side}]`;
 
-function nodeWidth(label: string, sub: string | undefined): number {
-  const text = Math.max(textWidth(label, LABEL_PX), sub ? textWidth(sub, SUB_PX) : 0);
+/** AZ 칩 너비: 글자 `AZ <az>`(11px) + 양쪽 안쪽 여백 3 + 양쪽 테두리 1 + 보조 글자와의 사이 6 (canvas.css .node__az · .node__subrow). */
+export function azChipWidth(az: string): number {
+  return textWidth(`AZ ${az}`, SUB_PX) + 2 * 3 + 2 * 1 + 6;
+}
+
+const azOf = (n: DNode): string | undefined => (n.attrs.az !== undefined && n.attrs.az !== null ? String(n.attrs.az) : undefined);
+
+function nodeWidth(label: string, sub: string | undefined, az: string | undefined): number {
+  // 보조 줄은 보조 글자와 AZ 칩이 나눠 쓴다.
+  const subRow = (sub ? textWidth(sub, SUB_PX) : 0) + (az !== undefined ? azChipWidth(az) : 0);
+  const text = Math.max(textWidth(label, LABEL_PX), subRow);
   return Math.min(NODE.maxWidth, Math.max(NODE.minWidth, text + NODE.padLeft + NODE.padRight));
 }
 
@@ -136,7 +147,7 @@ export async function layoutDiagram(g: DisplayGraph, pinned: Record<string, { x:
       elkById.get(containerOf(grp.id))!.children!.push(n);
     }
     for (const node of nodes.filter((x) => inRun(x.id))) {
-      const n: ElkNode = { id: node.id, width: nodeWidth(node.label, node.sub), height: NODE.height };
+      const n: ElkNode = { id: node.id, width: nodeWidth(node.label, node.sub, azOf(node)), height: NODE.height };
       elkById.set(node.id, n);
       elkById.get(containerOf(node.id))!.children!.push(n);
     }
@@ -353,7 +364,11 @@ export async function layoutDiagram(g: DisplayGraph, pinned: Record<string, { x:
       ...(pin ? { x: pin.x, y: pin.y } : {}),
       displayLabel: truncate(n.label, CONTENT_WIDTH, LABEL_PX),
     };
-    if (n.sub !== undefined) ln.displaySub = truncate(n.sub, CONTENT_WIDTH, SUB_PX);
+    // 칩이 같은 줄에 있으면 그만큼 덜 써서, CSS 가 말풍선 없이 자르는 일이 없게 한다.
+    if (n.sub !== undefined) {
+      const az = azOf(n);
+      ln.displaySub = truncate(n.sub, CONTENT_WIDTH - (az !== undefined ? azChipWidth(az) : 0), SUB_PX);
+    }
     out.nodes[n.id] = ln;
   }
 

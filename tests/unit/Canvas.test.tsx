@@ -5,7 +5,7 @@ import { afterEach, beforeAll, expect, test, vi } from "vitest";
 import * as layoutMod from "@/canvas/layout";
 import { Canvas, type CanvasOptions, type CanvasProps } from "@/canvas/Canvas";
 import { defaultDisplayOptions } from "@/canvas/display";
-import { emptyState } from "@/domain/types";
+import { type DiagramState, emptyState } from "@/domain/types";
 
 import { fx } from "../fixtures/spike";
 
@@ -547,4 +547,19 @@ test("hover survives a state change that keeps the node", async () => {
   await waitFor(() => expect(nodeEl(container, "extra")).not.toBeNull());
   expect(container.querySelector(".node--faded")).not.toBeNull();
   expect(nodeEl(container, "was-1")!.querySelector(".node--faded")).toBeNull();
+});
+
+test("every infra node wrapper carries the full, untruncated name as its accessible name", async () => {
+  const props = baseProps();
+  const long = "주문결제통합처리애플리케이션서버첫번째인스턴스입니다";
+  const state: DiagramState = { ...props.state, nodes: { ...props.state.nodes, "was-1": { ...props.state.nodes["was-1"], label: long, sub: "t3.large" } } };
+  const { container } = render(<div style={{ width: 800, height: 600 }}><Canvas {...props} state={state} /></div>);
+  await waitFor(() => expect(nodeEl(container, "was-1")).not.toBeNull());
+  // 화면에서는 잘리지만(말풍선 대상) 이름표는 전체다.
+  expect(nodeEl(container, "was-1")!.querySelector(".node__label")!.textContent!.endsWith("…")).toBe(true);
+  expect(nodeEl(container, "was-1")).toHaveAttribute("aria-label", `${long} · t3.large`);
+  for (const el of container.querySelectorAll<HTMLElement>(".react-flow__node-infra")) {
+    const n = state.nodes[el.getAttribute("data-id")!];
+    expect(el).toHaveAttribute("aria-label", n.sub ? `${n.label} · ${n.sub}` : n.label);
+  }
 });

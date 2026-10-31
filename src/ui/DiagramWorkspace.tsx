@@ -28,7 +28,7 @@ import type { MentionInputHandle } from "./chat/MentionInput";
 import type { ChecklistDrafts, ChecklistExpanded, MissingChecklistProps } from "./chat/MissingChecklist";
 import { type ChatLine, useChatTurn } from "./chat/useChatTurn";
 import { type CardMeasure, InfoCard } from "./canvas/InfoCard";
-import { Legend } from "./canvas/Legend";
+import { Legend, legendStacksAboveCard } from "./canvas/Legend";
 import { FlyLayer, useFly } from "./FlyLayer";
 import type { ExplanationProps } from "./explain/Explanation";
 import { type TargetKind, useExplanations } from "./explain/useExplanations";
@@ -136,7 +136,11 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
     (m: CardMeasure) => setCardSize((p) => (p && p.width === m.width && p.height === m.height && p.lineHeight === m.lineHeight ? p : m)),
     [],
   );
-  const insetBottom = PANEL_GAP + (cardSize?.lineHeight || CARD_LINE_HEIGHT) + PANEL_GAP;
+  const cardLine = cardSize?.lineHeight || CARD_LINE_HEIGHT;
+  const insetBottom = PANEL_GAP + cardLine + PANEL_GAP;
+  // 범례: 좁아서 카드와 가로로 겹치면 오른쪽 아래에서 카드 접힌 줄 위로 올린다.
+  const [legendWidth, setLegendWidth] = useState(0);
+  const legendBottom = legendStacksAboveCard({ canvasWidth: workspaceW, insetLeft, insetRight, cardWidth: cardSize?.width || CARD_WIDTH, legendWidth, gap: PANEL_GAP }) ? insetBottom : undefined;
   const cardW = cardOpen ? (cardSize?.width || CARD_WIDTH) + PANEL_GAP : 0;
   const cardH = cardOpen ? PANEL_GAP + (cardSize?.height || 0) + PANEL_GAP : 0;
   const cameraInsets = useMemo(
@@ -552,7 +556,7 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
               onLocate: locate,
             }}
           />
-          <Legend hideAux={canvasOptions.hideAux} empty={Object.keys(shown.nodes).length === 0} />
+          <Legend hideAux={canvasOptions.hideAux} empty={Object.keys(shown.nodes).length === 0} onMeasure={setLegendWidth} {...(legendBottom !== undefined ? { bottom: legendBottom } : {})} />
         </div>
       </section>
       <PanelResizer width={shownPanelWidth} min={PANEL_MIN} max={panelMax} defaultWidth={PANEL_DEFAULT} onChange={changePanelWidth} offset={PANEL_GAP} />

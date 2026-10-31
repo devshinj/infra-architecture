@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
+// 견본 선이 실제 연결선 클래스를 쓰므로 그 스타일을 직접 가져온다(캔버스가 먼저 불러 주는 데 기대지 않는다).
+import "@/canvas/edges.css";
 import { EDGE_KINDS } from "@/domain/catalog";
 
 import styles from "./legend.module.css";
@@ -11,6 +13,32 @@ export interface LegendProps {
   hideAux: boolean;
   /** 빈 구성도에서는 범례를 그리지 않는다. */
   empty?: boolean;
+  /** 캔버스 바닥에서 띄울 거리(px). 없으면 바닥 여백(--panel-gap)에 앉는다. 좁아서 카드와 겹칠 때 카드 접힌 줄 위로 올린다. */
+  bottom?: number;
+  /** 그려진 너비(px): 접힘·펼침·글자로 바뀌면 다시 알린다. 카드와 겹치는지 가리는 데 쓴다. */
+  onMeasure?(width: number): void;
+}
+
+export interface LegendFit {
+  /** 캔버스(작업 영역) 너비. 0 이면 모른다. */
+  canvasWidth: number;
+  /** 카드가 서는 왼쪽 인셋(--canvas-inset-left). */
+  insetLeft: number;
+  /** 범례가 서는 오른쪽 인셋(--canvas-inset-right). */
+  insetRight: number;
+  cardWidth: number;
+  /** 범례 너비. 0 이면 모른다. */
+  legendWidth: number;
+  /** 둘 사이에 남길 틈(--panel-gap). */
+  gap: number;
+}
+
+/** 오른쪽 아래 범례가 왼쪽 아래 카드와 가로로 겹치는가(틈 포함). 겹치면 범례를 카드 접힌 줄 위로 올린다. 크기를 모르면 올리지 않는다. */
+export function legendStacksAboveCard({ canvasWidth, insetLeft, insetRight, cardWidth, legendWidth, gap }: LegendFit): boolean {
+  if (canvasWidth <= 0 || legendWidth <= 0) return false;
+  const cardRight = insetLeft + cardWidth + gap;
+  const legendLeft = canvasWidth - Math.max(gap, insetRight) - legendWidth;
+  return legendLeft < cardRight;
 }
 
 const OPEN_KEY = "infrasketch.legendOpen";
@@ -48,9 +76,22 @@ function LegendIcon() {
  * 캔버스 오른쪽 아래의 연결 범례. 접히면 `범례` 버튼 하나(기본), 펼치면 위로 열려
  * 연결 종류 4가지와 점·화살표가 뜻하는 것을 실제 선 모양으로 보인다. 펼침 상태는 localStorage 에 기억한다.
  */
-export function Legend({ hideAux, empty = false }: LegendProps) {
+export function Legend({ hideAux, empty = false, bottom, onMeasure }: LegendProps) {
   const [open, setOpen] = useState(false);
   const toggleRef = useRef<HTMLButtonElement>(null);
+  const rootRef = useRef<HTMLElement>(null);
+
+  // 너비 알림: 펼침·내용으로 바뀌면 다시 잰다.
+  useLayoutEffect(() => {
+    const el = rootRef.current;
+    if (!el || !onMeasure) return;
+    const report = () => onMeasure(el.offsetWidth);
+    report();
+    if (typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(report);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [onMeasure, open, empty]);
 
   // 첫 렌더는 접힘(하이드레이션 일치), 마운트 뒤 저장된 값을 읽는다.
   useEffect(() => {
@@ -81,7 +122,7 @@ export function Legend({ hideAux, empty = false }: LegendProps) {
   };
 
   return (
-    <aside className={styles.legend} data-open={open || undefined} aria-label="연결 범례" onKeyDown={onKeyDown}>
+    <aside ref={rootRef} className={styles.legend} data-open={open || undefined} aria-label="연결 범례" onKeyDown={onKeyDown} style={bottom !== undefined ? { bottom } : undefined}>
       <button ref={toggleRef} type="button" className={styles.toggle} aria-expanded={open} aria-controls="legend-body" onClick={() => change(!open)}>
         <LegendIcon />
         <span>범례</span>

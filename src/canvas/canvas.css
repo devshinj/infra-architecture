@@ -32,14 +32,20 @@
 .node__sub { font-size: 11px; color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .node__az { flex: none; font-size: 11px; color: var(--text-secondary); border: 1px solid var(--line-node); border-radius: 3px; padding: 0 3px; }
 
-/* 잘린 이름 말풍선: 노드 바로 위, 유리 칠. 마우스를 받지 않는다. */
+/* 잘린 이름 말풍선: 노드 바로 위, 유리 칠. 마우스를 받지 않는다.
+   --tip-scale(1/zoom)로 캔버스 확대를 되돌려 화면에서 늘 같은 크기로 읽힌다(아래 가운데를 기준으로, 노드와의 틈도 화면 8px). */
 .name-tooltip {
-  position: absolute; left: 50%; bottom: calc(100% + 8px); transform: translateX(-50%);
+  position: absolute; left: 50%; bottom: calc(100% + 8px * var(--tip-scale, 1));
+  transform: translateX(-50%) scale(var(--tip-scale, 1)); transform-origin: 50% 100%;
   width: max-content; max-width: 320px; box-sizing: border-box; padding: 8px 12px;
   display: flex; flex-direction: column; gap: 2px;
   background: var(--glass-bg); border: 1px solid var(--glass-line); border-top-color: var(--glass-highlight);
   border-radius: var(--radius-panel); -webkit-backdrop-filter: blur(var(--glass-blur)); backdrop-filter: blur(var(--glass-blur));
   color: var(--text-primary); pointer-events: none; z-index: 30;
+}
+/* 흐림을 못 그리는 브라우저: 반투명 칠 대신 불투명한 바탕(범례·구성 정보 카드와 같다). */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .name-tooltip { background: var(--bg-sidebar); }
 }
 .name-tooltip__label { font-size: 14px; line-height: 1.35; overflow-wrap: anywhere; }
 .name-tooltip__sub { font-size: 11px; line-height: 1.35; color: var(--text-secondary); overflow-wrap: anywhere; }

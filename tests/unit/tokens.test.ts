@@ -147,6 +147,21 @@ test("glass panels fall back to an opaque background without backdrop-filter", (
   expect(block).toContain(".sidebar, .panel { background: var(--bg-sidebar); }");
 });
 
+test("name tooltip, legend and info card fall back to an opaque background without backdrop-filter", () => {
+  for (const [file, sel] of [["src/canvas/canvas.css", ".name-tooltip"], ["src/ui/canvas/legend.module.css", ".legend"], ["src/ui/canvas/infoCard.module.css", ".card"]] as const) {
+    const css = read(file);
+    const block = css.slice(css.indexOf("@supports not ((backdrop-filter"));
+    expect(block, file).toContain(`${sel} { background: var(--bg-sidebar); }`);
+  }
+});
+
+test("info card and legend body text is 13px (panel body rule)", () => {
+  const card = read("src/ui/canvas/infoCard.module.css");
+  for (const sel of [".title", ".empty", ".warnText"]) expect(rule(card, sel), sel).toMatch(/font-size:\s*13px/);
+  const legend = read("src/ui/canvas/legend.module.css");
+  for (const sel of [".toggle", ".text"]) expect(rule(legend, sel), sel).toMatch(/font-size:\s*13px/);
+});
+
 test("chat bubbles and progress dots follow the restrained spec", () => {
   const css = read("src/ui/chat/chat.module.css");
   const user = rule(css, ".user");
@@ -237,6 +252,19 @@ test("node card text contrast on --bg-node is at least 4.5:1", () => {
   for (const fg of ["text-primary", "text-secondary"]) {
     expect(contrast(token(fg), token("bg-node")), `${fg} on bg-node`).toBeGreaterThanOrEqual(4.5);
   }
+});
+
+test("layout AZ chip width matches .node__az and .node__subrow CSS", async () => {
+  const { azChipWidth, SUB_PX } = await import("@/canvas/layout");
+  const { textWidth } = await import("@/canvas/text");
+  const css = read("src/canvas/canvas.css");
+  const az = rule(css, ".node__az");
+  expect(Number(az.match(/font-size:\s*(\d+)px/)![1])).toBe(SUB_PX);
+  const border = Number(az.match(/border:\s*(\d+)px solid/)![1]);
+  const padX = Number(az.match(/padding:\s*0 (\d+)px/)![1]);
+  const gap = Number(rule(css, ".node__subrow").match(/\bgap:\s*(\d+)px/)![1]);
+  // 칩 = 글자(`AZ <az>`) + 양쪽 안쪽 여백 + 양쪽 테두리 + 보조 글자와의 사이.
+  expect(azChipWidth("2a")).toBeCloseTo(textWidth("AZ 2a", SUB_PX) + 2 * padX + 2 * border + gap);
 });
 
 test("layout truncation width equals the .node CSS content box", async () => {

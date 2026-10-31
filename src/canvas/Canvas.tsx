@@ -284,7 +284,7 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
   const edgeHover = useRef<string | null>(null);
   const known = useMemo(() => new Set([...Object.keys(display.nodes), ...Object.keys(display.groups)]), [display]);
   // 선택이 있거나 대상이 사라졌으면 호버는 없는 것으로 친다(노드가 다시 만들어지지 않게 선택 중엔 늘 null).
-  const hoverId = selected === null && hover.hoverId !== null && (known.has(hover.hoverId) || display.edges.some((e) => e.id === hover.hoverId || e.sourceEdgeIds.includes(hover.hoverId!))) ? hover.hoverId : null;
+  const hoverId = selected === null && emphasisOf(display.edges, hover.hoverId, known) !== null ? hover.hoverId : null;
   // 보드가 바뀌면(fitKey) 호버를 푼다(사라진 노드는 mouseleave 를 보내지 않는다).
   const resetHover = hover.reset;
   useEffect(() => {
@@ -358,6 +358,8 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
         type: "infra",
         position: { x: ln.x, y: ln.y },
         data,
+        // 키보드 포커스를 받는 래퍼의 이름표: 화면에서 잘려도 전체 이름(과 보조 글자)을 읽어 준다.
+        ariaLabel: n.sub ? `${n.label} · ${n.sub}` : n.label,
         zIndex: 10,
         draggable: editMode,
         width: ln.width,

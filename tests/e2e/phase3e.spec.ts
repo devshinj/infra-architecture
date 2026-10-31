@@ -111,19 +111,23 @@ test("warning item moves to node and opens explanation", async ({ page }) => {
   await expect(pubDb.locator(".node--selected")).toHaveCount(1);
   await expect(page.getByRole("tab", { name: "설명" })).toHaveAttribute("aria-selected", "true");
 
-  // 카메라 이동이 끝나면 노드가 캔버스 안에 있고 구성 정보 카드와 겹치지 않는다.
+  // 카메라 이동이 끝나면 노드가 캔버스 안에 있고 구성 정보 카드·떠 있는 오른쪽 패널과 겹치지 않는다
+  // (캔버스는 패널 밑까지 펼쳐져 있어, 패널 아래에 숨은 노드도 "캔버스 안" 이다).
   const pane = page.locator(".react-flow__pane");
   const card = page.getByRole("complementary", { name: "구성 정보" });
+  const panel = page.getByRole("complementary", { name: "오른쪽 패널" });
+  type Box = { x: number; y: number; width: number; height: number };
+  const overlaps = (a: Box, b: Box) => a.x < b.x + b.width && a.x + a.width > b.x && a.y < b.y + b.height && a.y + a.height > b.y;
   await expect
     .poll(
       async () => {
         const n = await pubDb.boundingBox();
         const p = await pane.boundingBox();
         const c = await card.boundingBox();
-        if (!n || !p || !c) return false;
+        const r = await panel.boundingBox();
+        if (!n || !p || !c || !r) return false;
         const inside = n.x >= p.x && n.y >= p.y && n.x + n.width <= p.x + p.width && n.y + n.height <= p.y + p.height;
-        const overlap = n.x < c.x + c.width && n.x + n.width > c.x && n.y < c.y + c.height && n.y + n.height > c.y;
-        return inside && !overlap;
+        return inside && !overlaps(n, c) && !overlaps(n, r);
       },
       { timeout: 10_000 },
     )

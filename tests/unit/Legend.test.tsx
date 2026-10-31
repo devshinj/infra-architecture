@@ -4,7 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
 import { EDGE_KINDS } from "@/domain/catalog";
-import { Legend } from "@/ui/canvas/Legend";
+import { Legend, legendStacksAboveCard } from "@/ui/canvas/Legend";
 
 const KEY = "infrasketch.legendOpen";
 beforeEach(() => window.localStorage.clear());
@@ -82,4 +82,42 @@ test("open state persists in localStorage and survives storage errors", async ()
 test("hidden on an empty diagram", () => {
   render(<Legend hideAux={false} empty />);
   expect(screen.queryByRole("button", { name: /범례/ })).toBeNull();
+});
+
+// ---- 좁은 캔버스: 범례가 구성 정보 카드와 가로로 겹치면 카드 접힌 줄 위로 올라간다 ----
+const narrow = { insetLeft: 252, insetRight: 444, cardWidth: 300, gap: 12 };
+
+test("wide canvas: legend stays in the card band beside the card", () => {
+  // 카드 오른쪽 끝(252+300) + 틈 12 = 564 ≤ 범례 왼쪽 끝(1400 − 444 − 90 = 866).
+  expect(legendStacksAboveCard({ ...narrow, canvasWidth: 1400, legendWidth: 90 })).toBe(false);
+});
+
+test("narrow canvas: legend that would overlap the card stacks above it", () => {
+  // 1000 − 444 − 90 = 466 < 564: 겹친다.
+  expect(legendStacksAboveCard({ ...narrow, canvasWidth: 1000, legendWidth: 90 })).toBe(true);
+  // 경계: 범례 왼쪽 끝이 카드 끝 + 틈과 딱 맞으면 겹치지 않는다.
+  expect(legendStacksAboveCard({ ...narrow, canvasWidth: 564 + 444 + 90, legendWidth: 90 })).toBe(false);
+  expect(legendStacksAboveCard({ ...narrow, canvasWidth: 564 + 444 + 90 - 1, legendWidth: 90 })).toBe(true);
+  // 펼친 범례는 넓어서 더 일찍 올라간다.
+  expect(legendStacksAboveCard({ ...narrow, canvasWidth: 1100, legendWidth: 90 })).toBe(false);
+  expect(legendStacksAboveCard({ ...narrow, canvasWidth: 1100, legendWidth: 300 })).toBe(true);
+});
+
+test("unknown sizes never stack", () => {
+  expect(legendStacksAboveCard({ ...narrow, canvasWidth: 0, legendWidth: 90 })).toBe(false);
+  expect(legendStacksAboveCard({ ...narrow, canvasWidth: 1000, legendWidth: 0 })).toBe(false);
+});
+
+test("legend sits on the panel gap by default and above the card line when lifted", () => {
+  const { unmount } = render(<Legend hideAux={false} />);
+  expect((screen.getByRole("complementary", { name: "연결 범례" }) as HTMLElement).style.bottom).toBe("");
+  unmount();
+  render(<Legend hideAux={false} bottom={66} />);
+  expect((screen.getByRole("complementary", { name: "연결 범례" }) as HTMLElement).style.bottom).toBe("66px");
+});
+
+test("legend reports its rendered width", () => {
+  const seen: number[] = [];
+  render(<Legend hideAux={false} onMeasure={(w) => seen.push(w)} />);
+  expect(seen.length).toBeGreaterThan(0);
 });
