@@ -461,8 +461,8 @@ test("a selection that the chat removed or the adopted state no longer has is cl
   expect(screen.getByRole("tab", { name: "대화" })).toHaveAttribute("aria-selected", "true");
 });
 
-test("queued fly dots are dropped when the turn ends or is interrupted", () => {
-  for (const end of ["onDone", "onInterrupted"] as const) {
+test("queued fly dots survive turn done (post-done settle launches them) but are dropped on interrupt", () => {
+  for (const [end, expected] of [["onDone", 1], ["onInterrupted", 0]] as const) {
     hookState.busy = true;
     hookState.lines = [{ id: "c", kind: "card", text: "", card: { mode: "build", step: "drawing", changes: 1 }, turn: "t1", at: 0 }];
     vi.stubGlobal("matchMedia", () => ({ matches: false, addEventListener() {}, removeEventListener() {} }));
@@ -480,7 +480,7 @@ test("queued fly dots are dropped when the turn ends or is interrupted", () => {
       act(() => hookState.onCommand!({ op: "add_node", id: "b", kind: "server", label: "b", parent: null }));
       act(() => hookState.turn![end]());
       act(() => hookState.placed!(() => ({ x: 300, y: 400 })));
-      expect(document.querySelectorAll("[data-fly-dot]")).toHaveLength(0);
+      expect(document.querySelectorAll("[data-fly-dot]")).toHaveLength(expected);
     } finally {
       cleanup();
       Element.prototype.getBoundingClientRect = orig;

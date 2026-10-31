@@ -225,10 +225,8 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
       setOptions((o) => (o.selectedId !== null && !hasId(next, o.selectedId) ? { ...o, selectedId: null } : o));
       if (cmd.op === "add_node" && live && !current.state.nodes[cmd.id]) fly.queue(cmd.id);
     },
-    onDone: () => {
-      fly.clear();
-      refreshFromServer();
-    },
+    // 차례가 끝나도 빛점은 비우지 않는다: 출발점은 queue 때 잡아 두어, done 뒤 배치에서도 마지막 노드로 날 수 있다.
+    onDone: refreshFromServer,
     onOpenHistory: () => {
       setTab("이력");
       loadVersions();
