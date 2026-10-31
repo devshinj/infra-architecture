@@ -66,17 +66,37 @@ export const diagrams = pgTable("diagrams", {
 
 export type MessageRole = "user" | "assistant" | "system";
 
+// 노드에 대해 물어보는 대화 세션(§6.8). 구성도 대화는 세션 없이 session_id null 로 쌓인다.
+export const chatSessions = pgTable(
+  "chat_sessions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    diagramId: uuid("diagram_id").notNull().references(() => diagrams.id, { onDelete: "cascade" }),
+    nodeId: text("node_id").notNull(),
+    // 만들 때의 노드 이름 스냅숏. 노드가 지워지거나 이름이 바뀌어도 목록에서 알아볼 수 있게.
+    nodeLabel: text("node_label").notNull(),
+    title: text("title").notNull(),
+    createdAt: createdAt(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("chat_sessions_diagram_updated_idx").on(t.diagramId, t.updatedAt)],
+);
+
 export const messages = pgTable(
   "messages",
   {
     id: uuid("id").primaryKey().defaultRandom(),
     diagramId: uuid("diagram_id").notNull().references(() => diagrams.id, { onDelete: "cascade" }),
+    sessionId: uuid("session_id").references(() => chatSessions.id, { onDelete: "cascade" }),
     role: text("role").$type<MessageRole>().notNull(),
     content: text("content").notNull(),
     meta: jsonb("meta").$type<MessageMeta>().notNull().default(sql`'{}'::jsonb`),
     createdAt: createdAt(),
   },
-  (t) => [index("messages_diagram_created_idx").on(t.diagramId, t.createdAt)],
+  (t) => [
+    index("messages_diagram_created_idx").on(t.diagramId, t.createdAt),
+    index("messages_session_created_idx").on(t.sessionId, t.createdAt),
+  ],
 );
 
 export type VersionSource = "import" | "restore" | "ai" | "form";
