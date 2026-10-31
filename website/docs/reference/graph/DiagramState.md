@@ -1,6 +1,6 @@
 ---
 title: "DiagramState"
-sidebar_position: 40
+sidebar_position: 50
 sidebar_label: "핵심 노드: DiagramState"
 ---
 # DiagramState
@@ -9,7 +9,7 @@ sidebar_label: "핵심 노드: DiagramState"
 
 > God node · 36 connections · `src/domain/types.ts`
 
-**Community:** [오른쪽 패널과 설명 화면](오른쪽_패널과_설명_화면.md)
+**Community:** [DB 스키마와 인증](DB_스키마와_인증.md)
 
 ## Connections by Relation
 
@@ -17,24 +17,24 @@ sidebar_label: "핵심 노드: DiagramState"
 - types.ts `EXTRACTED`
 
 ### imports
-- (app)/actions.ts `EXTRACTED`
+- [(app)/actions.ts](app-actions.ts.md) `EXTRACTED`
+- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) `EXTRACTED`
 - server/explain.ts `EXTRACTED`
-- DiagramWorkspace.tsx `EXTRACTED`
-- [pipeline.ts](pipeline.ts.md) `EXTRACTED`
 - [Canvas.tsx](Canvas.tsx.md) `EXTRACTED`
-- projects.ts `EXTRACTED`
-- prompt.ts `EXTRACTED`
+- [pipeline.ts](pipeline.ts.md) `EXTRACTED`
+- [projects.ts](projects.ts.md) `EXTRACTED`
+- [prompt.ts](prompt.ts.md) `EXTRACTED`
 - samples.ts `EXTRACTED`
 - schema.ts `EXTRACTED`
-- NodeInfo.tsx `EXTRACTED`
+- [NodeInfo.tsx](NodeInfo.tsx.md) `EXTRACTED`
 - domain/explain.ts `EXTRACTED`
 - [MissingChecklist.tsx](MissingChecklist.tsx.md) `EXTRACTED`
-- useExplanations.ts `EXTRACTED`
+- [useExplanations.ts](useExplanations.ts.md) `EXTRACTED`
 - versions.ts `EXTRACTED`
 - chat/warnings.ts `EXTRACTED`
 - domain/warnings.ts `EXTRACTED`
-- missing.ts `EXTRACTED`
 - display.ts `EXTRACTED`
+- missing.ts `EXTRACTED`
 - InfoCard.tsx `EXTRACTED`
 - useDiagramView.ts `EXTRACTED`
 - *…and 6 more `imports` connection(s) not listed (lowest-degree first to go)*

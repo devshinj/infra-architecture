@@ -1,6 +1,6 @@
 ---
 title: "useCamera.ts"
-sidebar_position: 21
+sidebar_position: 28
 ---
 # useCamera.ts
 
@@ -33,7 +33,7 @@ sidebar_position: 21
 - [Canvas.tsx](Canvas.tsx.md) (4 shared connections)
 - [캔버스 이벤트](캔버스_이벤트.md) (4 shared connections)
 - [ELK 자동 배치와 꺾은선](ELK_자동_배치와_꺾은선.md) (3 shared connections)
-- [ChatPanel.tsx](ChatPanel.tsx.md) (2 shared connections)
+- [FlyLayer.tsx](FlyLayer.tsx.md) (2 shared connections)
 - [ref_react](ref_react.md) (1 shared connections)
 
 ## Source Files

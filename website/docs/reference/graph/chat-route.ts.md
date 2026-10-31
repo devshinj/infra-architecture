@@ -1,24 +1,23 @@
 ---
 title: "chat/route.ts"
-sidebar_position: 24
+sidebar_position: 34
 ---
 # chat/route.ts
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 15 nodes · cohesion 0.16
+> 14 nodes · cohesion 0.16
 
 ## Key Concepts
 
 - **chat/route.ts** (24 connections) — `src/app/api/diagrams/[id]/chat/route.ts`
-- **runChatTurn()** (8 connections) — `src/server/chat/pipeline.ts`
+- **defaultChatDeps()** (9 connections) — `src/server/chat/deps.ts`
 - **POST()** (6 connections) — `src/app/api/diagrams/[id]/chat/route.ts`
-- **ChatEvent** (6 connections) — `src/server/chat/events.ts`
-- **.emit()** (4 connections) — `src/server/chat/pipeline.ts`
+- **Task 5: 설명 API** (4 connections) — `docs/superpowers/plans/2026-10-30-infrasketch-phase3c1-explanations-glossary.md`
 - **line()** (2 connections) — `src/app/api/diagrams/[id]/chat/route.ts`
+- **setChatDepsForTest()** (2 connections) — `src/server/chat/deps.ts`
 - **ChatTurnResult** (2 connections) — `src/server/chat/pipeline.ts`
 - **GENERIC_ERROR_MESSAGE** (2 connections) — `src/server/chat/pipeline.ts`
-- **TurnArgs** (2 connections) — `src/server/chat/pipeline.ts`
 - **BodySchema** (1 connections) — `src/app/api/diagrams/[id]/chat/route.ts`
 - **dynamic** (1 connections) — `src/app/api/diagrams/[id]/chat/route.ts`
 - **encoder** (1 connections) — `src/app/api/diagrams/[id]/chat/route.ts`
@@ -28,24 +27,28 @@ sidebar_position: 24
 
 ## Relationships
 
-- [pipeline.ts](pipeline.ts.md) (8 shared connections)
-- [서버 액션과 작업 화면](서버_액션과_작업_화면.md) (7 shared connections)
+- [pipeline.ts](pipeline.ts.md) (5 shared connections)
 - [ref_react](ref_react.md) (5 shared connections)
-- [deps.ts](deps.ts.md) (3 shared connections)
-- [useChatTurn.ts](useChatTurn.ts.md) (3 shared connections)
-- [경고 규칙과 점검](경고_규칙과_점검.md) (1 shared connections)
-- [설계 문서와 계획](설계_문서와_계획.md) (1 shared connections)
+- [getOwnedDiagram](getOwnedDiagram.md) (4 shared connections)
+- [auth.ts](auth.ts.md) (3 shared connections)
+- [useChatTurn.ts](useChatTurn.ts.md) (2 shared connections)
+- [projects.ts](projects.ts.md) (2 shared connections)
+- [prompt.ts](prompt.ts.md) (2 shared connections)
+- [설명 생성과 품질 검사](설명_생성과_품질_검사.md) (2 shared connections)
+- [3C-1 계획 작업 목록](3C-1_계획_작업_목록.md) (1 shared connections)
+- [catalog.ts](catalog.ts.md) (1 shared connections)
 
 ## Source Files
 
+- `docs/superpowers/plans/2026-10-30-infrasketch-phase3c1-explanations-glossary.md`
 - `src/app/api/diagrams/[id]/chat/route.ts`
-- `src/server/chat/events.ts`
+- `src/server/chat/deps.ts`
 - `src/server/chat/pipeline.ts`
 
 ## Audit Trail
 
-- EXTRACTED: 44 (98%)
-- INFERRED: 1 (2%)
+- EXTRACTED: 39 (93%)
+- INFERRED: 3 (7%)
 - AMBIGUOUS: 0 (0%)
 
 ---

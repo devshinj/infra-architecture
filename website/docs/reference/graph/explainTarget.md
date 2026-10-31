@@ -1,6 +1,6 @@
 ---
 title: "explainTarget()"
-sidebar_position: 45
+sidebar_position: 55
 sidebar_label: "핵심 노드: explainTarget()"
 ---
 # explainTarget()
@@ -40,7 +40,7 @@ sidebar_label: "핵심 노드: explainTarget()"
 - server/explain.ts `EXTRACTED`
 
 ### imports
-- explain/route.ts `EXTRACTED`
+- [explain/route.ts](explain-route.ts.md) `EXTRACTED`
 
 ---
 

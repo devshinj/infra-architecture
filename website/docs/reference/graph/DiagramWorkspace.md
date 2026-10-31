@@ -1,15 +1,15 @@
 ---
 title: "DiagramWorkspace()"
-sidebar_position: 42
+sidebar_position: 51
 sidebar_label: "핵심 노드: DiagramWorkspace()"
 ---
 # DiagramWorkspace()
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> God node · 33 connections · `src/ui/DiagramWorkspace.tsx`
+> God node · 35 connections · `src/ui/DiagramWorkspace.tsx`
 
-**Community:** [서버 액션과 작업 화면](서버_액션과_작업_화면.md)
+**Community:** [(app)/actions.ts](app-actions.ts.md)
 
 ## Connections by Relation
 
@@ -25,6 +25,7 @@ sidebar_label: "핵심 노드: DiagramWorkspace()"
 - setWarningIgnoredAction() `EXTRACTED`
 - getVersionAction() `EXTRACTED`
 - diffStates() `EXTRACTED`
+- Legend() `EXTRACTED`
 - DiagramPage() `EXTRACTED`
 - useFly() `EXTRACTED`
 - listVersionsAction() `EXTRACTED`
@@ -33,14 +34,13 @@ sidebar_label: "핵심 노드: DiagramWorkspace()"
 - saveFieldsAction() `EXTRACTED`
 - importSampleAction() `EXTRACTED`
 - clearPinnedAction() `EXTRACTED`
-- savePinnedAction() `EXTRACTED`
-- *…and 10 more `calls` connection(s) not listed (lowest-degree first to go)*
+- *…and 12 more `calls` connection(s) not listed (lowest-degree first to go)*
 
 ### contains
-- DiagramWorkspace.tsx `EXTRACTED`
+- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) `EXTRACTED`
 
 ### imports
-- \[diagramId\]/page.tsx `EXTRACTED`
+- [\[diagramId\]/page.tsx]([diagramId]-page.tsx.md) `EXTRACTED`
 
 ### references
 - InfraSketch 3D단계: 화면·사용성 개선 구현 계획 `INFERRED`

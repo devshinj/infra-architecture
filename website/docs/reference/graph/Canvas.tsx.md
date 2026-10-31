@@ -1,6 +1,6 @@
 ---
 title: "Canvas.tsx"
-sidebar_position: 18
+sidebar_position: 20
 ---
 # Canvas.tsx
 
@@ -10,7 +10,7 @@ sidebar_position: 18
 
 ## Key Concepts
 
-- **Canvas.tsx** (62 connections) — `src/canvas/Canvas.tsx`
+- **Canvas.tsx** (66 connections) — `src/canvas/Canvas.tsx`
 - **Canvas()** (15 connections) — `src/canvas/Canvas.tsx`
 - **Icon()** (6 connections) — `src/canvas/Canvas.tsx`
 - **ViewMenu()** (5 connections) — `src/canvas/Canvas.tsx`
@@ -34,18 +34,18 @@ sidebar_position: 18
 
 ## Relationships
 
-- [노드 카드와 아이콘](노드_카드와_아이콘.md) (9 shared connections)
 - [표시 그래프와 버전 비교](표시_그래프와_버전_비교.md) (9 shared connections)
 - [캔버스 이벤트](캔버스_이벤트.md) (9 shared connections)
-- [오른쪽 패널과 설명 화면](오른쪽_패널과_설명_화면.md) (5 shared connections)
+- [연결선 그리기](연결선_그리기.md) (7 shared connections)
+- [NodeCard.tsx](NodeCard.tsx.md) (5 shared connections)
 - [useCamera.ts](useCamera.ts.md) (4 shared connections)
-- [경고 규칙과 점검](경고_규칙과_점검.md) (4 shared connections)
-- [연결선 그리기](연결선_그리기.md) (2 shared connections)
+- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (4 shared connections)
+- [catalog.ts](catalog.ts.md) (3 shared connections)
+- [경고 규칙과 점검](경고_규칙과_점검.md) (3 shared connections)
 - [ELK 자동 배치와 꺾은선](ELK_자동_배치와_꺾은선.md) (2 shared connections)
 - [NodeMenu](NodeMenu.md) (2 shared connections)
 - [MissingChecklist.tsx](MissingChecklist.tsx.md) (2 shared connections)
-- [ChatPanel.tsx](ChatPanel.tsx.md) (1 shared connections)
-- [ref_react](ref_react.md) (1 shared connections)
+- [DB 스키마와 인증](DB_스키마와_인증.md) (2 shared connections)
 
 ## Source Files
 
@@ -53,7 +53,7 @@ sidebar_position: 18
 
 ## Audit Trail
 
-- EXTRACTED: 87 (100%)
+- EXTRACTED: 91 (100%)
 - INFERRED: 0 (0%)
 - AMBIGUOUS: 0 (0%)
 

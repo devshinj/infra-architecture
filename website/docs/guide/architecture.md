@@ -12,8 +12,8 @@ InfraSketch 는 Next.js 15 (App Router) 하나로 화면과 서버를 함께 띄
 | 폴더 | 역할 |
 | --- | --- |
 | `src/app` | 라우트. `(app)` 은 로그인 후 화면(구성도 작업 화면, 용어 사전 `(app)/glossary`), `(auth)` 는 로그인·가입·비밀번호 재설정, `api` 는 대화(`diagrams/[id]/chat`)·설명(`diagrams/[id]/explain`)·인증·AI 상태 API. 폼 저장·경고 무시·용어 사전 편집 같은 나머지 쓰기는 `(app)/actions.ts` 의 서버 액션이 맡습니다 |
-| `src/ui` | 작업 화면 컴포넌트. 전체 틀(`Shell.tsx`), 사이드바, 오른쪽 패널(대화·설명·이력)과 너비 조절 손잡이(`PanelResizer.tsx`), 대화 입력과 체크리스트(`chat/`), 설명 패널(`explain/`), 용어 사전 화면(`glossary/`), 로고(`brand/`), 캔버스 위에 뜨는 정보 카드(`canvas/InfoCard.tsx`), 노드가 날아가 앉는 효과(`FlyLayer.tsx`) |
-| `src/canvas` | React Flow(`@xyflow/react`) 캔버스. 노드·영역·연결선 그리기, ELK.js 자동 배치(`layout.ts`), 확대·이동 카메라(`useCamera.ts`), 애니메이션, 경고 배지 |
+| `src/ui` | 작업 화면 컴포넌트. 전체 틀(`Shell.tsx`), 사이드바, 오른쪽 패널(대화·설명·이력)과 너비 조절 손잡이(`PanelResizer.tsx`), 대화 입력과 체크리스트(`chat/`), 설명 패널(`explain/`), 용어 사전 화면(`glossary/`), 로고(`brand/`), 캔버스 위에 뜨는 정보 카드(`canvas/InfoCard.tsx`)와 범례(`canvas/Legend.tsx`, 연결선 종류 견본·보조 연결 숨김 표시), 노드가 날아가 앉는 효과(`FlyLayer.tsx`) |
+| `src/canvas` | React Flow(`@xyflow/react`) 캔버스. 노드·영역·연결선 그리기, ELK.js 자동 배치(`layout.ts`), 확대·이동 카메라(`useCamera.ts`), 선택·호버 강조 집합 계산(`emphasis.ts`)과 호버 지연(`useHoverEmphasis.ts`), 잘린 이름을 보여 주는 말풍선(`NameTooltip.tsx`), 애니메이션, 경고 배지 |
 | `src/domain` | 구성도 규칙. 변경 명령 스키마(`commands.ts`), 명령 적용(`apply.ts`), 노드 종류 목록(`catalog.ts`), 빠진 정보 계산(`missing.ts`), 경고 규칙(`warnings.ts`), 구성 패턴(`patterns.ts`), 설명 모양·길이 상한·서명(`explain.ts`), 용어 사전 시드와 화면용 타입(`glossary-seed.ts`, `glossary-types.ts`) |
 | `src/server` | 서버 로직. 대화 파이프라인과 경고 점검(`chat/`), AI 연동(`llm/`), 설명 생성(`explain.ts`), 용어 사전(`glossary.ts`), 체크리스트 폼 저장(`fields.ts`), 경고 무시(`ignore.ts`), 프로젝트·버전 저장, 인증 |
 | `src/db` | Drizzle 스키마와 마이그레이션 |

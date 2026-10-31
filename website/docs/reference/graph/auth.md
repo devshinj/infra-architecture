@@ -1,6 +1,6 @@
 ---
 title: "auth"
-sidebar_position: 49
+sidebar_position: 59
 sidebar_label: "핵심 노드: auth"
 ---
 # auth
@@ -9,7 +9,7 @@ sidebar_label: "핵심 노드: auth"
 
 > God node · 18 connections · `src/auth.ts`
 
-**Community:** [ref_react](ref_react.md)
+**Community:** [auth.ts](auth.ts.md)
 
 ## Connections by Relation
 
@@ -25,13 +25,13 @@ sidebar_label: "핵심 노드: auth"
 - Home() `EXTRACTED`
 
 ### contains
-- auth.ts `EXTRACTED`
+- [auth.ts](auth.ts.md) `EXTRACTED`
 
 ### imports
-- (app)/actions.ts `EXTRACTED`
+- [(app)/actions.ts](app-actions.ts.md) `EXTRACTED`
 - [chat/route.ts](chat-route.ts.md) `EXTRACTED`
-- explain/route.ts `EXTRACTED`
-- \[diagramId\]/page.tsx `EXTRACTED`
+- [explain/route.ts](explain-route.ts.md) `EXTRACTED`
+- [\[diagramId\]/page.tsx]([diagramId]-page.tsx.md) `EXTRACTED`
 - glossary/page.tsx `EXTRACTED`
 - (app)/layout.tsx `EXTRACTED`
 - (app)/page.tsx `EXTRACTED`

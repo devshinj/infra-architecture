@@ -11,63 +11,73 @@ sidebar_label: "개요"
 
 [인터랙티브 그래프 열기](pathname:///graph/graph.html) — 노드를 끌고 확대해서 전체 연결을 볼 수 있습니다.
 
-**974 nodes · 2458 edges · 38 communities**
+**1017 nodes · 2548 edges · 48 communities**
 
 ---
 
 ## Communities
 (sorted by size, largest first)
 
-- [서버 액션과 작업 화면](서버_액션과_작업_화면.md) — 114 nodes
-- [오른쪽 패널과 설명 화면](오른쪽_패널과_설명_화면.md) — 78 nodes
-- [ref_react](ref_react.md) — 78 nodes
-- [useChatTurn.ts](useChatTurn.ts.md) — 57 nodes
-- [ChatPanel.tsx](ChatPanel.tsx.md) — 53 nodes
-- [MissingChecklist.tsx](MissingChecklist.tsx.md) — 52 nodes
-- [설계 문서와 계획](설계_문서와_계획.md) — 41 nodes
-- [경고 규칙과 점검](경고_규칙과_점검.md) — 36 nodes
+- [MissingChecklist.tsx](MissingChecklist.tsx.md) — 54 nodes
+- [prompt.ts](prompt.ts.md) — 54 nodes
+- [ref_react](ref_react.md) — 54 nodes
+- [useChatTurn.ts](useChatTurn.ts.md) — 46 nodes
+- [경고 규칙과 점검](경고_규칙과_점검.md) — 45 nodes
+- [설계 문서와 계획](설계_문서와_계획.md) — 40 nodes
+- [설명 생성과 품질 검사](설명_생성과_품질_검사.md) — 36 nodes
 - [명령 적용과 샘플](명령_적용과_샘플.md) — 35 nodes
-- [DB 스키마와 인증](DB_스키마와_인증.md) — 32 nodes
-- [ELK 자동 배치와 꺾은선](ELK_자동_배치와_꺾은선.md) — 28 nodes
-- [노드 카드와 아이콘](노드_카드와_아이콘.md) — 24 nodes
+- [DB 스키마와 인증](DB_스키마와_인증.md) — 31 nodes
+- [glossary.ts](glossary.ts.md) — 29 nodes
+- [(app)/actions.ts](app-actions.ts.md) — 25 nodes
+- [Sidebar.tsx](Sidebar.tsx.md) — 25 nodes
+- [ELK 자동 배치와 꺾은선](ELK_자동_배치와_꺾은선.md) — 24 nodes
+- [catalog.ts](catalog.ts.md) — 23 nodes
 - [표시 그래프와 버전 비교](표시_그래프와_버전_비교.md) — 22 nodes
-- [프롬프트와 구성 패턴](프롬프트와_구성_패턴.md) — 22 nodes
-- [설명 생성과 품질 검사](설명_생성과_품질_검사.md) — 22 nodes
+- [RightPanel.tsx](RightPanel.tsx.md) — 22 nodes
 - [pipeline.ts](pipeline.ts.md) — 21 nodes
+- [auth.ts](auth.ts.md) — 21 nodes
 - [Canvas.tsx](Canvas.tsx.md) — 21 nodes
+- [getOwnedDiagram](getOwnedDiagram.md) — 20 nodes
+- [useExplanations.ts](useExplanations.ts.md) — 20 nodes
+- [NodeInfo.tsx](NodeInfo.tsx.md) — 20 nodes
 - [연결선 구간 묶음](연결선_구간_묶음.md) — 19 nodes
+- [ChatPanel.tsx](ChatPanel.tsx.md) — 19 nodes
+- [연결선 그리기](연결선_그리기.md) — 19 nodes
 - [캔버스 이벤트](캔버스_이벤트.md) — 17 nodes
 - [useCamera.ts](useCamera.ts.md) — 17 nodes
-- [deps.ts](deps.ts.md) — 17 nodes
-- [용어 사전 저장과 시드](용어_사전_저장과_시드.md) — 15 nodes
-- [chat/route.ts](chat-route.ts.md) — 15 nodes
-- [Clef 질문과 응답 타입](Clef_질문과_응답_타입.md) — 14 nodes
+- [FlyLayer.tsx](FlyLayer.tsx.md) — 17 nodes
+- [Explanation.tsx](Explanation.tsx.md) — 16 nodes
+- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) — 15 nodes
+- [projects.ts](projects.ts.md) — 15 nodes
 - [연결선 개발용 화면](연결선_개발용_화면.md) — 14 nodes
-- [설명 모양·길이·서명](설명_모양·길이·서명.md) — 13 nodes
-- [연결선 그리기](연결선_그리기.md) — 12 nodes
+- [chat/route.ts](chat-route.ts.md) — 14 nodes
+- [MentionInput](MentionInput.md) — 14 nodes
+- [NodeCard.tsx](NodeCard.tsx.md) — 14 nodes
+- [Legend.tsx](Legend.tsx.md) — 14 nodes
+- [3C-1 계획 작업 목록](3C-1_계획_작업_목록.md) — 13 nodes
+- [middleware.ts](middleware.ts.md) — 13 nodes
+- [설명 모양·길이·서명](설명_모양·길이·서명.md) — 12 nodes
 - [흐름 애니메이션](흐름_애니메이션.md) — 12 nodes
-- [3C-1 계획 작업 목록](3C-1_계획_작업_목록.md) — 12 nodes
-- [ExplainRepo](ExplainRepo.md) — 11 nodes
-- [Clef 호출과 동시성](Clef_호출과_동시성.md) — 10 nodes
-- [환경 변수와 AI 상태 점검](환경_변수와_AI_상태_점검.md) — 9 nodes
+- [explain/route.ts](explain-route.ts.md) — 11 nodes
+- [Review Focus](Review_Focus.md) — 9 nodes
+- [text.ts](text.ts.md) — 9 nodes
 - [겹침 검사](겹침_검사.md) — 8 nodes
 - [normalize.ts](normalize.ts.md) — 7 nodes
-- [easeScore](easeScore.md) — 5 nodes
 - [NodeMenu](NodeMenu.md) — 5 nodes
-- [SkipTally](SkipTally.md) — 5 nodes
+- [\[diagramId\]/page.tsx]([diagramId]-page.tsx.md) — 5 nodes
 - [라우트 재수출](라우트_재수출.md) — 1 nodes
 
 ## God Nodes
 (most connected concepts — the load-bearing abstractions)
 
 - [DiagramState](DiagramState.md) — 36 connections
+- [DiagramWorkspace()](DiagramWorkspace.md) — 35 connections
 - [InfraSketch 설계 문서](InfraSketch_설계_문서.md) — 34 connections
-- [DiagramWorkspace()](DiagramWorkspace.md) — 33 connections
-- [getOwnedDiagram()](getOwnedDiagram.md) — 27 connections
+- [getOwnedDiagram()](getOwnedDiagram_2.md) — 27 connections
 - [lockedTurn()](lockedTurn.md) — 24 connections
 - [explainTarget()](explainTarget.md) — 23 connections
+- [Flow()](Flow.md) — 22 connections
 - [Sidebar()](Sidebar.md) — 21 connections
-- [Flow()](Flow.md) — 20 connections
 - [ValidationError](ValidationError.md) — 19 connections
 - [auth](auth.md) — 18 connections
 
