@@ -1,8 +1,8 @@
 import "@testing-library/jest-dom/vitest";
 import { ReactFlowProvider } from "@xyflow/react";
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, expect, test, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 import { GroupBox } from "@/canvas/GroupBox";
 import { NodeCard } from "@/canvas/NodeCard";
@@ -83,4 +83,94 @@ test("group box exposes its tint token", () => {
   wrap(<GroupBox data={{ label: "VPC", groupKind: "vpc", collapsed: false, hiddenCount: 0, onToggle: () => {} }} {...rfProps} />);
   const box = document.querySelector("[data-group-kind='vpc']") as HTMLElement;
   expect(box.style.getPropertyValue("--tint")).toBe("var(--zone-tint-vpc)");
+});
+
+// ---- 잘린 이름 말풍선 (P3E Task 3) ----
+const LONG = "결제승인처리배치서버클러스터";
+const truncatedData = { label: "결제승인처리배치서…", fullLabel: LONG, category: "compute" as const, state: "normal" as const, truncated: true };
+// 실제 화면처럼 React Flow 노드 래퍼(포커스를 받는 쪽) 안에 카드를 넣는다.
+const inWrapper = (data: React.ComponentProps<typeof NodeCard>["data"], extra: Partial<typeof rfProps> = {}) => {
+  render(
+    <ReactFlowProvider>
+      <div className="react-flow__node" tabIndex={0} data-testid="rf-wrapper">
+        <NodeCard data={data} {...rfProps} {...extra} />
+      </div>
+    </ReactFlowProvider>,
+  );
+  return screen.getByTestId("rf-wrapper");
+};
+const hoverCard = () => fireEvent.mouseEnter(document.querySelector(".node") as HTMLElement);
+const wait = (ms: number) => act(() => void vi.advanceTimersByTime(ms));
+
+describe("name tooltip", () => {
+  beforeEach(() => vi.useFakeTimers());
+  afterEach(() => vi.useRealTimers());
+
+  test("tooltip appears after 300ms only when truncated", () => {
+    inWrapper(truncatedData);
+    hoverCard();
+    wait(299);
+    expect(screen.queryByRole("tooltip")).toBeNull();
+    wait(1);
+    expect(screen.getByRole("tooltip")).toHaveTextContent(LONG);
+    fireEvent.mouseLeave(document.querySelector(".node") as HTMLElement);
+    expect(screen.queryByRole("tooltip")).toBeNull();
+  });
+
+  test("untruncated node never shows a tooltip", () => {
+    inWrapper({ label: "DB", fullLabel: "DB", category: "data", state: "normal" });
+    hoverCard();
+    wait(1000);
+    expect(screen.queryByRole("tooltip")).toBeNull();
+  });
+
+  test("sub-only truncation also shows tooltip with full sub", () => {
+    inWrapper({ label: "API", fullLabel: "API", sub: "10.0.0.1, 10.0.0.…", fullSub: "10.0.0.1, 10.0.0.2, 10.0.0.3", category: "compute", state: "normal", truncated: true });
+    hoverCard();
+    wait(300);
+    const tip = screen.getByRole("tooltip");
+    expect(tip).toHaveTextContent("API");
+    expect(tip).toHaveTextContent("10.0.0.1, 10.0.0.2, 10.0.0.3");
+  });
+
+  test("tooltip opens on keyboard focus of the node wrapper and closes on Esc", () => {
+    const wrapper = inWrapper(truncatedData);
+    fireEvent.focusIn(wrapper);
+    wait(300);
+    const tip = screen.getByRole("tooltip");
+    expect(document.querySelector(".node")).toHaveAttribute("aria-describedby", tip.id);
+    fireEvent.keyDown(wrapper, { key: "Escape" });
+    expect(screen.queryByRole("tooltip")).toBeNull();
+    // Esc 뒤 다시 포커스를 옮겨야 다시 뜬다.
+    fireEvent.focusOut(wrapper);
+    fireEvent.focusIn(wrapper);
+    wait(300);
+    expect(screen.getByRole("tooltip")).toBeInTheDocument();
+    fireEvent.focusOut(wrapper);
+    expect(screen.queryByRole("tooltip")).toBeNull();
+  });
+
+  test("hover is cancelled when the pointer leaves before 300ms", () => {
+    inWrapper(truncatedData);
+    hoverCard();
+    wait(200);
+    fireEvent.mouseLeave(document.querySelector(".node") as HTMLElement);
+    wait(500);
+    expect(screen.queryByRole("tooltip")).toBeNull();
+  });
+
+  test("no tooltip while the node is being dragged", () => {
+    inWrapper(truncatedData, { dragging: true });
+    hoverCard();
+    wait(500);
+    expect(screen.queryByRole("tooltip")).toBeNull();
+  });
+
+  test("truncated node has no title attribute, untruncated keeps it", () => {
+    inWrapper(truncatedData);
+    expect(document.querySelector(".node")).not.toHaveAttribute("title");
+    cleanup();
+    inWrapper({ label: "DB", fullLabel: "DB", category: "data", state: "normal" });
+    expect(document.querySelector(".node")).toHaveAttribute("title", "DB");
+  });
 });

@@ -229,3 +229,28 @@ test("text contrast is at least 4.5:1", () => {
     expect(contrast(fg, bg), `zone ${m[1]}`).toBeGreaterThanOrEqual(4.5);
   }
 });
+
+// ---- 노드 글자 영역·대비 (P3E Task 3) ----
+test("node card text contrast on --bg-node is at least 4.5:1", () => {
+  const css = read("src/styles/tokens.css");
+  const token = (name: string) => css.match(new RegExp(`--${name}:[ ]*(#[0-9A-Fa-f]{6});`))![1];
+  for (const fg of ["text-primary", "text-secondary"]) {
+    expect(contrast(token(fg), token("bg-node")), `${fg} on bg-node`).toBeGreaterThanOrEqual(4.5);
+  }
+});
+
+test("layout truncation width equals the .node CSS content box", async () => {
+  const { NODE, CONTENT_WIDTH } = await import("@/canvas/layout");
+  const css = read("src/canvas/canvas.css");
+  const node = rule(css, ".node");
+  const px = (re: RegExp) => Number(node.match(re)![1]);
+  const pad = node.match(/padding:\s*0 (\d+)px 0 (\d+)px;/)!;
+  const padRightCss = Number(pad[1]);
+  const padLeftCss = Number(pad[2]);
+  const gap = px(/\bgap:\s*(\d+)px/);
+  const border = px(/border:\s*(\d+)px solid/);
+  const icon = Number(rule(css, ".node__icon").match(/width:\s*(\d+)px/)![1]);
+  // 한 줄 안의 글자 칸 = 최대 너비 − 양쪽 테두리 − 안쪽 여백 − 아이콘 − 아이콘과 글자 사이.
+  const cssContent = NODE.maxWidth - 2 * border - padLeftCss - padRightCss - icon - gap;
+  expect(CONTENT_WIDTH).toBe(cssContent);
+});

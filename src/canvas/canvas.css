@@ -32,6 +32,20 @@
 .node__sub { font-size: 11px; color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .node__az { flex: none; font-size: 11px; color: var(--text-secondary); border: 1px solid var(--line-node); border-radius: 3px; padding: 0 3px; }
 
+/* 잘린 이름 말풍선: 노드 바로 위, 유리 칠. 마우스를 받지 않는다. */
+.name-tooltip {
+  position: absolute; left: 50%; bottom: calc(100% + 8px); transform: translateX(-50%);
+  width: max-content; max-width: 320px; box-sizing: border-box; padding: 8px 12px;
+  display: flex; flex-direction: column; gap: 2px;
+  background: var(--glass-bg); border: 1px solid var(--glass-line); border-top-color: var(--glass-highlight);
+  border-radius: var(--radius-panel); -webkit-backdrop-filter: blur(var(--glass-blur)); backdrop-filter: blur(var(--glass-blur));
+  color: var(--text-primary); pointer-events: none; z-index: 30;
+}
+.name-tooltip__label { font-size: 14px; line-height: 1.35; overflow-wrap: anywhere; }
+.name-tooltip__sub { font-size: 11px; line-height: 1.35; color: var(--text-secondary); overflow-wrap: anywhere; }
+/* 말풍선이 다른 노드 아래로 깔리지 않게 열린 노드 래퍼를 올린다. */
+.canvas__flow .react-flow__node:has(.name-tooltip) { z-index: 1000 !important; }
+
 .node--selected { outline: 1.5px solid var(--accent); outline-offset: 4px; }
 .node--diff-added { border-color: var(--cat-data); }
 .node--diff-changed { border-color: var(--accent); }

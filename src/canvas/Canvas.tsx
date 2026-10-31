@@ -341,6 +341,7 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
         category: categoryOf(n.kind),
         state: visual,
         ...(az !== undefined && az !== null ? { az: String(az) } : {}),
+        ...(ln.displayLabel !== n.label || ln.displaySub !== n.sub ? { truncated: true, ...(n.sub !== undefined ? { fullSub: n.sub } : {}) } : {}),
         ...(diff ? { diff } : {}),
         ...(pulse?.ids.has(ln.id) ? { pulse: pulse.token } : {}),
       };
