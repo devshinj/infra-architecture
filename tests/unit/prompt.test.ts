@@ -4,10 +4,14 @@ import { parseCommand } from "@/domain/commands";
 import { EDGE_KINDS, GROUP_KINDS, NODE_KINDS } from "@/domain/catalog";
 import { patternPromptBlock } from "@/domain/patterns";
 import { emptyState, type DiagramState } from "@/domain/types";
+import type { NodeExplanation } from "@/domain/explain";
 import {
   ANSWER_PROMPT,
+  ASK_PROMPT,
+  buildAskMessages,
   buildWarningMessages,
   buildMessages,
+  explainContext,
   HISTORY_LIMIT,
   parseMentions,
   summarizeState,
@@ -250,3 +254,51 @@ describe("warning prompt", () => {
     expect(SYSTEM_PROMPT).toContain("warn 과 report_missing 명령은 내지 않는다");
   });
 });
+
+describe("ask prompt", () => {
+  const explanation: NodeExplanation = {
+    kind: "node",
+    term: "Tomcat",
+    definition: "Tomcat은 자바 웹 애플리케이션을 실행하는 서버입니다.",
+    definitionSource: "glossary",
+    reviewed: true,
+    role: "이 구성에서 요청을 받아\n처리합니다.",
+    adr: { decision: "WAS 를 둔다", reason: "업무 처리", alternative: "서버리스", cost: "운영 부담" },
+  };
+
+  test("ask prompt includes target node context and explanation", () => {
+    const s = sample();
+    const msgs = buildAskMessages({ state: s, nodeId: "was-1", explanation, history: [], text: "이건 뭐야?" });
+    expect(msgs[0]).toEqual({ role: "system", content: ASK_PROMPT });
+    expect(msgs).toHaveLength(2);
+    const user = msgs[1]!;
+    expect(user.role).toBe("user");
+    expect(user.content.startsWith(`대상 노드:\n${explainContext(s, "node", "was-1")}\n\n설명:\n`)).toBe(true);
+    expect(user.content).toContain("e-was-1-db-1"); // 연결된 노드
+    expect(user.content).toContain("정의: Tomcat은 자바 웹 애플리케이션을 실행하는 서버입니다.");
+    // 줄바꿈은 접혀 한 항목이 한 줄이다.
+    expect(user.content).toContain("역할: 이 구성에서 요청을 받아 처리합니다.");
+    expect(user.content).toMatch(/ADR: [^\n]*WAS 를 둔다[^\n]*업무 처리[^\n]*서버리스[^\n]*운영 부담/);
+    expect(user.content.endsWith("\n\n질문: 이건 뭐야?")).toBe(true);
+    for (const phrase of ["1~4문장", "대상 노드", "설명", "모른다", "JSON", "코드펜스", "마크다운 제목", "원어", "구성도 대화"]) {
+      expect(ASK_PROMPT).toContain(phrase);
+    }
+  });
+
+  test("ask prompt says 없음 without explanation", () => {
+    const user = buildAskMessages({ state: sample(), nodeId: "db-1", history: [], text: "왜 있어?" })[1]!.content;
+    expect(user).toContain("\n\n설명:\n없음\n\n질문: 왜 있어?");
+  });
+
+  test("ask history is capped", () => {
+    const history = Array.from({ length: HISTORY_LIMIT + 5 }, (_, i) => ({
+      role: (i % 2 === 0 ? "user" : "assistant") as "user" | "assistant",
+      content: `m${i}`,
+    }));
+    const msgs = buildAskMessages({ state: sample(), nodeId: "was-1", history, text: "다음" });
+    expect(msgs).toHaveLength(HISTORY_LIMIT + 2);
+    expect(msgs[1]).toEqual(history[5]);
+    expect(msgs.at(-2)).toEqual(history.at(-1));
+  });
+});
+

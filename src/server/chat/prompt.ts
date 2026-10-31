@@ -1,5 +1,5 @@
 import { EDGE_KINDS, GROUP_KINDS, NODE_KINDS } from "@/domain/catalog";
-import { LIMITS } from "@/domain/explain";
+import { LIMITS, type NodeExplanation } from "@/domain/explain";
 import type { MissingItem } from "@/domain/missing";
 import { patternPromptBlock } from "@/domain/patterns";
 import type { DiagramState } from "@/domain/types";
@@ -221,7 +221,7 @@ function ancestorsOf(state: DiagramState, parent: string | null): string {
 }
 
 /** 대상과 이웃(상위 영역·연결 상대)만 담은 요약. */
-function explainContext(state: DiagramState, kind: "node" | "edge", id: string): string {
+export function explainContext(state: DiagramState, kind: "node" | "edge", id: string): string {
   if (kind === "edge") {
     const e = state.edges[id];
     if (!e) return `대상 연결 ${JSON.stringify(id)}: 없음`;
@@ -279,5 +279,45 @@ export function buildExplainMessages(input: {
   return [
     { role: "system", content: input.kind === "node" ? EXPLAIN_NODE_PROMPT : EXPLAIN_EDGE_PROMPT },
     { role: "user", content: parts.join("\n\n") },
+  ];
+}
+
+// 노드 하나에 대해 물어보기(§6.8). 근거는 대상 노드 요약과 저장된 설명뿐이다.
+export const ASK_PROMPT = `너는 인프라 아키텍처 구성도 도구의 도우미다.
+사용자가 구성도의 노드 하나에 대해 묻는 말에 한국어로 답한다.
+
+규칙:
+- 일반 글로만 답한다. JSON, 명령, 코드펜스, 마크다운 제목은 쓰지 않는다.
+- 1~4문장으로 짧게 쓴다.
+- 근거는 주어진 "대상 노드"(종류·SW·속성·연결된 노드)와 "설명"(있으면)뿐이다. 거기에 없는 내용은 지어내지 말고 모른다고 말한다.
+- 제품명(Redis, ALB, Tomcat 등)은 원어 그대로 쓴다.
+- 사용자가 구성을 바꿔 달라고 하면 바꾸지 않는다. 구성 변경은 구성도 대화에서 요청해 달라고 짧게 안내한다.`;
+
+/** 설명 항목 한 줄. 줄바꿈을 접어 한 항목이 한 줄이 되게 한다. */
+const oneLine = (t: string) => t.replace(/\s+/g, " ").trim();
+
+function explanationBlock(e: NodeExplanation | undefined): string {
+  if (!e) return "없음";
+  const { decision, reason, alternative, cost } = e.adr;
+  return [
+    `정의: ${oneLine(e.definition)}`,
+    `역할: ${oneLine(e.role)}`,
+    `ADR: 결정 ${oneLine(decision)} / 이유 ${oneLine(reason)} / 대안 ${oneLine(alternative)} / 대가 ${oneLine(cost)}`,
+  ].join("\n");
+}
+
+/** 노드 질문 요청. 기록은 그 세션 것만 최근 HISTORY_LIMIT 개. */
+export function buildAskMessages(input: {
+  state: DiagramState;
+  nodeId: string;
+  explanation?: NodeExplanation;
+  history: { role: "user" | "assistant"; content: string }[];
+  text: string;
+}): ChatMessage[] {
+  const user = `대상 노드:\n${explainContext(input.state, "node", input.nodeId)}\n\n설명:\n${explanationBlock(input.explanation)}\n\n질문: ${input.text}`;
+  return [
+    { role: "system", content: ASK_PROMPT },
+    ...input.history.slice(-HISTORY_LIMIT).map((h) => ({ role: h.role, content: h.content })),
+    { role: "user", content: user },
   ];
 }

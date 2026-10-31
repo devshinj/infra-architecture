@@ -37,7 +37,7 @@ export const TIMEOUT_MESSAGE = "응답 시간이 너무 길어 중단했어요."
 export const GENERIC_ERROR_MESSAGE = "응답을 처리하지 못했어요. 잠시 뒤 다시 시도해 주세요.";
 
 const TURN_TIMEOUT_MS = 120_000;
-const HISTORY_FETCH = 40;
+export const HISTORY_FETCH = 40;
 const OP_MAX = 40;
 
 interface TurnArgs {
@@ -50,16 +50,7 @@ interface TurnArgs {
 
 export async function runChatTurn(args: TurnArgs, deps: ChatDeps): Promise<ChatTurnResult> {
   await getOwnedDiagram(args.userId, args.diagramId); // NotFoundError 는 그대로 던진다
-  // 전송이 끊겨 emit 이 던져도 차례는 끝까지 돌아 버전·메시지를 저장한다.
-  let emitFailed = false;
-  const emit = (e: ChatEvent) => {
-    try {
-      args.emit(e);
-    } catch (err) {
-      if (!emitFailed) console.error("chat emit failed", err);
-      emitFailed = true;
-    }
-  };
+  const emit = guardEmit(args.emit);
   const turnArgs = { ...args, emit };
   const locked = await withDiagramLock(args.diagramId, () => lockedTurn(turnArgs, deps));
   if (!locked.ok) {
@@ -67,6 +58,40 @@ export async function runChatTurn(args: TurnArgs, deps: ChatDeps): Promise<ChatT
     return { status: "busy" };
   }
   return { status: "ok" };
+}
+
+/** 전송이 끊겨 emit 이 던져도 차례는 끝까지 돌아 버전·메시지를 저장하게 감싼다. */
+export function guardEmit(emit: (e: ChatEvent) => void): (e: ChatEvent) => void {
+  let emitFailed = false;
+  return (e) => {
+    try {
+      emit(e);
+    } catch (err) {
+      if (!emitFailed) console.error("chat emit failed", err);
+      emitFailed = true;
+    }
+  };
+}
+
+/** 차례 신호: 호출자 신호(연결 끊김) + 차례 전체 상한. */
+export function turnSignals(outer: AbortSignal, deps: ChatDeps): { signal: AbortSignal; timeout: AbortSignal } {
+  const timeout = AbortSignal.timeout(deps.turnTimeoutMs ?? TURN_TIMEOUT_MS);
+  return { signal: AbortSignal.any([outer, timeout]), timeout };
+}
+
+/** 스트리밍 실패를 중단·오류로 나누고 알맞은 error 이벤트를 보낸다(원래 오류 글은 숨긴다). */
+export function streamFailure(
+  err: unknown,
+  s: { outer: AbortSignal; signal: AbortSignal; timeout: AbortSignal },
+  emit: (e: ChatEvent) => void,
+): "aborted" | "error" {
+  if (s.signal.aborted) {
+    if (s.timeout.aborted && !s.outer.aborted) emit({ t: "error", message: TIMEOUT_MESSAGE });
+    return "aborted";
+  }
+  console.error("chat turn failed", err);
+  emit({ t: "error", message: GENERIC_ERROR_MESSAGE });
+  return "error";
 }
 
 function opName(raw: unknown): string {
@@ -92,14 +117,14 @@ function prunedOrder(before: DiagramState, after: DiagramState): string[] {
 
 async function lockedTurn(args: TurnArgs, deps: ChatDeps): Promise<void> {
   const { diagramId, emit } = args;
-  const timeout = AbortSignal.timeout(deps.turnTimeoutMs ?? TURN_TIMEOUT_MS);
-  const signal = AbortSignal.any([args.signal, timeout]);
+  const { signal, timeout } = turnSignals(args.signal, deps);
 
   const latest = await getLatestState(diagramId);
   let state: DiagramState = latest?.state ?? emptyState();
   const turnStartState = state;
   const prevWarnings = latest?.state.warnings; // 차례 시작 상태의 경고
-  const history = (await listMessages(diagramId, HISTORY_FETCH))
+  // 구성도 대화만 본다(질문 세션 글은 섞지 않는다).
+  const history = (await listMessages(diagramId, HISTORY_FETCH, null))
     .filter((m) => m.role === "user" || m.role === "assistant")
     .map((m) => ({ role: m.role as "user" | "assistant", content: m.content }));
   const lastAssistant = history.findLast((m) => m.role === "assistant")?.content;
@@ -203,14 +228,7 @@ async function lockedTurn(args: TurnArgs, deps: ChatDeps): Promise<void> {
       if (answerMode) stripper.end();
       else parser.end();
     } catch (err) {
-      if (signal.aborted) {
-        status = "aborted";
-        if (timeout.aborted && !args.signal.aborted) emit({ t: "error", message: TIMEOUT_MESSAGE });
-      } else {
-        status = "error";
-        console.error("chat turn failed", err);
-        emit({ t: "error", message: GENERIC_ERROR_MESSAGE });
-      }
+      status = streamFailure(err, { outer: args.signal, signal, timeout }, emit);
     }
     answer = shown.trim();
   }
