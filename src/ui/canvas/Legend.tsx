@@ -41,6 +41,30 @@ export function legendStacksAboveCard({ canvasWidth, insetLeft, insetRight, card
   return legendLeft < cardRight;
 }
 
+/** 접힌 범례 높이(px): 버튼 min-height 40 + 위아래 테두리 1 (legend.module.css). */
+export const LEGEND_LINE_HEIGHT = 42;
+
+export interface LegendPlacementInput extends LegendFit {
+  /** 구성 정보 카드 접힌 줄 높이. */
+  cardLine: number;
+  cardOpen: boolean;
+  /** 열린 카드 전체 높이(열렸을 때만 쓴다). */
+  cardHeight: number;
+}
+
+/**
+ * 범례 자리와 카메라 바닥 인셋. 카드와 가로로 겹치지 않으면 바닥 여백에 앉고 카메라는 카드 줄만 비운다.
+ * 겹치면 카드 접힌 줄 위로 올리고(카드가 열려 있으면 열린 카드 꼭대기 위로), 카메라 바닥 인셋도
+ * 카드 줄 + 틈 + 접힌 범례 + 틈으로 늘려 맞춤이 범례 밑에 노드를 두지 않게 한다.
+ * 열린 카드 자체는 인셋에 넣지 않는다(위치 보기가 카드 사각형을 따로 피한다).
+ */
+export function legendPlacement(p: LegendPlacementInput): { bottom?: number; insetBottom: number } {
+  const band = p.gap + p.cardLine + p.gap;
+  if (!legendStacksAboveCard(p)) return { insetBottom: band };
+  const bottom = p.cardOpen && p.cardHeight > 0 ? p.gap + p.cardHeight + p.gap : band;
+  return { bottom, insetBottom: band + LEGEND_LINE_HEIGHT + p.gap };
+}
+
 const OPEN_KEY = "infrasketch.legendOpen";
 
 /** 선 모양 견본: 실제 연결선과 같은 클래스(edges.css)를 쓴다. 복제는 굵은 선 위에 바탕색 가는 선(이중선). */
@@ -122,7 +146,7 @@ export function Legend({ hideAux, empty = false, bottom, onMeasure }: LegendProp
   };
 
   return (
-    <aside ref={rootRef} className={styles.legend} data-open={open || undefined} aria-label="연결 범례" onKeyDown={onKeyDown} style={bottom !== undefined ? { bottom } : undefined}>
+    <aside ref={rootRef} className={styles.legend} data-open={open || undefined} aria-label="연결 범례" onKeyDown={onKeyDown} style={bottom !== undefined ? { bottom, maxHeight: `calc(100% - ${bottom}px - var(--panel-gap))` } : undefined}>
       <button ref={toggleRef} type="button" className={styles.toggle} aria-expanded={open} aria-controls="legend-body" onClick={() => change(!open)}>
         <LegendIcon />
         <span>범례</span>

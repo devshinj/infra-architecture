@@ -1,10 +1,11 @@
 import "@testing-library/jest-dom/vitest";
 import { cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { readFileSync } from "node:fs";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
 import { EDGE_KINDS } from "@/domain/catalog";
-import { Legend, legendStacksAboveCard } from "@/ui/canvas/Legend";
+import { LEGEND_LINE_HEIGHT, Legend, legendPlacement, legendStacksAboveCard } from "@/ui/canvas/Legend";
 
 const KEY = "infrasketch.legendOpen";
 beforeEach(() => window.localStorage.clear());
@@ -120,4 +121,42 @@ test("legend reports its rendered width", () => {
   const seen: number[] = [];
   render(<Legend hideAux={false} onMeasure={(w) => seen.push(w)} />);
   expect(seen.length).toBeGreaterThan(0);
+});
+
+// ---- 비켜난 범례 자리: 카메라 바닥 인셋과 열린 카드 ----
+const band = { cardLine: 42, cardOpen: false, cardHeight: 42 };
+
+test("legend line height matches the collapsed toggle (min-height 40 + 2px border)", () => {
+  const css = readFileSync("src/ui/canvas/legend.module.css", "utf8");
+  const minH = Number(css.match(/\.toggle \{[^}]*min-height:\s*(\d+)px/)![1]);
+  const border = Number(css.match(/\.legend \{[^}]*border:\s*(\d+)px solid/)![1]);
+  expect(LEGEND_LINE_HEIGHT).toBe(minH + 2 * border);
+});
+
+test("beside the card: legend stays on the gap and the camera keeps only the card band", () => {
+  const p = legendPlacement({ ...narrow, ...band, canvasWidth: 1400, legendWidth: 90 });
+  expect(p.bottom).toBeUndefined();
+  expect(p.insetBottom).toBe(12 + 42 + 12);
+});
+
+test("lifted above the collapsed card: the camera bottom inset also clears the legend", () => {
+  const p = legendPlacement({ ...narrow, ...band, canvasWidth: 1000, legendWidth: 90 });
+  expect(p.bottom).toBe(12 + 42 + 12);
+  // 카드 줄 + 틈 + 접힌 범례 + 틈: 맞춤이 범례 밑에 노드를 두지 않는다.
+  expect(p.insetBottom).toBe(12 + 42 + 12 + LEGEND_LINE_HEIGHT + 12);
+});
+
+test("open card on a narrow canvas: the legend sits above the open card's top, never over its body", () => {
+  const p = legendPlacement({ ...narrow, ...band, cardOpen: true, cardHeight: 320, canvasWidth: 1000, legendWidth: 90 });
+  expect(p.bottom).toBe(12 + 320 + 12);
+  // 카메라 바닥 띠는 접힌 카드 기준 그대로(열린 카드는 위치 보기에서 따로 피한다).
+  expect(p.insetBottom).toBe(12 + 42 + 12 + LEGEND_LINE_HEIGHT + 12);
+  // 넓으면 열린 카드여도 옮기지 않는다.
+  expect(legendPlacement({ ...narrow, ...band, cardOpen: true, cardHeight: 320, canvasWidth: 1400, legendWidth: 90 }).bottom).toBeUndefined();
+});
+
+test("a lifted legend caps its height to the room above it", () => {
+  render(<Legend hideAux={false} bottom={344} />);
+  const el = screen.getByRole("complementary", { name: "연결 범례" }) as HTMLElement;
+  expect(el.style.maxHeight).toBe("calc(100% - 344px - var(--panel-gap))");
 });

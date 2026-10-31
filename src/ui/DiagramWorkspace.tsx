@@ -28,7 +28,7 @@ import type { MentionInputHandle } from "./chat/MentionInput";
 import type { ChecklistDrafts, ChecklistExpanded, MissingChecklistProps } from "./chat/MissingChecklist";
 import { type ChatLine, useChatTurn } from "./chat/useChatTurn";
 import { type CardMeasure, InfoCard } from "./canvas/InfoCard";
-import { Legend, legendStacksAboveCard } from "./canvas/Legend";
+import { Legend, legendPlacement } from "./canvas/Legend";
 import { FlyLayer, useFly } from "./FlyLayer";
 import type { ExplanationProps } from "./explain/Explanation";
 import { type TargetKind, useExplanations } from "./explain/useExplanations";
@@ -136,11 +136,19 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
     (m: CardMeasure) => setCardSize((p) => (p && p.width === m.width && p.height === m.height && p.lineHeight === m.lineHeight ? p : m)),
     [],
   );
-  const cardLine = cardSize?.lineHeight || CARD_LINE_HEIGHT;
-  const insetBottom = PANEL_GAP + cardLine + PANEL_GAP;
-  // 범례: 좁아서 카드와 가로로 겹치면 오른쪽 아래에서 카드 접힌 줄 위로 올린다.
+  // 범례: 좁아서 카드와 가로로 겹치면 카드 접힌 줄(열려 있으면 열린 카드) 위로 올리고, 카메라 바닥도 그만큼 비운다.
   const [legendWidth, setLegendWidth] = useState(0);
-  const legendBottom = legendStacksAboveCard({ canvasWidth: workspaceW, insetLeft, insetRight, cardWidth: cardSize?.width || CARD_WIDTH, legendWidth, gap: PANEL_GAP }) ? insetBottom : undefined;
+  const { bottom: legendBottom, insetBottom } = legendPlacement({
+    canvasWidth: workspaceW,
+    insetLeft,
+    insetRight,
+    cardWidth: cardSize?.width || CARD_WIDTH,
+    legendWidth,
+    gap: PANEL_GAP,
+    cardLine: cardSize?.lineHeight || CARD_LINE_HEIGHT,
+    cardOpen,
+    cardHeight: cardSize?.height || 0,
+  });
   const cardW = cardOpen ? (cardSize?.width || CARD_WIDTH) + PANEL_GAP : 0;
   const cardH = cardOpen ? PANEL_GAP + (cardSize?.height || 0) + PANEL_GAP : 0;
   const cameraInsets = useMemo(
