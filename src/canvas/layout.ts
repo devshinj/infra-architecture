@@ -5,7 +5,7 @@ import type { DisplayGraph } from "./display";
 import { elbowRoute } from "./elbow";
 import { textWidth, truncate } from "./text";
 
-export const NODE = { height: 44, minWidth: 132, maxWidth: 220, padLeft: 38 /* 아이콘 */, padRight: 18 /* 배지 자리 */, gap: 28, layerGap: 52 };
+export const NODE = { height: 52, minWidth: 132, maxWidth: 240, padLeft: 38 /* 아이콘 */, padRight: 18 /* 배지 자리 */, gap: 28, layerGap: 52 };
 export const GROUP_PAD = { top: 30, side: 12, bottom: 12 }; // top 은 이름 머리 공간
 
 export interface Rect { x: number; y: number; width: number; height: number }
@@ -18,8 +18,8 @@ export interface Layout { nodes: Record<string, LaidOutNode>; groups: Record<str
 type Pt = { x: number; y: number };
 
 const EMPTY_GROUP = { width: 160, height: 56 };
-const LABEL_PX = 12;
-const SUB_PX = 9.5;
+export const LABEL_PX = 14;
+export const SUB_PX = 11;
 const ROOT = "__root";
 const CHANNEL_MARGIN = 24; // main 오른쪽 끝 ↔ 첫 통로, 마지막 통로 ↔ 외부 열
 const CHANNEL_STEP = 12; // 통로끼리 간격 (spacing.edgeEdge)

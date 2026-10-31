@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { expect, test } from "vitest";
 
@@ -175,4 +175,57 @@ test("scrollbar tokens and thin themed scrollbars; the app shell never scrolls t
   expect(globals).toMatch(/::-webkit-scrollbar-thumb:hover \{[^}]*var\(--scrollbar-thumb-hover\)/);
   // 셸은 화면에 고정돼 문서 높이에 보태지지 않는다.
   expect(rule(read("src/ui/app.module.css"), ".shell")).toMatch(/position: fixed;\s*inset: 0;[^}]*overflow: hidden;/);
+});
+
+// ---- 글자 크기·대비 (P3E Task 1) ----
+function cssFiles(dir: string): string[] {
+  return readdirSync(dir).flatMap((n) => {
+    const p = join(dir, n);
+    return statSync(p).isDirectory() ? cssFiles(p) : p.endsWith(".css") ? [p] : [];
+  });
+}
+
+test("no css font-size below 11px", () => {
+  // 예외: 대화 아바타 IS 모노그램 하나.
+  const allowed = [{ file: "chat.module.css", selector: ".mono" }];
+  const bad: string[] = [];
+  for (const f of cssFiles(join(process.cwd(), "src"))) {
+    const css = readFileSync(f, "utf8");
+    for (const m of css.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+      const sel = m[1].trim().split(/\r?\n/).pop()!.trim();
+      for (const d of m[2].matchAll(/font-size:\s*([\d.]+)px/g)) {
+        if (parseFloat(d[1]) >= 11) continue;
+        if (allowed.some((a) => f.endsWith(a.file) && sel === a.selector)) continue;
+        bad.push(`${f} ${sel} ${d[0]}`);
+      }
+    }
+  }
+  expect(bad).toEqual([]);
+});
+
+// rgba 색을 불투명 배경 위에 합성한다.
+function over(rgba: string, bg: string): string {
+  const m = rgba.match(/rgba\((\d+),\s*(\d+),\s*(\d+),\s*([\d.]+)\)/)!;
+  const a = parseFloat(m[4]);
+  const ch = (h: string, i: number) => parseInt(h.slice(i, i + 2), 16);
+  return "#" + [1, 3, 5].map((i, k) => Math.round(parseInt(m[k + 1]) * a + ch(bg, i) * (1 - a)).toString(16).padStart(2, "0")).join("");
+}
+
+test("text contrast is at least 4.5:1", () => {
+  const css = read("src/styles/tokens.css");
+  const token = (name: string) => css.match(new RegExp(`--${name}:[ ]*(#[0-9A-Fa-f]{6});`))![1];
+  const glass = over(css.match(/--glass-bg:\s*(rgba\([^)]*\));/)![1], token("bg-canvas"));
+  for (const fg of ["text-primary", "text-secondary"]) {
+    for (const [name, bg] of [["bg-canvas", token("bg-canvas")], ["bg-panel", token("bg-panel")], ["glass-bg", glass]]) {
+      expect(contrast(token(fg), bg), `${fg} on ${name}`).toBeGreaterThanOrEqual(4.5);
+    }
+  }
+  // 영역 이름표: canvas.css 의 글자 비율을 그대로 읽는다.
+  const canvas = read("src/canvas/canvas.css");
+  const fgPct = Number(canvas.match(/color: color-mix\(in srgb, var\(--tint\) (\d+)%, var\(--text-primary\)\)/)![1]);
+  for (const m of css.matchAll(/--zone-tint-([a-z0-9]+):\s*(#[0-9A-Fa-f]{6});/g)) {
+    const bg = mix(m[2], 22, token("bg-canvas"));
+    const fg = mix(m[2], fgPct, token("text-primary"));
+    expect(contrast(fg, bg), `zone ${m[1]}`).toBeGreaterThanOrEqual(4.5);
+  }
 });

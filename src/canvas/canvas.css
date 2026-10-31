@@ -27,10 +27,10 @@
   background: color-mix(in srgb, var(--cat) 26%, var(--bg-node));
 }
 .node__text { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 1px; }
-.node__label { font-size: 12px; font-weight: 500; line-height: 1.25; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.node__label { font-size: 14px; font-weight: 500; line-height: 1.25; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .node__subrow { display: flex; align-items: baseline; gap: 6px; min-width: 0; }
-.node__sub { font-size: 9.5px; color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.node__az { flex: none; font-size: 8.5px; color: var(--text-secondary); border: 1px solid var(--line-node); border-radius: 3px; padding: 0 3px; }
+.node__sub { font-size: 11px; color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.node__az { flex: none; font-size: 11px; color: var(--text-secondary); border: 1px solid var(--line-node); border-radius: 3px; padding: 0 3px; }
 
 .node--selected { outline: 1.5px solid var(--accent); outline-offset: 4px; }
 .node--diff-added { border-color: var(--cat-data); }
@@ -79,7 +79,7 @@
   border-radius: 50%;
   display: grid;
   place-items: center;
-  font-size: 9.5px;
+  font-size: 11px;
   font-weight: 600;
   line-height: 1;
 }
@@ -119,7 +119,7 @@ button.node__badge:focus-visible { outline: 1.5px solid var(--text-secondary); o
 .group__toggle {
   flex: none;
   font: inherit;
-  font-size: 10px;
+  font-size: 11px;
   color: var(--text-secondary);
   background: transparent;
   border: 1px solid var(--zone);
@@ -129,7 +129,7 @@ button.node__badge:focus-visible { outline: 1.5px solid var(--text-secondary); o
 }
 .group__toggle:hover { color: var(--text-primary); }
 .group__toggle:focus-visible { outline: 1.5px solid var(--text-secondary); outline-offset: 2px; }
-.group__count { padding: 0 10px; font-size: 9.5px; color: var(--text-secondary); }
+.group__count { padding: 0 10px; font-size: 11px; color: var(--text-secondary); }
 
 @media (prefers-reduced-motion: reduce) {
   .node--appearing { animation: none; }
@@ -174,7 +174,7 @@ button.node__badge:focus-visible { outline: 1.5px solid var(--text-secondary); o
 .canvas__opt input { flex: none; width: 14px; height: 14px; margin: 2px 0 0; accent-color: var(--text-secondary); cursor: pointer; }
 .canvas__opt input:focus-visible { outline: 1.5px solid var(--text-secondary); outline-offset: 2px; }
 .canvas__opt-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.canvas__opt-name { font-size: 12.5px; color: var(--text-primary); }
+.canvas__opt-name { font-size: 13px; color: var(--text-primary); }
 .canvas__opt-desc { font-size: 11.5px; line-height: 1.4; color: var(--text-secondary); }
 .canvas__empty {
   position: absolute; inset: 0 var(--canvas-inset-right, 0px) 0 var(--canvas-inset-left, 0px); margin: auto; height: fit-content; max-width: 360px; text-align: center;
@@ -194,7 +194,7 @@ button.node__badge:focus-visible { outline: 1.5px solid var(--text-secondary); o
   background: var(--bg-node); border: 1px solid var(--line-node); border-radius: var(--radius-node);
 }
 .node-menu__item {
-  display: block; width: 100%; text-align: left; font: inherit; font-size: 12.5px;
+  display: block; width: 100%; text-align: left; font: inherit; font-size: 13px;
   color: var(--text-primary); background: transparent; border: 0; border-radius: 4px; padding: 6px 10px; cursor: pointer;
 }
 .node-menu__item:hover { background: var(--bg-canvas); }
@@ -202,7 +202,7 @@ button.node__badge:focus-visible { outline: 1.5px solid var(--text-secondary); o
 .canvas__empty p { margin: 0; }
 .canvas__samples { position: relative; margin-top: 10px; display: inline-block; }
 .canvas__sample-btn {
-  font: inherit; font-size: 12.5px; color: var(--text-secondary); background: transparent; border: 0; padding: 2px 4px;
+  font: inherit; font-size: 13px; color: var(--text-secondary); background: transparent; border: 0; padding: 2px 4px;
   text-decoration: underline; text-underline-offset: 3px; cursor: pointer;
 }
 .canvas__sample-btn:hover:not(:disabled) { color: var(--text-primary); }

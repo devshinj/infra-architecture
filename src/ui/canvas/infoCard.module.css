@@ -78,7 +78,7 @@
 }
 .warning:hover { background: var(--bg-panel-raised); }
 .warning:focus-visible { outline: 1.5px solid var(--text-secondary); outline-offset: -1px; }
-.level { flex: none; font-size: 10.5px; line-height: 1.5; padding: 0 5px; border: 1px solid var(--state-warn); border-radius: 4px; color: var(--text-primary); }
+.level { flex: none; font-size: 11px; line-height: 1.5; padding: 0 5px; border: 1px solid var(--state-warn); border-radius: 4px; color: var(--text-primary); }
 .warning[data-level="check"] .level { border-color: var(--line-node); color: var(--text-secondary); }
 .warnText { min-width: 0; font-size: 12px; line-height: 1.5; }
 

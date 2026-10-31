@@ -17,7 +17,7 @@
 .edge-junction { fill: var(--edge-request); }
 .edge-hit { stroke: transparent; stroke-width: 10; pointer-events: stroke; }
 .edge-label {
-  font-size: 10px;
+  font-size: 11px;
   fill: var(--text-secondary);
   text-anchor: middle;
   dominant-baseline: central;

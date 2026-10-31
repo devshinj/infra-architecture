@@ -188,9 +188,18 @@ test("long labels truncate without overlap", async () => {
     { op: "update_node", id: "was-1", label: "주문결제통합처리애플리케이션서버첫번째인스턴스입니다" },
   ]).state;
   const l = await lay(st);
-  expect(l.nodes["was-1"].width).toBe(220);
+  expect(l.nodes["was-1"].width).toBe(240);
   expect(l.nodes["was-1"].displayLabel.endsWith("…")).toBe(true);
   expect(findOverlaps(l)).toEqual([]);
+});
+
+test("node height is 52 and width is capped at 240", async () => {
+  const st = applyCommands(fx("s2"), [
+    { op: "update_node", id: "was-1", label: "주문결제통합처리애플리케이션서버첫번째인스턴스입니다" },
+  ]).state;
+  const l = await lay(st);
+  expect(l.nodes["was-1"].width).toBe(240);
+  expect(l.nodes["was-1"].height).toBe(52);
 });
 
 test("empty state and empty group", async () => {
