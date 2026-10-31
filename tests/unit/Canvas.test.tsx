@@ -535,3 +535,16 @@ test("unknown hover id gives no fade", async () => {
   await settle();
   expect(container.querySelector(".node--faded")).toBeNull();
 });
+
+test("hover survives a state change that keeps the node", async () => {
+  const props = baseProps();
+  const { container, rerender } = render(<div style={{ width: 800, height: 600 }}><Canvas {...props} /></div>);
+  await waitFor(() => expect(nodeEl(container, "was-1")).not.toBeNull());
+  hoverEnter(nodeEl(container, "was-1")!);
+  await waitFor(() => expect(container.querySelector(".node--faded")).not.toBeNull());
+  const next = { ...props.state, nodes: { ...props.state.nodes, extra: { ...props.state.nodes["web-1"], id: "extra", label: "extra", parent: null } } };
+  rerender(<div style={{ width: 800, height: 600 }}><Canvas {...props} state={next} /></div>);
+  await waitFor(() => expect(nodeEl(container, "extra")).not.toBeNull());
+  expect(container.querySelector(".node--faded")).not.toBeNull();
+  expect(nodeEl(container, "was-1")!.querySelector(".node--faded")).toBeNull();
+});
