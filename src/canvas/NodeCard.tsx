@@ -5,7 +5,7 @@ import type { Category } from "@/domain/catalog";
 import "./canvas.css";
 import { CategoryIcon } from "./icons";
 
-export type NodeVisualState = "normal" | "selected" | "dimmed" | "appearing" | "updated";
+export type NodeVisualState = "normal" | "selected" | "dimmed" | "faded" | "appearing" | "updated";
 
 export interface NodeCardData extends Record<string, unknown> {
   label: string;

@@ -5,6 +5,7 @@ import { EDGE_KINDS } from "@/domain/catalog";
 
 import "./edges.css";
 import type { DisplayEdge } from "./display";
+import { emphasisOf } from "./emphasis";
 import type { Layout } from "./layout";
 import { startBundleMotion, type MotionKind } from "./motion";
 import { buildSegmentBundles, type Bundle } from "./segments";
@@ -13,6 +14,10 @@ export interface EdgeLayerProps {
   layout: Layout;
   edges: DisplayEdge[];
   selectedId: string | null;
+  /** 선택이 없을 때 마우스를 올린 노드/연결 id. 선택이 있으면 무시한다. */
+  hoverId: string | null;
+  /** 연결선(클릭 영역)에 마우스가 들어오면 그 id, 나가면 null. */
+  onHover?(id: string | null): void;
   hoverLabels: boolean;
   motion: boolean;
   appearing: Set<string>;
@@ -51,7 +56,7 @@ function prefersReducedMotion(): boolean {
   return typeof window !== "undefined" && !!window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
 }
 
-export function EdgeLayer({ layout, edges, selectedId, hoverLabels, motion, appearing, nodeCount, onSelect }: EdgeLayerProps) {
+export function EdgeLayer({ layout, edges, selectedId, hoverId, onHover, hoverLabels, motion, appearing, nodeCount, onSelect }: EdgeLayerProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [hovered, setHovered] = useState<string | null>(null);
 
@@ -62,15 +67,13 @@ export function EdgeLayer({ layout, edges, selectedId, hoverLabels, motion, appe
     [laid, byId],
   );
 
-  const incident = useMemo(() => {
-    const s = new Set<string>();
-    const selEdge = selectedId === null ? undefined : edges.find((e) => e.id === selectedId || e.sourceEdgeIds.includes(selectedId));
-    if (selEdge) s.add(selEdge.id);
-    else if (selectedId !== null) for (const e of edges) if (e.from === selectedId || e.to === selectedId) s.add(e.id);
-    return s;
-  }, [edges, selectedId]);
+  // 선택 기준 강조(흐림 22%)와 호버 기준 강조(흐림 45%). 호버는 선택이 없을 때만.
+  const sel = useMemo(() => emphasisOf(edges, selectedId), [edges, selectedId]);
+  const hov = useMemo(() => (selectedId === null ? emphasisOf(edges, hoverId) : null), [edges, selectedId, hoverId]);
+  const incident = useMemo(() => sel?.edges ?? new Set<string>(), [sel]);
   const isSelectedEdge = (e: DisplayEdge) => selectedId !== null && (e.id === selectedId || e.sourceEdgeIds.includes(selectedId));
-  const isDim = (ids: string[]) => selectedId !== null && !ids.some((i) => incident.has(i));
+  const isDim = (ids: string[]) => sel !== null && !ids.some((i) => sel.edges.has(i));
+  const isFaded = (ids: string[]) => hov !== null && !ids.some((i) => hov.edges.has(i));
 
   // Which bundles animate. Over 40 nodes only the ones touching the selection; with fewer, every bundle animates.
   const restrictTo = nodeCount > MANY_NODES ? incident : null;
@@ -106,7 +109,9 @@ export function EdgeLayer({ layout, edges, selectedId, hoverLabels, motion, appe
     return () => stops.forEach((stop) => stop());
   }, [signature]);
 
-  const junctionDim = (b: Bundle) => isDim(b.segments.flatMap((s) => s.edgeIds));
+  const bundleEdgeIds = (b: Bundle) => b.segments.flatMap((s) => s.edgeIds);
+  const junctionDim = (b: Bundle) => isDim(bundleEdgeIds(b));
+  const junctionFaded = (b: Bundle) => isFaded(bundleEdgeIds(b));
 
   return (
     <svg ref={svgRef} className="edge-layer" width={layout.width} height={layout.height} aria-hidden="true">
@@ -120,7 +125,7 @@ export function EdgeLayer({ layout, edges, selectedId, hoverLabels, motion, appe
             return (
               <g
                 key={s.key}
-                className={`edge-seg${isDim(s.edgeIds) ? " edge--dim" : ""}${degraded ? " edge--degraded" : ""}`}
+                className={`edge-seg${isDim(s.edgeIds) ? " edge--dim" : ""}${isFaded(s.edgeIds) ? " edge--faded" : ""}${degraded ? " edge--degraded" : ""}`}
                 data-seg-shared={s.edgeIds.length > 1 ? "true" : undefined}
                 data-edge-kind={s.edgeKind}
               >
@@ -139,7 +144,7 @@ export function EdgeLayer({ layout, edges, selectedId, hoverLabels, motion, appe
           {b.junctions.map((j) => (
             <circle
               key={`${j.x},${j.y}`}
-              className={`edge-junction${junctionDim(b) ? " edge--dim" : ""}`}
+              className={`edge-junction${junctionDim(b) ? " edge--dim" : ""}${junctionFaded(b) ? " edge--faded" : ""}`}
               data-junction=""
               cx={j.x}
               cy={j.y}
@@ -153,9 +158,10 @@ export function EdgeLayer({ layout, edges, selectedId, hoverLabels, motion, appe
         const e = byId.get(l.id)!;
         const d = arrowD(l.points);
         const dim = isDim([e.id]);
+        const faded = isFaded([e.id]);
         const showLabel = !!e.label && !!l.labelAt && (!hoverLabels || hovered === e.id || incident.has(e.id));
         return (
-          <g key={e.id} className={`edge${dim ? " edge--dim" : ""}${isSelectedEdge(e) ? " edge--selected" : ""}`} data-edge-id={e.id} data-edge-kind={e.edgeKind}>
+          <g key={e.id} className={`edge${dim ? " edge--dim" : ""}${faded ? " edge--faded" : ""}${isSelectedEdge(e) ? " edge--selected" : ""}`} data-edge-id={e.id} data-edge-kind={e.edgeKind}>
             {d && <path className={`edge-arrow edge-arrow--${e.edgeKind}`} d={d} />}
             <path
               className="edge-hit"
@@ -164,8 +170,14 @@ export function EdgeLayer({ layout, edges, selectedId, hoverLabels, motion, appe
                 ev.stopPropagation();
                 onSelect?.(isSelectedEdge(e) ? null : e.id);
               }}
-              onMouseEnter={() => setHovered(e.id)}
-              onMouseLeave={() => setHovered((h) => (h === e.id ? null : h))}
+              onMouseEnter={() => {
+                setHovered(e.id);
+                onHover?.(e.id);
+              }}
+              onMouseLeave={() => {
+                setHovered((h) => (h === e.id ? null : h));
+                onHover?.(null);
+              }}
             />
             {showLabel && (
               <text className="edge-label" x={l.labelAt!.x} y={l.labelAt!.y}>

@@ -452,3 +452,62 @@ test("보기 popover closes when focus leaves it, but not for focus moving insid
   fireEvent.keyDown(document, { key: "Escape" });
   expect(open).toHaveFocus();
 });
+
+const hoverEnter = (el: HTMLElement) => fireEvent.mouseEnter(el);
+const settle = (ms = 250) => new Promise((r) => setTimeout(r, ms));
+
+test("hover fades non-neighbors when nothing is selected", async () => {
+  const { container } = render(<div style={{ width: 800, height: 600 }}><Canvas {...baseProps()} /></div>);
+  await waitFor(() => expect(nodeEl(container, "was-1")).not.toBeNull());
+  hoverEnter(nodeEl(container, "was-1")!);
+  await waitFor(() => expect(container.querySelector(".node--faded")).not.toBeNull());
+  expect(nodeEl(container, "was-1")!.querySelector(".node--faded")).toBeNull();
+  expect(container.querySelector(".node--dimmed")).toBeNull();
+  fireEvent.mouseLeave(nodeEl(container, "was-1")!);
+  await waitFor(() => expect(container.querySelector(".node--faded")).toBeNull());
+});
+
+test("selection wins over hover", async () => {
+  const props = baseProps();
+  props.options = { ...props.options, selectedId: "was-1" };
+  const { container } = render(<div style={{ width: 800, height: 600 }}><Canvas {...props} /></div>);
+  await waitFor(() => expect(container.querySelector(".node--dimmed")).not.toBeNull());
+  const dimmed = container.querySelectorAll(".node--dimmed").length;
+  hoverEnter(container.querySelector(".node--dimmed")!.closest(".react-flow__node") as HTMLElement);
+  await settle();
+  expect(container.querySelector(".node--faded")).toBeNull();
+  expect(container.querySelectorAll(".node--dimmed").length).toBe(dimmed);
+});
+
+test("drag suppresses hover", async () => {
+  const props = { ...baseProps(), editMode: true };
+  const { container } = render(<div style={{ width: 800, height: 600 }}><Canvas {...props} /></div>);
+  await waitFor(() => expect(nodeEl(container, "was-1")).not.toBeNull());
+  const el = nodeEl(container, "was-1")!;
+  const win = el.ownerDocument.defaultView as unknown as typeof globalThis;
+  const fire = (target: EventTarget, type: string, x: number, y: number) => {
+    const ev = new win.MouseEvent(type, { bubbles: true, cancelable: true, clientX: x, clientY: y, button: 0, buttons: type === "mouseup" ? 0 : 1 });
+    Object.defineProperty(ev, "view", { value: win });
+    target.dispatchEvent(ev);
+  };
+  fire(el, "mousedown", 10, 10);
+  fire(win.document, "mousemove", 60, 60);
+  fire(win.document, "mousemove", 80, 80);
+  hoverEnter(nodeEl(container, "web-1")!);
+  await settle();
+  expect(container.querySelector(".node--faded")).toBeNull();
+  fire(win.document, "mouseup", 80, 80);
+});
+
+test("appearing node is not faded", async () => {
+  const props = baseProps();
+  const { container, rerender } = render(<div style={{ width: 800, height: 600 }}><Canvas {...props} /></div>);
+  await waitFor(() => expect(nodeEl(container, "web-1")).not.toBeNull());
+  const next = { ...props.state, nodes: { ...props.state.nodes, extra: { ...props.state.nodes["web-1"], id: "extra", label: "extra", parent: null } } };
+  rerender(<div style={{ width: 800, height: 600 }}><Canvas {...props} state={next} /></div>);
+  await waitFor(() => expect(nodeEl(container, "extra")).not.toBeNull());
+  hoverEnter(nodeEl(container, "web-1")!);
+  await waitFor(() => expect(container.querySelector(".node--faded")).not.toBeNull());
+  expect(nodeEl(container, "extra")!.querySelector(".node--appearing")).not.toBeNull();
+  expect(nodeEl(container, "extra")!.querySelector(".node--faded")).toBeNull();
+});

@@ -2,6 +2,7 @@
 .edge-layer { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; }
 .edge-seg, .edge, .edge-junction { transition: opacity 0.35s ease; }
 .edge--dim { opacity: 0.22; }
+.edge--faded { opacity: 0.45; }
 .edge--degraded { opacity: 0.8; }
 .edge-line, .edge-arrow, .edge-hit, .motion-path { fill: none; stroke-linecap: round; stroke-linejoin: round; }
 .edge-line--request { stroke: var(--edge-request); stroke-width: 1.2; }
@@ -43,6 +44,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .edge-line--appear { animation: none; }
+  .edge-seg, .edge, .edge-junction { transition: none; }
 }
 
 .edge--selected .edge-label { fill: var(--text-primary); }

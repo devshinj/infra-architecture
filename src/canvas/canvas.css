@@ -37,6 +37,8 @@
 .node--diff-changed { border-color: var(--accent); }
 .node--diff-removed { border: 1px dashed var(--state-missing); opacity: 0.75; }
 .node--dimmed { opacity: 0.22; }
+/* 마우스를 올린 대상과 이어지지 않은 노드(선택이 없을 때만). */
+.node--faded { opacity: 0.45; }
 .node--appearing { animation: node-appear 0.35s ease-out both; }
 @keyframes node-appear {
   from { opacity: 0; transform: scale(0.96); }
@@ -133,6 +135,7 @@ button.node__badge:focus-visible { outline: 1.5px solid var(--text-secondary); o
 
 @media (prefers-reduced-motion: reduce) {
   .node--appearing { animation: none; }
+  .node { transition: none; }
   /* 움직임 없이 강조 시간 동안 링만 보인다. */
   .node__pulse { animation: none; opacity: 1; }
 }
