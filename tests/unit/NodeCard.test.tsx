@@ -135,6 +135,7 @@ describe("name tooltip", () => {
 
   test("tooltip opens on keyboard focus of the node wrapper and closes on Esc", () => {
     const wrapper = inWrapper(truncatedData);
+    fireEvent.keyDown(document.body, { key: "Tab" });
     fireEvent.focusIn(wrapper);
     wait(300);
     const tip = screen.getByRole("tooltip");
@@ -147,6 +148,81 @@ describe("name tooltip", () => {
     wait(300);
     expect(screen.getByRole("tooltip")).toBeInTheDocument();
     fireEvent.focusOut(wrapper);
+    expect(screen.queryByRole("tooltip")).toBeNull();
+  });
+
+  test("mouse click focus does not keep the tooltip after leave", () => {
+    const wrapper = inWrapper(truncatedData);
+    const card = document.querySelector(".node") as HTMLElement;
+    hoverCard();
+    fireEvent.pointerDown(wrapper);
+    fireEvent.focusIn(wrapper);
+    wait(300);
+    expect(screen.getByRole("tooltip")).toBeInTheDocument();
+    fireEvent.mouseLeave(card);
+    expect(screen.queryByRole("tooltip")).toBeNull();
+  });
+
+  test("a stale focus flag cannot pin the tooltip after it was disabled", () => {
+    const wrapper = inWrapper(truncatedData);
+    fireEvent.keyDown(document.body, { key: "Tab" });
+    fireEvent.focusIn(wrapper);
+    wait(300);
+    expect(screen.getByRole("tooltip")).toBeInTheDocument();
+    cleanup();
+    // 끄는 중으로 바뀌면 포커스 표시도 지워진다.
+    const w2 = inWrapper(truncatedData, { dragging: true });
+    fireEvent.keyDown(document.body, { key: "Tab" });
+    fireEvent.focusIn(w2);
+    wait(500);
+    expect(screen.queryByRole("tooltip")).toBeNull();
+    cleanup();
+    const w3 = inWrapper(truncatedData);
+    hoverCard();
+    wait(300);
+    fireEvent.mouseLeave(document.querySelector(".node") as HTMLElement);
+    expect(screen.queryByRole("tooltip")).toBeNull();
+    void w3;
+  });
+
+  test("disabling clears hover so a later enable does not reopen", () => {
+    const { rerender } = render(
+      <ReactFlowProvider>
+        <div className="react-flow__node" tabIndex={0}><NodeCard data={truncatedData} {...rfProps} /></div>
+      </ReactFlowProvider>,
+    );
+    hoverCard();
+    wait(300);
+    expect(screen.getByRole("tooltip")).toBeInTheDocument();
+    rerender(
+      <ReactFlowProvider>
+        <div className="react-flow__node" tabIndex={0}><NodeCard data={truncatedData} {...rfProps} dragging /></div>
+      </ReactFlowProvider>,
+    );
+    expect(screen.queryByRole("tooltip")).toBeNull();
+    rerender(
+      <ReactFlowProvider>
+        <div className="react-flow__node" tabIndex={0}><NodeCard data={truncatedData} {...rfProps} /></div>
+      </ReactFlowProvider>,
+    );
+    wait(1000);
+    expect(screen.queryByRole("tooltip")).toBeNull();
+  });
+
+  test("Esc listener exists only while open", () => {
+    const add = vi.spyOn(document, "addEventListener");
+    inWrapper(truncatedData);
+    expect(add.mock.calls.some(([t]) => t === "keydown")).toBe(false);
+    hoverCard();
+    wait(300);
+    expect(add.mock.calls.some(([t]) => t === "keydown")).toBe(true);
+    add.mockRestore();
+  });
+
+  test.each(["dimmed", "faded"] as const)("no tooltip on a %s node", (state) => {
+    inWrapper({ ...truncatedData, state });
+    hoverCard();
+    wait(1000);
     expect(screen.queryByRole("tooltip")).toBeNull();
   });
 

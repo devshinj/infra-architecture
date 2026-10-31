@@ -5,7 +5,7 @@ import type { Category } from "@/domain/catalog";
 
 import "./canvas.css";
 import { CategoryIcon } from "./icons";
-import { NameTooltip, useNameTooltip } from "./NameTooltip";
+import { NameTooltip, isKeyboardFocus, useNameTooltip } from "./NameTooltip";
 
 export type NodeVisualState = "normal" | "selected" | "dimmed" | "faded" | "appearing" | "updated";
 
@@ -37,14 +37,17 @@ export function NodeCard({ data, dragging }: Pick<NodeProps, "data"> & Partial<N
   const tipId = useId();
   const ref = useRef<HTMLDivElement>(null);
   const truncated = d.truncated === true;
-  // 끄는 중에는 말풍선을 띄우지 않는다.
-  const tip = useNameTooltip(truncated && !dragging);
+  // 끄는 중이거나 흐려진 노드(불투명도를 물려받아 안 보인다)에는 말풍선을 띄우지 않는다.
+  const tip = useNameTooltip(truncated && !dragging && d.state !== "dimmed" && d.state !== "faded");
   const setTip = tip.set;
   // 키보드 포커스는 카드가 아니라 React Flow 노드 래퍼가 받는다.
   useEffect(() => {
     const wrapper = ref.current?.closest<HTMLElement>(".react-flow__node");
     if (!wrapper || !truncated) return;
-    const on = () => setTip("focus", true);
+    // 마우스 클릭으로 받은 포커스는 치지 않는다(마우스를 떠나도 남아 있게 되므로).
+    const on = () => {
+      if (isKeyboardFocus(wrapper)) setTip("focus", true);
+    };
     const off = () => setTip("focus", false);
     wrapper.addEventListener("focusin", on);
     wrapper.addEventListener("focusout", off);
