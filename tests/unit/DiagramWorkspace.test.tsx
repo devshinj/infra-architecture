@@ -280,6 +280,43 @@ test("warn badge or card warning item for the already selected node still opens 
   expect(screen.getByRole("heading", { name: "주의할 점" })).toBeInTheDocument();
 });
 
+test("warning item selects the node and moves the camera", () => {
+  hookState.busy = false;
+  render(ui(solo(1) as never));
+  fireEvent.click(screen.getByRole("tab", { name: "대화" }));
+  fireEvent.click(cardToggle());
+  const before = hookState.focus.at(-1) as { id: string; token: number } | undefined;
+  fireEvent.click(within(screen.getByRole("region", { name: "주의" })).getByRole("button", { name: /1대뿐/ }));
+  const after = hookState.focus.at(-1) as { id: string; token: number };
+  expect(after.id).toBe("b");
+  expect(after.token).toBeGreaterThan(before?.token ?? 0);
+  expect(screen.getByRole("tab", { name: "설명" })).toHaveAttribute("aria-selected", "true");
+  expect(screen.getByRole("heading", { name: "주의할 점" })).toBeInTheDocument();
+  // 카드는 열린 채로 둔다.
+  expect(cardToggle()).toHaveAttribute("aria-expanded", "true");
+});
+
+test("same warning clicked twice refocuses", () => {
+  hookState.busy = false;
+  render(ui(solo(1) as never));
+  fireEvent.click(cardToggle());
+  const item = () => within(screen.getByRole("region", { name: "주의" })).getByRole("button", { name: /1대뿐/ });
+  fireEvent.click(item());
+  const first = hookState.focus.at(-1) as { id: string; token: number };
+  fireEvent.click(item());
+  const second = hookState.focus.at(-1) as { id: string; token: number };
+  expect(second.id).toBe("b");
+  expect(second.token).toBeGreaterThan(first.token);
+});
+
+test("node warning badge does not move the camera", () => {
+  hookState.busy = false;
+  render(ui(solo(1) as never));
+  const before = hookState.focus.at(-1);
+  fireEvent.click(screen.getByRole("button", { name: "경고배지b" }));
+  expect(hookState.focus.at(-1)).toBe(before);
+});
+
 test("selecting a node shows its explanation in 설명", async () => {
   hookState.busy = false;
   const posts: unknown[] = [];

@@ -151,7 +151,7 @@ export function InfoCard({ state, readOnly, busy, open, onOpenChange, scrollToWa
               <ul className={styles.warnings}>
                 {warnings.map((w) => (
                   <li key={w.id}>
-                    <button type="button" className={styles.warning} data-level={w.level} onClick={() => onSelectWarning(w.nodeId)}>
+                    <button type="button" className={styles.warning} data-level={w.level} aria-label={`${state.nodes[w.nodeId]?.label ?? w.nodeId}으로 가기: ${w.text}`} onClick={() => onSelectWarning(w.nodeId)}>
                       <span className={styles.level}>{LEVEL_LABEL[w.level]}</span>
                       <span className={styles.warnText}>{w.text}</span>
                     </button>

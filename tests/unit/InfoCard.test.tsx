@@ -110,6 +110,12 @@ test("warning item selects node", async () => {
   expect(onSelectWarning).toHaveBeenCalledWith("web");
 });
 
+test("warning item has descriptive aria-label", () => {
+  render(<Card open />);
+  const warn = within(screen.getByRole("region", { name: "주의" }));
+  expect(warn.getByRole("button", { name: /^웹1으로 가기: .*1대뿐/ })).toBeInTheDocument();
+});
+
 test("scroll request opens at the warnings section", () => {
   const { rerender } = render(<Card open scrollToWarnings={0} />);
   vi.mocked(Element.prototype.scrollIntoView).mockClear();

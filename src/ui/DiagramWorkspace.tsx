@@ -377,6 +377,15 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
     if (selectedRef.current === id) setTab("설명");
     setOptions((o) => ({ ...o, selectedId: id }));
   }, []);
+  // 카드 주의 항목: 선택에 더해 카메라도 그 노드로 옮긴다(열린 카드를 피해 가운데에 둔다). 같은 항목을 다시 눌러도 새 토큰으로 다시 간다.
+  const onSelectWarning = useCallback(
+    (id: string) => {
+      selectNode(id);
+      seq.current += 1;
+      setFocusRequest({ id, token: seq.current });
+    },
+    [selectNode],
+  );
 
   // Form save = one version (source form); adopt it through the same server-state path as assumptions.
   const saveFields: MissingChecklistProps["onSave"] = async (input) => {
@@ -529,7 +538,7 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
             scrollToWarnings={warnScroll}
             onChooseAssumption={(k, v) => void onChooseAssumption(k, v)}
             onConfirmAssumption={onConfirmAssumption}
-            onSelectWarning={selectNode}
+            onSelectWarning={onSelectWarning}
             onMeasure={onCardMeasure}
             checklist={{
               focusId: focus?.id ?? null,
