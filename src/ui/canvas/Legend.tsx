@@ -115,7 +115,7 @@ export function Legend({ hideAux, empty = false }: LegendProps) {
             <li className={styles.row}>
               <svg className={styles.sample} width={40} height={14} viewBox="0 0 40 14" aria-hidden="true">
                 <path className="edge-line edge-line--request" d="M3 7H34" />
-                <path className="edge-arrow edge-arrow--request" d="M30 3.5 35 7 30 10.5" />
+                <path className="edge-arrow edge-arrow--request" d="M30.61 9.4 L35 7 L30.61 4.6" />
               </svg>
               <span className={styles.text}>화살표: 연결이 향하는 쪽</span>
             </li>
