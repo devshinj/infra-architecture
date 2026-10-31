@@ -30,6 +30,8 @@ vi.mock("@/canvas/Canvas", () => ({
       {onBadgeClick && <button onClick={() => onBadgeClick("a")}>배지a</button>}
       {onWarnBadgeClick && <button onClick={() => onWarnBadgeClick("b")}>경고배지b</button>}
       <button onClick={() => onSelect("b")}>선택b</button>
+      <button onClick={() => onSelect("a")}>선택a</button>
+      <button onClick={() => onSelect("e1")}>선택e1</button>
       <button onClick={onAutoArrange}>자동정렬</button>
       {onImportSample && <button onClick={() => onImportSample("s")}>샘플 불러오기</button>}
       <button onClick={() => onSelect(null)}>선택해제</button>
@@ -583,7 +585,7 @@ test("menu ask selects node, opens 설명 and focuses the ask input", () => {
   expect(screen.getByLabelText("이 노드에 대해 물어보기")).toHaveFocus();
 });
 
-test("ask input is disabled with the reason while another turn runs; edges get no ask input", () => {
+test("ask input is disabled with the reason while another turn runs", () => {
   stubFetch();
   hookState.busy = true;
   try {
@@ -594,4 +596,28 @@ test("ask input is disabled with the reason while another turn runs; edges get n
   } finally {
     hookState.busy = false;
   }
+});
+
+test("menu-ask focus is spent once: reselecting the node or going a→b→a does not refocus the input", () => {
+  stubFetch();
+  hookState.busy = false;
+  render(ui(two() as never));
+  fireEvent.click(screen.getByRole("button", { name: "메뉴로 묻기a" }));
+  expect(screen.getByLabelText("이 노드에 대해 물어보기")).toHaveFocus();
+  (document.activeElement as HTMLElement).blur(); // 캔버스를 누르면 포커스가 입력칸을 떠난다
+  fireEvent.click(screen.getByRole("button", { name: "선택b" }));
+  expect(screen.getByLabelText("이 노드에 대해 물어보기")).not.toHaveFocus();
+  fireEvent.click(screen.getByRole("button", { name: "선택a" }));
+  expect(screen.getByLabelText("이 노드에 대해 물어보기")).not.toHaveFocus();
+});
+
+test("an edge gets no ask input", () => {
+  stubFetch();
+  hookState.busy = false;
+  const s = two() as { number: number; state: { edges: object } };
+  s.state.edges = { e1: { id: "e1", from: "a", to: "b", edgeKind: "request" } };
+  render(ui(s as never));
+  fireEvent.click(screen.getByRole("button", { name: "선택e1" }));
+  expect(screen.getByRole("heading", { name: "연결선" })).toBeInTheDocument();
+  expect(screen.queryByLabelText("이 노드에 대해 물어보기")).not.toBeInTheDocument();
 });

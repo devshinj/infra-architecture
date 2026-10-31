@@ -100,3 +100,28 @@ test("context menu ask item calls onAskNode with the node id", async () => {
   await userEvent.click(await screen.findByRole("menuitem", { name: "이 노드에 대해 물어보기" }));
   expect(onAskNode).toHaveBeenCalledWith(node.getAttribute("data-id"));
 });
+
+test("ArrowUp wraps, ArrowDown wraps, and a disabled item is skipped", async () => {
+  const { rerender } = render(<NodeMenu x={0} y={0} onChoose={vi.fn()} onAsk={vi.fn()} onClose={vi.fn()} />);
+  const [first, second] = screen.getAllByRole("menuitem");
+  expect(first).toHaveFocus();
+  await userEvent.keyboard("{ArrowUp}");
+  expect(second).toHaveFocus();
+  await userEvent.keyboard("{ArrowDown}");
+  expect(first).toHaveFocus();
+  rerender(<NodeMenu x={0} y={0} onChoose={vi.fn()} onAsk={vi.fn()} askDisabled onClose={vi.fn()} />);
+  await userEvent.keyboard("{ArrowDown}");
+  expect(first).toHaveFocus();
+});
+
+test("zones get no ask item in the canvas menu", async () => {
+  const { container } = render(<div style={{ width: 800, height: 600 }}><Canvas {...baseProps()} onMention={vi.fn()} onAskNode={vi.fn()} /></div>);
+  const zone = await waitFor(() => {
+    const z = container.querySelector(".react-flow__node-zone");
+    expect(z).not.toBeNull();
+    return z as HTMLElement;
+  });
+  fireEvent.contextMenu(zone);
+  expect(await screen.findByRole("menuitem", { name: "대화에 참조 붙이기" })).toBeInTheDocument();
+  expect(screen.queryByRole("menuitem", { name: "이 노드에 대해 물어보기" })).not.toBeInTheDocument();
+});

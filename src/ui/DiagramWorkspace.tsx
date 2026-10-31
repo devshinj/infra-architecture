@@ -349,13 +349,14 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
   }; // no history view/compare/restore, edit mode or sample import while the AI answers
 
   /** 노드에 대해 묻기(설명 패널·우클릭 메뉴가 부른다): 대화 탭으로 가서 새 질문 세션의 첫 차례를 시작한다. */
-  const startAsk = (nodeId: string, text: string) => {
+  const startAsk = (nodeId: string, text: string): boolean => {
     const label = labelOf(nodeId);
     const t = text.trim();
-    if (!live || chat.busy || label === null || !t) return;
+    if (!live || chat.busy || label === null || !t) return false;
     setTab("대화");
     sessions.startNew({ nodeId, nodeLabel: label, text: t });
     void chat.send(t, { kind: "ask", nodeId, sessionId: null });
+    return true;
   };
 
   // Confirm first (the model cannot overwrite confirmed assumptions), then ask the AI to adjust the structure.
@@ -641,7 +642,7 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
                   disabled: askLocked,
                   ...(askReason ? { disabledReason: askReason } : {}),
                   onAsk: (text: string) => startAsk(selId!, text),
-                  ...(askFocus?.id === selId ? { focusToken: askFocus.token } : {}),
+                  ...(askFocus?.id === selId ? { focusToken: askFocus.token, onFocusHandled: () => setAskFocus(null) } : {}),
                 },
               }
             : {})}
