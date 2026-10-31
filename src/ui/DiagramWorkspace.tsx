@@ -28,6 +28,7 @@ import type { MentionInputHandle } from "./chat/MentionInput";
 import type { ChecklistDrafts, ChecklistExpanded, MissingChecklistProps } from "./chat/MissingChecklist";
 import { type ChatLine, useChatTurn } from "./chat/useChatTurn";
 import { type CardMeasure, InfoCard } from "./canvas/InfoCard";
+import { Legend } from "./canvas/Legend";
 import { FlyLayer, useFly } from "./FlyLayer";
 import type { ExplanationProps } from "./explain/Explanation";
 import { type TargetKind, useExplanations } from "./explain/useExplanations";
@@ -542,6 +543,7 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
               onLocate: locate,
             }}
           />
+          <Legend hideAux={canvasOptions.hideAux} empty={Object.keys(shown.nodes).length === 0} />
         </div>
       </section>
       <PanelResizer width={shownPanelWidth} min={PANEL_MIN} max={panelMax} defaultWidth={PANEL_DEFAULT} onChange={changePanelWidth} offset={PANEL_GAP} />
