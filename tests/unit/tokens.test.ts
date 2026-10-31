@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { expect, test } from "vitest";
 
@@ -147,6 +147,21 @@ test("glass panels fall back to an opaque background without backdrop-filter", (
   expect(block).toContain(".sidebar, .panel { background: var(--bg-sidebar); }");
 });
 
+test("name tooltip, legend and info card fall back to an opaque background without backdrop-filter", () => {
+  for (const [file, sel] of [["src/canvas/canvas.css", ".name-tooltip"], ["src/ui/canvas/legend.module.css", ".legend"], ["src/ui/canvas/infoCard.module.css", ".card"]] as const) {
+    const css = read(file);
+    const block = css.slice(css.indexOf("@supports not ((backdrop-filter"));
+    expect(block, file).toContain(`${sel} { background: var(--bg-sidebar); }`);
+  }
+});
+
+test("info card and legend body text is 13px (panel body rule)", () => {
+  const card = read("src/ui/canvas/infoCard.module.css");
+  for (const sel of [".title", ".empty", ".warnText"]) expect(rule(card, sel), sel).toMatch(/font-size:\s*13px/);
+  const legend = read("src/ui/canvas/legend.module.css");
+  for (const sel of [".toggle", ".text"]) expect(rule(legend, sel), sel).toMatch(/font-size:\s*13px/);
+});
+
 test("chat bubbles and progress dots follow the restrained spec", () => {
   const css = read("src/ui/chat/chat.module.css");
   const user = rule(css, ".user");
@@ -175,4 +190,95 @@ test("scrollbar tokens and thin themed scrollbars; the app shell never scrolls t
   expect(globals).toMatch(/::-webkit-scrollbar-thumb:hover \{[^}]*var\(--scrollbar-thumb-hover\)/);
   // 셸은 화면에 고정돼 문서 높이에 보태지지 않는다.
   expect(rule(read("src/ui/app.module.css"), ".shell")).toMatch(/position: fixed;\s*inset: 0;[^}]*overflow: hidden;/);
+});
+
+// ---- 글자 크기·대비 (P3E Task 1) ----
+function cssFiles(dir: string): string[] {
+  return readdirSync(dir).flatMap((n) => {
+    const p = join(dir, n);
+    return statSync(p).isDirectory() ? cssFiles(p) : p.endsWith(".css") ? [p] : [];
+  });
+}
+
+test("no css font-size below 11px", () => {
+  // 예외: 대화 아바타 IS 모노그램 하나.
+  const allowed = [{ file: "chat.module.css", selector: ".mono" }];
+  const bad: string[] = [];
+  for (const f of cssFiles(join(process.cwd(), "src"))) {
+    const css = readFileSync(f, "utf8");
+    for (const m of css.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+      const sel = m[1].trim().split(/\r?\n/).pop()!.trim();
+      for (const d of m[2].matchAll(/font-size:\s*([\d.]+)px/g)) {
+        if (parseFloat(d[1]) >= 11) continue;
+        if (allowed.some((a) => f.endsWith(a.file) && sel === a.selector)) continue;
+        bad.push(`${f} ${sel} ${d[0]}`);
+      }
+    }
+  }
+  expect(bad).toEqual([]);
+});
+
+// rgba 색을 불투명 배경 위에 합성한다.
+function over(rgba: string, bg: string): string {
+  const m = rgba.match(/rgba\((\d+),\s*(\d+),\s*(\d+),\s*([\d.]+)\)/)!;
+  const a = parseFloat(m[4]);
+  const ch = (h: string, i: number) => parseInt(h.slice(i, i + 2), 16);
+  return "#" + [1, 3, 5].map((i, k) => Math.round(parseInt(m[k + 1]) * a + ch(bg, i) * (1 - a)).toString(16).padStart(2, "0")).join("");
+}
+
+test("text contrast is at least 4.5:1", () => {
+  const css = read("src/styles/tokens.css");
+  const token = (name: string) => css.match(new RegExp(`--${name}:[ ]*(#[0-9A-Fa-f]{6});`))![1];
+  const glass = over(css.match(/--glass-bg:\s*(rgba\([^)]*\));/)![1], token("bg-canvas"));
+  for (const fg of ["text-primary", "text-secondary"]) {
+    for (const [name, bg] of [["bg-canvas", token("bg-canvas")], ["bg-panel", token("bg-panel")], ["glass-bg", glass]]) {
+      expect(contrast(token(fg), bg), `${fg} on ${name}`).toBeGreaterThanOrEqual(4.5);
+    }
+  }
+  // 영역 이름표: canvas.css 의 글자 비율을 그대로 읽는다.
+  const canvas = read("src/canvas/canvas.css");
+  const fgPct = Number(canvas.match(/color: color-mix\(in srgb, var\(--tint\) (\d+)%, var\(--text-primary\)\)/)![1]);
+  for (const m of css.matchAll(/--zone-tint-([a-z0-9]+):\s*(#[0-9A-Fa-f]{6});/g)) {
+    const bg = mix(m[2], 22, token("bg-canvas"));
+    const fg = mix(m[2], fgPct, token("text-primary"));
+    expect(contrast(fg, bg), `zone ${m[1]}`).toBeGreaterThanOrEqual(4.5);
+  }
+});
+
+// ---- 노드 글자 영역·대비 (P3E Task 3) ----
+test("node card text contrast on --bg-node is at least 4.5:1", () => {
+  const css = read("src/styles/tokens.css");
+  const token = (name: string) => css.match(new RegExp(`--${name}:[ ]*(#[0-9A-Fa-f]{6});`))![1];
+  for (const fg of ["text-primary", "text-secondary"]) {
+    expect(contrast(token(fg), token("bg-node")), `${fg} on bg-node`).toBeGreaterThanOrEqual(4.5);
+  }
+});
+
+test("layout AZ chip width matches .node__az and .node__subrow CSS", async () => {
+  const { azChipWidth, SUB_PX } = await import("@/canvas/layout");
+  const { textWidth } = await import("@/canvas/text");
+  const css = read("src/canvas/canvas.css");
+  const az = rule(css, ".node__az");
+  expect(Number(az.match(/font-size:\s*(\d+)px/)![1])).toBe(SUB_PX);
+  const border = Number(az.match(/border:\s*(\d+)px solid/)![1]);
+  const padX = Number(az.match(/padding:\s*0 (\d+)px/)![1]);
+  const gap = Number(rule(css, ".node__subrow").match(/\bgap:\s*(\d+)px/)![1]);
+  // 칩 = 글자(`AZ <az>`) + 양쪽 안쪽 여백 + 양쪽 테두리 + 보조 글자와의 사이.
+  expect(azChipWidth("2a")).toBeCloseTo(textWidth("AZ 2a", SUB_PX) + 2 * padX + 2 * border + gap);
+});
+
+test("layout truncation width equals the .node CSS content box", async () => {
+  const { NODE, CONTENT_WIDTH } = await import("@/canvas/layout");
+  const css = read("src/canvas/canvas.css");
+  const node = rule(css, ".node");
+  const px = (re: RegExp) => Number(node.match(re)![1]);
+  const pad = node.match(/padding:\s*0 (\d+)px 0 (\d+)px;/)!;
+  const padRightCss = Number(pad[1]);
+  const padLeftCss = Number(pad[2]);
+  const gap = px(/\bgap:\s*(\d+)px/);
+  const border = px(/border:\s*(\d+)px solid/);
+  const icon = Number(rule(css, ".node__icon").match(/width:\s*(\d+)px/)![1]);
+  // 한 줄 안의 글자 칸 = 최대 너비 − 양쪽 테두리 − 안쪽 여백 − 아이콘 − 아이콘과 글자 사이.
+  const cssContent = NODE.maxWidth - 2 * border - padLeftCss - padRightCss - icon - gap;
+  expect(CONTENT_WIDTH).toBe(cssContent);
 });

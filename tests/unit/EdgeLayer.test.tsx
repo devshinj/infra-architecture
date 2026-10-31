@@ -31,7 +31,7 @@ const fanOutLayout = lay([
   { id: "e2", points: [{ x: 165, y: 52 }, { x: 165, y: 110 }, { x: 245, y: 110 }, { x: 245, y: 170 }] },
 ]);
 const fanOutEdges = [de("e1", "alb", "w1"), de("e2", "alb", "w2")];
-const base = { selectedId: null, hoverLabels: true, motion: false, appearing: new Set<string>(), nodeCount: 3 };
+const base = { selectedId: null, hoverId: null, hoverLabels: true, motion: false, appearing: new Set<string>(), nodeCount: 3 };
 
 test("shared trunk path is rendered once", () => {
   render(<EdgeLayer layout={fanOutLayout} edges={fanOutEdges} {...base} />);
@@ -151,4 +151,36 @@ test("clicking the selected edge again clears selection", () => {
   render(<EdgeLayer layout={fanOutLayout} edges={fanOutEdges} {...base} selectedId="e2" onSelect={onSelect} />);
   fireEvent.click(document.querySelector('[data-edge-id="e2"] .edge-hit')!);
   expect(onSelect).toHaveBeenCalledWith(null);
+});
+
+test("hoverId fades unrelated edges", () => {
+  const edges = [...fanOutEdges, de("e3", "x", "y")];
+  const layout = lay([...fanOutLayout.edges, { id: "e3", points: [{ x: 10, y: 10 }, { x: 10, y: 60 }] }]);
+  render(<EdgeLayer layout={layout} edges={edges} {...base} hoverId="alb" />);
+  expect(document.querySelector('[data-edge-id="e3"]')).toHaveClass("edge--faded");
+  expect(document.querySelector('[data-edge-id="e1"]')).not.toHaveClass("edge--faded");
+});
+
+test("hoverId is ignored while something is selected", () => {
+  render(<EdgeLayer layout={fanOutLayout} edges={fanOutEdges} {...base} selectedId="e1" hoverId="e2" />);
+  expect(document.querySelector('[data-edge-id="e2"]')).toHaveClass("edge--dim");
+  expect(document.querySelector('[data-edge-id="e2"]')).not.toHaveClass("edge--faded");
+});
+
+test("hovering an edge hit path calls onHover", () => {
+  const onHover = vi.fn();
+  render(<EdgeLayer layout={fanOutLayout} edges={fanOutEdges} {...base} onHover={onHover} />);
+  const hit = document.querySelector('[data-edge-id="e1"] .edge-hit')!;
+  fireEvent.mouseEnter(hit);
+  expect(onHover).toHaveBeenLastCalledWith("e1");
+  fireEvent.mouseLeave(hit);
+  expect(onHover).toHaveBeenLastCalledWith(null);
+});
+
+test("appearing edges are not faded by hover", () => {
+  const edges = [...fanOutEdges, de("e3", "x", "y")];
+  const layout = lay([...fanOutLayout.edges, { id: "e3", points: [{ x: 10, y: 10 }, { x: 10, y: 60 }] }]);
+  render(<EdgeLayer layout={layout} edges={edges} {...base} hoverId="alb" appearing={new Set(["e3"])} />);
+  expect(document.querySelector('[data-edge-id="e3"]')).not.toHaveClass("edge--faded");
+  expect(document.querySelector('[data-edge-id="e1"]')).not.toHaveClass("edge--faded");
 });

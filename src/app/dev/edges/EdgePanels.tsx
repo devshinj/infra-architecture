@@ -96,7 +96,7 @@ function PanelView({ panel }: { panel: Panel }) {
       <h3 style={{ margin: "0 0 2px", fontSize: 14, fontWeight: 600 }}>{panel.title}</h3>
       <p style={{ margin: "2px 0 8px", fontSize: 12.5, lineHeight: 1.55, color: "var(--text-secondary)" }}>{panel.desc}</p>
       <div style={{ position: "relative", width: 330, height: 240 }} onClick={() => setSelected(null)}>
-        <EdgeLayer layout={layout} edges={edges} selectedId={selected} hoverLabels motion appearing={appearing} nodeCount={panel.nodes.length} />
+        <EdgeLayer layout={layout} edges={edges} selectedId={selected} hoverId={null} hoverLabels motion appearing={appearing} nodeCount={panel.nodes.length} />
         {panel.nodes.map((nd) => (
           <div
             key={nd.id}

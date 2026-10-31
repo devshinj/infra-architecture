@@ -28,6 +28,7 @@ import type { MentionInputHandle } from "./chat/MentionInput";
 import type { ChecklistDrafts, ChecklistExpanded, MissingChecklistProps } from "./chat/MissingChecklist";
 import { type ChatLine, useChatTurn } from "./chat/useChatTurn";
 import { type CardMeasure, InfoCard } from "./canvas/InfoCard";
+import { Legend, legendPlacement } from "./canvas/Legend";
 import { FlyLayer, useFly } from "./FlyLayer";
 import type { ExplanationProps } from "./explain/Explanation";
 import { type TargetKind, useExplanations } from "./explain/useExplanations";
@@ -135,7 +136,19 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
     (m: CardMeasure) => setCardSize((p) => (p && p.width === m.width && p.height === m.height && p.lineHeight === m.lineHeight ? p : m)),
     [],
   );
-  const insetBottom = PANEL_GAP + (cardSize?.lineHeight || CARD_LINE_HEIGHT) + PANEL_GAP;
+  // 범례: 좁아서 카드와 가로로 겹치면 카드 접힌 줄(열려 있으면 열린 카드) 위로 올리고, 카메라 바닥도 그만큼 비운다.
+  const [legendWidth, setLegendWidth] = useState(0);
+  const { bottom: legendBottom, insetBottom } = legendPlacement({
+    canvasWidth: workspaceW,
+    insetLeft,
+    insetRight,
+    cardWidth: cardSize?.width || CARD_WIDTH,
+    legendWidth,
+    gap: PANEL_GAP,
+    cardLine: cardSize?.lineHeight || CARD_LINE_HEIGHT,
+    cardOpen,
+    cardHeight: cardSize?.height || 0,
+  });
   const cardW = cardOpen ? (cardSize?.width || CARD_WIDTH) + PANEL_GAP : 0;
   const cardH = cardOpen ? PANEL_GAP + (cardSize?.height || 0) + PANEL_GAP : 0;
   const cameraInsets = useMemo(
@@ -376,6 +389,15 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
     if (selectedRef.current === id) setTab("설명");
     setOptions((o) => ({ ...o, selectedId: id }));
   }, []);
+  // 카드 주의 항목: 선택에 더해 카메라도 그 노드로 옮긴다(열린 카드를 피해 가운데에 둔다). 같은 항목을 다시 눌러도 새 토큰으로 다시 간다.
+  const onSelectWarning = useCallback(
+    (id: string) => {
+      selectNode(id);
+      seq.current += 1;
+      setFocusRequest({ id, token: seq.current });
+    },
+    [selectNode],
+  );
 
   // Form save = one version (source form); adopt it through the same server-state path as assumptions.
   const saveFields: MissingChecklistProps["onSave"] = async (input) => {
@@ -528,7 +550,7 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
             scrollToWarnings={warnScroll}
             onChooseAssumption={(k, v) => void onChooseAssumption(k, v)}
             onConfirmAssumption={onConfirmAssumption}
-            onSelectWarning={selectNode}
+            onSelectWarning={onSelectWarning}
             onMeasure={onCardMeasure}
             checklist={{
               focusId: focus?.id ?? null,
@@ -542,6 +564,7 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
               onLocate: locate,
             }}
           />
+          <Legend hideAux={canvasOptions.hideAux} empty={Object.keys(shown.nodes).length === 0} onMeasure={setLegendWidth} {...(legendBottom !== undefined ? { bottom: legendBottom } : {})} />
         </div>
       </section>
       <PanelResizer width={shownPanelWidth} min={PANEL_MIN} max={panelMax} defaultWidth={PANEL_DEFAULT} onChange={changePanelWidth} offset={PANEL_GAP} />

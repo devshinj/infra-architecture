@@ -1,11 +1,13 @@
 import ELK from "elkjs/lib/elk.bundled.js";
 import type { ElkExtendedEdge, ElkNode } from "elkjs/lib/elk-api";
 
+import type { DNode } from "@/domain/types";
+
 import type { DisplayGraph } from "./display";
 import { elbowRoute } from "./elbow";
 import { textWidth, truncate } from "./text";
 
-export const NODE = { height: 44, minWidth: 132, maxWidth: 220, padLeft: 38 /* 아이콘 */, padRight: 18 /* 배지 자리 */, gap: 28, layerGap: 52 };
+export const NODE = { height: 52, minWidth: 132, maxWidth: 240, padLeft: 42 /* 테두리 양쪽 2+안쪽 왼쪽 10+아이콘 22+사이 8 (canvas.css .node) */, padRight: 18 /* 안쪽 오른쪽 여백(배지 자리) */, gap: 28, layerGap: 52 };
 export const GROUP_PAD = { top: 30, side: 12, bottom: 12 }; // top 은 이름 머리 공간
 
 export interface Rect { x: number; y: number; width: number; height: number }
@@ -18,12 +20,12 @@ export interface Layout { nodes: Record<string, LaidOutNode>; groups: Record<str
 type Pt = { x: number; y: number };
 
 const EMPTY_GROUP = { width: 160, height: 56 };
-const LABEL_PX = 12;
-const SUB_PX = 9.5;
+export const LABEL_PX = 14;
+export const SUB_PX = 11;
 const ROOT = "__root";
 const CHANNEL_MARGIN = 24; // main 오른쪽 끝 ↔ 첫 통로, 마지막 통로 ↔ 외부 열
 const CHANNEL_STEP = 12; // 통로끼리 간격 (spacing.edgeEdge)
-const CONTENT_WIDTH = NODE.maxWidth - NODE.padLeft - NODE.padRight;
+export const CONTENT_WIDTH = NODE.maxWidth - NODE.padLeft - NODE.padRight;
 
 const elk = new ELK();
 
@@ -42,8 +44,17 @@ const BASE_OPTIONS: Record<string, string> = {
 };
 const GROUP_PADDING = `[top=${GROUP_PAD.top},left=${GROUP_PAD.side},bottom=${GROUP_PAD.bottom},right=${GROUP_PAD.side}]`;
 
-function nodeWidth(label: string, sub: string | undefined): number {
-  const text = Math.max(textWidth(label, LABEL_PX), sub ? textWidth(sub, SUB_PX) : 0);
+/** AZ 칩 너비: 글자 `AZ <az>`(11px) + 양쪽 안쪽 여백 3 + 양쪽 테두리 1 + 보조 글자와의 사이 6 (canvas.css .node__az · .node__subrow). */
+export function azChipWidth(az: string): number {
+  return textWidth(`AZ ${az}`, SUB_PX) + 2 * 3 + 2 * 1 + 6;
+}
+
+const azOf = (n: DNode): string | undefined => (n.attrs.az !== undefined && n.attrs.az !== null ? String(n.attrs.az) : undefined);
+
+function nodeWidth(label: string, sub: string | undefined, az: string | undefined): number {
+  // 보조 줄은 보조 글자와 AZ 칩이 나눠 쓴다.
+  const subRow = (sub ? textWidth(sub, SUB_PX) : 0) + (az !== undefined ? azChipWidth(az) : 0);
+  const text = Math.max(textWidth(label, LABEL_PX), subRow);
   return Math.min(NODE.maxWidth, Math.max(NODE.minWidth, text + NODE.padLeft + NODE.padRight));
 }
 
@@ -136,7 +147,7 @@ export async function layoutDiagram(g: DisplayGraph, pinned: Record<string, { x:
       elkById.get(containerOf(grp.id))!.children!.push(n);
     }
     for (const node of nodes.filter((x) => inRun(x.id))) {
-      const n: ElkNode = { id: node.id, width: nodeWidth(node.label, node.sub), height: NODE.height };
+      const n: ElkNode = { id: node.id, width: nodeWidth(node.label, node.sub, azOf(node)), height: NODE.height };
       elkById.set(node.id, n);
       elkById.get(containerOf(node.id))!.children!.push(n);
     }
@@ -353,7 +364,11 @@ export async function layoutDiagram(g: DisplayGraph, pinned: Record<string, { x:
       ...(pin ? { x: pin.x, y: pin.y } : {}),
       displayLabel: truncate(n.label, CONTENT_WIDTH, LABEL_PX),
     };
-    if (n.sub !== undefined) ln.displaySub = truncate(n.sub, CONTENT_WIDTH, SUB_PX);
+    // 칩이 같은 줄에 있으면 그만큼 덜 써서, CSS 가 말풍선 없이 자르는 일이 없게 한다.
+    if (n.sub !== undefined) {
+      const az = azOf(n);
+      ln.displaySub = truncate(n.sub, CONTENT_WIDTH - (az !== undefined ? azChipWidth(az) : 0), SUB_PX);
+    }
     out.nodes[n.id] = ln;
   }
 

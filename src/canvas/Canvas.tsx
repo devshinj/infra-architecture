@@ -9,6 +9,7 @@ import { mergeWarnings, warningsByNode } from "@/domain/warnings";
 
 import "./canvas.css";
 import { EdgeLayerPortal } from "./EdgeLayer";
+import { emphasisOf } from "./emphasis";
 import type { GroupBoxData } from "./GroupBox";
 import type { NodeCardData, NodeVisualState } from "./NodeCard";
 import { outermostCollapsedAncestor, type DisplayGraph, type DisplayOptions } from "./display";
@@ -17,6 +18,7 @@ import { NodeMenu } from "./NodeMenu";
 import { nodeTypes } from "./nodeTypes";
 import { prefersReducedMotion, unionRect, useCamera, type Insets, type Viewport } from "./useCamera";
 import { useDiagramView } from "./useDiagramView";
+import { useHoverEmphasis } from "./useHoverEmphasis";
 
 export type CanvasOptions = DisplayOptions & { hoverLabels: boolean; showMissingBadges: boolean };
 export type DiffMarks = { added: Set<string>; removed: Set<string>; changed: Set<string> };
@@ -276,24 +278,26 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
   const selected = drawnId(state, options.collapsed, options.selectedId);
   const missingByNode = useMemo(() => computeMissing(state).byNode, [state]);
   const warnByNode = useMemo(() => warningsByNode(mergeWarnings(state).active), [state]);
+  // 마우스 강조: 지연 뒤 hoverId 가 되고, 위치 옮기기 드래그 중에는 받지 않는다.
+  const hover = useHoverEmphasis();
+  const dragging = useRef(false);
+  const edgeHover = useRef<string | null>(null);
+  const known = useMemo(() => new Set([...Object.keys(display.nodes), ...Object.keys(display.groups)]), [display]);
+  // 선택이 있거나 대상이 사라졌으면 호버는 없는 것으로 친다(노드가 다시 만들어지지 않게 선택 중엔 늘 null).
+  const hoverId = selected === null && emphasisOf(display.edges, hover.hoverId, known) !== null ? hover.hoverId : null;
+  // 보드가 바뀌면(fitKey) 호버를 푼다(사라진 노드는 mouseleave 를 보내지 않는다).
+  const resetHover = hover.reset;
+  useEffect(() => {
+    edgeHover.current = null;
+    resetHover();
+  }, [fitKey, resetHover]);
   // 위치 보기 강조: 강조할 그려진 노드 id 와 토큰(같은 노드를 다시 눌러도 링이 처음부터 돈다).
   const [pulse, setPulse] = useState<{ ids: Set<string>; token: number } | null>(null);
 
   const computed = useMemo<Node[]>(() => {
-    const neighbors = new Set<string>();
-    if (selected !== null) {
-      const selEdge = display.edges.find((e) => e.id === selected || e.sourceEdgeIds.includes(selected));
-      if (selEdge) {
-        neighbors.add(selEdge.from);
-        neighbors.add(selEdge.to);
-      } else {
-        neighbors.add(selected);
-        for (const e of display.edges) {
-          if (e.from === selected) neighbors.add(e.to);
-          if (e.to === selected) neighbors.add(e.from);
-        }
-      }
-    }
+    // 선택이 있으면 선택 기준으로만 흐리고, 호버는 선택이 없을 때만 쓴다.
+    const sel = emphasisOf(display.edges, selected);
+    const hov = emphasisOf(display.edges, hoverId, known);
     const toggleGroup = (id: string) => {
       const collapsed = new Set(options.collapsed);
       if (collapsed.has(id)) collapsed.delete(id);
@@ -324,9 +328,10 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
       let visual: NodeVisualState = "normal";
       if (ln.id === selected) visual = "selected";
       // 위치 보기로 강조 중인 노드는 흐리지 않는다(흐린 노드 안에서는 링이 보이지 않는다).
-      else if (selected !== null && !neighbors.has(ln.id) && !pulse?.ids.has(ln.id)) visual = "dimmed";
+      else if (sel && !sel.nodes.has(ln.id) && !pulse?.ids.has(ln.id)) visual = "dimmed";
       else if (appearing.has(ln.id)) visual = "appearing";
       else if (updated.has(ln.id)) visual = "updated";
+      else if (hov && !hov.nodes.has(ln.id) && !pulse?.ids.has(ln.id)) visual = "faded";
       const az = n.attrs.az;
       const diff = diffMarks?.removed.has(ln.id) ? "removed" : diffMarks?.added.has(ln.id) ? "added" : diffMarks?.changed.has(ln.id) ? "changed" : undefined;
       const data: NodeCardData = {
@@ -336,6 +341,7 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
         category: categoryOf(n.kind),
         state: visual,
         ...(az !== undefined && az !== null ? { az: String(az) } : {}),
+        ...(ln.displayLabel !== n.label || ln.displaySub !== n.sub ? { truncated: true, ...(n.sub !== undefined ? { fullSub: n.sub } : {}) } : {}),
         ...(diff ? { diff } : {}),
         ...(pulse?.ids.has(ln.id) ? { pulse: pulse.token } : {}),
       };
@@ -352,6 +358,8 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
         type: "infra",
         position: { x: ln.x, y: ln.y },
         data,
+        // 키보드 포커스를 받는 래퍼의 이름표: 화면에서 잘려도 전체 이름(과 보조 글자)을 읽어 준다.
+        ariaLabel: n.sub ? `${n.label} · ${n.sub}` : n.label,
         zIndex: 10,
         draggable: editMode,
         width: ln.width,
@@ -360,7 +368,7 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
       });
     }
     return out;
-  }, [layout, display, selected, appearing, updated, editMode, options, onOptionsChange, diffMarks, missingByNode, warnByNode, onBadgeClick, onWarnBadgeClick, pulse]);
+  }, [layout, display, selected, appearing, updated, editMode, options, onOptionsChange, diffMarks, missingByNode, warnByNode, onBadgeClick, onWarnBadgeClick, pulse, hoverId, known]);
 
   const [nodes, setNodes] = useState<Node[]>(computed);
   useEffect(() => setNodes(computed), [computed]);
@@ -475,7 +483,18 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
           setMenu(null);
           camera.onMoveStart(e);
         }}
+        onNodeMouseEnter={(_, node) => {
+          if (node.type === "infra" && !dragging.current) hover.enter(node.id);
+        }}
+        onNodeMouseLeave={(_, node) => {
+          if (node.type === "infra") hover.leave(node.id);
+        }}
+        onNodeDragStart={() => {
+          dragging.current = true;
+          hover.reset();
+        }}
         onNodeDragStop={(_, node) => {
+          dragging.current = false;
           if (editMode && node.type === "infra") onPinnedChange({ ...pinned, [node.id]: { x: node.position.x, y: node.position.y } });
         }}
       >
@@ -484,6 +503,17 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
           layout={layout}
           edges={display.edges}
           selectedId={selected}
+          hoverId={hoverId}
+          onHover={(id) => {
+            if (id !== null) {
+              if (dragging.current) return;
+              edgeHover.current = id;
+              hover.enter(id);
+            } else if (edgeHover.current !== null) {
+              hover.leave(edgeHover.current);
+              edgeHover.current = null;
+            }
+          }}
           hoverLabels={options.hoverLabels}
           motion={motion}
           appearing={appearing}

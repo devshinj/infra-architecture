@@ -11,11 +11,11 @@
 .section { display: flex; flex-direction: column; gap: 8px; }
 .heading { margin: 0; font-size: 11px; font-weight: 500; color: var(--text-secondary); }
 .fields { margin: 0; display: flex; flex-direction: column; gap: 6px; }
-.field { display: flex; justify-content: space-between; gap: 12px; font-size: 12.5px; }
+.field { display: flex; justify-content: space-between; gap: 12px; font-size: 13px; }
 .field dt { color: var(--text-secondary); }
 .field dd { margin: 0; color: var(--text-primary); text-align: right; word-break: break-all; }
-.missing { color: var(--text-secondary) !important; font-style: italic; font-size: 12.5px; margin: 0; }
-.relations { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 6px; font-size: 12.5px; color: var(--text-primary); }
+.missing { color: var(--text-secondary) !important; font-style: italic; font-size: 13px; margin: 0; }
+.relations { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: var(--text-primary); }
 .relText { color: var(--text-secondary); font-size: 12px; }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .chip, .actions button {
@@ -29,13 +29,13 @@
 .version { border: 1px solid transparent; border-radius: var(--radius-node); }
 .version[data-viewing] { border-color: var(--text-secondary); }
 .versionRow {
-  width: 100%; display: flex; align-items: center; gap: 8px; font: inherit; font-size: 12.5px;
+  width: 100%; display: flex; align-items: center; gap: 8px; font: inherit; font-size: 13px;
   color: var(--text-primary); background: transparent; border: 0; padding: 8px; cursor: pointer; text-align: left;
 }
 .versionRow:hover { background: var(--bg-panel-raised); }
 .versionNo { font-weight: 600; min-width: 28px; }
 .time { margin-left: auto; font-size: 11px; color: var(--text-secondary); }
-.badge { font-size: 10.5px; color: var(--text-primary); border: 1px solid var(--state-missing); border-radius: 4px; padding: 0 5px; }
+.badge { font-size: 11px; color: var(--text-primary); border: 1px solid var(--state-missing); border-radius: 4px; padding: 0 5px; }
 .actions { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 8px 10px; }
 .actions button { border-radius: 6px; }
 .actions button:disabled { opacity: 0.4; cursor: default; }
@@ -51,17 +51,17 @@
 .cautions { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 10px; }
 .caution { display: flex; flex-direction: column; gap: 4px; padding: 8px 10px; border: 1px solid var(--line-node); border-radius: var(--radius-node); }
 .cautionIgnored { opacity: 0.75; }
-.level { align-self: flex-start; font-size: 10.5px; font-weight: 600; color: var(--text-primary); border: 1px solid var(--state-warn); border-radius: 4px; padding: 0 5px; }
+.level { align-self: flex-start; font-size: 11px; font-weight: 600; color: var(--text-primary); border: 1px solid var(--state-warn); border-radius: 4px; padding: 0 5px; }
 .level[data-level="check"] { border-color: var(--line-node); color: var(--text-secondary); }
-.cautionText { margin: 0; font-size: 12.5px; line-height: 1.5; color: var(--text-primary); }
+.cautionText { margin: 0; font-size: 13px; line-height: 1.5; color: var(--text-primary); }
 .cautionGuide { margin: 0; font-size: 12px; line-height: 1.5; color: var(--text-secondary); }
 .cautionError { margin: 0; font-size: 12px; color: var(--text-primary); border: 1px solid var(--state-missing); border-radius: var(--radius-node); padding: 5px 8px; }
 /* 설명: 정의·역할·ADR. 강조색 없이 중립 토큰만 쓴다. */
 .explain { display: flex; flex-direction: column; gap: 16px; }
-.explainText { margin: 0; font-size: 12.5px; line-height: 1.6; color: var(--text-primary); }
-.unreviewed { margin-left: 6px; font-size: 10.5px; color: var(--text-secondary); border: 1px solid var(--line-node); border-radius: 4px; padding: 0 5px; white-space: nowrap; }
+.explainText { margin: 0; font-size: 13px; line-height: 1.6; color: var(--text-primary); }
+.unreviewed { margin-left: 6px; font-size: 11px; color: var(--text-secondary); border: 1px solid var(--line-node); border-radius: 4px; padding: 0 5px; white-space: nowrap; }
 .adr { margin: 0; display: flex; flex-direction: column; gap: 6px; }
-.adrRow { display: grid; grid-template-columns: 36px 1fr; gap: 8px; font-size: 12.5px; line-height: 1.5; }
+.adrRow { display: grid; grid-template-columns: 36px 1fr; gap: 8px; font-size: 13px; line-height: 1.5; }
 .adrRow dt { color: var(--text-secondary); }
 .adrRow dd { margin: 0; color: var(--text-primary); }
 .rewrite { display: flex; gap: 6px; align-items: center; }

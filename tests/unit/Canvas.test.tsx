@@ -5,7 +5,7 @@ import { afterEach, beforeAll, expect, test, vi } from "vitest";
 import * as layoutMod from "@/canvas/layout";
 import { Canvas, type CanvasOptions, type CanvasProps } from "@/canvas/Canvas";
 import { defaultDisplayOptions } from "@/canvas/display";
-import { emptyState } from "@/domain/types";
+import { type DiagramState, emptyState } from "@/domain/types";
 
 import { fx } from "../fixtures/spike";
 
@@ -451,4 +451,115 @@ test("보기 popover closes when focus leaves it, but not for focus moving insid
   fireEvent.click(open);
   fireEvent.keyDown(document, { key: "Escape" });
   expect(open).toHaveFocus();
+});
+
+const hoverEnter = (el: HTMLElement) => fireEvent.mouseEnter(el);
+const settle = (ms = 250) => new Promise((r) => setTimeout(r, ms));
+
+test("hover fades non-neighbors when nothing is selected", async () => {
+  const { container } = render(<div style={{ width: 800, height: 600 }}><Canvas {...baseProps()} /></div>);
+  await waitFor(() => expect(nodeEl(container, "was-1")).not.toBeNull());
+  hoverEnter(nodeEl(container, "was-1")!);
+  await waitFor(() => expect(container.querySelector(".node--faded")).not.toBeNull());
+  expect(nodeEl(container, "was-1")!.querySelector(".node--faded")).toBeNull();
+  expect(container.querySelector(".node--dimmed")).toBeNull();
+  fireEvent.mouseLeave(nodeEl(container, "was-1")!);
+  await waitFor(() => expect(container.querySelector(".node--faded")).toBeNull());
+});
+
+test("selection wins over hover", async () => {
+  const props = baseProps();
+  props.options = { ...props.options, selectedId: "was-1" };
+  const { container } = render(<div style={{ width: 800, height: 600 }}><Canvas {...props} /></div>);
+  await waitFor(() => expect(container.querySelector(".node--dimmed")).not.toBeNull());
+  const dimmed = container.querySelectorAll(".node--dimmed").length;
+  hoverEnter(container.querySelector(".node--dimmed")!.closest(".react-flow__node") as HTMLElement);
+  await settle();
+  expect(container.querySelector(".node--faded")).toBeNull();
+  expect(container.querySelectorAll(".node--dimmed").length).toBe(dimmed);
+});
+
+test("drag suppresses hover", async () => {
+  const props = { ...baseProps(), editMode: true };
+  const { container } = render(<div style={{ width: 800, height: 600 }}><Canvas {...props} /></div>);
+  await waitFor(() => expect(nodeEl(container, "was-1")).not.toBeNull());
+  const el = nodeEl(container, "was-1")!;
+  const win = el.ownerDocument.defaultView as unknown as typeof globalThis;
+  const fire = (target: EventTarget, type: string, x: number, y: number) => {
+    const ev = new win.MouseEvent(type, { bubbles: true, cancelable: true, clientX: x, clientY: y, button: 0, buttons: type === "mouseup" ? 0 : 1 });
+    Object.defineProperty(ev, "view", { value: win });
+    target.dispatchEvent(ev);
+  };
+  fire(el, "mousedown", 10, 10);
+  fire(win.document, "mousemove", 60, 60);
+  fire(win.document, "mousemove", 80, 80);
+  hoverEnter(nodeEl(container, "web-1")!);
+  await settle();
+  expect(container.querySelector(".node--faded")).toBeNull();
+  fire(win.document, "mouseup", 80, 80);
+});
+
+test("appearing node is not faded", async () => {
+  const props = baseProps();
+  const { container, rerender } = render(<div style={{ width: 800, height: 600 }}><Canvas {...props} /></div>);
+  await waitFor(() => expect(nodeEl(container, "web-1")).not.toBeNull());
+  const next = { ...props.state, nodes: { ...props.state.nodes, extra: { ...props.state.nodes["web-1"], id: "extra", label: "extra", parent: null } } };
+  rerender(<div style={{ width: 800, height: 600 }}><Canvas {...props} state={next} /></div>);
+  await waitFor(() => expect(nodeEl(container, "extra")).not.toBeNull());
+  hoverEnter(nodeEl(container, "web-1")!);
+  await waitFor(() => expect(container.querySelector(".node--faded")).not.toBeNull());
+  expect(nodeEl(container, "extra")!.querySelector(".node--appearing")).not.toBeNull();
+  expect(nodeEl(container, "extra")!.querySelector(".node--faded")).toBeNull();
+});
+
+test("hover resets on diagram change", async () => {
+  const props = baseProps();
+  const { container, rerender } = render(<div style={{ width: 800, height: 600 }}><Canvas {...props} fitKey="a" /></div>);
+  await waitFor(() => expect(nodeEl(container, "was-1")).not.toBeNull());
+  hoverEnter(nodeEl(container, "was-1")!);
+  await waitFor(() => expect(container.querySelector(".node--faded")).not.toBeNull());
+  rerender(<div style={{ width: 800, height: 600 }}><Canvas {...props} fitKey="b" /></div>);
+  await waitFor(() => expect(container.querySelector(".node--faded")).toBeNull());
+});
+
+test("unknown hover id gives no fade", async () => {
+  const props = baseProps();
+  const next = { ...props.state, nodes: { ...props.state.nodes, extra: { ...props.state.nodes["web-1"], id: "extra", label: "extra", parent: null } } };
+  const { container, rerender } = render(<div style={{ width: 800, height: 600 }}><Canvas {...props} state={next} /></div>);
+  await waitFor(() => expect(nodeEl(container, "extra")).not.toBeNull());
+  hoverEnter(nodeEl(container, "extra")!);
+  await waitFor(() => expect(container.querySelector(".node--faded")).not.toBeNull());
+  // 호버 중이던 노드가 사라져도 mouseleave 는 오지 않는다.
+  rerender(<div style={{ width: 800, height: 600 }}><Canvas {...props} /></div>);
+  await waitFor(() => expect(nodeEl(container, "extra")).toBeNull());
+  await settle();
+  expect(container.querySelector(".node--faded")).toBeNull();
+});
+
+test("hover survives a state change that keeps the node", async () => {
+  const props = baseProps();
+  const { container, rerender } = render(<div style={{ width: 800, height: 600 }}><Canvas {...props} /></div>);
+  await waitFor(() => expect(nodeEl(container, "was-1")).not.toBeNull());
+  hoverEnter(nodeEl(container, "was-1")!);
+  await waitFor(() => expect(container.querySelector(".node--faded")).not.toBeNull());
+  const next = { ...props.state, nodes: { ...props.state.nodes, extra: { ...props.state.nodes["web-1"], id: "extra", label: "extra", parent: null } } };
+  rerender(<div style={{ width: 800, height: 600 }}><Canvas {...props} state={next} /></div>);
+  await waitFor(() => expect(nodeEl(container, "extra")).not.toBeNull());
+  expect(container.querySelector(".node--faded")).not.toBeNull();
+  expect(nodeEl(container, "was-1")!.querySelector(".node--faded")).toBeNull();
+});
+
+test("every infra node wrapper carries the full, untruncated name as its accessible name", async () => {
+  const props = baseProps();
+  const long = "주문결제통합처리애플리케이션서버첫번째인스턴스입니다";
+  const state: DiagramState = { ...props.state, nodes: { ...props.state.nodes, "was-1": { ...props.state.nodes["was-1"], label: long, sub: "t3.large" } } };
+  const { container } = render(<div style={{ width: 800, height: 600 }}><Canvas {...props} state={state} /></div>);
+  await waitFor(() => expect(nodeEl(container, "was-1")).not.toBeNull());
+  // 화면에서는 잘리지만(말풍선 대상) 이름표는 전체다.
+  expect(nodeEl(container, "was-1")!.querySelector(".node__label")!.textContent!.endsWith("…")).toBe(true);
+  expect(nodeEl(container, "was-1")).toHaveAttribute("aria-label", `${long} · t3.large`);
+  for (const el of container.querySelectorAll<HTMLElement>(".react-flow__node-infra")) {
+    const n = state.nodes[el.getAttribute("data-id")!];
+    expect(el).toHaveAttribute("aria-label", n.sub ? `${n.label} · ${n.sub}` : n.label);
+  }
 });

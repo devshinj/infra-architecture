@@ -116,7 +116,7 @@ test("checklist title focuses node without selecting", async ({ page }) => {
   await buildS1(page);
   await page.getByRole("tab", { name: "설명" }).click();
   if ((await cardToggle(page).getAttribute("aria-expanded")) !== "true") await cardToggle(page).click();
-  const block = page.getByRole("group", { name: "WAS #1" });
+  const block = page.getByRole("group", { name: "WAS #1", exact: true }); // 노드 래퍼도 "WAS #1 · …" 이름의 group 이다
   await expect(block).toBeVisible({ timeout: 15_000 });
   await block.getByRole("button", { name: "WAS #1 위치 보기" }).click();
   await expect(was1(page).locator(".node--pulse")).toBeVisible();

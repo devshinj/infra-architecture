@@ -28,7 +28,7 @@
 .railFoot { position: relative; margin-top: auto; }
 .accountPop {
   position: absolute; left: calc(100% + 10px); bottom: 0; z-index: 30; min-width: 160px;
-  display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 8px 8px 12px; font-size: 12.5px;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 8px 8px 12px; font-size: 13px;
   background: var(--bg-panel-raised); border: 1px solid var(--line-node); border-radius: var(--radius-node);
 }
 .accountPop span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -51,20 +51,20 @@
   position: absolute; right: 4px; top: 100%; z-index: 30; min-width: 120px; display: flex; flex-direction: column;
   background: var(--bg-node); border: 1px solid var(--line-node); border-radius: var(--radius-node); padding: 4px;
 }
-.menu button { font: inherit; font-size: 12.5px; color: var(--text-primary); background: transparent; border: 0; text-align: left; padding: 6px 8px; border-radius: 4px; cursor: pointer; }
+.menu button { font: inherit; font-size: 13px; color: var(--text-primary); background: transparent; border: 0; text-align: left; padding: 6px 8px; border-radius: 4px; cursor: pointer; }
 .menu button:hover { background: var(--bg-canvas); }
 .sideFoot { padding: 8px; border-top: 1px solid var(--glass-line); display: flex; flex-direction: column; gap: 8px; }
 .user { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 12px; color: var(--text-secondary); padding: 0 4px; }
 .user span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .btn {
-  font: inherit; font-size: 12.5px; color: var(--text-primary); background: var(--bg-node);
+  font: inherit; font-size: 13px; color: var(--text-primary); background: var(--bg-node);
   border: 1px solid var(--line-node); border-radius: 6px; padding: 6px 10px; cursor: pointer;
 }
 .btn:hover:not(:disabled) { border-color: var(--text-secondary); }
 .btn:disabled { opacity: 0.5; cursor: default; }
 .linkBtn { font: inherit; font-size: 12px; color: var(--text-secondary); background: transparent; border: 0; cursor: pointer; padding: 2px 4px; }
 .linkBtn:hover { color: var(--text-primary); }
-.sideLink { font-size: 12.5px; color: var(--text-secondary); text-decoration: none; padding: 4px; border-radius: 4px; }
+.sideLink { font-size: 13px; color: var(--text-secondary); text-decoration: none; padding: 4px; border-radius: 4px; }
 .sideLinkActive { color: var(--text-primary); background: var(--bg-panel-raised); font-weight: 600; }
 .sideLink:hover { color: var(--text-primary); }
 .sideLink:focus-visible { outline: 1.5px solid var(--text-secondary); outline-offset: 2px; }
@@ -92,7 +92,7 @@
 .canvasWrap { flex: 1; min-height: 0; position: relative; }
 /* 보기·비교·오류 띠: 떠 있는 패널 사이의 보이는 캔버스 폭에 맞춘다. */
 .banner {
-  display: flex; align-items: center; gap: 12px; padding: 8px 14px; font-size: 12.5px;
+  display: flex; align-items: center; gap: 12px; padding: 8px 14px; font-size: 13px;
   margin: var(--panel-gap) var(--canvas-inset-right, 0px) 0 var(--canvas-inset-left, 0px);
   background: var(--bg-node); border: 1px solid var(--line-node); border-radius: var(--radius-zone); color: var(--text-primary);
 }
