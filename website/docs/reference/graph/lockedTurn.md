@@ -1,42 +1,43 @@
 ---
 title: "lockedTurn()"
-sidebar_position: 43
+sidebar_position: 44
 sidebar_label: "핵심 노드: lockedTurn()"
 ---
 # lockedTurn()
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> God node · 21 connections · `src/server/chat/pipeline.ts`
+> God node · 24 connections · `src/server/chat/pipeline.ts`
 
-**Community:** [대화 파이프라인과 저장](대화_파이프라인과_저장.md)
+**Community:** [pipeline.ts](pipeline.ts.md)
 
 ## Connections by Relation
 
 ### calls
-- [createVersion()](createVersion.md) `EXTRACTED`
+- createVersion() `EXTRACTED`
+- applyCommand() `EXTRACTED`
 - emptyState() `EXTRACTED`
 - computeMissing() `EXTRACTED`
-- applyCommand() `EXTRACTED`
 - getLatestState() `EXTRACTED`
 - checkWarnings() `EXTRACTED`
 - createJsonlParser() `EXTRACTED`
 - runChatTurn() `EXTRACTED`
 - listMessages() `EXTRACTED`
 - createThinkStripper() `EXTRACTED`
+- pruneEmptyGroups() `EXTRACTED`
+- createMessage() `EXTRACTED`
 - buildMessages() `EXTRACTED`
 - normalizeAiCommand() `EXTRACTED`
-- createMessage() `EXTRACTED`
 - parseMentions() `EXTRACTED`
 - .emit() `EXTRACTED`
+- resolveIntent() `EXTRACTED`
 - createSkipTally() `EXTRACTED`
 - skipKey() `EXTRACTED`
 - parseCommand() `EXTRACTED`
-- .counts() `EXTRACTED`
-- opName() `EXTRACTED`
+- *…and 3 more `calls` connection(s) not listed (lowest-degree first to go)*
 
 ### contains
-- pipeline.ts `EXTRACTED`
+- [pipeline.ts](pipeline.ts.md) `EXTRACTED`
 
 ---
 

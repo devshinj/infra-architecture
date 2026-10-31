@@ -1,6 +1,6 @@
 ---
 title: "ValidationError"
-sidebar_position: 44
+sidebar_position: 48
 sidebar_label: "핵심 노드: ValidationError"
 ---
 # ValidationError
@@ -9,7 +9,7 @@ sidebar_label: "핵심 노드: ValidationError"
 
 > God node · 19 connections · `src/server/projects.ts`
 
-**Community:** [대화 파이프라인과 저장](대화_파이프라인과_저장.md)
+**Community:** [서버 액션과 작업 화면](서버_액션과_작업_화면.md)
 
 ## Connections by Relation
 

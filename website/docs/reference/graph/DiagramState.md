@@ -1,6 +1,6 @@
 ---
 title: "DiagramState"
-sidebar_position: 38
+sidebar_position: 40
 sidebar_label: "핵심 노드: DiagramState"
 ---
 # DiagramState
@@ -9,7 +9,7 @@ sidebar_label: "핵심 노드: DiagramState"
 
 > God node · 36 connections · `src/domain/types.ts`
 
-**Community:** [구성도 상태 타입](구성도_상태_타입.md)
+**Community:** [오른쪽 패널과 설명 화면](오른쪽_패널과_설명_화면.md)
 
 ## Connections by Relation
 
@@ -20,34 +20,34 @@ sidebar_label: "핵심 노드: DiagramState"
 - (app)/actions.ts `EXTRACTED`
 - server/explain.ts `EXTRACTED`
 - DiagramWorkspace.tsx `EXTRACTED`
-- pipeline.ts `EXTRACTED`
+- [pipeline.ts](pipeline.ts.md) `EXTRACTED`
+- [Canvas.tsx](Canvas.tsx.md) `EXTRACTED`
 - projects.ts `EXTRACTED`
-- Canvas.tsx `EXTRACTED`
 - prompt.ts `EXTRACTED`
 - samples.ts `EXTRACTED`
 - schema.ts `EXTRACTED`
 - NodeInfo.tsx `EXTRACTED`
 - domain/explain.ts `EXTRACTED`
+- [MissingChecklist.tsx](MissingChecklist.tsx.md) `EXTRACTED`
 - useExplanations.ts `EXTRACTED`
 - versions.ts `EXTRACTED`
 - chat/warnings.ts `EXTRACTED`
-- useChatTurn.ts `EXTRACTED`
-- missing.ts `EXTRACTED`
 - domain/warnings.ts `EXTRACTED`
+- missing.ts `EXTRACTED`
 - display.ts `EXTRACTED`
+- InfoCard.tsx `EXTRACTED`
 - useDiagramView.ts `EXTRACTED`
-- RightPanel.tsx `EXTRACTED`
 - *…and 6 more `imports` connection(s) not listed (lowest-degree first to go)*
 
 ### references
 - CanvasProps `EXTRACTED`
 - RightPanelProps `EXTRACTED`
-- NodeInfoProps `EXTRACTED`
+- InfoCardProps `EXTRACTED`
 - MissingChecklistProps `EXTRACTED`
+- NodeInfoProps `EXTRACTED`
 - .getLatestState() `EXTRACTED`
 - Rule `EXTRACTED`
 - DiagramWorkspaceProps `EXTRACTED`
-- .getState() `EXTRACTED`
 - UseExplanationsInput `EXTRACTED`
 
 ---

@@ -6,15 +6,19 @@ sidebar_position: 12
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 22 nodes · cohesion 0.13
+> 28 nodes · cohesion 0.12
 
 ## Key Concepts
 
-- **layout.ts** (31 connections) — `src/canvas/layout.ts`
+- **layout.ts** (32 connections) — `src/canvas/layout.ts`
 - **layoutDiagram()** (11 connections) — `src/canvas/layout.ts`
+- **Rect** (8 connections) — `src/canvas/layout.ts`
+- **text.ts** (6 connections) — `src/canvas/text.ts`
 - **elbow.ts** (5 connections) — `src/canvas/elbow.ts`
 - **elbowRoute()** (5 connections) — `src/canvas/elbow.ts`
-- **Rect** (5 connections) — `src/canvas/layout.ts`
+- **textWidth()** (5 connections) — `src/canvas/text.ts`
+- **truncate()** (5 connections) — `src/canvas/text.ts`
+- **charWidth()** (4 connections) — `src/canvas/text.ts`
 - **nodeWidth()** (3 connections) — `src/canvas/layout.ts`
 - **LaidOutGroup** (2 connections) — `src/canvas/layout.ts`
 - **LaidOutNode** (2 connections) — `src/canvas/layout.ts`
@@ -23,6 +27,7 @@ sidebar_position: 12
 - **segmentRect()** (2 connections) — `src/canvas/layout.ts`
 - **touches()** (2 connections) — `src/canvas/layout.ts`
 - **translate()** (2 connections) — `src/canvas/layout.ts`
+- **isWide()** (2 connections) — `src/canvas/text.ts`
 - **ref_elkjs** (1 connections)
 - **Pt** (1 connections) — `src/canvas/elbow.ts`
 - **BASE_OPTIONS** (1 connections) — `src/canvas/layout.ts`
@@ -30,16 +35,15 @@ sidebar_position: 12
 - **ElkRun** (1 connections) — `src/canvas/layout.ts`
 - **EMPTY_GROUP** (1 connections) — `src/canvas/layout.ts`
 - **LaidOutEdge** (1 connections) — `src/canvas/layout.ts`
-- **NODE** (1 connections) — `src/canvas/layout.ts`
-- **Pt** (1 connections) — `src/canvas/layout.ts`
+- *... and 3 more nodes in this community*
 
 ## Relationships
 
 - [표시 그래프와 버전 비교](표시_그래프와_버전_비교.md) (9 shared connections)
-- [글자 폭 계산](글자_폭_계산.md) (5 shared connections)
 - [겹침 검사](겹침_검사.md) (3 shared connections)
+- [useCamera.ts](useCamera.ts.md) (3 shared connections)
+- [Canvas.tsx](Canvas.tsx.md) (2 shared connections)
 - [연결선 개발용 화면](연결선_개발용_화면.md) (1 shared connections)
-- [캔버스 옵션과 노드 메뉴](캔버스_옵션과_노드_메뉴.md) (1 shared connections)
 - [연결선 그리기](연결선_그리기.md) (1 shared connections)
 - [설계 문서와 계획](설계_문서와_계획.md) (1 shared connections)
 
@@ -47,10 +51,11 @@ sidebar_position: 12
 
 - `src/canvas/elbow.ts`
 - `src/canvas/layout.ts`
+- `src/canvas/text.ts`
 
 ## Audit Trail
 
-- EXTRACTED: 52 (100%)
+- EXTRACTED: 65 (100%)
 - INFERRED: 0 (0%)
 - AMBIGUOUS: 0 (0%)
 
