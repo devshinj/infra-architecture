@@ -7,11 +7,17 @@ export interface NodeMenuProps {
   x: number;
   y: number;
   onChoose(): void;
+  /** "이 노드에 대해 물어보기" 항목. 없으면(구역 등) 항목을 두지 않는다. */
+  onAsk?(): void;
+  /** 질문을 지금 못 보낼 때 항목을 막는다. */
+  askDisabled?: boolean;
+  /** 막힌 까닭(항목 툴팁). */
+  askReason?: string;
   onClose(): void;
 }
 
 /** Small right-click menu on a node or zone. Closes on Escape, outside click, or after choosing. */
-export function NodeMenu({ x, y, onChoose, onClose }: NodeMenuProps) {
+export function NodeMenu({ x, y, onChoose, onAsk, askDisabled = false, askReason, onClose }: NodeMenuProps) {
   const ref = useRef<HTMLDivElement>(null);
   const item = useRef<HTMLButtonElement>(null);
   const close = useRef(onClose);
@@ -25,13 +31,25 @@ export function NodeMenu({ x, y, onChoose, onClose }: NodeMenuProps) {
         close.current();
       }
     };
+    // 위·아래 화살표로 항목 사이를 옮긴다(막힌 항목은 건너뛴다).
+    const onArrow = (e: KeyboardEvent) => {
+      if (e.key !== "ArrowDown" && e.key !== "ArrowUp") return;
+      const items = [...(ref.current?.querySelectorAll<HTMLButtonElement>('[role="menuitem"]:not(:disabled)') ?? [])];
+      if (items.length === 0) return;
+      e.preventDefault();
+      const i = items.indexOf(document.activeElement as HTMLButtonElement);
+      const step = e.key === "ArrowDown" ? 1 : -1;
+      items[(i + step + items.length) % items.length].focus();
+    };
     const onDown = (e: Event) => {
       if (!ref.current?.contains(e.target as Node)) close.current();
     };
     document.addEventListener("keydown", onKey);
+    document.addEventListener("keydown", onArrow);
     document.addEventListener("pointerdown", onDown, true);
     return () => {
       document.removeEventListener("keydown", onKey);
+      document.removeEventListener("keydown", onArrow);
       document.removeEventListener("pointerdown", onDown, true);
     };
   }, []);
@@ -50,6 +68,21 @@ export function NodeMenu({ x, y, onChoose, onClose }: NodeMenuProps) {
       >
         대화에 참조 붙이기
       </button>
+      {onAsk && (
+        <button
+          type="button"
+          role="menuitem"
+          className="node-menu__item"
+          disabled={askDisabled}
+          {...(askDisabled && askReason ? { title: askReason } : {})}
+          onClick={() => {
+            onAsk();
+            onClose();
+          }}
+        >
+          이 노드에 대해 물어보기
+        </button>
+      )}
     </div>
   );
 }

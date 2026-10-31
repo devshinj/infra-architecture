@@ -52,6 +52,10 @@ export interface CanvasProps {
   cameraInsets?: Insets;
   /** Right-click menu "대화에 참조 붙이기" on nodes and zones. Omit to turn the menu off. */
   onMention?(id: string): void;
+  /** 우클릭 메뉴 "이 노드에 대해 물어보기"(노드 전용, 구역에는 없다). 없으면 항목을 두지 않는다. */
+  onAskNode?(id: string): void;
+  askDisabled?: boolean;
+  askReason?: string;
   /**
    * 위치 보기: 바뀔 때마다(token) 그 노드(연결이면 양 끝)로 카메라를 옮기고 은빛 링으로 잠깐 강조한다.
    * 선택은 바꾸지 않는다. 접힌 영역 안이면 그려진 바깥 영역으로 간다.
@@ -237,7 +241,7 @@ interface FlowProps extends CanvasProps {
   updated: Set<string>;
 }
 
-function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onPinnedChange, motion, layout, settled, layoutFailed, fitRequest, display, appearing, updated, diffMarks, fitKey, streaming = false, cameraInsets = NO_INSETS, focusRequest, onMention, onBadgeClick, onWarnBadgeClick, onPlaced }: FlowProps) {
+function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onPinnedChange, motion, layout, settled, layoutFailed, fitRequest, display, appearing, updated, diffMarks, fitKey, streaming = false, cameraInsets = NO_INSETS, focusRequest, onMention, onAskNode, askDisabled, askReason, onBadgeClick, onWarnBadgeClick, onPlaced }: FlowProps) {
   const far = useStore((s) => s.transform[2] < FAR_ZOOM);
   const selected = drawnId(state, options.collapsed, options.selectedId);
   const missingByNode = useMemo(() => computeMissing(state).byNode, [state]);
@@ -408,7 +412,7 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
   useEffect(() => {
     if (settled) latest.current.onPlaced?.(locate);
   }, [layout, settled, locate]);
-  const [menu, setMenu] = useState<{ id: string; x: number; y: number } | null>(null);
+  const [menu, setMenu] = useState<{ id: string; zone: boolean; x: number; y: number } | null>(null);
   const closeMenu = useCallback(() => {
     setMenu(null);
     wrap.current?.focus({ preventScroll: true });
@@ -441,7 +445,7 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
           if (!onMention) return;
           e.preventDefault();
           const r = wrap.current?.getBoundingClientRect();
-          setMenu({ id: node.id, x: e.clientX - (r?.left ?? 0), y: e.clientY - (r?.top ?? 0) });
+          setMenu({ id: node.id, zone: node.type === "zone", x: e.clientX - (r?.left ?? 0), y: e.clientY - (r?.top ?? 0) });
         }}
         onMoveStart={(e) => {
           setMenu(null);
@@ -485,7 +489,15 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
           onSelect={onSelect}
         />
       </ReactFlow>
-      {menu && onMention && <NodeMenu x={menu.x} y={menu.y} onChoose={() => onMention(menu.id)} onClose={closeMenu} />}
+      {menu && onMention && (
+        <NodeMenu
+          x={menu.x}
+          y={menu.y}
+          onChoose={() => onMention(menu.id)}
+          {...(onAskNode && !menu.zone ? { onAsk: () => onAskNode(menu.id), askDisabled: askDisabled ?? false, ...(askReason ? { askReason } : {}) } : {})}
+          onClose={closeMenu}
+        />
+      )}
     </div>
   );
 }

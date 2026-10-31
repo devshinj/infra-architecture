@@ -81,3 +81,19 @@
   padding: 4px 8px; font-size: 11.5px; line-height: 1.5; font-style: normal; text-decoration: none; white-space: normal;
   color: var(--text-primary); background: var(--bg-panel-raised); border: 1px solid var(--line-node); border-radius: var(--radius-node);
 }
+/* 노드에 대해 물어보기: 한 줄 입력 + 보내기 아이콘 버튼. */
+.ask { display: flex; gap: 6px; align-items: center; }
+.askInput {
+  flex: 1; min-width: 0; font: inherit; font-size: 12px; color: var(--text-primary); background: var(--bg-panel-raised);
+  border: 1px solid var(--line-node); border-radius: var(--radius-node); padding: 6px 8px;
+}
+.askInput:focus-visible { outline: 1.5px solid var(--text-secondary); outline-offset: 1px; }
+.askInput:disabled { opacity: 0.5; }
+.askSend {
+  flex: none; display: grid; place-items: center; width: 28px; height: 28px; color: var(--text-primary);
+  background: var(--bg-panel-raised); border: 1px solid var(--line-node); border-radius: var(--radius-node); cursor: pointer;
+}
+.askSend:hover:not(:disabled) { border-color: var(--text-secondary); }
+.askSend:disabled { opacity: 0.5; cursor: default; }
+.askSend:focus-visible { outline: 1.5px solid var(--text-secondary); outline-offset: 2px; }
+.askReason { margin: 0; font-size: 11px; color: var(--text-secondary); }

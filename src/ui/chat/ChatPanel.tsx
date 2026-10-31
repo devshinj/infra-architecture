@@ -42,7 +42,7 @@ export interface ChatPanelProps {
 
 const PLACEHOLDER = "만들고 싶은 서비스나 바꾸고 싶은 점을 말해 주세요. 노드를 오른쪽 클릭하면 참조를 붙일 수 있어요.";
 const ASK_PLACEHOLDER = "이 노드에 대해 더 물어보기";
-const ELSEWHERE_BUSY = "다른 대화가 답하는 중이에요.";
+export const ELSEWHERE_BUSY = "다른 대화가 답하는 중이에요.";
 const HANDOFF_LABEL = "구성도 대화로 보내기";
 const DOWN = "AI 서버에 연결할 수 없어요. 잠시 뒤 다시 시도하거나 관리자에게 문의해 주세요.";
 const NEAR_BOTTOM = 40;

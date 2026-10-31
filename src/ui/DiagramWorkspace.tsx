@@ -23,7 +23,7 @@ import type { DiagramState } from "@/domain/types";
 
 import styles from "./app.module.css";
 import type { VersionRow } from "./HistoryPanel";
-import { type LlmHealth } from "./chat/ChatPanel";
+import { ELSEWHERE_BUSY, type LlmHealth } from "./chat/ChatPanel";
 import type { MentionInputHandle } from "./chat/MentionInput";
 import type { ChecklistDrafts, ChecklistExpanded, MissingChecklistProps } from "./chat/MissingChecklist";
 import { type ChatLine, useChatTurn } from "./chat/useChatTurn";
@@ -349,7 +349,6 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
   }; // no history view/compare/restore, edit mode or sample import while the AI answers
 
   /** 노드에 대해 묻기(설명 패널·우클릭 메뉴가 부른다): 대화 탭으로 가서 새 질문 세션의 첫 차례를 시작한다. */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- 설명 패널·우클릭 메뉴(3C-2 Task 4)가 부른다
   const startAsk = (nodeId: string, text: string) => {
     const label = labelOf(nodeId);
     const t = text.trim();
@@ -434,6 +433,21 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
     },
     [selectNode],
   );
+
+  // 질문 입력 포커스: 우클릭 메뉴로 오면 그 노드의 설명 탭에서 입력칸이 포커스를 받는다(설명 탭을 떠나면 잊는다).
+  const [askFocus, setAskFocus] = useState<{ id: string; token: number } | null>(null);
+  useEffect(() => {
+    if (tab !== "설명") setAskFocus(null);
+  }, [tab]);
+  const askLocked = !live || chat.busy;
+  const askReason = !live ? "이전 버전을 보는 중에는 대화할 수 없어요." : chat.busy ? ELSEWHERE_BUSY : undefined;
+  const onAskFromMenu = (id: string) => {
+    if (askLocked) return;
+    selectNode(id);
+    setTab("설명");
+    seq.current += 1;
+    setAskFocus({ id, token: seq.current });
+  };
 
   // Form save = one version (source form); adopt it through the same server-state path as assumptions.
   const saveFields: MissingChecklistProps["onSave"] = async (input) => {
@@ -564,6 +578,8 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
             cameraInsets={cameraInsets}
             onOptionsChange={changeOptions}
             onSelect={(id) => setOptions((o) => ({ ...o, selectedId: id }))}
+            askDisabled={askLocked}
+            {...(askReason ? { askReason } : {})}
             onPinnedChange={live ? onPinnedChange : () => {}}
             onAutoArrange={onAutoArrange}
             autoArrangeDisabled={!live}
@@ -576,7 +592,7 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
             importing={busy || locked}
             onPlaced={fly.placed}
             {...(focusRequest ? { focusRequest } : {})}
-            {...(live ? { onMention, onBadgeClick } : {})}
+            {...(live ? { onMention, onBadgeClick, onAskNode: onAskFromMenu } : {})}
             {...(mode.kind === "compare" ? { diffMarks: mode.marks } : {})}
           />
           <InfoCard
@@ -619,6 +635,16 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
           onHistoryOpen={loadVersions}
           live={live}
           {...(explain ? { explain } : {})}
+          {...(selKind === "node"
+            ? {
+                ask: {
+                  disabled: askLocked,
+                  ...(askReason ? { disabledReason: askReason } : {}),
+                  onAsk: (text: string) => startAsk(selId!, text),
+                  ...(askFocus?.id === selId ? { focusToken: askFocus.token } : {}),
+                },
+              }
+            : {})}
           {...(live ? { cautions: { onIgnoreWarning, ignoreDisabled: locked || warnSaving, ignoreError: warnError } } : {})}
           history={{
             versions,

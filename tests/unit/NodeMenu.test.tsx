@@ -35,6 +35,20 @@ test("menu item is focused on open and choosing it calls onChoose then onClose",
   expect(onClose).toHaveBeenCalled();
 });
 
+test("has 이 노드에 대해 물어보기 item that calls onAsk, and it can be disabled", async () => {
+  const onAsk = vi.fn();
+  const { rerender } = render(<NodeMenu x={0} y={0} onChoose={vi.fn()} onAsk={onAsk} onClose={vi.fn()} />);
+  await userEvent.keyboard("{ArrowDown}{Enter}");
+  expect(onAsk).toHaveBeenCalledTimes(1);
+  rerender(<NodeMenu x={0} y={0} onChoose={vi.fn()} onAsk={onAsk} askDisabled askReason="막힘" onClose={vi.fn()} />);
+  expect(screen.getByRole("menuitem", { name: "이 노드에 대해 물어보기" })).toBeDisabled();
+});
+
+test("no ask item without onAsk", () => {
+  render(<NodeMenu x={0} y={0} onChoose={vi.fn()} onClose={vi.fn()} />);
+  expect(screen.queryByRole("menuitem", { name: "이 노드에 대해 물어보기" })).not.toBeInTheDocument();
+});
+
 test("Escape closes the menu", async () => {
   const onClose = vi.fn();
   render(<NodeMenu x={0} y={0} onChoose={vi.fn()} onClose={onClose} />);
@@ -75,4 +89,14 @@ test("no menu when onMention is not given", async () => {
   await waitFor(() => expect(container.querySelectorAll(".react-flow__node-infra").length).toBeGreaterThan(0));
   fireEvent.contextMenu(container.querySelector(".react-flow__node-infra") as HTMLElement);
   expect(screen.queryByRole("menu")).not.toBeInTheDocument();
+});
+
+test("context menu ask item calls onAskNode with the node id", async () => {
+  const onAskNode = vi.fn();
+  const { container } = render(<div style={{ width: 800, height: 600 }}><Canvas {...baseProps()} onMention={vi.fn()} onAskNode={onAskNode} /></div>);
+  await waitFor(() => expect(container.querySelectorAll(".react-flow__node-infra").length).toBeGreaterThan(0));
+  const node = container.querySelector(".react-flow__node-infra") as HTMLElement;
+  fireEvent.contextMenu(node);
+  await userEvent.click(await screen.findByRole("menuitem", { name: "이 노드에 대해 물어보기" }));
+  expect(onAskNode).toHaveBeenCalledWith(node.getAttribute("data-id"));
 });

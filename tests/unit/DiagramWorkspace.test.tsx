@@ -13,7 +13,7 @@ vi.mock("@/app/(app)/actions", () => ({
   listTermsAction: vi.fn(async () => []),
 }));
 vi.mock("@/canvas/Canvas", () => ({
-  Canvas: ({ state, pinned, fitRequest, onAutoArrange, fitKey, cameraInsets, focusRequest, onMention, onBadgeClick, onWarnBadgeClick, onSelect, onImportSample, onPlaced }: { onPlaced?: (l: (id: string) => { x: number; y: number } | null) => void; onImportSample?: (id: string) => void; state: { nodes: object }; pinned: unknown; fitRequest?: unknown; onAutoArrange(): void; fitKey?: string; cameraInsets?: unknown; focusRequest?: unknown; onMention?: (id: string) => void; onBadgeClick?: (id: string) => void; onWarnBadgeClick?: (id: string) => void; onSelect: (id: string | null) => void }) => {
+  Canvas: ({ state, pinned, fitRequest, onAutoArrange, fitKey, cameraInsets, focusRequest, onMention, onAskNode, onBadgeClick, onWarnBadgeClick, onSelect, onImportSample, onPlaced }: {onAskNode?: (id: string) => void;  onPlaced?: (l: (id: string) => { x: number; y: number } | null) => void; onImportSample?: (id: string) => void; state: { nodes: object }; pinned: unknown; fitRequest?: unknown; onAutoArrange(): void; fitKey?: string; cameraInsets?: unknown; focusRequest?: unknown; onMention?: (id: string) => void; onBadgeClick?: (id: string) => void; onWarnBadgeClick?: (id: string) => void; onSelect: (id: string | null) => void }) => {
     hookState.insets.push(cameraInsets);
     hookState.placed = onPlaced ?? null;
     hookState.pinned.push(pinned);
@@ -26,6 +26,7 @@ vi.mock("@/canvas/Canvas", () => ({
       <div data-testid="n">{Object.keys(state.nodes).join(",")}</div>
       <div data-testid="fit">{fitKey}</div>
       {onMention && <button onClick={() => onMention("a")}>멘션a</button>}
+      {onAskNode && <button onClick={() => onAskNode("a")}>메뉴로 묻기a</button>}
       {onBadgeClick && <button onClick={() => onBadgeClick("a")}>배지a</button>}
       {onWarnBadgeClick && <button onClick={() => onWarnBadgeClick("b")}>경고배지b</button>}
       <button onClick={() => onSelect("b")}>선택b</button>
@@ -49,7 +50,10 @@ import { emptyState } from "@/domain/types";
 import { DiagramWorkspace } from "@/ui/DiagramWorkspace";
 import { ShellProvider } from "@/ui/Shell";
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  vi.unstubAllGlobals();
+});
 // jsdom 에는 scrollIntoView 가 없다: 테스트마다 끼우고 원래대로 돌려 둔다.
 const origScroll = Object.getOwnPropertyDescriptor(Element.prototype, "scrollIntoView");
 beforeEach(() => {
@@ -551,5 +555,43 @@ test("question sessions: picking one shows its saved lines; a canvas mention ret
     expect(screen.getByRole("button", { name: "a 참조 제거" })).toBeInTheDocument();
   } finally {
     vi.unstubAllGlobals();
+  }
+});
+
+const stubFetch = () => vi.stubGlobal("fetch", vi.fn(async (url: string) => (String(url).includes("/explain") ? new Response("{}", { status: 200 }) : Response.json({ qwen: "ok", clef: "ok" }))));
+
+test("ask from explanation opens chat tab with a new session", () => {
+  stubFetch();
+  hookState.busy = false;
+  hookState.lines = [];
+  render(ui(two() as never));
+  fireEvent.click(screen.getByRole("button", { name: "선택b" }));
+  fireEvent.change(screen.getByLabelText("이 노드에 대해 물어보기"), { target: { value: "왜 두 대예요?" } });
+  fireEvent.click(screen.getByRole("button", { name: "질문 보내기" }));
+  expect(screen.getByRole("tab", { name: "대화" })).toHaveAttribute("aria-selected", "true");
+  expect(screen.getByRole("textbox")).toHaveAttribute("placeholder", "이 노드에 대해 더 물어보기");
+  expect(screen.getByRole("button", { name: /^b · / })).toBeInTheDocument();
+});
+
+test("menu ask selects node, opens 설명 and focuses the ask input", () => {
+  stubFetch();
+  hookState.busy = false;
+  render(ui(two() as never));
+  expect(screen.getByRole("tab", { name: "대화" })).toHaveAttribute("aria-selected", "true");
+  fireEvent.click(screen.getByRole("button", { name: "메뉴로 묻기a" }));
+  expect(screen.getByRole("tab", { name: "설명" })).toHaveAttribute("aria-selected", "true");
+  expect(screen.getByLabelText("이 노드에 대해 물어보기")).toHaveFocus();
+});
+
+test("ask input is disabled with the reason while another turn runs; edges get no ask input", () => {
+  stubFetch();
+  hookState.busy = true;
+  try {
+    render(ui(two() as never));
+    fireEvent.click(screen.getByRole("button", { name: "선택b" }));
+    expect(screen.getByLabelText("이 노드에 대해 물어보기")).toBeDisabled();
+    expect(screen.getByText("다른 대화가 답하는 중이에요.", { selector: "p" })).toBeInTheDocument();
+  } finally {
+    hookState.busy = false;
   }
 });
