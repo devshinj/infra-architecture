@@ -4,7 +4,7 @@ import http from "node:http";
 import "./fake-env";
 
 import spike from "../../docs/superpowers/spike/spike-results.json";
-import { EXPLAIN_EDGE_PROMPT, EXPLAIN_NODE_PROMPT, WARNING_PROMPT } from "../../src/server/chat/prompt";
+import { ASK_PROMPT, EXPLAIN_EDGE_PROMPT, EXPLAIN_NODE_PROMPT, WARNING_PROMPT } from "../../src/server/chat/prompt";
 import { convertSpikeScenario, type SpikeState } from "../../src/server/samples";
 import { FAKE_PORT } from "./fake-config";
 
@@ -131,6 +131,13 @@ function readBody(req: http.IncomingMessage): Promise<string> {
   });
 }
 
+/** 노드 질문 E2E: 글에 "이중화해 줘" 가 있으면 구조 변경, "왜" 가 있으면 질문, 그 밖은 늘 구조 변경. */
+function intentFor(state: unknown): string {
+  const t = String(state ?? "");
+  if (t.includes("이중화해 줘")) return "structure_change";
+  return t.includes("왜") ? "question" : "structure_change";
+}
+
 export function startFakeLlm(): Promise<http.Server> {
   const server = http.createServer(async (req, res) => {
     const url = req.url ?? "";
@@ -151,17 +158,20 @@ export function startFakeLlm(): Promise<http.Server> {
             ? { type: "noul", probability: exposed ? 0.95 : 0.1 }
             : q?.type === "score"
               ? { type: "score", score: 0.5 }
-              : { type: "choice", choice: "structure_change", confidence: 0.95, probabilities: {} };
+              : { type: "choice", choice: intentFor(body.state), confidence: 0.95, probabilities: {} };
       }
-      if (!("intent" in answers)) answers.intent = { type: "choice", choice: "structure_change", confidence: 0.95, probabilities: {} };
+      if (!("intent" in answers)) answers.intent = { type: "choice", choice: intentFor(body.state), confidence: 0.95, probabilities: {} };
       return json(200, { answers });
     }
     if (req.method === "POST" && url === "/v1/chat/completions") {
       const body = JSON.parse(await readBody(req)) as { messages: Msg[] };
       const isWarning = body.messages.some((m) => m.role === "system" && m.content === WARNING_PROMPT);
       const sys = body.messages.find((m) => m.role === "system")?.content;
+      const askQuestion = sys === ASK_PROMPT ? ([...body.messages].reverse().find((m) => m.role === "user")?.content.split("질문: ").pop() ?? "") : null;
       const explainKind = sys === EXPLAIN_NODE_PROMPT ? "node" : sys === EXPLAIN_EDGE_PROMPT ? "edge" : null;
-      const { lines, delay } = explainKind
+      const { lines, delay } = askQuestion !== null
+        ? { lines: [`가짜 답이에요. ${askQuestion}`], delay: FAST_MS }
+        : explainKind
         ? { lines: [explainJson(body.messages, explainKind)], delay: FAST_MS }
         : isWarning
           ? warningLines(body.messages)
