@@ -66,6 +66,16 @@ async function linesFor(messages: Msg[]): Promise<{ lines: string[]; delay: numb
   if (request.includes("공개DB 다시")) {
     return { lines: [JSON.stringify({ op: "update_node", id: "pubdb", attrs: { version: "8.0" } }), JSON.stringify({ op: "say", text: "DB 를 고쳤어요." })], delay };
   }
+  // 긴이름: 노드 폭에서 잘리는 긴 이름의 노드 하나(말풍선 E2E).
+  if (request.includes("긴이름")) {
+    return {
+      delay,
+      lines: [
+        JSON.stringify({ op: "add_node", id: "longn", kind: "db_rdb", label: "결제승인처리배치서버클러스터", parent: null }),
+        JSON.stringify({ op: "say", text: "긴 이름 노드를 그렸어요." }),
+      ],
+    };
+  }
   // 공개DB: 공개 서브넷 안의 DB → db_public 코드 규칙이 걸린다.
   if (request.includes("공개DB")) {
     return {
