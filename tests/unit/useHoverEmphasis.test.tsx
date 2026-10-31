@@ -84,3 +84,16 @@ test("unmount cancels a pending hover", () => {
   unmount();
   expect(vi.getTimerCount()).toBe(0);
 });
+
+test("sweeping across a neighbor into empty space clears the emphasis", () => {
+  const { result } = renderHook(() => useHoverEmphasis());
+  act(() => result.current.enter("a"));
+  tick(120);
+  act(() => result.current.leave("a"));
+  act(() => result.current.enter("b"));
+  tick(50);
+  // b 가 걸리기 전에 빈 곳으로 나간다: a 강조가 남으면 안 된다.
+  act(() => result.current.leave("b"));
+  tick(120);
+  expect(result.current.hoverId).toBeNull();
+});

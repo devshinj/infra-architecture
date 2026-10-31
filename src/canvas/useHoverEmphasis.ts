@@ -35,10 +35,12 @@ export function useHoverEmphasis(delayMs = 120) {
     (id: string) => {
       // 다른 대상이 이미 기다리는 중이면 그쪽이 hoverId 를 바꾼다.
       if (pending.current !== null && pending.current !== id) return;
+      // 기다리던 대상에서 떠나면(a 강조 중 b 로 갔다가 곧 빈 곳으로) 아직 걸려 있는 a 강조도 함께 푼다.
+      const wasPending = pending.current === id;
       cancel();
       timer.current = setTimeout(() => {
         timer.current = null;
-        setHoverId((h) => (h === id ? null : h));
+        setHoverId((h) => (wasPending || h === id ? null : h));
       }, delayMs);
     },
     [cancel, delayMs],
