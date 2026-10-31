@@ -27,6 +27,7 @@ import { type LlmHealth } from "./chat/ChatPanel";
 import type { MentionInputHandle } from "./chat/MentionInput";
 import type { ChecklistDrafts, ChecklistExpanded, MissingChecklistProps } from "./chat/MissingChecklist";
 import { type ChatLine, useChatTurn } from "./chat/useChatTurn";
+import { NEW_SESSION, type SessionSummary, useSessions } from "./chat/useSessions";
 import { type CardMeasure, InfoCard } from "./canvas/InfoCard";
 import { Legend, legendPlacement } from "./canvas/Legend";
 import { FlyLayer, useFly } from "./FlyLayer";
@@ -50,6 +51,8 @@ export interface DiagramWorkspaceProps {
   samples: { id: string; title: string }[];
   /** Saved conversation (Task 10 maps server messages to lines). */
   initialChat?: ChatLine[];
+  /** 노드 질문 세션 목록(최근에 이어간 순). */
+  initialSessions?: SessionSummary[];
 }
 
 /** Compare view draws current ∪ old so removed nodes appear as ghosts beside the live ones. */
@@ -73,7 +76,9 @@ const CARD_WIDTH = 300;
 // showMissingBadges 는 브라우저 설정이라 여기서는 항상 끈 값이고, 실제 값은 아래 showMissing 상태가 덮어쓴다.
 const optionsFor = (state: DiagramState): CanvasOptions => ({ ...defaultDisplayOptions(state), hoverLabels: true, showMissingBadges: false });
 
-export function DiagramWorkspace({ diagramId, name, latest, initialPinned, samples, initialChat = [] }: DiagramWorkspaceProps) {
+const NO_SESSIONS: SessionSummary[] = [];
+
+export function DiagramWorkspace({ diagramId, name, latest, initialPinned, samples, initialChat = [], initialSessions = NO_SESSIONS }: DiagramWorkspaceProps) {
   const router = useRouter();
   const [current, setCurrent] = useState(latest);
   const [pinned, setPinned] = useState<Pinned>(initialPinned);
@@ -228,9 +233,13 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
     if (timer.current) clearTimeout(timer.current);
     timer.current = setTimeout(refreshFromServer, 1500);
   };
+  // 대화 세션: 구성도 대화(main)와 노드 질문 세션. 새로고침하면 구성도 대화로 연다.
+  const sessions = useSessions({ diagramId, initial: initialSessions });
   const chat = useChatTurn({
     diagramId,
     initial: initialChat,
+    onSession: sessions.upsert,
+    onAskLines: sessions.setLines,
     onCommand: (cmd) => {
       const next = applyCommand(current.state, cmd).state;
       setCurrent((c) => ({ number: c.number, state: applyCommand(c.state, cmd).state }));
@@ -263,6 +272,9 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
     setMode({ kind: "live" });
   }
   const locked = chat.busy;
+  // 도는 차례의 세션(가짜 훅처럼 모르면 구성도 대화로 친다).
+  const runningKey = chat.busy ? (chat.runningKey ?? "main") : null;
+  const mainTurn = runningKey === "main";
 
   // 설명: 대화가 끝나거나 구성도를 열면 낡은 노드를 차례로 만든다. 이력 보기·비교에서는 멈춘다.
   const explanations = useExplanations({ diagramId, state: shown, live, busy: chat.busy, selectedId: options.selectedId });
@@ -283,19 +295,21 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
 
   // Attach a node/group to the chat input: open the 대화 tab, then insert once the input has rendered.
   const [pendingMention, setPendingMention] = useState<{ id: string; label: string } | null>(null);
+  // 참조는 구성도 대화에 붙인다(질문 세션을 보고 있었으면 구성도 대화로 바꾼다).
   const onMention = (id: string) => {
     if (!live) return;
     const label = shown.nodes[id]?.label ?? shown.groups[id]?.label ?? id;
     setTab("대화");
+    if (sessions.active !== "main") sessions.select("main");
     setPendingMention({ id, label });
   };
   useEffect(() => {
-    if (!pendingMention || tab !== "대화") return;
+    if (!pendingMention || tab !== "대화" || sessions.active !== "main") return;
     const m = pendingMention;
     setPendingMention(null);
     mentionRef.current?.insertMention(m);
     mentionRef.current?.focus();
-  }, [pendingMention, tab]);
+  }, [pendingMention, tab, sessions.active]);
 
   // AI server health: once on mount, again whenever a new error line shows up. A failed fetch counts as down.
   const [health, setHealth] = useState<LlmHealth | null>(null);
@@ -316,12 +330,34 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
       alive = false;
     };
   }, [errorLines]);
+  /** 지금 구성도의 노드 이름. 노드가 없으면 null(지워진 노드의 세션). */
+  const labelOf = (nodeId: string) => current.state.nodes[nodeId]?.label ?? null;
+  const activeSession = sessions.active === "main" ? null : sessions.summaryOf(sessions.active);
   const sendChat = (text: string) => {
     if (!live || chat.busy) return;
+    if (sessions.active !== "main") {
+      // 질문 세션: 노드가 지금 구성도에 있을 때만 이어 묻는다. 새 세션은 서버가 id 를 줄 때까지 sessionId 없이 보낸다.
+      if (!activeSession || labelOf(activeSession.nodeId) === null) return;
+      const isNew = sessions.active === NEW_SESSION;
+      if (!isNew) sessions.upsert({ ...activeSession, updatedAt: new Date().toISOString() });
+      void chat.send(text, { kind: "ask", nodeId: activeSession.nodeId, sessionId: isNew ? null : activeSession.id });
+      return;
+    }
     setEditMode(false);
     adoptAfterChat.current = false;
     void chat.send(text);
   }; // no history view/compare/restore, edit mode or sample import while the AI answers
+
+  /** 노드에 대해 묻기(설명 패널·우클릭 메뉴가 부른다): 대화 탭으로 가서 새 질문 세션의 첫 차례를 시작한다. */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- 설명 패널·우클릭 메뉴(3C-2 Task 4)가 부른다
+  const startAsk = (nodeId: string, text: string) => {
+    const label = labelOf(nodeId);
+    const t = text.trim();
+    if (!live || chat.busy || label === null || !t) return;
+    setTab("대화");
+    sessions.startNew({ nodeId, nodeLabel: label, text: t });
+    void chat.send(t, { kind: "ask", nodeId, sessionId: null });
+  };
 
   // Confirm first (the model cannot overwrite confirmed assumptions), then ask the AI to adjust the structure.
   const confirmKey = async (key: string, value: string): Promise<boolean> => {
@@ -485,6 +521,8 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
     clearPinnedAction(diagramId).catch(fail);
   };
 
+  const chatLines = sessions.active === "main" ? chat.lines : sessions.linesOf(sessions.active);
+
   const banner =
     mode.kind === "view"
       ? `v${mode.number} 보는 중`
@@ -522,7 +560,7 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
             options={canvasOptions}
             motion={motion}
             fitKey={`${board}:${mode.kind}:${mode.kind === "live" ? "" : mode.number}`}
-            streaming={live && chat.busy}
+            streaming={live && mainTurn}
             cameraInsets={cameraInsets}
             onOptionsChange={changeOptions}
             onSelect={(id) => setOptions((o) => ({ ...o, selectedId: id }))}
@@ -591,8 +629,12 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
             disabled: locked,
           }}
           chat={{
-            lines: chat.lines,
-            busy: chat.busy,
+            lines: chatLines === "loading" ? [] : chatLines,
+            loading: chatLines === "loading",
+            busy: chat.busy && runningKey === sessions.active,
+            elsewhereBusy: chat.busy && runningKey !== sessions.active,
+            picker: { sessions: sessions.sessions, active: sessions.active, labelOf, onSelect: sessions.select, pending: sessions.pending },
+            ...(activeSession ? { ask: { nodeId: activeSession.nodeId, nodeLabel: labelOf(activeSession.nodeId) } } : {}),
             onSend: sendChat,
             onStop: chat.stop,
             onOpenWarnings: openWarnings,

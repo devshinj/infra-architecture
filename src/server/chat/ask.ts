@@ -6,7 +6,7 @@ import { createThinkStripper } from "@/server/llm/think";
 import { getOwnedDiagram, NotFoundError, ValidationError } from "@/server/projects";
 import { getLatestState } from "@/server/versions";
 
-import type { ChatEvent, MessageMeta } from "./events";
+import { NODE_GONE_MESSAGE, type ChatEvent, type MessageMeta } from "./events";
 import { resolveIntent } from "./intent";
 import { withDiagramLock } from "./lock";
 import { createMessage, listMessages } from "./messages";
@@ -24,7 +24,7 @@ import { buildAskMessages } from "./prompt";
 import { createSession, getSession, touchSession, type SessionRow } from "./sessions";
 
 export const HANDOFF_REPLY = "구성을 바꾸려면 구성도 대화에서 말해 주세요.";
-export const NODE_GONE_MESSAGE = "이 노드는 지금 구성도에 없어서 이어서 물을 수 없어요.";
+export { NODE_GONE_MESSAGE };
 
 export type AskTurnResult = ChatTurnResult | { status: "gone" };
 

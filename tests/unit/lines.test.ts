@@ -84,3 +84,15 @@ test("reload of a layout reply has no 변경 사항이 없어요. chip", () => {
     ["progress", text],
   ]);
 });
+
+test("reload of a handoff reply keeps the send-to-main line with the user's text", () => {
+  const lines = messagesToLines([
+    { id: "u1", role: "user", content: "이중화해 줘", meta: {} },
+    { id: "a1", role: "assistant", content: "구성을 바꾸려면 구성도 대화에서 말해 주세요.", meta: { intent: "structure_change", handoff: true, says: ["구성을 바꾸려면 구성도 대화에서 말해 주세요."] } },
+  ]);
+  expect(lines.map((l) => [l.kind, l.text])).toEqual([
+    ["user", "이중화해 줘"],
+    ["progress", "구성을 바꾸려면 구성도 대화에서 말해 주세요."],
+    ["handoff", "이중화해 줘"],
+  ]);
+});

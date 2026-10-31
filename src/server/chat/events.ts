@@ -2,6 +2,9 @@
 import type { Command } from "@/domain/commands";
 import type { Warning } from "@/domain/types";
 
+/** 노드 질문: 노드가 지금 구성도에 없을 때. 질문 세션 화면도 같은 문구를 안내로 보인다. */
+export const NODE_GONE_MESSAGE = "이 노드는 지금 구성도에 없어서 이어서 물을 수 없어요.";
+
 export interface MessageMeta {
   intent?: string;
   applied?: number;

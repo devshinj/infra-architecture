@@ -527,3 +527,29 @@ test("queued fly dots survive turn done (post-done settle launches them) but are
     }
   }
 });
+
+test("question sessions: picking one shows its saved lines; a canvas mention returns to 구성도 대화", async () => {
+  hookState.busy = false;
+  hookState.lines = [];
+  const session = { id: "s1", nodeId: "a", nodeLabel: "a", title: "왜 두 대예요?", updatedAt: new Date().toISOString() };
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async (url: string) =>
+      url.endsWith("/sessions/s1")
+        ? Response.json({ session, messages: [{ id: "u1", role: "user", content: "왜 두 대예요?", meta: {}, createdAt: session.updatedAt }] })
+        : Response.json({ qwen: "ok", clef: "ok" }),
+    ),
+  );
+  try {
+    render(<DiagramWorkspace diagramId="d" name="n" latest={mk(1, ["a"]) as never} initialPinned={{}} samples={[]} initialSessions={[session]} />);
+    fireEvent.click(screen.getByRole("button", { name: "구성도 대화" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: /a · 왜 두 대예요\?/ }));
+    expect(await screen.findByText("왜 두 대예요?", { selector: "p" })).toBeInTheDocument();
+    expect(screen.getByRole("textbox")).toHaveAttribute("placeholder", "이 노드에 대해 더 물어보기");
+    fireEvent.click(screen.getByRole("button", { name: "멘션a" }));
+    expect(screen.getByRole("button", { name: "구성도 대화" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "a 참조 제거" })).toBeInTheDocument();
+  } finally {
+    vi.unstubAllGlobals();
+  }
+});

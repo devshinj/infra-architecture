@@ -7,6 +7,7 @@ import type { Warning } from "@/domain/types";
 import type { ChatEvent, MessageMeta } from "@/server/chat/events";
 
 import { keepsCard, summaryText, warningsChip } from "./lines";
+import { NEW_SESSION, type SessionKey, type SessionSummary } from "./useSessions";
 
 /** 진행 카드의 단계. 답변 모드는 한 단계(`답변 작성 중`)뿐이다. */
 export type CardStep = "review" | "drawing" | "checking";
@@ -27,8 +28,9 @@ export interface ChatLine {
   /**
    * card: 진행 카드 · progress: AI 안내(say) · summary/warning: 차례 끝 칩(warning 은 `주의 N` 하나).
    * system: 안내 글(차례 밖이면 가운데 작은 글).
+   * handoff: 질문 세션의 `구성도 대화로 보내기` 버튼. text 는 넘길 사용자 글.
    */
-  kind: "user" | "assistant" | "system" | "progress" | "error" | "warning" | "card" | "summary";
+  kind: "user" | "assistant" | "system" | "progress" | "error" | "warning" | "card" | "summary" | "handoff";
   text: string;
   meta?: MessageMeta;
   /** 같은 값의 줄은 한 AI 메시지로 묶인다(차례 id 또는 assistant 메시지 id). */
@@ -41,6 +43,10 @@ export interface ChatLine {
 
 type DoneEvent = Extract<ChatEvent, { t: "done" }>;
 
+/** 차례를 보낼 곳: 구성도 대화, 또는 노드 질문 세션(sessionId null 이면 새 세션). */
+export type TurnTarget = { kind: "main" } | { kind: "ask"; nodeId: string; sessionId: string | null };
+const MAIN: TurnTarget = { kind: "main" };
+
 export interface UseChatTurnArgs {
   diagramId: string;
   initial: ChatLine[];
@@ -51,6 +57,10 @@ export interface UseChatTurnArgs {
   onRelayout?(): void;
   /** The stream ended without `done` (user abort, network cut, error after commands): the saved version may differ from the canvas. */
   onInterrupted?(): void;
+  /** 노드 질문에서 서버가 새 세션을 만들었다(`session` 이벤트). */
+  onSession?(session: SessionSummary): void;
+  /** 질문 세션 차례의 줄은 이 함수로 그 세션에 쌓는다(useSessions.setLines). 구성도 대화 줄은 이 훅이 가진다. */
+  onAskLines?(key: SessionKey, update: (lines: ChatLine[]) => ChatLine[]): void;
 }
 
 const GENERIC_ERROR = "응답을 받지 못했어요. 다시 시도해 주세요.";
@@ -66,6 +76,8 @@ const ANSWER_INTENTS = new Set(["question", "other"]);
 export function useChatTurn(args: UseChatTurnArgs) {
   const [lines, setLines] = useState<ChatLine[]>(args.initial);
   const [busy, setBusy] = useState(false);
+  /** 도는 차례의 세션. 새 질문 세션은 서버가 id 를 줄 때까지 NEW_SESSION. */
+  const [runningKey, setRunningKey] = useState<SessionKey | null>(null);
   const argsRef = useRef(args);
   useEffect(() => {
     argsRef.current = args;
@@ -79,23 +91,29 @@ export function useChatTurn(args: UseChatTurnArgs) {
   }, []);
 
   const send = useCallback(
-    async (text: string) => {
+    async (text: string, target: TurnTarget = MAIN) => {
       const trimmed = text.trim();
       if (!trimmed || runningRef.current) return;
       runningRef.current = true;
       const ctrl = new AbortController();
       abortRef.current = ctrl;
+      // 질문 세션 차례: 진행 카드·요약·주의 칩 없이 말풍선과 답만 그 세션에 쌓는다. 구성도는 바꾸지 않는다.
+      const ask = target.kind === "ask" ? target : null;
+      let key: SessionKey = ask ? (ask.sessionId ?? NEW_SESSION) : "main";
       setBusy(true);
+      setRunningKey(key);
+      const update = (fn: (ls: ChatLine[]) => ChatLine[]) => (ask ? argsRef.current.onAskLines?.(key, fn) : setLines(fn));
+      const add = (line: Omit<ChatLine, "id"> & { id?: string }) => update((ls) => [...ls, { id: nextId("l"), ...line }]);
       // 서버 응답 전에 내 말풍선과 진행 카드를 바로 띄운다.
       const turn = nextId("t");
       const at = Date.now();
       const cardId = nextId("c");
-      const pushT = (line: Omit<ChatLine, "id" | "turn" | "at">) => push({ ...line, turn, at });
-      push({ kind: "user", text: trimmed, at });
-      push({ id: cardId, kind: "card", text: "", card: { mode: "build", step: "review", changes: 0 }, turn, at });
+      const pushT = (line: Omit<ChatLine, "id" | "turn" | "at">) => add({ ...line, turn, at });
+      add({ kind: "user", text: trimmed, at });
+      if (!ask) add({ id: cardId, kind: "card", text: "", card: { mode: "build", step: "review", changes: 0 }, turn, at });
       const patchCard = (fn: (c: ProgressCard) => ProgressCard) =>
-        setLines((ls) => ls.map((l) => (l.id === cardId && l.card ? { ...l, card: fn(l.card) } : l)));
-      const removeCard = () => setLines((ls) => ls.filter((l) => l.id !== cardId));
+        !ask && setLines((ls) => ls.map((l) => (l.id === cardId && l.card ? { ...l, card: fn(l.card) } : l)));
+      const removeCard = () => !ask && setLines((ls) => ls.filter((l) => l.id !== cardId));
 
       let answerId: string | null = null;
       let gotDone = false;
@@ -114,6 +132,15 @@ export function useChatTurn(args: UseChatTurnArgs) {
       const handle = (ev: ChatEvent) => {
         const a = argsRef.current;
         switch (ev.t) {
+          case "session":
+            if (!ask) break;
+            key = ev.session.id;
+            setRunningKey(key);
+            a.onSession?.(ev.session);
+            break;
+          case "handoff":
+            if (ask) pushT({ kind: "handoff", text: ev.text });
+            break;
           case "start":
             intent = ev.intent;
             if (ev.intent && ANSWER_INTENTS.has(ev.intent)) patchCard((c) => ({ ...c, mode: "answer" }));
@@ -127,6 +154,7 @@ export function useChatTurn(args: UseChatTurnArgs) {
             pushT({ kind: "progress", text: ev.text });
             break;
           case "cmd": {
+            if (ask) break; // 질문은 구성도를 바꾸지 않는다
             cmds++;
             patchCard((c) => ({ ...c, step: c.step === "review" ? "drawing" : c.step, changes: c.changes + 1 }));
             a.onCommand(ev.cmd);
@@ -136,24 +164,26 @@ export function useChatTurn(args: UseChatTurnArgs) {
             if (answerId === null) {
               const id = nextId("a");
               answerId = id;
-              setLines((ls) => [...ls, { id, kind: "assistant", text: ev.delta, turn, at }]);
+              update((ls) => [...ls, { id, kind: "assistant", text: ev.delta, turn, at }]);
             } else {
               const id = answerId;
-              setLines((ls) => ls.map((l) => (l.id === id ? { ...l, text: l.text + ev.delta } : l)));
+              update((ls) => ls.map((l) => (l.id === id ? { ...l, text: l.text + ev.delta } : l)));
             }
             break;
           }
           case "warnings":
-            warnings = ev.items;
+            if (!ask) warnings = ev.items;
             break;
           case "open_history":
-            a.onOpenHistory();
+            if (!ask) a.onOpenHistory();
             break;
           case "relayout":
-            a.onRelayout?.();
+            if (!ask) a.onRelayout?.();
             break;
           case "done": {
             gotDone = true;
+            if (ask) break; // 버전도 요약도 없다
+
             if (keepsCard(ev)) {
               const end = ev.status === "aborted" ? "aborted" : "done";
               patchCard((c) => ({ ...c, end, nodes: ev.nodes, edges: ev.edges }));
@@ -174,10 +204,12 @@ export function useChatTurn(args: UseChatTurnArgs) {
       };
 
       try {
-        const res = await fetch(`/api/diagrams/${encodeURIComponent(argsRef.current.diagramId)}/chat`, {
+        const base = `/api/diagrams/${encodeURIComponent(argsRef.current.diagramId)}`;
+        const body = ask ? { nodeId: ask.nodeId, text: trimmed, ...(ask.sessionId ? { sessionId: ask.sessionId } : {}) } : { text: trimmed };
+        const res = await fetch(ask ? `${base}/ask` : `${base}/chat`, {
           method: "POST",
           headers: { "content-type": "application/json" },
-          body: JSON.stringify({ text: trimmed }),
+          body: JSON.stringify(body),
           signal: ctrl.signal,
         });
         if (!res.ok || !res.body) {
@@ -237,13 +269,14 @@ export function useChatTurn(args: UseChatTurnArgs) {
         runningRef.current = false;
         abortRef.current = null;
         setBusy(false);
-        if (!gotDone && (ctrl.signal.aborted || cmds > 0)) argsRef.current.onInterrupted?.();
+        setRunningKey(null);
+        if (!ask && !gotDone && (ctrl.signal.aborted || cmds > 0)) argsRef.current.onInterrupted?.();
       }
     },
-    [push],
+    [],
   );
 
   const stop = useCallback(() => abortRef.current?.abort(), []);
 
-  return { lines, busy, send, stop, pushLine: push };
+  return { lines, busy, runningKey, send, stop, pushLine: push };
 }

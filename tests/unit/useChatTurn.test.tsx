@@ -297,3 +297,67 @@ test("abort after done keeps the done card", async () => {
   await act(() => p);
   expect(cardOf(h.result.current.lines)).toMatchObject({ end: "done" });
 });
+
+/** 질문 세션 줄 저장소(useSessions.setLines 자리). */
+function askSetup() {
+  const store: Record<string, import("@/ui/chat/useChatTurn").ChatLine[]> = {};
+  const onSession = vi.fn();
+  const onDone = vi.fn();
+  const onInterrupted = vi.fn();
+  const onAskLines = (key: string, fn: (ls: import("@/ui/chat/useChatTurn").ChatLine[]) => import("@/ui/chat/useChatTurn").ChatLine[]) => {
+    store[key] = fn(store[key] ?? []);
+  };
+  const hook = renderHook(() =>
+    useChatTurn({ diagramId: "d1", initial: [], onCommand: vi.fn(), onDone, onOpenHistory: vi.fn(), onInterrupted, onSession, onAskLines }),
+  );
+  return { ...hook, store, onSession, onDone, onInterrupted };
+}
+const askDone = done({ version: null, applied: 0, skipped: 0 });
+
+test("ask target posts to /ask with nodeId and sessionId", async () => {
+  const fetchMock = vi.fn<(u: string, i: RequestInit) => Promise<Response>>(async () => streamOf([nd([{ t: "start", messageId: "m", intent: "question" }, { t: "answer", delta: "이중화예요." }, askDone])]));
+  vi.stubGlobal("fetch", fetchMock);
+  const h = askSetup();
+  await act(() => h.result.current.send("왜 두 대예요?", { kind: "ask", nodeId: "n1", sessionId: "s1" }));
+  const [url, init] = fetchMock.mock.calls[0]!;
+  expect(url).toBe("/api/diagrams/d1/ask");
+  expect(JSON.parse(init.body as string)).toEqual({ nodeId: "n1", text: "왜 두 대예요?", sessionId: "s1" });
+  // 질문 세션에는 진행 카드·요약 칩이 없고, 구성도 대화 줄은 그대로다.
+  expect(h.store.s1!.map((l) => [l.kind, l.text])).toEqual([["user", "왜 두 대예요?"], ["assistant", "이중화예요."]]);
+  expect(h.result.current.lines).toEqual([]);
+  expect(h.onDone).not.toHaveBeenCalled();
+  expect(h.result.current.busy).toBe(false);
+});
+
+test("session event is reported", async () => {
+  const session = { id: "s9", nodeId: "n1", nodeLabel: "API 서버", title: "왜?", updatedAt: "2026-11-01T00:00:00.000Z" };
+  const fetchMock = vi.fn<(u: string, i: RequestInit) => Promise<Response>>(async () => streamOf([nd([{ t: "session", session }, { t: "start", messageId: "m", intent: null }, { t: "answer", delta: "답" }, askDone])]));
+  vi.stubGlobal("fetch", fetchMock);
+  const h = askSetup();
+  let p!: Promise<void>;
+  act(() => { p = h.result.current.send("왜?", { kind: "ask", nodeId: "n1", sessionId: null }); });
+  expect(h.result.current.runningKey).toBe("new");
+  await act(() => p);
+  expect(JSON.parse(fetchMock.mock.calls[0]![1].body as string)).toEqual({ nodeId: "n1", text: "왜?" });
+  expect(h.onSession).toHaveBeenCalledWith(session);
+  // 세션 이름이 온 뒤의 줄은 그 세션으로 간다.
+  expect(h.store.new!.map((l) => l.kind)).toEqual(["user"]);
+  expect(h.store.s9!.map((l) => l.kind)).toEqual(["assistant"]);
+  expect(h.result.current.runningKey).toBeNull();
+});
+
+test("handoff line has a send-to-main action", async () => {
+  vi.stubGlobal("fetch", vi.fn(async () => streamOf([nd([
+    { t: "start", messageId: "m", intent: "structure_change" }, { t: "say", text: "구성을 바꾸려면 구성도 대화에서 말해 주세요." },
+    { t: "handoff", text: "이중화해 줘" }, askDone,
+  ])])));
+  const h = askSetup();
+  await act(() => h.result.current.send("이중화해 줘", { kind: "ask", nodeId: "n1", sessionId: "s1" }));
+  expect(h.store.s1!.map((l) => [l.kind, l.text])).toEqual([
+    ["user", "이중화해 줘"],
+    ["progress", "구성을 바꾸려면 구성도 대화에서 말해 주세요."],
+    ["handoff", "이중화해 줘"],
+  ]);
+  // 안내와 넘기기 버튼은 한 AI 메시지다.
+  expect(new Set(h.store.s1!.slice(1).map((l) => l.turn)).size).toBe(1);
+});
