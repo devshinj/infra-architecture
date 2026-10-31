@@ -33,3 +33,9 @@ test("a node without edges is emphasized alone", () => {
   expect([...em.nodes]).toEqual(["lonely"]);
   expect(em.edges.size).toBe(0);
 });
+
+test("unknown hover id gives no emphasis when node ids are known", () => {
+  expect(emphasisOf(edges, "gone", new Set(["a", "b"]))).toBeNull();
+  expect(emphasisOf(edges, "a", new Set(["a", "b"]))).not.toBeNull();
+  expect(emphasisOf(edges, "src1", new Set())).not.toBeNull();
+});

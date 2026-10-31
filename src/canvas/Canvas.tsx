@@ -278,18 +278,26 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
   const selected = drawnId(state, options.collapsed, options.selectedId);
   const missingByNode = useMemo(() => computeMissing(state).byNode, [state]);
   const warnByNode = useMemo(() => warningsByNode(mergeWarnings(state).active), [state]);
-  // 위치 보기 강조: 강조할 그려진 노드 id 와 토큰(같은 노드를 다시 눌러도 링이 처음부터 돈다).
   // 마우스 강조: 지연 뒤 hoverId 가 되고, 위치 옮기기 드래그 중에는 받지 않는다.
   const hover = useHoverEmphasis();
   const dragging = useRef(false);
   const edgeHover = useRef<string | null>(null);
-  const { hoverId } = hover;
+  const known = useMemo(() => new Set([...Object.keys(display.nodes), ...Object.keys(display.groups)]), [display]);
+  // 선택이 있거나 대상이 사라졌으면 호버는 없는 것으로 친다(노드가 다시 만들어지지 않게 선택 중엔 늘 null).
+  const hoverId = selected === null && hover.hoverId !== null && (known.has(hover.hoverId) || display.edges.some((e) => e.id === hover.hoverId || e.sourceEdgeIds.includes(hover.hoverId!))) ? hover.hoverId : null;
+  // 그림이나 보드가 바뀌면 호버를 푼다(사라진 노드는 mouseleave 를 보내지 않는다).
+  const resetHover = hover.reset;
+  useEffect(() => {
+    edgeHover.current = null;
+    resetHover();
+  }, [state, fitKey, resetHover]);
+  // 위치 보기 강조: 강조할 그려진 노드 id 와 토큰(같은 노드를 다시 눌러도 링이 처음부터 돈다).
   const [pulse, setPulse] = useState<{ ids: Set<string>; token: number } | null>(null);
 
   const computed = useMemo<Node[]>(() => {
     // 선택이 있으면 선택 기준으로만 흐리고, 호버는 선택이 없을 때만 쓴다.
     const sel = emphasisOf(display.edges, selected);
-    const hov = selected === null ? emphasisOf(display.edges, hoverId) : null;
+    const hov = emphasisOf(display.edges, hoverId, known);
     const toggleGroup = (id: string) => {
       const collapsed = new Set(options.collapsed);
       if (collapsed.has(id)) collapsed.delete(id);
@@ -357,7 +365,7 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
       });
     }
     return out;
-  }, [layout, display, selected, appearing, updated, editMode, options, onOptionsChange, diffMarks, missingByNode, warnByNode, onBadgeClick, onWarnBadgeClick, pulse, hoverId]);
+  }, [layout, display, selected, appearing, updated, editMode, options, onOptionsChange, diffMarks, missingByNode, warnByNode, onBadgeClick, onWarnBadgeClick, pulse, hoverId, known]);
 
   const [nodes, setNodes] = useState<Node[]>(computed);
   useEffect(() => setNodes(computed), [computed]);

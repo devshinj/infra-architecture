@@ -49,3 +49,11 @@ test("leave clears an applied hover and reset clears everything", () => {
   act(() => result.current.reset());
   expect(result.current.hoverId).toBeNull();
 });
+
+test("unmount cancels a pending hover", () => {
+  const { result, unmount } = renderHook(() => useHoverEmphasis());
+  act(() => result.current.enter("a"));
+  expect(vi.getTimerCount()).toBe(1);
+  unmount();
+  expect(vi.getTimerCount()).toBe(0);
+});

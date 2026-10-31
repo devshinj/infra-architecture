@@ -511,3 +511,27 @@ test("appearing node is not faded", async () => {
   expect(nodeEl(container, "extra")!.querySelector(".node--appearing")).not.toBeNull();
   expect(nodeEl(container, "extra")!.querySelector(".node--faded")).toBeNull();
 });
+
+test("hover resets on diagram change", async () => {
+  const props = baseProps();
+  const { container, rerender } = render(<div style={{ width: 800, height: 600 }}><Canvas {...props} fitKey="a" /></div>);
+  await waitFor(() => expect(nodeEl(container, "was-1")).not.toBeNull());
+  hoverEnter(nodeEl(container, "was-1")!);
+  await waitFor(() => expect(container.querySelector(".node--faded")).not.toBeNull());
+  rerender(<div style={{ width: 800, height: 600 }}><Canvas {...props} fitKey="b" /></div>);
+  await waitFor(() => expect(container.querySelector(".node--faded")).toBeNull());
+});
+
+test("unknown hover id gives no fade", async () => {
+  const props = baseProps();
+  const next = { ...props.state, nodes: { ...props.state.nodes, extra: { ...props.state.nodes["web-1"], id: "extra", label: "extra", parent: null } } };
+  const { container, rerender } = render(<div style={{ width: 800, height: 600 }}><Canvas {...props} state={next} /></div>);
+  await waitFor(() => expect(nodeEl(container, "extra")).not.toBeNull());
+  hoverEnter(nodeEl(container, "extra")!);
+  await waitFor(() => expect(container.querySelector(".node--faded")).not.toBeNull());
+  // 호버 중이던 노드가 사라져도 mouseleave 는 오지 않는다.
+  rerender(<div style={{ width: 800, height: 600 }}><Canvas {...props} /></div>);
+  await waitFor(() => expect(nodeEl(container, "extra")).toBeNull());
+  await settle();
+  expect(container.querySelector(".node--faded")).toBeNull();
+});

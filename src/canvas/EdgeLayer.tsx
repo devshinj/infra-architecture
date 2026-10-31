@@ -73,7 +73,8 @@ export function EdgeLayer({ layout, edges, selectedId, hoverId, onHover, hoverLa
   const incident = useMemo(() => sel?.edges ?? new Set<string>(), [sel]);
   const isSelectedEdge = (e: DisplayEdge) => selectedId !== null && (e.id === selectedId || e.sourceEdgeIds.includes(selectedId));
   const isDim = (ids: string[]) => sel !== null && !ids.some((i) => sel.edges.has(i));
-  const isFaded = (ids: string[]) => hov !== null && !ids.some((i) => hov.edges.has(i));
+  // 새로 그려지는 선은 흐리지 않는다.
+  const isFaded = (ids: string[]) => hov !== null && !ids.some((i) => hov.edges.has(i) || appearing.has(i));
 
   // Which bundles animate. Over 40 nodes only the ones touching the selection; with fewer, every bundle animates.
   const restrictTo = nodeCount > MANY_NODES ? incident : null;

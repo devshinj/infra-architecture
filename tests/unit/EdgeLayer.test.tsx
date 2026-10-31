@@ -176,3 +176,11 @@ test("hovering an edge hit path calls onHover", () => {
   fireEvent.mouseLeave(hit);
   expect(onHover).toHaveBeenLastCalledWith(null);
 });
+
+test("appearing edges are not faded by hover", () => {
+  const edges = [...fanOutEdges, de("e3", "x", "y")];
+  const layout = lay([...fanOutLayout.edges, { id: "e3", points: [{ x: 10, y: 10 }, { x: 10, y: 60 }] }]);
+  render(<EdgeLayer layout={layout} edges={edges} {...base} hoverId="alb" appearing={new Set(["e3"])} />);
+  expect(document.querySelector('[data-edge-id="e3"]')).not.toHaveClass("edge--faded");
+  expect(document.querySelector('[data-edge-id="e1"]')).not.toHaveClass("edge--faded");
+});
