@@ -1,8 +1,8 @@
 import { computeMissing } from "@/domain/missing";
-import { applyCommand } from "@/domain/apply";
+import { applyCommand, pruneEmptyGroups } from "@/domain/apply";
 import { COMMAND_OPS, parseCommand } from "@/domain/commands";
 import { emptyState, type DiagramState, type Warning } from "@/domain/types";
-import { INTENT_MIN_CONFIDENCE, type ClefClient, type Intent } from "@/server/llm/clef";
+import type { ClefClient, Intent } from "@/server/llm/clef";
 import { createJsonlParser } from "@/server/llm/jsonl";
 import { createThinkStripper } from "@/server/llm/think";
 import type { QwenClient } from "@/server/llm/qwen";
@@ -12,6 +12,7 @@ import { createVersion, getLatestState } from "@/server/versions";
 import type { ChatEvent, MessageMeta } from "./events";
 import { BUSY_MESSAGE } from "./busy";
 import { withDiagramLock } from "./lock";
+import { resolveIntent } from "./intent";
 import { createMessage, listMessages } from "./messages";
 import { normalizeAiCommand } from "./normalize";
 import { checkWarnings } from "./warnings";
@@ -31,6 +32,7 @@ export type ChatTurnResult = { status: "ok" } | { status: "busy" };
 export { BUSY_MESSAGE };
 export const AI_UNAVAILABLE_MESSAGE = "AI 서버에 연결할 수 없어요. 잠시 뒤 다시 시도하거나 관리자에게 문의해 주세요.";
 export const HISTORY_REPLY = "변경 이력은 오른쪽 '이력' 탭에서 보고 되돌릴 수 있어요.";
+export const LAYOUT_REPLY = "구성도를 다시 정렬했어요.";
 export const TIMEOUT_MESSAGE = "응답 시간이 너무 길어 중단했어요.";
 export const GENERIC_ERROR_MESSAGE = "응답을 처리하지 못했어요. 잠시 뒤 다시 시도해 주세요.";
 
@@ -76,6 +78,18 @@ const KNOWN_OPS: ReadonlySet<string> = new Set(COMMAND_OPS);
 const SKIP_PREFIX = "건너뜀: ";
 const SKIP_MAX = 120;
 
+/** 정리로 사라진 그룹 id 를 깊은 것부터(자식이 부모보다 먼저) 돌려준다. */
+function prunedOrder(before: DiagramState, after: DiagramState): string[] {
+  const depth = (id: string) => {
+    let d = 0;
+    for (let p = before.groups[id]?.parent ?? null; p !== null; p = before.groups[p]?.parent ?? null) d++;
+    return d;
+  };
+  return Object.keys(before.groups)
+    .filter((id) => !Object.hasOwn(after.groups, id))
+    .sort((a, b) => depth(b) - depth(a));
+}
+
 async function lockedTurn(args: TurnArgs, deps: ChatDeps): Promise<void> {
   const { diagramId, emit } = args;
   const timeout = AbortSignal.timeout(deps.turnTimeoutMs ?? TURN_TIMEOUT_MS);
@@ -83,6 +97,7 @@ async function lockedTurn(args: TurnArgs, deps: ChatDeps): Promise<void> {
 
   const latest = await getLatestState(diagramId);
   let state: DiagramState = latest?.state ?? emptyState();
+  const turnStartState = state;
   const prevWarnings = latest?.state.warnings; // 차례 시작 상태의 경고
   const history = (await listMessages(diagramId, HISTORY_FETCH))
     .filter((m) => m.role === "user" || m.role === "assistant")
@@ -109,9 +124,9 @@ async function lockedTurn(args: TurnArgs, deps: ChatDeps): Promise<void> {
     const e = state.edges[m.targetId];
     return e ? `${nameOf(e.from)} → ${nameOf(e.to)} ${m.label}` : `${m.targetId} ${m.label}`;
   });
-  const classified = await deps.clef.classifyIntent(clean, { lastAssistant, openItems }, signal);
-  const intent: Intent | null =
-    classified && classified.confidence >= INTENT_MIN_CONFIDENCE ? classified.intent : null;
+  const intent: Intent | null = await resolveIntent(args.text, () =>
+    deps.clef.classifyIntent(clean, { lastAssistant, openItems }, signal),
+  );
   emit({ t: "start", messageId: userMsg.id, intent });
 
   const says: string[] = [];
@@ -124,6 +139,11 @@ async function lockedTurn(args: TurnArgs, deps: ChatDeps): Promise<void> {
     says.push(HISTORY_REPLY);
     emit({ t: "say", text: HISTORY_REPLY });
     emit({ t: "open_history" });
+  } else if (intent === "layout") {
+    // 배치는 클라이언트가 한다. 구성은 그대로라 AI 를 부르지 않고 버전도 만들지 않는다.
+    says.push(LAYOUT_REPLY);
+    emit({ t: "say", text: LAYOUT_REPLY });
+    emit({ t: "relayout" });
   } else {
     const answerMode = intent === "question" || intent === "other";
     const messages = buildMessages({ intent, text: clean, state, mentions, history, missing: openMissing });
@@ -202,6 +222,10 @@ async function lockedTurn(args: TurnArgs, deps: ChatDeps): Promise<void> {
   let version: number | null = null;
   let fresh: Warning[] = [];
   if (applied > 0) {
+    // 이번 차례에 비게 된 영역을 지운다. 클라이언트도 같은 명령으로 맞추도록 안쪽부터 보낸다.
+    const pruned = pruneEmptyGroups(turnStartState, state);
+    for (const id of prunedOrder(state, pruned)) emit({ t: "cmd", cmd: { op: "remove_group", id } });
+    state = pruned;
     // 변경이 있었던 차례만 점검한다. 중단·오류면 이미 중단된 신호로 불러 코드 규칙만 받는다.
     if (status === "complete") emit({ t: "status", phase: "checking" });
     const checkSignal = status === "complete" ? signal : AbortSignal.abort();
@@ -231,6 +255,7 @@ async function lockedTurn(args: TurnArgs, deps: ChatDeps): Promise<void> {
     says,
     ...(applied > 0 && missing > 0 ? { missing } : {}),
     ...(fresh.length > 0 ? { warnings: fresh } : {}),
+    ...counts(),
   };
   const assistant = await createMessage(diagramId, "assistant", content, meta);
   if (fresh.length > 0) emit({ t: "warnings", items: fresh });

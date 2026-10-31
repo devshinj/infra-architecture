@@ -16,7 +16,7 @@ export default async function Home() {
       <h1>{projects.length === 0 ? "아직 프로젝트가 없어요" : "구성도가 없어요"}</h1>
       <p>
         {projects.length === 0
-          ? "왼쪽 아래의 ‘새 프로젝트’로 시작해 보세요."
+          ? "왼쪽 프로젝트 영역의 ‘새 프로젝트’로 시작해 보세요."
           : "프로젝트 이름 옆 메뉴에서 ‘새 구성도’를 만들어 보세요."}
       </p>
     </div>

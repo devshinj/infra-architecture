@@ -2,7 +2,7 @@ import { expect, test } from "vitest";
 
 import { buildDisplayGraph, defaultDisplayOptions } from "@/canvas/display";
 import { elbowRoute } from "@/canvas/elbow";
-import { layoutDiagram, type Layout, type Rect } from "@/canvas/layout";
+import { GROUP_PAD, layoutDiagram, type Layout, type Rect } from "@/canvas/layout";
 import { findOverlaps, PAIR_BADGE_OFFSET } from "@/canvas/overlap";
 import { textWidth, truncate } from "@/canvas/text";
 import { applyCommand, applyCommands } from "@/domain/apply";
@@ -223,6 +223,67 @@ test("pinned node keeps its position and gets an elbow edge", async () => {
   }
   expect(l.width).toBeGreaterThanOrEqual(900 + was.width);
   expect(l.height).toBeGreaterThanOrEqual(900 + was.height);
+});
+
+/** 영역 상자가 직계 자식(노드·하위 영역)의 경계 상자 + GROUP_PAD 와 같은지. */
+function expectWraps(l: Layout, groupId: string) {
+  const kids = [...Object.values(l.nodes), ...Object.values(l.groups)].filter((r) => r.parent === groupId);
+  const x1 = Math.min(...kids.map((r) => r.x));
+  const y1 = Math.min(...kids.map((r) => r.y));
+  const x2 = Math.max(...kids.map((r) => r.x + r.width));
+  const y2 = Math.max(...kids.map((r) => r.y + r.height));
+  const g = l.groups[groupId];
+  expect({ x: g.x, y: g.y, width: g.width, height: g.height }, groupId).toEqual({
+    x: x1 - GROUP_PAD.side,
+    y: y1 - GROUP_PAD.top,
+    width: x2 - x1 + 2 * GROUP_PAD.side,
+    height: y2 - y1 + GROUP_PAD.top + GROUP_PAD.bottom,
+  });
+}
+
+test("pinned node outside its group grows the group and ancestors", async () => {
+  const free = await lay(fx("s2"));
+  const l = await lay(fx("s2"), { "was-1": { x: 2000, y: 1500 } });
+  // was-1 ⊂ was-pair ⊂ private-zone ⊂ idc-main
+  for (const id of ["was-pair", "private-zone", "idc-main"]) {
+    expectWraps(l, id);
+    expect(l.groups[id].x + l.groups[id].width).toBeGreaterThan(free.groups[id].x + free.groups[id].width);
+    expect(l.groups[id].y + l.groups[id].height).toBeGreaterThan(free.groups[id].y + free.groups[id].height);
+  }
+  // 고정되지 않은 형제(was-2)는 제자리, 소속도 그대로다.
+  expect(l.nodes["was-2"]).toEqual(free.nodes["was-2"]);
+  expect(l.nodes["was-1"].parent).toBe("was-pair");
+});
+
+test("pinned node moved inward shrinks the group", async () => {
+  const { state, errors } = applyCommands(emptyState(), [
+    { op: "add_group", id: "vpc", group_kind: "vpc", label: "VPC", parent: null },
+    { op: "add_node", id: "a", kind: "app_server", label: "A", parent: "vpc" },
+    { op: "add_node", id: "b", kind: "app_server", label: "B", parent: "vpc" },
+    { op: "add_node", id: "c", kind: "app_server", label: "C", parent: "vpc" },
+    { op: "add_edge", from: "a", to: "b", edge_kind: "request" },
+    { op: "add_edge", from: "b", to: "c", edge_kind: "request" },
+  ]);
+  expect(errors).toEqual([]);
+  const free = await lay(state);
+  // 맨 아래 c 를 b 오른쪽 옆으로 끌어올린다: 영역 높이가 줄어든다.
+  const b = free.nodes.b;
+  const l = await lay(state, { c: { x: b.x + b.width + 40, y: b.y } });
+  expectWraps(l, "vpc");
+  expect(l.groups.vpc.height).toBeLessThan(free.groups.vpc.height);
+  expect(l.nodes.a).toEqual(free.nodes.a);
+  expect(l.nodes.b).toEqual(free.nodes.b);
+});
+
+test("unpinned layout unchanged", async () => {
+  const st = fx("s2");
+  const free = await lay(st);
+  expect(await lay(st, {})).toEqual(free);
+  expect(findOverlaps(free)).toEqual([]);
+  // 고정 노드가 없는 영역(web-pair, dmz-zone 등)과 다른 노드는 그대로다.
+  const l = await lay(st, { "was-1": { x: 2000, y: 1500 } });
+  for (const id of ["dmz-zone", "web-pair", "db-pair"]) expect(l.groups[id]).toEqual(free.groups[id]);
+  for (const id of Object.keys(free.nodes).filter((x) => x !== "was-1")) expect(l.nodes[id]).toEqual(free.nodes[id]);
 });
 
 test("elbow route: below, above, side", () => {

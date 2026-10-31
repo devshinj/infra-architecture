@@ -15,18 +15,22 @@ const props = (selectedId: string | null): RightPanelProps => ({
   state: fx("s2"),
   selectedId,
   onSelect: vi.fn(),
-  samples: [{ id: "s1", title: "샘플 하나" }],
-  onImportSample: vi.fn(),
   history: { versions: [], onView: vi.fn(), onRestore: vi.fn(), onCompare: vi.fn() },
-  chat: { lines: [], busy: false, phase: null, onSend: vi.fn(), onStop: vi.fn(), health: null, mentionRef: { current: null } },
+  chat: { lines: [], busy: false, onSend: vi.fn(), onStop: vi.fn(), health: null, mentionRef: { current: null } },
 });
 
-test("chat tab shows the sample buttons only for an empty diagram", async () => {
-  const p = { ...props(null), state: emptyState() };
-  render(<RightPanel {...p} />);
-  expect(screen.getByText("또는 샘플로 시작하기")).toBeInTheDocument();
-  await userEvent.click(screen.getByRole("button", { name: "샘플 하나 불러오기" }));
-  expect(p.onImportSample).toHaveBeenCalledWith("s1");
+test("no sample list in chat; greeting only for an empty diagram", () => {
+  const { rerender } = render(<RightPanel {...props(null)} state={emptyState()} />);
+  expect(screen.queryByText("또는 샘플로 시작하기")).not.toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: /불러오기/ })).not.toBeInTheDocument();
+  expect(screen.getByText(/안녕하세요, InfraSketch예요/)).toBeInTheDocument();
+  rerender(<RightPanel {...props(null)} />);
+  expect(screen.queryByText(/안녕하세요, InfraSketch예요/)).not.toBeInTheDocument();
+});
+
+test("no greeting while viewing an old empty version (chat disabled)", () => {
+  render(<RightPanel {...props(null)} state={emptyState()} live={false} />);
+  expect(screen.queryByText(/안녕하세요, InfraSketch예요/)).not.toBeInTheDocument();
 });
 
 test("selecting activates 설명 and clearing returns to the previous tab", () => {
@@ -68,9 +72,4 @@ test("controlled mode: selection change notifies the parent outside render, no c
   expect(onTabChange).toHaveBeenLastCalledWith("이력");
   expect(err).not.toHaveBeenCalled();
   err.mockRestore();
-});
-
-test("chat tab hides samples when the diagram has nodes", () => {
-  render(<RightPanel {...props(null)} />);
-  expect(screen.queryByText("또는 샘플로 시작하기")).not.toBeInTheDocument();
 });

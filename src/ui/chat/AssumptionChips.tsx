@@ -12,6 +12,8 @@ export interface AssumptionChipsProps {
   busy: boolean;
   onChoose(key: string, value: string): void;
   onConfirm(key: string): void;
+  /** 이력 보기·비교: 값만 보이고 고르기·확정은 없다. */
+  readOnly?: boolean;
 }
 
 const labelOf = (key: string) => ASSUMPTION_LABELS[key] ?? key;
@@ -24,7 +26,7 @@ function orderedKeys(assumptions: Record<string, Assumption>): string[] {
   return [...known, ...other];
 }
 
-export function AssumptionChips({ assumptions, busy, onChoose, onConfirm }: AssumptionChipsProps) {
+export function AssumptionChips({ assumptions, busy, onChoose, onConfirm, readOnly = false }: AssumptionChipsProps) {
   const [open, setOpen] = useState<string | null>(null);
   const root = useRef<HTMLUListElement>(null);
 
@@ -52,11 +54,31 @@ export function AssumptionChips({ assumptions, busy, onChoose, onConfirm }: Assu
   if (keys.length === 0) return null;
 
   return (
-    <ul ref={root} className={styles.assumptions} aria-label="AI가 세운 가정">
+    <ul
+      ref={root}
+      className={styles.assumptions}
+      aria-label="AI가 세운 가정"
+      onKeyDown={(e) => {
+        // 열린 대안 메뉴의 Escape 는 메뉴만 닫는다(감싼 구성 정보 카드까지 접지 않는다).
+        if (e.key === "Escape" && open !== null) {
+          e.stopPropagation();
+          setOpen(null);
+        }
+      }}
+    >
       {keys.map((key) => {
         const a = assumptions[key]!;
         const isOpen = open === key;
         const choices = ASSUMPTION_CHOICES[key] ?? [];
+        if (readOnly)
+          return (
+            <li key={key} className={styles.assumptionItem}>
+              <span className={`${styles.assumptionChip} ${styles.assumptionStatic} ${a.confirmed ? styles.assumptionConfirmed : ""}`}>
+                {labelOf(key)}: {a.value}
+                {a.confirmed && <span className={styles.assumptionMark}>확정</span>}
+              </span>
+            </li>
+          );
         return (
           <li key={key} className={styles.assumptionItem}>
             <button

@@ -65,3 +65,16 @@ test("aux-first parallel edge: selecting an endpoint keeps the request edge in d
   expect(ids).toContain("z-req");
   expect(ids).toContain("a-aux");
 });
+
+test("settled is false while the layout for new pins is computed, then true", async () => {
+  const s2 = fx("s2");
+  const opts = defaultDisplayOptions(s2);
+  const { result, rerender } = renderHook(({ p }) => useDiagramView(s2, p, opts), {
+    initialProps: { p: { "was-1": { x: 900, y: 900 } } as Record<string, { x: number; y: number }> },
+  });
+  await waitFor(() => expect(result.current.settled).toBe(true));
+  rerender({ p: {} });
+  expect(result.current.settled).toBe(false);
+  await waitFor(() => expect(result.current.settled).toBe(true));
+  expect(result.current.layout!.nodes["was-1"].x).not.toBe(900);
+});

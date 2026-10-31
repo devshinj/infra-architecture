@@ -79,3 +79,8 @@ test("second pointerdown mid-drag is ignored and unmount restores user-select", 
   expect(document.body.style.userSelect).toBe("text");
   document.body.style.userSelect = "";
 });
+
+test("handle sits on the floating panel's left edge (offset + width)", () => {
+  render(<PanelResizer width={400} min={320} max={720} defaultWidth={360} onChange={() => {}} offset={12} />);
+  expect(screen.getByRole("separator", { name: "대화 패널 너비" }).style.right).toBe("412px");
+});

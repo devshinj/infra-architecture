@@ -73,3 +73,14 @@ test("expanded group shows fold button", () => {
   wrap(<GroupBox data={{ label: "VPC", groupKind: "vpc", collapsed: false, hiddenCount: 0, onToggle: vi.fn() }} {...rfProps} />);
   expect(screen.getByRole("button", { name: "접기" })).toBeInTheDocument();
 });
+
+test("node uses its category color variable on the card root", () => {
+  wrap(<NodeCard data={{ label: "DB", fullLabel: "DB", category: "data", state: "normal" }} {...rfProps} />);
+  expect(screen.getByTitle("DB").style.getPropertyValue("--cat")).toBe("var(--cat-data)");
+});
+
+test("group box exposes its tint token", () => {
+  wrap(<GroupBox data={{ label: "VPC", groupKind: "vpc", collapsed: false, hiddenCount: 0, onToggle: () => {} }} {...rfProps} />);
+  const box = document.querySelector("[data-group-kind='vpc']") as HTMLElement;
+  expect(box.style.getPropertyValue("--tint")).toBe("var(--zone-tint-vpc)");
+});

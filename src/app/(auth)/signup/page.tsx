@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useActionState } from "react";
 
 import { signupAction, type FormState } from "@/server/auth/actions";
+import { Logo } from "@/ui/brand/Logo";
 
 import styles from "../auth.module.css";
 
@@ -13,6 +14,7 @@ export default function SignupPage() {
   return (
     <main className={styles.page}>
       <form action={action} className={styles.form}>
+        <Logo className={styles.logo} />
         <h1 className={styles.title}>회원가입</h1>
         <label className={styles.field}>
           아이디

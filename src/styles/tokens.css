@@ -15,6 +15,22 @@
   --bg-panel-raised: #2A3A52; /* 패널 위 입력칸·말풍선·카드·메뉴 */
   --line-shell: #2C3A50; /* 영역 경계선 */
 
+  /* 떠 있는 유리 패널 — 캔버스 위 사이드바·오른쪽 패널. 그림자 없이 반투명·1px 선으로 층을 나눈다. */
+  --glass-bg: rgba(18, 26, 39, 0.78); /* 패널 칠 */
+  --glass-line: rgba(232, 235, 238, 0.08); /* 패널 테두리·안쪽 구분선 */
+  --glass-highlight: rgba(208, 218, 232, 0.42); /* 패널 머리 은빛 선 */
+  --glass-blur: 14px; /* 뒤 캔버스 흐림 */
+
+  /* 위치 보기 강조 링(은빛, 금색 --accent 아님) */
+  --focus-ring: #C9D3E2;
+
+  /* 얇은 테마 스크롤바(스크롤 영역 전체) */
+  --scrollbar-thumb: rgba(154, 167, 186, 0.28);
+  --scrollbar-thumb-hover: rgba(154, 167, 186, 0.5);
+
+  /* 대화에서 캔버스로 날아가는 빛점(은빛 단색 원, glass-highlight 보다 밝게) */
+  --fly-dot: #DCE3EE;
+
   /* 텍스트 */
   --text-primary: #E8EBEE; /* 노드 이름 등 */
   --text-secondary: #9AA7BA; /* 부제, 영역 이름 */
@@ -53,7 +69,22 @@
   --zone-redundancy: #536986; /* 이중화 묶음 (짧은 점선) */
   --zone-external: #82695B; /* 외부 서비스 상자 (점선) */
 
+  /* 영역 색조 — 구역 칠·테두리·이름 태그의 바탕색 (옅게 섞어 쓴다) */
+  --zone-tint-region: #5B7BA0; /* 클라우드 리전 */
+  --zone-tint-vpc: #4F7FB8; /* VPC */
+  --zone-tint-public: #3F93A8; /* 공개 구역(청록) */
+  --zone-tint-private: #6874B8; /* 내부 구역(남색) */
+  --zone-tint-dmz: #B08B4F; /* DMZ(황동) */
+  --zone-tint-k8s: #4E9A8E; /* 쿠버네티스 클러스터 */
+  --zone-tint-external: #A9765E; /* 외부 서비스(구리) */
+  --zone-tint-redundancy: #7F95B5; /* 이중화 묶음 */
+  --zone-tint-onprem: #7A8696; /* IDC·온프레미스 */
+
   /* 반경 */
   --radius-node: 6px;
   --radius-zone: 8px;
+  --radius-panel: 14px; /* 떠 있는 패널 */
+
+  /* 간격 */
+  --panel-gap: 12px; /* 떠 있는 패널과 화면 가장자리 사이 */
 }

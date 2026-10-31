@@ -4,6 +4,7 @@ import Link from "next/link";
 import { use, useActionState } from "react";
 
 import { resetPasswordAction, type FormState } from "@/server/auth/actions";
+import { Logo } from "@/ui/brand/Logo";
 
 import styles from "../../auth.module.css";
 
@@ -13,6 +14,7 @@ export default function ResetPasswordPage({ params }: { params: Promise<{ token:
   return (
     <main className={styles.page}>
       <form action={action} className={styles.form}>
+        <Logo className={styles.logo} />
         <h1 className={styles.title}>새 비밀번호 설정</h1>
         <input type="hidden" name="token" value={token} />
         <label className={styles.field}>

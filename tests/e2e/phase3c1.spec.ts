@@ -70,3 +70,39 @@ test("explanations and glossary", async ({ page }) => {
   await expect(definition.getByText(SEED_DEFINITION)).toBeVisible({ timeout: 30_000 });
   await expect(definition.getByText("미검수")).toHaveCount(0);
 });
+
+test("no page-level scroll", async ({ page }) => {
+  await setup(page);
+  const overflow = () => page.evaluate(() => ({ doc: document.scrollingElement!.scrollHeight - innerHeight, wide: document.scrollingElement!.scrollWidth - innerWidth }));
+  const d = await overflow();
+  expect(d.doc).toBeLessThanOrEqual(0);
+  expect(d.wide).toBeLessThanOrEqual(0);
+  // 구성도를 불러온 화면: 보기 팝오버를 연 채로, 구성 정보 카드를 펼친 채로도 문서가 넘치지 않는다.
+  await page.getByPlaceholder(PLACEHOLDER).fill("결제랑 카카오 로그인 붙는 쇼핑몰");
+  await page.getByRole("button", { name: "보내기" }).click();
+  await expect(nodes(page)).toHaveCount(S1_NODE_COUNT, { timeout: 30_000 });
+  await expect(page.getByText(/노드 \d+ · 연결 \d+ · 적용 \d+ · 건너뜀 \d+/)).toBeVisible({ timeout: 30_000 });
+  expect((await overflow()).doc).toBeLessThanOrEqual(0);
+  await page.getByRole("button", { name: "보기", exact: true }).click();
+  await expect(page.getByRole("dialog", { name: "보기 옵션" })).toBeVisible();
+  expect((await overflow()).doc).toBeLessThanOrEqual(0);
+  await page.keyboard.press("Escape");
+  await page.getByRole("button", { name: "구성 정보 펼치기" }).click();
+  await expect(page.getByRole("button", { name: "구성 정보 접기" })).toBeVisible();
+  expect((await overflow()).doc).toBeLessThanOrEqual(0);
+  expect((await overflow()).wide).toBeLessThanOrEqual(0);
+  await page.getByRole("link", { name: "용어 사전" }).first().click();
+  await page.waitForURL(/\/glossary/);
+  const g = await overflow();
+  expect(g.doc).toBeLessThanOrEqual(0);
+  // 용어 목록은 끝까지 스크롤된다: 마지막 용어의 아래 끝이 화면 안에 들어온다.
+  const last = page.getByRole("heading", { name: "용어 사전", level: 1 }).locator("xpath=..").locator("ul > li").last();
+  await expect(last).toBeAttached();
+  const bottom = await last.evaluate((li) => {
+    let el: HTMLElement | null = li.parentElement;
+    while (el && !(el.scrollHeight > el.clientHeight && getComputedStyle(el).overflowY === "auto")) el = el.parentElement;
+    if (el) el.scrollTop = el.scrollHeight;
+    return { li: li.getBoundingClientRect().bottom, view: innerHeight };
+  });
+  expect(bottom.li).toBeLessThanOrEqual(bottom.view);
+});

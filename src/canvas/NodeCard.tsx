@@ -16,6 +16,8 @@ export interface NodeCardData extends Record<string, unknown> {
   /** 빠진 정보 수와 경고 수. 둘 다 있으면 경고 "!" 가 빠진 정보 배지 왼쪽에 나란히 놓인다. */
   badges?: { missing?: number; warn?: number };
   az?: string;
+  /** 위치 보기 강조 토큰. 있으면 은빛 링이 두 번 돈다(바뀌면 처음부터). */
+  pulse?: number;
   /** Compare mode marker. */
   diff?: "added" | "removed" | "changed";
   /** Click on the missing badge; the click does not select the node. */
@@ -29,8 +31,8 @@ export function NodeCard({ data }: Pick<NodeProps, "data"> & Partial<NodeProps>)
   const missing = d.badges?.missing ?? 0;
   const warn = d.badges?.warn ?? 0;
   return (
-    <div className={`node node--${d.state}${d.diff ? ` node--diff-${d.diff}` : ""}`} title={d.fullLabel} data-category={d.category}>
-      <span className="node__icon" style={{ "--cat": `var(--cat-${d.category})` } as React.CSSProperties}>
+    <div className={`node node--${d.state}${d.diff ? ` node--diff-${d.diff}` : ""}${d.pulse !== undefined ? " node--pulse" : ""}`} title={d.fullLabel} data-category={d.category} style={{ "--cat": `var(--cat-${d.category})` } as React.CSSProperties}>
+      <span className="node__icon">
         <CategoryIcon category={d.category} />
       </span>
       <span className="node__text">
@@ -69,6 +71,7 @@ export function NodeCard({ data }: Pick<NodeProps, "data"> & Partial<NodeProps>)
         </button>
       )}
       {d.state === "updated" && <span className="node__updated" />}
+      {d.pulse !== undefined && <span key={d.pulse} className="node__pulse" aria-hidden="true" />}
     </div>
   );
 }

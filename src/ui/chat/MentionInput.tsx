@@ -12,6 +12,8 @@ export interface Mention {
 export interface MentionInputHandle {
   insertMention(m: Mention): void;
   focus(): void;
+  /** Replace the typed text (chips stay) and focus the field. Does not send. */
+  setText(text: string): void;
   /** Send what is typed now (same path as Enter). */
   submit(): void;
 }
@@ -70,6 +72,10 @@ export const MentionInput = forwardRef<MentionInputHandle, MentionInputProps>(fu
         area.current?.focus();
       },
       focus: () => area.current?.focus(),
+      setText: (t) => {
+        update(t, live.current.chips);
+        area.current?.focus();
+      },
       submit,
     }),
     [submit, update],

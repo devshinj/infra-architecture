@@ -2,42 +2,52 @@ import "@testing-library/jest-dom/vitest";
 import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
-const hookState = vi.hoisted(() => ({ busy: false, onCommand: null as null | ((c: unknown) => void), badgeFns: [] as unknown[], warnFns: [] as unknown[], lines: [] as unknown[] }));
+const hookState = vi.hoisted(() => ({ busy: false, onCommand: null as null | ((c: unknown) => void), badgeFns: [] as unknown[], warnFns: [] as unknown[], lines: [] as unknown[], insets: [] as unknown[], focus: [] as unknown[], turn: null as null | { onDone(): void; onInterrupted(): void; onRelayout?(): void }, pinned: [] as unknown[], fitRequest: [] as unknown[], placed: null as null | ((locate: (id: string) => { x: number; y: number } | null) => void) }));
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
 vi.mock("@/app/(app)/actions", () => ({
-  clearPinnedAction: vi.fn(), getVersionAction: vi.fn(), importSampleAction: vi.fn(),
+  clearPinnedAction: vi.fn(async () => undefined), getVersionAction: vi.fn(), importSampleAction: vi.fn(),
   listVersionsAction: vi.fn(async () => []), restoreVersionAction: vi.fn(), savePinnedAction: vi.fn(),
   saveFieldsAction: vi.fn(async () => ({ ok: true, number: 2 })),
   setWarningIgnoredAction: vi.fn(async () => ({ ok: true, number: 2 })),
   listTermsAction: vi.fn(async () => []),
 }));
 vi.mock("@/canvas/Canvas", () => ({
-  Canvas: ({ state, onMention, onBadgeClick, onWarnBadgeClick, onSelect }: { state: { nodes: object }; onMention?: (id: string) => void; onBadgeClick?: (id: string) => void; onWarnBadgeClick?: (id: string) => void; onSelect: (id: string | null) => void }) => {
+  Canvas: ({ state, pinned, fitRequest, onAutoArrange, fitKey, cameraInsets, focusRequest, onMention, onBadgeClick, onWarnBadgeClick, onSelect, onImportSample, onPlaced }: { onPlaced?: (l: (id: string) => { x: number; y: number } | null) => void; onImportSample?: (id: string) => void; state: { nodes: object }; pinned: unknown; fitRequest?: unknown; onAutoArrange(): void; fitKey?: string; cameraInsets?: unknown; focusRequest?: unknown; onMention?: (id: string) => void; onBadgeClick?: (id: string) => void; onWarnBadgeClick?: (id: string) => void; onSelect: (id: string | null) => void }) => {
+    hookState.insets.push(cameraInsets);
+    hookState.placed = onPlaced ?? null;
+    hookState.pinned.push(pinned);
+    hookState.fitRequest.push(fitRequest);
+    hookState.focus.push(focusRequest);
     hookState.badgeFns.push(onBadgeClick);
     hookState.warnFns.push(onWarnBadgeClick);
     return (
     <div>
       <div data-testid="n">{Object.keys(state.nodes).join(",")}</div>
+      <div data-testid="fit">{fitKey}</div>
       {onMention && <button onClick={() => onMention("a")}>멘션a</button>}
       {onBadgeClick && <button onClick={() => onBadgeClick("a")}>배지a</button>}
       {onWarnBadgeClick && <button onClick={() => onWarnBadgeClick("b")}>경고배지b</button>}
       <button onClick={() => onSelect("b")}>선택b</button>
+      <button onClick={onAutoArrange}>자동정렬</button>
+      {onImportSample && <button onClick={() => onImportSample("s")}>샘플 불러오기</button>}
       <button onClick={() => onSelect(null)}>선택해제</button>
     </div>
     );
   },
 }));
 vi.mock("@/ui/chat/useChatTurn", () => ({
-  useChatTurn: (a: { onCommand: (c: unknown) => void }) => {
+  useChatTurn: (a: { onCommand: (c: unknown) => void; onDone(): void; onInterrupted(): void; onRelayout?(): void }) => {
     hookState.onCommand = a.onCommand;
-    return { lines: hookState.lines, busy: hookState.busy, phase: null, send: vi.fn(), stop: vi.fn() };
+    hookState.turn = a;
+    return { lines: hookState.lines, busy: hookState.busy, send: vi.fn(), stop: vi.fn() };
   },
 }));
 
-import { saveFieldsAction, setWarningIgnoredAction } from "@/app/(app)/actions";
+import { clearPinnedAction, getVersionAction, listVersionsAction, saveFieldsAction, setWarningIgnoredAction } from "@/app/(app)/actions";
 import { emptyState } from "@/domain/types";
 import { DiagramWorkspace } from "@/ui/DiagramWorkspace";
+import { ShellProvider } from "@/ui/Shell";
 
 afterEach(cleanup);
 // jsdom 에는 scrollIntoView 가 없다: 테스트마다 끼우고 원래대로 돌려 둔다.
@@ -70,6 +80,26 @@ test("newer server state is not adopted while busy, then adopted after", () => {
   expect(screen.getByTestId("n")).toHaveTextContent("a,x");
 });
 
+test("relayout event clears pins and re-lays out", () => {
+  hookState.busy = false;
+  vi.mocked(clearPinnedAction).mockClear();
+  hookState.pinned.length = 0;
+  hookState.fitRequest.length = 0;
+  render(<DiagramWorkspace diagramId="d" name="n" latest={mk(1, ["a"]) as never} initialPinned={{ a: { x: 5, y: 5 } }} samples={[]} />);
+  expect(hookState.pinned.at(-1)).toEqual({ a: { x: 5, y: 5 } });
+  const before = hookState.fitRequest.at(-1) as number;
+  act(() => hookState.turn!.onRelayout!());
+  expect(hookState.pinned.at(-1)).toEqual({});
+  expect(clearPinnedAction).toHaveBeenCalledWith("d");
+  // 화면 맞춤 요청이 새로 간다.
+  const after = hookState.fitRequest.at(-1) as number;
+  expect(after).not.toBe(before);
+  // 버튼도 같은 동작을 한다.
+  fireEvent.click(screen.getByRole("button", { name: "자동정렬" }));
+  expect(clearPinnedAction).toHaveBeenCalledTimes(2);
+  expect(hookState.fitRequest.at(-1)).not.toBe(after);
+});
+
 test("canvas mention opens the 대화 tab and inserts a chip for the node", () => {
   hookState.busy = false;
   render(ui(mk(1, ["a"])));
@@ -83,21 +113,27 @@ test("canvas mention opens the 대화 tab and inserts a chip for the node", () =
 
 const web = (id: string) => [id, { id, kind: "web_server", label: id, parent: null, attrs: {} }];
 
-test("badge click opens the chat tab checklist at that node", async () => {
+const cardToggle = () => screen.getByRole("button", { name: /^구성 정보 (펼치기|접기)$/ });
+const two = () => ({ number: 1, state: { ...emptyState(), nodes: Object.fromEntries([web("a"), web("b")]) } });
+
+test("badge click opens card at that node block and focuses first input", async () => {
   hookState.busy = false;
-  const latest = { number: 1, state: { ...emptyState(), nodes: Object.fromEntries([web("a"), web("b")]) } };
-  render(<DiagramWorkspace diagramId="d" name="n" latest={latest as never} initialPinned={{}} samples={[]} />);
+  render(ui(two() as never));
   fireEvent.click(screen.getByRole("tab", { name: "설명" }));
+  expect(cardToggle()).toHaveAttribute("aria-expanded", "false");
   fireEvent.click(screen.getByRole("button", { name: "배지a" }));
-  expect(screen.getByRole("tab", { name: "대화" })).toHaveAttribute("aria-selected", "true");
-  expect(screen.getByRole("button", { name: /채워야 할 정보/ })).toHaveAttribute("aria-expanded", "true");
-  const a = screen.getByRole("group", { name: "a" });
-  const host = within(a).getByRole("textbox", { name: "호스트명" });
-  expect(host).toHaveFocus();
-  // 접고 같은 배지를 다시 눌러도 다시 펼쳐진다.
-  fireEvent.click(screen.getByRole("button", { name: /채워야 할 정보/ }));
+  // 대화 탭으로 가지 않는다.
+  expect(screen.getByRole("tab", { name: "설명" })).toHaveAttribute("aria-selected", "true");
+  expect(cardToggle()).toHaveAttribute("aria-expanded", "true");
+  expect(screen.getByRole("button", { name: "a 항목 접기" })).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "b 항목 펼치기" })).toBeInTheDocument();
+  expect(within(screen.getByRole("group", { name: "a" })).getByRole("textbox", { name: "호스트명" })).toHaveFocus();
+  // 카드를 접고 같은 배지를 다시 눌러도 다시 펼쳐진다.
+  fireEvent.click(cardToggle());
+  expect(cardToggle()).toHaveAttribute("aria-expanded", "false");
   fireEvent.click(screen.getByRole("button", { name: "배지a" }));
-  expect(screen.getByRole("button", { name: /채워야 할 정보/ })).toHaveAttribute("aria-expanded", "true");
+  expect(cardToggle()).toHaveAttribute("aria-expanded", "true");
+  expect(within(screen.getByRole("group", { name: "a" })).getByRole("textbox", { name: "호스트명" })).toHaveFocus();
   // 저장은 saveFieldsAction 으로 간다.
   fireEvent.change(within(screen.getByRole("group", { name: "a" })).getByRole("textbox", { name: "호스트명" }), { target: { value: "web-01" } });
   await act(async () => {
@@ -106,21 +142,74 @@ test("badge click opens the chat tab checklist at that node", async () => {
   expect(saveFieldsAction).toHaveBeenCalledWith("d", { targetKind: "node", targetId: "a", values: { hostname: "web-01" }, unknown: [] });
 });
 
-test("drafts survive leaving the 대화 tab", () => {
+test("title click sends focus request without selecting", () => {
   hookState.busy = false;
-  const latest = { number: 1, state: { ...emptyState(), nodes: Object.fromEntries([web("a"), web("b")]) } };
-  render(<DiagramWorkspace diagramId="d" name="n" latest={latest as never} initialPinned={{}} samples={[]} />);
-  fireEvent.click(screen.getByRole("button", { name: /채워야 할 정보/ }));
+  hookState.focus.length = 0;
+  render(ui(two() as never));
+  fireEvent.click(cardToggle());
+  fireEvent.click(screen.getByRole("button", { name: "b 위치 보기" }));
+  expect(hookState.focus.at(-1)).toEqual({ id: "b", token: expect.any(Number) });
+  const first = (hookState.focus.at(-1) as { token: number }).token;
+  // 선택하지 않으니 설명 탭으로 가지 않는다.
+  expect(screen.getByRole("tab", { name: "대화" })).toHaveAttribute("aria-selected", "true");
+  // 같은 노드를 다시 눌러도 새 토큰으로 다시 보낸다.
+  fireEvent.click(screen.getByRole("button", { name: "b 위치 보기" }));
+  expect((hookState.focus.at(-1) as { token: number }).token).toBeGreaterThan(first);
+});
+
+test("drafts and expanded blocks survive tab switch and card collapse", () => {
+  hookState.busy = false;
+  render(ui(two() as never));
+  fireEvent.click(cardToggle());
+  fireEvent.click(screen.getByRole("button", { name: "a 항목 펼치기" }));
   fireEvent.change(within(screen.getByRole("group", { name: "a" })).getByRole("textbox", { name: "호스트명" }), { target: { value: "web-01" } });
-  // 노드를 고르면 설명 탭으로 가고 체크리스트는 내려간다.
+  // 노드를 고르면 설명 탭으로 간다. 카드는 캔버스에 있어 그대로다.
   fireEvent.click(screen.getByRole("button", { name: "선택b" }));
   expect(screen.getByRole("tab", { name: "설명" })).toHaveAttribute("aria-selected", "true");
-  expect(screen.queryByRole("button", { name: /채워야 할 정보/ })).not.toBeInTheDocument();
-  // 선택을 풀면 대화로 돌아오고, 펼침과 초안이 그대로다.
-  fireEvent.click(screen.getByRole("button", { name: "선택해제" }));
-  expect(screen.getByRole("tab", { name: "대화" })).toHaveAttribute("aria-selected", "true");
-  expect(screen.getByRole("button", { name: /채워야 할 정보/ })).toHaveAttribute("aria-expanded", "true");
   expect(within(screen.getByRole("group", { name: "a" })).getByRole("textbox", { name: "호스트명" })).toHaveValue("web-01");
+  // 카드를 접었다 펴도 펼침과 초안이 남는다.
+  fireEvent.click(cardToggle());
+  expect(screen.queryByRole("group", { name: "a" })).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: "선택해제" }));
+  fireEvent.click(cardToggle());
+  expect(screen.getByRole("button", { name: "a 항목 접기" })).toBeInTheDocument();
+  expect(within(screen.getByRole("group", { name: "a" })).getByRole("textbox", { name: "호스트명" })).toHaveValue("web-01");
+  expect(screen.getByRole("textbox", { name: "호스트명" })).not.toHaveFocus();
+});
+
+test("주의 N chip opens the card at the warnings section", () => {
+  hookState.busy = false;
+  hookState.lines = [{ id: "w1", kind: "warning", text: "주의 1", turn: "t" }];
+  render(ui(solo(1) as never));
+  expect(cardToggle()).toHaveAttribute("aria-expanded", "false");
+  vi.mocked(Element.prototype.scrollIntoView).mockClear();
+  fireEvent.click(screen.getByRole("button", { name: "주의 1" }));
+  expect(cardToggle()).toHaveAttribute("aria-expanded", "true");
+  expect(vi.mocked(Element.prototype.scrollIntoView).mock.contexts.at(-1)).toBe(screen.getByRole("region", { name: "주의" }));
+  hookState.lines = [];
+});
+
+test("read-only card in history view", async () => {
+  hookState.busy = false;
+  const row = (number: number) => ({ number, source: "ai", status: "complete", restoredFrom: null, createdAt: new Date(0) });
+  vi.mocked(listVersionsAction).mockResolvedValue([row(1), row(2)] as never);
+  vi.mocked(getVersionAction).mockResolvedValue({ ...emptyState(), nodes: Object.fromEntries([web("a")]), assumptions: { scale: { key: "scale", value: "중규모(일 1만 명)", confirmed: false } } } as never);
+  render(ui({ number: 2, state: { ...emptyState(), nodes: Object.fromEntries([web("a"), web("b")]) } } as never));
+  await act(async () => {
+    fireEvent.click(screen.getByRole("tab", { name: "이력" }));
+  });
+  fireEvent.click(await screen.findByRole("button", { name: /v1/ }));
+  await act(async () => {
+    fireEvent.click(screen.getByRole("button", { name: "이 버전 보기" }));
+  });
+  fireEvent.click(cardToggle());
+  // 보는 버전의 내용이다(노드 a 만, 가정 하나).
+  expect(screen.queryByRole("group", { name: "b" })).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: "a 항목 펼치기" }));
+  expect(screen.queryByRole("button", { name: "저장" })).not.toBeInTheDocument();
+  expect(within(screen.getByRole("region", { name: "가정" })).queryByRole("button")).not.toBeInTheDocument();
+  expect(within(screen.getByRole("region", { name: "가정" })).getByText(/규모: 중규모/)).toBeInTheDocument();
+  vi.mocked(listVersionsAction).mockResolvedValue([]);
 });
 
 test("onBadgeClick keeps its identity across workspace re-renders (Canvas memo deps)", () => {
@@ -175,21 +264,20 @@ test("ignore buttons are disabled during a chat turn and action errors show as a
   expect(within(caution()).queryByRole("alert")).not.toBeInTheDocument();
 });
 
-test("warn badge or chat warning line for the already selected node still opens 설명", () => {
+test("warn badge or card warning item for the already selected node still opens 설명", () => {
   hookState.busy = false;
-  hookState.lines = [{ id: "w1", kind: "warning", text: "주의: b 1대뿐", nodeId: "b", level: "warn" }];
   render(ui(solo(1) as never));
   fireEvent.click(screen.getByRole("button", { name: "선택b" }));
   expect(screen.getByRole("tab", { name: "설명" })).toHaveAttribute("aria-selected", "true");
   fireEvent.click(screen.getByRole("tab", { name: "대화" }));
-  fireEvent.click(screen.getByRole("button", { name: "주의: b 1대뿐" }));
+  fireEvent.click(cardToggle());
+  fireEvent.click(within(screen.getByRole("region", { name: "주의" })).getByRole("button", { name: /1대뿐/ }));
   expect(screen.getByRole("tab", { name: "설명" })).toHaveAttribute("aria-selected", "true");
   expect(screen.getByRole("heading", { name: "주의할 점" })).toBeInTheDocument();
   fireEvent.click(screen.getByRole("tab", { name: "대화" }));
   fireEvent.click(screen.getByRole("button", { name: "경고배지b" }));
   expect(screen.getByRole("tab", { name: "설명" })).toHaveAttribute("aria-selected", "true");
   expect(screen.getByRole("heading", { name: "주의할 점" })).toBeInTheDocument();
-  hookState.lines = [];
 });
 
 test("selecting a node shows its explanation in 설명", async () => {
@@ -225,19 +313,46 @@ test("selecting a node shows its explanation in 설명", async () => {
 
 // ---- 대화 패널 너비 ----
 const KEY = "infrasketch.panelWidth";
-const panelCols = (c: HTMLElement) => (c.firstElementChild as HTMLElement).style.gridTemplateColumns;
+// 떠 있는 패널의 너비(패널을 감싼 자리 잡기 상자의 인라인 너비).
+const panelCols = (c: HTMLElement) => (within(c).getByRole("complementary", { name: "오른쪽 패널" }).parentElement as HTMLElement).style.width;
 
 test("width is saved and restored from localStorage after mount", () => {
   window.localStorage.clear();
   const first = render(ui(mk(1, ["a"])));
-  expect(panelCols(first.container)).toBe("minmax(0, 1fr) 360px");
+  expect(panelCols(first.container)).toBe("360px");
   fireEvent.keyDown(screen.getByRole("separator", { name: "대화 패널 너비" }), { key: "ArrowLeft" });
   expect(window.localStorage.getItem(KEY)).toBe("376");
-  expect(panelCols(first.container)).toBe("minmax(0, 1fr) 376px");
+  expect(panelCols(first.container)).toBe("376px");
   first.unmount();
   window.localStorage.setItem(KEY, "500");
   const second = render(ui(mk(1, ["a"])));
-  expect(panelCols(second.container)).toBe("minmax(0, 1fr) 500px");
+  expect(panelCols(second.container)).toBe("500px");
+  window.localStorage.clear();
+});
+
+test("fit padding accounts for floating panels", () => {
+  window.localStorage.clear();
+  hookState.insets.length = 0;
+  render(ui(mk(1, ["a"])));
+  // 왼쪽: 여백 12 + 사이드바 240 + 여백 12, 오른쪽: 여백 12 + 패널 360 + 여백 12
+  // 아래: 여백 12 + 접힌 구성 정보 카드 줄 42 + 여백 12
+  expect(hookState.insets.at(-1)).toEqual({ left: 264, right: 384, bottom: 66 });
+  fireEvent.keyDown(screen.getByRole("separator", { name: "대화 패널 너비" }), { key: "ArrowLeft" });
+  expect(hookState.insets.at(-1)).toEqual({ left: 264, right: 400, bottom: 66 });
+  // 카드를 펼치면 카메라가 피할 장애물(카드 폭 300 + 여백 12)이 함께 간다.
+  fireEvent.click(screen.getByRole("button", { name: "구성 정보 펼치기" }));
+  expect(hookState.insets.at(-1)).toMatchObject({ left: 264, right: 400, bottom: 66, card: { width: 312 } });
+  fireEvent.click(screen.getByRole("button", { name: "구성 정보 접기" }));
+  expect(hookState.insets.at(-1)).toEqual({ left: 264, right: 400, bottom: 66 });
+  cleanup();
+  // 접힌 사이드바(레일 56)
+  window.localStorage.setItem("infrasketch.sidebarCollapsed", "1");
+  render(<ShellProvider>{ui(mk(1, ["a"]))}</ShellProvider>);
+  expect(hookState.insets.at(-1)).toEqual({ left: 80, right: 400, bottom: 66 });
+  // 캔버스 도구 모음이 패널에 가리지 않게 같은 값을 CSS 변수로 넘긴다.
+  const ws = screen.getByRole("complementary", { name: "오른쪽 패널" }).closest("[data-workspace]") as HTMLElement;
+  expect(ws.style.getPropertyValue("--canvas-inset-left")).toBe("80px");
+  expect(ws.style.getPropertyValue("--canvas-inset-right")).toBe("400px");
   window.localStorage.clear();
 });
 
@@ -245,8 +360,133 @@ test("invalid stored value is ignored", () => {
   for (const bad of ["abc", "100", "9999", ""]) {
     window.localStorage.setItem(KEY, bad);
     const r = render(ui(mk(1, ["a"])));
-    expect(panelCols(r.container)).toBe("minmax(0, 1fr) 360px");
+    expect(panelCols(r.container)).toBe("360px");
     r.unmount();
   }
   window.localStorage.clear();
+});
+
+test("sample import after an interrupted turn refits the canvas at once", async () => {
+  hookState.busy = false;
+  const props = { diagramId: "d", name: "n", initialPinned: {}, samples: [{ id: "s", title: "샘플" }] };
+  const { rerender } = render(<DiagramWorkspace {...props} latest={mk(1, []) as never} />);
+  act(() => hookState.turn!.onInterrupted()); // no new version arrives for this turn
+  const before = screen.getByTestId("fit").textContent;
+  await act(async () => {
+    fireEvent.click(screen.getByRole("button", { name: "샘플 불러오기" }));
+  });
+  rerender(<DiagramWorkspace {...props} latest={mk(2, ["x"]) as never} />);
+  expect(screen.getByTestId("n")).toHaveTextContent("x");
+  expect(screen.getByTestId("fit").textContent).not.toBe(before);
+});
+
+test("restore while live refits the canvas at once, even after a turn that saved nothing", async () => {
+  hookState.busy = false;
+  const row = (number: number) => ({ number, source: "ai", status: "complete", restoredFrom: null, createdAt: new Date(0) });
+  vi.mocked(listVersionsAction).mockResolvedValue([row(1), row(2)] as never);
+  const { rerender } = render(ui(mk(2, ["a"])));
+  act(() => hookState.turn!.onDone()); // the turn ends without a new version
+  const before = screen.getByTestId("fit").textContent;
+  await act(async () => {
+    fireEvent.click(screen.getByRole("tab", { name: "이력" }));
+  });
+  fireEvent.click(await screen.findByRole("button", { name: /v1/ }));
+  await act(async () => {
+    fireEvent.click(screen.getByRole("button", { name: "이 버전으로 되돌리기" }));
+  });
+  rerender(ui(mk(3, ["a"])));
+  expect(screen.getByTestId("fit").textContent).not.toBe(before);
+  vi.mocked(listVersionsAction).mockResolvedValue([]);
+});
+
+test("add_node during a turn flies a dot from the progress card to the placed node, only on the 대화 tab", () => {
+  hookState.busy = true;
+  hookState.lines = [{ id: "c", kind: "card", text: "", card: { mode: "build", step: "drawing", changes: 1 }, turn: "t1", at: 0 }];
+  vi.stubGlobal("matchMedia", () => ({ matches: false, addEventListener() {}, removeEventListener() {} }));
+  const orig = Element.prototype.getBoundingClientRect;
+  Element.prototype.getBoundingClientRect = function (this: Element) {
+    const r = this.hasAttribute("data-fly-origin")
+      ? { left: 900, top: 200, width: 12, height: 12 }
+      : this.getAttribute("role") === "log"
+        ? { left: 800, top: 0, width: 400, height: 800 }
+        : { left: 0, top: 0, width: 0, height: 0 };
+    return { ...r, x: r.left, y: r.top, right: r.left + r.width, bottom: r.top + r.height, toJSON: () => r } as DOMRect;
+  };
+  try {
+    render(ui(mk(1, ["a"])));
+    act(() => hookState.onCommand!({ op: "add_node", id: "b", kind: "server", label: "b", parent: null }));
+    act(() => hookState.placed!(() => ({ x: 300, y: 400 })));
+    expect(document.querySelectorAll("[data-fly-dot]")).toHaveLength(1);
+    // 대화 탭이 아니면 출발점이 없다
+    fireEvent.click(screen.getByRole("tab", { name: "설명" }));
+    act(() => hookState.onCommand!({ op: "add_node", id: "c", kind: "server", label: "c", parent: null }));
+    act(() => hookState.placed!(() => ({ x: 300, y: 400 })));
+    expect(document.querySelectorAll("[data-fly-dot]")).toHaveLength(1);
+  } finally {
+    Element.prototype.getBoundingClientRect = orig;
+    vi.unstubAllGlobals();
+    hookState.lines = [];
+    hookState.busy = false;
+  }
+});
+
+test("missing-info badge click also moves the camera to that node (same path as 위치 보기)", () => {
+  hookState.busy = false;
+  hookState.focus.length = 0;
+  render(ui(two() as never));
+  fireEvent.click(screen.getByRole("button", { name: "배지a" }));
+  expect(cardToggle()).toHaveAttribute("aria-expanded", "true");
+  expect(hookState.focus.at(-1)).toEqual({ id: "a", token: expect.any(Number) });
+  const first = (hookState.focus.at(-1) as { token: number }).token;
+  fireEvent.click(screen.getByRole("button", { name: "배지a" }));
+  expect((hookState.focus.at(-1) as { token: number }).token).toBeGreaterThan(first);
+  // 선택하지 않는다(설명 탭으로 가지 않는다).
+  expect(screen.getByRole("tab", { name: "대화" })).toHaveAttribute("aria-selected", "true");
+});
+
+test("a selection that the chat removed or the adopted state no longer has is cleared", () => {
+  hookState.busy = true;
+  const { rerender } = render(ui(two() as never));
+  fireEvent.click(screen.getByRole("button", { name: "선택b" }));
+  expect(screen.getByRole("tab", { name: "설명" })).toHaveAttribute("aria-selected", "true");
+  // 대화가 선택된 노드를 지우면 선택이 풀린다(흐림이 남지 않는다).
+  act(() => hookState.onCommand!({ op: "remove_node", id: "b" }));
+  expect(screen.getByTestId("n")).toHaveTextContent(/^a$/);
+  expect(screen.getByRole("tab", { name: "대화" })).toHaveAttribute("aria-selected", "true");
+  // 대화 뒤 저장된 판을 받을 때도 없는 선택은 버린다.
+  hookState.busy = false;
+  fireEvent.click(screen.getByRole("button", { name: "선택b" }));
+  act(() => hookState.turn!.onDone());
+  rerender(ui(mk(2, ["a"]) as never));
+  expect(screen.getByRole("tab", { name: "대화" })).toHaveAttribute("aria-selected", "true");
+});
+
+test("queued fly dots survive turn done (post-done settle launches them) but are dropped on interrupt", () => {
+  for (const [end, expected] of [["onDone", 1], ["onInterrupted", 0]] as const) {
+    hookState.busy = true;
+    hookState.lines = [{ id: "c", kind: "card", text: "", card: { mode: "build", step: "drawing", changes: 1 }, turn: "t1", at: 0 }];
+    vi.stubGlobal("matchMedia", () => ({ matches: false, addEventListener() {}, removeEventListener() {} }));
+    const orig = Element.prototype.getBoundingClientRect;
+    Element.prototype.getBoundingClientRect = function (this: Element) {
+      const r = this.hasAttribute("data-fly-origin")
+        ? { left: 900, top: 200, width: 12, height: 12 }
+        : this.getAttribute("role") === "log"
+          ? { left: 800, top: 0, width: 400, height: 800 }
+          : { left: 0, top: 0, width: 0, height: 0 };
+      return { ...r, x: r.left, y: r.top, right: r.left + r.width, bottom: r.top + r.height, toJSON: () => r } as DOMRect;
+    };
+    try {
+      render(ui(mk(1, ["a"])));
+      act(() => hookState.onCommand!({ op: "add_node", id: "b", kind: "server", label: "b", parent: null }));
+      act(() => hookState.turn![end]());
+      act(() => hookState.placed!(() => ({ x: 300, y: 400 })));
+      expect(document.querySelectorAll("[data-fly-dot]")).toHaveLength(expected);
+    } finally {
+      cleanup();
+      Element.prototype.getBoundingClientRect = orig;
+      vi.unstubAllGlobals();
+      hookState.lines = [];
+      hookState.busy = false;
+    }
+  }
 });

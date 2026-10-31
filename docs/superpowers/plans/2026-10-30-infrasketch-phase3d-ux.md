@@ -41,7 +41,7 @@
   - 카메라: 조립 과정은 보이게 둔다. 대신 화면 이동을 부드럽게, 드물게, 확대 없이 한다.
   - 구조 가정 변경
     - `remove_group` 명령을 추가하고, AI 차례가 끝난 뒤 빈 영역을 자동 정리한다.
-    - 프롬프트에 "환경·배포 방식이 바뀌면 맞지 않는 영역·노드를 먼저 지우고, 유지할 노드는 `update_node` 의 `parent` 로 새 영역에 옮긴다" 규칙을 넣는다.
+    - 프롬프트에 "환경·배포 방식이 바뀌면 ① 새 영역을 만들고 ② 유지할 노드는 `update_node` 의 `parent` 로 옮긴 뒤 ③ 남은 노드·영역을 지운다" 규칙을 넣는다(2026-10-30 사용자 결정으로 순서 수정).
   - 캔버스 색: 구역에 옅은 색을 채우고 색 있는 구역 이름 태그를 단다. 노드 분류 색을 강조한다.
   - 빠진 정보 숫자 배지는 캔버스 보기 옵션으로 켜고 끈다. **기본은 끔**이고 브라우저에 기억한다. 경고 "!" 배지는 항상 보인다.
   - 대화창: 메신저형 말풍선 + 진행 카드. **너무 캐주얼하지 않게** 한다(이모지·둥근 캐릭터 아바타·과한 애니메이션 금지).
@@ -57,7 +57,7 @@
 - 화면 문구는 아래를 그대로 쓴다.
   - 사이드바 접기·펼치기 버튼 aria-label: `프로젝트 영역 접기` / `프로젝트 영역 펼치기`
   - 캔버스 보기 옵션: `빠진 정보 숫자`
-  - 진행 카드 단계: `구성 검토` → `그리는 중 (노드 N개)` → `위험 요소 점검` → `완료`(중단이면 `중단됨`)
+  - 진행 카드 단계: `구성 검토` → `그리는 중 (변경 N개)` → `위험 요소 점검` → `완료`(중단이면 `중단됨`)
   - AI 말풍선 표시 이름: `InfraSketch`
   - 체크리스트 블록 펼치기/접기 aria-label: `<이름> 항목 펼치기` / `<이름> 항목 접기`, 제목 버튼 aria-label: `<이름> 위치 보기`
   - `remove_group` 은 사용자 문구가 없다(내부 명령).
@@ -86,9 +86,9 @@
   - SYSTEM_PROMPT
     - 명령 목록에 `{"op":"remove_group","id":"기존 영역 id"}` 를 추가한다.
     - `update_node` 예시에 `"parent":"새 영역 id"` 를 추가한다.
-    - 규칙 추가: `- 환경(environment)이나 배포 방식(deploy) 가정이 바뀌면, 새 가정에 맞지 않는 영역은 remove_group 으로, 노드는 remove_node 로 먼저 지운다. 새 구성에서도 쓰는 노드(WAS·DB 등)는 지우지 말고 update_node 의 parent 로 새 영역에 옮긴다.`
-    - "영역 이름·상위 영역은 바꿀 수 없다" 규칙은 유지한다(삭제는 가능).
-  - 가정 칩 메시지(`DiagramWorkspace.tsx`): 키가 `environment`·`deploy` 면 `가정 변경: <라벨> → <값>. 이 가정에 맞지 않는 영역·노드는 지우고, 계속 쓰는 노드는 새 영역으로 옮겨 구성을 다시 맞춰 줘.` 로 보낸다. 그 밖의 키는 기존 문구를 쓴다.
+    - 규칙 추가(2026-10-30 사용자 결정으로 순서 수정): ① 새 영역을 add_group 으로 만든다 ② 계속 쓰는 노드는 update_node 의 parent 로 옮긴다 ③ 그 뒤 남은 노드는 remove_node, 영역은 remove_group 으로 지운다(remove_group 은 안의 노드까지 지우므로 옮기기 먼저). 정확한 문구는 src/server/chat/prompt.ts 가 기준이다.
+    - "영역 이름·상위 영역은 바꿀 수 없다" 규칙은 원문 그대로 유지한다.
+  - 가정 칩 메시지(`src/domain/assumptions.ts` assumptionChangeMessage): 키가 `environment`·`deploy` 면 `가정 변경: <라벨> → <값>. 새 가정에 맞는 영역을 먼저 만들고, 계속 쓰는 노드는 새 영역으로 옮긴 뒤, 남은 맞지 않는 노드·영역을 지워 구성을 다시 맞춰 줘.` 로 보낸다. 그 밖의 키는 기존 문구를 쓴다.
 - [ ] **Step 1: 실패하는 테스트**
   - `remove_group removes descendants and touching edges`
   - `remove_group unknown id fails`
@@ -269,7 +269,7 @@
   - 시스템 줄(되돌림 등)은 가운데 작은 회색 글이다.
 - 보내면 즉시 사용자 말풍선이 뜬다(서버 응답 전).
 - 진행 카드: AI 자리에 차례가 시작되면 카드 하나가 나타난다.
-  - 단계는 `구성 검토` → `그리는 중 (노드 N개)`(cmd 이벤트마다 N 갱신) → `위험 요소 점검` → `완료`다.
+  - 단계는 `구성 검토` → `그리는 중 (변경 N개)`(cmd 이벤트마다 N 갱신) → `위험 요소 점검` → `완료`다.
   - 현재 단계 옆에 작은 점 3개 진행 표시(opacity 순환, 1.2s)를 둔다.
   - 지난 단계는 체크 표시, 중단이면 `중단됨` 이다.
   - 답변 모드(question)에서는 `답변 작성 중` 한 단계다.
@@ -294,31 +294,60 @@
 
 ---
 
-### Task 8: 체크리스트 접기와 노드 위치 보기
+### Task 8: 캔버스 구성 정보 카드 (2026-10-30 사용자 결정으로 범위 변경 — 체크리스트 접기·위치 보기 포함)
 
-**Files:** Modify `src/ui/chat/MissingChecklist.tsx`, `src/ui/DiagramWorkspace.tsx`, `src/canvas/Canvas.tsx`(포커스 API) · Test `tests/unit/MissingChecklist.test.tsx`, `tests/unit/Canvas.test.tsx`, `tests/unit/DiagramWorkspace.test.tsx`
+**사용자 결정:**
+- 가정 칩은 대화창에서 빼고 캔버스 카드로 옮긴다.
+- 빠진 정보 알림·입력은 캔버스 카드에서 한다. 대화창의 체크리스트와 답변의 "빠진 정보 N개" 안내 칩은 없앤다.
+- 새 경고는 그 답변 아래 칩 하나(`주의 N`)로만 알리고, 자세한 목록은 카드에 모은다.
 
-**Interfaces:**
-- `CanvasProps.focusRequest?: { id: string; token: number }` 가 바뀌면 그 노드(또는 연결의 도착 노드)를 아래처럼 보여 준다.
-  - 화면 가운데로 `duration: 500`(reducedMotion 0) 이동한다.
-  - zoom 은 지금 값을 유지하되 0.8 미만이면 0.8 로 한다.
-  - 노드에 `node--pulse` 클래스(1.6초 동안 은빛 링 2회, 금색 아님)를 준다.
-  - 선택은 바꾸지 않는다.
-- 체크리스트
-  - 각 대상 블록 머리 = 접기 버튼(`<이름> 항목 펼치기/접기`) + 제목 버튼(`<이름> 위치 보기`) + 남은 개수다.
-  - 블록 기본은 접힘이다. 배지 클릭이나 `focusId` 로 열린 블록은 펼침이다.
-  - 펼침 상태는 3A 의 drafts·open 처럼 DiagramWorkspace 에 둔다(탭 전환에도 유지).
-  - 제목 버튼을 누르면 `focusRequest` 를 보낸다.
-- 노드 이름이 바뀌면 블록 제목도 바뀐다(이미 상태에서 읽음, 테스트로 고정).
+**Files:** Create `src/ui/canvas/InfoCard.tsx`(+ css module) · Modify `src/ui/DiagramWorkspace.tsx`, `src/ui/chat/ChatPanel.tsx`, `src/ui/chat/useChatTurn.ts`, `src/ui/chat/lines.ts`, `src/ui/chat/MissingChecklist.tsx`(카드 안에서 재사용), `src/ui/chat/AssumptionChips.tsx`(카드 안에서 재사용), `src/canvas/Canvas.tsx`(focusRequest) · Test `tests/unit/InfoCard.test.tsx`, ChatPanel/useChatTurn/lines/MissingChecklist/Canvas/DiagramWorkspace 테스트, E2E 선택자(3A·3B·phase2)
+
+**결정:**
+- **카드 위치와 모양**
+  - 캔버스 왼쪽 아래, 사이드바 인셋 + `--panel-gap` 안쪽에 둔다.
+  - Task 6 의 유리 패널과 같은 칠(`--glass-*`, `--radius-panel`)이고, 너비 300px 다.
+- **접힌 상태(기본)**는 한 줄이다: `구성 정보 · 채워야 할 정보 N · 주의 M · 미확정 가정 K`.
+  - 0 인 항목은 숫자를 흐리게 한다.
+  - 줄 전체가 버튼이고, aria-label 은 `구성 정보 펼치기`/`접기` 다.
+- **펼친 상태**는 위로 열린다. 최대 높이는 캔버스 높이의 70% 이고 그 안에서 스크롤한다. 세 절이 있다.
+  1. `가정`: 기존 AssumptionChips 동작을 그대로 쓴다(대안 고르기 → 확정 + 대화로 조정 메시지).
+  2. `채워야 할 정보`: 기존 MissingChecklist 다. 아래를 더한다.
+     - 노드별 블록을 접고 펼친다. 기본은 접힘이다. 블록 머리는 분류 아이콘·이름·남은 개수다.
+     - 접기 버튼 aria-label 은 `<이름> 항목 펼치기`/`<이름> 항목 접기` 다.
+     - 제목 버튼(`<이름> 위치 보기`)을 누르면 캔버스가 그 노드로 이동해 은빛 링으로 강조한다. 선택은 하지 않는다.
+     - drafts·open·블록 펼침 상태는 DiagramWorkspace 에 둔다.
+  3. `주의`: mergeWarnings 의 active 목록이다. 항목을 누르면 그 노드를 선택한다(설명 탭 → 주의할 점에서 `의도된 구성`).
+- **배지와 카드의 관계**
+  - 빠진 정보 숫자 배지(Task 5)를 누르면 카드가 펼쳐지고, 그 노드 블록이 펼쳐져 첫 칸에 포커스가 간다.
+  - 3A 의 "대화 탭으로 전환"은 없앤다.
+- **대화창**
+  - 상단의 가정 칩·체크리스트를 없앤다.
+  - 답변 아래 칩에서 빠진 정보 칩을 뺀다(서버 meta.missing 은 그대로 둔다).
+  - 경고는 줄 대신 `주의 N` 칩 하나로 바꾼다. 칩을 누르면 카드가 펼쳐지고 주의 절로 스크롤된다.
+  - 요약 칩은 그대로다. reload(messagesToLines)도 같다.
+- **CanvasProps.focusRequest?: { id: string; token: number }** 가 바뀌면 아래처럼 보여 준다.
+  - 그 노드로 `duration: 500`(reducedMotion 0) 이동한다. zoom 은 유지하되 0.8 미만이면 0.8 로 한다.
+  - `node--pulse`(1.6초 은빛 링 2회, 금색 아님)를 준다. 선택은 바꾸지 않는다.
+  - 이 이동은 Task 3 카메라 규칙의 "사용자 이동"으로 치지 않는다.
+- 이력 보기·비교 모드에서는 카드가 읽기 전용이다(저장·확정 버튼 숨김).
+- 노드 이름이 바뀌면 블록 제목도 바뀐다(테스트로 고정).
 - [ ] **Step 1: 실패하는 테스트**
+  - `card collapsed line shows counts`
+  - `expands upward with three sections`
   - `blocks start collapsed, toggle expands`
-  - `badge focus expands that block`
+  - `badge click opens card at that node block and focuses first input`
   - `title click sends focus request without selecting`
+  - `warning item selects node`
   - `renamed node updates block title`
   - `canvas centers and pulses on focus request`
-  - `expanded blocks survive tab switch`
-- [ ] **Step 2:** → FAIL · **Step 3: 구현** · **Step 4:** PASS, `npm test`, E2E
-- [ ] **Step 5: Commit** `feat: 체크리스트 접기와 노드 위치 보기`
+  - `chat has no assumption chips, checklist or missing chip; warnings collapse to one 주의 N chip that opens the card`
+  - `read-only in history view`
+  - `drafts and expanded blocks survive tab switch and card collapse`
+- [ ] **Step 2:** → FAIL
+- [ ] **Step 3: 구현**(frontend-design 지침 참고, 토큰·결정 준수)
+- [ ] **Step 4:** PASS, `npm test`, `npx tsc --noEmit`, `npm run lint`, E2E(3A·3B·phase2 선택자를 의도 유지하며 갱신)
+- [ ] **Step 5: Commit** `feat: 캔버스 구성 정보 카드(가정·빠진 정보·주의)`
 
 ---
 
@@ -350,5 +379,139 @@
 
 ---
 
+### Task 10: 재정렬(버튼+대화)과 영역이 노드 감싸기 (사용자 추가 요청, 2026-10-30 — Task 9 보다 먼저)
+
+**Files:** Modify `src/canvas/Canvas.tsx`(도구 모음), `src/canvas/layout.ts`, `src/server/llm/clef.ts`(의도), `src/server/chat/pipeline.ts`, `src/server/chat/events.ts`, `src/ui/chat/useChatTurn.ts`, `src/ui/DiagramWorkspace.tsx` · Test `tests/unit/layout.test.ts`, `tests/unit/clef.test.ts`, `tests/integration/pipeline.test.ts`, `tests/unit/useChatTurn.test.tsx`, `tests/unit/DiagramWorkspace.test.tsx`
+
+**결정(사용자 선택):**
+- **재정렬은 버튼과 대화 둘 다 지원한다.**
+  - 도구 모음의 `자동 정렬` 은 편집 모드가 아니어도 누를 수 있다. 동작은 지금처럼 고정 위치를 해제하고 자동 배치한다.
+  - 대화:
+    - Clef 의도에 `layout`("구성도 배치·정렬·정리만 다시 해 달라는 요청(노드·연결은 그대로)")을 추가한다.
+    - `layout` 으로 분류되면 서버는 AI(Qwen)를 부르지 않고 다음을 한다.
+      - 응답 문구 `구성도를 다시 정렬했어요.` 를 say 로 보낸다.
+      - 새 이벤트 `{t:"relayout"}` 를 보낸다.
+      - assistant 메시지를 저장하고, 버전은 만들지 않는다.
+    - 클라이언트는 `relayout` 을 받으면 버튼과 같은 동작(고정 위치 해제 → 자동 배치 → 화면 맞춤)을 한다.
+  - 확신도 0.6 미만이면 지금처럼 일반 경로다.
+- **영역은 안의 노드를 항상 감싼다.**
+  - 편집 모드에서 노드를 옮기면(고정 위치), 그 노드의 부모 영역과 모든 상위 영역 상자를 다시 계산한다. 자식 노드·하위 영역의 경계 상자에 기존 GROUP_PAD 여백과 머리 높이를 더한 크기다.
+  - 영역은 늘어날 수도, 줄어들 수도 있다.
+  - 고정되지 않은 형제 노드의 위치는 그대로 둔다.
+  - 소속 변경(다른 영역으로 옮김)은 하지 않는다.
+  - 연결선 경로는 기존 규칙(고정 노드가 끼면 꺾은선)을 따른다.
+  - 겹침 검사(overlap.ts)는 이 경우 영역끼리 겹칠 수 있음을 허용한다. 사용자가 옮긴 결과라서다. 자동 배치 결과에서는 여전히 0 이다.
+- [ ] **Step 1: 실패하는 테스트**
+  - `pinned node outside its group grows the group and ancestors`
+  - `pinned node moved inward shrinks the group`
+  - `unpinned layout unchanged`
+  - `layout intent skips qwen and emits relayout`(통합)
+  - `relayout event clears pins and re-lays out`
+  - `auto arrange button enabled outside edit mode`
+  - clef 기준 문구에 layout 이 있다
+- [ ] **Step 2:** → FAIL · **Step 3: 구현** · **Step 4:** PASS, `npm test`, `npm run test:int`, `npx tsc --noEmit`, `npm run lint`, E2E
+- [ ] **Step 5: Commit** `feat: 대화·버튼 재정렬과 영역이 노드 감싸기`
+
+---
+
+### Task 11: 빈 구성도 시작 경험 — 인사말·가이드·예시 질문 (사용자 추가 요청, 2026-10-30)
+
+**Files:** Modify `src/ui/chat/ChatPanel.tsx`, `src/ui/RightPanel.tsx`(샘플 footer 제거), `src/canvas/Canvas.tsx`(빈 화면 안내), `src/ui/DiagramWorkspace.tsx` · Test ChatPanel/RightPanel/Canvas/DiagramWorkspace 테스트, E2E(phase1 의 샘플 불러오기 경로 갱신)
+
+**결정(사용자 선택):**
+- 대화 기록이 없고 구성도가 비어 있으면, 대화창에 고정 인사말과 가이드를 보여 준다. AI 호출과 DB 저장은 없다.
+  - 모양은 Task 7 의 AI 메시지(`IS` · `InfraSketch`)와 같다.
+  - 인사말: `안녕하세요, InfraSketch예요. 만들고 싶은 서비스를 말씀해 주시면 인프라 구성도를 바로 그려 드릴게요.`
+  - 가이드 제목: `이렇게 말하면 더 정확해요`
+  - 가이드 항목 4줄: `무엇을 만드는지 (예: 쇼핑몰, 예약 서비스)` / `어디에 올리는지 (클라우드, 사내 IDC)` / `대략 사용자 수 (예: 하루 1만 명)` / `붙일 외부 서비스 (결제, 소셜 로그인, 문자)`
+  - 예시 질문 칩 4개: `결제와 카카오 로그인이 붙는 쇼핑몰` / `사내 IDC에 WEB-WAS-DB 이중화` / `AWS EKS 위 MSA와 Kafka` / `하루 10만 명이 쓰는 예약 서비스`
+  - 칩을 누르면 입력칸에 그 문장이 채워지고 포커스가 간다. 바로 보내지는 않는다.
+  - 첫 메시지를 보내면 인사말은 사라진다.
+- 대화창의 `샘플로 시작하기` 목록을 없앤다.
+  - 캔버스 빈 화면 안내 아래에 작은 텍스트 버튼 `샘플 불러오기` 를 둔다.
+  - 누르면 작은 목록(팝오버)에서 고른다. 기존 importSample 흐름을 그대로 쓴다.
+- [ ] **Step 1: 실패하는 테스트**
+  - `empty diagram shows greeting, guide and example chips`
+  - `chip fills the input without sending`
+  - `greeting disappears after the first message`
+  - `no sample list in chat`
+  - `canvas empty state offers 샘플 불러오기`
+- [ ] **Step 2:** → FAIL · **Step 3: 구현** · **Step 4:** PASS, `npm test`, E2E(phase1 샘플 경로를 새 버튼으로)
+- [ ] **Step 5: Commit** `feat: 빈 구성도 인사말과 예시 질문`
+
+---
+
+### Task 12: 대화에서 캔버스로 날아가는 빛점 (사용자 추가 요청, 2026-10-30)
+
+**Files:** Create `src/ui/FlyLayer.tsx` · Modify `src/ui/DiagramWorkspace.tsx`, `src/ui/chat/ChatPanel.tsx`(진행 카드 위치 노출), `src/canvas/Canvas.tsx`(노드 화면 좌표 조회) · Test `tests/unit/FlyLayer.test.tsx`
+
+**결정(사용자 선택: 진행 카드에서 노드로 날아가는 빛점, 요란하지 않게):**
+- 대화 차례 중 `add_node` 가 적용되면 빛점을 날린다.
+  - 출발점은 진행 카드의 현재 단계 점이다.
+  - 도착점은 캔버스에서 그 노드가 처음 그려지는 화면 좌표의 중심이다.
+- 빛점 모양
+  - 지름 6px 원, 색 `--glass-highlight` 보다 밝은 은빛(새 토큰 `--fly-dot: #DCE3EE`)
+  - 꼬리는 없고, 0.5초 동안 부드러운 2차 곡선(위로 약간 휘는)을 따라 이동한다.
+  - 끝 0.1초는 페이드아웃한다.
+  - 도착 직전 노드의 기존 등장 애니메이션이 시작되도록 맞춘다(등장을 늦추지는 않음).
+- 동시에 최대 3개다. 더 들어오면 건너뛴다.
+- 노드 좌표를 모르면(접힌 영역 안, 화면 밖) 날리지 않는다.
+- 사이드바가 접혔거나 대화 패널이 대화 탭이 아니면 출발점이 없으므로 날리지 않는다.
+- `prefers-reduced-motion` 이거나 캔버스 `흐름 표시`(움직임) 가 꺼져 있으면 날리지 않는다.
+- 레이어는 `position: fixed; pointer-events: none` 이고, 패널과 캔버스 위에 둔다.
+- 글로우·그림자 금지(단색 원).
+- [ ] **Step 1: 실패하는 테스트**
+  - `add_node during a turn launches one dot from card to node`
+  - `max 3 concurrent dots, extras skipped`
+  - `no dot when reduced motion or motion off`
+  - `no dot when target unknown or chat tab hidden`
+  - `layer never captures pointer events`
+- [ ] **Step 2:** → FAIL · **Step 3: 구현** · **Step 4:** PASS, `npm test`, E2E
+- [ ] **Step 5: Commit** `feat: 대화에서 캔버스로 날아가는 빛점`
+
+---
+
+### Task 13: 도구 모음 정리와 스크롤 정리 (사용자 추가 요청, 2026-10-30)
+
+**Files:** Modify `src/canvas/Canvas.tsx`, `src/canvas/canvas.css`, `src/styles/globals.css`, `src/ui/app.module.css`, `src/ui/chat/chat.module.css`, `src/ui/glossary/glossary.module.css`, 필요 시 레이아웃 컨테이너 · Test Canvas 테스트, `tests/unit/tokens.test.ts`, E2E 선택자
+
+**결정(사용자 선택: 세 묶음 + 보기 옵션 팝오버):**
+- 도구 모음은 세 묶음이다. 묶음 사이 구분선을 두고, 아이콘(SVG, 이모지 아님)과 라벨을 함께 쓴다.
+  1. `보기 ▾` 를 누르면 팝오버 `보기 옵션` 이 열린다. 항목마다 체크와 한 줄 설명이 있다.
+
+     | 체크 | 설명 |
+     | --- | --- |
+     | `보조 연결 숨기기` | `관리·모니터링 선을 감춰요` |
+     | `메시지 연결 단순화` | `큐·스트림을 거치는 연결을 묶어서 보여요` |
+     | `중복 연결 합치기` | `같은 두 곳 사이의 여러 선을 하나로 보여요` |
+     | `연결 이름은 마우스를 올릴 때만` | `캔버스를 깔끔하게 보여요` |
+     | `빠진 정보 숫자` | `노드마다 채워야 할 정보 개수를 보여요` |
+
+     - Esc·바깥 클릭으로 닫고, 포커스는 버튼으로 돌아간다.
+  2. 편집 묶음
+     - `위치 옮기기`(편집 모드 토글, aria-pressed)
+     - `자동 정렬`(Task 10: 항상 누를 수 있음)
+  3. 화면 묶음
+     - `전체 보기`(화면 맞춤, Task 3 카메라 규칙의 사용자 동작)
+     - `흐름 표시`(움직임 토글, aria-pressed)
+- 기존 내부 옵션 키(hideAux 등)는 그대로 두고 표시 라벨만 바꾼다. E2E·테스트 선택자도 함께 바꾼다.
+- 스크롤
+  - 앱 셸 전체(body·html·(app) 영역)에 페이지 스크롤이 생기지 않게 레이아웃 넘침 원인을 찾아 고친다(100vh·여백·테두리 합산 등).
+  - 스크롤이 필요한 영역(대화 목록, 구성 정보 카드, 오른쪽 패널 본문, 사이드바 트리, 용어 사전, 이력)에는 얇은 테마 스크롤바를 쓴다.
+    - `scrollbar-width: thin`, `scrollbar-color: var(--scrollbar-thumb) transparent`
+    - WebKit 스크롤바: 너비 8px, 둥근 thumb, 호버 시 밝게
+    - 새 토큰: `--scrollbar-thumb: rgba(154, 167, 186, 0.28)`, `--scrollbar-thumb-hover: rgba(154, 167, 186, 0.5)`
+- [ ] **Step 1: 실패하는 테스트**
+  - `toolbar has three groups with labels`
+  - `보기 popover lists options with descriptions and closes on Esc/outside`
+  - `위치 옮기기 and 흐름 표시 expose aria-pressed`
+  - `전체 보기 fits`
+  - 토큰 값
+  - `no page-level scroll`(E2E: 구성도 화면에서 `document.scrollingElement.scrollHeight <= innerHeight`)
+- [ ] **Step 2:** → FAIL · **Step 3: 구현**(frontend-design 지침 참고) · **Step 4:** PASS, `npm test`, `npm run lint`, E2E
+- [ ] **Step 5: Commit** `feat: 도구 모음 정리와 테마 스크롤바`
+
+---
+
 ## 실행 순서
-Task 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 → 9. 3과 6은 `insets` 로 연결된다. 3은 0 으로 두고, 6에서 실제 값을 넘긴다.
+Task 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 → 10 → 11 → 12 → 13 → 9. 3과 6은 `insets` 로 연결된다. 3은 0 으로 두고, 6에서 실제 값을 넘긴다.

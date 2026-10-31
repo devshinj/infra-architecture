@@ -29,6 +29,6 @@ describe("createThinkStripper", () => {
 
 test("COMMAND_OPS lists every schema op", () => {
   expect([...COMMAND_OPS].sort()).toEqual(
-    ["add_edge", "add_group", "add_node", "remove_edge", "remove_node", "set_assumption", "update_edge", "update_node"],
+    ["add_edge", "add_group", "add_node", "remove_edge", "remove_group", "remove_node", "set_assumption", "update_edge", "update_node"],
   );
 });

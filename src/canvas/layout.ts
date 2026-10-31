@@ -357,10 +357,34 @@ export async function layoutDiagram(g: DisplayGraph, pinned: Record<string, { x:
     out.nodes[n.id] = ln;
   }
 
-  // Pinned nodes keep their stored position; their edges are redrawn as elbows.
+  // A zone always wraps what is inside it: every zone holding a pinned node (directly or deeper) is
+  // re-fitted to its children's bounding box plus GROUP_PAD, innermost first, so it can grow or shrink.
+  // Other zones and unpinned nodes keep their ELK boxes; membership never changes.
+  const refit = new Set<string>();
+  for (const n of nodes) {
+    if (!pinned[n.id]) continue;
+    for (let p = parentOf(n.id); p !== null; p = parentOf(p)) refit.add(p);
+  }
+  for (const id of [...refit].sort((a, b) => depth(b) - depth(a))) {
+    const kids = [...Object.values(out.nodes), ...Object.values(out.groups)].filter((r) => r.parent === id);
+    if (kids.length === 0) continue;
+    const x1 = Math.min(...kids.map((r) => r.x));
+    const y1 = Math.min(...kids.map((r) => r.y));
+    const x2 = Math.max(...kids.map((r) => r.x + r.width));
+    const y2 = Math.max(...kids.map((r) => r.y + r.height));
+    Object.assign(out.groups[id], {
+      x: x1 - GROUP_PAD.side,
+      y: y1 - GROUP_PAD.top,
+      width: x2 - x1 + 2 * GROUP_PAD.side,
+      height: y2 - y1 + GROUP_PAD.top + GROUP_PAD.bottom,
+    });
+  }
+
+  // Pinned nodes keep their stored position; their edges (and edges of re-fitted zones) are redrawn as elbows.
   const rectOf = (id: string): Rect => out.nodes[id] ?? out.groups[id];
+  const moved = (id: string) => !!pinned[id] || refit.has(id);
   for (const e of g.edges) {
-    let pts = pinned[e.from] || pinned[e.to] ? elbowRoute(rectOf(e.from), rectOf(e.to)) : (points.get(e.id) ?? []);
+    let pts = moved(e.from) || moved(e.to) ? elbowRoute(rectOf(e.from), rectOf(e.to)) : (points.get(e.id) ?? []);
     if (pts.length < 2) {
       // ELK returned no route for this edge.
       pts = elbowRoute(rectOf(e.from), rectOf(e.to));

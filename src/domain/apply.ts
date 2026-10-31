@@ -88,12 +88,56 @@ export function applyCommand(state: DiagramState, cmd: Command): ApplyResult {
       delete edges[cmd.id];
       return { ok: true, state: { ...state, edges } };
     }
+    case "remove_group": {
+      if (!has(state.groups, cmd.id)) return fail(state, `group ${cmd.id} not found`);
+      return { ok: true, state: removeGroups(state, new Set([cmd.id])) };
+    }
     case "set_assumption": {
       const cur = has(state.assumptions, cmd.key) ? state.assumptions[cmd.key] : undefined;
       if (cur?.confirmed) return fail(state, `assumption ${cmd.key} is confirmed`);
       const next = { key: cmd.key, value: cmd.value, confirmed: false };
       return { ok: true, state: { ...state, assumptions: { ...state.assumptions, [cmd.key]: next } } };
     }
+  }
+}
+
+/** Removes the given groups with every descendant group and node, and every edge touching them. */
+function removeGroups(state: DiagramState, ids: ReadonlySet<string>): DiagramState {
+  const gone = new Set(ids);
+  // Collect descendant groups until no new one appears.
+  for (let grew = true; grew; ) {
+    grew = false;
+    for (const g of Object.values(state.groups)) {
+      if (!gone.has(g.id) && g.parent !== null && gone.has(g.parent)) {
+        gone.add(g.id);
+        grew = true;
+      }
+    }
+  }
+  for (const n of Object.values(state.nodes)) if (n.parent !== null && gone.has(n.parent)) gone.add(n.id);
+  // Groups, nodes and edges share one id space, so `gone` holds both group and node ids.
+  const groups = Object.fromEntries(Object.entries(state.groups).filter(([id]) => !gone.has(id)));
+  const nodes = Object.fromEntries(Object.entries(state.nodes).filter(([id]) => !gone.has(id)));
+  const edges = Object.fromEntries(Object.entries(state.edges).filter(([, e]) => !gone.has(e.from) && !gone.has(e.to)));
+  return { ...state, groups, nodes, edges };
+}
+
+const isEmptyGroup = (s: DiagramState, id: string) =>
+  !Object.values(s.nodes).some((n) => n.parent === id) && !Object.values(s.groups).some((g) => g.parent === id);
+
+/**
+ * Removes groups in `after` that have no node and no child group, but only those that were
+ * not empty in `before` (a group that was already empty, or is new, stays). Repeats inside-out,
+ * so a parent emptied by pruning its children goes too. Edges touching pruned groups go with them.
+ */
+export function pruneEmptyGroups(before: DiagramState, after: DiagramState): DiagramState {
+  let cur = after;
+  for (;;) {
+    const doomed = Object.keys(cur.groups).filter(
+      (id) => isEmptyGroup(cur, id) && has(before.groups, id) && !isEmptyGroup(before, id),
+    );
+    if (doomed.length === 0) return cur;
+    cur = removeGroups(cur, new Set(doomed));
   }
 }
 

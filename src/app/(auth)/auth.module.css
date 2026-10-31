@@ -67,3 +67,7 @@
 .links a {
   color: var(--text-secondary);
 }
+.logo {
+  align-self: center;
+  margin-bottom: 12px;
+}

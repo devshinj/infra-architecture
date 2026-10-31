@@ -18,8 +18,8 @@ export interface EdgeLayerProps {
   appearing: Set<string>;
   /** Number of nodes in the diagram; above 40 only bundles touching the selection animate. */
   nodeCount: number;
-  /** Click on an edge's hit path selects it (by edge id). */
-  onSelect?(id: string): void;
+  /** Click on an edge's hit path selects it (by edge id); clicking the selected edge again passes null. */
+  onSelect?(id: string | null): void;
 }
 
 const MANY_NODES = 40;
@@ -162,7 +162,7 @@ export function EdgeLayer({ layout, edges, selectedId, hoverLabels, motion, appe
               d={toD(l.points)}
               onClick={(ev) => {
                 ev.stopPropagation();
-                onSelect?.(e.id);
+                onSelect?.(isSelectedEdge(e) ? null : e.id);
               }}
               onMouseEnter={() => setHovered(e.id)}
               onMouseLeave={() => setHovered((h) => (h === e.id ? null : h))}

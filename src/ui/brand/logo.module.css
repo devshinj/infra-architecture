@@ -1,0 +1,4 @@
+.logo { display: flex; align-items: center; gap: 11px; }
+.mark { flex: none; display: block; }
+.word { font-size: 22px; font-weight: 650; letter-spacing: -0.02em; color: var(--text-primary); line-height: 1; }
+.wordSub { font-weight: 450; color: var(--text-secondary); }

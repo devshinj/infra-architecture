@@ -50,7 +50,9 @@ test("대화로 구성도 생성 → 노드가 하나씩 나타남 → 요약·�
   expect(seen.size).toBeGreaterThanOrEqual(2);
 
   await expect(nodes(page)).toHaveCount(S1_NODE_COUNT);
-  await expect(page.getByText(`노드 ${S1_NODE_COUNT} · 연결`)).toBeVisible({ timeout: 30_000 });
+  // 요약 칩과 접힌 완료 카드가 같은 노드 수를 보인다.
+  await expect(page.getByText(new RegExp(`^노드 ${S1_NODE_COUNT} · 연결 \\d+ · 적용`))).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByText(new RegExp(`^완료 · 노드 ${S1_NODE_COUNT} · 연결 \\d+$`))).toBeVisible();
 
   await page.getByRole("tab", { name: "이력" }).click();
   await expect(page.getByText("AI", { exact: true }).first()).toBeVisible();
@@ -80,6 +82,8 @@ test("중단하면 '중단됨' 버전이 남고 바로 다시 보낼 수 있음"
 
   // 클라이언트가 스트림을 끊으면 done 요약은 오지 않고 "중단했어요."가 남는다. 서버는 중단된 버전을 저장한다.
   await expect(page.getByText("중단했어요.")).toBeVisible({ timeout: 15_000 });
+  // 진행 카드도 중단됨 한 줄로 접힌다.
+  await expect(page.getByRole("group", { name: "InfraSketch 메시지" }).getByText("중단됨", { exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "보내기" })).toBeVisible();
   expect(await nodes(page).count()).toBeLessThan(S1_NODE_COUNT);
 
@@ -96,6 +100,8 @@ test("가정 칩에서 대안을 고르면 확정되고 대화가 이어짐", as
   await setup(page);
   await buildS1(page);
 
+  // 가정 칩은 캔버스 구성 정보 카드에 있다.
+  await page.getByRole("button", { name: "구성 정보 펼치기" }).click();
   await page.getByRole("button", { name: /^규모: / }).click();
   await page.getByRole("group", { name: "규모 대안" }).getByRole("button", { name: "대규모(일 10만 명 이상)" }).click();
 

@@ -14,13 +14,15 @@ export interface PanelResizerProps {
   max: number;
   defaultWidth: number;
   onChange: (width: number) => void;
+  /** 작업 영역 오른쪽 끝에서 떠 있는 패널 바깥 끝까지의 여백(px). 손잡이는 패널 왼쪽 가장자리(offset + width)에 선다. */
+  offset?: number;
 }
 
 const STEP = 16;
 const BIG_STEP = 64;
 
 /** 오른쪽 패널의 왼쪽 경계 손잡이. 왼쪽으로 끌거나 ← 를 누르면 패널이 넓어진다. */
-export function PanelResizer({ width, min, max, defaultWidth, onChange }: PanelResizerProps) {
+export function PanelResizer({ width, min, max, defaultWidth, onChange, offset = 0 }: PanelResizerProps) {
   const drag = useRef<{ x: number; width: number } | null>(null);
   const prevSelect = useRef("");
   const set = (w: number) => onChange(Math.min(max, Math.max(min, Math.round(w))));
@@ -49,7 +51,7 @@ export function PanelResizer({ width, min, max, defaultWidth, onChange }: PanelR
       aria-valuenow={width}
       tabIndex={0}
       className={styles.resizer}
-      style={{ right: width }}
+      style={{ right: offset + width }}
       onPointerDown={(e) => {
         // 끄는 중에 들어온 다른 포인터는 무시한다(시작점·이전 user-select 를 덮어쓰지 않게).
         if (drag.current) return;

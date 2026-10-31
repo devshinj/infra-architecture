@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useActionState } from "react";
 
 import { requestResetAction, type FormState } from "@/server/auth/actions";
+import { Logo } from "@/ui/brand/Logo";
 
 import styles from "../auth.module.css";
 
@@ -12,6 +13,7 @@ export default function ResetRequestPage() {
   return (
     <main className={styles.page}>
       <form action={action} className={styles.form}>
+        <Logo className={styles.logo} />
         <h1 className={styles.title}>비밀번호 찾기</h1>
         {state.done ? (
           <p className={styles.notice} role="status">

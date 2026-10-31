@@ -67,16 +67,16 @@ export function categoryOf(kind: NodeKind): Category {
 }
 
 export const GROUP_KINDS = [
-  { kind: "cloud_region", labelKo: "클라우드 리전", zoneToken: "--zone-region", innerDirection: "DOWN", dashed: true },
-  { kind: "vpc", labelKo: "VPC", zoneToken: "--zone-vpc", innerDirection: "DOWN", dashed: false },
-  { kind: "subnet_public", labelKo: "공개 구역", zoneToken: "--zone-subnet-public", innerDirection: "DOWN", dashed: false },
-  { kind: "subnet_private", labelKo: "내부 구역", zoneToken: "--zone-subnet-private", innerDirection: "DOWN", dashed: false },
-  { kind: "dmz", labelKo: "DMZ", zoneToken: "--zone-subnet-public", innerDirection: "DOWN", dashed: false },
-  { kind: "idc", labelKo: "IDC", zoneToken: "--zone-region", innerDirection: "DOWN", dashed: true },
-  { kind: "onprem_zone", labelKo: "온프레미스 구역", zoneToken: "--zone-region", innerDirection: "DOWN", dashed: true },
-  { kind: "k8s_cluster", labelKo: "쿠버네티스 클러스터", zoneToken: "--zone-vpc", innerDirection: "RIGHT", dashed: false },
-  { kind: "external_service", labelKo: "외부 서비스", zoneToken: "--zone-external", innerDirection: "DOWN", dashed: true },
-  { kind: "redundancy_group", labelKo: "이중화 묶음", zoneToken: "--zone-redundancy", innerDirection: "RIGHT", dashed: true },
+  { kind: "cloud_region", labelKo: "클라우드 리전", zoneToken: "--zone-region", tintToken: "--zone-tint-region", innerDirection: "DOWN", dashed: true },
+  { kind: "vpc", labelKo: "VPC", zoneToken: "--zone-vpc", tintToken: "--zone-tint-vpc", innerDirection: "DOWN", dashed: false },
+  { kind: "subnet_public", labelKo: "공개 구역", zoneToken: "--zone-subnet-public", tintToken: "--zone-tint-public", innerDirection: "DOWN", dashed: false },
+  { kind: "subnet_private", labelKo: "내부 구역", zoneToken: "--zone-subnet-private", tintToken: "--zone-tint-private", innerDirection: "DOWN", dashed: false },
+  { kind: "dmz", labelKo: "DMZ", zoneToken: "--zone-subnet-public", tintToken: "--zone-tint-dmz", innerDirection: "DOWN", dashed: false },
+  { kind: "idc", labelKo: "IDC", zoneToken: "--zone-region", tintToken: "--zone-tint-onprem", innerDirection: "DOWN", dashed: true },
+  { kind: "onprem_zone", labelKo: "온프레미스 구역", zoneToken: "--zone-region", tintToken: "--zone-tint-onprem", innerDirection: "DOWN", dashed: true },
+  { kind: "k8s_cluster", labelKo: "쿠버네티스 클러스터", zoneToken: "--zone-vpc", tintToken: "--zone-tint-k8s", innerDirection: "RIGHT", dashed: false },
+  { kind: "external_service", labelKo: "외부 서비스", zoneToken: "--zone-external", tintToken: "--zone-tint-external", innerDirection: "DOWN", dashed: true },
+  { kind: "redundancy_group", labelKo: "이중화 묶음", zoneToken: "--zone-redundancy", tintToken: "--zone-tint-redundancy", innerDirection: "RIGHT", dashed: true },
 ] as const;
 
 export type GroupKind = (typeof GROUP_KINDS)[number]["kind"];

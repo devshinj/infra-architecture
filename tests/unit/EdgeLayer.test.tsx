@@ -145,3 +145,10 @@ test("a selected edge keeps itself undimmed and dims the others", () => {
   expect(document.querySelector('[data-edge-id="e1"]')).not.toHaveClass("edge--dim");
   expect(document.querySelector('[data-edge-id="e2"]')).toHaveClass("edge--dim");
 });
+
+test("clicking the selected edge again clears selection", () => {
+  const onSelect = vi.fn();
+  render(<EdgeLayer layout={fanOutLayout} edges={fanOutEdges} {...base} selectedId="e2" onSelect={onSelect} />);
+  fireEvent.click(document.querySelector('[data-edge-id="e2"] .edge-hit')!);
+  expect(onSelect).toHaveBeenCalledWith(null);
+});

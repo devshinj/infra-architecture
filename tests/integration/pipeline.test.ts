@@ -4,6 +4,7 @@ import { describe, expect, test, vi } from "vitest";
 import { db } from "@/db/client";
 import { diagramVersions } from "@/db/schema";
 import { applyCommands } from "@/domain/apply";
+import { assumptionChangeMessage } from "@/domain/assumptions";
 import { computeMissing } from "@/domain/missing";
 import type { DiagramState } from "@/domain/types";
 import { emptyState } from "@/domain/types";
@@ -22,6 +23,7 @@ import { makeOwnedDiagram } from "./helpers";
 const BUSY = "다른 응답을 처리하고 있어요. 끝난 뒤 다시 보내 주세요.";
 const NO_AI = "AI 서버에 연결할 수 없어요. 잠시 뒤 다시 시도하거나 관리자에게 문의해 주세요.";
 const HISTORY_TEXT = "변경 이력은 오른쪽 '이력' 탭에서 보고 되돌릴 수 있어요.";
+const LAYOUT_TEXT = "구성도를 다시 정렬했어요.";
 const TIMEOUT_TEXT = "응답 시간이 너무 길어 중단했어요.";
 const GENERIC_ERR = "응답을 처리하지 못했어요. 잠시 뒤 다시 시도해 주세요.";
 
@@ -219,6 +221,8 @@ describe("runChatTurn", () => {
       { op: "add_edge", id: "e-client-web-was-1", from: "client-web", to: "was-1", edge_kind: "request" },
     ]);
     expect(events.at(-1)).toMatchObject({ t: "done", applied: 3, skipped: 0, nodes: 2, edges: 1 });
+    // 다시 불러올 때 요약 칩·완료 카드가 쓰는 수도 메타에 남는다.
+    expect((await listMessages(ids.diagramId))[1]!.meta).toMatchObject({ nodes: 2, edges: 1 });
     const saved = await getLatestState(ids.diagramId);
     expect(saved!.state.nodes["client-web"]).toBeDefined();
   });
@@ -390,6 +394,41 @@ describe("runChatTurn", () => {
     const msgs = await listMessages(ids.diagramId);
     expect(msgs[1]).toMatchObject({ role: "assistant", content: HISTORY_TEXT, meta: { intent: "history" } });
     expect(await versions(ids.diagramId)).toHaveLength(0);
+  });
+
+  test("layout intent skips qwen and emits relayout", async () => {
+    const ids = await makeOwnedDiagram();
+    await createVersion(ids.diagramId, s2, { source: "import" });
+    const { events } = await turn(ids, "구성도 좀 정리해줘", {
+      qwen: neverQwen,
+      clef: fakeClef({ intent: "layout", confidence: 0.8 }),
+    });
+    expect(events.map((e) => e.t)).toEqual(["start", "say", "relayout", "done"]);
+    expect(of(events, "start")[0]).toMatchObject({ intent: "layout" });
+    expect(of(events, "say")[0]!.text).toBe(LAYOUT_TEXT);
+    expect(events.at(-1)).toMatchObject({ t: "done", version: null, status: "complete", applied: 0 });
+    const msgs = await listMessages(ids.diagramId);
+    expect(msgs[1]).toMatchObject({ role: "assistant", content: LAYOUT_TEXT, meta: { intent: "layout", says: [LAYOUT_TEXT] } });
+    expect(await versions(ids.diagramId)).toHaveLength(1);
+  });
+
+  test("assumption-change message is a structure change without asking Clef", async () => {
+    const ids = await makeOwnedDiagram();
+    const qwen = fakeQwen(JSON.stringify({ op: "say", text: "맞춰 볼게요" }));
+    const clef = fakeClef({ intent: "layout", confidence: 0.99 });
+    const { events } = await turn(ids, assumptionChangeMessage("environment", "사내 IDC"), { qwen, clef });
+    expect(clef.calls).toHaveLength(0);
+    expect(qwen.calls).toHaveLength(1);
+    expect(of(events, "start")[0]).toMatchObject({ intent: "structure_change" });
+    expect(events.some((e) => e.t === "relayout")).toBe(false);
+  });
+
+  test("low-confidence layout intent takes the normal path", async () => {
+    const ids = await makeOwnedDiagram();
+    const qwen = fakeQwen(JSON.stringify({ op: "say", text: "그대로 둘게요" }));
+    const { events } = await turn(ids, "정리", { qwen, clef: fakeClef({ intent: "layout", confidence: 0.5 }) });
+    expect(qwen.calls).toHaveLength(1);
+    expect(events.some((e) => e.t === "relayout")).toBe(false);
   });
 
   test("confirmed assumption change from the model is skipped", async () => {
@@ -587,6 +626,84 @@ describe("runChatTurn", () => {
     expect(user).toContain("e-was-1-db-1 label(프로토콜/포트)");
     expect(user).not.toContain("was-1 ip(IP)");
     expect(user.indexOf("채워야 할 정보:")).toBeLessThan(user.indexOf("요청: RAM 은 16GB"));
+  });
+
+  test("structural change removes obsolete groups", async () => {
+    const ids = await makeOwnedDiagram();
+    const base = applyCommands(emptyState(), [
+      { op: "add_group", id: "aws-region", group_kind: "cloud_region", label: "AWS 서울 리전", parent: null },
+      { op: "add_group", id: "vpc", group_kind: "vpc", label: "서비스 VPC", parent: "aws-region" },
+      { op: "add_group", id: "pub", group_kind: "subnet_public", label: "공개 구역", parent: "vpc" },
+      { op: "add_group", id: "priv", group_kind: "subnet_private", label: "내부 구역", parent: "vpc" },
+      { op: "add_group", id: "spare", group_kind: "dmz", label: "원래 빈 구역", parent: null },
+      { op: "add_node", id: "client", kind: "client_web", label: "사용자", parent: null },
+      { op: "add_node", id: "alb", kind: "lb_l7", label: "ALB", parent: "pub" },
+      { op: "add_node", id: "was-1", kind: "was", label: "WAS#1", parent: "priv", attrs: { ip: "10.0.1.5" } },
+      { op: "add_edge", from: "client", to: "alb", edge_kind: "request" },
+      { op: "add_edge", from: "alb", to: "was-1", edge_kind: "request" },
+      { op: "add_edge", from: "client", to: "vpc", edge_kind: "aux" },
+    ] as Parameters<typeof applyCommands>[1]);
+    expect(base.errors).toEqual([]);
+    await createVersion(ids.diagramId, base.state, { source: "import" });
+    const lines = [
+      { op: "remove_node", id: "alb" },
+      { op: "add_group", id: "idc", group_kind: "idc", label: "사내 IDC", parent: null },
+      { op: "add_node", id: "l4", kind: "lb_l4", label: "L4", parent: "idc" },
+      { op: "update_node", id: "was-1", parent: "idc" },
+      { op: "add_edge", from: "client", to: "l4", edge_kind: "request" },
+      { op: "add_edge", from: "l4", to: "was-1", edge_kind: "request" },
+    ].map((l) => JSON.stringify(l));
+    const { events } = await turn(ids, "가정 변경: 환경 → 사내 IDC", { qwen: fakeQwen(lines.join("\n")), clef: fakeClef(null) });
+
+    const latest = await getLatestState(ids.diagramId);
+    expect(latest!.number).toBe(2);
+    const st = latest!.state;
+    expect(Object.keys(st.groups).sort()).toEqual(["idc", "spare"]);
+    expect(st.nodes["was-1"]).toMatchObject({ parent: "idc", attrs: { ip: "10.0.1.5" } });
+    expect(Object.keys(st.edges).sort()).toEqual(["e-client-l4", "e-l4-was-1"]);
+
+    // 정리된 그룹은 remove_group cmd 로도 나가, 클라이언트가 같은 상태에 닿는다.
+    const cmds = of(events, "cmd").map((e) => e.cmd);
+    const pruned = cmds.filter((c) => c.op === "remove_group").map((c) => (c as { id: string }).id);
+    expect(pruned.sort()).toEqual(["aws-region", "priv", "pub", "vpc"]);
+    const client = applyCommands(base.state, cmds);
+    expect(client.errors).toEqual([]);
+    expect(Object.keys(client.state.groups).sort()).toEqual(Object.keys(st.groups).sort());
+    expect(Object.keys(client.state.edges).sort()).toEqual(Object.keys(st.edges).sort());
+    expect(events.at(-1)).toMatchObject({ t: "done", applied: lines.length });
+  });
+
+  test("moving a node out before remove_group keeps it and its attrs", async () => {
+    const ids = await makeOwnedDiagram();
+    const base = applyCommands(emptyState(), [
+      { op: "add_group", id: "aws-region", group_kind: "cloud_region", label: "AWS 서울 리전", parent: null },
+      { op: "add_group", id: "vpc", group_kind: "vpc", label: "서비스 VPC", parent: "aws-region" },
+      { op: "add_group", id: "priv", group_kind: "subnet_private", label: "내부 구역", parent: "vpc" },
+      { op: "add_node", id: "client", kind: "client_web", label: "사용자", parent: null },
+      { op: "add_node", id: "alb", kind: "lb_l7", label: "ALB", parent: "vpc" },
+      { op: "add_node", id: "was-1", kind: "was", label: "WAS#1", parent: "priv", attrs: { ip: "10.0.1.5" } },
+      { op: "add_edge", from: "client", to: "alb", edge_kind: "request" },
+      { op: "add_edge", from: "alb", to: "was-1", edge_kind: "request" },
+    ] as Parameters<typeof applyCommands>[1]);
+    expect(base.errors).toEqual([]);
+    await createVersion(ids.diagramId, base.state, { source: "import" });
+    const lines = [
+      { op: "add_group", id: "idc", group_kind: "idc", label: "사내 IDC", parent: null },
+      { op: "update_node", id: "was-1", parent: "idc" },
+      { op: "remove_group", id: "aws-region" },
+      { op: "add_node", id: "l4", kind: "lb_l4", label: "L4", parent: "idc" },
+      { op: "add_edge", from: "client", to: "l4", edge_kind: "request" },
+      { op: "add_edge", from: "l4", to: "was-1", edge_kind: "request" },
+    ].map((l) => JSON.stringify(l));
+    const { events } = await turn(ids, "가정 변경: 환경 → 사내 IDC", { qwen: fakeQwen(lines.join("\n")), clef: fakeClef(null) });
+
+    expect(of(events, "skip")).toEqual([]);
+    const st = (await getLatestState(ids.diagramId))!.state;
+    expect(Object.keys(st.groups)).toEqual(["idc"]);
+    expect(st.nodes["was-1"]).toMatchObject({ parent: "idc", attrs: { ip: "10.0.1.5" } });
+    expect(st.nodes.alb).toBeUndefined();
+    expect(Object.keys(st.edges).sort()).toEqual(["e-client-l4", "e-l4-was-1"]);
+    expect(events.at(-1)).toMatchObject({ t: "done", applied: lines.length });
   });
 
   describe("warning check", () => {

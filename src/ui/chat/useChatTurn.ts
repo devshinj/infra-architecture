@@ -3,24 +3,42 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import type { Command } from "@/domain/commands";
-import { computeMissing, missingReminder } from "@/domain/missing";
-import type { DiagramState, Warning, WarningLevel } from "@/domain/types";
+import type { Warning } from "@/domain/types";
 import type { ChatEvent, MessageMeta } from "@/server/chat/events";
 
-import { warningLine } from "./lines";
+import { keepsCard, summaryText, warningsChip } from "./lines";
+
+/** 진행 카드의 단계. 답변 모드는 한 단계(`답변 작성 중`)뿐이다. */
+export type CardStep = "review" | "drawing" | "checking";
+export interface ProgressCard {
+  mode: "build" | "answer";
+  step: CardStep;
+  /** 이번 차례에 적용된 변경 수(cmd 이벤트마다 1. 빈 영역 정리도 cmd 로 와서 구별하지 않는다). */
+  changes: number;
+  /** 끝난 카드는 접힌 한 줄이 된다. */
+  end?: "done" | "aborted";
+  nodes?: number;
+  edges?: number;
+}
 
 export interface ChatLine {
   /** React key. Initial lines use the server message id; progress lines are client-only. */
   id: string;
-  kind: "user" | "assistant" | "system" | "progress" | "error" | "warning";
+  /**
+   * card: 진행 카드 · progress: AI 안내(say) · summary/warning: 차례 끝 칩(warning 은 `주의 N` 하나).
+   * system: 안내 글(차례 밖이면 가운데 작은 글).
+   */
+  kind: "user" | "assistant" | "system" | "progress" | "error" | "warning" | "card" | "summary";
   text: string;
   meta?: MessageMeta;
-  /** kind "warning": 클릭하면 이 노드를 선택한다. */
-  nodeId?: string;
-  level?: WarningLevel;
+  /** 같은 값의 줄은 한 AI 메시지로 묶인다(차례 id 또는 assistant 메시지 id). */
+  turn?: string;
+  /** 시각(ms). AI 메시지 머리 줄에 HH:mm 으로 보인다. */
+  at?: number;
+  /** kind "card" */
+  card?: ProgressCard;
 }
 
-export type ChatPhase = "thinking" | "drawing" | "answering" | "checking";
 type DoneEvent = Extract<ChatEvent, { t: "done" }>;
 
 export interface UseChatTurnArgs {
@@ -29,8 +47,8 @@ export interface UseChatTurnArgs {
   onCommand(cmd: Command): void;
   onDone(e: DoneEvent): void;
   onOpenHistory(): void;
-  /** Live canvas state; used to compute the reminder when the user aborts (no `done` arrives). */
-  getState?(): DiagramState;
+  /** 대화로 재정렬을 요청함(`relayout`): 자동 정렬 버튼과 같은 동작을 한다. */
+  onRelayout?(): void;
   /** The stream ended without `done` (user abort, network cut, error after commands): the saved version may differ from the canvas. */
   onInterrupted?(): void;
 }
@@ -43,16 +61,11 @@ const nextId = (p: string) => `${p}-${++seq}`;
 
 const isAbort = (e: unknown) => typeof e === "object" && e !== null && (e as { name?: string }).name === "AbortError";
 
-function summary(e: DoneEvent, hadAnswer: boolean): string | null {
-  if (e.version === null && e.applied === 0 && e.status === "complete") return hadAnswer ? null : "변경 사항이 없어요.";
-  const base = `노드 ${e.nodes} · 연결 ${e.edges} · 적용 ${e.applied} · 건너뜀 ${e.skipped}`;
-  return e.status === "aborted" ? `중단됨 · ${base}` : base;
-}
+const ANSWER_INTENTS = new Set(["question", "other"]);
 
 export function useChatTurn(args: UseChatTurnArgs) {
   const [lines, setLines] = useState<ChatLine[]>(args.initial);
   const [busy, setBusy] = useState(false);
-  const [phase, setPhase] = useState<ChatPhase | null>(null);
   const argsRef = useRef(args);
   useEffect(() => {
     argsRef.current = args;
@@ -73,37 +86,57 @@ export function useChatTurn(args: UseChatTurnArgs) {
       const ctrl = new AbortController();
       abortRef.current = ctrl;
       setBusy(true);
-      setPhase(null);
-      push({ kind: "user", text: trimmed });
+      // 서버 응답 전에 내 말풍선과 진행 카드를 바로 띄운다.
+      const turn = nextId("t");
+      const at = Date.now();
+      const cardId = nextId("c");
+      const pushT = (line: Omit<ChatLine, "id" | "turn" | "at">) => push({ ...line, turn, at });
+      push({ kind: "user", text: trimmed, at });
+      push({ id: cardId, kind: "card", text: "", card: { mode: "build", step: "review", changes: 0 }, turn, at });
+      const patchCard = (fn: (c: ProgressCard) => ProgressCard) =>
+        setLines((ls) => ls.map((l) => (l.id === cardId && l.card ? { ...l, card: fn(l.card) } : l)));
+      const removeCard = () => setLines((ls) => ls.filter((l) => l.id !== cardId));
 
       let answerId: string | null = null;
       let gotDone = false;
       let cmds = 0;
       let errored = false;
-      let warnings: Warning[] = []; // done 앞에 오지만 요약·빠진 정보 안내 줄 다음에 둔다
+      let intent: string | null = null;
+      /** done 없이 끝남: 그린 게 있으면 중단됨으로 남기고, 없으면 카드를 치운다. */
+      const endWithoutDone = (aborted: boolean) => (aborted || cmds > 0 ? patchCard((c) => ({ ...c, end: "aborted" })) : removeCard());
+      let warnings: Warning[] = []; // done 앞에 오지만 요약 칩 다음에 둔다
       const pushWarnings = () => {
-        for (const w of warnings) push(warningLine(w));
+        const chip = warningsChip(warnings);
+        if (chip) pushT(chip);
         warnings = [];
       };
 
       const handle = (ev: ChatEvent) => {
         const a = argsRef.current;
         switch (ev.t) {
-          case "status":
-            setPhase(ev.phase);
+          case "start":
+            intent = ev.intent;
+            if (ev.intent && ANSWER_INTENTS.has(ev.intent)) patchCard((c) => ({ ...c, mode: "answer" }));
             break;
+          case "status": {
+            const p = ev.phase;
+            patchCard((c) => (p === "answering" ? { ...c, mode: "answer" } : { ...c, step: p === "thinking" ? "review" : p }));
+            break;
+          }
           case "say":
-            push({ kind: "progress", text: ev.text });
+            pushT({ kind: "progress", text: ev.text });
             break;
-          case "cmd":
+          case "cmd": {
             cmds++;
+            patchCard((c) => ({ ...c, step: c.step === "review" ? "drawing" : c.step, changes: c.changes + 1 }));
             a.onCommand(ev.cmd);
             break;
+          }
           case "answer": {
             if (answerId === null) {
               const id = nextId("a");
               answerId = id;
-              setLines((ls) => [...ls, { id, kind: "assistant", text: ev.delta }]);
+              setLines((ls) => [...ls, { id, kind: "assistant", text: ev.delta, turn, at }]);
             } else {
               const id = answerId;
               setLines((ls) => ls.map((l) => (l.id === id ? { ...l, text: l.text + ev.delta } : l)));
@@ -116,18 +149,24 @@ export function useChatTurn(args: UseChatTurnArgs) {
           case "open_history":
             a.onOpenHistory();
             break;
+          case "relayout":
+            a.onRelayout?.();
+            break;
           case "done": {
             gotDone = true;
-            const s = summary(ev, answerId !== null);
-            if (s) push({ kind: "system", text: s });
-            if (ev.applied > 0 && ev.missing > 0) push({ kind: "system", text: missingReminder(ev.missing) });
+            if (keepsCard(ev)) {
+              const end = ev.status === "aborted" ? "aborted" : "done";
+              patchCard((c) => ({ ...c, end, nodes: ev.nodes, edges: ev.edges }));
+            } else removeCard();
+            const s = summaryText(ev, answerId !== null, intent);
+            if (s) pushT({ kind: "summary", text: s });
             pushWarnings();
             a.onDone(ev);
             break;
           }
           case "error":
             errored = true;
-            push({ kind: "error", text: ev.message || GENERIC_ERROR });
+            pushT({ kind: "error", text: ev.message || GENERIC_ERROR });
             break;
           default:
             break; // start, skip: nothing to show
@@ -152,7 +191,8 @@ export function useChatTurn(args: UseChatTurnArgs) {
               /* keep generic */
             }
           }
-          push({ kind: "error", text: msg });
+          removeCard();
+          pushT({ kind: "error", text: msg });
           return;
         }
         const reader = res.body.getReader();
@@ -180,22 +220,23 @@ export function useChatTurn(args: UseChatTurnArgs) {
         }
         buf += dec.decode();
         feed(buf);
-        if (!gotDone && !errored) push({ kind: "error", text: GENERIC_ERROR });
+        if (!gotDone) {
+          endWithoutDone(false);
+          if (!errored) pushT({ kind: "error", text: GENERIC_ERROR });
+        }
       } catch (e) {
         if (ctrl.signal.aborted || isAbort(e)) {
-          push({ kind: "system", text: "중단했어요." });
-          // The server stores meta.missing for an aborted turn; mirror the reload view from live state.
-          const st = cmds > 0 ? argsRef.current.getState?.() : undefined;
-          const n = st ? computeMissing(st).count : 0;
-          if (n > 0) push({ kind: "system", text: missingReminder(n) });
+          if (!gotDone) endWithoutDone(true); // done 뒤의 중단은 완료 카드를 바꾸지 않는다
+          pushT({ kind: "system", text: "중단했어요." });
           pushWarnings();
+        } else {
+          endWithoutDone(false);
+          pushT({ kind: "error", text: GENERIC_ERROR });
         }
-        else push({ kind: "error", text: GENERIC_ERROR });
       } finally {
         runningRef.current = false;
         abortRef.current = null;
         setBusy(false);
-        setPhase(null);
         if (!gotDone && (ctrl.signal.aborted || cmds > 0)) argsRef.current.onInterrupted?.();
       }
     },
@@ -204,5 +245,5 @@ export function useChatTurn(args: UseChatTurnArgs) {
 
   const stop = useCallback(() => abortRef.current?.abort(), []);
 
-  return { lines, busy, phase, send, stop, pushLine: push };
+  return { lines, busy, send, stop, pushLine: push };
 }

@@ -20,9 +20,6 @@ export interface RightPanelProps {
   /** 설명 tab "노드 링크 복사". */
   onMention?(id: string): void;
   mentionDisabled?: boolean;
-  samples: { id: string; title: string }[];
-  onImportSample(sampleId: string): void;
-  importing?: boolean;
   history: HistoryPanelProps;
   chat: ChatPanelProps;
   /** Fired when the 이력 tab becomes active so the parent can (re)load versions. */
@@ -36,9 +33,11 @@ export interface RightPanelProps {
   warningState?: DiagramState;
   /** 선택한 노드·연결의 설명. 없으면 설명 절을 그리지 않는다. */
   explain?: ExplanationProps;
+  /** 현재 판을 보고 있음(기본 true). 이전 버전 보기·비교에서는 대화를 못 하므로 빈 구성도 인사말을 숨긴다. */
+  live?: boolean;
 }
 
-export function RightPanel({ state, selectedId, onSelect, onMention, mentionDisabled, samples, onImportSample, importing = false, history, chat, onHistoryOpen, tab: controlledTab, onTabChange, cautions, warningState, explain }: RightPanelProps) {
+export function RightPanel({ state, selectedId, onSelect, onMention, mentionDisabled, history, chat, onHistoryOpen, tab: controlledTab, onTabChange, cautions, warningState, explain, live = true }: RightPanelProps) {
   const [innerTab, setInnerTab] = useState<Tab>("대화");
   const tab = controlledTab ?? innerTab;
   const setTab = (t: Tab) => {
@@ -83,23 +82,7 @@ export function RightPanel({ state, selectedId, onSelect, onMention, mentionDisa
         {tab === "대화" && (
           <ChatPanel
             {...chat}
-            footer={
-              Object.keys(state.nodes).length === 0 && samples.length > 0 ? (
-                <div className={styles.chatEmpty}>
-                  <p>또는 샘플로 시작하기</p>
-                  <ul className={styles.samples}>
-                    {samples.map((s) => (
-                      <li key={s.id} className={styles.sample}>
-                        <span>{s.title}</span>
-                        <button type="button" className={styles.btn} disabled={importing} aria-label={`${s.title} 불러오기`} onClick={() => onImportSample(s.id)}>
-                          불러오기
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ) : null
-            }
+            emptyDiagram={live && Object.keys(state.nodes).length === 0}
           />
         )}
         {tab === "설명" && <NodeInfo state={state} selectedId={selectedId} onSelect={onSelect} {...(onMention ? { onMention } : {})} {...(mentionDisabled ? { mentionDisabled } : {})} {...cautions} {...(warningState ? { warningState } : {})} {...(explain ? { explain } : {})} />}
