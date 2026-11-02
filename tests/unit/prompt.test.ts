@@ -308,3 +308,17 @@ describe("ask prompt", () => {
   });
 });
 
+
+describe("prompt wording from the real-model check", () => {
+  test("system prompt makes the Korean label rule concrete", () => {
+    expect(SYSTEM_PROMPT).toContain('"웹 서버 #1", "API 서버 #2", "공개 서브넷", "메인 VPC"');
+    expect(SYSTEM_PROMPT).toContain("제품명만 원어 그대로 쓴다(CloudFront, Redis, Aurora MySQL");
+  });
+
+  test("ask prompt: call nodes by name not id, and name no product outside the diagram", () => {
+    expect(ASK_PROMPT).toContain("- 답에서 노드 id 를 쓰지 말고 노드 이름(label)으로 부른다.");
+    expect(ASK_PROMPT).toContain("- 구성에 없는 제품·기술 이름을 새로 꺼내지 않는다. 모르면 이 구성 정보만으로는 알 수 없다고 말한다.");
+    const sys = buildAskMessages({ state: sample(), nodeId: "was-1", history: [], text: "?" })[0]!.content;
+    expect(sys).toBe(ASK_PROMPT);
+  });
+});
