@@ -97,6 +97,7 @@ export async function getOwnedDiagram(userId: string, diagramId: string) {
       id: diagrams.id,
       name: diagrams.name,
       projectId: diagrams.projectId,
+      projectName: projects.name,
       pinnedPositions: diagrams.pinnedPositions,
     })
     .from(diagrams)

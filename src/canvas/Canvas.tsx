@@ -1,6 +1,6 @@
 import { applyNodeChanges, Background, ReactFlow, ReactFlowProvider, useReactFlow, useStore, type Node, type NodeChange } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { categoryOf } from "@/domain/catalog";
 import { computeMissing } from "@/domain/missing";
@@ -10,6 +10,8 @@ import { mergeWarnings, warningsByNode } from "@/domain/warnings";
 import "./canvas.css";
 import { EdgeLayerPortal } from "./EdgeLayer";
 import { emphasisOf } from "./emphasis";
+import { ExportMenu } from "./ExportMenu";
+import { exportDiagramImage, exportFileName, type ExportBackground, type ExportFormat } from "./exportImage";
 import type { GroupBoxData } from "./GroupBox";
 import type { NodeCardData, NodeVisualState } from "./NodeCard";
 import { outermostCollapsedAncestor, type DisplayGraph, type DisplayOptions } from "./display";
@@ -18,7 +20,7 @@ import { NodeMenu } from "./NodeMenu";
 import { nodeTypes } from "./nodeTypes";
 import { prefersReducedMotion, unionRect, useCamera, type Insets, type Viewport } from "./useCamera";
 import { useDiagramView } from "./useDiagramView";
-import { usePopover } from "./usePopover";
+import { moveMenuFocus, usePopover } from "./usePopover";
 import { useHoverEmphasis } from "./useHoverEmphasis";
 
 export type CanvasOptions = DisplayOptions & { hoverLabels: boolean; showMissingBadges: boolean };
@@ -74,6 +76,9 @@ export interface CanvasProps {
    * 접힌 영역 안이거나 보이는 캔버스 띠(패널이 가린 곳 제외) 밖이면 null. 함수는 늘 최신 배치·카메라로 계산한다.
    */
   onPlaced?(locate: (id: string) => { x: number; y: number } | null): void;
+  /** 이미지로 내보낼 때 파일 이름(`<프로젝트>-<구성도>.png`)에 쓴다. */
+  projectName?: string;
+  diagramName?: string;
 }
 
 export const FAR_ZOOM = 0.6;
@@ -82,6 +87,8 @@ export const PULSE_MS = 1600;
 const NO_INSETS: Insets = { left: 0, right: 0 };
 const LAYOUT_FAILED_MESSAGE = "구성도를 배치하지 못했어요. 새로고침하거나 구성을 다시 확인해 주세요.";
 const EMPTY_MESSAGE = "아직 구성도가 비어 있어요. 오른쪽 대화에서 만들고 싶은 서비스를 설명해 보세요.";
+const EXPORT_LAYOUT_FAILED_REASON = "구성도를 배치하지 못해 내보낼 그림이 없어요.";
+const EXPORT_LAYOUT_PENDING_REASON = "구성도를 그리는 중이에요. 잠시 뒤 다시 해 보세요.";
 
 type ToggleKey = "hideAux" | "busSimplify" | "hoverLabels" | "mergeDuplicates" | "showMissingBadges";
 /** `보기` 팝오버의 옵션. 내부 키는 그대로이고 표시 문구만 사용자 말로 쓴다. */
@@ -140,20 +147,13 @@ function ViewMenu({ options, onFlip }: { options: CanvasOptions; onFlip(key: Tog
 /** 빈 화면의 작은 텍스트 버튼 + 팝오버 목록. Esc·바깥 클릭으로 닫고, 고르면 닫으며 가져온다. */
 function SamplePicker({ samples, onImport, disabled }: { samples: { id: string; title: string }[]; onImport(id: string): void; disabled: boolean }) {
   const { open, setOpen, root, trigger } = usePopover('[role="menuitem"]');
-  const move = (e: ReactKeyboardEvent<HTMLUListElement>) => {
-    if (e.key !== "ArrowDown" && e.key !== "ArrowUp") return;
-    e.preventDefault();
-    const items = [...e.currentTarget.querySelectorAll<HTMLElement>('[role="menuitem"]')];
-    const at = items.indexOf(document.activeElement as HTMLElement);
-    items[(at + (e.key === "ArrowDown" ? 1 : -1) + items.length) % items.length]?.focus();
-  };
   return (
     <div ref={root} className="canvas__samples">
       <button ref={trigger} type="button" className="canvas__sample-btn" aria-haspopup="menu" aria-expanded={open} disabled={disabled} onClick={() => setOpen((v) => !v)}>
         샘플 불러오기
       </button>
       {open && (
-        <ul className="canvas__sample-list" role="menu" aria-label="샘플" onKeyDown={move}>
+        <ul className="canvas__sample-list" role="menu" aria-label="샘플" onKeyDown={moveMenuFocus}>
           {samples.map((s) => (
             <li key={s.id} role="none">
               <button
@@ -182,9 +182,24 @@ export function Canvas(props: CanvasProps) {
   // 전체 보기: 카메라의 화면 맞춤 요청(fitRequest)을 올린다. 부모 요청과 합쳐 어느 쪽이든 늘기만 한다.
   const [fitTick, setFitTick] = useState(0);
   const flip = (key: ToggleKey) => onOptionsChange({ ...options, [key]: !options[key] });
+  // 이미지로 내보내기: 화면에 그려진 뷰포트를 복제해 구성도 전체를 찍는다(exportImage.ts).
+  const rootRef = useRef<HTMLDivElement>(null);
+  const exportBlocked = empty || !view.layout;
+  const onExport = async (format: ExportFormat, background: ExportBackground) => {
+    const viewport = rootRef.current?.querySelector<HTMLElement>(".react-flow__viewport");
+    if (!viewport || !view.layout) throw new Error("캔버스가 아직 그려지지 않았어요");
+    await exportDiagramImage({
+      viewport,
+      layout: view.layout,
+      edges: view.display.edges,
+      format,
+      background,
+      fileName: exportFileName(props.projectName, props.diagramName, format),
+    });
+  };
 
   return (
-    <div className="canvas">
+    <div ref={rootRef} className="canvas">
       <div className="canvas__toolbar" role="toolbar" aria-label="캔버스 도구">
         <div className="canvas__group" role="group" aria-label="보기">
           <ViewMenu options={options} onFlip={flip} />
@@ -210,6 +225,10 @@ export function Canvas(props: CanvasProps) {
             <IconFlow />
             <span>흐름 표시</span>
           </button>
+        </div>
+        <span className="canvas__sep" role="separator" aria-orientation="vertical" />
+        <div className="canvas__group" role="group" aria-label="내보내기">
+          <ExportMenu disabled={exportBlocked} {...(empty ? {} : { disabledReason: view.layoutFailed ? EXPORT_LAYOUT_FAILED_REASON : EXPORT_LAYOUT_PENDING_REASON })} onExport={onExport} />
         </div>
       </div>
       {empty ? (

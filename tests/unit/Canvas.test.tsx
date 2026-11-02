@@ -341,16 +341,17 @@ test("onPlaced locates drawn nodes on screen, not hidden or off-strip ones", asy
 
 const toolbar = () => screen.getByRole("toolbar", { name: "캔버스 도구" });
 
-test("toolbar has three groups with labels", () => {
+test("toolbar has four groups with labels", () => {
   render(<Canvas {...baseProps(emptyState())} />);
   const groups = within(toolbar()).getAllByRole("group");
-  expect(groups.map((g) => g.getAttribute("aria-label"))).toEqual(["보기", "편집", "화면"]);
+  expect(groups.map((g) => g.getAttribute("aria-label"))).toEqual(["보기", "편집", "화면", "내보내기"]);
   expect(within(groups[0]!).getByRole("button", { name: "보기" })).toBeInTheDocument();
   expect(within(groups[1]!).getAllByRole("button").map((b) => b.textContent)).toEqual(["위치 옮기기", "자동 정렬"]);
   expect(within(groups[2]!).getAllByRole("button").map((b) => b.textContent)).toEqual(["전체 보기", "흐름 표시"]);
+  expect(within(groups[3]!).getByRole("button", { name: "이미지로 내보내기" })).toBeInTheDocument();
   // 아이콘은 SVG 이고 이모지가 아니다.
   for (const b of within(toolbar()).getAllByRole("button")) expect(b.querySelector("svg")).not.toBeNull();
-  expect(toolbar().querySelectorAll('[role="separator"]')).toHaveLength(2);
+  expect(toolbar().querySelectorAll('[role="separator"]')).toHaveLength(3);
 });
 
 test("보기 popover lists options with descriptions and closes on Esc/outside", () => {
@@ -565,4 +566,15 @@ test("every infra node wrapper carries the full, untruncated name as its accessi
     const n = state.nodes[el.getAttribute("data-id")!];
     expect(el).toHaveAttribute("aria-label", n.sub ? `${n.label} · ${n.sub}` : n.label);
   }
+});
+
+test("toolbar offers 이미지로 내보내기, disabled with a reason while the diagram is empty", async () => {
+  const { unmount } = render(<Canvas {...baseProps(emptyState())} />);
+  const empty = screen.getByRole("button", { name: "이미지로 내보내기" });
+  expect(empty).toBeDisabled();
+  expect(empty).toHaveAccessibleDescription(/비어 있어/);
+  unmount();
+  render(<div style={{ width: 800, height: 600 }}><Canvas {...baseProps()} projectName="쇼핑몰" diagramName="운영" /></div>);
+  await waitFor(() => expect(screen.getByRole("button", { name: "이미지로 내보내기" })).toBeEnabled());
+  expect(within(screen.getByRole("toolbar", { name: "캔버스 도구" })).getByRole("group", { name: "내보내기" })).toBeInTheDocument();
 });

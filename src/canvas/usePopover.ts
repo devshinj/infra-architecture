@@ -36,3 +36,12 @@ export function usePopover(firstItem: string) {
   }, [open, firstItem]);
   return { open, setOpen, root, trigger };
 }
+
+/** 메뉴(role="menu") 안의 ↑↓: 항목 사이를 돌며 포커스를 옮긴다. 샘플 불러오기·이미지 내보내기가 함께 쓴다. */
+export function moveMenuFocus(e: { key: string; preventDefault(): void; currentTarget: Element }) {
+  if (e.key !== "ArrowDown" && e.key !== "ArrowUp") return;
+  e.preventDefault();
+  const items = [...e.currentTarget.querySelectorAll<HTMLElement>('[role="menuitem"]:not([disabled])')];
+  const at = items.indexOf(document.activeElement as HTMLElement);
+  items[(at + (e.key === "ArrowDown" ? 1 : -1) + items.length) % items.length]?.focus();
+}

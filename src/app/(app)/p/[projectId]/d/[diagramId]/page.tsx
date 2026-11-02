@@ -33,6 +33,7 @@ export default async function DiagramPage({ params }: { params: Promise<{ projec
       key={d.id}
       diagramId={d.id}
       name={d.name}
+      projectName={d.projectName}
       latest={d.latest}
       initialPinned={d.pinnedPositions ?? {}}
       samples={SAMPLES}

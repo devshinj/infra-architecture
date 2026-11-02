@@ -239,3 +239,30 @@ button.node__badge:focus-visible { outline: 1.5px solid var(--text-secondary); o
   position: absolute; z-index: 30; top: 100%; left: 50%; transform: translateX(-50%); margin: 6px 0 0; padding: 4px; list-style: none; min-width: 200px; text-align: left;
   background: var(--bg-node); border: 1px solid var(--line-node); border-radius: var(--radius-node);
 }
+
+/* 이미지 내보내기 무대(exportImage.ts): 화면 밖에 붙인 복제본은 움직이지 않는 한 장면이어야 한다. */
+.export-stage, .export-stage * { animation: none !important; transition: none !important; }
+
+/* 이미지로 내보내기: 도구 모음 맨 오른쪽이라 메뉴는 버튼 오른쪽 끝에 맞춰 왼쪽으로 펼친다. */
+.canvas__pop--end { left: auto; right: 0; }
+.canvas__export-menu { width: 260px; gap: 4px; }
+.canvas__export-group { display: flex; flex-direction: column; gap: 1px; }
+.canvas__export-group + .canvas__export-group { border-top: 1px solid var(--glass-line); padding-top: 4px; }
+.canvas__export-head { display: flex; align-items: baseline; gap: 8px; padding: 6px 10px 2px; }
+.canvas__export-item {
+  display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; font: inherit; font-size: 13px;
+  color: var(--text-primary); background: transparent; border: 0; border-radius: 10px; padding: 7px 10px; cursor: pointer;
+}
+.canvas__export-item:hover { background: var(--bg-panel-raised); }
+.canvas__export-item:focus-visible { outline: 1.5px solid var(--text-secondary); outline-offset: -1px; }
+.canvas__export-swatch { flex: none; width: 12px; height: 12px; border-radius: 3px; border: 1px solid var(--line-node); }
+.canvas__export-swatch--dark { background: var(--bg-canvas); }
+.canvas__export-foot { margin: 2px 0 0; padding: 6px 10px 4px; border-top: 1px solid var(--glass-line); font-size: 11.5px; line-height: 1.45; color: var(--text-secondary); }
+.canvas__export-note {
+  position: absolute; z-index: 30; top: calc(100% + 10px); right: 0; margin: 0; padding: 7px 12px; white-space: nowrap;
+  font-size: 12px; color: var(--text-primary);
+  background: var(--glass-bg); backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-line); border-radius: var(--radius-panel);
+}
+.canvas__export-note[hidden] { display: none; }
+.canvas__export-note--error { border-color: color-mix(in srgb, var(--state-missing) 60%, var(--glass-line)); white-space: normal; width: max-content; max-width: 280px; }
