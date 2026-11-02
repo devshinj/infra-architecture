@@ -41,13 +41,39 @@ function cleanName(name: string): string {
 // 목록에서 서로 구별되도록 같은 사용자의 프로젝트, 같은 프로젝트의 구성도끼리는 이름이 겹치지 않게 한다(대소문자 무시).
 const sameName = (col: typeof projects.name | typeof diagrams.name, name: string) => sql`lower(${col}) = lower(${name})`;
 
+const PROJECT_NAME_TAKEN = "같은 이름의 프로젝트가 이미 있어요. 다른 이름을 써 주세요";
+const DIAGRAM_NAME_TAKEN = "이 프로젝트에 같은 이름의 구성도가 이미 있어요. 다른 이름을 써 주세요";
+
+// DB 가 마지막으로 막는 자리(schema.ts 의 유니크 인덱스). 미리 검사한 뒤 동시에 들어온 요청이 같은 이름을 넣으면 여기서 걸린다.
+const PROJECT_NAME_INDEX = "projects_owner_name_uidx";
+const DIAGRAM_NAME_INDEX = "diagrams_project_name_uidx";
+
+/** Postgres 유니크 위반(23505)이 그 인덱스에서 났는가. drizzle 은 드라이버 오류를 cause 로 감싼다. */
+function isUniqueViolation(e: unknown, index: string): boolean {
+  for (let cur = e, depth = 0; cur && typeof cur === "object" && depth < 5; cur = (cur as { cause?: unknown }).cause, depth++) {
+    const pg = cur as { code?: unknown; constraint_name?: unknown };
+    if (pg.code === "23505" && pg.constraint_name === index) return true;
+  }
+  return false;
+}
+
+/** fn 이 그 인덱스의 유니크 위반으로 실패하면 미리 검사할 때와 같은 안내로 바꿔 던진다. */
+async function mapNameTaken<T>(index: string, message: string, fn: () => Promise<T>): Promise<T> {
+  try {
+    return await fn();
+  } catch (e) {
+    if (isUniqueViolation(e, index)) throw new ValidationError(message);
+    throw e;
+  }
+}
+
 async function assertUniqueProjectName(userId: string, name: string, exceptId?: string): Promise<void> {
   const [row] = await db
     .select({ id: projects.id })
     .from(projects)
     .where(and(eq(projects.ownerId, userId), sameName(projects.name, name), exceptId ? ne(projects.id, exceptId) : undefined))
     .limit(1);
-  if (row) throw new ValidationError("같은 이름의 프로젝트가 이미 있어요. 다른 이름을 써 주세요");
+  if (row) throw new ValidationError(PROJECT_NAME_TAKEN);
 }
 
 async function assertUniqueDiagramName(projectId: string, name: string, exceptId?: string): Promise<void> {
@@ -56,7 +82,7 @@ async function assertUniqueDiagramName(projectId: string, name: string, exceptId
     .from(diagrams)
     .where(and(eq(diagrams.projectId, projectId), sameName(diagrams.name, name), exceptId ? ne(diagrams.id, exceptId) : undefined))
     .limit(1);
-  if (row) throw new ValidationError("이 프로젝트에 같은 이름의 구성도가 이미 있어요. 다른 이름을 써 주세요");
+  if (row) throw new ValidationError(DIAGRAM_NAME_TAKEN);
 }
 
 /** 글자(자소 묶음) 경계에서 잘라 UTF-16 길이 max 이하로 만든다. 이모지·결합 문자를 반으로 쪼개지 않는다. */
@@ -145,10 +171,9 @@ export async function lastActiveDiagram(userId: string): Promise<{ id: string; p
 export async function createProject(userId: string, name: string): Promise<{ id: string; name: string }> {
   const clean = cleanName(name);
   await assertUniqueProjectName(userId, clean);
-  const [row] = await db
-    .insert(projects)
-    .values({ ownerId: userId, name: clean })
-    .returning({ id: projects.id, name: projects.name });
+  const [row] = await mapNameTaken(PROJECT_NAME_INDEX, PROJECT_NAME_TAKEN, () =>
+    db.insert(projects).values({ ownerId: userId, name: clean }).returning({ id: projects.id, name: projects.name }),
+  );
   return row;
 }
 
@@ -180,7 +205,9 @@ export async function renameProject(userId: string, projectId: string, name: str
   const clean = cleanName(name);
   await assertOwnedProject(userId, projectId);
   await assertUniqueProjectName(userId, clean, projectId);
-  await db.update(projects).set({ name: clean, updatedAt: sql`now()` }).where(eq(projects.id, projectId));
+  await mapNameTaken(PROJECT_NAME_INDEX, PROJECT_NAME_TAKEN, () =>
+    db.update(projects).set({ name: clean, updatedAt: sql`now()` }).where(eq(projects.id, projectId)),
+  );
 }
 
 export async function deleteProject(userId: string, projectId: string): Promise<void> {
@@ -192,7 +219,9 @@ export async function createDiagram(userId: string, projectId: string, name: str
   const clean = cleanName(name);
   await assertOwnedProject(userId, projectId);
   await assertUniqueDiagramName(projectId, clean);
-  const [row] = await db.insert(diagrams).values({ projectId, name: clean }).returning({ id: diagrams.id });
+  const [row] = await mapNameTaken(DIAGRAM_NAME_INDEX, DIAGRAM_NAME_TAKEN, () =>
+    db.insert(diagrams).values({ projectId, name: clean }).returning({ id: diagrams.id }),
+  );
   await createVersion(row.id, emptyState(), { source: "import" });
   return { id: row.id };
 }
@@ -201,7 +230,9 @@ export async function renameDiagram(userId: string, diagramId: string, name: str
   const clean = cleanName(name);
   const d = await getOwnedDiagram(userId, diagramId);
   await assertUniqueDiagramName(d.projectId, clean, diagramId);
-  await db.update(diagrams).set({ name: clean, updatedAt: sql`now()` }).where(eq(diagrams.id, diagramId));
+  await mapNameTaken(DIAGRAM_NAME_INDEX, DIAGRAM_NAME_TAKEN, () =>
+    db.update(diagrams).set({ name: clean, updatedAt: sql`now()` }).where(eq(diagrams.id, diagramId)),
+  );
 }
 
 /** 프로젝트의 첫 구성도(목록 순서와 같다). 없으면 null. */
@@ -221,15 +252,34 @@ export async function deleteDiagram(userId: string, diagramId: string): Promise<
   await db.delete(diagrams).where(eq(diagrams.id, diagramId));
 }
 
+const COPY_ATTEMPTS = 5;
+
+/**
+ * 비어 있는 사본 이름으로 구성도 행을 넣는다. 동시에 같은 사본 이름을 먼저 넣은 요청이 있으면
+ * 형제 이름을 다시 읽어 다음 번호로 몇 번 더 시도한다.
+ */
+async function insertCopy(projectId: string, base: string): Promise<{ id: string; name: string }> {
+  const lost: string[] = [];
+  for (let attempt = 1; ; attempt++) {
+    const siblings = await db.select({ name: diagrams.name }).from(diagrams).where(eq(diagrams.projectId, projectId));
+    const name = copyName(base, [...siblings.map((x) => x.name), ...lost]);
+    try {
+      const [row] = await db.insert(diagrams).values({ projectId, name }).returning({ id: diagrams.id, name: diagrams.name });
+      return row;
+    } catch (e) {
+      if (!isUniqueViolation(e, DIAGRAM_NAME_INDEX)) throw e;
+      if (attempt >= COPY_ATTEMPTS) throw new ValidationError(DIAGRAM_NAME_TAKEN);
+      // 형제 목록을 다시 읽어도 Postgres lower() 와 JS toLowerCase() 가 다르게 접는 이름이면 같은 이름을 또 고를 수 있다.
+      lost.push(name);
+    }
+  }
+}
+
 export async function duplicateDiagram(userId: string, diagramId: string): Promise<{ id: string; name: string }> {
   const src = await getOwnedDiagram(userId, diagramId);
   const latest = await getLatestState(diagramId);
   const state: DiagramState = latest?.state ?? emptyState();
-  const siblings = await db.select({ name: diagrams.name }).from(diagrams).where(eq(diagrams.projectId, src.projectId));
-  const [row] = await db
-    .insert(diagrams)
-    .values({ projectId: src.projectId, name: copyName(src.name, siblings.map((x) => x.name)) })
-    .returning({ id: diagrams.id, name: diagrams.name });
+  const row = await insertCopy(src.projectId, src.name);
   await createVersion(row.id, state, { source: "import" });
   return row;
 }
