@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useParams, usePathname, useRouter } from "next/navigation";
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, useTransition } from "react";
 
 import {
   createDiagramAction,
@@ -50,6 +50,12 @@ export const GENERIC_ERROR = "처리하지 못했어요. 잠시 후 다시 시�
 
 const diagramPath = (projectId: string, diagramId: string) => `/p/${projectId}/d/${diagramId}`;
 
+/** 서버 액션의 redirect() 는 클라이언트에서 NEXT_REDIRECT 오류로 끝난다(이동은 라우터가 이미 했다). */
+export const isRedirect = (e: unknown): boolean => {
+  const digest = (e as { digest?: unknown } | null)?.digest;
+  return typeof digest === "string" && digest.startsWith("NEXT_REDIRECT");
+};
+
 export function deleteMessage(t: Pick<MenuTarget, "type" | "name" | "project">): string {
   if (t.type === "diagram") {
     return `‘${t.name}’ 구성도를 삭제할까요? 그림과 버전 이력·대화가 모두 함께 지워져요. 되돌릴 수 없어요.`;
@@ -93,7 +99,8 @@ export function Sidebar({ projects, userName }: { projects: SidebarProject[]; us
   useEffect(() => {
     if (!account) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key !== "Escape") return;
+      // 대화상자가 먼저(캡처 단계에서) 받은 Esc 는 건드리지 않는다.
+      if (e.key !== "Escape" || e.defaultPrevented) return;
       setAccount(false);
       accountBtn.current?.focus();
     };
@@ -125,6 +132,9 @@ export function Sidebar({ projects, userName }: { projects: SidebarProject[]; us
   const menuBtns = useRef(new Map<string, HTMLButtonElement>());
   const openDialog = (d: Dialog, from: Element | null) => {
     returnFocus.current = from instanceof HTMLElement ? from : null;
+    // 떠 있는 팝오버·메뉴는 닫는다(Esc 한 번이 둘 다 닫으며 포커스가 튀지 않게).
+    setAccount(false);
+    setMenu(null);
     setDialog(d);
   };
   const closeDialog = () => {
@@ -237,16 +247,21 @@ export function Sidebar({ projects, userName }: { projects: SidebarProject[]; us
           title: t.type === "project" ? "프로젝트 삭제" : "구성도 삭제",
           message: deleteMessage(t),
           run: async () => {
-            const openHere = t.type === "project" ? params.projectId === t.id : params.diagramId === t.id;
-            if (t.type === "project") await deleteProjectAction(t.id);
-            else await deleteDiagramAction(t.id);
-            if (!openHere) return router.refresh();
-            // 보던 구성도를 지웠으면 같은 프로젝트의 다른 구성도로, 없으면 홈(최근 구성도 또는 시작 안내)으로.
-            const sibling = t.type === "diagram" ? t.project.diagrams.find((d) => d.id !== t.id) : undefined;
-            router.push(sibling ? diagramPath(t.project.id, sibling.id) : "/");
+            // 보던 것을 지우면 서버가 지운 뒤 곧바로 다음 화면(같은 프로젝트의 다른 구성도, 없으면 홈)으로 보낸다.
+            // 지우고 나서 클라이언트에서 옮기면, 액션 응답이 지금 주소(지운 구성도)를 다시 그려 404 가 잠깐 보인다.
+            const leave = t.type === "project" ? params.projectId === t.id : params.diagramId === t.id;
+            try {
+              if (t.type === "project") await deleteProjectAction(t.id, leave);
+              else await deleteDiagramAction(t.id, leave);
+            } catch (e) {
+              if (isRedirect(e)) return;
+              throw e;
+            }
+            router.refresh();
           },
         },
-        from,
+        // 지운 행의 ⋯ 는 곧 사라지므로, 구성도면 그 프로젝트의 ⋯ 로, 프로젝트면 ‘새 프로젝트’로 포커스를 돌린다.
+        t.type === "diagram" ? (menuBtns.current.get(t.project.id) ?? null) : newProjectBtn.current,
       );
     }
   };
@@ -340,8 +355,8 @@ export function Sidebar({ projects, userName }: { projects: SidebarProject[]; us
             <IconCollapse />
           </button>
         </div>
-        {projects.length === 0 && <p className={styles.treeEmpty}>아직 프로젝트가 없어요. 아래 ‘새 프로젝트’로 시작해 보세요.</p>}
-        <ul className={styles.tree}>
+        {projects.length === 0 && <p className={styles.treeEmpty}>아직 프로젝트가 없어요</p>}
+        <ul className={styles.tree} data-scroll-root="">
           {projects.map((p) => {
             const isCollapsed = collapsed.has(p.id);
             const holdsCurrent = p.diagrams.some((d) => d.id === params.diagramId);
@@ -352,11 +367,10 @@ export function Sidebar({ projects, userName }: { projects: SidebarProject[]; us
                     type="button"
                     className={`${styles.rowMain} ${styles.projectMain}`}
                     aria-expanded={!isCollapsed}
-                    title={p.name}
                     onClick={() => toggle(p.id)}
                   >
                     <span className={styles.caret} aria-hidden="true">{isCollapsed ? "▸" : "▾"}</span>
-                    <span className={styles.rowName}>{p.name}</span>
+                    <span className={styles.rowName} title={p.name}>{p.name}</span>
                     <span className={styles.count} aria-hidden="true">{p.diagrams.length}</span>
                     <span className={styles.srOnly}>{`, 구성도 ${p.diagrams.length}개`}</span>
                   </button>
@@ -381,10 +395,10 @@ export function Sidebar({ projects, userName }: { projects: SidebarProject[]; us
                               type="button"
                               className={styles.rowMain}
                               aria-current={current ? "page" : undefined}
-                              title={d.name}
                               onClick={() => goDiagram(p.id, d.id)}
                             >
-                              {d.name}
+                              {/* 잘린 긴 이름은 마우스를 올리면 보인다. 포커스되지 않는 안쪽에 두어 이름을 두 번 읽지 않게. */}
+                              <span className={styles.rowName} title={d.name}>{d.name}</span>
                             </button>
                             {menuFor({ type: "diagram", id: d.id, name: d.name, project: p })}
                           </div>
@@ -429,6 +443,16 @@ function RowMenu({ id, label, open, onOpenChange, buttonRef, items, onSelect }: 
     if (open) enabled()[0]?.focus();
   }, [open]);
 
+  // 스크롤되는 목록 아래쪽에 자리가 모자라면(잘려 보이면) 위로 연다. 그리기 전에 재서 깜빡이지 않게.
+  const [up, setUp] = useState(false);
+  useLayoutEffect(() => {
+    if (!open) return setUp(false);
+    const menuEl = list.current, root = menuEl?.closest("[data-scroll-root]");
+    if (!menuEl || !root || !btn.current) return;
+    const m = menuEl.getBoundingClientRect(), r = root.getBoundingClientRect(), b = btn.current.getBoundingClientRect();
+    setUp(m.bottom > r.bottom && b.top - r.top > r.bottom - b.bottom);
+  }, [open]);
+
   const onKeyDown = (e: React.KeyboardEvent) => {
     const all = enabled();
     const i = all.indexOf(document.activeElement as HTMLButtonElement);
@@ -457,7 +481,6 @@ function RowMenu({ id, label, open, onOpenChange, buttonRef, items, onSelect }: 
         type="button"
         className={styles.menuBtn}
         aria-label={label}
-        title="메뉴"
         aria-haspopup="menu"
         aria-expanded={open}
         aria-controls={open ? menuId : undefined}
@@ -472,7 +495,7 @@ function RowMenu({ id, label, open, onOpenChange, buttonRef, items, onSelect }: 
         ⋯
       </button>
       {open && (
-        <div ref={list} id={menuId} className={styles.menu} role="menu" aria-label={label} onKeyDown={onKeyDown}>
+        <div ref={list} id={menuId} className={`${styles.menu} ${up ? styles.menuUp : ""}`} role="menu" aria-label={label} onKeyDown={onKeyDown}>
           {items.map((it) => (
             <button
               key={it.action}
@@ -528,6 +551,8 @@ const IconPlus = () => <Svg><path d="M9 4v10M4 9h10" /></Svg>;
 const IconBook = () => <Svg><path d="M3.5 3.5h4a1.5 1.5 0 0 1 1.5 1.5v9a1.2 1.2 0 0 0-1.2-1.2H3.5zM14.5 3.5h-4A1.5 1.5 0 0 0 9 5v9a1.2 1.2 0 0 1 1.2-1.2h4.3z" /></Svg>;
 const IconUser = () => <Svg><circle cx="9" cy="6.5" r="2.75" /><path d="M3.75 15a5.25 5.25 0 0 1 10.5 0" /></Svg>;
 
+const focusables = (root: HTMLElement) => Array.from(root.querySelectorAll<HTMLElement>("input, button:not(:disabled)"));
+
 const DIALOG_HINT_ID = "sidebar-dialog-hint";
 const DIALOG_ERROR_ID = "sidebar-dialog-error";
 
@@ -555,14 +580,25 @@ function DialogView({ dialog, onClose }: { dialog: Dialog; onClose(): void }) {
   };
   const closeRef = useRef(close);
   closeRef.current = close;
+  // Esc 는 캡처 단계에서 먼저 받아 preventDefault 한다: 다른 팝오버의 Esc 처리기가 함께 돌지 않게.
+  // 포커스가 대화상자 밖으로 나가면(바탕 클릭 등) 다시 안으로 데려온다.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== "Escape") return;
       e.preventDefault();
+      e.stopPropagation();
       closeRef.current();
     };
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
+    const onFocusIn = (e: FocusEvent) => {
+      const f = form.current;
+      if (f && e.target instanceof Node && !f.contains(e.target)) focusables(f)[0]?.focus();
+    };
+    document.addEventListener("keydown", onKey, true);
+    document.addEventListener("focusin", onFocusIn);
+    return () => {
+      document.removeEventListener("keydown", onKey, true);
+      document.removeEventListener("focusin", onFocusIn);
+    };
   }, []);
 
   const submit = () => {
@@ -584,7 +620,7 @@ function DialogView({ dialog, onClose }: { dialog: Dialog; onClose(): void }) {
   // 포커스를 대화상자 안에 가둔다(Tab·Shift+Tab 이 끝에서 처음으로 돈다).
   const trap = (e: React.KeyboardEvent) => {
     if (e.key !== "Tab" || !form.current) return;
-    const f = Array.from(form.current.querySelectorAll<HTMLElement>("input, button:not(:disabled)"));
+    const f = focusables(form.current);
     if (f.length === 0) return;
     const first = f[0], last = f[f.length - 1];
     if (e.shiftKey && document.activeElement === first) {
@@ -602,7 +638,13 @@ function DialogView({ dialog, onClose }: { dialog: Dialog; onClose(): void }) {
   const submitLabel = dialog.kind === "name" ? (pending ? dialog.pendingLabel : dialog.submit) : pending ? "삭제하는 중…" : "삭제";
 
   return (
-    <div className={styles.backdrop}>
+    <div
+      className={styles.backdrop}
+      // 바탕을 눌러도 포커스가 body 로 빠져 Tab 이 대화상자 밖으로 새지 않게 한다.
+      onMouseDown={(e) => {
+        if (e.target === e.currentTarget) e.preventDefault();
+      }}
+    >
       <form
         ref={form}
         className={styles.dialog}

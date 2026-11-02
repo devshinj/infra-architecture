@@ -149,9 +149,12 @@ test("행 메뉴: 열면 첫 항목, 방향키로 옮기고 Esc 는 ⋯ 로 돌�
   expect(screen.getByRole("menu", { name: "운영 메뉴" })).toBeInTheDocument();
 });
 
-test("보던 구성도를 지우면 무엇이 지워지는지 알리고, 같은 프로젝트의 다른 구성도로 간다", async () => {
+// 서버 액션의 redirect() 가 클라이언트에 닿는 모양.
+const redirectError = (to: string) => Object.assign(new Error("NEXT_REDIRECT"), { digest: `NEXT_REDIRECT;push;${to};307;` });
+
+test("보던 구성도를 지우면 무엇이 지워지는지 알리고, 서버가 다음 화면으로 보낸다(클라이언트는 옮기지 않는다)", async () => {
   nav.params = { projectId: "p1", diagramId: "d1" };
-  actions.deleteDiagramAction.mockResolvedValue(undefined);
+  actions.deleteDiagramAction.mockRejectedValue(redirectError("/p/p1/d/d2"));
   view();
   fireEvent.click(screen.getByRole("button", { name: "운영 메뉴" }));
   fireEvent.click(screen.getByRole("menuitem", { name: "삭제" }));
@@ -160,13 +163,17 @@ test("보던 구성도를 지우면 무엇이 지워지는지 알리고, 같은 
   // 실수로 Enter 를 눌러도 지워지지 않게 취소에 포커스.
   expect(document.activeElement).toBe(within(dialog).getByRole("button", { name: "취소" }));
   fireEvent.click(within(dialog).getByRole("button", { name: "삭제" }));
-  await waitFor(() => expect(nav.push).toHaveBeenCalledWith("/p/p1/d/d2"));
-  expect(actions.deleteDiagramAction).toHaveBeenCalledWith("d1");
-  expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
+  await waitFor(() => expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument());
+  expect(actions.deleteDiagramAction).toHaveBeenCalledWith("d1", true);
+  expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  expect(nav.push).not.toHaveBeenCalled();
+  // 곧 사라질 지운 행의 ⋯ 대신 그 프로젝트의 ⋯ 로 포커스가 돌아온다.
+  await flush();
+  expect(document.activeElement).toBe(screen.getByRole("button", { name: "쇼핑몰 메뉴" }));
 });
 
-test("프로젝트 삭제는 구성도 개수를 알리고, 보던 프로젝트면 홈으로, 아니면 목록만 새로 고친다", async () => {
-  actions.deleteProjectAction.mockResolvedValue(undefined);
+test("프로젝트 삭제는 구성도 개수를 알리고, 보던 프로젝트면 서버가 홈으로 보내고, 아니면 목록만 새로 고친다", async () => {
+  actions.deleteProjectAction.mockRejectedValueOnce(redirectError("/")).mockResolvedValue(undefined);
   nav.params = { projectId: "p1", diagramId: "d1" };
   view();
   fireEvent.click(screen.getByRole("button", { name: "쇼핑몰 메뉴" }));
@@ -174,13 +181,19 @@ test("프로젝트 삭제는 구성도 개수를 알리고, 보던 프로젝트�
   const dialog = screen.getByRole("alertdialog", { name: "프로젝트 삭제" });
   expect(dialog).toHaveAccessibleDescription(/‘쇼핑몰’ 프로젝트를 삭제할까요\? 안에 있는 구성도 2개와/);
   fireEvent.click(within(dialog).getByRole("button", { name: "삭제" }));
-  await waitFor(() => expect(nav.push).toHaveBeenCalledWith("/"));
+  await waitFor(() => expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument());
+  expect(actions.deleteProjectAction).toHaveBeenLastCalledWith("p1", true);
+  expect(nav.refresh).not.toHaveBeenCalled();
 
   fireEvent.click(screen.getByRole("button", { name: "빈 프로젝트 메뉴" }));
   fireEvent.click(screen.getByRole("menuitem", { name: "삭제" }));
   expect(screen.getByRole("alertdialog")).toHaveAccessibleDescription(/안에 구성도는 없어요/);
   fireEvent.click(within(screen.getByRole("alertdialog")).getByRole("button", { name: "삭제" }));
   await waitFor(() => expect(nav.refresh).toHaveBeenCalled());
+  expect(actions.deleteProjectAction).toHaveBeenLastCalledWith("p2", false);
+  expect(nav.push).not.toHaveBeenCalled();
+  await flush();
+  expect(document.activeElement).toBe(screen.getByRole("button", { name: "새 프로젝트" }));
 });
 
 test("삭제가 실패하면 대화상자에 남아 한국어 안내를 보인다", async () => {
@@ -216,20 +229,95 @@ test("목록: 구성도 개수·긴 이름 툴팁·지금 연 구성도 표시, 
   nav.params = { projectId: "p1", diagramId: "d2" };
   view();
   const project = screen.getByRole("button", { name: "쇼핑몰, 구성도 2개" });
-  expect(project).toHaveAttribute("title", "쇼핑몰");
   expect(project).toHaveAttribute("aria-expanded", "true");
+  // 툴팁은 포커스되지 않는 안쪽 글자에만: 버튼 이름을 설명으로 한 번 더 읽지 않는다.
+  expect(project).not.toHaveAttribute("title");
+  expect(project).not.toHaveAccessibleDescription();
+  expect(within(project).getByText("쇼핑몰")).toHaveAttribute("title", "쇼핑몰");
   const current = screen.getByRole("button", { name: "개발" });
   expect(current).toHaveAttribute("aria-current", "page");
-  expect(current).toHaveAttribute("title", "개발");
+  expect(current).not.toHaveAccessibleDescription();
+  expect(within(current).getByText("개발")).toHaveAttribute("title", "개발");
+  const more = screen.getByRole("button", { name: "개발 메뉴" });
+  expect(more).not.toHaveAttribute("title"); // aria-label 이 이름이므로 같은 툴팁을 또 읽지 않게 둔다
+  expect(more).not.toHaveAccessibleDescription();
   expect(screen.getByRole("button", { name: "운영" })).not.toHaveAttribute("aria-current");
   fireEvent.click(screen.getByRole("button", { name: "+ 구성도 추가" }));
   const dialog = screen.getByRole("dialog", { name: "새 구성도" });
   expect(within(dialog).getByLabelText("이름")).toHaveAccessibleDescription(/‘빈 프로젝트’ 프로젝트 안에/);
 });
 
-test("프로젝트가 하나도 없으면 목록 자리에 시작 안내를 보인다", () => {
+test("프로젝트가 하나도 없으면 목록 자리엔 짧게만 알린다(자세한 안내는 홈 화면이 한다)", () => {
   view([]);
-  expect(screen.getByText(/아직 프로젝트가 없어요/)).toBeInTheDocument();
+  expect(screen.getByText("아직 프로젝트가 없어요")).toBeInTheDocument();
+  expect(screen.queryByText(/새 프로젝트’로/)).not.toBeInTheDocument();
+});
+
+test("복제 상태 알림 영역은 처음부터 있어 내용이 바뀌면 읽힌다", () => {
+  view();
+  const status = screen.getByRole("status");
+  expect(status).toBeEmptyDOMElement();
+  expect(status).toBeVisible();
+});
+
+test("대화상자를 열면 계정 팝오버는 닫히고, Esc 한 번은 대화상자만 닫는다", async () => {
+  window.localStorage.setItem("infrasketch.sidebarCollapsed", "1");
+  render(
+    <ShellProvider>
+      <Sidebar projects={P} userName="재석" />
+      <CreateButton>첫 프로젝트 만들기</CreateButton>
+    </ShellProvider>,
+  );
+  const account = screen.getByRole("button", { name: "계정" });
+  fireEvent.click(account);
+  expect(screen.getByRole("button", { name: "로그아웃" })).toBeInTheDocument();
+  const start = screen.getByRole("button", { name: "첫 프로젝트 만들기" });
+  start.focus();
+  fireEvent.click(start);
+  expect(screen.queryByRole("button", { name: "로그아웃" })).not.toBeInTheDocument();
+  const input = within(screen.getByRole("dialog")).getByLabelText("이름");
+  expect(fireEvent.keyDown(input, { key: "Escape" })).toBe(false); // preventDefault 됨
+  expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  await flush();
+  expect(document.activeElement).toBe(start);
+  expect(account).toHaveAttribute("aria-expanded", "false");
+});
+
+test("바탕을 눌러도 포커스가 대화상자 밖으로 새지 않는다", () => {
+  view();
+  fireEvent.click(screen.getByRole("button", { name: "새 프로젝트" }));
+  const dialog = screen.getByRole("dialog");
+  expect(fireEvent.mouseDown(dialog.parentElement!)).toBe(false);
+  // 그래도 밖으로 나가면(스크립트 등) 안으로 데려온다.
+  act(() => screen.getByRole("button", { name: "쇼핑몰 메뉴" }).focus());
+  expect(dialog.contains(document.activeElement)).toBe(true);
+});
+
+test("⋯ 메뉴는 목록 아래쪽에 자리가 모자라면 위로 열린다", () => {
+  const rects: Record<string, { top: number; bottom: number }> = {
+    tree: { top: 0, bottom: 300 },
+    btn: { top: 270, bottom: 290 },
+    menu: { top: 290, bottom: 400 },
+  };
+  const orig = HTMLElement.prototype.getBoundingClientRect;
+  HTMLElement.prototype.getBoundingClientRect = function (this: HTMLElement) {
+    const key = this.hasAttribute("data-scroll-root") ? "tree" : this.getAttribute("role") === "menu" ? "menu" : this.hasAttribute("aria-haspopup") ? "btn" : null;
+    return (key ? rects[key] : { top: 0, bottom: 0 }) as DOMRect;
+  };
+  try {
+    view();
+    fireEvent.click(screen.getByRole("button", { name: "개발 메뉴" }));
+    const menu = screen.getByRole("menu");
+    expect(menu.className).toMatch(/menuUp/);
+    expect(document.activeElement).toBe(within(menu).getAllByRole("menuitem")[0]);
+    fireEvent.keyDown(menu, { key: "Escape" });
+    rects.btn = { top: 20, bottom: 40 };
+    rects.menu = { top: 40, bottom: 150 };
+    fireEvent.click(screen.getByRole("button", { name: "개발 메뉴" }));
+    expect(screen.getByRole("menu").className).not.toMatch(/menuUp/);
+  } finally {
+    HTMLElement.prototype.getBoundingClientRect = orig;
+  }
 });
 
 test("복제: 진행 중에는 다시 누를 수 없고 상태를 알린다, 끝나면 사본으로 간다", async () => {
