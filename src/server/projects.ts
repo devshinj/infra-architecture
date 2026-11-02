@@ -1,8 +1,8 @@
-import { and, asc, eq, sql } from "drizzle-orm";
+import { and, asc, desc, eq, ne, sql } from "drizzle-orm";
 import { z } from "zod";
 
 import { db } from "@/db/client";
-import { diagrams, projects } from "@/db/schema";
+import { diagramVersions, diagrams, projects } from "@/db/schema";
 import { emptyState } from "@/domain/types";
 import type { DiagramState } from "@/domain/types";
 import { createVersion, getLatestState } from "@/server/versions";
@@ -30,10 +30,43 @@ function assertUuid(id: string): void {
   if (!UUID_RE.test(id)) throw new NotFoundError();
 }
 
+const NAME_MAX = 60;
+
 function cleanName(name: string): string {
   const n = name.trim();
-  if (n.length < 1 || n.length > 60) throw new ValidationError("이름은 1~60자로 입력해 주세요");
+  if (n.length < 1 || n.length > NAME_MAX) throw new ValidationError("이름은 1~60자로 입력해 주세요");
   return n;
+}
+
+// 목록에서 서로 구별되도록 같은 사용자의 프로젝트, 같은 프로젝트의 구성도끼리는 이름이 겹치지 않게 한다(대소문자 무시).
+const sameName = (col: typeof projects.name | typeof diagrams.name, name: string) => sql`lower(${col}) = lower(${name})`;
+
+async function assertUniqueProjectName(userId: string, name: string, exceptId?: string): Promise<void> {
+  const [row] = await db
+    .select({ id: projects.id })
+    .from(projects)
+    .where(and(eq(projects.ownerId, userId), sameName(projects.name, name), exceptId ? ne(projects.id, exceptId) : undefined))
+    .limit(1);
+  if (row) throw new ValidationError("같은 이름의 프로젝트가 이미 있어요. 다른 이름을 써 주세요");
+}
+
+async function assertUniqueDiagramName(projectId: string, name: string, exceptId?: string): Promise<void> {
+  const [row] = await db
+    .select({ id: diagrams.id })
+    .from(diagrams)
+    .where(and(eq(diagrams.projectId, projectId), sameName(diagrams.name, name), exceptId ? ne(diagrams.id, exceptId) : undefined))
+    .limit(1);
+  if (row) throw new ValidationError("이 프로젝트에 같은 이름의 구성도가 이미 있어요. 다른 이름을 써 주세요");
+}
+
+/** ‘이름 사본’, ‘이름 사본 2’ … 중 프로젝트 안에서 비어 있는 첫 이름. 60자를 넘으면 원래 이름 쪽을 줄인다. */
+export function copyName(base: string, taken: readonly string[]): string {
+  const used = new Set(taken.map((t) => t.toLowerCase()));
+  for (let i = 1; ; i++) {
+    const suffix = i === 1 ? " 사본" : ` 사본 ${i}`;
+    const name = `${base.slice(0, NAME_MAX - suffix.length).trimEnd()}${suffix}`;
+    if (!used.has(name.toLowerCase())) return name;
+  }
 }
 
 async function assertOwnedProject(userId: string, projectId: string): Promise<void> {
@@ -82,17 +115,55 @@ export async function listProjects(userId: string) {
   }));
 }
 
+/**
+ * 가장 최근에 손댄 구성도(마지막 버전 또는 이름 바꾼 시각 기준). 홈에서 이어서 작업할 곳으로 보낸다.
+ * 구성도가 하나도 없으면 null.
+ */
+export async function lastActiveDiagram(userId: string): Promise<{ id: string; projectId: string } | null> {
+  const touched = sql`greatest(${diagrams.updatedAt}, (select max(${diagramVersions.createdAt}) from ${diagramVersions} where ${diagramVersions.diagramId} = ${diagrams.id}))`;
+  const [row] = await db
+    .select({ id: diagrams.id, projectId: diagrams.projectId })
+    .from(diagrams)
+    .innerJoin(projects, eq(projects.id, diagrams.projectId))
+    .where(eq(projects.ownerId, userId))
+    .orderBy(desc(touched), desc(diagrams.createdAt), desc(diagrams.id))
+    .limit(1);
+  return row ?? null;
+}
+
 export async function createProject(userId: string, name: string): Promise<{ id: string; name: string }> {
+  const clean = cleanName(name);
+  await assertUniqueProjectName(userId, clean);
   const [row] = await db
     .insert(projects)
-    .values({ ownerId: userId, name: cleanName(name) })
+    .values({ ownerId: userId, name: clean })
     .returning({ id: projects.id, name: projects.name });
   return row;
+}
+
+/**
+ * 프로젝트와 첫 구성도를 함께 만든다. 구성도를 못 만들면 방금 만든 프로젝트를 지워
+ * 빈 프로젝트가 남거나, 다시 시도할 때 같은 이름에 막히지 않게 한다.
+ */
+export async function createProjectWithDiagram(
+  userId: string,
+  name: string,
+  diagramName: string,
+): Promise<{ id: string; diagramId: string }> {
+  const p = await createProject(userId, name);
+  try {
+    const d = await createDiagram(userId, p.id, diagramName);
+    return { id: p.id, diagramId: d.id };
+  } catch (e) {
+    await db.delete(projects).where(eq(projects.id, p.id));
+    throw e;
+  }
 }
 
 export async function renameProject(userId: string, projectId: string, name: string): Promise<void> {
   const clean = cleanName(name);
   await assertOwnedProject(userId, projectId);
+  await assertUniqueProjectName(userId, clean, projectId);
   await db.update(projects).set({ name: clean, updatedAt: sql`now()` }).where(eq(projects.id, projectId));
 }
 
@@ -104,6 +175,7 @@ export async function deleteProject(userId: string, projectId: string): Promise<
 export async function createDiagram(userId: string, projectId: string, name: string): Promise<{ id: string }> {
   const clean = cleanName(name);
   await assertOwnedProject(userId, projectId);
+  await assertUniqueDiagramName(projectId, clean);
   const [row] = await db.insert(diagrams).values({ projectId, name: clean }).returning({ id: diagrams.id });
   await createVersion(row.id, emptyState(), { source: "import" });
   return { id: row.id };
@@ -111,7 +183,8 @@ export async function createDiagram(userId: string, projectId: string, name: str
 
 export async function renameDiagram(userId: string, diagramId: string, name: string): Promise<void> {
   const clean = cleanName(name);
-  await getOwnedDiagram(userId, diagramId);
+  const d = await getOwnedDiagram(userId, diagramId);
+  await assertUniqueDiagramName(d.projectId, clean, diagramId);
   await db.update(diagrams).set({ name: clean, updatedAt: sql`now()` }).where(eq(diagrams.id, diagramId));
 }
 
@@ -120,16 +193,17 @@ export async function deleteDiagram(userId: string, diagramId: string): Promise<
   await db.delete(diagrams).where(eq(diagrams.id, diagramId));
 }
 
-export async function duplicateDiagram(userId: string, diagramId: string): Promise<{ id: string }> {
+export async function duplicateDiagram(userId: string, diagramId: string): Promise<{ id: string; name: string }> {
   const src = await getOwnedDiagram(userId, diagramId);
   const latest = await getLatestState(diagramId);
   const state: DiagramState = latest?.state ?? emptyState();
+  const siblings = await db.select({ name: diagrams.name }).from(diagrams).where(eq(diagrams.projectId, src.projectId));
   const [row] = await db
     .insert(diagrams)
-    .values({ projectId: src.projectId, name: `${src.name} 사본` })
-    .returning({ id: diagrams.id });
+    .values({ projectId: src.projectId, name: copyName(src.name, siblings.map((x) => x.name)) })
+    .returning({ id: diagrams.id, name: diagrams.name });
   await createVersion(row.id, state, { source: "import" });
-  return { id: row.id };
+  return row;
 }
 
 export async function getDiagram(userId: string, diagramId: string) {

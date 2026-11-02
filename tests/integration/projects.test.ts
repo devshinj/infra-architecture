@@ -6,13 +6,16 @@ import { db } from "@/db/client";
 import { users } from "@/db/schema";
 import {
   NotFoundError,
+  ValidationError,
   clearPinnedPositions,
   createDiagram,
   createProject,
+  createProjectWithDiagram,
   deleteDiagram,
   deleteProject,
   duplicateDiagram,
   getDiagram,
+  lastActiveDiagram,
   listProjects,
   renameDiagram,
   renameProject,
@@ -122,5 +125,60 @@ describe("projects", () => {
     await deleteProject(a, p.id);
     expect(await listProjects(a)).toEqual([]);
     await expect(getDiagram(a, d.id)).rejects.toBeInstanceOf(NotFoundError);
+  });
+
+  test("project names are unique per user (case-insensitive), diagram names per project", async () => {
+    const a = await user("a"), b = await user("b");
+    const p = await createProject(a, "쇼핑몰");
+    await expect(createProject(a, " 쇼핑몰 ")).rejects.toBeInstanceOf(ValidationError);
+    await expect(createProject(a, "쇼핑몰")).rejects.toThrow("같은 이름의 프로젝트가 이미 있어요");
+    await createProject(b, "쇼핑몰"); // 다른 사용자는 같은 이름을 써도 된다
+    const q = await createProject(a, "Shop");
+    await expect(createProject(a, "shop")).rejects.toBeInstanceOf(ValidationError);
+    await expect(renameProject(a, q.id, "쇼핑몰")).rejects.toBeInstanceOf(ValidationError);
+    await renameProject(a, q.id, "SHOP"); // 자기 자신과는 겹쳐도 된다(대소문자만 바꾸기)
+
+    const d = await createDiagram(a, p.id, "운영");
+    await expect(createDiagram(a, p.id, "운영")).rejects.toThrow("같은 이름의 구성도가 이미 있어요");
+    await createDiagram(a, q.id, "운영"); // 다른 프로젝트는 괜찮다
+    const e = await createDiagram(a, p.id, "개발");
+    await expect(renameDiagram(a, e.id, "운영")).rejects.toBeInstanceOf(ValidationError);
+    await renameDiagram(a, d.id, "운영");
+  });
+
+  test("duplicate picks the next free copy name within 60 chars", async () => {
+    const a = await user("a"); const p = await createProject(a, "x");
+    const d = await createDiagram(a, p.id, "운영");
+    expect((await duplicateDiagram(a, d.id)).name).toBe("운영 사본");
+    expect((await duplicateDiagram(a, d.id)).name).toBe("운영 사본 2");
+    const long = await createDiagram(a, p.id, "가".repeat(60));
+    const copy = await duplicateDiagram(a, long.id);
+    expect(copy.name).toHaveLength(60);
+    expect((await getDiagram(a, copy.id)).name).toBe(copy.name);
+  });
+
+  test("createProjectWithDiagram makes both, and leaves nothing behind when the diagram fails", async () => {
+    const a = await user("a");
+    const r = await createProjectWithDiagram(a, "쇼핑몰", "새 구성도");
+    expect(await listProjects(a)).toEqual([{ id: r.id, name: "쇼핑몰", diagrams: [{ id: r.diagramId, name: "새 구성도" }] }]);
+    expect((await getDiagram(a, r.diagramId)).latest.number).toBe(1);
+    await expect(createProjectWithDiagram(a, "예약", "   ")).rejects.toBeInstanceOf(ValidationError);
+    expect((await listProjects(a)).map((p) => p.name)).toEqual(["쇼핑몰"]);
+    // 실패 뒤 같은 이름으로 다시 만들 수 있다.
+    await createProjectWithDiagram(a, "예약", "새 구성도");
+  });
+
+  test("lastActiveDiagram is the most recently changed diagram, or null", async () => {
+    const a = await user("a");
+    expect(await lastActiveDiagram(a)).toBeNull();
+    const p = await createProject(a, "x");
+    expect(await lastActiveDiagram(a)).toBeNull();
+    const d1 = await createDiagram(a, p.id, "하나");
+    const q = await createProject(a, "y");
+    const d2 = await createDiagram(a, q.id, "둘");
+    expect(await lastActiveDiagram(a)).toEqual({ id: d2.id, projectId: q.id });
+    await importSample(a, d1.id, "s1"); // 새 버전 = 최근 작업
+    expect(await lastActiveDiagram(a)).toEqual({ id: d1.id, projectId: p.id });
+    expect(await lastActiveDiagram(await user("b"))).toBeNull();
   });
 });
