@@ -162,7 +162,7 @@ describe("reset request", () => {
   });
 
   test("done state explains what happens, takes focus, and can go back to the form", async () => {
-    actions.requestResetAction.mockResolvedValue({ done: true });
+    actions.requestResetAction.mockResolvedValue({ done: true, email: "a@b.co" });
     const user = userEvent.setup();
     render(<ResetRequestPage />);
     await user.type(screen.getByLabelText("이메일"), "a@b.co");
@@ -171,10 +171,21 @@ describe("reset request", () => {
     const status = await screen.findByRole("status");
     expect(status).toHaveTextContent("가입된 이메일이라면");
     expect(status).toHaveTextContent("1시간");
+    expect(status).toHaveTextContent("a@b.co");
     await waitFor(() => expect(status).toHaveFocus());
 
     await user.click(screen.getByRole("button", { name: "다시 보내기" }));
-    expect(screen.getByLabelText("이메일")).toBeInTheDocument();
+    expect(screen.getByLabelText("이메일")).toHaveValue("a@b.co");
+  });
+
+  test("a server-side email error is shown on the field", async () => {
+    actions.requestResetAction.mockResolvedValue({ errors: { email: "이메일 형식이 맞지 않아요" } });
+    const user = userEvent.setup();
+    render(<ResetRequestPage />);
+    await user.type(screen.getByLabelText("이메일"), "a@b.co");
+    await user.click(screen.getByRole("button", { name: "재설정 링크 보내기" }));
+    await waitFor(() => expect(screen.getByLabelText("이메일")).toHaveAttribute("aria-invalid", "true"));
+    expect(screen.getByLabelText("이메일")).toHaveValue("a@b.co");
   });
 });
 
@@ -197,7 +208,8 @@ describe("reset with token", () => {
     await user.type(screen.getByLabelText("새 비밀번호"), "newpass12");
     await user.click(screen.getByRole("button", { name: "비밀번호 바꾸기" }));
 
-    expect(await screen.findByRole("link", { name: "재설정 링크 다시 받기" })).toBeInTheDocument();
+    const renew = await screen.findByRole("link", { name: "재설정 링크 다시 받기" });
+    await waitFor(() => expect(renew).toHaveFocus());
     expect(Object.fromEntries(actions.resetPasswordAction.mock.calls[0][1])).toEqual({ token: "t", password: "newpass12" });
   });
 

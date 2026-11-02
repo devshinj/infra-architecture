@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useRef } from "react";
 
 import { resetPasswordAction } from "@/server/auth/actions";
 import { checkNewPassword, HINTS, MESSAGES } from "@/server/auth/rules";
@@ -19,6 +20,12 @@ function validate(data: FormData): FieldErrors {
 export function ResetPasswordForm({ token, usable }: { token: string; usable: boolean }) {
   const { state, errors, pending, formProps } = useAuthForm(resetPasswordAction, { validate });
   const expired = !usable || state.expired === true;
+  const renewRef = useRef<HTMLAnchorElement>(null);
+
+  useEffect(() => {
+    // 제출 중에 만료되면 입력칸·버튼이 사라진다 — 포커스가 문서 처음으로 떨어지지 않게 다음 할 일로 옮긴다.
+    if (state.expired) renewRef.current?.focus();
+  }, [state]);
 
   return (
     <main className={styles.page}>
@@ -30,7 +37,7 @@ export function ResetPasswordForm({ token, usable }: { token: string; usable: bo
             <p className={styles.alert} role="alert">
               {errors.form ?? MESSAGES.resetLinkExpired}
             </p>
-            <Link href="/reset" className={styles.linkButton}>
+            <Link href="/reset" ref={renewRef} className={styles.linkButton}>
               재설정 링크 다시 받기
             </Link>
           </>

@@ -13,6 +13,7 @@ type Props = {
   hint?: string;
   error?: string;
   autoFocus?: boolean;
+  defaultValue?: string;
 };
 
 /**
@@ -21,7 +22,7 @@ type Props = {
  * 비밀번호 칸은 "보기" 버튼으로 입력한 글자를 확인할 수 있다. 버튼 이름에 라벨 글자를 넣지 않는다
  * — getByLabel("비밀번호") 가 입력칸 하나만 찾도록.
  */
-export function AuthField({ label, name, type = "text", autoComplete, hint, error, autoFocus }: Props) {
+export function AuthField({ label, name, type = "text", autoComplete, hint, error, autoFocus, defaultValue }: Props) {
   const id = useId();
   const hintId = `${id}-hint`;
   const errorId = `${id}-error`;
@@ -46,6 +47,7 @@ export function AuthField({ label, name, type = "text", autoComplete, hint, erro
           required
           // 단일 목적 화면이라 첫 칸에 바로 입력할 수 있게 한다.
           autoFocus={autoFocus}
+          defaultValue={defaultValue}
           aria-invalid={error ? true : undefined}
           aria-describedby={describedBy}
           className={isPassword ? `${styles.input} ${styles.inputWithReveal}` : styles.input}

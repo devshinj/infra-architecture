@@ -36,8 +36,10 @@ export default function ResetRequestPage() {
         {done ? (
           <div ref={doneRef} tabIndex={-1} role="status" className={styles.doneBox}>
             <p className={styles.notice}>
-              가입된 이메일이라면 비밀번호 재설정 링크를 보냈습니다. 링크는 {RESET_TTL_HOURS}시간 동안 쓸 수 있습니다.
+              가입된 이메일이라면 아래 주소로 비밀번호 재설정 링크를 보냈습니다. 링크는 {RESET_TTL_HOURS}시간 동안 쓸 수
+              있습니다.
             </p>
+            {state.email && <p className={styles.sentTo}>{state.email}</p>}
             <p className={styles.hint}>
               메일이 오지 않으면 스팸함을 확인하거나, 이메일 주소를 확인한 뒤 다시 보내 주세요.
             </p>
@@ -54,6 +56,8 @@ export default function ResetRequestPage() {
               type="email"
               autoComplete="email"
               error={errors.email}
+              // "다시 보내기" 로 돌아오면 앞서 입력한 주소를 채워 둔다.
+              defaultValue={state.email}
               autoFocus
             />
             <AuthSubmit pending={pending} label="재설정 링크 보내기" pendingLabel="보내는 중…" />

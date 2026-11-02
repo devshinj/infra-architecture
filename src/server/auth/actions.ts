@@ -6,11 +6,14 @@ import { redirect } from "next/navigation";
 import { signIn } from "@/auth";
 
 import { requestPasswordReset, resetPassword } from "./reset";
+import { checkEmail, normalizeEmail } from "./rules";
 import { signup } from "./signup";
 
 export type FormState = {
   errors?: Partial<Record<"username" | "email" | "password" | "form", string>>;
   done?: boolean;
+  /** 재설정 링크를 보낸 주소(사용자가 입력한 값을 맞춘 것 — 계정이 있는지는 담지 않는다) */
+  email?: string;
   /** 재설정 링크가 만료됐거나 이미 쓰였다 — 새 링크를 받아야 한다. */
   expired?: boolean;
 };
@@ -49,8 +52,12 @@ export async function signupAction(_prev: FormState, data: FormData): Promise<Fo
 }
 
 export async function requestResetAction(_prev: FormState, data: FormData): Promise<FormState> {
-  await requestPasswordReset(text(data, "email"));
-  return { done: true };
+  // 형식 오류는 계정 유무와 상관없으므로 칸 오류로 돌려줘도 된다.
+  const emailError = checkEmail(text(data, "email"));
+  if (emailError) return { errors: { email: emailError } };
+  const email = normalizeEmail(text(data, "email"));
+  await requestPasswordReset(email);
+  return { done: true, email };
 }
 
 export async function resetPasswordAction(_prev: FormState, data: FormData): Promise<FormState> {
