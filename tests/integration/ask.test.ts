@@ -352,6 +352,21 @@ describe("runAskTurn", () => {
     await main;
   });
 
+  test("main chat is busy while an ask turn holds the lock", async () => {
+    const ids = await seeded();
+    let release!: () => void;
+    const gate = new Promise<void>((r) => (release = r));
+    const askQwen = fakeQwen("답", { gate });
+    const asking = ask(ids, { text: "뭐야?" }, { qwen: askQwen, clef: question });
+    await vi.waitFor(() => expect(askQwen.calls).toHaveLength(1));
+    const events: ChatEvent[] = [];
+    const result = await runChatTurn({ ...ids, text: "구성도 질문", signal: new AbortController().signal, emit: (e) => events.push(e) }, { qwen: neverQwen, clef: question });
+    expect(result).toEqual({ status: "busy" });
+    expect(events).toEqual([{ t: "error", message: BUSY }]);
+    release();
+    await asking;
+  });
+
   test("aborted first question keeps the session and user message", async () => {
     const ids = await seeded();
     const ctrl = new AbortController();
