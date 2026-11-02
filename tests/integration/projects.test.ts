@@ -14,6 +14,7 @@ import {
   deleteDiagram,
   deleteProject,
   duplicateDiagram,
+  firstDiagramId,
   getDiagram,
   lastActiveDiagram,
   listProjects,
@@ -168,6 +169,15 @@ describe("projects", () => {
     await createProjectWithDiagram(a, "예약", "새 구성도");
   });
 
+  test("firstDiagramId returns the first diagram in list order, or null", async () => {
+    const a = await user("a"); const p = await createProject(a, "x");
+    expect(await firstDiagramId(a, p.id)).toBeNull();
+    const d1 = await createDiagram(a, p.id, "하나");
+    await createDiagram(a, p.id, "둘");
+    expect(await firstDiagramId(a, p.id)).toBe(d1.id);
+    await expect(firstDiagramId(await user("b"), p.id)).rejects.toBeInstanceOf(NotFoundError);
+  });
+
   test("lastActiveDiagram is the most recently changed diagram, or null", async () => {
     const a = await user("a");
     expect(await lastActiveDiagram(a)).toBeNull();
@@ -179,6 +189,8 @@ describe("projects", () => {
     expect(await lastActiveDiagram(a)).toEqual({ id: d2.id, projectId: q.id });
     await importSample(a, d1.id, "s1"); // 새 버전 = 최근 작업
     expect(await lastActiveDiagram(a)).toEqual({ id: d1.id, projectId: p.id });
+    await savePinnedPositions(a, d2.id, { "was-1": { x: 1, y: 2 } }); // 노드를 옮긴 것도 최근 작업
+    expect(await lastActiveDiagram(a)).toEqual({ id: d2.id, projectId: q.id });
     expect(await lastActiveDiagram(await user("b"))).toBeNull();
   });
 });

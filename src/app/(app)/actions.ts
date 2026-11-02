@@ -13,6 +13,7 @@ import {
   deleteDiagram,
   deleteProject,
   duplicateDiagram,
+  firstDiagramId,
   getOwnedDiagram,
   NotFoundError,
   ValidationError,
@@ -90,11 +91,16 @@ export async function renameProjectAction(projectId: string, name: string): Prom
   });
 }
 
-export async function deleteProjectAction(projectId: string): Promise<void> {
-  return run(async (uid) => {
+/**
+ * leave: 지금 보고 있는 프로젝트를 지울 때 true. 지운 뒤 서버에서 홈으로 보낸다
+ * (클라이언트가 나중에 옮기면 액션 응답이 지운 주소를 다시 그려 404 가 잠깐 보인다).
+ */
+export async function deleteProjectAction(projectId: string, leave = false): Promise<void> {
+  await run(async (uid) => {
     await deleteProject(uid, projectId);
     refreshAll();
   });
+  if (leave) redirect("/");
 }
 
 export async function createDiagramAction(projectId: string, name: string): Promise<ActionResult<{ id: string }>> {
@@ -113,11 +119,17 @@ export async function renameDiagramAction(diagramId: string, name: string): Prom
   });
 }
 
-export async function deleteDiagramAction(diagramId: string): Promise<void> {
-  return run(async (uid) => {
+/** leave: 지금 보고 있는 구성도를 지울 때 true. 같은 프로젝트의 다른 구성도로, 없으면 홈으로 보낸다. */
+export async function deleteDiagramAction(diagramId: string, leave = false): Promise<void> {
+  const next = await run(async (uid) => {
+    const { projectId } = await getOwnedDiagram(uid, diagramId);
     await deleteDiagram(uid, diagramId);
     refreshAll();
+    if (!leave) return null;
+    const sibling = await firstDiagramId(uid, projectId);
+    return sibling ? `/p/${projectId}/d/${sibling}` : "/";
   });
+  if (next) redirect(next);
 }
 
 export async function duplicateDiagramAction(diagramId: string): Promise<{ id: string; name: string; projectId: string }> {

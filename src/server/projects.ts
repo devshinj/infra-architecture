@@ -59,12 +59,23 @@ async function assertUniqueDiagramName(projectId: string, name: string, exceptId
   if (row) throw new ValidationError("이 프로젝트에 같은 이름의 구성도가 이미 있어요. 다른 이름을 써 주세요");
 }
 
+/** 글자(자소 묶음) 경계에서 잘라 UTF-16 길이 max 이하로 만든다. 이모지·결합 문자를 반으로 쪼개지 않는다. */
+function clip(text: string, max: number): string {
+  if (text.length <= max) return text;
+  let out = "";
+  for (const { segment } of new Intl.Segmenter("ko", { granularity: "grapheme" }).segment(text)) {
+    if (out.length + segment.length > max) break;
+    out += segment;
+  }
+  return out;
+}
+
 /** ‘이름 사본’, ‘이름 사본 2’ … 중 프로젝트 안에서 비어 있는 첫 이름. 60자를 넘으면 원래 이름 쪽을 줄인다. */
 export function copyName(base: string, taken: readonly string[]): string {
   const used = new Set(taken.map((t) => t.toLowerCase()));
   for (let i = 1; ; i++) {
     const suffix = i === 1 ? " 사본" : ` 사본 ${i}`;
-    const name = `${base.slice(0, NAME_MAX - suffix.length).trimEnd()}${suffix}`;
+    const name = `${clip(base, NAME_MAX - suffix.length).trimEnd()}${suffix}`;
     if (!used.has(name.toLowerCase())) return name;
   }
 }
@@ -155,7 +166,12 @@ export async function createProjectWithDiagram(
     const d = await createDiagram(userId, p.id, diagramName);
     return { id: p.id, diagramId: d.id };
   } catch (e) {
-    await db.delete(projects).where(eq(projects.id, p.id));
+    try {
+      await db.delete(projects).where(eq(projects.id, p.id));
+    } catch (cleanup) {
+      // 정리 실패가 원래 원인을 가리지 않게 남기기만 하고, 원래 오류를 던진다.
+      console.error("빈 프로젝트를 지우지 못했습니다", p.id, cleanup);
+    }
     throw e;
   }
 }
@@ -186,6 +202,18 @@ export async function renameDiagram(userId: string, diagramId: string, name: str
   const d = await getOwnedDiagram(userId, diagramId);
   await assertUniqueDiagramName(d.projectId, clean, diagramId);
   await db.update(diagrams).set({ name: clean, updatedAt: sql`now()` }).where(eq(diagrams.id, diagramId));
+}
+
+/** 프로젝트의 첫 구성도(목록 순서와 같다). 없으면 null. */
+export async function firstDiagramId(userId: string, projectId: string): Promise<string | null> {
+  await assertOwnedProject(userId, projectId);
+  const [row] = await db
+    .select({ id: diagrams.id })
+    .from(diagrams)
+    .where(eq(diagrams.projectId, projectId))
+    .orderBy(asc(diagrams.createdAt), asc(diagrams.id))
+    .limit(1);
+  return row?.id ?? null;
 }
 
 export async function deleteDiagram(userId: string, diagramId: string): Promise<void> {
@@ -237,7 +265,8 @@ export async function savePinnedPositions(
 ): Promise<void> {
   await getOwnedDiagram(userId, diagramId);
   const clean = parsePinned(positions);
-  await db.update(diagrams).set({ pinnedPositions: clean }).where(eq(diagrams.id, diagramId));
+  // 노드를 옮긴 것도 최근 작업으로 친다(lastActiveDiagram).
+  await db.update(diagrams).set({ pinnedPositions: clean, updatedAt: sql`now()` }).where(eq(diagrams.id, diagramId));
 }
 
 export async function clearPinnedPositions(userId: string, diagramId: string): Promise<void> {
