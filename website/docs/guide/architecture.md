@@ -13,7 +13,7 @@ InfraSketch 는 Next.js 15 (App Router) 하나로 화면과 서버를 함께 띄
 | --- | --- |
 | `src/app` | 라우트. `(app)` 은 로그인 후 화면(구성도 작업 화면, 용어 사전 `(app)/glossary`), `(auth)` 는 로그인·가입·비밀번호 재설정(공통 입력칸과 제출 훅은 `(auth)/_components`), `api` 는 대화(`diagrams/[id]/chat`)·노드 질문(`diagrams/[id]/ask`)·질문 세션 조회(`diagrams/[id]/sessions/[sessionId]`)·설명(`diagrams/[id]/explain`)·인증·AI 상태 API. 폼 저장·경고 무시·용어 사전 편집 같은 나머지 쓰기는 `(app)/actions.ts` 의 서버 액션이 맡습니다 |
 | `src/ui` | 작업 화면 컴포넌트. 전체 틀(`Shell.tsx`), 사이드바, 오른쪽 패널(대화·설명·이력)과 너비 조절 손잡이(`PanelResizer.tsx`), 대화 입력·체크리스트·질문 세션 선택(`chat/`, `SessionPicker.tsx`), 설명 패널과 “이 노드에 대해 물어보기”(`explain/`, `AskNode.tsx`), 용어 사전 화면(`glossary/`), 로고(`brand/`), 캔버스 위에 뜨는 정보 카드(`canvas/InfoCard.tsx`)와 범례(`canvas/Legend.tsx`, 연결선 종류 견본·보조 연결 숨김 표시), 노드가 날아가 앉는 효과(`FlyLayer.tsx`) |
-| `src/canvas` | React Flow(`@xyflow/react`) 캔버스. 노드·영역·연결선 그리기, ELK.js 자동 배치(`layout.ts`), 확대·이동 카메라(`useCamera.ts`), 선택·호버 강조 집합 계산(`emphasis.ts`)과 호버 지연(`useHoverEmphasis.ts`), 잘린 이름을 보여 주는 말풍선(`NameTooltip.tsx`), 애니메이션, 경고 배지 |
+| `src/canvas` | React Flow(`@xyflow/react`) 캔버스. 노드·영역·연결선 그리기, ELK.js 자동 배치(`layout.ts`), 확대·이동 카메라(`useCamera.ts`), 선택·호버 강조 집합 계산(`emphasis.ts`)과 호버 지연(`useHoverEmphasis.ts`), 잘린 이름을 보여 주는 말풍선(`NameTooltip.tsx`), 애니메이션, 경고 배지, 구성도 전체를 PNG·SVG(어두운·흰 바탕)로 저장하는 이미지 저장(`exportImage.ts`, `ExportMenu.tsx`, html-to-image) |
 | `src/domain` | 구성도 규칙. 변경 명령 스키마(`commands.ts`), 명령 적용(`apply.ts`), 노드 종류 목록(`catalog.ts`), 빠진 정보 계산(`missing.ts`), 경고 규칙(`warnings.ts`), 구성 패턴(`patterns.ts`), 설명 모양·길이 상한·서명(`explain.ts`), 용어 사전 시드와 화면용 타입(`glossary-seed.ts`, `glossary-types.ts`) |
 | `src/server` | 서버 로직. 대화 파이프라인·노드 질문·질문 세션·경고 점검(`chat/`), AI 연동(`llm/`), 설명 생성(`explain.ts`), 용어 사전(`glossary.ts`), 체크리스트 폼 저장(`fields.ts`), 경고 무시(`ignore.ts`), 프로젝트·버전 저장(프로젝트와 첫 구성도를 함께 만들고, 이름 중복을 막고, 홈에서 이어 갈 최근 구성도를 고름), 인증(가입·재설정·로그인이 함께 쓰는 입력 규칙과 문구는 `auth/rules.ts`) |
 | `src/db` | Drizzle 스키마와 마이그레이션 |
@@ -188,8 +188,8 @@ Qwen 요청 하나는 30초 상한이고, 실패하면 "설명을 만들지 못�
 | 테이블 | 내용 |
 | --- | --- |
 | `users`, `accounts`, `password_reset_tokens` | 회원과 인증 |
-| `projects` | 사용자별 프로젝트 |
-| `diagrams` | 프로젝트 안의 구성도 |
+| `projects` | 사용자별 프로젝트. 같은 사용자 안에서 이름이 겹치지 않습니다(대소문자 무시, 유니크 인덱스 `projects_owner_name_uidx`) |
+| `diagrams` | 프로젝트 안의 구성도. 같은 프로젝트 안에서 이름이 겹치지 않습니다(대소문자 무시, `diagrams_project_name_uidx`) |
 | `chat_sessions` | 노드 질문 세션. 구성도(`diagram_id`)·노드(`node_id`)·만들 때의 노드 이름(`node_label`)·제목·갱신 시각. 구성도가 지워지면 함께 지워집니다 |
 | `messages` | 대화 기록 (메타에 의도·적용 수·버전·빠진 정보 수·새 경고 등). `session_id` 가 비어 있으면(NULL) 구성도 대화이고, 값이 있으면 그 질문 세션의 메시지입니다. 세션이 지워지면 함께 지워집니다 |
 | `diagram_versions` | 구성도 상태 스냅샷. AI 변경 한 차례마다 버전 하나가 생기고, 이력 탭에서 비교하고 되돌립니다. 체크리스트 폼 저장과 경고 무시도 `form` 버전 하나를 만듭니다 |
@@ -202,7 +202,7 @@ Qwen 요청 하나는 30초 상한이고, 실패하면 "설명을 만들지 못�
 - `warnings`: 마지막 점검의 경고 목록(규칙·대상·수준·문구·안내). 코드 규칙 경고는 화면이 지금 상태로 다시 계산하고, 저장된 문구와 Clef 판정(`db_exposed`)만 여기서 가져옵니다.
 - `ignoredWarnings`: 사용자가 "의도된 구성"으로 무시한 경고 ID 목록. 설명 탭의 주의할 점에서 다시 경고하도록 되돌릴 수 있습니다.
 
-마이그레이션은 `src/db/migrations` 에 있으며, 용어 사전·설명 테이블은 `0002`, 질문 세션 테이블과 `messages.session_id` 는 `0003` 에서 추가됐습니다.
+마이그레이션은 `src/db/migrations` 에 있으며, 용어 사전·설명 테이블은 `0002`, 질문 세션 테이블과 `messages.session_id` 는 `0003` 에서 추가됐습니다. `0004` 는 이미 겹친 프로젝트·구성도 이름 중 나중 것에 ` 2`, ` 3` … 을 붙여 정리한 뒤 이름 유니크 인덱스를 만듭니다.
 
 `listMessages` 는 `sessionId` 가 null 이면 구성도 대화만, 아니면 그 세션의 것만 돌려줍니다. 그래서 `pipeline.ts` 의 대화 기록과 Clef 에 넘기는 직전 AI 답변(`lastAssistant`)에는 구성도 대화 메시지만 쓰이고, 질문 세션의 글은 섞이지 않습니다.
 
