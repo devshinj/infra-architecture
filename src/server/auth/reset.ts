@@ -35,7 +35,7 @@ export async function requestPasswordReset(email: string): Promise<void> {
     return;
   }
   try {
-    await sendMail(email, "InfraSketch 비밀번호 재설정", `아래 링크에서 비밀번호를 재설정하세요 (${RESET_TTL_HOURS}시간 안에 유효):\n${link}`);
+    await sendMail(email, "InfraSketch 비밀번호 재설정", `아래 링크에서 새 비밀번호를 정해 주세요. 링크는 ${RESET_TTL_HOURS}시간 동안 쓸 수 있어요.\n${link}`);
   } catch (e) {
     // 발송 실패가 계정 존재 여부로 드러나지 않게 삼킨다. 링크·토큰은 기록하지 않는다.
     console.error("[reset-mail] 발송 실패:", e instanceof Error ? e.message : "unknown");

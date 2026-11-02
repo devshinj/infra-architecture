@@ -3,6 +3,7 @@ import { afterEach, describe, expect, test, vi } from "vitest";
 import { isResetTokenUsable, requestPasswordReset, resetPassword } from "@/server/auth/reset";
 import { signup } from "@/server/auth/signup";
 import { verifyCredentials } from "@/server/auth/password";
+import { MESSAGES } from "@/server/auth/rules";
 
 afterEach(() => vi.restoreAllMocks());
 
@@ -18,7 +19,7 @@ describe("auth", () => {
     await signup({ username: "jae", password: "password1", email: "a@b.co" });
     expect(
       await signup({ username: "jae", password: "password1", email: "c@d.co" }),
-    ).toMatchObject({ ok: false, field: "username", message: "이미 쓰는 아이디입니다" });
+    ).toMatchObject({ ok: false, field: "username", message: MESSAGES.usernameTaken });
   });
 
   test("duplicate email and invalid input are field errors", async () => {

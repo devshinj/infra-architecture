@@ -4,7 +4,7 @@ import { db } from "@/db/client";
 import { users } from "@/db/schema";
 
 import { hashPassword } from "./password";
-import { checkEmail, checkNewPassword, checkUsername, normalizeEmail, normalizeUsername } from "./rules";
+import { checkEmail, checkNewPassword, checkUsername, MESSAGES, normalizeEmail, normalizeUsername } from "./rules";
 
 export type SignupInput = { username: string; password: string; email: string };
 export type SignupResult =
@@ -25,9 +25,9 @@ export async function signup(input: SignupInput): Promise<SignupResult> {
   if (passwordError) return { ok: false, field: "password", message: passwordError };
 
   const [sameName] = await db.select({ id: users.id }).from(users).where(eq(users.username, username)).limit(1);
-  if (sameName) return { ok: false, field: "username", message: "이미 쓰는 아이디입니다" };
+  if (sameName) return { ok: false, field: "username", message: MESSAGES.usernameTaken };
   const [sameEmail] = await db.select({ id: users.id }).from(users).where(eq(users.email, email)).limit(1);
-  if (sameEmail) return { ok: false, field: "email", message: "이미 가입된 이메일입니다" };
+  if (sameEmail) return { ok: false, field: "email", message: MESSAGES.emailTaken };
 
   const passwordHash = await hashPassword(password);
   try {
@@ -36,7 +36,7 @@ export async function signup(input: SignupInput): Promise<SignupResult> {
   } catch (e) {
     // 동시 가입으로 unique 제약에 걸린 경우.
     const code = (e as { code?: string; cause?: { code?: string } }).code ?? (e as { cause?: { code?: string } }).cause?.code;
-    if (code === "23505") return { ok: false, field: "username", message: "이미 쓰는 아이디입니다" };
+    if (code === "23505") return { ok: false, field: "username", message: MESSAGES.usernameTaken };
     throw e;
   }
 }

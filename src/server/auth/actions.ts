@@ -6,7 +6,7 @@ import { redirect } from "next/navigation";
 import { signIn } from "@/auth";
 
 import { requestPasswordReset, resetPassword } from "./reset";
-import { checkEmail, normalizeEmail } from "./rules";
+import { checkEmail, MESSAGES, normalizeEmail } from "./rules";
 import { signup } from "./signup";
 
 export type FormState = {
@@ -29,7 +29,7 @@ export async function loginAction(_prev: FormState, data: FormData): Promise<For
     });
   } catch (e) {
     if (e instanceof AuthError) {
-      return { errors: { form: "아이디 또는 비밀번호가 올바르지 않습니다" } };
+      return { errors: { form: MESSAGES.loginFailed } };
     }
     throw e; // signIn 성공 시의 redirect 도 여기로 온다.
   }

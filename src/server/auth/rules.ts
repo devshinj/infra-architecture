@@ -19,13 +19,16 @@ export const HINTS = {
 
 export const MESSAGES = {
   usernameRequired: "아이디를 입력해 주세요",
-  usernameInvalid: "아이디는 영문 소문자·숫자·밑줄 3~32자로 입력해 주세요",
+  usernameInvalid: "아이디는 영문·숫자·밑줄(_)로 3~32자만 쓸 수 있어요",
   emailRequired: "이메일을 입력해 주세요",
-  emailInvalid: "이메일 형식이 올바르지 않습니다",
+  emailInvalid: "이메일 형식이 맞지 않아요",
   passwordRequired: "비밀번호를 입력해 주세요",
-  passwordShort: `비밀번호는 ${PASSWORD_MIN}자 이상이어야 합니다`,
+  passwordShort: `비밀번호는 ${PASSWORD_MIN}자 이상이어야 해요`,
   passwordLong: `비밀번호가 너무 길어요. ${PASSWORD_MAX_BYTES}바이트(영문 ${PASSWORD_MAX_BYTES}자, 한글 약 24자) 이하로 입력해 주세요`,
-  resetLinkExpired: "만료되었거나 이미 사용한 링크입니다. 재설정 링크를 다시 받아 주세요",
+  usernameTaken: "이미 쓰고 있는 아이디예요",
+  emailTaken: "이미 가입된 이메일이에요",
+  loginFailed: "아이디 또는 비밀번호가 맞지 않아요",
+  resetLinkExpired: "만료됐거나 이미 쓴 링크예요. 재설정 링크를 다시 받아 주세요",
 } as const;
 
 export const normalizeEmail = (email: string) => email.trim().toLowerCase();

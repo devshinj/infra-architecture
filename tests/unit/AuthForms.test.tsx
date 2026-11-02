@@ -4,6 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 import type { FormState } from "@/server/auth/actions";
+import { MESSAGES } from "@/server/auth/rules";
 
 const actions = vi.hoisted(() => ({
   loginAction: vi.fn<(prev: FormState, data: FormData) => Promise<FormState>>(),
@@ -72,13 +73,13 @@ describe("signup", () => {
   });
 
   test("server error keeps every typed value and focuses the field", async () => {
-    actions.signupAction.mockResolvedValue({ errors: { username: "이미 쓰는 아이디입니다" } });
+    actions.signupAction.mockResolvedValue({ errors: { username: MESSAGES.usernameTaken } });
     const user = userEvent.setup();
     render(<SignupPage />);
     await fillSignup(user, "jae", "a@b.co", "password1");
     await user.click(screen.getByRole("button", { name: "가입하기" }));
 
-    await screen.findByText("이미 쓰는 아이디입니다");
+    await screen.findByText(MESSAGES.usernameTaken);
     expect(actions.signupAction).toHaveBeenCalledTimes(1);
     const sent = actions.signupAction.mock.calls[0][1];
     expect(Object.fromEntries(sent)).toEqual({ username: "jae", email: "a@b.co", password: "password1" });
@@ -131,21 +132,21 @@ describe("login", () => {
   });
 
   test("failed login keeps the username and focuses the password", async () => {
-    actions.loginAction.mockResolvedValue({ errors: { form: "아이디 또는 비밀번호가 올바르지 않습니다" } });
+    actions.loginAction.mockResolvedValue({ errors: { form: MESSAGES.loginFailed } });
     const user = userEvent.setup();
     render(<LoginForm />);
     await user.type(screen.getByLabelText("아이디"), "jae");
     await user.type(screen.getByLabelText("비밀번호"), "wrongpass");
     await user.click(screen.getByRole("button", { name: "로그인" }));
 
-    expect(await screen.findByRole("alert")).toHaveTextContent("아이디 또는 비밀번호가 올바르지 않습니다");
+    expect(await screen.findByRole("alert")).toHaveTextContent(MESSAGES.loginFailed);
     expect(screen.getByLabelText("아이디")).toHaveValue("jae");
     await waitFor(() => expect(screen.getByLabelText("비밀번호")).toHaveFocus());
   });
 
   test("shows a notice passed from another screen and keeps the links", () => {
-    render(<LoginForm notice="비밀번호를 바꿨습니다. 새 비밀번호로 로그인해 주세요." />);
-    expect(screen.getByRole("status")).toHaveTextContent("비밀번호를 바꿨습니다");
+    render(<LoginForm notice="비밀번호를 바꿨어요. 새 비밀번호로 로그인해 주세요." />);
+    expect(screen.getByRole("status")).toHaveTextContent("비밀번호를 바꿨어요");
     expect(screen.getByRole("link", { name: "회원가입" })).toHaveAttribute("href", "/signup");
     expect(screen.getByRole("link", { name: "비밀번호 찾기" })).toHaveAttribute("href", "/reset");
   });
@@ -179,7 +180,7 @@ describe("reset request", () => {
   });
 
   test("a server-side email error is shown on the field", async () => {
-    actions.requestResetAction.mockResolvedValue({ errors: { email: "이메일 형식이 맞지 않아요" } });
+    actions.requestResetAction.mockResolvedValue({ errors: { email: MESSAGES.emailInvalid } });
     const user = userEvent.setup();
     render(<ResetRequestPage />);
     await user.type(screen.getByLabelText("이메일"), "a@b.co");
@@ -192,14 +193,14 @@ describe("reset request", () => {
 describe("reset with token", () => {
   test("an expired link shows how to get a new one instead of a password field", () => {
     render(<ResetPasswordForm token="t" usable={false} />);
-    expect(screen.getByRole("alert")).toHaveTextContent("만료되었거나 이미 사용한 링크입니다");
+    expect(screen.getByRole("alert")).toHaveTextContent(MESSAGES.resetLinkExpired);
     expect(screen.getByRole("link", { name: "재설정 링크 다시 받기" })).toHaveAttribute("href", "/reset");
     expect(screen.queryByLabelText("새 비밀번호")).not.toBeInTheDocument();
   });
 
   test("a link that expires while typing switches to the same guidance", async () => {
     actions.resetPasswordAction.mockResolvedValue({
-      errors: { form: "만료되었거나 이미 사용한 링크입니다. 재설정 링크를 다시 받아 주세요" },
+      errors: { form: MESSAGES.resetLinkExpired },
       expired: true,
     });
     const user = userEvent.setup();
@@ -219,6 +220,6 @@ describe("reset with token", () => {
     await user.type(screen.getByLabelText("새 비밀번호"), "short");
     await user.click(screen.getByRole("button", { name: "비밀번호 바꾸기" }));
     expect(actions.resetPasswordAction).not.toHaveBeenCalled();
-    expect(screen.getByLabelText("새 비밀번호")).toHaveAccessibleDescription(/8자 이상이어야 합니다/);
+    expect(screen.getByLabelText("새 비밀번호")).toHaveAccessibleDescription(expect.stringContaining(MESSAGES.passwordShort));
   });
 });

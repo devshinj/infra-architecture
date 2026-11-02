@@ -42,7 +42,7 @@ export default function SignupPage() {
           name="email"
           type="email"
           autoComplete="email"
-          hint="비밀번호를 잊었을 때 재설정 링크를 받을 주소입니다"
+          hint="비밀번호를 잊었을 때 재설정 링크를 받을 주소예요"
           error={errors.email}
         />
         <AuthField
