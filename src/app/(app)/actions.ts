@@ -9,7 +9,7 @@ import type { DiagramState } from "@/domain/types";
 import {
   clearPinnedPositions,
   createDiagram,
-  createProject,
+  createProjectWithDiagram,
   deleteDiagram,
   deleteProject,
   duplicateDiagram,
@@ -71,11 +71,14 @@ const validVersion = (n: number) => {
 const refreshAll = () => revalidatePath("/", "layout");
 const refreshDiagram = () => revalidatePath(DIAGRAM_ROUTE, "page");
 
-export async function createProjectAction(name: string): Promise<ActionResult<{ id: string }>> {
+/** 첫 구성도 이름. 새 프로젝트는 곧바로 그릴 수 있게 빈 구성도 하나를 함께 만든다. */
+const FIRST_DIAGRAM_NAME = "새 구성도";
+
+export async function createProjectAction(name: string): Promise<ActionResult<{ id: string; diagramId: string }>> {
   return runResult(async (uid) => {
-    const p = await createProject(uid, name);
+    const p = await createProjectWithDiagram(uid, name, FIRST_DIAGRAM_NAME);
     refreshAll();
-    return { id: p.id };
+    return p;
   });
 }
 
@@ -117,12 +120,12 @@ export async function deleteDiagramAction(diagramId: string): Promise<void> {
   });
 }
 
-export async function duplicateDiagramAction(diagramId: string): Promise<{ id: string; projectId: string }> {
+export async function duplicateDiagramAction(diagramId: string): Promise<{ id: string; name: string; projectId: string }> {
   return run(async (uid) => {
     const src = await getOwnedDiagram(uid, diagramId);
     const d = await duplicateDiagram(uid, diagramId);
     refreshAll();
-    return { id: d.id, projectId: src.projectId };
+    return { id: d.id, name: d.name, projectId: src.projectId };
   });
 }
 
