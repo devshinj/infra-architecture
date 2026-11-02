@@ -143,13 +143,17 @@ async function askInSession(
     // 질문 세션에서는 구성을 바꾸지 않는다. 구성도 대화로 넘기도록 사용자 글을 돌려준다.
     emit({ t: "say", text: HANDOFF_REPLY });
     emit({ t: "handoff", text: args.text });
-    const meta: MessageMeta = { intent, handoff: true, says: [HANDOFF_REPLY] };
+    const meta: MessageMeta = { intent, handoff: true, handoffText: args.text, says: [HANDOFF_REPLY] };
     const assistant = await createMessage(diagramId, "assistant", HANDOFF_REPLY, meta, sessionId);
     emit(done("complete", assistant.id));
     return "ok";
   }
 
-  const explanation = await cachedNodeExplanation(args.userId, diagramId, state, nodeId);
+  // 설명은 답의 근거일 뿐이라 못 읽어도 없이 답한다.
+  const explanation = await cachedNodeExplanation(args.userId, diagramId, state, nodeId).catch((err) => {
+    console.error("ask explanation lookup failed", { diagramId, nodeId, err: err instanceof Error ? err.message : String(err) });
+    return undefined;
+  });
   const messages = buildAskMessages({ state, nodeId, explanation, history, text: args.text });
   emit({ t: "status", phase: "thinking" });
 

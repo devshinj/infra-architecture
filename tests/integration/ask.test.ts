@@ -21,6 +21,11 @@ import { createVersion } from "@/server/versions";
 import { makeOwnedDiagram } from "./helpers";
 
 vi.mock("@/auth", () => ({ auth: vi.fn() }));
+vi.mock("@/server/explain", async (orig) => {
+  const m = await orig<typeof import("@/server/explain")>();
+  return { ...m, cachedNodeExplanation: vi.fn(m.cachedNodeExplanation) };
+});
+import { cachedNodeExplanation } from "@/server/explain";
 import { auth } from "@/auth";
 import { GET } from "@/app/api/diagrams/[id]/sessions/[sessionId]/route";
 
@@ -302,6 +307,31 @@ describe("runAskTurn", () => {
       content: HANDOFF_REPLY,
       meta: { intent: "structure_change", handoff: true, says: [HANDOFF_REPLY] },
     });
+  });
+
+  test("handoff reply meta carries the handed-off text", async () => {
+    const ids = await seeded();
+    const { events } = await ask(
+      ids,
+      { text: "WAS 하나 더 추가해 줘" },
+      { qwen: neverQwen, clef: fakeClef({ intent: "structure_change", confidence: 0.9 }) },
+    );
+    const sessionId = (events[0] as Extract<ChatEvent, { t: "session" }>).session.id;
+    const stored = await listMessages(ids.diagramId, 100, sessionId);
+    expect(stored[1]!.meta).toMatchObject({ handoff: true, handoffText: "WAS 하나 더 추가해 줘" });
+  });
+
+  test("explanation lookup failure does not abort the turn", async () => {
+    const ids = await seeded();
+    vi.mocked(cachedNodeExplanation).mockRejectedValueOnce(new Error("db down"));
+    const err = vi.spyOn(console, "error").mockImplementation(() => {});
+    const qwen = fakeQwen("답이에요.");
+    const { events, result } = await ask(ids, { text: "뭐야?" }, { qwen, clef: question });
+    expect(result).toEqual({ status: "ok" });
+    expect(of(events, "answer").map((e) => e.delta).join("")).toBe("답이에요.");
+    expect(of(events, "error")).toEqual([]);
+    expect(err).toHaveBeenCalled();
+    err.mockRestore();
   });
 
   test("clef failure falls back to answering", async () => {
