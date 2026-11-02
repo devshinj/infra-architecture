@@ -1,9 +1,13 @@
 import { randomUUID } from "node:crypto";
+import { readFileSync } from "node:fs";
+import path from "node:path";
 
+import { TransactionRollbackError, sql } from "drizzle-orm";
+import postgres from "postgres";
 import { describe, expect, test } from "vitest";
 
 import { db } from "@/db/client";
-import { users } from "@/db/schema";
+import { diagrams, projects, users } from "@/db/schema";
 import {
   NotFoundError,
   ValidationError,
@@ -192,5 +196,231 @@ describe("projects", () => {
     await savePinnedPositions(a, d2.id, { "was-1": { x: 1, y: 2 } }); // 노드를 옮긴 것도 최근 작업
     expect(await lastActiveDiagram(a)).toEqual({ id: d2.id, projectId: q.id });
     expect(await lastActiveDiagram(await user("b"))).toBeNull();
+  });
+});
+
+const PROJECT_TAKEN = "같은 이름의 프로젝트가 이미 있어요. 다른 이름을 써 주세요";
+const DIAGRAM_TAKEN = "이 프로젝트에 같은 이름의 구성도가 이미 있어요. 다른 이름을 써 주세요";
+
+/**
+ * 다른 연결이 아직 커밋하지 않은 행을 넣어 둔 채 action 을 시작하고, action 이 그 행의 잠금을 기다리기 시작하면 커밋한다.
+ * 미리 검사(커밋 안 된 행은 안 보인다)는 통과하고 DB 유니크 인덱스에서 걸리는 경쟁을 매번 같은 순서로 만든다.
+ */
+async function racedBy<T>(
+  insert: (tx: postgres.TransactionSql) => Promise<unknown>,
+  action: () => Promise<T>,
+): Promise<PromiseSettledResult<T>> {
+  const other = postgres(process.env.DATABASE_URL!, { max: 1 });
+  try {
+    let pending: Promise<PromiseSettledResult<T>> | undefined;
+    await other.begin(async (tx) => {
+      await insert(tx);
+      pending = action().then(
+        (value) => ({ status: "fulfilled" as const, value }),
+        (reason: unknown) => ({ status: "rejected" as const, reason }),
+      );
+      for (let i = 0; ; i++) {
+        const rows = await db.execute(sql`select 1 from pg_locks where not granted`);
+        if (rows.length > 0) break;
+        if (i > 300) throw new Error("action 이 잠금을 기다리지 않았다");
+        await new Promise((r) => setTimeout(r, 10));
+      }
+    });
+    return await pending!;
+  } finally {
+    await other.end();
+  }
+}
+
+function expectTaken(r: PromiseSettledResult<unknown>, message: string): void {
+  expect(r.status).toBe("rejected");
+  const reason = (r as PromiseRejectedResult).reason;
+  expect(reason).toBeInstanceOf(ValidationError);
+  expect((reason as Error).message).toBe(message);
+}
+
+describe("unique names under concurrency (DB unique index)", () => {
+  test("concurrent creates with the same name: exactly one wins, the rest get the friendly error", async () => {
+    const a = await user("a");
+    const rs = await Promise.allSettled(["동시", "동시", " 동시 ", "동시", "동시"].map((n) => createProject(a, n)));
+    expect(rs.filter((r) => r.status === "fulfilled")).toHaveLength(1);
+    for (const r of rs.filter((x) => x.status === "rejected")) expectTaken(r, PROJECT_TAKEN);
+    const [p] = await listProjects(a);
+    expect(p.name).toBe("동시");
+
+    const ds = await Promise.allSettled(["운영", "운영", "운영"].map((n) => createDiagram(a, p.id, n)));
+    expect(ds.filter((r) => r.status === "fulfilled")).toHaveLength(1);
+    for (const r of ds.filter((x) => x.status === "rejected")) expectTaken(r, DIAGRAM_TAKEN);
+  });
+
+  test("a create that passed the pre-check but loses to a concurrent insert gets the friendly error (case-insensitive)", async () => {
+    const a = await user("a");
+    const r = await racedBy((tx) => tx`insert into projects (owner_id, name) values (${a}, ${"Race"})`, () => createProject(a, "race"));
+    expectTaken(r, PROJECT_TAKEN);
+    const ps = await listProjects(a);
+    expect(ps.map((p) => p.name)).toEqual(["Race"]);
+
+    const d = await racedBy(
+      (tx) => tx`insert into diagrams (project_id, name) values (${ps[0].id}, ${"운영"})`,
+      () => createDiagram(a, ps[0].id, "운영"),
+    );
+    expectTaken(d, DIAGRAM_TAKEN);
+  });
+
+  test("createProjectWithDiagram that loses the race leaves nothing extra behind", async () => {
+    const a = await user("a");
+    const r = await racedBy(
+      (tx) => tx`insert into projects (owner_id, name) values (${a}, ${"쇼핑몰"})`,
+      () => createProjectWithDiagram(a, "쇼핑몰", "새 구성도"),
+    );
+    expectTaken(r, PROJECT_TAKEN);
+    expect(await listProjects(a)).toEqual([{ id: expect.any(String), name: "쇼핑몰", diagrams: [] }]);
+  });
+
+  test("a rename collision race gets the friendly error and keeps the old name", async () => {
+    const a = await user("a");
+    const q = await createProject(a, "원래");
+    const r = await racedBy(
+      (tx) => tx`insert into projects (owner_id, name) values (${a}, ${"목표"})`,
+      () => renameProject(a, q.id, "목표"),
+    );
+    expectTaken(r, PROJECT_TAKEN);
+    expect((await listProjects(a)).find((p) => p.id === q.id)?.name).toBe("원래");
+
+    const d = await createDiagram(a, q.id, "하나");
+    const rd = await racedBy(
+      (tx) => tx`insert into diagrams (project_id, name) values (${q.id}, ${"둘"})`,
+      () => renameDiagram(a, d.id, "둘"),
+    );
+    expectTaken(rd, DIAGRAM_TAKEN);
+    expect((await getDiagram(a, d.id)).name).toBe("하나");
+  });
+
+  test("a duplicate that loses the race for its copy name retries with the next number", async () => {
+    const a = await user("a"); const p = await createProject(a, "x");
+    const d = await createDiagram(a, p.id, "운영");
+    const r = await racedBy(
+      (tx) => tx`insert into diagrams (project_id, name) values (${p.id}, ${"운영 사본"})`,
+      () => duplicateDiagram(a, d.id),
+    );
+    expect(r.status).toBe("fulfilled");
+    const copy = (r as PromiseFulfilledResult<{ id: string; name: string }>).value;
+    expect(copy.name).toBe("운영 사본 2");
+    expect((await getDiagram(a, copy.id)).latest.number).toBe(1);
+
+    const many = await Promise.all([duplicateDiagram(a, d.id), duplicateDiagram(a, d.id), duplicateDiagram(a, d.id)]);
+    expect(new Set(many.map((m) => m.name.toLowerCase())).size).toBe(3);
+  });
+
+  test("the DB itself rejects a case-insensitive duplicate without the app pre-check", async () => {
+    const a = await user("a");
+    const [p] = await db.insert(projects).values({ ownerId: a, name: "Shop" }).returning({ id: projects.id });
+    await expect(db.insert(projects).values({ ownerId: a, name: "SHOP" })).rejects.toMatchObject({
+      cause: { code: "23505", constraint_name: "projects_owner_name_uidx" },
+    });
+    await db.insert(diagrams).values({ projectId: p.id, name: "운영" });
+    await expect(db.insert(diagrams).values({ projectId: p.id, name: "운영" })).rejects.toMatchObject({
+      cause: { code: "23505", constraint_name: "diagrams_project_name_uidx" },
+    });
+  });
+});
+
+describe("0004 migration renames existing duplicates", () => {
+  const statements = readFileSync(path.resolve(process.cwd(), "src/db/migrations/0004_unique_names.sql"), "utf8")
+    .split("--> statement-breakpoint")
+    .map((x) => x.trim())
+    .filter(Boolean);
+  const renames = statements.filter((x) => x.includes("DO $$"));
+  const indexes = statements.filter((x) => x.startsWith("CREATE UNIQUE INDEX"));
+
+  test("renames come before the unique indexes", () => {
+    expect(renames).toHaveLength(2);
+    expect(indexes).toHaveLength(2);
+    const lastRename = statements.findLastIndex((x) => x.includes("DO $$"));
+    const firstIndex = statements.findIndex((x) => x.startsWith("CREATE UNIQUE INDEX"));
+    expect(firstIndex).toBeGreaterThan(lastRename);
+  });
+
+  test("keeps the oldest, numbers the rest with free names within 60 UTF-16 units, then the indexes build", async () => {
+    type Seen = { a: string[]; b: string[]; tie: (string | undefined)[]; p: string[]; q: string[] };
+    let seen: Seen | undefined;
+    // 인덱스를 잠깐 내리고 겹치는 행을 넣은 뒤 마이그레이션 문장을 그대로 돌리고, 끝나면 되돌린다(DDL 도 트랜잭션 안).
+    await db
+      .transaction(async (tx) => {
+        await tx.execute(sql`drop index projects_owner_name_uidx`);
+        await tx.execute(sql`drop index diagrams_project_name_uidx`);
+        const [a] = await tx.insert(users).values({ username: "mig-a", email: "mig-a@example.com", passwordHash: "x" }).returning({ id: users.id });
+        const [b] = await tx.insert(users).values({ username: "mig-b", email: "mig-b@example.com", passwordHash: "x" }).returning({ id: users.id });
+        const at = (sec: number) => new Date(Date.UTC(2026, 0, 1, 0, 0, sec));
+        const tie = (n: number) => `00000000-0000-4000-8000-00000000000${n}`;
+        const longKo = "가".repeat(60);
+        const emoji = "😀".repeat(30); // UTF-16 으로 60
+        await tx.insert(projects).values([
+          { ownerId: a.id, name: "Shop 2", createdAt: at(0) },
+          { ownerId: a.id, name: "Shop", createdAt: at(1) },
+          { ownerId: a.id, name: "shop", createdAt: at(2) },
+          { ownerId: a.id, name: "SHOP", createdAt: at(3) },
+          { id: tie(2), ownerId: a.id, name: "같은 시각", createdAt: at(5) },
+          { id: tie(1), ownerId: a.id, name: "같은 시각", createdAt: at(5) },
+          { ownerId: a.id, name: longKo, createdAt: at(6) },
+          { ownerId: a.id, name: longKo, createdAt: at(7) },
+          { ownerId: a.id, name: emoji, createdAt: at(8) },
+          { ownerId: a.id, name: emoji, createdAt: at(9) },
+          { ownerId: b.id, name: "shop", createdAt: at(4) }, // 다른 사용자는 그대로
+        ]);
+        const [p] = await tx.insert(projects).values({ ownerId: b.id, name: "p", createdAt: at(10) }).returning({ id: projects.id });
+        const [q] = await tx.insert(projects).values({ ownerId: b.id, name: "q", createdAt: at(11) }).returning({ id: projects.id });
+        await tx.insert(diagrams).values([
+          { projectId: p.id, name: "운영", createdAt: at(3) },
+          { projectId: p.id, name: "운영", createdAt: at(1) },
+          { projectId: p.id, name: "운영 2", createdAt: at(2) },
+          { projectId: p.id, name: "운영", createdAt: at(4) },
+          { projectId: q.id, name: "운영", createdAt: at(5) }, // 다른 프로젝트는 그대로
+        ]);
+
+        for (const stmt of renames) await tx.execute(sql.raw(stmt));
+        for (const stmt of indexes) await tx.execute(sql.raw(stmt));
+
+        const ps = await tx.execute<{ owner_id: string; id: string; name: string }>(
+          sql`select owner_id, id, name from projects order by created_at, id`,
+        );
+        const ds = await tx.execute<{ project_id: string; name: string }>(
+          sql`select project_id, name from diagrams order by created_at, id`,
+        );
+        seen = {
+          a: ps.filter((r) => r.owner_id === a.id).map((r) => r.name),
+          b: ps.filter((r) => r.owner_id === b.id).map((r) => r.name),
+          tie: [tie(1), tie(2)].map((id) => ps.find((r) => r.id === id)?.name),
+          p: ds.filter((r) => r.project_id === p.id).map((r) => r.name),
+          q: ds.filter((r) => r.project_id === q.id).map((r) => r.name),
+        };
+        tx.rollback();
+      })
+      .catch((e: unknown) => {
+        if (!(e instanceof TransactionRollbackError)) throw e;
+      });
+
+    expect(seen).toEqual({
+      a: [
+        "Shop 2",
+        "Shop",
+        "shop 3", // "shop 2" 는 "Shop 2" 와 겹친다
+        "SHOP 4", // "SHOP 2", "SHOP 3"(= "shop 3") 도 겹친다
+        "같은 시각", // 같은 시각이면 id 가 작은 쪽이 먼저
+        "같은 시각 2",
+        "가".repeat(60),
+        `${"가".repeat(58)} 2`,
+        "😀".repeat(30),
+        `${"😀".repeat(29)} 2`, // 서로게이트 쌍을 반으로 자르지 않고 UTF-16 60 안에 맞춘다
+      ],
+      b: ["shop", "p", "q"],
+      tie: ["같은 시각", "같은 시각 2"],
+      p: ["운영", "운영 2", "운영 3", "운영 4"],
+      q: ["운영"],
+    });
+    // 되돌린 뒤에는 인덱스와 데이터가 원래대로다.
+    const idx = await db.execute(sql`select indexname from pg_indexes where indexname in ('projects_owner_name_uidx', 'diagrams_project_name_uidx')`);
+    expect(idx).toHaveLength(2);
+    expect(await db.execute(sql`select 1 from users where username like 'mig-%'`)).toHaveLength(0);
   });
 });
