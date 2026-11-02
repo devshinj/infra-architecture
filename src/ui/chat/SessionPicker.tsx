@@ -86,6 +86,16 @@ export function SessionPicker({ sessions, active, labelOf, onSelect, pending = n
               <span className={styles.sessionLabel}>{MAIN_LABEL}</span>
             </button>
           </li>
+          {active === NEW_SESSION && pending && (
+            <li role="none">
+              <button type="button" role="menuitem" className={styles.sessionItem} aria-current="true" onClick={() => choose(NEW_SESSION)}>
+                <span className={styles.sessionLabel}>{sessionName(pending, labelOf)}</span>
+                <time className={styles.sessionTime} dateTime={pending.updatedAt}>
+                  {when(pending.updatedAt)}
+                </time>
+              </button>
+            </li>
+          )}
           {sorted.map((s) => (
             <li key={s.id} role="none">
               <button type="button" role="menuitem" className={styles.sessionItem} {...(active === s.id ? { "aria-current": "true" as const } : {})} onClick={() => choose(s.id)}>
