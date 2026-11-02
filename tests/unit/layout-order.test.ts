@@ -77,13 +77,14 @@ test("a mixed group keeps Writer in place while Reader 1 comes before Reader 2",
   expect([...crossingsOf(g, on)].every((k) => crossingsOf(g, off).has(k))).toBe(true);
 });
 
-// 고정 시드의 임의 구성도: 이름 순서로 자리를 바꿔도 노드를 가로지르는 연결이 새로 생기지 않는다.
-test("random VPC > subnet > group diagrams: reordering adds no edge-through-node crossing", async () => {
+// 고정 시드의 임의 구성도 50개. 그래프는 미리(동기로, 싸게) 다 만들어 두고, 비싼 ELK 배치는 구성도마다
+// 따로 시험한다. 예전에는 50개 × 배치 2번을 한 시험에 몰아 5초 기본 제한의 60% 넘게 썼고, 기계가 바쁘면 넘겼다.
+function randomDiagrams(count: number): DisplayGraph[] {
   let seed = 7;
   const rnd = () => (seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff;
   const pick = <T,>(a: T[]): T => a[Math.floor(rnd() * a.length)]!;
-  let reordered = 0;
-  for (let t = 0; t < 50; t++) {
+  const out: DisplayGraph[] = [];
+  for (let t = 0; t < count; t++) {
     const g: DisplayGraph = { groups: {}, nodes: {}, edges: [] } as unknown as DisplayGraph;
     const grp = (id: string, kind: string, parent: string | null) => ((g.groups as Record<string, unknown>)[id] = { id, groupKind: kind, label: id, parent, collapsed: false, hiddenCount: 0 });
     const nd = (id: string, kind: string, parent: string | null, label: string) => ((g.nodes as Record<string, unknown>)[id] = { id, kind, label, parent, attrs: {} });
@@ -112,13 +113,34 @@ test("random VPC > subnet > group diagrams: reordering adds no edge-through-node
     }
     const outside = ["lb", "lb2", "was", "db", "cache", "mon"];
     for (let k = 0; k < 4; k++) add(pick(outside), pick(outside));
+    out.push(g);
+  }
+  return out;
+}
+
+const RANDOM = randomDiagrams(50);
+
+// 이름 순서로 자리를 바꿔도 노드를 가로지르는 연결이 새로 생기지 않는다.
+test.each(RANDOM.map((g, t) => [t, g] as const))(
+  "random VPC > subnet > group diagram %i: reordering adds no edge-through-node crossing",
+  async (_t, g) => {
     const off = await layoutDiagram(g, {}, { reorder: false });
     const on = await layoutDiagram(g, {});
     const before = crossingsOf(g, off);
-    const added = [...crossingsOf(g, on)].filter((k) => !before.has(k));
-    expect(added, `diagram ${t}`).toEqual([]);
-    if (Object.keys(on.nodes).some((id) => on.nodes[id]!.x !== off.nodes[id]!.x)) reordered++;
+    expect([...crossingsOf(g, on)].filter((k) => !before.has(k))).toEqual([]);
+  },
+);
+
+// 아무 것도 안 바꿔서 통과하는 시험이 되지 않게, 일부는 실제로 바뀐다(처음 바뀌는 것을 찾으면 멈춘다).
+test("random diagrams: reordering actually moves nodes in some of them", async () => {
+  let moved = -1;
+  for (const [t, g] of RANDOM.entries()) {
+    const off = await layoutDiagram(g, {}, { reorder: false });
+    const on = await layoutDiagram(g, {});
+    if (Object.keys(on.nodes).some((id) => on.nodes[id]!.x !== off.nodes[id]!.x)) {
+      moved = t;
+      break;
+    }
   }
-  // 아무 것도 안 바꿔서 통과하는 시험이 되지 않게, 일부는 실제로 바뀐다.
-  expect(reordered).toBeGreaterThan(0);
+  expect(moved).toBeGreaterThanOrEqual(0);
 });

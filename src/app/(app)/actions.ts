@@ -132,8 +132,11 @@ export async function deleteDiagramAction(diagramId: string, leave = false): Pro
   if (next) redirect(next);
 }
 
-export async function duplicateDiagramAction(diagramId: string): Promise<{ id: string; name: string; projectId: string }> {
-  return run(async (uid) => {
+/** 사본 이름을 동시에 빼앗겨 몇 번 다시 시도해도 실패하면 그 안내를 데이터로 돌려준다(운영에서는 던진 메시지가 가려진다). */
+export async function duplicateDiagramAction(
+  diagramId: string,
+): Promise<ActionResult<{ id: string; name: string; projectId: string }>> {
+  return runResult(async (uid) => {
     const src = await getOwnedDiagram(uid, diagramId);
     const d = await duplicateDiagram(uid, diagramId);
     refreshAll();
