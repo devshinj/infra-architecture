@@ -235,6 +235,10 @@ export function Sidebar({ projects, userName }: { projects: SidebarProject[]; us
       startDup(async () => {
         try {
           const d = await duplicateDiagramAction(t.id);
+          if (!d.ok) {
+            setNotice(d.error);
+            return;
+          }
           goDiagram(d.projectId, d.id);
         } catch {
           setNotice("복제하지 못했어요. 잠시 후 다시 시도해 주세요.");

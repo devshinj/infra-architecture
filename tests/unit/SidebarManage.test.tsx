@@ -321,7 +321,7 @@ test("⋯ 메뉴는 목록 아래쪽에 자리가 모자라면 위로 열린다"
 });
 
 test("복제: 진행 중에는 다시 누를 수 없고 상태를 알린다, 끝나면 사본으로 간다", async () => {
-  const d = deferred<{ id: string; name: string; projectId: string }>();
+  const d = deferred<{ ok: true; id: string; name: string; projectId: string }>();
   actions.duplicateDiagramAction.mockReturnValue(d.promise);
   view();
   fireEvent.click(screen.getByRole("button", { name: "운영 메뉴" }));
@@ -329,7 +329,7 @@ test("복제: 진행 중에는 다시 누를 수 없고 상태를 알린다, 끝
   expect(await screen.findByRole("status")).toHaveTextContent("복제하는 중…");
   fireEvent.click(screen.getByRole("button", { name: "개발 메뉴" }));
   expect(screen.getByRole("menuitem", { name: "복제" })).toBeDisabled();
-  await act(async () => d.resolve({ id: "d3", name: "운영 사본", projectId: "p1" }));
+  await act(async () => d.resolve({ ok: true, id: "d3", name: "운영 사본", projectId: "p1" }));
   expect(nav.push).toHaveBeenCalledWith("/p/p1/d/d3");
   expect(actions.duplicateDiagramAction).toHaveBeenCalledTimes(1);
 });
@@ -343,6 +343,16 @@ test("복제가 실패하면 안내를 보이고, 다음 메뉴 동작에서 지
   fireEvent.click(screen.getByRole("button", { name: "운영 메뉴" }));
   fireEvent.click(screen.getByRole("menuitem", { name: "이름 바꾸기" }));
   expect(screen.queryByText(/복제하지 못했어요/)).not.toBeInTheDocument();
+});
+
+test("복제가 이름 충돌로 실패하면 서버가 돌려준 안내를 그대로 보인다", async () => {
+  const error = "이 프로젝트에 같은 이름의 구성도가 이미 있어요. 다른 이름을 써 주세요";
+  actions.duplicateDiagramAction.mockResolvedValue({ ok: false, error });
+  view();
+  fireEvent.click(screen.getByRole("button", { name: "운영 메뉴" }));
+  fireEvent.click(screen.getByRole("menuitem", { name: "복제" }));
+  expect(await screen.findByRole("alert")).toHaveTextContent(error);
+  expect(nav.push).not.toHaveBeenCalled();
 });
 
 test("빈 홈 화면의 시작 버튼은 사이드바와 같은 대화상자를 연다(접힌 레일에서도)", () => {

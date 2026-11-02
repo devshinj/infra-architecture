@@ -8,6 +8,7 @@ import {
   text,
   timestamp,
   unique,
+  uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
 
@@ -44,25 +45,35 @@ export const passwordResetTokens = pgTable("password_reset_tokens", {
   usedAt: timestamp("used_at", { withTimezone: true }),
 });
 
-export const projects = pgTable("projects", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  ownerId: uuid("owner_id").notNull().references(() => users.id, { onDelete: "cascade" }),
-  name: text("name").notNull(),
-  createdAt: createdAt(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
-});
+// 이름은 앞뒤 공백을 지운 채로 저장된다(server/projects.ts cleanName). 그래서 lower(name) 만으로
+// 앱의 비교(대소문자 무시)와 같은 기준이 된다. 같은 사용자의 프로젝트, 같은 프로젝트의 구성도끼리 겹치지 않는다.
+export const projects = pgTable(
+  "projects",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    ownerId: uuid("owner_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    createdAt: createdAt(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex("projects_owner_name_uidx").on(t.ownerId, sql`lower(${t.name})`)],
+);
 
-export const diagrams = pgTable("diagrams", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  projectId: uuid("project_id").notNull().references(() => projects.id, { onDelete: "cascade" }),
-  name: text("name").notNull(),
-  pinnedPositions: jsonb("pinned_positions")
-    .$type<Record<string, { x: number; y: number }>>()
-    .notNull()
-    .default(sql`'{}'::jsonb`),
-  createdAt: createdAt(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
-});
+export const diagrams = pgTable(
+  "diagrams",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    projectId: uuid("project_id").notNull().references(() => projects.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    pinnedPositions: jsonb("pinned_positions")
+      .$type<Record<string, { x: number; y: number }>>()
+      .notNull()
+      .default(sql`'{}'::jsonb`),
+    createdAt: createdAt(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex("diagrams_project_name_uidx").on(t.projectId, sql`lower(${t.name})`)],
+);
 
 export type MessageRole = "user" | "assistant" | "system";
 
