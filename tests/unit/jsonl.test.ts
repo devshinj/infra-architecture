@@ -76,4 +76,42 @@ describe("createJsonlParser", () => {
     p.end();
     expect(values).toEqual([{ a: 1 }]);
   });
+
+  test("object spread over several lines is parsed as one command", () => {
+    const text = '{\n  "op": "update_node",\n  "id": "was-1",\n  "attrs": {\n    "memo": "a } b { c \\" }"\n  }\n}\n';
+    const { values, bad } = run([text]);
+    expect(values).toEqual([{ op: "update_node", id: "was-1", attrs: { memo: 'a } b { c " }' } }]);
+    expect(bad).toEqual([]);
+  });
+
+  test("two pretty objects in a row give two commands, even across chunks", () => {
+    const { values, bad } = run(['{\n  "op": "a"\n}\n{\n  "op"', ': "b"\n}\n']);
+    expect(values).toEqual([{ op: "a" }, { op: "b" }]);
+    expect(bad).toEqual([]);
+  });
+
+  test("single-line objects around a multi-line one still work", () => {
+    const { values, bad } = run(['{"op":"x"}\n{\n"op":"y"\n}\n{"op":"z"}']);
+    expect(values).toEqual([{ op: "x" }, { op: "y" }, { op: "z" }]);
+    expect(bad).toEqual([]);
+  });
+
+  test("unbalanced object is one bad line at the end", () => {
+    const { values, bad } = run(['{\n  "op": "a",\n  "id": 1\n']);
+    expect(values).toEqual([]);
+    expect(bad).toHaveLength(1);
+  });
+
+  test("an unclosed object followed by a new command loses only the broken one", () => {
+    const { values, bad } = run(['{"op":"a",\n{"op":"b"}\n']);
+    expect(values).toEqual([{ op: "b" }]);
+    expect(bad).toHaveLength(1);
+  });
+
+  test("a runaway object is reported once after the line cap", () => {
+    const { values, bad } = run(["{\n" + '"k": 1,\n'.repeat(300)]);
+    expect(values).toEqual([]);
+    expect(bad.length).toBeGreaterThanOrEqual(1);
+    expect(bad.length).toBeLessThan(5);
+  });
 });

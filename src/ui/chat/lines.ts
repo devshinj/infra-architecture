@@ -19,11 +19,13 @@ export interface TurnResult {
 }
 
 /**
- * 차례 끝 요약 칩 글. 바뀐 것도 답도 없으면 "변경 사항이 없어요.", 답만 한 차례면 없음.
+ * 차례 끝 요약 칩 글. 바뀐 것이 없는데 건너뛴 명령이 있으면 읽지 못해 반영하지 못했다고 알린다.
+ * 건너뛴 것도 없고 답도 없으면 "변경 사항이 없어요.", 답만 한 차례면 없음.
  * 재정렬(layout) 차례는 "다시 정렬했어요" 안내와 어긋나므로 칩을 두지 않는다.
  */
 export function summaryText(r: TurnResult, hadAnswer: boolean, intent?: string | null): string | null {
   if (r.version === null && r.applied === 0 && r.status === "complete") {
+    if (r.skipped > 0 && intent !== "layout") return "AI 응답 일부를 읽지 못해 반영하지 못했어요. 다시 말해 주세요.";
     return hadAnswer || intent === "layout" ? null : "변경 사항이 없어요.";
   }
   const counts = `적용 ${r.applied} · 건너뜀 ${r.skipped}`;
