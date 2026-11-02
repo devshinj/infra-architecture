@@ -14,7 +14,7 @@ interface Rule {
 
 const PUBLIC_GROUPS = ["subnet_public", "dmz"];
 export const DATA_KINDS = ["db_rdb", "db_nosql", "cache", "search", "db_proxy", "file_storage"];
-const SPOF_KINDS = ["web_server", "was", "app_server", "db_rdb", "db_nosql", "lb_l4", "lb_l7"];
+const SPOF_KINDS = ["web_server", "was", "app_server", "db_rdb", "db_nosql", "lb_l4", "lb_l7", "db_proxy", "cache"];
 
 /** 노드의 조상 그룹 종류들(순환 방어). */
 function ancestorKinds(state: DiagramState, node: DNode): string[] {
@@ -96,8 +96,8 @@ export function evaluateRules(state: DiagramState): Warning[] {
   }
 
   const redundancy = state.assumptions.redundancy;
-  // 이중화 가정이 없거나 "이중화 없음"(미확정)일 때만 켠다. 확정된 "이중화 없음"(의도)이나 다른 값(이중화됨)이면 끈다.
-  const spofOff = !!redundancy && !(redundancy.value === "이중화 없음" && !redundancy.confirmed);
+  // 이중화 가정 값과 상관없이 redundancy_group 밖의 단일 노드는 경고한다. 사용자가 "이중화 없음"을 확정(의도)했을 때만 끈다.
+  const spofOff = !!redundancy && redundancy.value === "이중화 없음" && redundancy.confirmed;
   if (!spofOff) {
     const spof = ruleOf("spof");
     for (const n of nodes) {

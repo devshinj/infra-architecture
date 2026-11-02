@@ -179,10 +179,16 @@ describe("missing block", () => {
 
   test("missing block only for missing_info_answer", () => {
     const u = user("missing_info_answer");
-    expect(u).toContain("채워야 할 정보:\nwas-1 cpu(CPU)\ne-was-1-db-1 label(프로토콜/포트)\n\n요청: 4코어");
+    expect(u).toContain("채워야 할 정보:\nwas-1 cpu(CPU)\ne-was-1-db-1 label(프로토콜/포트)\n\n값을 반영하는 명령은 한 줄에 JSON 하나로, 줄바꿈 없이 쓴다. 사용자가 말한 대상마다 따로 update_node 를 낸다.\n\n요청: 4코어");
     for (const i of ["structure_change", "question", "other", "history", null] as const) {
       expect(user(i)).not.toContain("채워야 할 정보");
     }
+  });
+
+  test("missing block carries the one-line instruction and the system prompt forbids multi-line objects", () => {
+    expect(user("missing_info_answer")).toContain("값을 반영하는 명령은 한 줄에 JSON 하나로, 줄바꿈 없이 쓴다. 사용자가 말한 대상마다 따로 update_node 를 낸다.");
+    expect(user("structure_change")).not.toContain("줄바꿈 없이 쓴다");
+    expect(SYSTEM_PROMPT).toContain("- JSON 객체 하나를 여러 줄로 나눠 쓰지 않는다.");
   });
 
   test("unknown items are excluded from the block", () => {
@@ -302,3 +308,17 @@ describe("ask prompt", () => {
   });
 });
 
+
+describe("prompt wording from the real-model check", () => {
+  test("system prompt makes the Korean label rule concrete", () => {
+    expect(SYSTEM_PROMPT).toContain('"웹 서버 #1", "API 서버 #2", "공개 서브넷", "메인 VPC"');
+    expect(SYSTEM_PROMPT).toContain("제품명만 원어 그대로 쓴다(CloudFront, Redis, Aurora MySQL");
+  });
+
+  test("ask prompt: call nodes by name not id, and name no product outside the diagram", () => {
+    expect(ASK_PROMPT).toContain("- 답에서 노드 id 를 쓰지 말고 노드 이름(label)으로 부른다.");
+    expect(ASK_PROMPT).toContain("- 구성에 없는 제품·기술 이름을 새로 꺼내지 않는다. 모르면 이 구성 정보만으로는 알 수 없다고 말한다.");
+    const sys = buildAskMessages({ state: sample(), nodeId: "was-1", history: [], text: "?" })[0]!.content;
+    expect(sys).toBe(ASK_PROMPT);
+  });
+});

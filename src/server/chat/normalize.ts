@@ -4,6 +4,8 @@
  * - 생략 가능하지만 null 은 안 되는 칸의 null → 키 제거
  * - add_node / add_group 에 parent 가 없으면 parent: null
  * - attrs 값: 문자열·숫자 배열 → "a, b", true/false → "true"/"false"
+ * - id 처럼 쓰는 칸(id, from, to, parent, target): 소문자로 바꾸고 "_" 를 "-" 로 바꿔 id 형식에 맞으면 그 값을 쓴다.
+ *   모든 명령이 같은 정규화를 거치므로 노드 id 와 그것을 가리키는 칸이 서로 어긋나지 않는다.
  * 그 밖의 값은 그대로 둬서 스키마가 거부하게 한다.
  */
 
@@ -17,6 +19,15 @@ const DROP_NULL: Readonly<Record<string, readonly string[]>> = {
 
 const NEEDS_PARENT: ReadonlySet<string> = new Set(["add_node", "add_group"]);
 const HAS_ATTRS: ReadonlySet<string> = new Set(["add_node", "update_node"]);
+
+const ID_FIELDS = ["id", "from", "to", "parent", "target"] as const;
+const ID_PATTERN = /^[a-z0-9][a-z0-9-]{0,63}$/;
+
+function normalizeId(v: unknown): unknown {
+  if (typeof v !== "string") return v;
+  const c = v.toLowerCase().replace(/_/g, "-");
+  return c !== v && ID_PATTERN.test(c) ? c : v;
+}
 
 const isPlainObject = (v: unknown): v is Record<string, unknown> =>
   typeof v === "object" && v !== null && !Array.isArray(v);
@@ -33,6 +44,9 @@ export function normalizeAiCommand(raw: unknown): unknown {
   const out: Record<string, unknown> = { ...raw };
   for (const key of DROP_NULL[op] ?? []) {
     if (out[key] === null) delete out[key];
+  }
+  for (const key of ID_FIELDS) {
+    if (key in out) out[key] = normalizeId(out[key]);
   }
   if (NEEDS_PARENT.has(op) && !("parent" in out)) out.parent = null;
   if (HAS_ATTRS.has(op) && isPlainObject(out.attrs)) {

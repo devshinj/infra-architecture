@@ -46,12 +46,22 @@ test("confirmed 이중화 없음 turns spof off", () => {
   expect(ids(s)).not.toContain("spof:w");
 });
 
-test("any other redundancy assumption value turns spof off, confirmed or not", () => {
+test("spof fires for a lone node whatever the redundancy assumption value is (only a confirmed 이중화 없음 turns it off)", () => {
   for (const confirmed of [false, true]) {
     const s = build([node("w", "was", "WAS")]);
     s.assumptions.redundancy = { key: "redundancy", value: "웹/WAS/DB 이중화 및 멀티 AZ", confirmed };
-    expect(ids(s)).not.toContain("spof:w");
+    expect(ids(s)).toContain("spof:w");
   }
+  // 이중화 그룹 안이면 가정과 상관없이 없다.
+  const grouped = build([node("w", "was", "WAS", "r")], [["r", "redundancy_group", null]]);
+  grouped.assumptions.redundancy = { key: "redundancy", value: "전 구간 이중화", confirmed: true };
+  expect(ids(grouped)).not.toContain("spof:w");
+});
+
+test("db_proxy and cache are single points of failure too", () => {
+  const s = build([node("p", "db_proxy", "DB 프록시"), node("c", "cache", "Redis"), node("l", "lb_l4", "L4")]);
+  s.assumptions.redundancy = { key: "redundancy", value: "핵심 구간 이중화", confirmed: false };
+  expect(ids(s)).toEqual(expect.arrayContaining(["spof:p", "spof:c", "spof:l"]));
 });
 
 test("client to k8s_ingress or bastion is a legitimate entry, no no_firewall", () => {

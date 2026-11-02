@@ -15,6 +15,9 @@ const KIND_LIST = NODE_KINDS.map((k) => k.kind).filter((k) => k !== "k8s_cluster
 const GROUP_KIND_LIST = GROUP_KINDS.map((k) => k.kind).join(", ");
 const EDGE_KIND_LIST = EDGE_KINDS.map((k) => k.kind).join(", ");
 
+const MISSING_FORMAT_NOTE =
+  "값을 반영하는 명령은 한 줄에 JSON 하나로, 줄바꿈 없이 쓴다. 사용자가 말한 대상마다 따로 update_node 를 낸다.";
+
 export const SYSTEM_PROMPT = `너는 인프라 아키텍처 구성도를 그리는 도구의 엔진이다.
 사용자 요청을 받아 구성도 변경 명령을 JSON Lines 로만 출력한다. 한 줄에 JSON 객체 하나. 다른 글, 코드펜스, 설명 금지.
 
@@ -50,8 +53,9 @@ EDGE_KIND 허용값: ${EDGE_KIND_LIST}
 - 연결은 실제 요청 흐름 방향(호출하는 쪽 → 받는 쪽)으로.
 - edge_kind 는 동기 요청 request, 비동기·이벤트·웹훅 async, 복제·동기화 replication 이다. 모니터링·관리(Bastion, Prometheus 등) 연결은 aux 로 한다.
 - 각 단계마다 say 로 진행 상황을 짧게 알린다.
+- JSON 객체 하나를 여러 줄로 나눠 쓰지 않는다.
 - 기존 구성이 주어지면 바꿀 부분만 명령으로 낸다. 기존 id 를 그대로 쓴다.
-- label, sub, say, set_assumption 의 value 는 모두 한국어로 쓴다. 제품명(Redis, ALB, Tomcat 등)은 원어 그대로.
+- label, sub, say, set_assumption 의 value 는 모두 한국어로 쓴다. label·sub 예시: "웹 서버 #1", "API 서버 #2", "공개 서브넷", "메인 VPC". 제품명만 원어 그대로 쓴다(CloudFront, Redis, Aurora MySQL, ALB, Tomcat 등).
 - external_service 그룹은 우리 회사가 운영하지 않는 타사 서비스(PG사, 카카오, 택배사, 문자 발송 등)에만 쓴다. AWS 관리형 서비스(RDS, MSK, ElastiCache, S3, SQS)는 우리 인프라이므로 해당 위치(VPC/서브넷/리전)에 둔다.
 - Kafka/MSK/Kinesis 는 stream, SQS/RabbitMQ 는 queue.
 - CDN, WAF, DNS 처럼 VPC 밖 전역 서비스는 VPC 밖(리전 그룹 또는 최상위)에 둔다.
@@ -148,7 +152,7 @@ export function buildMessages(input: {
   const labelOf = (id: string, fallback: string) => input.state.nodes[id]?.label ?? input.state.groups[id]?.label ?? fallback;
   const refs = input.mentions.length ? input.mentions.map((m) => `${m.id} ${labelOf(m.id, m.label).replace(/\s+/g, " ")}`).join("\n") : "없음";
   const open = input.intent === "missing_info_answer" ? (input.missing ?? []).filter((m) => !m.unknown).slice(0, MISSING_LINES_MAX) : [];
-  const missingBlock = open.length ? `채워야 할 정보:\n${open.map((m) => `${m.targetId} ${m.key}(${m.label})`).join("\n")}\n\n` : "";
+  const missingBlock = open.length ? `채워야 할 정보:\n${open.map((m) => `${m.targetId} ${m.key}(${m.label})`).join("\n")}\n\n${MISSING_FORMAT_NOTE}\n\n` : "";
   const user = `현재 구성:\n${summarizeState(input.state)}\n\n참조 노드:\n${refs}\n\n${missingBlock}요청: ${input.text}`;
   return [
     { role: "system", content: system },
@@ -291,6 +295,8 @@ export const ASK_PROMPT = `너는 인프라 아키텍처 구성도 도구의 도
 - 1~4문장으로 짧게 쓴다.
 - 근거는 주어진 "대상 노드"(종류·SW·속성·연결된 노드)와 "설명"(있으면)뿐이다. 거기에 없는 내용은 지어내지 말고 모른다고 말한다.
 - 제품명(Redis, ALB, Tomcat 등)은 원어 그대로 쓴다.
+- 답에서 노드 id 를 쓰지 말고 노드 이름(label)으로 부른다.
+- 구성에 없는 제품·기술 이름을 새로 꺼내지 않는다. 모르면 이 구성 정보만으로는 알 수 없다고 말한다.
 - 사용자가 구성을 바꿔 달라고 하면 바꾸지 않는다. 구성 변경은 구성도 대화에서 요청해 달라고 짧게 안내한다.`;
 
 /** 설명 항목 한 줄. 줄바꿈을 접어 한 항목이 한 줄이 되게 한다. */

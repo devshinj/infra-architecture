@@ -397,3 +397,31 @@ test("findOverlaps also checks the paired warning badge left of the corner badge
   // 경고 원 없이 모서리 원만 보던 예전 검사로는 안 걸린다.
   expect(findOverlaps({ ...l, nodes: { n, m: { ...m, x: 100 } } } as unknown as Layout, { ring: 0, badge: 8 })).toEqual([]);
 });
+
+test("redundancy group members inserted as #3,#1,#2,#4 lay out left to right as #1,#2,#3,#4", async () => {
+  const { state, errors } = applyCommands(emptyState(), [
+    { op: "add_group", id: "vpc", group_kind: "vpc", label: "VPC", parent: null },
+    { op: "add_node", id: "lb", kind: "lb_l4", label: "L4", parent: "vpc" },
+    { op: "add_group", id: "pool", group_kind: "redundancy_group", label: "웹 서버 VIP", parent: "vpc" },
+    { op: "add_node", id: "web-3", kind: "web_server", label: "웹 서버 #3", parent: "pool" },
+    { op: "add_node", id: "web-1", kind: "web_server", label: "웹 서버 #1", parent: "pool" },
+    { op: "add_node", id: "web-2", kind: "web_server", label: "웹 서버 #2", parent: "pool" },
+    { op: "add_node", id: "web-4", kind: "web_server", label: "웹 서버 #4", parent: "pool" },
+    { op: "add_edge", from: "lb", to: "web-3", edge_kind: "request" },
+    { op: "add_edge", from: "lb", to: "web-1", edge_kind: "request" },
+    { op: "add_edge", from: "lb", to: "web-2", edge_kind: "request" },
+    { op: "add_edge", from: "lb", to: "web-4", edge_kind: "request" },
+  ]);
+  expect(errors).toEqual([]);
+  const l = await lay(state);
+  const xs = ["web-1", "web-2", "web-3", "web-4"].map((id) => l.nodes[id].x);
+  expect([...xs].sort((a, b) => a - b)).toEqual(xs);
+  expect(new Set(["web-1", "web-2", "web-3", "web-4"].map((id) => l.nodes[id].y)).size).toBe(1);
+  // 자리를 바꾼 노드로 드나드는 연결도 노드 테두리에서 끝난다.
+  for (const e of l.edges) {
+    const de = Object.values(state.edges).find((x) => x.id === e.id)!;
+    expect(onBorder(e.points[0], rectOf(l, de.from)), `${e.id} start`).toBe(true);
+    expect(onBorder(e.points[e.points.length - 1], rectOf(l, de.to)), `${e.id} end`).toBe(true);
+  }
+  expect(findOverlaps(l)).toEqual([]);
+});

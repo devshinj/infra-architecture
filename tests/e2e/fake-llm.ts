@@ -155,7 +155,7 @@ export function startFakeLlm(): Promise<http.Server> {
       for (const [key, q] of Object.entries(body.questions ?? {})) {
         answers[key] =
           q?.type === "noul"
-            ? { type: "noul", probability: exposed ? 0.95 : 0.1 }
+            ? { type: "noul", noul: exposed ? 0.95 : 0.1 }
             : q?.type === "score"
               ? { type: "score", score: 0.5 }
               : { type: "choice", choice: intentFor(body.state), confidence: 0.95, probabilities: {} };

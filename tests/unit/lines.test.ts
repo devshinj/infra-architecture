@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 
-import { messagesToLines } from "@/ui/chat/lines";
+import { messagesToLines, summaryText } from "@/ui/chat/lines";
 
 test("reload has no missing-info line (the canvas card shows it)", () => {
   const lines = messagesToLines([
@@ -123,4 +123,16 @@ test("an empty handoffText falls back to the preceding user text", () => {
     { id: "a1", role: "assistant", content: "안내", meta: { handoff: true, handoffText: "", says: ["안내"] } },
   ]);
   expect(lines.find((l) => l.kind === "handoff")?.text).toBe("추가해 줘");
+});
+
+test("summary: nothing applied but commands skipped says the reply could not be read", () => {
+  const msg = "요청을 반영하지 못했어요. 다시 말해 주세요.";
+  expect(summaryText({ version: null, status: "complete", applied: 0, skipped: 1 }, false, "missing_info_answer")).toBe(msg);
+  expect(summaryText({ version: null, status: "complete", applied: 0, skipped: 0 }, false, "missing_info_answer")).toBe("변경 사항이 없어요.");
+  expect(summaryText({ version: null, status: "complete", applied: 0, skipped: 2 }, false, "layout")).toBeNull();
+  const lines = messagesToLines([
+    { id: "u1", role: "user", content: "IP는 10.0.2.11", meta: {} },
+    { id: "a1", role: "assistant", content: "", meta: { intent: "missing_info_answer", applied: 0, skipped: 1, version: null, status: "complete" } },
+  ]);
+  expect(lines.map((l) => [l.kind, l.text])).toEqual([["user", "IP는 10.0.2.11"], ["summary", msg]]);
 });

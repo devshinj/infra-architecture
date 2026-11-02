@@ -338,6 +338,13 @@ describe("noulProbability", () => {
     expect(noulProbability({ probability: -0.2 })).toBe(0);
   });
 
+  test("noulProbability reads the real Clef shape (noul field) first and clamps", () => {
+    expect(noulProbability({ type: "noul", noul: 0.97 })).toBe(0.97);
+    expect(noulProbability({ type: "noul", noul: 1.4 })).toBe(1);
+    expect(noulProbability({ type: "noul", noul: -0.3 })).toBe(0);
+    expect(noulProbability({ type: "noul", noul: 0.2, probability: 0.9 })).toBe(0.2);
+  });
+
   test("unknown shape gives null", () => {
     expect(noulProbability(undefined)).toBeNull();
     expect(noulProbability({})).toBeNull();
