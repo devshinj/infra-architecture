@@ -25,17 +25,23 @@ async function importSample(page: Page, title: string) {
   await page.getByRole("menuitem", { name: title }).click();
 }
 
-/** `이미지로 내보내기` 메뉴에서 한 항목을 골라 내려받은 파일을 돌려준다. */
+const EXPORT = "이미지 저장";
+
+/** `이미지 저장` 메뉴에서 한 항목을 골라 내려받은 파일을 돌려준다. */
 async function exportAs(page: Page, item: string) {
-  await page.getByRole("button", { name: "이미지로 내보내기" }).click();
-  const menu = page.getByRole("menu", { name: "이미지로 내보내기" });
+  const trigger = page.getByRole("button", { name: EXPORT, exact: true });
+  await trigger.click();
+  const menu = page.getByRole("menu", { name: EXPORT });
   await expect(menu).toBeVisible();
+  // 메뉴를 열면 지난 알림이 걷힌다(이전 '저장했어요'가 이번 확인을 대신하지 않게).
+  const status = page.locator(".canvas__export-note[role=status]");
+  await expect(status).toBeEmpty();
   const download = page.waitForEvent("download", { timeout: 60_000 });
   await menu.getByRole("menuitem", { name: item }).click();
   const d = await download;
-  const path = await d.path();
-  const body = await readFile(path);
-  await expect(page.getByRole("status").filter({ hasText: "이미지를 저장했어요." })).toBeVisible();
+  const body = await readFile(await d.path());
+  await expect(status).toHaveText("이미지를 저장했어요.");
+  await expect(trigger).toBeEnabled();
   return { name: d.suggestedFilename(), body };
 }
 
@@ -46,22 +52,27 @@ test("구성도를 PNG·SVG, 어두운·흰 바탕으로 내보낸다", async ({
   await newProject(page, "쇼핑몰");
 
   // 빈 구성도: 내보내기는 막혀 있고 까닭을 알려 준다.
-  const trigger = page.getByRole("button", { name: "이미지로 내보내기" });
+  const trigger = page.getByRole("button", { name: EXPORT, exact: true });
   await expect(trigger).toBeDisabled();
   await expect(trigger).toHaveAttribute("title", /비어 있어/);
 
   await importSample(page, "IDC WEB-WAS-DB 이중화");
   await expect(page.locator(".react-flow__node-infra")).toHaveCount(9);
   await expect(trigger).toBeEnabled();
+  // 보조 연결 숨김(기본) 상태에서 노드를 고르면 그 노드의 보조 연결이 화면에만 드러난다. 그림에는 넣지 않는다.
+  const baseEdges = await page.locator(".edge-layer g[data-edge-id]").evaluateAll((els) => els.map((e) => e.getAttribute("data-edge-id")!));
   // 노드를 골라 흐림·강조가 있는 화면에서 내보내도 그림은 평상시 모습이다(화면은 그대로 남는다).
   await page.getByTitle("WAS#1").click();
   await expect(page.locator(".edge--dim").first()).toBeAttached();
+  await expect(trigger).toBeEnabled();
+  const selectedEdges = await page.locator(".edge-layer g[data-edge-id]").evaluateAll((els) => els.map((e) => e.getAttribute("data-edge-id")!));
+  const selectionOnly = selectedEdges.filter((id) => !baseEdges.includes(id));
 
   // Esc 로 닫힌다.
   await trigger.click();
-  await expect(page.getByRole("menu", { name: "이미지로 내보내기" })).toBeVisible();
+  await expect(page.getByRole("menu", { name: EXPORT })).toBeVisible();
   await page.keyboard.press("Escape");
-  await expect(page.getByRole("menu", { name: "이미지로 내보내기" })).toHaveCount(0);
+  await expect(page.getByRole("menu", { name: EXPORT })).toHaveCount(0);
   await expect(trigger).toBeFocused();
 
   const darkPng = await exportAs(page, "PNG 어두운 바탕(화면과 같음)");
@@ -90,11 +101,16 @@ test("구성도를 PNG·SVG, 어두운·흰 바탕으로 내보낸다", async ({
   const lightText = lightSvg.body.toString("utf8");
   expect(lightText).toContain("WAS#1");
   expect(lightText).toContain("rgb(255, 255, 255)");
-  // 화면 장치(배지·접기 버튼·말풍선)와 움직임 겹선은 그림에 없다.
+  // 화면 장치(배지·접기 버튼·말풍선)·움직임 겹선·선택 강조·흐림은 그림에 없다.
   for (const t of [lightText, darkText]) {
     expect(t).not.toContain("node__badge");
     expect(t).not.toContain("group__toggle");
     expect(t).not.toContain("motion-path");
+    expect(t).not.toContain("node--selected");
+    expect(t).not.toContain("edge--dim");
+    expect(t).not.toContain("edge--faded");
+    for (const id of selectionOnly) expect(t, id).not.toContain(`data-edge-id="${id}"`);
+    for (const id of baseEdges) expect(t, id).toContain(`data-edge-id="${id}"`);
   }
 
   // 화면은 흰 바탕으로 바뀌지 않았고 선택도 그대로다.
