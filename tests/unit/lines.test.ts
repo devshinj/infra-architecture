@@ -126,7 +126,7 @@ test("an empty handoffText falls back to the preceding user text", () => {
 });
 
 test("summary: nothing applied but commands skipped says the reply could not be read", () => {
-  const msg = "AI 응답 일부를 읽지 못해 반영하지 못했어요. 다시 말해 주세요.";
+  const msg = "요청을 반영하지 못했어요. 다시 말해 주세요.";
   expect(summaryText({ version: null, status: "complete", applied: 0, skipped: 1 }, false, "missing_info_answer")).toBe(msg);
   expect(summaryText({ version: null, status: "complete", applied: 0, skipped: 0 }, false, "missing_info_answer")).toBe("변경 사항이 없어요.");
   expect(summaryText({ version: null, status: "complete", applied: 0, skipped: 2 }, false, "layout")).toBeNull();

@@ -40,8 +40,8 @@ test("가입 → 프로젝트·구성도 → 샘플 → 선택 → 편집 이동
 
   await page.getByTitle("WAS#1").click();
   await expect(page.getByRole("tab", { name: "설명", selected: true })).toBeVisible();
-  // 흐려진 연결이 있는지만 본다. 곧은 세로 토막은 폭이 0 이라 "보이는지"는 배치에 따라 달라진다.
-  await expect(page.locator(".edge--dim")).not.toHaveCount(0);
+  // 곧은 세로 토막은 폭이 0 이라 첫 연결의 모양에 기대지 않고, 보이는 흐린 연결이 있는지 본다.
+  await expect(page.locator(".edge--dim").filter({ visible: true }).first()).toBeVisible();
 
   // 편집 모드에서 드래그 → 새로고침 후 위치 유지
   await page.getByRole("button", { name: "위치 옮기기" }).click();
