@@ -247,7 +247,9 @@ export async function layoutDiagram(g: DisplayGraph, pinned: Record<string, { x:
       };
       slide(de.to, pts.length - 1, pts.length - 2);
       slide(de.from, 0, 1);
-      edges.set(id, pts);
+      // 옮기고 나면 이웃한 두 점이 겹칠 수 있다. 길이가 0인 토막은 그리지 못하므로 뺀다.
+      const clean = pts.filter((q, i) => i === 0 || Math.abs(q.x - pts[i - 1].x) > 0.01 || Math.abs(q.y - pts[i - 1].y) > 0.01);
+      edges.set(id, clean);
     }
     rects.delete(ROOT);
     return { rects, edges };
