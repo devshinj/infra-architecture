@@ -18,7 +18,7 @@ const VIEWPORT = `
     <div class="react-flow__node react-flow__node-zone"><div class="group group--selected" data-group-kind="vpc">
       <div class="group__head"><span class="group__name">VPC</span><button class="group__toggle">접기</button></div>
     </div></div>
-    <div class="react-flow__node react-flow__node-infra selected"><div class="node node--selected node--pulse">
+    <div class="react-flow__node react-flow__node-infra selected" tabindex="0"><div class="node node--selected node--pulse">
       <span class="node__text"><span class="node__label">웹 서버</span></span>
       <button class="node__badge node__badge--missing" aria-label="빠진 정보 2개">2</button>
       <div class="name-tooltip" id="tip-1">웹 서버 전체 이름</div>
@@ -31,10 +31,12 @@ const VIEWPORT = `
   <div class="react-flow__viewport-portal">
     <svg class="edge-layer">
       <g data-bundle="b1">
-        <g class="edge-seg edge--dim"><path class="edge-line edge-line--request edge-line--appear" style="--len: 120;"></path>
+        <g class="edge-seg edge--dim" data-edge-ids="e1 e2"><path class="edge-line edge-line--request edge-line--appear" style="--len: 120;"></path>
           <g data-motion-seg="s1"><path class="motion-path motion-comet"></path><rect class="motion-capsule"></rect></g></g>
       </g>
+      <g data-bundle="b2"><g class="edge-seg" data-edge-ids="aux1"><path class="edge-line edge-line--aux"></path></g></g>
       <g class="edge edge--faded edge--selected" data-edge-id="e1"><path class="edge-arrow"></path><path class="edge-hit"></path></g>
+      <g class="edge" data-edge-id="aux1"><path class="edge-arrow edge-arrow--aux"></path><text class="edge-label">관리</text></g>
       <g class="edge" data-edge-id="e2"><path class="edge-hit"></path><text class="edge-label">이미 보임</text></g>
     </svg>
   </div>
@@ -77,10 +79,14 @@ test("neutralizeClone freezes the neutral state and drops chrome, without touchi
   const viewport = mount();
   const before = viewport.outerHTML;
   const clone = viewport.cloneNode(true) as HTMLElement;
-  neutralizeClone(clone, [
-    { id: "e1", label: "HTTPS", x: 170, y: 196 },
-    { id: "e2", label: "이미 보임", x: 320, y: 126 },
-  ]);
+  neutralizeClone(
+    clone,
+    [
+      { id: "e1", label: "HTTPS", x: 170, y: 196 },
+      { id: "e2", label: "이미 보임", x: 320, y: 126 },
+    ],
+    new Set(["e1", "e2"]),
+  );
 
   for (const c of ["node--selected", "node--dimmed", "node--faded", "node--appearing", "node--pulse", "group--selected", "edge--dim", "edge--faded", "edge--selected", "edge-line--appear", "selected"]) {
     expect(clone.getElementsByClassName(c), c).toHaveLength(0);
@@ -97,6 +103,12 @@ test("neutralizeClone freezes the neutral state and drops chrome, without touchi
   expect(clone.querySelectorAll('[data-edge-id="e2"] .edge-label')).toHaveLength(1);
   expect(clone.querySelector<SVGElement>(".edge-line")!.style.getPropertyValue("--len")).toBe("");
   expect(clone.querySelector("[id]")).toBeNull();
+  expect(clone.querySelector("[tabindex]")).toBeNull();
+  // 선택 때문에만 보이던 보조 연결(기준 배치에 없는 연결)은 선·화살표·이름 모두 빠진다.
+  expect(clone.querySelector('[data-edge-id="aux1"]')).toBeNull();
+  expect(clone.querySelector('[data-edge-ids="aux1"]')).toBeNull();
+  expect(clone.textContent).not.toContain("관리");
+  expect(clone.querySelector('[data-edge-ids="e1 e2"]')).not.toBeNull();
   // 노드 이름·영역 이름은 남는다.
   expect(clone.textContent).toContain("웹 서버");
   expect(clone.textContent).toContain("VPC");
@@ -111,6 +123,7 @@ test("buildStage sits off screen, frames the viewport and remaps tokens only for
   expect(dark.holder.style.position).toBe("fixed");
   expect(dark.holder.style.left).toBe("-100000px");
   expect(dark.holder.firstElementChild).toBe(dark.stage);
+  expect(dark.holder.inert).toBe(true);
   expect(dark.stage.dataset.exportBg).toBe("dark");
   expect(dark.stage.style.left).toBe("");
   expect(dark.stage.style.position).toBe("relative");
@@ -172,6 +185,35 @@ test("exportDiagramImage writes SVG text (not a data URL) for the svg format", a
   expect(lib.toSvg.mock.calls[0]![1].pixelRatio).toBeUndefined();
   expect(blobs[0]!.type).toContain("image/svg+xml");
   expect(await blobs[0]!.text()).toBe("<svg><text>웹 서버</text></svg>");
+});
+
+test("exportDiagramImage drops edges missing from the base layout (selection-only aux edges)", async () => {
+  const viewport = mount();
+  vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {});
+  let aux: Element | null | undefined;
+  lib.toBlob.mockImplementation(async (stage: HTMLElement) => {
+    aux = stage.querySelector('[data-edge-id="aux1"]');
+    return new Blob(["png"]);
+  });
+  await exportDiagramImage({ viewport, layout: LAYOUT, edges: EDGES, format: "png", background: "dark", fileName: "a.png" });
+  expect(aux).toBeNull();
+  expect(viewport.querySelector('[data-edge-id="aux1"]')).not.toBeNull();
+});
+
+test("exportDiagramImage still exports without the font when font embedding fails, and retries it next time", async () => {
+  vi.resetModules();
+  const fresh = await import("@/canvas/exportImage");
+  const viewport = mount();
+  const click = vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {});
+  const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+  lib.getFontEmbedCSS.mockRejectedValueOnce(new Error("font fetch failed"));
+  await fresh.exportDiagramImage({ viewport, layout: LAYOUT, edges: EDGES, format: "png", background: "dark", fileName: "a.png" });
+  expect(click).toHaveBeenCalledTimes(1);
+  expect(lib.toBlob.mock.calls[0]![1].fontEmbedCSS).toBe("");
+  expect(warn).toHaveBeenCalled();
+  await fresh.exportDiagramImage({ viewport, layout: LAYOUT, edges: EDGES, format: "png", background: "dark", fileName: "a.png" });
+  expect(lib.getFontEmbedCSS).toHaveBeenCalledTimes(2);
+  expect(lib.toBlob.mock.calls[1]![1].fontEmbedCSS).toBe("@font-face{font-family:SUIT}");
 });
 
 test("exportDiagramImage removes the stage and rethrows when capture fails", async () => {

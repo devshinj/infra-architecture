@@ -11,8 +11,11 @@ import {
   exportFrame,
   keepInExport,
   LIGHT_BACKGROUND,
+  labelRect,
   LIGHT_TOKENS,
-  MAX_EXPORT_SIDE,
+  MAX_CANVAS_AREA,
+  MAX_CANVAS_SIDE,
+  PNG_PIXEL_RATIO,
   sanitizeFileName,
 } from "@/canvas/exportImage";
 import type { DisplayEdge } from "@/canvas/display";
@@ -56,23 +59,47 @@ test("diagramBounds unions nodes, groups, edge bends and label anchors", () => {
   expect(diagramBounds({ nodes: {}, groups: {}, edges: [] })).toBeNull();
 });
 
+test("diagramBounds includes the estimated box of each edge label, not just its center", () => {
+  const label = { id: "e", label: "MySQL 3306 복제", x: 380, y: 30 };
+  const r = labelRect(label);
+  expect(r.width).toBeGreaterThan(60);
+  expect(r.height).toBeGreaterThan(11);
+  expect(r.x + r.width / 2).toBeCloseTo(380);
+  const b = diagramBounds(layout(), [label])!;
+  // 영역 오른쪽 끝(380)을 이름 상자의 오른쪽 절반만큼 넘는다.
+  expect(b.x + b.width).toBeCloseTo(r.x + r.width);
+  expect(b.x + b.width).toBeGreaterThan(380 + 30);
+});
+
 test("exportFrame pads the whole diagram at zoom 1 and maps its corner to the padding", () => {
   const f = exportFrame({ x: 80, y: 20, width: 300, height: 200 });
   expect(f).toEqual({ width: 300 + 2 * EXPORT_PADDING, height: 200 + 2 * EXPORT_PADDING, x: EXPORT_PADDING - 80, y: EXPORT_PADDING - 20, zoom: 1 });
   // 음수 좌표(고정 위치를 왼쪽 위로 끈 노드)도 여백 안으로 들어온다.
-  const neg = exportFrame({ x: -50, y: -10, width: 100, height: 100 }, 20);
+  const neg = exportFrame({ x: -50, y: -10, width: 100, height: 100 }, { padding: 20 });
   expect(neg.x).toBe(70);
   expect(neg.y).toBe(30);
 });
 
-test("exportFrame scales a huge diagram down so the longest side fits the cap", () => {
-  const f = exportFrame({ x: 0, y: 0, width: 12_000, height: 3_000 });
-  expect(f.zoom).toBeCloseTo(MAX_EXPORT_SIDE / (12_000 + 2 * EXPORT_PADDING));
-  expect(f.width).toBeLessThanOrEqual(MAX_EXPORT_SIDE);
-  expect(f.height).toBeLessThan(f.width);
+test("exportFrame keeps each pixel side under the cap, counting the PNG pixel ratio", () => {
+  const f = exportFrame({ x: 0, y: 0, width: 12_000, height: 1_000 }, { pixelRatio: PNG_PIXEL_RATIO });
+  expect(f.zoom).toBeCloseTo(MAX_CANVAS_SIDE / ((12_000 + 2 * EXPORT_PADDING) * PNG_PIXEL_RATIO));
+  expect(f.width * PNG_PIXEL_RATIO).toBeLessThanOrEqual(MAX_CANVAS_SIDE);
   expect(f.x).toBeCloseTo(EXPORT_PADDING * f.zoom);
+  // 같은 그림도 SVG(배율 1)는 두 배 크게 둔다.
+  expect(exportFrame({ x: 0, y: 0, width: 12_000, height: 1_000 }).zoom).toBeCloseTo(f.zoom * 2);
   // 작은 구성도는 키우지 않는다.
-  expect(exportFrame({ x: 0, y: 0, width: 10, height: 10 }).zoom).toBe(1);
+  expect(exportFrame({ x: 0, y: 0, width: 10, height: 10 }, { pixelRatio: 2 }).zoom).toBe(1);
+});
+
+test("exportFrame keeps the pixel area under the canvas limit (iOS Safari ≈16.7M px)", () => {
+  // 3800×3800 CSS px 는 한 변(×2 = 7.7k)은 괜찮지만 넓이(×4 ≈ 59M)가 넘는다.
+  const f = exportFrame({ x: 0, y: 0, width: 3800, height: 3800 }, { pixelRatio: PNG_PIXEL_RATIO });
+  const area = f.width * PNG_PIXEL_RATIO * (f.height * PNG_PIXEL_RATIO);
+  expect(area).toBeLessThanOrEqual(MAX_CANVAS_AREA);
+  expect(area).toBeGreaterThan(MAX_CANVAS_AREA * 0.98);
+  expect(f.width * PNG_PIXEL_RATIO).toBeLessThanOrEqual(MAX_CANVAS_SIDE);
+  // 보통 크기(큰 샘플 ≈ 2050×1384)는 줄이지 않는다.
+  expect(exportFrame({ x: 0, y: 0, width: 1970, height: 1304 }, { pixelRatio: PNG_PIXEL_RATIO }).zoom).toBe(1);
 });
 
 test("edgeLabels lists every named edge that is drawn, hover-only or not", () => {

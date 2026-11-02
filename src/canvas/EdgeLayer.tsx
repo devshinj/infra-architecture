@@ -128,6 +128,7 @@ export function EdgeLayer({ layout, edges, selectedId, hoverId, onHover, hoverLa
                 key={s.key}
                 className={`edge-seg${isDim(s.edgeIds) ? " edge--dim" : ""}${isFaded(s.edgeIds) ? " edge--faded" : ""}${degraded ? " edge--degraded" : ""}`}
                 data-seg-shared={s.edgeIds.length > 1 ? "true" : undefined}
+                data-edge-ids={s.edgeIds.join(" ")}
                 data-edge-kind={s.edgeKind}
               >
                 <path className={cls(`edge-line--${s.edgeKind}`)} d={s.d} style={style} />

@@ -1,5 +1,6 @@
 import type { DisplayEdge } from "./display";
 import type { Layout, Rect } from "./layout";
+import { textWidth } from "./text";
 
 /**
  * 구성도 이미지 내보내기(PNG·SVG). 화면에 그려진 React Flow 뷰포트(.react-flow__viewport)를 복제해
@@ -12,8 +13,10 @@ export type ExportBackground = "dark" | "light";
 
 /** 구성도 둘레 여백(구성도 좌표 px). */
 export const EXPORT_PADDING = 40;
-/** 이미지 한 변의 최대 길이(CSS px, PNG 는 여기에 pixelRatio 를 곱한다). 넘으면 비율대로 줄인다. */
-export const MAX_EXPORT_SIDE = 4096;
+/** 그림(캔버스) 한 변의 최대 픽셀(pixelRatio 를 곱한 뒤). 넘으면 비율대로 줄인다. */
+export const MAX_CANVAS_SIDE = 8192;
+/** 그림 넓이의 최대 픽셀(pixelRatio 를 곱한 뒤). iOS Safari 캔버스 한도(약 16.7M) 아래로 둔다. */
+export const MAX_CANVAS_AREA = 16_000_000;
 export const PNG_PIXEL_RATIO = 2;
 export const LIGHT_BACKGROUND = "#FFFFFF";
 
@@ -42,8 +45,19 @@ export function exportFileName(projectName: string | undefined, diagramName: str
   return `${base || FALLBACK_NAME}.${format}`;
 }
 
-/** 노드·영역 상자와 연결선 꺾임점·이름 자리를 모두 감싸는 사각형. 그릴 것이 없으면 null. */
-export function diagramBounds(layout: Pick<Layout, "nodes" | "groups" | "edges">): Rect | null {
+/** 연결 이름 글자 크기(edges.css .edge-label)와 글자 둘레 테두리(stroke 3px) 몫. */
+const LABEL_PX = 11;
+const LABEL_HALO = 3;
+
+/** 연결 이름이 차지하는 상자(가운데 정렬, 너비는 글자 수로 어림한다). */
+export function labelRect(l: Pick<EdgeLabel, "label" | "x" | "y">): Rect {
+  const width = textWidth(l.label, LABEL_PX) + 2 * LABEL_HALO;
+  const height = LABEL_PX * 1.4 + 2 * LABEL_HALO;
+  return { x: l.x - width / 2, y: l.y - height / 2, width, height };
+}
+
+/** 노드·영역 상자와 연결선 꺾임점, 연결 이름 상자를 모두 감싸는 사각형. 그릴 것이 없으면 null. */
+export function diagramBounds(layout: Pick<Layout, "nodes" | "groups" | "edges">, labels: EdgeLabel[] = []): Rect | null {
   let x1 = Infinity, y1 = Infinity, x2 = -Infinity, y2 = -Infinity;
   const add = (x: number, y: number, w = 0, h = 0) => {
     x1 = Math.min(x1, x);
@@ -55,6 +69,10 @@ export function diagramBounds(layout: Pick<Layout, "nodes" | "groups" | "edges">
   for (const e of layout.edges) {
     for (const p of e.points) add(p.x, p.y);
     if (e.labelAt) add(e.labelAt.x, e.labelAt.y);
+  }
+  for (const l of labels) {
+    const r = labelRect(l);
+    add(r.x, r.y, r.width, r.height);
   }
   return x1 === Infinity ? null : { x: x1, y: y1, width: x2 - x1, height: y2 - y1 };
 }
@@ -69,17 +87,27 @@ export interface ExportFrame {
   zoom: number;
 }
 
+export interface FrameLimits {
+  padding?: number;
+  /** 그림 1 CSS px 당 픽셀 수(PNG 2, SVG 1). 한도는 이것을 곱한 픽셀로 잰다. */
+  pixelRatio?: number;
+  maxSide?: number;
+  maxArea?: number;
+}
+
 /**
  * 구성도 전체를 여백과 함께 담는 이미지 크기와 뷰포트 변환(React Flow 예제의 getViewportForBounds 와 같은 계산을
- * 배율 1 로 고정해 한다). 한 변이 maxSide 를 넘으면 그만큼 줄인다(확대는 하지 않는다).
+ * 배율 1 로 고정해 한다). 픽셀로 잰 한 변이 maxSide, 넓이가 maxArea 를 넘으면 그만큼 줄인다(확대는 하지 않는다).
  */
-export function exportFrame(bounds: Rect, padding = EXPORT_PADDING, maxSide = MAX_EXPORT_SIDE): ExportFrame {
+export function exportFrame(bounds: Rect, limits: FrameLimits = {}): ExportFrame {
+  const { padding = EXPORT_PADDING, pixelRatio = 1, maxSide = MAX_CANVAS_SIDE, maxArea = MAX_CANVAS_AREA } = limits;
   const w0 = Math.max(1, bounds.width + 2 * padding);
   const h0 = Math.max(1, bounds.height + 2 * padding);
-  const zoom = Math.min(1, maxSide / w0, maxSide / h0);
+  const zoom = Math.min(1, maxSide / (w0 * pixelRatio), maxSide / (h0 * pixelRatio), Math.sqrt(maxArea / (w0 * h0)) / pixelRatio);
   return {
-    width: Math.max(1, Math.ceil(w0 * zoom)),
-    height: Math.max(1, Math.ceil(h0 * zoom)),
+    // 올림 때문에 한도를 넘지 않게 내림한다.
+    width: Math.max(1, Math.floor(w0 * zoom)),
+    height: Math.max(1, Math.floor(h0 * zoom)),
     x: (padding - bounds.x) * zoom,
     y: (padding - bounds.y) * zoom,
     zoom,
@@ -203,7 +231,15 @@ export function edgeLabels(layout: Pick<Layout, "edges">, edges: DisplayEdge[]):
  * 복제한 뷰포트를 정지한 평상시 모습으로 만든다: 선택·호버 강조와 흐림, 등장 효과를 걷고, 움직임 겹선과 화면 장치를
  * 지우고, 빠진 연결 이름을 채운다. 복제본만 바꾸며 화면의 원본은 그대로다.
  */
-export function neutralizeClone(root: Element, labels: EdgeLabel[] = []): void {
+export function neutralizeClone(root: Element, labels: EdgeLabel[] = [], keepEdgeIds?: Set<string>): void {
+  // 선택 때문에만 보이는 연결(보조 연결 숨김 중 선택한 노드의 보조 연결)은 그림에 넣지 않는다.
+  if (keepEdgeIds) {
+    for (const g of [...root.querySelectorAll("g[data-edge-id]")]) if (!keepEdgeIds.has(g.getAttribute("data-edge-id") ?? "")) g.remove();
+    for (const g of [...root.querySelectorAll("g[data-edge-ids]")]) {
+      const ids = (g.getAttribute("data-edge-ids") ?? "").split(" ").filter(Boolean);
+      if (ids.length > 0 && !ids.some((i) => keepEdgeIds.has(i))) g.remove();
+    }
+  }
   for (const [from, to] of NEUTRAL_SWAPS) {
     for (const el of [...root.getElementsByClassName(from)]) {
       el.classList.remove(from);
@@ -214,6 +250,9 @@ export function neutralizeClone(root: Element, labels: EdgeLabel[] = []): void {
   for (const el of root.querySelectorAll<SVGElement | HTMLElement>("[style]")) el.style.removeProperty("--len");
   // 접근성용 속성은 그림에 의미가 없고, 같은 id 가 화면에 두 번 생기지 않게 지운다.
   for (const el of [...root.querySelectorAll("[id]")]) el.removeAttribute("id");
+  // 화면 밖 복제본에 키보드 포커스가 가지 않게 한다.
+  for (const el of [...root.querySelectorAll("[tabindex]")]) el.removeAttribute("tabindex");
+  for (const el of [...root.querySelectorAll("[focusable]")]) el.removeAttribute("focusable");
   const byId = new Map(labels.map((l) => [l.id, l]));
   for (const g of root.querySelectorAll("g[data-edge-id]")) {
     const l = byId.get(g.getAttribute("data-edge-id") ?? "");
@@ -235,6 +274,8 @@ export function neutralizeClone(root: Element, labels: EdgeLabel[] = []): void {
 export function buildStage(doc: Document, viewportClone: HTMLElement, frame: ExportFrame, background: ExportBackground): { holder: HTMLDivElement; stage: HTMLDivElement } {
   const holder = doc.createElement("div");
   holder.setAttribute("aria-hidden", "true");
+  // 화면 밖 무대는 포커스·클릭·보조기기에서 빠진다.
+  holder.inert = true;
   const h = holder.style;
   h.position = "fixed";
   h.left = "-100000px";
@@ -268,6 +309,7 @@ let fontCSS: Promise<string> | null = null;
 export interface ExportRequest {
   /** 화면의 `.react-flow__viewport` 요소. */
   viewport: HTMLElement;
+  /** 선택과 상관없는 배치·연결(useDiagramView 의 baseLayout·baseDisplay). 여기 없는 연결은 그림에서 뺀다. */
   layout: Layout;
   edges: DisplayEdge[];
   format: ExportFormat;
@@ -277,12 +319,13 @@ export interface ExportRequest {
 
 /** 그림을 만들어 내려받게 한다. 실패하면 예외를 던진다(부르는 쪽이 사용자에게 알린다). */
 export async function exportDiagramImage(req: ExportRequest): Promise<void> {
-  const bounds = diagramBounds(req.layout);
+  const labels = edgeLabels(req.layout, req.edges);
+  const bounds = diagramBounds(req.layout, labels);
   if (!bounds) throw new Error("빈 구성도");
-  const frame = exportFrame(bounds);
+  const frame = exportFrame(bounds, { pixelRatio: req.format === "png" ? PNG_PIXEL_RATIO : 1 });
   const doc = req.viewport.ownerDocument;
   const clone = req.viewport.cloneNode(true) as HTMLElement;
-  neutralizeClone(clone, edgeLabels(req.layout, req.edges));
+  neutralizeClone(clone, labels, new Set(req.edges.map((e) => e.id)));
   const { holder, stage } = buildStage(doc, clone, frame, req.background);
   doc.body.appendChild(holder);
   try {
@@ -291,9 +334,11 @@ export async function exportDiagramImage(req: ExportRequest): Promise<void> {
       req.background === "light"
         ? LIGHT_BACKGROUND
         : getComputedStyle(doc.documentElement).getPropertyValue("--bg-canvas").trim() || "#1B2638";
+    // 글꼴을 못 넣어도 그림은 만든다(보는 쪽 글꼴로 그려진다). 다음 내보내기에서 다시 시도한다.
     fontCSS ??= lib.getFontEmbedCSS(stage).catch((e: unknown) => {
+      console.warn("글꼴을 그림에 넣지 못했습니다", e);
       fontCSS = null;
-      throw e;
+      return "";
     });
     const options = {
       width: frame.width,
