@@ -2,10 +2,13 @@
 
 import { type ReactNode, type RefObject, useEffect, useLayoutEffect, useRef, useState } from "react";
 
+import { NODE_GONE_MESSAGE } from "@/server/chat/events";
+
 import { FLY_ORIGIN_ATTR } from "../FlyLayer";
 
 import styles from "./chat.module.css";
-import { MentionInput, type MentionInputHandle } from "./MentionInput";
+import { type Mention, MentionInput, type MentionInputHandle } from "./MentionInput";
+import { SessionPicker, type SessionPickerProps } from "./SessionPicker";
 import type { ChatLine, ProgressCard } from "./useChatTurn";
 
 export type LlmHealth = { qwen: string; clef: string };
@@ -24,9 +27,23 @@ export interface ChatPanelProps {
   footer?: ReactNode;
   /** `주의 N` 칩 클릭: 캔버스 구성 정보 카드를 펼쳐 주의 절로 간다. 없으면 칩은 글로만 보인다. */
   onOpenWarnings?(): void;
+  /** 맨 위 대화 세션 고르기. 없으면 그리지 않는다. */
+  picker?: SessionPickerProps;
+  /**
+   * 노드 질문 세션을 보는 중. 진행 카드·결과 칩·인사말 없이 말풍선과 답만 보인다.
+   * nodeLabel 은 지금 구성도의 노드 이름이고, 노드가 지워졌으면 null(입력 대신 안내).
+   */
+  ask?: { nodeId: string; nodeLabel: string | null };
+  /** 다른 세션의 차례가 도는 중: 보내기를 막고 안내한다(busy 는 이 세션의 차례). */
+  elsewhereBusy?: boolean;
+  /** 세션 줄을 불러오는 중: 보내기를 막는다. */
+  loading?: boolean;
 }
 
 const PLACEHOLDER = "만들고 싶은 서비스나 바꾸고 싶은 점을 말해 주세요. 노드를 오른쪽 클릭하면 참조를 붙일 수 있어요.";
+const ASK_PLACEHOLDER = "이 노드에 대해 더 물어보기";
+export const ELSEWHERE_BUSY = "다른 대화가 답하는 중이에요.";
+const HANDOFF_LABEL = "구성도 대화로 보내기";
 const DOWN = "AI 서버에 연결할 수 없어요. 잠시 뒤 다시 시도하거나 관리자에게 문의해 주세요.";
 const NEAR_BOTTOM = 40;
 
@@ -63,6 +80,8 @@ const hhmm = (ms: number) => {
 
 /** 차례 끝 결과 칩(요약·주의 N). */
 const CHIP_KINDS = new Set<ChatLine["kind"]>(["summary", "warning"]);
+/** 질문 세션에서 보이지 않는 줄: 진행 카드·결과 칩. */
+const HIDDEN_IN_ASK = new Set<ChatLine["kind"]>(["card", "summary", "warning"]);
 
 /** 차례 밖의 줄은 하나씩, 같은 차례(turn)의 줄은 한 AI 메시지로 묶는다. */
 type Block = { kind: "line"; line: ChatLine } | { kind: "turn"; id: string; lines: ChatLine[] };
@@ -145,7 +164,24 @@ function CardView({ card }: { card: ProgressCard }) {
   );
 }
 
-export function ChatPanel({ lines, busy, onSend, onStop, health, disabledReason, mentionRef, emptyDiagram = false, footer, onOpenWarnings }: ChatPanelProps) {
+export function ChatPanel({
+  lines: allLines,
+  busy,
+  onSend,
+  onStop,
+  health,
+  disabledReason,
+  mentionRef,
+  emptyDiagram = false,
+  footer,
+  onOpenWarnings,
+  picker,
+  ask,
+  elsewhereBusy = false,
+  loading = false,
+}: ChatPanelProps) {
+  const lines = ask ? allLines.filter((l) => !HIDDEN_IN_ASK.has(l.kind)) : allLines;
+  const gone = !!ask && ask.nodeLabel === null;
   const list = useRef<HTMLDivElement>(null);
   const composer = useRef<HTMLDivElement>(null);
   const stopBtn = useRef<HTMLButtonElement>(null);
@@ -175,7 +211,25 @@ export function ChatPanel({ lines, busy, onSend, onStop, health, disabledReason,
     onSend(text);
   };
 
-  const blocked = busy || !!disabledReason;
+  // 세션을 바꾸면 입력칸이 새로 그려져 비므로 보내기도 비활성으로 돌린다.
+  const sessionKey = picker?.active ?? "main";
+  useEffect(() => setHasContent(false), [sessionKey]);
+  // 넘겨주기: 구성도 대화로 바꾼 뒤(입력칸이 새로 그려진 뒤) 참조와 글을 채운다. 보내지는 않는다.
+  const [fill, setFill] = useState<{ mention: Mention; text: string } | null>(null);
+  const handoff = (text: string) => {
+    if (!ask || ask.nodeLabel === null) return;
+    setFill({ mention: { id: ask.nodeId, label: ask.nodeLabel }, text });
+    picker?.onSelect("main");
+  };
+  useEffect(() => {
+    if (!fill || ask) return;
+    setFill(null);
+    mentionRef.current?.insertMention(fill.mention);
+    mentionRef.current?.setText(fill.text);
+  }, [fill, ask, mentionRef]);
+
+  const reason = disabledReason ?? (elsewhereBusy ? ELSEWHERE_BUSY : undefined);
+  const blocked = busy || elsewhereBusy || loading || !!disabledReason;
   const lastCard = lines.findLast((l) => l.kind === "card" && l.card)?.card;
   const down = health !== null && health.qwen !== "ok";
 
@@ -197,6 +251,16 @@ export function ChatPanel({ lines, busy, onSend, onStop, health, disabledReason,
   /** 말풍선·본문 한 줄. inTurn: AI 메시지 안의 줄(안내 글은 왼쪽 작은 글, 밖이면 가운데). */
   const renderLine = (l: ChatLine, inTurn: boolean) => {
     if (CHIP_KINDS.has(l.kind)) return <div key={l.id}>{renderChip(l)}</div>;
+    if (l.kind === "handoff") {
+      if (!ask) return null;
+      return (
+        <div key={l.id}>
+          <button type="button" className={`${styles.result} ${styles.handoff}`} disabled={gone} onClick={() => handoff(l.text)}>
+            {HANDOFF_LABEL}
+          </button>
+        </div>
+      );
+    }
     const cls = l.kind === "system" && inTurn ? styles.note : styles[l.kind];
     return (
       <p key={l.id} className={`${styles.line} ${cls}`} data-kind={l.kind}>
@@ -273,6 +337,7 @@ export function ChatPanel({ lines, busy, onSend, onStop, health, disabledReason,
 
   return (
     <div className={styles.chat}>
+      {picker && <SessionPicker {...picker} />}
       {down && (
         <div className={styles.notice} role="status">
           {DOWN}
@@ -290,34 +355,44 @@ export function ChatPanel({ lines, busy, onSend, onStop, health, disabledReason,
           stick.current = el.scrollHeight - el.scrollTop - el.clientHeight <= NEAR_BOTTOM;
         }}
       >
-        {emptyDiagram && lines.length === 0 && renderGreeting()}
+        {!ask && emptyDiagram && lines.length === 0 && renderGreeting()}
         {toBlocks(lines).map((b) => (b.kind === "line" ? renderLine(b.line, false) : renderTurn(b.id, b.lines)))}
         {footer}
       </div>
       <div role="status" className={styles.srOnly}>
         {lastCard ? stepName(lastCard) : ""}
       </div>
-      <div ref={composer} className={styles.composer}>
-        {disabledReason && <p className={styles.reason}>{disabledReason}</p>}
-        <MentionInput
-          ref={mentionRef}
-          placeholder={PLACEHOLDER}
-          canSend={!blocked}
-          disabled={blocked}
-          onSend={send}
-          onContentChange={setHasContent}
-        />
-        <div className={styles.actions}>
-          {busy && (
-            <button ref={stopBtn} type="button" className={styles.btn} onClick={onStop}>
-              중단
-            </button>
-          )}
-          <button type="button" className={styles.btn} disabled={blocked || !hasContent} onClick={() => mentionRef.current?.submit()}>
-            보내기
-          </button>
+      {gone ? (
+        <div className={styles.composer}>
+          <p className={styles.reason} role="status">
+            {NODE_GONE_MESSAGE}
+          </p>
         </div>
-      </div>
+      ) : (
+        <div ref={composer} className={styles.composer}>
+          {reason && <p className={styles.reason}>{reason}</p>}
+          {/* 세션마다 입력칸을 새로 그린다(쓰던 글·참조가 다른 세션으로 따라가지 않게). */}
+          <MentionInput
+            key={sessionKey}
+            ref={mentionRef}
+            placeholder={ask ? ASK_PLACEHOLDER : PLACEHOLDER}
+            canSend={!blocked}
+            disabled={blocked}
+            onSend={send}
+            onContentChange={setHasContent}
+          />
+          <div className={styles.actions}>
+            {busy && (
+              <button ref={stopBtn} type="button" className={styles.btn} onClick={onStop}>
+                중단
+              </button>
+            )}
+            <button type="button" className={styles.btn} disabled={blocked || !hasContent} onClick={() => mentionRef.current?.submit()}>
+              보내기
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

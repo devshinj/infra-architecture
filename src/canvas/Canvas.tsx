@@ -18,6 +18,7 @@ import { NodeMenu } from "./NodeMenu";
 import { nodeTypes } from "./nodeTypes";
 import { prefersReducedMotion, unionRect, useCamera, type Insets, type Viewport } from "./useCamera";
 import { useDiagramView } from "./useDiagramView";
+import { usePopover } from "./usePopover";
 import { useHoverEmphasis } from "./useHoverEmphasis";
 
 export type CanvasOptions = DisplayOptions & { hoverLabels: boolean; showMissingBadges: boolean };
@@ -51,6 +52,10 @@ export interface CanvasProps {
   cameraInsets?: Insets;
   /** Right-click menu "대화에 참조 붙이기" on nodes and zones. Omit to turn the menu off. */
   onMention?(id: string): void;
+  /** 우클릭 메뉴 "이 노드에 대해 물어보기"(노드 전용, 구역에는 없다). 없으면 항목을 두지 않는다. */
+  onAskNode?(id: string): void;
+  askDisabled?: boolean;
+  askReason?: string;
   /**
    * 위치 보기: 바뀔 때마다(token) 그 노드(연결이면 양 끝)로 카메라를 옮기고 은빛 링으로 잠깐 강조한다.
    * 선택은 바꾸지 않는다. 접힌 영역 안이면 그려진 바깥 영역으로 간다.
@@ -91,43 +96,6 @@ const VIEW_OPTIONS: { key: ToggleKey; label: string; desc: string }[] = [
 /** The id actually drawn for `id`: itself, or its outermost collapsed ancestor group. */
 const drawnId = (state: DiagramState, collapsed: Set<string>, id: string | null): string | null =>
   id === null ? null : (outermostCollapsedAncestor(state, collapsed, id) ?? id);
-
-/**
- * 버튼 + 팝오버 공통 동작: 열면 첫 항목에 포커스, Esc 는 닫고 포커스를 버튼으로 돌리며, 바깥 누름은 닫는다.
- * 샘플 불러오기와 보기 옵션이 함께 쓴다.
- */
-function usePopover(firstItem: string) {
-  const [open, setOpen] = useState(false);
-  const root = useRef<HTMLDivElement>(null);
-  const trigger = useRef<HTMLButtonElement>(null);
-  useEffect(() => {
-    if (!open) return;
-    root.current?.querySelector<HTMLElement>(firstItem)?.focus();
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key !== "Escape") return;
-      setOpen(false);
-      trigger.current?.focus();
-    };
-    const onDown = (e: MouseEvent) => {
-      if (!root.current?.contains(e.target as globalThis.Node)) setOpen(false);
-    };
-    // 키보드로 포커스가 팝오버 밖(버튼 포함 root 바깥)으로 나가면 닫는다. 창 전환처럼 relatedTarget 이 없으면 그대로 둔다.
-    const onOut = (e: FocusEvent) => {
-      const to = e.relatedTarget as globalThis.Node | null;
-      if (to && !root.current?.contains(to)) setOpen(false);
-    };
-    const el = root.current;
-    document.addEventListener("keydown", onKey);
-    document.addEventListener("mousedown", onDown);
-    el?.addEventListener("focusout", onOut);
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.removeEventListener("mousedown", onDown);
-      el?.removeEventListener("focusout", onOut);
-    };
-  }, [open, firstItem]);
-  return { open, setOpen, root, trigger };
-}
 
 const stroke = { fill: "none", stroke: "currentColor", strokeWidth: 1.5, strokeLinecap: "round", strokeLinejoin: "round" } as const;
 const Icon = ({ children }: { children: React.ReactNode }) => (
@@ -273,7 +241,7 @@ interface FlowProps extends CanvasProps {
   updated: Set<string>;
 }
 
-function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onPinnedChange, motion, layout, settled, layoutFailed, fitRequest, display, appearing, updated, diffMarks, fitKey, streaming = false, cameraInsets = NO_INSETS, focusRequest, onMention, onBadgeClick, onWarnBadgeClick, onPlaced }: FlowProps) {
+function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onPinnedChange, motion, layout, settled, layoutFailed, fitRequest, display, appearing, updated, diffMarks, fitKey, streaming = false, cameraInsets = NO_INSETS, focusRequest, onMention, onAskNode, askDisabled, askReason, onBadgeClick, onWarnBadgeClick, onPlaced }: FlowProps) {
   const far = useStore((s) => s.transform[2] < FAR_ZOOM);
   const selected = drawnId(state, options.collapsed, options.selectedId);
   const missingByNode = useMemo(() => computeMissing(state).byNode, [state]);
@@ -444,7 +412,7 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
   useEffect(() => {
     if (settled) latest.current.onPlaced?.(locate);
   }, [layout, settled, locate]);
-  const [menu, setMenu] = useState<{ id: string; x: number; y: number } | null>(null);
+  const [menu, setMenu] = useState<{ id: string; zone: boolean; x: number; y: number } | null>(null);
   const closeMenu = useCallback(() => {
     setMenu(null);
     wrap.current?.focus({ preventScroll: true });
@@ -477,7 +445,7 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
           if (!onMention) return;
           e.preventDefault();
           const r = wrap.current?.getBoundingClientRect();
-          setMenu({ id: node.id, x: e.clientX - (r?.left ?? 0), y: e.clientY - (r?.top ?? 0) });
+          setMenu({ id: node.id, zone: node.type === "zone", x: e.clientX - (r?.left ?? 0), y: e.clientY - (r?.top ?? 0) });
         }}
         onMoveStart={(e) => {
           setMenu(null);
@@ -521,7 +489,15 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
           onSelect={onSelect}
         />
       </ReactFlow>
-      {menu && onMention && <NodeMenu x={menu.x} y={menu.y} onChoose={() => onMention(menu.id)} onClose={closeMenu} />}
+      {menu && onMention && (
+        <NodeMenu
+          x={menu.x}
+          y={menu.y}
+          onChoose={() => onMention(menu.id)}
+          {...(onAskNode && !menu.zone ? { onAsk: () => onAskNode(menu.id), askDisabled: askDisabled ?? false, ...(askReason ? { askReason } : {}) } : {})}
+          onClose={closeMenu}
+        />
+      )}
     </div>
   );
 }

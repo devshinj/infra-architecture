@@ -1,4 +1,4 @@
-import { desc, eq } from "drizzle-orm";
+import { and, desc, eq, isNull } from "drizzle-orm";
 
 import { db } from "@/db/client";
 import { messages, type MessageRole } from "@/db/schema";
@@ -12,18 +12,20 @@ export async function createMessage(
   role: MessageRole,
   content: string,
   meta: MessageMeta = {},
+  sessionId: string | null = null,
 ): Promise<{ id: string; createdAt: Date }> {
   const [row] = await db
     .insert(messages)
-    .values({ diagramId, role, content, meta })
+    .values({ diagramId, role, content, meta, sessionId })
     .returning({ id: messages.id, createdAt: messages.createdAt });
   return row;
 }
 
-/** 가장 최근 `limit` 개를 오래된 순으로 돌려준다. */
+/** 가장 최근 `limit` 개를 오래된 순으로 돌려준다. `sessionId` 가 null 이면 구성도 대화만, 아니면 그 세션 것만. */
 export async function listMessages(
   diagramId: string,
   limit = 100,
+  sessionId: string | null = null,
 ): Promise<{ id: string; role: MessageRole; content: string; meta: MessageMeta; createdAt: Date }[]> {
   const rows = await db
     .select({
@@ -34,7 +36,12 @@ export async function listMessages(
       createdAt: messages.createdAt,
     })
     .from(messages)
-    .where(eq(messages.diagramId, diagramId))
+    .where(
+      and(
+        eq(messages.diagramId, diagramId),
+        sessionId === null ? isNull(messages.sessionId) : eq(messages.sessionId, sessionId),
+      ),
+    )
     .orderBy(desc(messages.createdAt), desc(messages.id))
     .limit(limit);
   return rows.reverse();

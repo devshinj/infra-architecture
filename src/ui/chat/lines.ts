@@ -45,8 +45,10 @@ const timeOf = (v: Row["createdAt"]): number | undefined => {
 /** 저장된 메시지를 화면 줄로 바꾼다. 살아 있는 차례가 끝난 모양(카드·안내·답·칩)과 같게 만든다. */
 export function messagesToLines(rows: Row[]): ChatLine[] {
   const out: ChatLine[] = [];
+  let lastUser = "";
   for (const m of rows) {
     const at = timeOf(m.createdAt);
+    if (m.role === "user") lastUser = m.content;
     if (m.role !== "assistant") {
       out.push({ id: m.id, kind: m.role, text: m.content, meta: m.meta, ...(at !== undefined ? { at } : {}) });
       continue;
@@ -76,6 +78,11 @@ export function messagesToLines(rows: Row[]): ChatLine[] {
       answer = m.content.slice(joined.length).replace(/^\n/, "");
     }
     if (answer.trim()) out.push({ id: m.id, kind: "assistant", text: answer, meta, ...t });
+    // 질문 세션에서 구성도 대화로 넘긴 답: 바로 앞 사용자 글을 넘기는 버튼. 요약 칩은 두지 않는다.
+    if (meta.handoff) {
+      out.push({ id: `${m.id}-handoff`, kind: "handoff", text: lastUser, ...t });
+      continue;
+    }
     const s = summaryText(r, answer.trim() !== "", meta.intent);
     if (s) out.push({ id: `${m.id}-summary`, kind: "summary", text: s, ...t });
     // 빠진 정보(meta.missing)는 대화에 줄을 두지 않는다: 캔버스 카드가 지금 상태로 보여 준다.

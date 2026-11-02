@@ -35,6 +35,20 @@ test("menu item is focused on open and choosing it calls onChoose then onClose",
   expect(onClose).toHaveBeenCalled();
 });
 
+test("has 이 노드에 대해 물어보기 item that calls onAsk, and it can be disabled", async () => {
+  const onAsk = vi.fn();
+  const { rerender } = render(<NodeMenu x={0} y={0} onChoose={vi.fn()} onAsk={onAsk} onClose={vi.fn()} />);
+  await userEvent.keyboard("{ArrowDown}{Enter}");
+  expect(onAsk).toHaveBeenCalledTimes(1);
+  rerender(<NodeMenu x={0} y={0} onChoose={vi.fn()} onAsk={onAsk} askDisabled askReason="막힘" onClose={vi.fn()} />);
+  expect(screen.getByRole("menuitem", { name: "이 노드에 대해 물어보기" })).toBeDisabled();
+});
+
+test("no ask item without onAsk", () => {
+  render(<NodeMenu x={0} y={0} onChoose={vi.fn()} onClose={vi.fn()} />);
+  expect(screen.queryByRole("menuitem", { name: "이 노드에 대해 물어보기" })).not.toBeInTheDocument();
+});
+
 test("Escape closes the menu", async () => {
   const onClose = vi.fn();
   render(<NodeMenu x={0} y={0} onChoose={vi.fn()} onClose={onClose} />);
@@ -75,4 +89,39 @@ test("no menu when onMention is not given", async () => {
   await waitFor(() => expect(container.querySelectorAll(".react-flow__node-infra").length).toBeGreaterThan(0));
   fireEvent.contextMenu(container.querySelector(".react-flow__node-infra") as HTMLElement);
   expect(screen.queryByRole("menu")).not.toBeInTheDocument();
+});
+
+test("context menu ask item calls onAskNode with the node id", async () => {
+  const onAskNode = vi.fn();
+  const { container } = render(<div style={{ width: 800, height: 600 }}><Canvas {...baseProps()} onMention={vi.fn()} onAskNode={onAskNode} /></div>);
+  await waitFor(() => expect(container.querySelectorAll(".react-flow__node-infra").length).toBeGreaterThan(0));
+  const node = container.querySelector(".react-flow__node-infra") as HTMLElement;
+  fireEvent.contextMenu(node);
+  await userEvent.click(await screen.findByRole("menuitem", { name: "이 노드에 대해 물어보기" }));
+  expect(onAskNode).toHaveBeenCalledWith(node.getAttribute("data-id"));
+});
+
+test("ArrowUp wraps, ArrowDown wraps, and a disabled item is skipped", async () => {
+  const { rerender } = render(<NodeMenu x={0} y={0} onChoose={vi.fn()} onAsk={vi.fn()} onClose={vi.fn()} />);
+  const [first, second] = screen.getAllByRole("menuitem");
+  expect(first).toHaveFocus();
+  await userEvent.keyboard("{ArrowUp}");
+  expect(second).toHaveFocus();
+  await userEvent.keyboard("{ArrowDown}");
+  expect(first).toHaveFocus();
+  rerender(<NodeMenu x={0} y={0} onChoose={vi.fn()} onAsk={vi.fn()} askDisabled onClose={vi.fn()} />);
+  await userEvent.keyboard("{ArrowDown}");
+  expect(first).toHaveFocus();
+});
+
+test("zones get no ask item in the canvas menu", async () => {
+  const { container } = render(<div style={{ width: 800, height: 600 }}><Canvas {...baseProps()} onMention={vi.fn()} onAskNode={vi.fn()} /></div>);
+  const zone = await waitFor(() => {
+    const z = container.querySelector(".react-flow__node-zone");
+    expect(z).not.toBeNull();
+    return z as HTMLElement;
+  });
+  fireEvent.contextMenu(zone);
+  expect(await screen.findByRole("menuitem", { name: "대화에 참조 붙이기" })).toBeInTheDocument();
+  expect(screen.queryByRole("menuitem", { name: "이 노드에 대해 물어보기" })).not.toBeInTheDocument();
 });

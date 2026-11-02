@@ -33,11 +33,13 @@ export interface RightPanelProps {
   warningState?: DiagramState;
   /** 선택한 노드·연결의 설명. 없으면 설명 절을 그리지 않는다. */
   explain?: ExplanationProps;
+  /** 설명 탭 맨 아래 "이 노드에 대해 물어보기". 없으면 숨긴다. */
+  ask?: NodeInfoProps["ask"];
   /** 현재 판을 보고 있음(기본 true). 이전 버전 보기·비교에서는 대화를 못 하므로 빈 구성도 인사말을 숨긴다. */
   live?: boolean;
 }
 
-export function RightPanel({ state, selectedId, onSelect, onMention, mentionDisabled, history, chat, onHistoryOpen, tab: controlledTab, onTabChange, cautions, warningState, explain, live = true }: RightPanelProps) {
+export function RightPanel({ state, selectedId, onSelect, onMention, mentionDisabled, history, chat, onHistoryOpen, tab: controlledTab, onTabChange, cautions, warningState, explain, ask, live = true }: RightPanelProps) {
   const [innerTab, setInnerTab] = useState<Tab>("대화");
   const tab = controlledTab ?? innerTab;
   const setTab = (t: Tab) => {
@@ -85,7 +87,7 @@ export function RightPanel({ state, selectedId, onSelect, onMention, mentionDisa
             emptyDiagram={live && Object.keys(state.nodes).length === 0}
           />
         )}
-        {tab === "설명" && <NodeInfo state={state} selectedId={selectedId} onSelect={onSelect} {...(onMention ? { onMention } : {})} {...(mentionDisabled ? { mentionDisabled } : {})} {...cautions} {...(warningState ? { warningState } : {})} {...(explain ? { explain } : {})} />}
+        {tab === "설명" && <NodeInfo state={state} selectedId={selectedId} onSelect={onSelect} {...(onMention ? { onMention } : {})} {...(mentionDisabled ? { mentionDisabled } : {})} {...cautions} {...(warningState ? { warningState } : {})} {...(explain ? { explain } : {})} {...(ask ? { ask } : {})} />}
         {tab === "이력" && <HistoryPanel {...history} />}
       </div>
     </aside>

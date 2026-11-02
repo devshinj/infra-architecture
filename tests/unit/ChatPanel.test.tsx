@@ -1,9 +1,10 @@
 import "@testing-library/jest-dom/vitest";
 import { act, cleanup, render, screen, within } from "@testing-library/react";
-import { createRef } from "react";
+import { createRef, useState } from "react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, expect, test, vi } from "vitest";
 
+import { NODE_GONE_MESSAGE } from "@/server/chat/events";
 import { ChatPanel, type ChatPanelProps } from "@/ui/chat/ChatPanel";
 import type { MentionInputHandle } from "@/ui/chat/MentionInput";
 import type { ChatLine } from "@/ui/chat/useChatTurn";
@@ -239,4 +240,78 @@ test("greeting disappears after the first message and when the diagram has nodes
   expect(screen.queryByText(GREETING)).not.toBeInTheDocument();
   rerender(<ChatPanel {...base()} />);
   expect(screen.queryByText(GREETING)).not.toBeInTheDocument();
+});
+
+const ASK = { nodeId: "n1", nodeLabel: "API 서버" };
+const askSession = { id: "s1", nodeId: "n1", nodeLabel: "API 서버", title: "왜 두 대예요?", updatedAt: "2026-11-01T00:00:00.000Z" };
+const picker = (active: string, onSelect: (key: string) => void = vi.fn()) => ({ sessions: [askSession], active, labelOf: (id: string) => (id === "n1" ? "API 서버" : null), onSelect });
+
+test("ask session hides progress card and chips", () => {
+  render(
+    <ChatPanel
+      {...base({
+        ask: ASK,
+        picker: picker("s1"),
+        emptyDiagram: true,
+        lines: [
+          { id: "u", kind: "user", text: "왜 두 대예요?" },
+          card({ mode: "build", step: "checking", changes: 0, end: "aborted" }),
+          { id: "a", kind: "assistant", text: "이중화 때문이에요.", ...T },
+          { id: "s", kind: "summary", text: "중단됨 · 적용 0 · 건너뜀 0", ...T },
+          { id: "w", kind: "warning", text: "주의 1", ...T },
+        ],
+      })}
+    />,
+  );
+  const ai = screen.getByRole("group", { name: "InfraSketch 메시지" });
+  expect(within(ai).getByText("14:07")).toBeInTheDocument();
+  expect(within(ai).getByText("이중화 때문이에요.")).toBeInTheDocument();
+  expect(screen.queryByText("중단됨")).not.toBeInTheDocument();
+  expect(screen.queryByRole("list", { name: "이번 차례 결과" })).not.toBeInTheDocument();
+  expect(screen.queryByText(GREETING)).not.toBeInTheDocument();
+  expect(screen.getByRole("textbox")).toHaveAttribute("placeholder", "이 노드에 대해 더 물어보기");
+  expect(screen.getByRole("button", { name: "API 서버 · 왜 두 대예요?" })).toBeInTheDocument();
+});
+
+test("sending is blocked in every session while a turn runs", () => {
+  const { rerender } = render(<ChatPanel {...base({ elsewhereBusy: true, picker: picker("main") })} />);
+  expect(screen.getByText("다른 대화가 답하는 중이에요.")).toBeInTheDocument();
+  expect(screen.getByRole("textbox")).toBeDisabled();
+  expect(screen.queryByRole("button", { name: "중단" })).not.toBeInTheDocument();
+  rerender(<ChatPanel {...base({ elsewhereBusy: true, ask: ASK, picker: picker("s1") })} />);
+  expect(screen.getByText("다른 대화가 답하는 중이에요.")).toBeInTheDocument();
+  expect(screen.getByRole("textbox")).toBeDisabled();
+  expect(screen.getByRole("button", { name: "보내기" })).toBeDisabled();
+  // 세션 전환은 막지 않는다.
+  expect(screen.getByRole("button", { name: "API 서버 · 왜 두 대예요?" })).toBeEnabled();
+});
+
+test("gone node session shows notice instead of input", () => {
+  render(<ChatPanel {...base({ ask: { nodeId: "n1", nodeLabel: null }, picker: picker("s1"), lines: [{ id: "h", kind: "handoff", text: "이중화해 줘", ...T }] })} />);
+  expect(screen.getByText(NODE_GONE_MESSAGE)).toBeInTheDocument();
+  expect(screen.queryByRole("textbox")).not.toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "보내기" })).not.toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "구성도 대화로 보내기" })).toBeDisabled();
+});
+
+test("handoff button fills the main input with mention and text", async () => {
+  const mentionRef = createRef<MentionInputHandle>();
+  const onSend = vi.fn();
+  const lines: ChatLine[] = [
+    { id: "u", kind: "user", text: "이중화해 줘" },
+    { id: "p", kind: "progress", text: "구성을 바꾸려면 구성도 대화에서 말해 주세요.", ...T },
+    { id: "h", kind: "handoff", text: "이중화해 줘", ...T },
+  ];
+  function Harness() {
+    const [active, setActive] = useState("s1");
+    return <ChatPanel {...base({ mentionRef, onSend, lines: active === "main" ? [] : lines, picker: picker(active, setActive), ...(active === "main" ? {} : { ask: ASK }) })} />;
+  }
+  render(<Harness />);
+  await userEvent.click(screen.getByRole("button", { name: "구성도 대화로 보내기" }));
+  expect(screen.getByRole("button", { name: "구성도 대화" })).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "API 서버 참조 제거" })).toBeInTheDocument();
+  const box = screen.getByRole("textbox");
+  expect(box).toHaveValue("이중화해 줘");
+  expect(box).toHaveAttribute("placeholder", expect.stringContaining("만들고 싶은 서비스"));
+  expect(onSend).not.toHaveBeenCalled();
 });

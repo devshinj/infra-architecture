@@ -2,6 +2,9 @@
 import type { Command } from "@/domain/commands";
 import type { Warning } from "@/domain/types";
 
+/** 노드 질문: 노드가 지금 구성도에 없을 때. 질문 세션 화면도 같은 문구를 안내로 보인다. */
+export const NODE_GONE_MESSAGE = "이 노드는 지금 구성도에 없어서 이어서 물을 수 없어요.";
+
 export interface MessageMeta {
   intent?: string;
   applied?: number;
@@ -17,9 +20,13 @@ export interface MessageMeta {
   /** 차례 끝 구성도의 노드·연결 수(다시 불러올 때 요약 칩·완료 카드에 쓴다). */
   nodes?: number;
   edges?: number;
+  /** 노드 질문에서 구성 변경 요청이라 구성도 대화로 넘긴 답. */
+  handoff?: true;
 }
 
 export type ChatEvent =
+  // 노드 질문에서 새 세션을 만들었을 때만, start 바로 앞
+  | { t: "session"; session: { id: string; nodeId: string; nodeLabel: string; title: string; updatedAt: string } }
   | { t: "start"; messageId: string; intent: string | null }
   | { t: "status"; phase: "thinking" | "drawing" | "answering" | "checking" }
   | { t: "say"; text: string }
@@ -29,6 +36,7 @@ export type ChatEvent =
   | { t: "warnings"; items: Warning[] } // 새 경고만, done 앞
   | { t: "open_history" }
   | { t: "relayout" } // 고정 위치를 풀고 다시 배치(구성도 재정렬 요청)
+  | { t: "handoff"; text: string } // 노드 질문의 구성 변경 요청(사용자 글 그대로)
   | {
       t: "done";
       version: number | null;

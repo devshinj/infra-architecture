@@ -106,3 +106,26 @@ button.blockTitle:hover { text-decoration: underline; text-underline-offset: 3px
 .example:hover:not(:disabled) { border-color: var(--text-secondary); }
 .example:disabled { opacity: 0.5; cursor: default; }
 .example:focus-visible { outline: 1.5px solid var(--text-secondary); outline-offset: 2px; }
+
+/* 대화 세션 고르기(대화 탭 맨 위). 팝오버는 보기 옵션과 같은 유리 칠. */
+.sessionBar { position: relative; flex: none; padding: 8px 12px; border-bottom: 1px solid var(--line-node); }
+.sessionBtn { display: inline-flex; align-items: center; gap: 6px; max-width: 100%; font: inherit; font-size: 13px; font-weight: 600; color: var(--text-primary); background: transparent; border: 0; border-radius: 6px; padding: 4px 6px; margin-left: -6px; cursor: pointer; }
+.sessionBtn:hover:not(:disabled), .sessionBtn[aria-expanded="true"] { background: var(--bg-panel-raised); }
+.sessionBtn:disabled { cursor: default; }
+.sessionBtn:focus-visible, .sessionItem:focus-visible { outline: 1.5px solid var(--text-secondary); outline-offset: 1px; }
+.sessionLabel { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sessionChevron { flex: none; color: var(--text-secondary); }
+.sessionList {
+  position: absolute; z-index: 30; top: calc(100% - 2px); left: 6px; right: 6px; max-height: 320px; overflow-y: auto; margin: 0; padding: 4px; list-style: none;
+  background: var(--glass-bg); backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-line); border-radius: var(--radius-panel);
+}
+.sessionItem { display: flex; align-items: baseline; gap: 10px; width: 100%; font: inherit; font-size: 13px; text-align: left; color: var(--text-primary); background: transparent; border: 0; border-radius: 6px; padding: 6px 8px; cursor: pointer; }
+.sessionItem:hover { background: var(--bg-panel-raised); }
+.sessionItem[aria-current="true"] { font-weight: 600; }
+.sessionItem .sessionLabel { flex: 1; }
+.sessionTime { flex: none; font-size: 11px; font-weight: 400; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+/* 질문 세션: 구성도 대화로 넘기는 버튼(결과 칩과 같은 모양). */
+.handoff { cursor: pointer; }
+.handoff:disabled { opacity: 0.5; cursor: default; }
+.handoff:disabled:hover { border-color: var(--line-node); }

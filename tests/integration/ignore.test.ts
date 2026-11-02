@@ -75,9 +75,14 @@ test("busy while the chat lock is held", async () => {
   const ids = await setup();
   let release!: () => void;
   const gate = new Promise<void>((r) => (release = r));
-  const held = withDiagramLock(ids.diagramId, () => gate);
+  let entered!: () => void;
+  const inside = new Promise<void>((r) => (entered = r));
+  const held = withDiagramLock(ids.diagramId, () => {
+    entered();
+    return gate;
+  });
   try {
-    await new Promise((r) => setTimeout(r, 200));
+    await inside;
     await expect(setWarningIgnoredFor(ids.userId, ids.diagramId, WID, true)).rejects.toThrow(BUSY_MESSAGE);
   } finally {
     release();

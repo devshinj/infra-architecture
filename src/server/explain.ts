@@ -262,6 +262,45 @@ function glossaryPart(row: GlossaryRow, source: NodeExplanation["definitionSourc
 }
 
 /**
+ * 캐시된 노드 설명에 지금 사전 값을 덮는다. 사전은 생성 뒤에 고쳐지거나 검수될 수 있다(Qwen 은 부르지 않는다).
+ * 서명이 같으면 용어 후보도 같아 생성 때와 같은 항목을 찾는다. 항목이 없어졌으면 저장된 값 그대로다.
+ */
+async function withCurrentGlossary(
+  repo: Pick<ExplainRepo, "findTerm">,
+  userId: string,
+  node: DiagramState["nodes"][string],
+  data: NodeExplanation,
+): Promise<NodeExplanation> {
+  const current = await repo.findTerm(userId, termCandidates(node).map((c) => c.key));
+  if (!current) return data;
+  const rest: NodeExplanation = { ...data };
+  delete rest.why;
+  delete rest.compare;
+  return { ...rest, ...glossaryPart(current, data.definitionSource) };
+}
+
+/**
+ * 패널이 보여 주는 것과 같은 캐시된 노드 설명(지금 노드 서명과 맞을 때만, 사전 값을 덮어서).
+ * 없거나 낡았으면 undefined. 만들지 않고 소유 검사도 하지 않는다(호출자가 한다).
+ */
+export async function cachedNodeExplanation(
+  userId: string,
+  diagramId: string,
+  state: DiagramState,
+  nodeId: string,
+  depsInput: { repo?: Partial<ExplainRepo> } = {},
+): Promise<NodeExplanation | undefined> {
+  const repo = { ...dbRepo, ...depsInput.repo };
+  const node = state.nodes[nodeId];
+  const signature = signatureOf(state, "node", nodeId);
+  if (!node || !signature) return undefined;
+  const cached = await repo.getCached(diagramId, "node", nodeId);
+  if (!cached || cached.signature !== signature) return undefined;
+  const data = cached.data as Explanation;
+  return data.kind === "node" ? withCurrentGlossary(repo, userId, node, data) : undefined;
+}
+
+/**
  * 노드·연결 설명을 만든다(또는 캐시에서 돌려준다).
  * 1. 소유·대상 확인 2. 캐시 3. 사전 조회(노드) 4. Qwen JSON 생성(형식 오류는 1회 다시 요청)
  * 5. 길이·Clef 점수로 최대 2회 다시 쓰기 6. 사전 추가(AI 정의) 7. 저장.
@@ -295,14 +334,7 @@ export async function explainTarget(
     const data = fresh.data as Explanation;
     const node = targetKind === "node" ? state.nodes[targetId] : undefined;
     if (data.kind !== "node" || !node) return { ok: true, explanation: data, signature };
-    // 사전은 생성 뒤에 고쳐지거나 검수될 수 있어 지금 사전 값을 덮어 보여 준다(Qwen 은 부르지 않는다).
-    // 서명이 같으면 용어 후보도 같아 생성 때와 같은 항목을 찾는다. 항목이 없어졌으면 저장된 값 그대로다.
-    const current = await repo.findTerm(userId, termCandidates(node).map((c) => c.key));
-    if (!current) return { ok: true, explanation: data, signature };
-    const rest: NodeExplanation = { ...data };
-    delete rest.why;
-    delete rest.compare;
-    return { ok: true, explanation: { ...rest, ...glossaryPart(current, data.definitionSource) }, signature };
+    return { ok: true, explanation: await withCurrentGlossary(repo, userId, node, data), signature };
   }
 
   // 노드: 사전 조회. ensureSeeded 를 먼저 해야 시드와 같은 용어를 AI 가 새로 넣지 않는다.

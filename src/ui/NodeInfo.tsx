@@ -4,6 +4,7 @@ import { FIELD_LABELS, isEmpty } from "@/domain/missing";
 import type { DiagramState, DNode, Warning } from "@/domain/types";
 import { mergeWarnings } from "@/domain/warnings";
 
+import { AskNode, type AskNodeProps } from "./explain/AskNode";
 import { Explanation, type ExplanationProps } from "./explain/Explanation";
 
 import styles from "./panel.module.css";
@@ -25,6 +26,8 @@ export interface NodeInfoProps {
   warningState?: DiagramState;
   /** 설명 패널 데이터. 없으면 설명 절을 그리지 않는다. */
   explain?: ExplanationProps;
+  /** 노드에 대해 물어보기 입력(노드 전용: 연결선·구역에는 두지 않는다). 없으면 숨긴다. */
+  ask?: Omit<AskNodeProps, "nodeId" | "nodeLabel">;
 }
 
 type CautionProps = Pick<NodeInfoProps, "onIgnoreWarning" | "ignoreDisabled" | "ignoreError">;
@@ -119,7 +122,7 @@ function Cautions({ active, ignored, onIgnoreWarning, ignoreDisabled, ignoreErro
   );
 }
 
-export function NodeInfo({ state, selectedId, onSelect, onMention, mentionDisabled, warningState, explain, ...caution }: NodeInfoProps) {
+export function NodeInfo({ state, selectedId, onSelect, onMention, mentionDisabled, warningState, explain, ask, ...caution }: NodeInfoProps) {
   if (selectedId === null) return <p className={styles.empty}>캔버스에서 노드를 선택하면 설명이 여기에 표시돼요.</p>;
 
   const warnings = mergeWarnings(warningState ?? state);
@@ -213,6 +216,7 @@ export function NodeInfo({ state, selectedId, onSelect, onMention, mentionDisabl
           </div>
         </section>
       )}
+      {ask && <AskNode nodeId={node.id} nodeLabel={node.label} {...ask} />}
     </div>
   );
 }
