@@ -2,7 +2,7 @@ import "@testing-library/jest-dom/vitest";
 import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
-const hookState = vi.hoisted(() => ({ send: vi.fn(), busy: false, onCommand: null as null | ((c: unknown) => void), badgeFns: [] as unknown[], warnFns: [] as unknown[], lines: [] as unknown[], insets: [] as unknown[], focus: [] as unknown[], turn: null as null | { onDone(): void; onInterrupted(): void; onRelayout?(): void }, pinned: [] as unknown[], fitRequest: [] as unknown[], placed: null as null | ((locate: (id: string) => { x: number; y: number } | null) => void) }));
+const hookState = vi.hoisted(() => ({ send: vi.fn(), busy: false, onCommand: null as null | ((c: unknown) => void), badgeFns: [] as unknown[], warnFns: [] as unknown[], lines: [] as unknown[], insets: [] as unknown[], focus: [] as unknown[], turn: null as null | { onDone(): void; onInterrupted(): void; onRelayout?(): void; onAskLines?(key: string, fn: (ls: { id: string; kind: string; text: string }[]) => { id: string; kind: string; text: string }[]): void }, pushLine: vi.fn(), pinned: [] as unknown[], fitRequest: [] as unknown[], placed: null as null | ((locate: (id: string) => { x: number; y: number } | null) => void) }));
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
 vi.mock("@/app/(app)/actions", () => ({
@@ -44,11 +44,11 @@ vi.mock("@/ui/chat/useChatTurn", () => ({
   useChatTurn: (a: { onCommand: (c: unknown) => void; onDone(): void; onInterrupted(): void; onRelayout?(): void }) => {
     hookState.onCommand = a.onCommand;
     hookState.turn = a;
-    return { lines: hookState.lines, busy: hookState.busy, send: hookState.send, stop: vi.fn() };
+    return { lines: hookState.lines, busy: hookState.busy, send: hookState.send, stop: vi.fn(), pushLine: hookState.pushLine };
   },
 }));
 
-import { clearPinnedAction, getVersionAction, listVersionsAction, saveFieldsAction, setWarningIgnoredAction } from "@/app/(app)/actions";
+import { clearPinnedAction, confirmAssumptionAction, getVersionAction, listVersionsAction, saveFieldsAction, setWarningIgnoredAction } from "@/app/(app)/actions";
 import { emptyState } from "@/domain/types";
 import { DiagramWorkspace } from "@/ui/DiagramWorkspace";
 import { ShellProvider } from "@/ui/Shell";
@@ -647,4 +647,60 @@ test("choosing an assumption while a question session is open goes to the main c
   // 질문 세션 옵션(kind: "ask")이 없는 구성도 대화 전송이다.
   expect(hookState.send.mock.calls[0]![1]).toBeUndefined();
   expect(screen.getByRole("button", { name: "구성도 대화" })).toBeInTheDocument();
+});
+
+const askSession = { id: "s1", nodeId: "a", nodeLabel: "a", title: "왜 두 대예요?", updatedAt: new Date().toISOString() };
+const assumptionLatest = () => ({ number: 1, state: { ...emptyState(), nodes: Object.fromEntries([web("a")]), assumptions: { scale: { key: "scale", value: "중규모(일 1만 명)", confirmed: false } } } });
+const openAskSession = async () => {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async (url: string) => (String(url).endsWith("/sessions/s1") ? Response.json({ session: askSession, messages: [] }) : Response.json({ qwen: "ok", clef: "ok" }))),
+  );
+  render(<DiagramWorkspace diagramId="d" name="n" latest={assumptionLatest() as never} initialPinned={{}} samples={[]} initialSessions={[askSession]} />);
+  fireEvent.click(screen.getByRole("button", { name: "구성도 대화" }));
+  fireEvent.click(screen.getByRole("menuitem", { name: /a · 왜 두 대예요\?/ }));
+  await screen.findByRole("button", { name: /a · 왜 두 대예요\?/ });
+};
+
+test("a failed assumption confirm while a question session is shown switches to 구성도 대화 so the error line is visible", async () => {
+  hookState.busy = false;
+  hookState.lines = [];
+  hookState.pushLine.mockClear();
+  vi.mocked(confirmAssumptionAction).mockResolvedValueOnce({ ok: false, error: "확정하지 못했어요" } as never);
+  await openAskSession();
+  fireEvent.click(cardToggle());
+  fireEvent.click(screen.getByRole("button", { name: /^규모: 중규모/ }));
+  await act(async () => {
+    fireEvent.click(screen.getByRole("button", { name: "대규모(일 10만 명 이상)" }));
+  });
+  expect(hookState.pushLine).toHaveBeenCalledWith({ kind: "error", text: "확정하지 못했어요" });
+  expect(screen.getByRole("button", { name: "구성도 대화" })).toBeInTheDocument();
+  expect(hookState.send).not.toHaveBeenCalled();
+});
+
+test("a first question that failed leaves no old lines when it is asked again from the new draft", async () => {
+  hookState.busy = false;
+  hookState.lines = [];
+  hookState.send.mockReset();
+  stubFetch();
+  hookState.send.mockImplementation(async (text: string, target: { sessionId: string | null }) => {
+    const key = target.sessionId ?? "new";
+    const retry = hookState.send.mock.calls.length > 1;
+    hookState.turn!.onAskLines!(key, (ls) => [
+      ...ls,
+      { id: `u-${text}`, kind: "user", text },
+      retry ? { id: "ans", kind: "assistant", text: "답이에요" } : { id: "err", kind: "error", text: "다른 응답을 처리하고 있어요" },
+    ]);
+  });
+  render(ui(two() as never));
+  fireEvent.click(screen.getByRole("button", { name: "선택b" }));
+  fireEvent.change(screen.getByLabelText("이 노드에 대해 물어보기"), { target: { value: "첫 질문" } });
+  fireEvent.click(screen.getByRole("button", { name: "질문 보내기" }));
+  expect(await screen.findByText("다른 응답을 처리하고 있어요")).toBeInTheDocument();
+  fireEvent.change(screen.getByRole("textbox"), { target: { value: "다시 질문" } });
+  fireEvent.click(screen.getByRole("button", { name: "보내기" }));
+  expect(await screen.findByText("답이에요")).toBeInTheDocument();
+  expect(screen.getByText("다시 질문")).toBeInTheDocument();
+  expect(screen.queryByText("첫 질문", { selector: "p" })).not.toBeInTheDocument();
+  expect(screen.queryByText("다른 응답을 처리하고 있어요")).not.toBeInTheDocument();
 });

@@ -22,6 +22,8 @@ export interface MessageMeta {
   edges?: number;
   /** 노드 질문에서 구성 변경 요청이라 구성도 대화로 넘긴 답. */
   handoff?: true;
+  /** handoff 일 때 구성도 대화로 넘긴 사용자 글(다시 불러와도 버튼에 쓴다). */
+  handoffText?: string;
 }
 
 export type ChatEvent =

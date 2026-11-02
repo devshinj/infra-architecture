@@ -41,7 +41,22 @@ test("has 이 노드에 대해 물어보기 item that calls onAsk, and it can be
   await userEvent.keyboard("{ArrowDown}{Enter}");
   expect(onAsk).toHaveBeenCalledTimes(1);
   rerender(<NodeMenu x={0} y={0} onChoose={vi.fn()} onAsk={onAsk} askDisabled askReason="막힘" onClose={vi.fn()} />);
-  expect(screen.getByRole("menuitem", { name: "이 노드에 대해 물어보기" })).toBeDisabled();
+  expect(screen.getByRole("menuitem", { name: "이 노드에 대해 물어보기" })).toHaveAttribute("aria-disabled", "true");
+});
+
+test("disabled ask item stays in the arrow-key order, is described by its reason and does nothing when activated", async () => {
+  const onAsk = vi.fn();
+  const onClose = vi.fn();
+  render(<NodeMenu x={0} y={0} onChoose={vi.fn()} onAsk={onAsk} askDisabled askReason="다른 대화가 답하는 중이에요." onClose={onClose} />);
+  await userEvent.keyboard("{ArrowDown}");
+  const item = screen.getByRole("menuitem", { name: "이 노드에 대해 물어보기" });
+  expect(item).toHaveFocus();
+  expect(item).not.toBeDisabled();
+  expect(item).toHaveAccessibleDescription("다른 대화가 답하는 중이에요.");
+  await userEvent.keyboard("{Enter}");
+  await userEvent.click(item);
+  expect(onAsk).not.toHaveBeenCalled();
+  expect(onClose).not.toHaveBeenCalled();
 });
 
 test("no ask item without onAsk", () => {
@@ -101,7 +116,7 @@ test("context menu ask item calls onAskNode with the node id", async () => {
   expect(onAskNode).toHaveBeenCalledWith(node.getAttribute("data-id"));
 });
 
-test("ArrowUp wraps, ArrowDown wraps, and a disabled item is skipped", async () => {
+test("ArrowUp wraps, ArrowDown wraps, and a disabled item is still reachable", async () => {
   const { rerender } = render(<NodeMenu x={0} y={0} onChoose={vi.fn()} onAsk={vi.fn()} onClose={vi.fn()} />);
   const [first, second] = screen.getAllByRole("menuitem");
   expect(first).toHaveFocus();
@@ -111,7 +126,7 @@ test("ArrowUp wraps, ArrowDown wraps, and a disabled item is skipped", async () 
   expect(first).toHaveFocus();
   rerender(<NodeMenu x={0} y={0} onChoose={vi.fn()} onAsk={vi.fn()} askDisabled onClose={vi.fn()} />);
   await userEvent.keyboard("{ArrowDown}");
-  expect(first).toHaveFocus();
+  expect(second).toHaveFocus();
 });
 
 test("zones get no ask item in the canvas menu", async () => {
@@ -124,4 +139,11 @@ test("zones get no ask item in the canvas menu", async () => {
   fireEvent.contextMenu(zone);
   expect(await screen.findByRole("menuitem", { name: "대화에 참조 붙이기" })).toBeInTheDocument();
   expect(screen.queryByRole("menuitem", { name: "이 노드에 대해 물어보기" })).not.toBeInTheDocument();
+});
+
+test("the hidden reason is not a child of the menu", () => {
+  render(<NodeMenu x={0} y={0} onChoose={vi.fn()} onAsk={vi.fn()} askDisabled askReason="막힘" onClose={vi.fn()} />);
+  const menu = screen.getByRole("menu");
+  expect(menu.querySelector(".node-menu__reason")).toBeNull();
+  expect(screen.getByRole("menuitem", { name: "이 노드에 대해 물어보기" })).toHaveAccessibleDescription("막힘");
 });

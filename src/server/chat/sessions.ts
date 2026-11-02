@@ -14,6 +14,8 @@ export type SessionRow = {
 };
 
 const TITLE_MAX = 60;
+/** 페이지를 열 때 보내는 질문 세션 수(최근 이어간 순). */
+export const SESSION_LIST_LIMIT = 50;
 
 const columns = {
   id: chatSessions.id,
@@ -32,7 +34,7 @@ export async function createSession(
   nodeLabel: string,
   firstQuestion: string,
 ): Promise<SessionRow> {
-  const title = [...firstQuestion.replace(/\s+/g, " ").trim()].slice(0, TITLE_MAX).join("");
+  const title = [...firstQuestion.replace(/\s+/g, " ").trim()].slice(0, TITLE_MAX).join("").trimEnd();
   const [row] = await db
     .insert(chatSessions)
     .values({ diagramId, nodeId, nodeLabel, title })
@@ -40,13 +42,14 @@ export async function createSession(
   return row;
 }
 
-/** 최근에 이어간 순서. */
+/** 최근에 이어간 순서로 SESSION_LIST_LIMIT 개까지. */
 export async function listSessions(diagramId: string): Promise<SessionRow[]> {
   return db
     .select(columns)
     .from(chatSessions)
     .where(eq(chatSessions.diagramId, diagramId))
-    .orderBy(desc(chatSessions.updatedAt), desc(chatSessions.id));
+    .orderBy(desc(chatSessions.updatedAt), desc(chatSessions.id))
+    .limit(SESSION_LIST_LIMIT);
 }
 
 /** 다른 구성도의 세션이면 null. */

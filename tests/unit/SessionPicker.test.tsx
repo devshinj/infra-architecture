@@ -59,3 +59,17 @@ test("Esc closes and returns focus", async () => {
   expect(screen.queryByRole("menu")).not.toBeInTheDocument();
   expect(btn).toHaveFocus();
 });
+
+test("the pending new session is the first session row with aria-current, and choosing it is a no-op", async () => {
+  const onSelect = vi.fn();
+  const pending = s("new", "n1", "API 서버", "왜 두 대예요?", today(9, 5));
+  const sessions = [s("a", "n2", "주문 DB", "백업은 어떻게 해요?", "2026-03-04T10:00:00Z")];
+  render(<SessionPicker sessions={sessions} active="new" labelOf={labelOf} onSelect={onSelect} pending={pending} />);
+  await userEvent.click(screen.getByRole("button", { name: "API 서버 · 왜 두 대예요?" }));
+  const items = screen.getAllByRole("menuitem");
+  expect(items.map((i) => i.textContent)).toEqual(["구성도 대화", "API 서버 · 왜 두 대예요?09:05", "주문 DB · 백업은 어떻게 해요?3/4"]);
+  expect(items[1]).toHaveAttribute("aria-current", "true");
+  expect(items.filter((i) => i.hasAttribute("aria-current"))).toHaveLength(1);
+  await userEvent.click(items[1]!);
+  expect(onSelect).not.toHaveBeenCalled();
+});

@@ -4,7 +4,7 @@ import { describe, expect, test } from "vitest";
 import { db } from "@/db/client";
 import { chatSessions, diagrams, messages } from "@/db/schema";
 import { createMessage, listMessages } from "@/server/chat/messages";
-import { createSession, getSession, listSessions, touchSession } from "@/server/chat/sessions";
+import { createSession, getSession, listSessions, SESSION_LIST_LIMIT, touchSession } from "@/server/chat/sessions";
 
 import { makeDiagram } from "./helpers";
 
@@ -26,6 +26,23 @@ describe("chat sessions", () => {
     expect((await listSessions(d)).map((s) => s.id)).toEqual([b.id, a.id]);
     await touchSession(a.id);
     expect((await listSessions(d)).map((s) => s.id)).toEqual([a.id, b.id]);
+  });
+
+  test("title has no trailing space after the 60-codepoint cut", async () => {
+    const d = await makeDiagram();
+    const s = await createSession(d, "n1", "A", `${"가".repeat(59)} 나다라`);
+    expect(s.title).toBe("가".repeat(59));
+  });
+
+  test("listSessions returns only the most recent SESSION_LIST_LIMIT", async () => {
+    const d = await makeDiagram();
+    expect(SESSION_LIST_LIMIT).toBe(50);
+    const made = [];
+    for (let i = 0; i < 55; i++) made.push(await createSession(d, "n1", "A", `q${i}`));
+    const list = await listSessions(d);
+    expect(list).toHaveLength(50);
+    expect(list[0]!.id).toBe(made[54]!.id);
+    expect(list.at(-1)!.id).toBe(made[5]!.id);
   });
 
   test("getSession returns null for another diagram's session", async () => {

@@ -347,7 +347,9 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
     // 질문 세션: 노드가 지금 구성도에 있을 때만 이어 묻는다. 새 세션은 서버가 id 를 줄 때까지 sessionId 없이 보낸다.
     if (!activeSession || labelOf(activeSession.nodeId) === null) return;
     const isNew = sessions.active === NEW_SESSION;
-    if (!isNew) sessions.upsert({ ...activeSession, updatedAt: new Date().toISOString() });
+    // 첫 질문이 세션 id 를 받기 전에 실패했으면 초안에 실패한 말풍선이 남아 있다: 비우고 다시 시작한다.
+    if (isNew) sessions.startNew({ nodeId: activeSession.nodeId, nodeLabel: activeSession.nodeLabel, text });
+    else sessions.upsert({ ...activeSession, updatedAt: new Date().toISOString() });
     void chat.send(text, { kind: "ask", nodeId: activeSession.nodeId, sessionId: isNew ? null : activeSession.id });
   }; // no history view/compare/restore, edit mode or sample import while the AI answers
 
@@ -380,14 +382,15 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
   };
   const onChooseAssumption = async (key: string, value: string) => {
     if (!live || chat.busy) return;
-    if (!(await confirmKey(key, value))) return;
-    // 구조를 다시 맞추는 차례라 질문 세션이 아니라 구성도 대화로 보내고, 그 줄이 보이게 옮겨 간다.
+    // 구조를 다시 맞추는 차례라 질문 세션이 아니라 구성도 대화로 보낸다. 확정 실패 줄도 보이게 먼저 옮겨 간다.
     sessions.select("main");
+    if (!(await confirmKey(key, value))) return;
     sendMain(assumptionChangeMessage(key, value));
   };
   const onConfirmAssumption = (key: string) => {
     const a = current.state.assumptions[key];
     if (!live || chat.busy || !a) return;
+    sessions.select("main"); // 실패 줄이 보이게
     void confirmKey(key, a.value);
   };
 

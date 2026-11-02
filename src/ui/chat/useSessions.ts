@@ -24,12 +24,35 @@ export const NEW_SESSION = "new";
 
 const TITLE_MAX = 60;
 /** 서버(createSession)와 같은 규칙: 공백을 한 칸으로 접고 60자. */
-const titleOf = (text: string) => [...text.replace(/\s+/g, " ").trim()].slice(0, TITLE_MAX).join("");
+const titleOf = (text: string) => [...text.replace(/\s+/g, " ").trim()].slice(0, TITLE_MAX).join("").trimEnd();
 
 const LOAD_FAILED = "대화를 불러오지 못했어요. 다시 시도해 주세요.";
 
 type Lines = Record<string, ChatLine[] | "loading">;
 type Update = ChatLine[] | ((prev: ChatLine[]) => ChatLine[]);
+
+const without = (ls: Lines, id: string): Lines => Object.fromEntries(Object.entries(ls).filter(([k]) => k !== id));
+
+/**
+ * 불러온 기록 뒤에 이을 차례 줄. 차례 줄은 화면용 id(l-N)라 저장된 줄과 id 로 맞출 수 없어 글로 맞춘다:
+ * 사용자 줄은 같은 글의 불러온 사용자 줄이 있으면, 그 뒤에 불러온 답이 있으면 이어지는 답·안내 줄도 이미 있는 것이다.
+ */
+function turnOnly(loaded: ChatLine[], turn: ChatLine[]): ChatLine[] {
+  const out: ChatLine[] = [];
+  let replied = false;
+  for (const l of turn) {
+    if (l.id.endsWith("-load-failed")) continue;
+    if (l.kind === "user") {
+      const at = loaded.findLastIndex((x) => x.kind === "user" && x.text === l.text);
+      replied = at >= 0 && loaded.some((x, k) => k > at && x.kind === "assistant");
+      if (at >= 0) continue;
+    } else if (replied) {
+      continue;
+    }
+    out.push(l);
+  }
+  return out;
+}
 
 interface Row {
   id: string;
@@ -54,10 +77,14 @@ export function useSessions({ diagramId, initial }: { diagramId: string; initial
     linesRef.current = lines;
   });
   const alive = useRef(true);
+  /** 지금 불러오는 세션 하나(고른 세션이 바뀌거나 사라지면 끊는다). */
+  const inflight = useRef<{ id: string; ac: AbortController } | null>(null);
   useEffect(() => {
     alive.current = true;
     return () => {
       alive.current = false;
+      inflight.current?.ac.abort();
+      inflight.current = null;
     };
   }, []);
 
@@ -65,32 +92,60 @@ export function useSessions({ diagramId, initial }: { diagramId: string; initial
   const failed = useRef(new Set<string>());
 
   const load = useCallback(
-    async (id: string) => {
+    async (id: string, signal: AbortSignal) => {
       let next: ChatLine[];
       try {
-        const r = await fetch(`/api/diagrams/${encodeURIComponent(diagramId)}/sessions/${encodeURIComponent(id)}`);
+        const r = await fetch(`/api/diagrams/${encodeURIComponent(diagramId)}/sessions/${encodeURIComponent(id)}`, { signal });
         if (!r.ok) throw new Error(`status ${r.status}`);
         const j = (await r.json()) as { messages: Row[] };
         next = messagesToLines(j.messages);
       } catch {
+        // 끊긴 불러오기는 오류가 아니다(끊은 쪽이 이미 줄을 비웠다).
+        if (signal.aborted) return;
         next = [{ id: `${id}-load-failed`, kind: "error", text: LOAD_FAILED }];
         failed.current.add(id);
       }
-      // 불러오는 사이 차례가 줄을 쌓았으면 그대로 둔다.
-      if (alive.current) setAllLines((ls) => (ls[id] === "loading" ? { ...ls, [id]: next } : ls));
+      if (signal.aborted || !alive.current) return;
+      if (inflight.current?.ac.signal === signal) inflight.current = null;
+      // 불러오는 사이 도는 차례가 줄을 쌓았으면 불러온 줄을 앞에 두고, 아직 없는 차례 줄만 뒤에 잇는다.
+      setAllLines((ls) => {
+        const cur = ls[id];
+        if (cur === "loading") return { ...ls, [id]: next };
+        if (cur === undefined) return ls;
+        return { ...ls, [id]: [...next, ...turnOnly(next, cur)] };
+      });
     },
     [diagramId],
   );
   const select = useCallback(
     (key: SessionKey) => {
       setActive(key);
+      // 다른 세션으로 옮기면 불러오던 것을 끊고, 반쯤 불러온 줄은 비워 다시 고르면 다시 불러오게 한다.
+      const flying = inflight.current;
+      if (flying && flying.id !== key) {
+        flying.ac.abort();
+        inflight.current = null;
+        if (linesRef.current[flying.id] === "loading") {
+          linesRef.current = without(linesRef.current, flying.id);
+          setAllLines((ls) => (ls[flying.id] === "loading" ? without(ls, flying.id) : ls));
+        } else {
+          // 도는 차례 줄이 이미 있는 세션: 기록을 못 불렀으니 다시 고르면 다시 불러와 합친다.
+          failed.current.add(flying.id);
+        }
+      }
       if (key === "main" || key === NEW_SESSION) return;
       const have = linesRef.current[key];
       if (have !== undefined && !failed.current.has(key)) return;
       failed.current.delete(key);
-      linesRef.current = { ...linesRef.current, [key]: "loading" };
-      setAllLines((ls) => ({ ...ls, [key]: "loading" }));
-      void load(key);
+      // 차례 줄이 이미 있으면 가리지 않고 그대로 두고 불러온 기록과 합친다.
+      const keep = Array.isArray(have) && have.some((l) => !l.id.endsWith("-load-failed"));
+      if (!keep) {
+        linesRef.current = { ...linesRef.current, [key]: "loading" };
+        setAllLines((ls) => ({ ...ls, [key]: "loading" }));
+      }
+      const ac = new AbortController();
+      inflight.current = { id: key, ac };
+      void load(key, ac.signal);
     },
     [load],
   );

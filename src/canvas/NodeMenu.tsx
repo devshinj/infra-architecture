@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useId, useRef } from "react";
 
 export interface NodeMenuProps {
   /** Pointer position, relative to the canvas wrapper. */
@@ -11,7 +11,7 @@ export interface NodeMenuProps {
   onAsk?(): void;
   /** 질문을 지금 못 보낼 때 항목을 막는다. */
   askDisabled?: boolean;
-  /** 막힌 까닭(항목 툴팁). */
+  /** 막힌 까닭(항목 설명으로 읽힌다). */
   askReason?: string;
   onClose(): void;
 }
@@ -20,6 +20,7 @@ export interface NodeMenuProps {
 export function NodeMenu({ x, y, onChoose, onAsk, askDisabled = false, askReason, onClose }: NodeMenuProps) {
   const ref = useRef<HTMLDivElement>(null);
   const item = useRef<HTMLButtonElement>(null);
+  const reasonId = useId();
   const close = useRef(onClose);
   close.current = onClose;
 
@@ -31,10 +32,10 @@ export function NodeMenu({ x, y, onChoose, onAsk, askDisabled = false, askReason
         close.current();
       }
     };
-    // 위·아래 화살표로 항목 사이를 옮긴다(막힌 항목은 건너뛴다).
+    // 위·아래 화살표로 항목 사이를 옮긴다(막힌 항목도 포커스는 받아 까닭을 읽을 수 있다).
     const onArrow = (e: KeyboardEvent) => {
       if (e.key !== "ArrowDown" && e.key !== "ArrowUp") return;
-      const items = [...(ref.current?.querySelectorAll<HTMLButtonElement>('[role="menuitem"]:not(:disabled)') ?? [])];
+      const items = [...(ref.current?.querySelectorAll<HTMLButtonElement>('[role="menuitem"]') ?? [])];
       if (items.length === 0) return;
       e.preventDefault();
       const i = items.indexOf(document.activeElement as HTMLButtonElement);
@@ -55,6 +56,7 @@ export function NodeMenu({ x, y, onChoose, onAsk, askDisabled = false, askReason
   }, []);
 
   return (
+    <>
     <div ref={ref} className="node-menu" role="menu" aria-label="노드 메뉴" style={{ left: x, top: y }}>
       <button
         ref={item}
@@ -73,9 +75,10 @@ export function NodeMenu({ x, y, onChoose, onAsk, askDisabled = false, askReason
           type="button"
           role="menuitem"
           className="node-menu__item"
-          disabled={askDisabled}
-          {...(askDisabled && askReason ? { title: askReason } : {})}
+          {...(askDisabled ? { "aria-disabled": "true" as const } : {})}
+          {...(askDisabled && askReason ? { "aria-describedby": reasonId } : {})}
           onClick={() => {
+            if (askDisabled) return;
             onAsk();
             onClose();
           }}
@@ -84,5 +87,12 @@ export function NodeMenu({ x, y, onChoose, onAsk, askDisabled = false, askReason
         </button>
       )}
     </div>
+    {/* 메뉴 밖에 둔다: menu 의 자식은 menuitem 만 와야 한다. aria-describedby 로 읽힌다. */}
+    {onAsk && askDisabled && askReason && (
+      <span id={reasonId} className="node-menu__reason">
+        {askReason}
+      </span>
+    )}
+    </>
   );
 }
