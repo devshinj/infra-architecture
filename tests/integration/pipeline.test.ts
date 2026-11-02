@@ -174,7 +174,7 @@ describe("runChatTurn", () => {
     const vs = await versions(ids.diagramId);
     expect(vs).toHaveLength(2);
     expect(vs[1]).toMatchObject({ number: 2, source: "ai", status: "complete", messageId: start.messageId });
-    expect(vs[1]!.state).toEqual({ ...s2, warnings: [] });
+    expect(vs[1]!.state).toEqual({ ...s2, warnings: [expect.objectContaining({ id: "spof:db-proxy", rule: "spof" })] });
 
     const msgs = await listMessages(ids.diagramId);
     expect(msgs.map((m) => m.role)).toEqual(["user", "assistant"]);
@@ -592,7 +592,7 @@ describe("runChatTurn", () => {
     const vs = await versions(ids.diagramId);
     expect(vs).toHaveLength(1);
     expect(vs[0]).toMatchObject({ status: "complete", source: "ai" });
-    expect(vs[0]!.state).toEqual({ ...s2, warnings: [] });
+    expect(vs[0]!.state).toEqual({ ...s2, warnings: [expect.objectContaining({ id: "spof:db-proxy", rule: "spof" })] });
     const msgs = await listMessages(ids.diagramId);
     expect(msgs[1]!.meta).toMatchObject({ status: "complete", applied: S2_CMDS, version: 1 });
   });

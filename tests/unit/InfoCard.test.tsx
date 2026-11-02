@@ -64,7 +64,7 @@ test("card collapsed line shows counts", () => {
   // 0 인 항목은 숫자가 흐리다.
   const st = mkState();
   st.nodes.web!.attrs.hostname = "h";
-  st.assumptions = { redundancy: { key: "redundancy", value: "핵심 구간 이중화", confirmed: true } };
+  st.assumptions = { redundancy: { key: "redundancy", value: "이중화 없음", confirmed: true } };
   render(<Card state={st} />);
   expect(toggle()).toHaveTextContent("구성 정보 · 채워야 할 정보 0 · 주의 0 · 미확정 가정 0");
   for (const n of within(toggle()).getAllByText("0")) expect(n).toHaveAttribute("data-zero");

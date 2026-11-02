@@ -110,10 +110,13 @@ test("a rejected layout shows a message instead of a blank canvas", async () => 
   expect(await screen.findByText("구성도를 배치하지 못했어요. 새로고침하거나 구성을 다시 확인해 주세요.")).toBeInTheDocument();
 });
 
+// spof 경고는 이중화 가정과 상관없이 켜지므로, 배지가 없어야 하는 테스트는 "이중화 없음"을 확정한 상태를 쓴다.
+const noSpof = (st = fx("s2")) => ({ ...st, assumptions: { ...st.assumptions, redundancy: { key: "redundancy" as const, value: "이중화 없음", confirmed: true } } });
+
 const withMissing = (p: CanvasProps): CanvasProps => ({ ...p, options: { ...p.options, showMissingBadges: true } });
 
 test("missing badges hidden by default", async () => {
-  const { container } = render(<div style={{ width: 800, height: 600 }}><Canvas {...baseProps()} /></div>);
+  const { container } = render(<div style={{ width: 800, height: 600 }}><Canvas {...baseProps(noSpof())} /></div>);
   await waitFor(() => expect(container.querySelectorAll(".react-flow__node-infra").length).toBeGreaterThan(0));
   expect(container.querySelector(".node__badge")).toBeNull();
 });
@@ -195,7 +198,7 @@ test("no badges in compare mode", async () => {
 });
 
 test("ignored warning has no badge", async () => {
-  const props = baseProps({ ...fx("s2"), warnings: [exposed("was-1")], ignoredWarnings: ["db_exposed:was-1"] });
+  const props = baseProps({ ...noSpof(), warnings: [exposed("was-1")], ignoredWarnings: ["db_exposed:was-1"] });
   props.options = { ...props.options, showMissingBadges: true };
   const { container } = render(<div style={{ width: 800, height: 600 }}><Canvas {...props} /></div>);
   await waitFor(() => expect(nodeEl(container, "was-1")?.querySelector(".node__badge") ?? null).not.toBeNull());
