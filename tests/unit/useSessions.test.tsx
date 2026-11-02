@@ -111,3 +111,56 @@ test("titles drop a trailing space left by the 60-codepoint cut", () => {
   act(() => result.current.startNew({ nodeId: "n1", nodeLabel: "A", text: `${"가".repeat(59)} 나다라` }));
   expect(result.current.summaryOf(NEW_SESSION)!.title).toBe("가".repeat(59));
 });
+
+const dupRes = (withReply: boolean) =>
+  Response.json({
+    session: s("a", "2026-11-01T00:00:00Z"),
+    messages: [
+      { id: "db-u1", role: "user", content: "이어 묻기", meta: {}, createdAt: "2026-11-01T00:00:00Z" },
+      ...(withReply ? [{ id: "db-m1", role: "assistant", content: "이어 답", meta: { applied: 0, version: null, status: "complete" }, createdAt: "2026-11-01T00:00:01Z" }] : []),
+    ],
+  });
+
+test.each([false, true])("merge drops turn lines already in the loaded history (reply saved: %s)", async (withReply) => {
+  let release!: (r: Response) => void;
+  vi.stubGlobal("fetch", vi.fn(() => new Promise<Response>((r) => (release = r))));
+  const { result } = renderHook(() => useSessions({ diagramId: "d1", initial: [s("a", "2026-11-01T00:00:00Z")] }));
+  act(() => result.current.select("a"));
+  act(() =>
+    result.current.setLines("a", (ls) => [...ls, { id: "l-1", kind: "user", text: "이어 묻기" }, { id: "a-1", kind: "assistant", text: "이어 답" }]),
+  );
+  await act(async () => release(dupRes(withReply)));
+  await waitFor(() => {
+    const l = result.current.linesOf("a");
+    expect(l).not.toBe("loading");
+    const texts = (l as { text: string }[]).map((x) => x.text);
+    expect(texts.filter((t) => t === "이어 묻기")).toHaveLength(1);
+    expect(texts.filter((t) => t === "이어 답")).toHaveLength(1);
+  });
+});
+
+test("a session holding turn lines whose load was aborted is reloaded and merged on reselect", async () => {
+  const calls: AbortSignal[] = [];
+  let release!: (r: Response) => void;
+  vi.stubGlobal(
+    "fetch",
+    vi.fn((_u: string, init?: RequestInit) => {
+      calls.push(init!.signal!);
+      if (calls.length === 1) return new Promise<Response>((_, rej) => init!.signal!.addEventListener("abort", () => rej(new DOMException("a", "AbortError"))));
+      return new Promise<Response>((r) => (release = r));
+    }),
+  );
+  const { result } = renderHook(() => useSessions({ diagramId: "d1", initial: [s("a", "2026-11-01T00:00:00Z")] }));
+  act(() => result.current.select("a"));
+  act(() => result.current.setLines("a", (ls) => [...ls, { id: "t1", kind: "assistant", text: "새 답" }]));
+  act(() => result.current.select("main"));
+  expect(calls[0]!.aborted).toBe(true);
+  act(() => result.current.select("a"));
+  expect(calls).toHaveLength(2);
+  expect(result.current.linesOf("a")).not.toBe("loading");
+  await act(async () => release(histRes()));
+  await waitFor(() => {
+    const l = result.current.linesOf("a");
+    expect(l !== "loading" && l.map((x) => x.text)).toEqual(["옛 질문", "새 답"]);
+  });
+});

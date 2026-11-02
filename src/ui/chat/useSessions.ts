@@ -33,6 +33,27 @@ type Update = ChatLine[] | ((prev: ChatLine[]) => ChatLine[]);
 
 const without = (ls: Lines, id: string): Lines => Object.fromEntries(Object.entries(ls).filter(([k]) => k !== id));
 
+/**
+ * 불러온 기록 뒤에 이을 차례 줄. 차례 줄은 화면용 id(l-N)라 저장된 줄과 id 로 맞출 수 없어 글로 맞춘다:
+ * 사용자 줄은 같은 글의 불러온 사용자 줄이 있으면, 그 뒤에 불러온 답이 있으면 이어지는 답·안내 줄도 이미 있는 것이다.
+ */
+function turnOnly(loaded: ChatLine[], turn: ChatLine[]): ChatLine[] {
+  const out: ChatLine[] = [];
+  let replied = false;
+  for (const l of turn) {
+    if (l.id.endsWith("-load-failed")) continue;
+    if (l.kind === "user") {
+      const at = loaded.findLastIndex((x) => x.kind === "user" && x.text === l.text);
+      replied = at >= 0 && loaded.some((x, k) => k > at && x.kind === "assistant");
+      if (at >= 0) continue;
+    } else if (replied) {
+      continue;
+    }
+    out.push(l);
+  }
+  return out;
+}
+
 interface Row {
   id: string;
   role: "user" | "assistant" | "system";
@@ -91,8 +112,7 @@ export function useSessions({ diagramId, initial }: { diagramId: string; initial
         const cur = ls[id];
         if (cur === "loading") return { ...ls, [id]: next };
         if (cur === undefined) return ls;
-        const have = new Set(next.map((l) => l.id));
-        return { ...ls, [id]: [...next, ...cur.filter((l) => !have.has(l.id))] };
+        return { ...ls, [id]: [...next, ...turnOnly(next, cur)] };
       });
     },
     [diagramId],
@@ -108,14 +128,21 @@ export function useSessions({ diagramId, initial }: { diagramId: string; initial
         if (linesRef.current[flying.id] === "loading") {
           linesRef.current = without(linesRef.current, flying.id);
           setAllLines((ls) => (ls[flying.id] === "loading" ? without(ls, flying.id) : ls));
+        } else {
+          // 도는 차례 줄이 이미 있는 세션: 기록을 못 불렀으니 다시 고르면 다시 불러와 합친다.
+          failed.current.add(flying.id);
         }
       }
       if (key === "main" || key === NEW_SESSION) return;
       const have = linesRef.current[key];
       if (have !== undefined && !failed.current.has(key)) return;
       failed.current.delete(key);
-      linesRef.current = { ...linesRef.current, [key]: "loading" };
-      setAllLines((ls) => ({ ...ls, [key]: "loading" }));
+      // 차례 줄이 이미 있으면 가리지 않고 그대로 두고 불러온 기록과 합친다.
+      const keep = Array.isArray(have) && have.some((l) => !l.id.endsWith("-load-failed"));
+      if (!keep) {
+        linesRef.current = { ...linesRef.current, [key]: "loading" };
+        setAllLines((ls) => ({ ...ls, [key]: "loading" }));
+      }
       const ac = new AbortController();
       inflight.current = { id: key, ac };
       void load(key, ac.signal);
