@@ -96,3 +96,23 @@ test("reload of a handoff reply keeps the send-to-main line with the user's text
     ["handoff", "이중화해 줘"],
   ]);
 });
+
+test("handoff button uses meta.handoffText even when no user row is in the window", () => {
+  const lines = messagesToLines([
+    { id: "a1", role: "assistant", content: "구성을 바꾸려면 구성도 대화에서 말해 주세요.", meta: { handoff: true, handoffText: "WAS 추가해 줘", says: ["구성을 바꾸려면 구성도 대화에서 말해 주세요."] } },
+  ]);
+  const h = lines.find((l) => l.kind === "handoff");
+  expect(h?.text).toBe("WAS 추가해 줘");
+});
+
+test("old handoff rows fall back to the preceding user text; with neither there is no button", () => {
+  const meta = { handoff: true as const, says: ["안내"] };
+  const withUser = messagesToLines([
+    { id: "u1", role: "user", content: "추가해 줘", meta: {} },
+    { id: "a1", role: "assistant", content: "안내", meta },
+  ]);
+  expect(withUser.find((l) => l.kind === "handoff")?.text).toBe("추가해 줘");
+  const none = messagesToLines([{ id: "a1", role: "assistant", content: "안내", meta }]);
+  expect(none.some((l) => l.kind === "handoff")).toBe(false);
+  expect(none.map((l) => l.text)).toContain("안내");
+});
