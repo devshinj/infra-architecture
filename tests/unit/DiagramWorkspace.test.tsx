@@ -2,7 +2,7 @@ import "@testing-library/jest-dom/vitest";
 import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
-const hookState = vi.hoisted(() => ({ busy: false, onCommand: null as null | ((c: unknown) => void), badgeFns: [] as unknown[], warnFns: [] as unknown[], lines: [] as unknown[], insets: [] as unknown[], focus: [] as unknown[], turn: null as null | { onDone(): void; onInterrupted(): void; onRelayout?(): void }, pinned: [] as unknown[], fitRequest: [] as unknown[], placed: null as null | ((locate: (id: string) => { x: number; y: number } | null) => void) }));
+const hookState = vi.hoisted(() => ({ send: vi.fn(), busy: false, onCommand: null as null | ((c: unknown) => void), badgeFns: [] as unknown[], warnFns: [] as unknown[], lines: [] as unknown[], insets: [] as unknown[], focus: [] as unknown[], turn: null as null | { onDone(): void; onInterrupted(): void; onRelayout?(): void }, pinned: [] as unknown[], fitRequest: [] as unknown[], placed: null as null | ((locate: (id: string) => { x: number; y: number } | null) => void) }));
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
 vi.mock("@/app/(app)/actions", () => ({
@@ -11,6 +11,7 @@ vi.mock("@/app/(app)/actions", () => ({
   saveFieldsAction: vi.fn(async () => ({ ok: true, number: 2 })),
   setWarningIgnoredAction: vi.fn(async () => ({ ok: true, number: 2 })),
   listTermsAction: vi.fn(async () => []),
+  confirmAssumptionAction: vi.fn(async () => ({ ok: true })),
 }));
 vi.mock("@/canvas/Canvas", () => ({
   Canvas: ({ state, pinned, fitRequest, onAutoArrange, fitKey, cameraInsets, focusRequest, onMention, onAskNode, onBadgeClick, onWarnBadgeClick, onSelect, onImportSample, onPlaced }: {onAskNode?: (id: string) => void;  onPlaced?: (l: (id: string) => { x: number; y: number } | null) => void; onImportSample?: (id: string) => void; state: { nodes: object }; pinned: unknown; fitRequest?: unknown; onAutoArrange(): void; fitKey?: string; cameraInsets?: unknown; focusRequest?: unknown; onMention?: (id: string) => void; onBadgeClick?: (id: string) => void; onWarnBadgeClick?: (id: string) => void; onSelect: (id: string | null) => void }) => {
@@ -43,7 +44,7 @@ vi.mock("@/ui/chat/useChatTurn", () => ({
   useChatTurn: (a: { onCommand: (c: unknown) => void; onDone(): void; onInterrupted(): void; onRelayout?(): void }) => {
     hookState.onCommand = a.onCommand;
     hookState.turn = a;
-    return { lines: hookState.lines, busy: hookState.busy, send: vi.fn(), stop: vi.fn() };
+    return { lines: hookState.lines, busy: hookState.busy, send: hookState.send, stop: vi.fn() };
   },
 }));
 
@@ -620,4 +621,30 @@ test("an edge gets no ask input", () => {
   fireEvent.click(screen.getByRole("button", { name: "선택e1" }));
   expect(screen.getByRole("heading", { name: "연결선" })).toBeInTheDocument();
   expect(screen.queryByLabelText("이 노드에 대해 물어보기")).not.toBeInTheDocument();
+});
+
+test("choosing an assumption while a question session is open goes to the main chat, not /ask", async () => {
+  hookState.busy = false;
+  hookState.lines = [];
+  hookState.send.mockClear();
+  const session = { id: "s1", nodeId: "a", nodeLabel: "a", title: "왜 두 대예요?", updatedAt: new Date().toISOString() };
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async (url: string) => (String(url).endsWith("/sessions/s1") ? Response.json({ session, messages: [] }) : Response.json({ qwen: "ok", clef: "ok" }))),
+  );
+  const latest = { number: 1, state: { ...emptyState(), nodes: Object.fromEntries([web("a")]), assumptions: { scale: { key: "scale", value: "중규모(일 1만 명)", confirmed: false } } } };
+  render(<DiagramWorkspace diagramId="d" name="n" latest={latest as never} initialPinned={{}} samples={[]} initialSessions={[session]} />);
+  fireEvent.click(screen.getByRole("button", { name: "구성도 대화" }));
+  fireEvent.click(screen.getByRole("menuitem", { name: /a · 왜 두 대예요\?/ }));
+  await screen.findByRole("button", { name: /a · 왜 두 대예요\?/ });
+  fireEvent.click(cardToggle());
+  fireEvent.click(screen.getByRole("button", { name: /^규모: 중규모/ }));
+  await act(async () => {
+    fireEvent.click(screen.getByRole("button", { name: "대규모(일 10만 명 이상)" }));
+  });
+  expect(hookState.send).toHaveBeenCalledTimes(1);
+  expect(hookState.send.mock.calls[0]![0]).toMatch(/^가정 변경:/);
+  // 질문 세션 옵션(kind: "ask")이 없는 구성도 대화 전송이다.
+  expect(hookState.send.mock.calls[0]![1]).toBeUndefined();
+  expect(screen.getByRole("button", { name: "구성도 대화" })).toBeInTheDocument();
 });

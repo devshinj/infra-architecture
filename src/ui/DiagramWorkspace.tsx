@@ -333,19 +333,22 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
   /** 지금 구성도의 노드 이름. 노드가 없으면 null(지워진 노드의 세션). */
   const labelOf = (nodeId: string) => current.state.nodes[nodeId]?.label ?? null;
   const activeSession = sessions.active === "main" ? null : sessions.summaryOf(sessions.active);
-  const sendChat = (text: string) => {
+  /** 구성도 대화(main)로만 보낸다. 구조를 바꾸는 가정 변경처럼 질문 세션으로 가면 안 되는 차례가 쓴다. */
+  const sendMain = (text: string) => {
     if (!live || chat.busy) return;
-    if (sessions.active !== "main") {
-      // 질문 세션: 노드가 지금 구성도에 있을 때만 이어 묻는다. 새 세션은 서버가 id 를 줄 때까지 sessionId 없이 보낸다.
-      if (!activeSession || labelOf(activeSession.nodeId) === null) return;
-      const isNew = sessions.active === NEW_SESSION;
-      if (!isNew) sessions.upsert({ ...activeSession, updatedAt: new Date().toISOString() });
-      void chat.send(text, { kind: "ask", nodeId: activeSession.nodeId, sessionId: isNew ? null : activeSession.id });
-      return;
-    }
     setEditMode(false);
     adoptAfterChat.current = false;
     void chat.send(text);
+  };
+  // 대화 패널의 보내기: 질문 세션을 보고 있으면 그 세션으로, 아니면 구성도 대화로.
+  const sendChat = (text: string) => {
+    if (sessions.active === "main") return sendMain(text);
+    if (!live || chat.busy) return;
+    // 질문 세션: 노드가 지금 구성도에 있을 때만 이어 묻는다. 새 세션은 서버가 id 를 줄 때까지 sessionId 없이 보낸다.
+    if (!activeSession || labelOf(activeSession.nodeId) === null) return;
+    const isNew = sessions.active === NEW_SESSION;
+    if (!isNew) sessions.upsert({ ...activeSession, updatedAt: new Date().toISOString() });
+    void chat.send(text, { kind: "ask", nodeId: activeSession.nodeId, sessionId: isNew ? null : activeSession.id });
   }; // no history view/compare/restore, edit mode or sample import while the AI answers
 
   /** 노드에 대해 묻기(설명 패널·우클릭 메뉴가 부른다): 대화 탭으로 가서 새 질문 세션의 첫 차례를 시작한다. */
@@ -377,7 +380,10 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
   };
   const onChooseAssumption = async (key: string, value: string) => {
     if (!live || chat.busy) return;
-    if (await confirmKey(key, value)) sendChat(assumptionChangeMessage(key, value));
+    if (!(await confirmKey(key, value))) return;
+    // 구조를 다시 맞추는 차례라 질문 세션이 아니라 구성도 대화로 보내고, 그 줄이 보이게 옮겨 간다.
+    sessions.select("main");
+    sendMain(assumptionChangeMessage(key, value));
   };
   const onConfirmAssumption = (key: string) => {
     const a = current.state.assumptions[key];
