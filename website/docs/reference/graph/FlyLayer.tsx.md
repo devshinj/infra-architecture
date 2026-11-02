@@ -1,6 +1,6 @@
 ---
 title: "FlyLayer.tsx"
-sidebar_position: 26
+sidebar_position: 28
 ---
 # FlyLayer.tsx
 
@@ -30,11 +30,13 @@ sidebar_position: 26
 
 ## Relationships
 
-- [Canvas.tsx](Canvas.tsx.md) (4 shared connections)
 - [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (3 shared connections)
+- [useCamera.ts](useCamera.ts.md) (2 shared connections)
 - [ChatPanel.tsx](ChatPanel.tsx.md) (2 shared connections)
 - [(app)/actions.ts](app-actions.ts.md) (2 shared connections)
-- [schema.ts](schema.ts.md) (1 shared connections)
+- [Flow](Flow.md) (1 shared connections)
+- [Canvas.tsx](Canvas.tsx.md) (1 shared connections)
+- [DiagramState](DiagramState.md) (1 shared connections)
 
 ## Source Files
 

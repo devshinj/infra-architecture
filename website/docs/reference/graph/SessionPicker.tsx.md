@@ -1,6 +1,6 @@
 ---
 title: "SessionPicker.tsx"
-sidebar_position: 40
+sidebar_position: 42
 ---
 # SessionPicker.tsx
 
@@ -24,13 +24,12 @@ sidebar_position: 40
 
 ## Relationships
 
-- [useSessions.ts](useSessions.ts.md) (7 shared connections)
-- [ChatPanel.tsx](ChatPanel.tsx.md) (4 shared connections)
+- [useSessions.ts](useSessions.ts.md) (6 shared connections)
+- [ChatPanel.tsx](ChatPanel.tsx.md) (5 shared connections)
 - [Canvas.tsx](Canvas.tsx.md) (3 shared connections)
+- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (3 shared connections)
 - [MentionInput](MentionInput.md) (2 shared connections)
-- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (2 shared connections)
-- [schema.ts](schema.ts.md) (1 shared connections)
-- [commands.ts](commands.ts.md) (1 shared connections)
+- [DiagramState](DiagramState.md) (1 shared connections)
 
 ## Source Files
 

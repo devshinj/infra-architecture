@@ -32,15 +32,14 @@ sidebar_position: 21
 ## Relationships
 
 - [missing.ts](missing.ts.md) (6 shared connections)
+- [NodeCard.tsx](NodeCard.tsx.md) (5 shared connections)
 - [InfoCard.tsx](InfoCard.tsx.md) (5 shared connections)
 - [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (4 shared connections)
-- [catalog.ts](catalog.ts.md) (3 shared connections)
-- [(app)/actions.ts](app-actions.ts.md) (3 shared connections)
-- [NodeInfo.tsx](NodeInfo.tsx.md) (2 shared connections)
+- [DiagramState](DiagramState.md) (3 shared connections)
 - [prompt.ts](prompt.ts.md) (1 shared connections)
 - [MentionInput](MentionInput.md) (1 shared connections)
-- [schema.ts](schema.ts.md) (1 shared connections)
-- [명령 적용과 샘플](명령_적용과_샘플.md) (1 shared connections)
+- [types.ts](types.ts.md) (1 shared connections)
+- [Review Focus](Review_Focus.md) (1 shared connections)
 
 ## Source Files
 

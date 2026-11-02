@@ -1,6 +1,6 @@
 ---
 title: "DiagramWorkspace()"
-sidebar_position: 52
+sidebar_position: 55
 sidebar_label: "핵심 노드: DiagramWorkspace()"
 ---
 # DiagramWorkspace()
@@ -28,12 +28,12 @@ sidebar_label: "핵심 노드: DiagramWorkspace()"
 - getVersionAction() `EXTRACTED`
 - diffStates() `EXTRACTED`
 - Legend() `EXTRACTED`
+- useShell() `EXTRACTED`
 - useFly() `EXTRACTED`
 - listVersionsAction() `EXTRACTED`
 - confirmAssumptionAction() `EXTRACTED`
 - confirmAssumption() `EXTRACTED`
 - saveFieldsAction() `EXTRACTED`
-- importSampleAction() `EXTRACTED`
 - *…and 13 more `calls` connection(s) not listed (lowest-degree first to go)*
 
 ### contains

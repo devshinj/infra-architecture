@@ -1,23 +1,20 @@
 ---
 title: "domain/warnings.ts"
-sidebar_position: 23
+sidebar_position: 36
 ---
 # domain/warnings.ts
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 17 nodes · cohesion 0.18
+> 14 nodes · cohesion 0.21
 
 ## Key Concepts
 
 - **domain/warnings.ts** (24 connections) — `src/domain/warnings.ts`
-- **DNode** (11 connections) — `src/domain/types.ts`
 - **evaluateRules()** (10 connections) — `src/domain/warnings.ts`
-- **mergeWarnings()** (9 connections) — `src/domain/warnings.ts`
 - **categoryOf()** (7 connections) — `src/domain/catalog.ts`
 - **Edge** (5 connections) — `src/domain/types.ts`
 - **WarningLevel** (4 connections) — `src/domain/types.ts`
-- **NodeKind** (3 connections) — `src/domain/catalog.ts`
 - **Rule** (3 connections) — `src/domain/warnings.ts`
 - **Target** (3 connections) — `src/domain/warnings.ts`
 - **ancestorKinds()** (2 connections) — `src/domain/warnings.ts`
@@ -30,17 +27,18 @@ sidebar_position: 23
 
 ## Relationships
 
-- [chat/warnings.ts](chat-warnings.ts.md) (9 shared connections)
-- [Canvas.tsx](Canvas.tsx.md) (7 shared connections)
-- [(app)/actions.ts](app-actions.ts.md) (7 shared connections)
-- [NodeInfo.tsx](NodeInfo.tsx.md) (6 shared connections)
-- [catalog.ts](catalog.ts.md) (3 shared connections)
-- [layout.ts](layout.ts.md) (3 shared connections)
+- [chat/warnings.ts](chat-warnings.ts.md) (6 shared connections)
+- [types.ts](types.ts.md) (4 shared connections)
+- [NodeInfo.tsx](NodeInfo.tsx.md) (3 shared connections)
 - [InfoCard.tsx](InfoCard.tsx.md) (3 shared connections)
-- [missing.ts](missing.ts.md) (2 shared connections)
-- [domain/explain.ts](domain-explain.ts.md) (1 shared connections)
-- [연결선 구간 묶음](연결선_구간_묶음.md) (1 shared connections)
-- [useSessions.ts](useSessions.ts.md) (1 shared connections)
+- [Flow](Flow.md) (2 shared connections)
+- [Canvas.tsx](Canvas.tsx.md) (2 shared connections)
+- [NodeCard.tsx](NodeCard.tsx.md) (2 shared connections)
+- [DiagramState](DiagramState.md) (2 shared connections)
+- [display.ts](display.ts.md) (2 shared connections)
+- [Task 2: 서버 점검 — Clef 판정과 Qwen 문구](Task_2-_서버_점검_—_Clef_판정과_Qwen_문구.md) (2 shared connections)
+- [segments.ts](segments.ts.md) (1 shared connections)
+- [missing.ts](missing.ts.md) (1 shared connections)
 
 ## Source Files
 
@@ -50,8 +48,8 @@ sidebar_position: 23
 
 ## Audit Trail
 
-- EXTRACTED: 64 (96%)
-- INFERRED: 3 (4%)
+- EXTRACTED: 47 (96%)
+- INFERRED: 2 (4%)
 - AMBIGUOUS: 0 (0%)
 
 ---

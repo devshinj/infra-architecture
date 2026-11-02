@@ -1,37 +1,40 @@
 ---
 title: "Sidebar()"
-sidebar_position: 60
+sidebar_position: 58
 sidebar_label: "핵심 노드: Sidebar()"
 ---
 # Sidebar()
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> God node · 21 connections · `src/ui/Sidebar.tsx`
+> God node · 26 connections · `src/ui/Sidebar.tsx`
 
 **Community:** [(app)/actions.ts](app-actions.ts.md)
 
 ## Connections by Relation
 
 ### calls
+- deleteDiagramAction() `EXTRACTED`
 - duplicateDiagramAction() `EXTRACTED`
 - createProjectAction() `EXTRACTED`
 - createDiagramAction() `EXTRACTED`
 - renameDiagramAction() `EXTRACTED`
 - renameProjectAction() `EXTRACTED`
 - deleteProjectAction() `EXTRACTED`
-- deleteDiagramAction() `EXTRACTED`
-- AppLayout() `EXTRACTED`
 - useShell() `EXTRACTED`
+- AppLayout() `EXTRACTED`
 - LogoMark() `EXTRACTED`
+- DialogView() `EXTRACTED`
 - IconBook() `EXTRACTED`
 - IconExpand() `EXTRACTED`
 - IconPlus() `EXTRACTED`
 - IconUser() `EXTRACTED`
 - IconCollapse() `EXTRACTED`
-- DialogView() `EXTRACTED`
-- RailButton() `EXTRACTED`
 - .setCollapsed() `EXTRACTED`
+- diagramPath() `EXTRACTED`
+- .setCreateHandler() `EXTRACTED`
+- deleteMessage() `EXTRACTED`
+- *…and 3 more `calls` connection(s) not listed (lowest-degree first to go)*
 
 ### contains
 - Sidebar.tsx `EXTRACTED`

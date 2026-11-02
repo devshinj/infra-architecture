@@ -1,19 +1,21 @@
 ---
 title: "ChatPanel.tsx"
-sidebar_position: 20
+sidebar_position: 19
 ---
 # ChatPanel.tsx
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 18 nodes · cohesion 0.17
+> 22 nodes · cohesion 0.13
 
 ## Key Concepts
 
 - **ChatPanel.tsx** (38 connections) — `src/ui/chat/ChatPanel.tsx`
 - **ChatPanel()** (13 connections) — `src/ui/chat/ChatPanel.tsx`
+- **ChatPanelProps** (9 connections) — `src/ui/chat/ChatPanel.tsx`
 - **CardView()** (5 connections) — `src/ui/chat/ChatPanel.tsx`
 - **hhmm()** (3 connections) — `src/ui/chat/ChatPanel.tsx`
+- **.onSend()** (2 connections) — `src/ui/chat/ChatPanel.tsx`
 - **Check()** (2 connections) — `src/ui/chat/ChatPanel.tsx`
 - **Dots()** (2 connections) — `src/ui/chat/ChatPanel.tsx`
 - **pad()** (2 connections) — `src/ui/chat/ChatPanel.tsx`
@@ -23,6 +25,8 @@ sidebar_position: 20
 - **toBlocks()** (2 connections) — `src/ui/chat/ChatPanel.tsx`
 - **Block** (1 connections) — `src/ui/chat/ChatPanel.tsx`
 - **BUILD_STEPS** (1 connections) — `src/ui/chat/ChatPanel.tsx`
+- **.onOpenWarnings()** (1 connections) — `src/ui/chat/ChatPanel.tsx`
+- **.onStop()** (1 connections) — `src/ui/chat/ChatPanel.tsx`
 - **CHIP_KINDS** (1 connections) — `src/ui/chat/ChatPanel.tsx`
 - **EXAMPLES** (1 connections) — `src/ui/chat/ChatPanel.tsx`
 - **GUIDE_ITEMS** (1 connections) — `src/ui/chat/ChatPanel.tsx`
@@ -31,13 +35,14 @@ sidebar_position: 20
 
 ## Relationships
 
-- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (8 shared connections)
-- [MentionInput](MentionInput.md) (7 shared connections)
-- [useSessions.ts](useSessions.ts.md) (5 shared connections)
-- [SessionPicker.tsx](SessionPicker.tsx.md) (4 shared connections)
+- [MentionInput](MentionInput.md) (8 shared connections)
+- [DiagramState](DiagramState.md) (6 shared connections)
+- [SessionPicker.tsx](SessionPicker.tsx.md) (5 shared connections)
+- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (5 shared connections)
+- [useSessions.ts](useSessions.ts.md) (2 shared connections)
+- [types.ts](types.ts.md) (2 shared connections)
 - [FlyLayer.tsx](FlyLayer.tsx.md) (2 shared connections)
-- [schema.ts](schema.ts.md) (1 shared connections)
-- [명령 적용과 샘플](명령_적용과_샘플.md) (1 shared connections)
+- [Review Focus](Review_Focus.md) (1 shared connections)
 
 ## Source Files
 
@@ -45,8 +50,8 @@ sidebar_position: 20
 
 ## Audit Trail
 
-- EXTRACTED: 52 (96%)
-- INFERRED: 2 (4%)
+- EXTRACTED: 60 (97%)
+- INFERRED: 2 (3%)
 - AMBIGUOUS: 0 (0%)
 
 ---

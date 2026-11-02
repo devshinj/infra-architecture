@@ -1,12 +1,12 @@
 ---
 title: "domain/explain.ts"
-sidebar_position: 35
+sidebar_position: 41
 ---
 # domain/explain.ts
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 13 nodes · cohesion 0.21
+> 12 nodes · cohesion 0.23
 
 ## Key Concepts
 
@@ -14,7 +14,6 @@ sidebar_position: 35
 - **signatureOf()** (12 connections) — `src/domain/explain.ts`
 - **Task 4: 서버 설명 생성** (6 connections) — `docs/superpowers/plans/2026-10-30-infrasketch-phase3c1-explanations-glossary.md`
 - **overLimit()** (4 connections) — `src/domain/explain.ts`
-- **Task 7: 설명 큐와 연결** (3 connections) — `docs/superpowers/plans/2026-10-30-infrasketch-phase3c1-explanations-glossary.md`
 - **LIMITS** (3 connections) — `src/domain/explain.ts`
 - **TermEntry** (3 connections) — `src/domain/explain.ts`
 - **attrText()** (2 connections) — `src/domain/explain.ts`
@@ -26,18 +25,18 @@ sidebar_position: 35
 
 ## Relationships
 
-- [useExplanations.ts](useExplanations.ts.md) (9 shared connections)
-- [(app)/actions.ts](app-actions.ts.md) (7 shared connections)
-- [설명 생성과 품질 검사](설명_생성과_품질_검사.md) (7 shared connections)
-- [Explanation.tsx](Explanation.tsx.md) (3 shared connections)
+- [설명 생성과 품질 검사](설명_생성과_품질_검사.md) (8 shared connections)
+- [useExplanations.ts](useExplanations.ts.md) (7 shared connections)
+- [glossary.ts](glossary.ts.md) (5 shared connections)
 - [3C-1 계획 작업 목록](3C-1_계획_작업_목록.md) (2 shared connections)
+- [(app)/actions.ts](app-actions.ts.md) (2 shared connections)
+- [types.ts](types.ts.md) (2 shared connections)
 - [prompt.ts](prompt.ts.md) (2 shared connections)
-- [chat/warnings.ts](chat-warnings.ts.md) (1 shared connections)
+- [ask/route.ts](ask-route.ts.md) (1 shared connections)
+- [Task 2: 서버 점검 — Clef 판정과 Qwen 문구](Task_2-_서버_점검_—_Clef_판정과_Qwen_문구.md) (1 shared connections)
 - [missing.ts](missing.ts.md) (1 shared connections)
-- [domain/warnings.ts](domain-warnings.ts.md) (1 shared connections)
-- [schema.ts](schema.ts.md) (1 shared connections)
-- [catalog.ts](catalog.ts.md) (1 shared connections)
-- [ask.ts](ask.ts.md) (1 shared connections)
+- [DiagramState](DiagramState.md) (1 shared connections)
+- [display.ts](display.ts.md) (1 shared connections)
 
 ## Source Files
 
@@ -46,8 +45,8 @@ sidebar_position: 35
 
 ## Audit Trail
 
-- EXTRACTED: 45 (87%)
-- INFERRED: 7 (13%)
+- EXTRACTED: 44 (88%)
+- INFERRED: 6 (12%)
 - AMBIGUOUS: 0 (0%)
 
 ---
