@@ -11,6 +11,8 @@ import { signup } from "./signup";
 export type FormState = {
   errors?: Partial<Record<"username" | "email" | "password" | "form", string>>;
   done?: boolean;
+  /** 재설정 링크가 만료됐거나 이미 쓰였다 — 새 링크를 받아야 한다. */
+  expired?: boolean;
 };
 
 const text = (data: FormData, key: string) => String(data.get(key) ?? "");
@@ -39,7 +41,8 @@ export async function signupAction(_prev: FormState, data: FormData): Promise<Fo
   try {
     await signIn("credentials", { username, password, redirectTo: "/" });
   } catch (e) {
-    if (e instanceof AuthError) redirect("/login");
+    // 가입은 끝났으니 로그인 화면에서 그렇다고 알려 준다.
+    if (e instanceof AuthError) redirect("/login?notice=signup");
     throw e;
   }
   return {};
@@ -52,6 +55,10 @@ export async function requestResetAction(_prev: FormState, data: FormData): Prom
 
 export async function resetPasswordAction(_prev: FormState, data: FormData): Promise<FormState> {
   const result = await resetPassword(text(data, "token"), text(data, "password"));
-  if (!result.ok) return { errors: { password: result.message } };
-  redirect("/login");
+  if (!result.ok) {
+    return result.reason === "token"
+      ? { errors: { form: result.message }, expired: true }
+      : { errors: { password: result.message } };
+  }
+  redirect("/login?notice=reset");
 }

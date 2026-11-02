@@ -8,6 +8,7 @@ import { env } from "@/env";
 
 import { sendMail } from "./mailer";
 import { hashPassword } from "./password";
+import { checkNewPassword } from "./rules";
 
 const TTL_MS = 60 * 60 * 1000;
 
@@ -41,12 +42,22 @@ export async function requestPasswordReset(email: string): Promise<void> {
   }
 }
 
+/** reason 이 "token" 이면 비밀번호를 다시 입력해도 소용없다 — 화면은 새 링크를 받도록 안내한다. */
+export type ResetResult =
+  | { ok: true }
+  | { ok: false; reason: "password" | "token"; message: string };
+
 export async function resetPassword(
   token: string,
   newPassword: string,
-): Promise<{ ok: boolean; message?: string }> {
-  if (newPassword.length < 8) return { ok: false, message: "비밀번호는 8자 이상이어야 합니다" };
-  const invalid = { ok: false, message: "만료되었거나 이미 사용한 링크입니다" };
+): Promise<ResetResult> {
+  const passwordError = checkNewPassword(newPassword);
+  if (passwordError) return { ok: false, reason: "password", message: passwordError };
+  const invalid: ResetResult = {
+    ok: false,
+    reason: "token",
+    message: "만료되었거나 이미 사용한 링크입니다. 재설정 링크를 다시 받아 주세요",
+  };
   const passwordHash = await hashPassword(newPassword);
 
   // 한 번만 쓰이도록 usedAt 갱신을 조건부 UPDATE 로 먼저 선점한다.
@@ -64,6 +75,6 @@ export async function resetPassword(
       .returning({ userId: passwordResetTokens.userId });
     if (!claimed) return invalid;
     await tx.update(users).set({ passwordHash }).where(eq(users.id, claimed.userId));
-    return { ok: true };
+    return { ok: true } as const;
   });
 }
