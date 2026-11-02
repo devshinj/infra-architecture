@@ -1,12 +1,19 @@
 .page {
+  /* 다크 단일 테마 — 자동완성·스크롤바 같은 브라우저 기본 컨트롤도 어둡게 그린다. */
+  color-scheme: dark;
+  box-sizing: border-box;
   min-height: 100vh;
+  min-height: 100dvh;
   display: grid;
   place-items: center;
+  padding: 24px 16px;
   background: var(--bg-canvas);
   color: var(--text-primary);
 }
 .form {
-  width: 320px;
+  /* 좁은 화면에서는 좌우 여백(16px) 안으로 줄어든다. */
+  width: 100%;
+  max-width: 320px;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -20,10 +27,19 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
+}
+.label {
   font-size: 14px;
   color: var(--text-secondary);
 }
+.inputRow {
+  position: relative;
+  display: flex;
+}
 .input {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 40px;
   background: var(--bg-node);
   border: 1px solid var(--line-node);
   border-radius: var(--radius-node);
@@ -31,21 +47,75 @@
   padding: 8px 10px;
   font: inherit;
 }
-.input:focus-visible {
-  outline: 2px solid var(--text-secondary);
+.inputWithReveal {
+  padding-right: 64px;
+}
+.input[aria-invalid="true"] {
+  border-color: var(--state-missing);
+}
+.input:focus-visible,
+.button:focus-visible,
+.reveal:focus-visible,
+.linkButton:focus-visible,
+.links a:focus-visible,
+.linkLine a:focus-visible,
+.doneBox:focus-visible {
+  outline: 2px solid var(--focus-ring);
   outline-offset: 1px;
 }
+.reveal {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  bottom: 4px;
+  min-width: 52px;
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-node);
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+.reveal:hover {
+  color: var(--text-primary);
+}
+.hint {
+  color: var(--text-secondary);
+  font-size: 12px;
+  margin: 0;
+}
+/* --state-missing 그대로는 바탕과의 대비가 낮아(약 2.7:1) 글자에는 밝게 섞어 쓴다(약 6:1). */
 .error {
-  color: var(--state-missing);
+  color: color-mix(in srgb, var(--state-missing) 55%, var(--text-primary));
+  font-size: 13px;
+  margin: 0;
+}
+.alert {
+  color: var(--text-primary);
+  background: var(--bg-node);
+  border: 1px solid var(--state-missing);
+  border-radius: var(--radius-node);
+  padding: 8px 10px;
   font-size: 13px;
   margin: 0;
 }
 .notice {
   color: var(--text-secondary);
   font-size: 14px;
+  line-height: 1.5;
   margin: 0;
 }
-.button {
+.doneBox {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border-radius: var(--radius-node);
+}
+.button,
+.linkButton {
+  box-sizing: border-box;
+  min-height: 40px;
   background: var(--bg-node);
   border: 1px solid var(--line-node);
   border-radius: var(--radius-node);
@@ -54,18 +124,29 @@
   font: inherit;
   font-weight: 500;
   cursor: pointer;
+  text-align: center;
+  text-decoration: none;
 }
 .button:disabled {
   opacity: 0.6;
-  cursor: default;
+  cursor: progress;
 }
 .links {
   display: flex;
-  gap: 16px;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 16px;
   font-size: 13px;
 }
-.links a {
+.links a,
+.linkLine a {
   color: var(--text-secondary);
+}
+/* "이미 계정이 있나요? 로그인" 처럼 문장 안의 링크 */
+.linkLine {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin: 0;
 }
 .logo {
   align-self: center;
