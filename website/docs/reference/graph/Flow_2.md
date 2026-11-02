@@ -1,6 +1,6 @@
 ---
 title: "Flow()"
-sidebar_position: 62
+sidebar_position: 65
 sidebar_label: "핵심 노드: Flow()"
 ---
 # Flow()
@@ -14,8 +14,8 @@ sidebar_label: "핵심 노드: Flow()"
 ## Connections by Relation
 
 ### calls
-- computeMissing() `EXTRACTED`
 - Canvas() `EXTRACTED`
+- computeMissing() `EXTRACTED`
 - useCamera() `EXTRACTED`
 - mergeWarnings() `EXTRACTED`
 - categoryOf() `EXTRACTED`

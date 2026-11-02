@@ -1,6 +1,6 @@
 ---
 title: "Shell.tsx"
-sidebar_position: 27
+sidebar_position: 30
 ---
 # Shell.tsx
 
@@ -30,12 +30,13 @@ sidebar_position: 27
 
 ## Relationships
 
-- [(app)/actions.ts](app-actions.ts.md) (7 shared connections)
+- [Sidebar.tsx](Sidebar.tsx.md) (7 shared connections)
 - [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (5 shared connections)
-- [\[sessionId\]/route.ts]([sessionId]-route.ts.md) (4 shared connections)
-- [auth/actions.ts](auth-actions.ts.md) (4 shared connections)
+- [ask/route.ts](ask-route.ts.md) (4 shared connections)
 - [projects.ts](projects.ts.md) (4 shared connections)
-- [DiagramState](DiagramState.md) (1 shared connections)
+- [ref_next](ref_next.md) (2 shared connections)
+- [auth/actions.ts](auth-actions.ts.md) (2 shared connections)
+- [ref_react](ref_react.md) (1 shared connections)
 
 ## Source Files
 

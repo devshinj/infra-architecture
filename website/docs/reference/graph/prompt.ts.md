@@ -38,18 +38,18 @@ sidebar_position: 15
 
 ## Relationships
 
-- [pipeline.ts](pipeline.ts.md) (10 shared connections)
-- [missing.ts](missing.ts.md) (3 shared connections)
+- [ask.ts](ask.ts.md) (5 shared connections)
+- [pipeline.ts](pipeline.ts.md) (4 shared connections)
+- [chat/warnings.ts](chat-warnings.ts.md) (3 shared connections)
+- [catalog.ts](catalog.ts.md) (3 shared connections)
+- [MissingChecklist.tsx](MissingChecklist.tsx.md) (3 shared connections)
 - [설명 생성과 품질 검사](설명_생성과_품질_검사.md) (3 shared connections)
-- [NodeCard.tsx](NodeCard.tsx.md) (2 shared connections)
 - [domain/explain.ts](domain-explain.ts.md) (2 shared connections)
-- [qwen.ts](qwen.ts.md) (2 shared connections)
-- [chat/warnings.ts](chat-warnings.ts.md) (2 shared connections)
-- [Task 2: 서버 점검 — Clef 판정과 Qwen 문구](Task_2-_서버_점검_—_Clef_판정과_Qwen_문구.md) (1 shared connections)
-- [segments.ts](segments.ts.md) (1 shared connections)
-- [useExplanations.ts](useExplanations.ts.md) (1 shared connections)
-- [MissingChecklist.tsx](MissingChecklist.tsx.md) (1 shared connections)
-- [DiagramState](DiagramState.md) (1 shared connections)
+- [useExplanations.ts](useExplanations.ts.md) (2 shared connections)
+- [clef.ts](clef.ts.md) (2 shared connections)
+- [ask/route.ts](ask-route.ts.md) (2 shared connections)
+- [설계 문서와 계획](설계_문서와_계획.md) (1 shared connections)
+- [types.ts](types.ts.md) (1 shared connections)
 
 ## Source Files
 

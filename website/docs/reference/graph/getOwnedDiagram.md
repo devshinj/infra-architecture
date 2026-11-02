@@ -1,6 +1,6 @@
 ---
 title: "getOwnedDiagram()"
-sidebar_position: 56
+sidebar_position: 59
 sidebar_label: "핵심 노드: getOwnedDiagram()"
 ---
 # getOwnedDiagram()
@@ -26,10 +26,10 @@ sidebar_label: "핵심 노드: getOwnedDiagram()"
 - duplicateDiagram() `EXTRACTED`
 - duplicateDiagramAction() `EXTRACTED`
 - getVersionAction() `EXTRACTED`
+- renameDiagram() `EXTRACTED`
 - POST() `EXTRACTED`
 - listVersionsAction() `EXTRACTED`
 - getDiagram() `EXTRACTED`
-- renameDiagram() `EXTRACTED`
 - savePinnedPositions() `EXTRACTED`
 - importSample() `EXTRACTED`
 - GET() `EXTRACTED`
@@ -43,12 +43,12 @@ sidebar_label: "핵심 노드: getOwnedDiagram()"
 - [(app)/actions.ts](app-actions.ts.md) `EXTRACTED`
 - server/explain.ts `EXTRACTED`
 - [pipeline.ts](pipeline.ts.md) `EXTRACTED`
-- ask.ts `EXTRACTED`
+- [ask.ts](ask.ts.md) `EXTRACTED`
 - samples.ts `EXTRACTED`
 - [ask/route.ts](ask-route.ts.md) `EXTRACTED`
 - chat/route.ts `EXTRACTED`
 - fields.ts `EXTRACTED`
-- [\[sessionId\]/route.ts]([sessionId]-route.ts.md) `EXTRACTED`
+- \[sessionId\]/route.ts `EXTRACTED`
 - ignore.ts `EXTRACTED`
 - server/assumptions.ts `EXTRACTED`
 

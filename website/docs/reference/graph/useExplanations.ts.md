@@ -1,20 +1,22 @@
 ---
 title: "useExplanations.ts"
-sidebar_position: 38
+sidebar_position: 35
 ---
 # useExplanations.ts
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 14 nodes · cohesion 0.24
+> 16 nodes · cohesion 0.21
 
 ## Key Concepts
 
+- **DiagramState** (37 connections) — `src/domain/types.ts`
 - **useExplanations.ts** (27 connections) — `src/ui/explain/useExplanations.ts`
 - **useExplanations()** (12 connections) — `src/ui/explain/useExplanations.ts`
 - **NodeExplanation** (8 connections) — `src/domain/explain.ts`
 - **EdgeExplanation** (7 connections) — `src/domain/explain.ts`
 - **queueOf()** (5 connections) — `src/ui/explain/useExplanations.ts`
+- **.getLatestState()** (4 connections) — `src/server/explain.ts`
 - **fresh()** (4 connections) — `src/ui/explain/useExplanations.ts`
 - **Entry** (3 connections) — `src/ui/explain/useExplanations.ts`
 - **keyOf()** (3 connections) — `src/ui/explain/useExplanations.ts`
@@ -27,26 +29,30 @@ sidebar_position: 38
 
 ## Relationships
 
-- [domain/explain.ts](domain-explain.ts.md) (7 shared connections)
-- [DiagramState](DiagramState.md) (6 shared connections)
+- [NodeInfo.tsx](NodeInfo.tsx.md) (8 shared connections)
+- [domain/explain.ts](domain-explain.ts.md) (8 shared connections)
+- [설명 생성과 품질 검사](설명_생성과_품질_검사.md) (6 shared connections)
+- [MissingChecklist.tsx](MissingChecklist.tsx.md) (6 shared connections)
 - [glossary.ts](glossary.ts.md) (6 shared connections)
-- [(app)/actions.ts](app-actions.ts.md) (4 shared connections)
+- [chat/warnings.ts](chat-warnings.ts.md) (4 shared connections)
+- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (4 shared connections)
+- [schema.ts](schema.ts.md) (3 shared connections)
 - [types.ts](types.ts.md) (3 shared connections)
-- [Explanation.tsx](Explanation.tsx.md) (3 shared connections)
-- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (3 shared connections)
-- [설명 생성과 품질 검사](설명_생성과_품질_검사.md) (2 shared connections)
-- [prompt.ts](prompt.ts.md) (1 shared connections)
-- [Task 2: 서버 점검 — Clef 판정과 Qwen 문구](Task_2-_서버_점검_—_Clef_판정과_Qwen_문구.md) (1 shared connections)
+- [(app)/actions.ts](app-actions.ts.md) (3 shared connections)
+- [display.ts](display.ts.md) (3 shared connections)
+- [projects.ts](projects.ts.md) (3 shared connections)
 
 ## Source Files
 
 - `src/domain/explain.ts`
+- `src/domain/types.ts`
+- `src/server/explain.ts`
 - `src/ui/explain/useExplanations.ts`
 
 ## Audit Trail
 
-- EXTRACTED: 57 (98%)
-- INFERRED: 1 (2%)
+- EXTRACTED: 94 (98%)
+- INFERRED: 2 (2%)
 - AMBIGUOUS: 0 (0%)
 
 ---

@@ -1,6 +1,6 @@
 ---
 title: "glossary.ts"
-sidebar_position: 33
+sidebar_position: 38
 ---
 # glossary.ts
 
@@ -28,15 +28,14 @@ sidebar_position: 33
 
 ## Relationships
 
-- [(app)/actions.ts](app-actions.ts.md) (8 shared connections)
 - [설명 생성과 품질 검사](설명_생성과_품질_검사.md) (8 shared connections)
+- [projects.ts](projects.ts.md) (6 shared connections)
+- [GlossaryPage.tsx](GlossaryPage.tsx.md) (6 shared connections)
 - [useExplanations.ts](useExplanations.ts.md) (6 shared connections)
+- [schema.ts](schema.ts.md) (5 shared connections)
 - [domain/explain.ts](domain-explain.ts.md) (5 shared connections)
-- [projects.ts](projects.ts.md) (4 shared connections)
-- [auth/actions.ts](auth-actions.ts.md) (3 shared connections)
-- [ask/route.ts](ask-route.ts.md) (2 shared connections)
-- [types.ts](types.ts.md) (2 shared connections)
-- [Explanation.tsx](Explanation.tsx.md) (2 shared connections)
+- [NodeInfo.tsx](NodeInfo.tsx.md) (2 shared connections)
+- [(app)/actions.ts](app-actions.ts.md) (2 shared connections)
 - [3C-1 계획 작업 목록](3C-1_계획_작업_목록.md) (1 shared connections)
 
 ## Source Files

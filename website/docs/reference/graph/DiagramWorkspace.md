@@ -1,6 +1,6 @@
 ---
 title: "DiagramWorkspace()"
-sidebar_position: 55
+sidebar_position: 58
 sidebar_label: "핵심 노드: DiagramWorkspace()"
 ---
 # DiagramWorkspace()
@@ -15,9 +15,9 @@ sidebar_label: "핵심 노드: DiagramWorkspace()"
 
 ### calls
 - useChatTurn() `EXTRACTED`
+- Canvas() `EXTRACTED`
 - applyCommand() `EXTRACTED`
 - run() `EXTRACTED`
-- Canvas() `EXTRACTED`
 - useExplanations() `EXTRACTED`
 - InfoCard() `EXTRACTED`
 - restoreVersionAction() `EXTRACTED`

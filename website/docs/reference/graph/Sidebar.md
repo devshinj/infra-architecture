@@ -1,6 +1,6 @@
 ---
 title: "Sidebar()"
-sidebar_position: 58
+sidebar_position: 62
 sidebar_label: "핵심 노드: Sidebar()"
 ---
 # Sidebar()
@@ -9,7 +9,7 @@ sidebar_label: "핵심 노드: Sidebar()"
 
 > God node · 26 connections · `src/ui/Sidebar.tsx`
 
-**Community:** [(app)/actions.ts](app-actions.ts.md)
+**Community:** [Sidebar.tsx](Sidebar.tsx.md)
 
 ## Connections by Relation
 
@@ -37,7 +37,7 @@ sidebar_label: "핵심 노드: Sidebar()"
 - *…and 3 more `calls` connection(s) not listed (lowest-degree first to go)*
 
 ### contains
-- Sidebar.tsx `EXTRACTED`
+- [Sidebar.tsx](Sidebar.tsx.md) `EXTRACTED`
 
 ### imports
 - (app)/layout.tsx `EXTRACTED`

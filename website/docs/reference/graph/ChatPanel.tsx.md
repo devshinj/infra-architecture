@@ -1,32 +1,31 @@
 ---
 title: "ChatPanel.tsx"
-sidebar_position: 19
+sidebar_position: 21
 ---
 # ChatPanel.tsx
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 22 nodes · cohesion 0.13
+> 21 nodes · cohesion 0.14
 
 ## Key Concepts
 
 - **ChatPanel.tsx** (38 connections) — `src/ui/chat/ChatPanel.tsx`
 - **ChatPanel()** (13 connections) — `src/ui/chat/ChatPanel.tsx`
-- **ChatPanelProps** (9 connections) — `src/ui/chat/ChatPanel.tsx`
 - **CardView()** (5 connections) — `src/ui/chat/ChatPanel.tsx`
 - **hhmm()** (3 connections) — `src/ui/chat/ChatPanel.tsx`
-- **.onSend()** (2 connections) — `src/ui/chat/ChatPanel.tsx`
 - **Check()** (2 connections) — `src/ui/chat/ChatPanel.tsx`
 - **Dots()** (2 connections) — `src/ui/chat/ChatPanel.tsx`
+- **ELSEWHERE_BUSY** (2 connections) — `src/ui/chat/ChatPanel.tsx`
+- **LlmHealth** (2 connections) — `src/ui/chat/ChatPanel.tsx`
 - **pad()** (2 connections) — `src/ui/chat/ChatPanel.tsx`
 - **renderText()** (2 connections) — `src/ui/chat/ChatPanel.tsx`
 - **stepName()** (2 connections) — `src/ui/chat/ChatPanel.tsx`
 - **stepRows()** (2 connections) — `src/ui/chat/ChatPanel.tsx`
 - **toBlocks()** (2 connections) — `src/ui/chat/ChatPanel.tsx`
+- **ProgressCard** (2 connections) — `src/ui/chat/useChatTurn.ts`
 - **Block** (1 connections) — `src/ui/chat/ChatPanel.tsx`
 - **BUILD_STEPS** (1 connections) — `src/ui/chat/ChatPanel.tsx`
-- **.onOpenWarnings()** (1 connections) — `src/ui/chat/ChatPanel.tsx`
-- **.onStop()** (1 connections) — `src/ui/chat/ChatPanel.tsx`
 - **CHIP_KINDS** (1 connections) — `src/ui/chat/ChatPanel.tsx`
 - **EXAMPLES** (1 connections) — `src/ui/chat/ChatPanel.tsx`
 - **GUIDE_ITEMS** (1 connections) — `src/ui/chat/ChatPanel.tsx`
@@ -35,23 +34,24 @@ sidebar_position: 19
 
 ## Relationships
 
-- [MentionInput](MentionInput.md) (8 shared connections)
-- [DiagramState](DiagramState.md) (6 shared connections)
-- [SessionPicker.tsx](SessionPicker.tsx.md) (5 shared connections)
-- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (5 shared connections)
-- [useSessions.ts](useSessions.ts.md) (2 shared connections)
-- [types.ts](types.ts.md) (2 shared connections)
+- [types.ts](types.ts.md) (8 shared connections)
+- [MentionInput](MentionInput.md) (7 shared connections)
+- [DiagramState](DiagramState.md) (5 shared connections)
+- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (3 shared connections)
 - [FlyLayer.tsx](FlyLayer.tsx.md) (2 shared connections)
-- [Review Focus](Review_Focus.md) (1 shared connections)
+- [ask/route.ts](ask-route.ts.md) (1 shared connections)
+- [ref_react](ref_react.md) (1 shared connections)
+- [명령 적용과 샘플](명령_적용과_샘플.md) (1 shared connections)
 
 ## Source Files
 
 - `src/ui/chat/ChatPanel.tsx`
+- `src/ui/chat/useChatTurn.ts`
 
 ## Audit Trail
 
-- EXTRACTED: 60 (97%)
-- INFERRED: 2 (3%)
+- EXTRACTED: 55 (96%)
+- INFERRED: 2 (4%)
 - AMBIGUOUS: 0 (0%)
 
 ---
