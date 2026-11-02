@@ -26,8 +26,8 @@ const NOT_FOUND_MESSAGE = "대상을 찾을 수 없어요";
 const INSTRUCTION_MAX = 200;
 // 길이 초과와 Clef 점수를 합쳐 다시 쓰는 최대 횟수.
 const MAX_REWRITES = 2;
-// Clef 점수(0~2)가 이 값을 넘으면 다시 쓴다.
-const SCORE_MAX = 1.3;
+// Clef 점수(0~2)가 이 값을 넘으면 다시 쓴다. 실제 점수: 쉬운 사전식 설명 1.38, 전문용어 장황한 설명 1.93.
+const SCORE_MAX = 1.7;
 // Clef 단계 상한(대기열 포함). 재시도는 하지 않는다(3B 와 같다).
 const CLEF_CAP_MS = 3000;
 // Qwen 요청 1건의 상한.

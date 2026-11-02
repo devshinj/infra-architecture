@@ -281,10 +281,19 @@ describe("explainTarget", () => {
     expect(userOf(once.calls[1]!)).toContain("adr.cost");
   });
 
-  test("clef score above 1.3 triggers rewrite, clef failure uses length only", async () => {
+  test("a clef score of 1.38 (easy dictionary-style explanation) is not rewritten", async () => {
+    const { repo } = fakeRepo();
+    const { qwen, calls } = fakeQwen(nodeJson());
+    const { clef } = fakeClef(() => 1.38);
+    const r = await explainTarget("u", "d", "node", "lb", {}, { qwen, clef, repo });
+    expect(r.ok).toBe(true);
+    expect(calls).toHaveLength(1);
+  });
+
+  test("clef score above 1.7 triggers rewrite, clef failure uses length only", async () => {
     const { repo } = fakeRepo();
     const { qwen, calls } = fakeQwen((_m, i) => nodeJson({ role: `역할 ${i}` }));
-    const { clef, calls: clefCalls } = fakeClef((i) => (i === 0 ? 1.6 : 1.3));
+    const { clef, calls: clefCalls } = fakeClef((i) => (i === 0 ? 1.9 : 1.7));
     const r = await explainTarget("u", "d", "node", "lb", {}, { qwen, clef, repo });
     expect(calls).toHaveLength(2);
     expect(userOf(calls[1]!)).toContain("어렵거나 장황");
