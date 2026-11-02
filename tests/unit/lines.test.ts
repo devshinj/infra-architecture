@@ -116,3 +116,11 @@ test("old handoff rows fall back to the preceding user text; with neither there 
   expect(none.some((l) => l.kind === "handoff")).toBe(false);
   expect(none.map((l) => l.text)).toContain("안내");
 });
+
+test("an empty handoffText falls back to the preceding user text", () => {
+  const lines = messagesToLines([
+    { id: "u1", role: "user", content: "추가해 줘", meta: {} },
+    { id: "a1", role: "assistant", content: "안내", meta: { handoff: true, handoffText: "", says: ["안내"] } },
+  ]);
+  expect(lines.find((l) => l.kind === "handoff")?.text).toBe("추가해 줘");
+});
