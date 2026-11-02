@@ -29,13 +29,15 @@ export const INTENT_MIN_CONFIDENCE = 0.6;
 
 /**
  * Clef `noul` 답에서 "예" 확률(0~1)을 읽는다.
- * 실제 응답 모양이 스파이크 기록에 없어 세 모양을 받는다: probability, probabilities.yes, choice(yes/no)+confidence.
- * 그 밖의 모양이면 null 이다.
+ * 실제 응답은 `{ type: "noul", noul: 0.97 }` 로, `noul` 칸이 "예" 확률이다. 먼저 이것을 읽는다.
+ * 예전 추정 모양도 받는다: probability, probabilities.yes, choice(yes/no)+confidence. 그 밖의 모양이면 null 이다.
  */
 export function noulProbability(a: ClefAnswer | undefined): number | null {
   if (!a) return null;
   const clamp = (n: number) => Math.min(1, Math.max(0, n));
   const num = (v: unknown): number | null => (typeof v === "number" && Number.isFinite(v) ? v : null);
+  const n = num(a.noul);
+  if (n !== null) return clamp(n);
   const p = num(a.probability);
   if (p !== null) return clamp(p);
   const yes = num(a.probabilities?.yes);
