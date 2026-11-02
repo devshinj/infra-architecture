@@ -114,4 +114,19 @@ describe("createJsonlParser", () => {
     expect(bad.length).toBeGreaterThanOrEqual(1);
     expect(bad.length).toBeLessThan(5);
   });
+
+  test("a broken line does not swallow the valid lines after it", () => {
+    const good = Array.from({ length: 30 }, (_, i) => `{"op":"say","text":"${i}"}`).join("\n") + "\n";
+    for (const broken of ['{"op":"update_node","id":"x","attrs":{"ip":"1"', '{"op":"say","text":"abc}']) {
+      const { values, bad } = run([broken + "\n" + good]);
+      expect(values).toHaveLength(30);
+      expect(bad).toHaveLength(1);
+    }
+  });
+
+  test("brace on the next line stays one object", () => {
+    const { values, bad } = run(['{\n  "op": "update_node",\n  "id": "x",\n  "attrs":\n  {\n    "ip": "1"\n  }\n}\n']);
+    expect(values).toEqual([{ op: "update_node", id: "x", attrs: { ip: "1" } }]);
+    expect(bad).toEqual([]);
+  });
 });

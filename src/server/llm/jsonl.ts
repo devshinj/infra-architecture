@@ -18,6 +18,15 @@ function scanLine(text: string, st: { depth: number; inStr: boolean; esc: boolea
   }
 }
 
+function isCompleteJson(t: string): boolean {
+  try {
+    JSON.parse(t);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export function createJsonlParser(
   onLine: (value: unknown) => void,
   onBadLine: (text: string) => void,
@@ -52,19 +61,18 @@ export function createJsonlParser(
   /** 줄 하나를 받는다. 객체가 덜 닫혔으면 다음 줄들과 모아서 한 번에 읽는다. */
   const feed = (text: string): void => {
     const t = text.trim();
-    if (skipping) {
-      if (!(st.depth === 1 && !st.inStr && t.startsWith("{"))) {
-        scanLine(t, st);
-        if (st.depth <= 0) skipping = false;
-        return;
-      }
+    // 모으는 중(또는 한도를 넘겨 버리는 중)에 그 줄만으로 완전한 JSON 객체인 줄이 오면, 앞의 것은 깨진 한 줄로
+    // 알리고 이 줄은 새 명령으로 읽는다. 그렇지 않으면 계속 모은다(여는 괄호만 다음 줄에 있는 객체도 온전히 읽는다).
+    if ((pending !== null || skipping) && t.startsWith("{") && isCompleteJson(t)) {
+      flushPendingBad();
       skipping = false;
     }
-    if (pending !== null) {
-      if (!t) return;
-      // 열린 객체의 바로 안쪽에서 "{" 로 시작하는 줄은 새 명령이다. 앞의 것은 깨진 것으로 보고 새로 시작한다.
-      if (st.depth === 1 && !st.inStr && t.startsWith("{")) flushPendingBad();
+    if (skipping) {
+      scanLine(t, st);
+      if (st.depth <= 0) skipping = false;
+      return;
     }
+    if (pending !== null && !t) return;
     if (pending === null) {
       if (!t.startsWith("{")) return handle(t);
       st.depth = 0;
