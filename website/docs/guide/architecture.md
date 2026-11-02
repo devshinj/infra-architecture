@@ -11,11 +11,11 @@ InfraSketch 는 Next.js 15 (App Router) 하나로 화면과 서버를 함께 띄
 
 | 폴더 | 역할 |
 | --- | --- |
-| `src/app` | 라우트. `(app)` 은 로그인 후 화면(구성도 작업 화면, 용어 사전 `(app)/glossary`), `(auth)` 는 로그인·가입·비밀번호 재설정, `api` 는 대화(`diagrams/[id]/chat`)·설명(`diagrams/[id]/explain`)·인증·AI 상태 API. 폼 저장·경고 무시·용어 사전 편집 같은 나머지 쓰기는 `(app)/actions.ts` 의 서버 액션이 맡습니다 |
-| `src/ui` | 작업 화면 컴포넌트. 전체 틀(`Shell.tsx`), 사이드바, 오른쪽 패널(대화·설명·이력)과 너비 조절 손잡이(`PanelResizer.tsx`), 대화 입력과 체크리스트(`chat/`), 설명 패널(`explain/`), 용어 사전 화면(`glossary/`), 로고(`brand/`), 캔버스 위에 뜨는 정보 카드(`canvas/InfoCard.tsx`)와 범례(`canvas/Legend.tsx`, 연결선 종류 견본·보조 연결 숨김 표시), 노드가 날아가 앉는 효과(`FlyLayer.tsx`) |
+| `src/app` | 라우트. `(app)` 은 로그인 후 화면(구성도 작업 화면, 용어 사전 `(app)/glossary`), `(auth)` 는 로그인·가입·비밀번호 재설정, `api` 는 대화(`diagrams/[id]/chat`)·노드 질문(`diagrams/[id]/ask`)·질문 세션 조회(`diagrams/[id]/sessions/[sessionId]`)·설명(`diagrams/[id]/explain`)·인증·AI 상태 API. 폼 저장·경고 무시·용어 사전 편집 같은 나머지 쓰기는 `(app)/actions.ts` 의 서버 액션이 맡습니다 |
+| `src/ui` | 작업 화면 컴포넌트. 전체 틀(`Shell.tsx`), 사이드바, 오른쪽 패널(대화·설명·이력)과 너비 조절 손잡이(`PanelResizer.tsx`), 대화 입력·체크리스트·질문 세션 선택(`chat/`, `SessionPicker.tsx`), 설명 패널과 “이 노드에 대해 물어보기”(`explain/`, `AskNode.tsx`), 용어 사전 화면(`glossary/`), 로고(`brand/`), 캔버스 위에 뜨는 정보 카드(`canvas/InfoCard.tsx`)와 범례(`canvas/Legend.tsx`, 연결선 종류 견본·보조 연결 숨김 표시), 노드가 날아가 앉는 효과(`FlyLayer.tsx`) |
 | `src/canvas` | React Flow(`@xyflow/react`) 캔버스. 노드·영역·연결선 그리기, ELK.js 자동 배치(`layout.ts`), 확대·이동 카메라(`useCamera.ts`), 선택·호버 강조 집합 계산(`emphasis.ts`)과 호버 지연(`useHoverEmphasis.ts`), 잘린 이름을 보여 주는 말풍선(`NameTooltip.tsx`), 애니메이션, 경고 배지 |
 | `src/domain` | 구성도 규칙. 변경 명령 스키마(`commands.ts`), 명령 적용(`apply.ts`), 노드 종류 목록(`catalog.ts`), 빠진 정보 계산(`missing.ts`), 경고 규칙(`warnings.ts`), 구성 패턴(`patterns.ts`), 설명 모양·길이 상한·서명(`explain.ts`), 용어 사전 시드와 화면용 타입(`glossary-seed.ts`, `glossary-types.ts`) |
-| `src/server` | 서버 로직. 대화 파이프라인과 경고 점검(`chat/`), AI 연동(`llm/`), 설명 생성(`explain.ts`), 용어 사전(`glossary.ts`), 체크리스트 폼 저장(`fields.ts`), 경고 무시(`ignore.ts`), 프로젝트·버전 저장, 인증 |
+| `src/server` | 서버 로직. 대화 파이프라인·노드 질문·질문 세션·경고 점검(`chat/`), AI 연동(`llm/`), 설명 생성(`explain.ts`), 용어 사전(`glossary.ts`), 체크리스트 폼 저장(`fields.ts`), 경고 무시(`ignore.ts`), 프로젝트·버전 저장, 인증 |
 | `src/db` | Drizzle 스키마와 마이그레이션 |
 | `src/styles` | 색·간격 토큰(`tokens.css`). 사이드바·캔버스·오른쪽 패널은 바탕 명도를 3단으로 달리해 영역을 구분합니다 |
 
@@ -23,13 +23,13 @@ InfraSketch 는 Next.js 15 (App Router) 하나로 화면과 서버를 함께 띄
 
 ## 대화 한 차례의 흐름
 
-사용자가 대화를 보내면 `POST /api/diagrams/[id]/chat` 이 받고, `server/chat/pipeline.ts` 의 `runChatTurn` 이 한 차례를 처리합니다. 응답은 **한 줄에 이벤트 하나(JSON Lines, `application/x-ndjson`)** 로 스트리밍됩니다.
+사용자가 대화를 보내면 `POST /api/diagrams/[id]/chat` 이 받고, `server/chat/pipeline.ts` 의 `runChatTurn` 이 한 차례를 처리합니다. 응답은 **한 줄에 이벤트 하나(JSON Lines, `application/x-ndjson`)** 로 스트리밍됩니다. 스트림을 여는 공통 부분(첫 이벤트까지 버퍼링해 409·404 를 정하고, 연결이 끊기면 차례를 중단하는 일)은 `server/chat/stream.ts` 의 `streamTurn` 이 맡으며, 노드 질문 route 도 같은 함수를 씁니다.
 
 ```text
 브라우저 (ui/chat/useChatTurn.ts)
   │ POST /api/diagrams/{id}/chat  { text }
   ▼
-route.ts ── 로그인·본문·소유권 확인 (401 / 400 / 404)
+chat/route.ts ── 로그인·본문·소유권 확인 (401 / 400 / 404)
   │
   ▼
 runChatTurn ── 구성도별 잠금 (이미 진행 중이면 409)
@@ -83,6 +83,7 @@ runChatTurn ── 구성도별 잠금 (이미 진행 중이면 409)
 
 | 이벤트 | 의미 |
 | --- | --- |
+| `session` | 노드 질문에서 새 세션을 만들었을 때만, `start` 바로 앞에 옵니다. 세션 id·노드·노드 이름·제목·갱신 시각 |
 | `start` | 차례 시작, 분류된 의도 |
 | `relayout` | 고정 위치를 풀고 구성도를 다시 배치하라는 요청. 재정렬 의도일 때만 옵니다 |
 | `status` | 진행 단계 (`thinking` → `drawing` 또는 `answering`, 변경이 있으면 끝에 `checking`) |
@@ -91,11 +92,44 @@ runChatTurn ── 구성도별 잠금 (이미 진행 중이면 409)
 | `skip` | 깨진 줄이나 거부된 명령 |
 | `answer` | 질문에 대한 답변 글 조각 |
 | `warnings` | 이번 차례에 새로 생긴 경고(무시한 것 제외). 있을 때만, `done` 바로 앞에 옵니다 |
+| `handoff` | 노드 질문에서 구성 변경을 요청했을 때, 사용자 글을 그대로 돌려줘 구성도 대화로 넘기게 합니다 |
 | `open_history` | 이력 탭 열기 요청 |
 | `error` | 사용자에게 보여 줄 오류 문구 (AI 미설정, 시간 초과, 진행 중인 차례 등) |
 | `done` | 차례 끝. 새 버전 번호, `complete`/`aborted`, 적용·건너뜀·빠진 정보 수, 노드·연결 수 |
 
-응답 메시지의 메타(`MessageMeta`)에는 의도·적용·건너뜀 수·버전·상태·차례 끝의 노드·연결 수(`nodes`, `edges`)와 함께, 해당될 때만 `missing`(남은 빠진 정보 수)과 `warnings`(새 경고)가 저장됩니다. 그래서 대화 기록을 다시 열어도 경고 줄이 보입니다.
+응답 메시지의 메타(`MessageMeta`)에는 의도·적용·건너뜀 수·버전·상태·차례 끝의 노드·연결 수(`nodes`, `edges`)와 함께, 해당될 때만 `missing`(남은 빠진 정보 수)과 `warnings`(새 경고)가 저장됩니다. 그래서 대화 기록을 다시 열어도 경고 줄이 보입니다. 노드 질문에서 구성도 대화로 넘긴 답에는 `handoff` 가 남습니다.
+
+## 노드에 대해 물어보기
+
+설명 패널 맨 아래의 “이 노드에 대해 물어보기”나 노드 우클릭 메뉴의 같은 항목으로, 노드 하나를 두고 따로 질문을 이어 갑니다. `POST /api/diagrams/[id]/ask` (`{ nodeId, text, sessionId? }`) 가 받고 `server/chat/ask.ts` 의 `runAskTurn` 이 한 차례를 처리합니다. 응답 형식은 구성도 대화와 같은 ndjson 입니다. 이 차례는 **읽기 전용**이라 명령을 내지 않고 구성도 버전도 만들지 않습니다.
+
+```text
+runAskTurn
+  1. 소유권 확인 (남의 구성도·세션은 404)
+  2. sessionId 가 있으면 세션을 찾고, 세션의 노드와 nodeId 가 같은지 확인 (다르면 400)
+  3. 노드가 지금 구성도에 있는지 확인 (없으면 409, 세션을 만들지 않음)
+  4. 구성도별 잠금 (구성도 대화와 같은 잠금이라 둘이 동시에 돌지 않음, 이미 진행 중이면 409)
+  5. 잠금 안에서 최신 상태를 다시 읽어 노드를 한 번 더 확인
+     (기다리는 사이 구성도 대화가 지웠을 수 있음)
+  6. 첫 질문이면 세션을 만들고 session 이벤트를 start 앞에 보낸다
+  7. 의도를 분류한다 (Clef, 직전 답변만 문맥으로 쓰고 빠진 정보 목록은 비움)
+       구조 변경이면 Qwen 을 부르지 않고 안내 한 줄(say)과 handoff 이벤트만 보냄
+  8. 그 밖에는 Qwen 이 답변을 스트리밍한다 (answer 이벤트)
+  9. 답변을 저장하고 done (version 은 null, applied·skipped 는 0). 세션 갱신 시각을 올린다
+```
+
+- **근거 범위**: 프롬프트(`buildAskMessages`)에는 대상 노드 요약(종류·SW·속성·연결된 노드), 저장된 설명(`cachedNodeExplanation`), 그 세션의 이전 대화만 들어갑니다. 설명 캐시는 패널이 보여 주는 것과 같은 규칙(서명이 맞을 때만, 사전의 최신 값을 덮어서)으로 읽으며 새로 만들지 않습니다. 근거에 없는 내용은 모른다고 답하게 합니다.
+- **구성 변경 요청**: 질문 세션에서는 구성을 바꾸지 않습니다. 의도가 구조 변경이면 “구성을 바꾸려면 구성도 대화에서 말해 주세요.” 라고 답하고, `handoff` 이벤트로 사용자의 글을 그대로 돌려줍니다. 브라우저는 이 글을 구성도 대화로 넘길 수 있습니다. 응답 메시지 메타에는 `handoff: true` 가 남습니다. 의도 분류가 실패하거나 확신이 낮으면 질문으로 칩니다.
+- **노드가 사라졌을 때**: 노드가 지금 구성도에 없으면 `NODE_GONE_MESSAGE` (“이 노드는 지금 구성도에 없어서 이어서 물을 수 없어요.”) 로 409 를 돌려줍니다. 질문 세션 화면도 같은 문구를 안내로 보입니다. 이미 만든 세션은 노드가 지워져도 목록에 남고, 만들 때의 노드 이름(`nodeLabel`)에 “(지워짐)”을 붙여 보입니다.
+- **시간 제한**: 구성도 대화와 같은 120초 상한과 중단 규칙을 씁니다(`turnSignals`, `streamFailure` 를 `pipeline.ts` 와 함께 씁니다).
+
+### 질문 세션
+
+질문 세션은 노드 하나에 묶인 대화 한 묶음입니다. 첫 질문을 보낼 때 만들어지며, 제목은 첫 질문의 공백을 접고 60자로 자른 것입니다. 구성도 대화는 세션이 없는 별도 대화로 그대로 남습니다.
+
+- 대화 탭 위쪽의 세션 선택(`ui/chat/SessionPicker.tsx`)에서 “구성도 대화”와 질문 세션들을 오갑니다. 세션은 최근에 이어간 순서로 보이며 `노드 이름 · 제목` 으로 표시됩니다. 목록은 `useSessions.ts` 가 관리하고, 세션의 메시지는 `GET /api/diagrams/[id]/sessions/[sessionId]` (최근 100개) 로 불러옵니다.
+- 서버가 `session` 이벤트로 새 세션의 id 를 알려 주기 전까지 화면은 대기 중인 새 세션으로 다룹니다.
+- 질문 차례와 구성도 대화는 같은 잠금을 쓰므로, 한쪽이 진행 중일 때 다른 쪽을 보내면 409(진행 중) 오류가 납니다.
 
 ## 변경 명령
 
@@ -125,7 +159,7 @@ AI 는 구성도를 직접 그리지 않고 **작은 변경 명령**을 연달�
 
 ### 설명 생성 (`server/explain.ts`)
 
-설명 패널은 `POST /api/diagrams/[id]/explain` 으로 노드·연결 하나의 설명을 받습니다. `explainTarget` 은 구성도 버전을 만들지 않고 대화 잠금도 잡지 않습니다.
+설명 패널은 `POST /api/diagrams/[id]/explain` 으로 노드·연결 하나의 설명을 받습니다. `explainTarget` 은 구성도 버전을 만들지 않고 대화 잠금도 잡지 않습니다. 캐시를 읽어 사전의 최신 값을 덮는 부분은 `cachedNodeExplanation` 으로 나뉘어 있어, 노드 질문도 만들지 않고 이 캐시만 읽어 씁니다.
 
 1. 소유와 대상을 확인하고, 내용 서명(`signatureOf`)이 같은 캐시가 있으면 Qwen 없이 돌려줍니다. 노드는 이때 사전의 최신 정의를 덮어 보여 줍니다.
 2. 노드는 용어 사전에서 정의를 찾습니다(`attrs.sw` → `sub` → 종류 이름 순). 사용자 사전이 비어 있으면 먼저 시드를 채웁니다.
@@ -151,7 +185,8 @@ Qwen 요청 하나는 30초 상한이고, 실패하면 "설명을 만들지 못�
 | `users`, `accounts`, `password_reset_tokens` | 회원과 인증 |
 | `projects` | 사용자별 프로젝트 |
 | `diagrams` | 프로젝트 안의 구성도 |
-| `messages` | 구성도별 대화 기록 (메타에 의도·적용 수·버전·빠진 정보 수·새 경고 등) |
+| `chat_sessions` | 노드 질문 세션. 구성도(`diagram_id`)·노드(`node_id`)·만들 때의 노드 이름(`node_label`)·제목·갱신 시각. 구성도가 지워지면 함께 지워집니다 |
+| `messages` | 대화 기록 (메타에 의도·적용 수·버전·빠진 정보 수·새 경고 등). `session_id` 가 비어 있으면(NULL) 구성도 대화이고, 값이 있으면 그 질문 세션의 메시지입니다. 세션이 지워지면 함께 지워집니다 |
 | `diagram_versions` | 구성도 상태 스냅샷. AI 변경 한 차례마다 버전 하나가 생기고, 이력 탭에서 비교하고 되돌립니다. 체크리스트 폼 저장과 경고 무시도 `form` 버전 하나를 만듭니다 |
 | `glossary_terms` | 사용자별 용어 사전. 정규화한 `key` 와 별칭(`aliases`), 정의·필요한 이유·비교, 검수 여부(`reviewed`), 출처(`seed`/`ai`). 처음 쓸 때 시드 50개를 미검수로 복사합니다 |
 | `explanations` | 노드·연결 설명 캐시. 구성도·대상별로 하나이고, 내용 서명(`signature`)이 바뀌면 다시 만듭니다 |
@@ -162,7 +197,9 @@ Qwen 요청 하나는 30초 상한이고, 실패하면 "설명을 만들지 못�
 - `warnings`: 마지막 점검의 경고 목록(규칙·대상·수준·문구·안내). 코드 규칙 경고는 화면이 지금 상태로 다시 계산하고, 저장된 문구와 Clef 판정(`db_exposed`)만 여기서 가져옵니다.
 - `ignoredWarnings`: 사용자가 "의도된 구성"으로 무시한 경고 ID 목록. 설명 탭의 주의할 점에서 다시 경고하도록 되돌릴 수 있습니다.
 
-마이그레이션은 `src/db/migrations` 에 있으며, 용어 사전·설명 테이블은 `0002` 에서 추가됐습니다.
+마이그레이션은 `src/db/migrations` 에 있으며, 용어 사전·설명 테이블은 `0002`, 질문 세션 테이블과 `messages.session_id` 는 `0003` 에서 추가됐습니다.
+
+`listMessages` 는 `sessionId` 가 null 이면 구성도 대화만, 아니면 그 세션의 것만 돌려줍니다. 그래서 `pipeline.ts` 의 대화 기록과 Clef 에 넘기는 직전 AI 답변(`lastAssistant`)에는 구성도 대화 메시지만 쓰이고, 질문 세션의 글은 섞이지 않습니다.
 
 ## 더 보기
 
