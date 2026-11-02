@@ -1,20 +1,21 @@
 ---
 title: "ValidationError"
-sidebar_position: 58
+sidebar_position: 51
 sidebar_label: "핵심 노드: ValidationError"
 ---
 # ValidationError
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> God node · 19 connections · `src/server/projects.ts`
+> God node · 22 connections · `src/server/projects.ts`
 
-**Community:** [getOwnedDiagram](getOwnedDiagram.md)
+**Community:** [(app)/actions.ts](app-actions.ts.md)
 
 ## Connections by Relation
 
 ### calls
 - [explainTarget()](explainTarget.md) `EXTRACTED`
+- runAskTurn() `EXTRACTED`
 - saveFieldsFor() `EXTRACTED`
 - confirmAssumptionFor() `EXTRACTED`
 - setWarningIgnoredFor() `EXTRACTED`
@@ -24,14 +25,16 @@ sidebar_label: "핵심 노드: ValidationError"
 - parsePinned() `EXTRACTED`
 
 ### contains
-- [projects.ts](projects.ts.md) `EXTRACTED`
+- projects.ts `EXTRACTED`
 
 ### imports
 - [(app)/actions.ts](app-actions.ts.md) `EXTRACTED`
 - server/explain.ts `EXTRACTED`
-- [glossary.ts](glossary.ts.md) `EXTRACTED`
+- [ask.ts](ask.ts.md) `EXTRACTED`
+- [ask/route.ts](ask-route.ts.md) `EXTRACTED`
+- glossary.ts `EXTRACTED`
 - fields.ts `EXTRACTED`
-- [explain/route.ts](explain-route.ts.md) `EXTRACTED`
+- explain/route.ts `EXTRACTED`
 - ignore.ts `EXTRACTED`
 - server/assumptions.ts `EXTRACTED`
 

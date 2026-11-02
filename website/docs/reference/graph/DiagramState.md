@@ -1,15 +1,15 @@
 ---
 title: "DiagramState"
-sidebar_position: 50
+sidebar_position: 44
 sidebar_label: "핵심 노드: DiagramState"
 ---
 # DiagramState
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> God node · 36 connections · `src/domain/types.ts`
+> God node · 37 connections · `src/domain/types.ts`
 
-**Community:** [DB 스키마와 인증](DB_스키마와_인증.md)
+**Community:** [설명 생성과 품질 검사](설명_생성과_품질_검사.md)
 
 ## Connections by Relation
 
@@ -20,34 +20,34 @@ sidebar_label: "핵심 노드: DiagramState"
 - [(app)/actions.ts](app-actions.ts.md) `EXTRACTED`
 - [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) `EXTRACTED`
 - server/explain.ts `EXTRACTED`
-- [Canvas.tsx](Canvas.tsx.md) `EXTRACTED`
 - [pipeline.ts](pipeline.ts.md) `EXTRACTED`
-- [projects.ts](projects.ts.md) `EXTRACTED`
+- [Canvas.tsx](Canvas.tsx.md) `EXTRACTED`
+- [ask.ts](ask.ts.md) `EXTRACTED`
+- projects.ts `EXTRACTED`
 - [prompt.ts](prompt.ts.md) `EXTRACTED`
-- samples.ts `EXTRACTED`
-- schema.ts `EXTRACTED`
 - [NodeInfo.tsx](NodeInfo.tsx.md) `EXTRACTED`
+- [schema.ts](schema.ts.md) `EXTRACTED`
+- samples.ts `EXTRACTED`
 - domain/explain.ts `EXTRACTED`
+- versions.ts `EXTRACTED`
 - [MissingChecklist.tsx](MissingChecklist.tsx.md) `EXTRACTED`
 - [useExplanations.ts](useExplanations.ts.md) `EXTRACTED`
-- versions.ts `EXTRACTED`
 - chat/warnings.ts `EXTRACTED`
 - domain/warnings.ts `EXTRACTED`
-- display.ts `EXTRACTED`
 - missing.ts `EXTRACTED`
+- display.ts `EXTRACTED`
 - InfoCard.tsx `EXTRACTED`
-- useDiagramView.ts `EXTRACTED`
-- *…and 6 more `imports` connection(s) not listed (lowest-degree first to go)*
+- *…and 7 more `imports` connection(s) not listed (lowest-degree first to go)*
 
 ### references
 - CanvasProps `EXTRACTED`
 - RightPanelProps `EXTRACTED`
+- NodeInfoProps `EXTRACTED`
 - InfoCardProps `EXTRACTED`
 - MissingChecklistProps `EXTRACTED`
-- NodeInfoProps `EXTRACTED`
+- DiagramWorkspaceProps `EXTRACTED`
 - .getLatestState() `EXTRACTED`
 - Rule `EXTRACTED`
-- DiagramWorkspaceProps `EXTRACTED`
 - UseExplanationsInput `EXTRACTED`
 
 ---

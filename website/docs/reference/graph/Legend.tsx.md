@@ -1,6 +1,6 @@
 ---
 title: "Legend.tsx"
-sidebar_position: 37
+sidebar_position: 34
 ---
 # Legend.tsx
 
