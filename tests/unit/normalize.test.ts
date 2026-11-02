@@ -130,4 +130,39 @@ describe("normalizeAiCommand", () => {
     const warn = { op: "warn", text: null };
     expect(normalizeAiCommand(warn)).toEqual(warn);
   });
+
+  test("ids with underscores or capitals are normalized consistently so references still resolve", () => {
+    const raw = [
+      { op: "add_node", id: "client_web", kind: "client_web", label: "웹 사용자", parent: null },
+      { op: "add_node", id: "Web_1", kind: "web_server", label: "웹 서버 #1", parent: null },
+      { op: "add_edge", from: "client_web", to: "Web_1", edge_kind: "request" },
+    ];
+    const normalized = raw.map((r) => normalizeAiCommand(r));
+    expect(normalized[0]).toMatchObject({ id: "client-web" });
+    expect(normalized[2]).toMatchObject({ from: "client-web", to: "web-1" });
+    // 정규화 없이는 거부된다.
+    expect(parseCommand(raw[2]).ok).toBe(false);
+    let state: DiagramState = emptyState();
+    for (const n of normalized) {
+      const p = parseCommand(n);
+      expect(p.ok).toBe(true);
+      if (p.ok) {
+        const r = applyCommand(state, p.cmd);
+        expect(r.ok).toBe(true);
+        if (r.ok) state = r.state;
+      }
+    }
+    expect(Object.keys(state.nodes)).toEqual(["client-web", "web-1"]);
+    expect(Object.values(state.edges).map((e) => [e.from, e.to])).toEqual([["client-web", "web-1"]]);
+  });
+
+  test("values that would still not be a valid id, and other fields, are left untouched", () => {
+    expect(normalizeAiCommand({ op: "update_node", id: "a b_c", attrs: { sw: "Foo_Bar" }, label: "A_B" })).toEqual({
+      op: "update_node",
+      id: "a b_c",
+      attrs: { sw: "Foo_Bar" },
+      label: "A_B",
+    });
+    expect(normalizeAiCommand({ op: "add_node", id: "x", kind: "was", label: "A", parent: null })).toMatchObject({ parent: null });
+  });
 });
