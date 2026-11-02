@@ -19,6 +19,10 @@ export interface DiagramView {
   /** True once `layout` was computed for the current state, options and pins (false while ELK runs). */
   settled: boolean;
   display: DisplayGraph;
+  /** 선택과 상관없는 배치(선택 때문에만 보이는 보조 연결 없음). 이미지 내보내기가 쓴다. */
+  baseLayout: Layout | null;
+  /** baseLayout 을 만든 선택과 상관없는 표시 그래프. */
+  baseDisplay: DisplayGraph | null;
   appearing: Set<string>;
   updated: Set<string>;
 }
@@ -98,5 +102,5 @@ export function useDiagramView(state: DiagramState, pinned: Pinned, opts: Displa
   useEffect(() => () => timers.current.forEach(clearTimeout), []);
 
   const settled = base !== null && base.display === layoutDisplay && base.pinnedKey === pinnedKey;
-  return { layout, layoutFailed, settled, display, appearing, updated };
+  return { layout, layoutFailed, settled, display, baseLayout, baseDisplay: base?.display ?? null, appearing, updated };
 }

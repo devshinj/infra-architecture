@@ -9,13 +9,13 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-const trigger = () => screen.getByRole("button", { name: /이미지로 내보내기|이미지를 만드는 중/ });
+const trigger = () => screen.getByRole("button", { name: /^(이미지 저장|이미지를 만드는 중…)$/ });
 
 test("opens a menu of PNG/SVG × dark/light, focuses the first item, and moves with arrow keys", () => {
   render(<ExportMenu disabled={false} onExport={vi.fn(() => Promise.resolve())} />);
   expect(trigger()).toHaveAttribute("aria-haspopup", "menu");
   fireEvent.click(trigger());
-  const menu = screen.getByRole("menu", { name: "이미지로 내보내기" });
+  const menu = screen.getByRole("menu", { name: "이미지 저장" });
   expect(trigger()).toHaveAttribute("aria-expanded", "true");
   const items = within(menu).getAllByRole("menuitem");
   expect(items.map((i) => i.getAttribute("aria-label"))).toEqual([
@@ -59,7 +59,50 @@ test("choosing an item closes the menu, shows progress, then a short success not
   await act(async () => resolve());
   expect(screen.getByRole("status")).toHaveTextContent(EXPORT_DONE_MESSAGE);
   act(() => vi.advanceTimersByTime(3000));
-  expect(screen.getByRole("status", { hidden: true })).toBeEmptyDOMElement();
+  // 알림 자리(role=status)는 비어도 남아 있다(다음 '만드는 중'을 읽어 주게).
+  expect(screen.getByRole("status")).toBeEmptyDOMElement();
+  expect(screen.getByRole("status")).toHaveClass("canvas__export-note--empty");
+});
+
+test("the live region exists before the first export so '만드는 중' is announced", () => {
+  render(<ExportMenu disabled={false} onExport={vi.fn(() => new Promise<void>(() => {}))} />);
+  const status = screen.getByRole("status");
+  expect(status).toBeEmptyDOMElement();
+  fireEvent.click(trigger());
+  fireEvent.click(screen.getByRole("menuitem", { name: "PNG 흰 바탕(문서용)" }));
+  expect(screen.getByRole("status")).toBe(status);
+  expect(status).toHaveTextContent(EXPORT_BUSY_MESSAGE);
+  expect(status).not.toHaveClass("canvas__export-note--empty");
+});
+
+test("reopening the menu clears the previous note so they do not overlap", async () => {
+  render(<ExportMenu disabled={false} onExport={vi.fn(() => Promise.reject(new Error("x")))} />);
+  fireEvent.click(trigger());
+  await act(async () => fireEvent.click(screen.getByRole("menuitem", { name: "SVG 어두운 바탕(화면과 같음)" })));
+  expect(await screen.findByRole("alert")).toBeInTheDocument();
+  fireEvent.click(trigger());
+  expect(screen.getByRole("menu")).toBeInTheDocument();
+  expect(screen.queryByRole("alert")).toBeNull();
+  expect(screen.getByRole("status")).toBeEmptyDOMElement();
+});
+
+test("an open menu closes when the button becomes blocked", () => {
+  const { rerender } = render(<ExportMenu disabled={false} onExport={vi.fn()} />);
+  fireEvent.click(trigger());
+  expect(screen.getByRole("menu")).toBeInTheDocument();
+  rerender(<ExportMenu disabled onExport={vi.fn()} />);
+  expect(screen.queryByRole("menu")).toBeNull();
+  expect(trigger()).toHaveAttribute("aria-expanded", "false");
+});
+
+test("no accessible name in the export UI contains '보내기' (the chat send button)", () => {
+  render(<ExportMenu disabled={false} onExport={vi.fn()} />);
+  fireEvent.click(trigger());
+  const named = [trigger(), screen.getByRole("menu"), ...screen.getAllByRole("menuitem"), ...screen.getAllByRole("group")];
+  for (const el of named) {
+    const name = el.getAttribute("aria-label") ?? el.textContent ?? "";
+    expect(name, name).not.toContain("보내기");
+  }
 });
 
 test("a failed export shows a Korean alert", async () => {

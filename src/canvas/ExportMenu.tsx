@@ -6,7 +6,9 @@ import { moveMenuFocus, usePopover } from "./usePopover";
 export const EXPORT_BUSY_MESSAGE = "이미지를 만드는 중…";
 export const EXPORT_DONE_MESSAGE = "이미지를 저장했어요.";
 export const EXPORT_FAILED_MESSAGE = "이미지를 만들지 못했어요. 잠시 뒤 다시 해 보세요.";
-export const EXPORT_EMPTY_REASON = "구성도가 비어 있어 내보낼 그림이 없어요.";
+export const EXPORT_EMPTY_REASON = "구성도가 비어 있어 저장할 그림이 없어요.";
+/** 버튼·메뉴 이름. 대화의 `보내기` 버튼과 이름이 겹치지 않게 '보내기'를 쓰지 않는다. */
+export const EXPORT_LABEL = "이미지 저장";
 /** 끝났다는 알림·실패 알림을 보여 두는 시간. */
 const NOTE_MS = { done: 2500, failed: 8000 } as const;
 
@@ -41,7 +43,7 @@ export interface ExportMenuProps {
 type Note = { kind: "busy" | "done" | "failed" } | null;
 
 /**
- * `이미지로 내보내기 ▾`: 형식(PNG·SVG)마다 바탕(어두운·흰) 두 항목을 묶은 메뉴. 고르면 닫히고, 만드는 동안 버튼은 막히며
+ * `이미지 저장 ▾`: 형식(PNG·SVG)마다 바탕(어두운·흰) 두 항목을 묶은 메뉴. 고르면 닫히고, 만드는 동안 버튼은 막히며
  * 진행·완료·실패를 도구 모음 아래에 알린다.
  */
 export function ExportMenu({ disabled, disabledReason = EXPORT_EMPTY_REASON, onExport }: ExportMenuProps) {
@@ -63,6 +65,10 @@ export function ExportMenu({ disabled, disabledReason = EXPORT_EMPTY_REASON, onE
   const busy = note?.kind === "busy";
   const blocked = disabled || busy;
   const status = note?.kind === "busy" ? EXPORT_BUSY_MESSAGE : note?.kind === "done" ? EXPORT_DONE_MESSAGE : "";
+  // 메뉴가 열린 채 버튼이 막히면(구성도가 비거나 다시 배치 중) 메뉴를 닫는다.
+  useEffect(() => {
+    if (open && blocked) setOpen(false);
+  }, [open, blocked, setOpen]);
 
   const choose = (format: ExportFormat, background: ExportBackground) => {
     setOpen(false);
@@ -88,10 +94,15 @@ export function ExportMenu({ disabled, disabledReason = EXPORT_EMPTY_REASON, onE
         disabled={disabled}
         title={disabled ? disabledReason : undefined}
         aria-describedby={disabled ? reasonId : undefined}
-        onClick={() => !busy && setOpen((v) => !v)}
+        onClick={() => {
+          if (busy) return;
+          // 메뉴를 열면 지난 완료·실패 알림을 걷는다(같은 자리에 겹치지 않게).
+          if (!open) setNote(null);
+          setOpen((v) => !v);
+        }}
       >
         <IconExport />
-        <span>{busy ? EXPORT_BUSY_MESSAGE : "이미지로 내보내기"}</span>
+        <span>{busy ? EXPORT_BUSY_MESSAGE : EXPORT_LABEL}</span>
         {!busy && <IconChevron />}
       </button>
       {disabled && (
@@ -100,7 +111,7 @@ export function ExportMenu({ disabled, disabledReason = EXPORT_EMPTY_REASON, onE
         </span>
       )}
       {open && !blocked && (
-        <div className="canvas__pop canvas__pop--end canvas__export-menu" role="menu" aria-label="이미지로 내보내기" onKeyDown={moveMenuFocus}>
+        <div className="canvas__pop canvas__pop--end canvas__export-menu" role="menu" aria-label={EXPORT_LABEL} onKeyDown={moveMenuFocus}>
           {FORMATS.map((f) => (
             <div key={f.format} role="group" aria-label={`${f.title} · ${f.hint}`} className="canvas__export-group">
               <div className="canvas__export-head" aria-hidden="true">
@@ -132,7 +143,7 @@ export function ExportMenu({ disabled, disabledReason = EXPORT_EMPTY_REASON, onE
         </div>
       )}
       {/* 진행·완료 알림 자리는 늘 두어 화면 읽기 프로그램이 바뀐 글을 읽게 한다. */}
-      <p className="canvas__export-note" role="status" hidden={!status}>
+      <p className={`canvas__export-note${status ? "" : " canvas__export-note--empty"}`} role="status">
         {status}
       </p>
       {note?.kind === "failed" && (

@@ -87,7 +87,7 @@ export const PULSE_MS = 1600;
 const NO_INSETS: Insets = { left: 0, right: 0 };
 const LAYOUT_FAILED_MESSAGE = "구성도를 배치하지 못했어요. 새로고침하거나 구성을 다시 확인해 주세요.";
 const EMPTY_MESSAGE = "아직 구성도가 비어 있어요. 오른쪽 대화에서 만들고 싶은 서비스를 설명해 보세요.";
-const EXPORT_LAYOUT_FAILED_REASON = "구성도를 배치하지 못해 내보낼 그림이 없어요.";
+const EXPORT_LAYOUT_FAILED_REASON = "구성도를 배치하지 못해 저장할 그림이 없어요.";
 const EXPORT_LAYOUT_PENDING_REASON = "구성도를 그리는 중이에요. 잠시 뒤 다시 해 보세요.";
 
 type ToggleKey = "hideAux" | "busSimplify" | "hoverLabels" | "mergeDuplicates" | "showMissingBadges";
@@ -184,14 +184,16 @@ export function Canvas(props: CanvasProps) {
   const flip = (key: ToggleKey) => onOptionsChange({ ...options, [key]: !options[key] });
   // 이미지로 내보내기: 화면에 그려진 뷰포트를 복제해 구성도 전체를 찍는다(exportImage.ts).
   const rootRef = useRef<HTMLDivElement>(null);
-  const exportBlocked = empty || !view.layout;
+  // 다시 배치하는 중(settled 아님)에는 화면과 배치가 어긋날 수 있어 막는다.
+  const exportBlocked = empty || !view.settled || !view.baseLayout || !view.baseDisplay;
   const onExport = async (format: ExportFormat, background: ExportBackground) => {
     const viewport = rootRef.current?.querySelector<HTMLElement>(".react-flow__viewport");
-    if (!viewport || !view.layout) throw new Error("캔버스가 아직 그려지지 않았어요");
+    if (!viewport || !view.baseLayout || !view.baseDisplay) throw new Error("캔버스가 아직 그려지지 않았어요");
+    // 선택과 상관없는 배치를 쓴다: 선택 때문에만 보이는 보조 연결은 그림에 넣지 않는다.
     await exportDiagramImage({
       viewport,
-      layout: view.layout,
-      edges: view.display.edges,
+      layout: view.baseLayout,
+      edges: view.baseDisplay.edges,
       format,
       background,
       fileName: exportFileName(props.projectName, props.diagramName, format),
@@ -227,7 +229,7 @@ export function Canvas(props: CanvasProps) {
           </button>
         </div>
         <span className="canvas__sep" role="separator" aria-orientation="vertical" />
-        <div className="canvas__group" role="group" aria-label="내보내기">
+        <div className="canvas__group" role="group" aria-label="이미지">
           <ExportMenu disabled={exportBlocked} {...(empty ? {} : { disabledReason: view.layoutFailed ? EXPORT_LAYOUT_FAILED_REASON : EXPORT_LAYOUT_PENDING_REASON })} onExport={onExport} />
         </div>
       </div>
