@@ -28,11 +28,13 @@ sidebar_position: 33
 ## Relationships
 
 - [ChatPanel.tsx](ChatPanel.tsx.md) (8 shared connections)
-- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (3 shared connections)
 - [SessionPicker.tsx](SessionPicker.tsx.md) (2 shared connections)
-- [MissingChecklist.tsx](MissingChecklist.tsx.md) (2 shared connections)
+- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (2 shared connections)
 - [Review Focus](Review_Focus.md) (1 shared connections)
 - [useChatTurn.ts](useChatTurn.ts.md) (1 shared connections)
+- [useSessions.ts](useSessions.ts.md) (1 shared connections)
+- [domain/assumptions.ts](domain-assumptions.ts.md) (1 shared connections)
+- [MissingChecklist.tsx](MissingChecklist.tsx.md) (1 shared connections)
 - [ref_react](ref_react.md) (1 shared connections)
 - [pipeline.ts](pipeline.ts.md) (1 shared connections)
 

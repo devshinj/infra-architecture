@@ -1,6 +1,6 @@
 ---
 title: "DiagramState"
-sidebar_position: 44
+sidebar_position: 59
 sidebar_label: "핵심 노드: DiagramState"
 ---
 # DiagramState
@@ -9,7 +9,7 @@ sidebar_label: "핵심 노드: DiagramState"
 
 > God node · 37 connections · `src/domain/types.ts`
 
-**Community:** [설명 생성과 품질 검사](설명_생성과_품질_검사.md)
+**Community:** [(app)/actions.ts](app-actions.ts.md)
 
 ## Connections by Relation
 
@@ -28,15 +28,15 @@ sidebar_label: "핵심 노드: DiagramState"
 - [NodeInfo.tsx](NodeInfo.tsx.md) `EXTRACTED`
 - [schema.ts](schema.ts.md) `EXTRACTED`
 - samples.ts `EXTRACTED`
-- domain/explain.ts `EXTRACTED`
+- [domain/explain.ts](domain-explain.ts.md) `EXTRACTED`
 - versions.ts `EXTRACTED`
 - [MissingChecklist.tsx](MissingChecklist.tsx.md) `EXTRACTED`
 - [useExplanations.ts](useExplanations.ts.md) `EXTRACTED`
 - chat/warnings.ts `EXTRACTED`
 - domain/warnings.ts `EXTRACTED`
-- missing.ts `EXTRACTED`
+- [missing.ts](missing.ts.md) `EXTRACTED`
 - display.ts `EXTRACTED`
-- InfoCard.tsx `EXTRACTED`
+- [InfoCard.tsx](InfoCard.tsx.md) `EXTRACTED`
 - *…and 7 more `imports` connection(s) not listed (lowest-degree first to go)*
 
 ### references

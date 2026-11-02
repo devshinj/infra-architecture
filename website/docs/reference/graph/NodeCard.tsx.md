@@ -1,6 +1,6 @@
 ---
 title: "NodeCard.tsx"
-sidebar_position: 37
+sidebar_position: 44
 ---
 # NodeCard.tsx
 
@@ -26,11 +26,10 @@ sidebar_position: 37
 
 - [catalog.ts](catalog.ts.md) (5 shared connections)
 - [연결선 개발용 화면](연결선_개발용_화면.md) (5 shared connections)
-- [NodeInfo.tsx](NodeInfo.tsx.md) (4 shared connections)
+- [MissingChecklist.tsx](MissingChecklist.tsx.md) (5 shared connections)
 - [Canvas.tsx](Canvas.tsx.md) (3 shared connections)
 - [연결선 그리기](연결선_그리기.md) (2 shared connections)
 - [ref_react](ref_react.md) (2 shared connections)
-- [MissingChecklist.tsx](MissingChecklist.tsx.md) (1 shared connections)
 
 ## Source Files
 

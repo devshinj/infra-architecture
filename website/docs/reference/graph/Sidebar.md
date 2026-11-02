@@ -1,6 +1,6 @@
 ---
 title: "Sidebar()"
-sidebar_position: 53
+sidebar_position: 68
 sidebar_label: "핵심 노드: Sidebar()"
 ---
 # Sidebar()

@@ -1,6 +1,6 @@
 ---
 title: "ELK 자동 배치와 꺾은선"
-sidebar_position: 12
+sidebar_position: 10
 ---
 # ELK 자동 배치와 꺾은선
 
@@ -42,10 +42,11 @@ sidebar_position: 12
 - [표시 그래프와 버전 비교](표시_그래프와_버전_비교.md) (7 shared connections)
 - [겹침 검사](겹침_검사.md) (4 shared connections)
 - [useCamera.ts](useCamera.ts.md) (4 shared connections)
-- [경고 규칙과 점검](경고_규칙과_점검.md) (2 shared connections)
+- [경고 규칙과 점검](경고_규칙과_점검.md) (1 shared connections)
 - [연결선 개발용 화면](연결선_개발용_화면.md) (1 shared connections)
 - [Canvas.tsx](Canvas.tsx.md) (1 shared connections)
 - [연결선 그리기](연결선_그리기.md) (1 shared connections)
+- [(app)/actions.ts](app-actions.ts.md) (1 shared connections)
 - [설계 문서와 계획](설계_문서와_계획.md) (1 shared connections)
 
 ## Source Files

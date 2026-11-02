@@ -1,6 +1,6 @@
 ---
 title: "Canvas.tsx"
-sidebar_position: 16
+sidebar_position: 12
 ---
 # Canvas.tsx
 
@@ -44,10 +44,10 @@ sidebar_position: 16
 - [연결선 그리기](연결선_그리기.md) (6 shared connections)
 - [catalog.ts](catalog.ts.md) (5 shared connections)
 - [useCamera.ts](useCamera.ts.md) (5 shared connections)
-- [경고 규칙과 점검](경고_규칙과_점검.md) (5 shared connections)
 - [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (4 shared connections)
 - [NodeCard.tsx](NodeCard.tsx.md) (3 shared connections)
 - [겹침 검사](겹침_검사.md) (3 shared connections)
+- [(app)/actions.ts](app-actions.ts.md) (3 shared connections)
 - [ref_react](ref_react.md) (3 shared connections)
 - [SessionPicker.tsx](SessionPicker.tsx.md) (3 shared connections)
 - [NodeMenu](NodeMenu.md) (2 shared connections)

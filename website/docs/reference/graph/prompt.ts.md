@@ -1,6 +1,6 @@
 ---
 title: "prompt.ts"
-sidebar_position: 14
+sidebar_position: 11
 ---
 # prompt.ts
 
@@ -39,16 +39,18 @@ sidebar_position: 14
 
 ## Relationships
 
-- [ask.ts](ask.ts.md) (6 shared connections)
+- [pipeline.ts](pipeline.ts.md) (5 shared connections)
 - [경고 규칙과 점검](경고_규칙과_점검.md) (4 shared connections)
-- [설명 생성과 품질 검사](설명_생성과_품질_검사.md) (4 shared connections)
-- [pipeline.ts](pipeline.ts.md) (4 shared connections)
+- [ask.ts](ask.ts.md) (4 shared connections)
 - [catalog.ts](catalog.ts.md) (3 shared connections)
-- [MissingChecklist.tsx](MissingChecklist.tsx.md) (3 shared connections)
-- [clef.ts](clef.ts.md) (3 shared connections)
-- [useExplanations.ts](useExplanations.ts.md) (2 shared connections)
+- [설명 생성과 품질 검사](설명_생성과_품질_검사.md) (3 shared connections)
+- [domain/explain.ts](domain-explain.ts.md) (2 shared connections)
+- [(app)/actions.ts](app-actions.ts.md) (2 shared connections)
+- [qwen.ts](qwen.ts.md) (2 shared connections)
+- [missing.ts](missing.ts.md) (2 shared connections)
 - [설계 문서와 계획](설계_문서와_계획.md) (1 shared connections)
 - [Explanation.tsx](Explanation.tsx.md) (1 shared connections)
+- [MissingChecklist.tsx](MissingChecklist.tsx.md) (1 shared connections)
 
 ## Source Files
 

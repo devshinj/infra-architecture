@@ -1,6 +1,6 @@
 ---
 title: "DiagramWorkspace()"
-sidebar_position: 45
+sidebar_position: 60
 sidebar_label: "핵심 노드: DiagramWorkspace()"
 ---
 # DiagramWorkspace()
@@ -21,6 +21,7 @@ sidebar_label: "핵심 노드: DiagramWorkspace()"
 - useExplanations() `EXTRACTED`
 - InfoCard() `EXTRACTED`
 - restoreVersionAction() `EXTRACTED`
+- useSessions() `EXTRACTED`
 - RightPanel() `EXTRACTED`
 - DiagramPage() `EXTRACTED`
 - setWarningIgnoredAction() `EXTRACTED`
@@ -29,7 +30,6 @@ sidebar_label: "핵심 노드: DiagramWorkspace()"
 - Legend() `EXTRACTED`
 - useFly() `EXTRACTED`
 - listVersionsAction() `EXTRACTED`
-- useSessions() `EXTRACTED`
 - confirmAssumptionAction() `EXTRACTED`
 - confirmAssumption() `EXTRACTED`
 - saveFieldsAction() `EXTRACTED`

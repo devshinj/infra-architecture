@@ -1,6 +1,6 @@
 ---
 title: "ChatPanel.tsx"
-sidebar_position: 19
+sidebar_position: 15
 ---
 # ChatPanel.tsx
 
@@ -36,14 +36,14 @@ sidebar_position: 19
 ## Relationships
 
 - [MentionInput](MentionInput.md) (8 shared connections)
+- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (8 shared connections)
 - [SessionPicker.tsx](SessionPicker.tsx.md) (5 shared connections)
-- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (5 shared connections)
-- [NodeInfo.tsx](NodeInfo.tsx.md) (5 shared connections)
+- [useSessions.ts](useSessions.ts.md) (2 shared connections)
 - [useChatTurn.ts](useChatTurn.ts.md) (2 shared connections)
 - [FlyLayer.tsx](FlyLayer.tsx.md) (2 shared connections)
 - [ask/route.ts](ask-route.ts.md) (1 shared connections)
 - [ref_react](ref_react.md) (1 shared connections)
-- [schema.ts](schema.ts.md) (1 shared connections)
+- [commands.ts](commands.ts.md) (1 shared connections)
 - [Review Focus](Review_Focus.md) (1 shared connections)
 
 ## Source Files

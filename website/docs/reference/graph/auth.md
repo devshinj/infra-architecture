@@ -1,45 +1,45 @@
 ---
 title: "auth"
-sidebar_position: 52
+sidebar_position: 51
 sidebar_label: "핵심 노드: auth"
 ---
 # auth
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> God node · 22 connections · `src/auth.ts`
+> 8 nodes · cohesion 0.39
 
-**Community:** [ref_react](ref_react.md)
+## Key Concepts
 
-## Connections by Relation
+- **auth** (22 connections) — `src/auth.ts`
+- **health.ts** (7 connections) — `src/server/llm/health.ts`
+- **health/route.ts** (6 connections) — `src/app/api/llm/health/route.ts`
+- **checkLlmHealth()** (5 connections) — `src/server/llm/health.ts`
+- **GET()** (3 connections) — `src/app/api/llm/health/route.ts`
+- **probe()** (2 connections) — `src/server/llm/health.ts`
+- **LlmHealth** (1 connections) — `src/server/llm/health.ts`
+- **resetHealthCacheForTest()** (1 connections) — `src/server/llm/health.ts`
 
-### calls
-- POST() `EXTRACTED`
-- DiagramPage() `EXTRACTED`
-- POST() `EXTRACTED`
-- Glossary() `EXTRACTED`
-- GET() `EXTRACTED`
-- AppLayout() `EXTRACTED`
-- GET() `EXTRACTED`
-- POST() `EXTRACTED`
-- userId() `EXTRACTED`
-- GET() `EXTRACTED`
-- Home() `EXTRACTED`
+## Relationships
 
-### contains
-- auth.ts `EXTRACTED`
+- [ref_react](ref_react.md) (7 shared connections)
+- [ask/route.ts](ask-route.ts.md) (4 shared connections)
+- [\[sessionId\]/route.ts]([sessionId]-route.ts.md) (4 shared connections)
+- [(app)/actions.ts](app-actions.ts.md) (4 shared connections)
+- [explain/route.ts](explain-route.ts.md) (3 shared connections)
+- [deps.ts](deps.ts.md) (3 shared connections)
 
-### imports
-- [(app)/actions.ts](app-actions.ts.md) `EXTRACTED`
-- [ask/route.ts](ask-route.ts.md) `EXTRACTED`
-- chat/route.ts `EXTRACTED`
-- explain/route.ts `EXTRACTED`
-- [\[sessionId\]/route.ts]([sessionId]-route.ts.md) `EXTRACTED`
-- \[diagramId\]/page.tsx `EXTRACTED`
-- glossary/page.tsx `EXTRACTED`
-- (app)/layout.tsx `EXTRACTED`
-- (app)/page.tsx `EXTRACTED`
-- health/route.ts `EXTRACTED`
+## Source Files
+
+- `src/app/api/llm/health/route.ts`
+- `src/auth.ts`
+- `src/server/llm/health.ts`
+
+## Audit Trail
+
+- EXTRACTED: 36 (100%)
+- INFERRED: 0 (0%)
+- AMBIGUOUS: 0 (0%)
 
 ---
 
