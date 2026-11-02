@@ -32,7 +32,7 @@ async function fillSignup(user: ReturnType<typeof userEvent.setup>, name: string
 describe("signup", () => {
   test("rules are shown before submit and linked to the inputs", () => {
     render(<SignupPage />);
-    expect(screen.getByLabelText("아이디")).toHaveAccessibleDescription("영문 소문자·숫자·밑줄(_)로 3~32자");
+    expect(screen.getByLabelText("아이디")).toHaveAccessibleDescription(/3~32자/);
     expect(screen.getByLabelText("비밀번호")).toHaveAccessibleDescription("8자 이상");
     expect(screen.getByLabelText("아이디")).toHaveFocus();
   });
@@ -48,13 +48,13 @@ describe("signup", () => {
   test("client check matches server rules: blocks submit, marks the field, focuses it, keeps values", async () => {
     const user = userEvent.setup();
     render(<SignupPage />);
-    await fillSignup(user, "Jae", "a@b.co", "password1");
+    await fillSignup(user, "j!", "a@b.co", "password1");
     await user.click(screen.getByRole("button", { name: "가입하기" }));
 
     const name = screen.getByLabelText("아이디");
     expect(actions.signupAction).not.toHaveBeenCalled();
     expect(name).toHaveAttribute("aria-invalid", "true");
-    expect(name).toHaveAccessibleDescription(/소문자로 입력해 주세요/);
+    expect(name).toHaveAccessibleDescription(/3~32자/);
     expect(name).toHaveFocus();
     expect(screen.getByLabelText("이메일")).toHaveValue("a@b.co");
     expect(screen.getByLabelText("비밀번호")).toHaveValue("password1");

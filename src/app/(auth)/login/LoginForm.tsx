@@ -3,7 +3,7 @@
 import Link from "next/link";
 
 import { loginAction } from "@/server/auth/actions";
-import { MESSAGES } from "@/server/auth/rules";
+import { MESSAGES, normalizeUsername } from "@/server/auth/rules";
 import { Logo } from "@/ui/brand/Logo";
 
 import { AuthField, AuthSubmit } from "../_components/AuthField";
@@ -12,7 +12,7 @@ import styles from "../auth.module.css";
 
 function validate(data: FormData): FieldErrors {
   const errors: FieldErrors = {};
-  if (!String(data.get("username") ?? "")) errors.username = MESSAGES.usernameRequired;
+  if (!normalizeUsername(String(data.get("username") ?? ""))) errors.username = MESSAGES.usernameRequired;
   if (!String(data.get("password") ?? "")) errors.password = MESSAGES.passwordRequired;
   return errors;
 }

@@ -4,7 +4,7 @@ import { db } from "@/db/client";
 import { users } from "@/db/schema";
 
 import { hashPassword } from "./password";
-import { checkEmail, checkNewPassword, checkUsername, normalizeEmail } from "./rules";
+import { checkEmail, checkNewPassword, checkUsername, normalizeEmail, normalizeUsername } from "./rules";
 
 export type SignupInput = { username: string; password: string; email: string };
 export type SignupResult =
@@ -12,7 +12,8 @@ export type SignupResult =
   | { ok: false; field: "username" | "email" | "password"; message: string };
 
 export async function signup(input: SignupInput): Promise<SignupResult> {
-  const { username, password } = input;
+  const { password } = input;
+  const username = normalizeUsername(input.username);
   const email = normalizeEmail(input.email);
 
   // 화면이 미리 보여 주는 안내·확인과 같은 규칙(rules.ts)을 쓴다.
