@@ -42,6 +42,10 @@ const BASE_OPTIONS: Record<string, string> = {
   // Keep edges that leave a group apart; merged they share one line and you cannot tell which goes where.
   "elk.layered.mergeHierarchyEdges": "false",
 };
+// 나란히 놓는 영역(이중화 묶음·쿠버네티스 클러스터)의 자식 노드는 이름의 숫자 순서(#1, #2, …)로 놓는다.
+const ROW_GROUP_KINDS: ReadonlySet<string> = new Set(["redundancy_group", "k8s_cluster"]);
+const labelOrder = new Intl.Collator("ko", { numeric: true });
+
 const GROUP_PADDING = `[top=${GROUP_PAD.top},left=${GROUP_PAD.side},bottom=${GROUP_PAD.bottom},right=${GROUP_PAD.side}]`;
 
 /** AZ 칩 너비: 글자 `AZ <az>`(11px) + 양쪽 안쪽 여백 3 + 양쪽 테두리 1 + 보조 글자와의 사이 6 (canvas.css .node__az · .node__subrow). */
@@ -121,6 +125,43 @@ export async function layoutDiagram(g: DisplayGraph, pinned: Record<string, { x:
     return p !== null && p === parentOf(to) && g.groups[p].groupKind === "redundancy_group" && !!g.nodes[from] && !!g.nodes[to];
   };
 
+  // ELK 는 INCLUDE_CHILDREN 계층 안에서 입력 순서(considerModelOrder·forceNodeModelOrder)를 지키지 않고,
+  // 안쪽 영역에 그 옵션을 주면 오류가 난다. 그래서 나란히 놓인 자식 노드는 ELK 가 놓은 뒤 같은 줄 안에서
+  // 이름 순서로 자리를 바꾼다. 자리가 바뀐 노드로 드나드는 연결은 끝 구간을 옆으로 옮겨 이어 붙이고,
+  // 끝 구간이 세로가 아니면 아래에서 다시 그린다.
+  const edgeById = new Map(g.edges.map((e) => [e.id, e]));
+  const reordered = new Map<string, number>(); // 노드 id → 옮긴 x 거리
+  const reroute = new Set<string>();
+  function reorderRows(rects: Map<string, Rect>): void {
+    for (const grp of groups) {
+      if (!ROW_GROUP_KINDS.has(grp.groupKind) || !rects.has(grp.id)) continue;
+      const kids = [...groups, ...nodes].filter((x) => x.parent === grp.id && rects.has(x.id));
+      if (kids.length < 2 || kids.some((k) => !g.nodes[k.id])) continue; // 안쪽 영역이 섞여 있으면 건드리지 않는다.
+      const rows = new Map<number, string[]>();
+      for (const k of kids) {
+        const y = Math.round(rects.get(k.id)!.y);
+        rows.set(y, [...(rows.get(y) ?? []), k.id]);
+      }
+      for (const ids of rows.values()) {
+        if (ids.length < 2) continue;
+        const left = [...ids].sort((a, b) => rects.get(a)!.x - rects.get(b)!.x);
+        const want = [...ids].sort((a, b) => labelOrder.compare(g.nodes[a].label, g.nodes[b].label));
+        if (left.every((id, i) => id === want[i])) continue;
+        const x0 = rects.get(left[0])!.x;
+        const last = rects.get(left[left.length - 1])!;
+        const sumW = want.reduce((t, id) => t + rects.get(id)!.width, 0);
+        const gap = (last.x + last.width - x0 - sumW) / (want.length - 1);
+        let x = x0;
+        for (const id of want) {
+          const r = rects.get(id)!;
+          if (Math.abs(r.x - x) > 0.01) reordered.set(id, x - r.x);
+          r.x = x;
+          x += r.width + gap;
+        }
+      }
+    }
+  }
+
   // One ELK run over the hierarchy under `tops`. Each edge sits in the lowest common ancestor container
   // of its endpoints; ELK returns its sections relative to that container, so the container's absolute
   // offset is added back.
@@ -151,6 +192,13 @@ export async function layoutDiagram(g: DisplayGraph, pinned: Record<string, { x:
       elkById.set(node.id, n);
       elkById.get(containerOf(node.id))!.children!.push(n);
     }
+    // 나란히 놓는 영역의 자식은 이름 순서로 ELK 에 넣는다.
+    for (const grp of groups) {
+      const n = elkById.get(grp.id);
+      if (!n?.children || !ROW_GROUP_KINDS.has(grp.groupKind)) continue;
+      const label = (id: string) => (g.nodes[id] ?? g.groups[id])?.label ?? id;
+      n.children.sort((a, b) => labelOrder.compare(label(a.id), label(b.id)));
+    }
     const chain = (id: string): string[] => {
       const out: string[] = [];
       for (let c: string | null = containerOf(id); c !== null; c = c === ROOT ? null : containerOf(c)) out.push(c);
@@ -174,6 +222,7 @@ export async function layoutDiagram(g: DisplayGraph, pinned: Record<string, { x:
       for (const c of n.children ?? []) walk(c, x + (c.x ?? 0), y + (c.y ?? 0));
     };
     walk(result, 0, 0);
+    reorderRows(rects);
     const edges = new Map<string, Pt[]>();
     for (const [id, container] of edgeContainer) {
       const off = rects.get(container)!;
@@ -185,6 +234,19 @@ export async function layoutDiagram(g: DisplayGraph, pinned: Record<string, { x:
           if (!last || Math.abs(last.x - q.x) > 0.01 || Math.abs(last.y - q.y) > 0.01) pts.push(q);
         }
       }
+      // 자리가 바뀐 노드에 닿는 끝 구간(세로)을 노드를 따라 옮긴다.
+      const de = edgeById.get(id)!;
+      const both = reordered.has(de.from) && reordered.has(de.to);
+      const slide = (nodeId: string, a: number, b: number) => {
+        const dx = reordered.get(nodeId);
+        if (dx === undefined) return;
+        // 끝 구간만 옮기려면 점이 세 개(양쪽 다 옮기면 네 개) 이상이고 그 구간이 세로여야 한다.
+        if (pts.length < (both ? 4 : 3) || Math.abs(pts[a].x - pts[b].x) > 0.01) return void reroute.add(id);
+        pts[a].x += dx;
+        pts[b].x += dx;
+      };
+      slide(de.to, pts.length - 1, pts.length - 2);
+      slide(de.from, 0, 1);
       edges.set(id, pts);
     }
     rects.delete(ROOT);
@@ -399,7 +461,7 @@ export async function layoutDiagram(g: DisplayGraph, pinned: Record<string, { x:
   const rectOf = (id: string): Rect => out.nodes[id] ?? out.groups[id];
   const moved = (id: string) => !!pinned[id] || refit.has(id);
   for (const e of g.edges) {
-    let pts = moved(e.from) || moved(e.to) ? elbowRoute(rectOf(e.from), rectOf(e.to)) : (points.get(e.id) ?? []);
+    let pts = moved(e.from) || moved(e.to) || reroute.has(e.id) ? elbowRoute(rectOf(e.from), rectOf(e.to)) : (points.get(e.id) ?? []);
     if (pts.length < 2) {
       // ELK returned no route for this edge.
       pts = elbowRoute(rectOf(e.from), rectOf(e.to));
