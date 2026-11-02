@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 
 import styles from "./app.module.css";
 
@@ -9,17 +9,31 @@ export const SIDEBAR_WIDTH = 240;
 export const RAIL_WIDTH = 56;
 export const PANEL_GAP = 12;
 export const SIDEBAR_COLLAPSED_KEY = "infrasketch.sidebarCollapsed";
+/** 이보다 좁은 화면은 저장값이 없을 때 레일로 시작해 캔버스·안내를 가리지 않는다. */
+export const NARROW_QUERY = "(max-width: 640px)";
+
+/** 사이드바 밖(빈 홈 화면 등)에서 사이드바의 ‘새 프로젝트’·‘새 구성도’ 대화상자를 연다. projectId 가 있으면 그 프로젝트에 구성도를 만든다. */
+export type CreateRequest = (projectId?: string) => void;
 
 interface ShellValue {
   collapsed: boolean;
   setCollapsed(v: boolean): void;
   /** 화면 왼쪽 가장자리에서 사이드바 바깥 끝까지(여백 + 너비). */
   sidebarExtent: number;
+  requestCreate: CreateRequest;
+  /** 사이드바가 대화상자를 여는 함수를 등록한다(null 이면 해제). */
+  setCreateHandler(fn: CreateRequest | null): void;
 }
 
 const extentOf = (collapsed: boolean) => PANEL_GAP + (collapsed ? RAIL_WIDTH : SIDEBAR_WIDTH);
 
-const ShellContext = createContext<ShellValue>({ collapsed: false, setCollapsed: () => {}, sidebarExtent: extentOf(false) });
+const ShellContext = createContext<ShellValue>({
+  collapsed: false,
+  setCollapsed: () => {},
+  sidebarExtent: extentOf(false),
+  requestCreate: () => {},
+  setCreateHandler: () => {},
+});
 
 export const useShell = () => useContext(ShellContext);
 
@@ -28,7 +42,8 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
   const [collapsed, setState] = useState(false);
   useEffect(() => {
     try {
-      if (window.localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === "1") setState(true);
+      const saved = window.localStorage.getItem(SIDEBAR_COLLAPSED_KEY);
+      if (saved === "1" || (saved === null && window.matchMedia?.(NARROW_QUERY).matches)) setState(true);
     } catch {
       /* 저장소를 못 읽으면 펼친 채로 */
     }
@@ -41,12 +56,30 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
       /* 저장 실패는 이번 방문에만 영향 */
     }
   }, []);
-  const value = useMemo(() => ({ collapsed, setCollapsed, sidebarExtent: extentOf(collapsed) }), [collapsed, setCollapsed]);
+  const createHandler = useRef<CreateRequest | null>(null);
+  const requestCreate = useCallback<CreateRequest>((projectId) => createHandler.current?.(projectId), []);
+  const setCreateHandler = useCallback((fn: CreateRequest | null) => {
+    createHandler.current = fn;
+  }, []);
+  const value = useMemo(
+    () => ({ collapsed, setCollapsed, sidebarExtent: extentOf(collapsed), requestCreate, setCreateHandler }),
+    [collapsed, setCollapsed, requestCreate, setCreateHandler],
+  );
   return (
     <ShellContext.Provider value={value}>
       <div className={styles.shell} style={{ "--shell-inset-left": `${value.sidebarExtent}px` } as React.CSSProperties}>
         {children}
       </div>
     </ShellContext.Provider>
+  );
+}
+
+/** 빈 홈 화면의 시작 버튼: 사이드바와 같은 대화상자를 연다. */
+export function CreateButton({ projectId, children }: { projectId?: string; children: React.ReactNode }) {
+  const { requestCreate } = useShell();
+  return (
+    <button type="button" className={styles.primaryBtn} onClick={() => requestCreate(projectId)}>
+      {children}
+    </button>
   );
 }

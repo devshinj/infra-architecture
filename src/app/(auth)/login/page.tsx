@@ -1,35 +1,11 @@
-"use client";
+import { LoginForm } from "./LoginForm";
 
-import Link from "next/link";
-import { useActionState } from "react";
+const NOTICES: Record<string, string> = {
+  reset: "비밀번호를 바꿨어요. 새 비밀번호로 로그인해 주세요.",
+  signup: "가입이 끝났어요. 아이디와 비밀번호로 로그인해 주세요.",
+};
 
-import { loginAction, type FormState } from "@/server/auth/actions";
-import { Logo } from "@/ui/brand/Logo";
-
-import styles from "../auth.module.css";
-
-export default function LoginPage() {
-  const [state, action, pending] = useActionState<FormState, FormData>(loginAction, {});
-  return (
-    <main className={styles.page}>
-      <form action={action} className={styles.form}>
-        <Logo className={styles.logo} />
-        <h1 className={styles.title}>로그인</h1>
-        <label className={styles.field}>
-          아이디
-          <input name="username" autoComplete="username" required className={styles.input} />
-        </label>
-        <label className={styles.field}>
-          비밀번호
-          <input name="password" type="password" autoComplete="current-password" required className={styles.input} />
-        </label>
-        {state.errors?.form && <p className={styles.error} role="alert">{state.errors.form}</p>}
-        <button type="submit" disabled={pending} className={styles.button}>로그인</button>
-        <div className={styles.links}>
-          <Link href="/signup">회원가입</Link>
-          <Link href="/reset">비밀번호 찾기</Link>
-        </div>
-      </form>
-    </main>
-  );
+export default async function LoginPage({ searchParams }: { searchParams: Promise<{ notice?: string | string[] }> }) {
+  const { notice } = await searchParams;
+  return <LoginForm notice={typeof notice === "string" ? NOTICES[notice] : undefined} />;
 }
