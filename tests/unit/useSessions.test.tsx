@@ -24,7 +24,7 @@ test("loads a session's lines once on first select", async () => {
   expect(result.current.active).toBe("a");
   expect(result.current.linesOf("a")).toBe("loading");
   await waitFor(() => expect(result.current.linesOf("a")).not.toBe("loading"));
-  expect(fetchMock).toHaveBeenCalledWith("/api/diagrams/d1/sessions/a");
+  expect(fetchMock).toHaveBeenCalledWith("/api/diagrams/d1/sessions/a", expect.objectContaining({ signal: expect.any(AbortSignal) }));
   const lines = result.current.linesOf("a");
   expect(lines !== "loading" && lines.map((l) => [l.kind, l.text])).toEqual([["user", "왜 두 대예요?"], ["assistant", "이중화예요."]]);
   act(() => result.current.select("main"));
@@ -51,4 +51,63 @@ test("a new session's lines move to its id when the server names it", () => {
   expect(result.current.summaryOf(NEW_SESSION)).toBeNull();
   const lines = result.current.linesOf("x");
   expect(lines !== "loading" && lines.map((l) => l.text)).toEqual(["왜 두 대예요?"]);
+});
+
+const histRes = () =>
+  Response.json({ session: s("a", "2026-11-01T00:00:00Z"), messages: [{ id: "u1", role: "user", content: "옛 질문", meta: {}, createdAt: "2026-11-01T00:00:00Z" }] });
+
+test("a load that finishes after the running turn appended lines merges history first, then the turn's lines", async () => {
+  let release!: (r: Response) => void;
+  const fetchMock = vi
+    .fn()
+    .mockRejectedValueOnce(new Error("net"))
+    .mockImplementationOnce(() => new Promise<Response>((r) => (release = r)));
+  vi.stubGlobal("fetch", fetchMock);
+  const { result } = renderHook(() => useSessions({ diagramId: "d1", initial: [s("a", "2026-11-01T00:00:00Z")] }));
+  act(() => result.current.select("a"));
+  await waitFor(() => expect(result.current.linesOf("a")).not.toBe("loading"));
+  // 차례가 도는 중에 다시 고른다.
+  act(() => result.current.select("a"));
+  expect(result.current.linesOf("a")).toBe("loading");
+  act(() => result.current.setLines("a", (ls) => [...ls, { id: "t1", kind: "assistant", text: "새 답" }]));
+  await act(async () => release(histRes()));
+  await waitFor(() => {
+    const l = result.current.linesOf("a");
+    expect(l !== "loading" && l.map((x) => x.text)).toEqual(["옛 질문", "새 답"]);
+  });
+});
+
+test("switching sessions aborts the in-flight load without an error line", async () => {
+  const signals: AbortSignal[] = [];
+  const fetchMock = vi.fn((_url: string, init?: RequestInit) => {
+    const sig = init!.signal!;
+    signals.push(sig);
+    return new Promise<Response>((_, reject) => sig.addEventListener("abort", () => reject(new DOMException("aborted", "AbortError"))));
+  });
+  vi.stubGlobal("fetch", fetchMock);
+  const { result } = renderHook(() => useSessions({ diagramId: "d1", initial: [s("a", "2026-11-01T00:00:00Z"), s("b", "2026-11-01T00:00:00Z")] }));
+  act(() => result.current.select("a"));
+  act(() => result.current.select("b"));
+  expect(signals[0]!.aborted).toBe(true);
+  expect(signals[1]!.aborted).toBe(false);
+  await act(async () => {});
+  // 끊긴 세션은 오류 줄 없이 비워 두어 다시 고르면 다시 불러온다.
+  expect(result.current.linesOf("a")).toEqual([]);
+  act(() => result.current.select("a"));
+  expect(fetchMock).toHaveBeenCalledTimes(3);
+});
+
+test("unmount aborts the in-flight load", () => {
+  let sig: AbortSignal | undefined;
+  vi.stubGlobal("fetch", vi.fn((_u: string, init?: RequestInit) => ((sig = init!.signal!), new Promise<Response>(() => {}))));
+  const { result, unmount } = renderHook(() => useSessions({ diagramId: "d1", initial: [s("a", "2026-11-01T00:00:00Z")] }));
+  act(() => result.current.select("a"));
+  unmount();
+  expect(sig!.aborted).toBe(true);
+});
+
+test("titles drop a trailing space left by the 60-codepoint cut", () => {
+  const { result } = renderHook(() => useSessions({ diagramId: "d1", initial: [] }));
+  act(() => result.current.startNew({ nodeId: "n1", nodeLabel: "A", text: `${"가".repeat(59)} 나다라` }));
+  expect(result.current.summaryOf(NEW_SESSION)!.title).toBe("가".repeat(59));
 });

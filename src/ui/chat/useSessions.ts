@@ -24,7 +24,7 @@ export const NEW_SESSION = "new";
 
 const TITLE_MAX = 60;
 /** 서버(createSession)와 같은 규칙: 공백을 한 칸으로 접고 60자. */
-const titleOf = (text: string) => [...text.replace(/\s+/g, " ").trim()].slice(0, TITLE_MAX).join("");
+const titleOf = (text: string) => [...text.replace(/\s+/g, " ").trim()].slice(0, TITLE_MAX).join("").trimEnd();
 
 const LOAD_FAILED = "대화를 불러오지 못했어요. 다시 시도해 주세요.";
 
@@ -54,10 +54,14 @@ export function useSessions({ diagramId, initial }: { diagramId: string; initial
     linesRef.current = lines;
   });
   const alive = useRef(true);
+  /** 지금 불러오는 세션 하나(고른 세션이 바뀌거나 사라지면 끊는다). */
+  const inflight = useRef<{ id: string; ac: AbortController } | null>(null);
   useEffect(() => {
     alive.current = true;
     return () => {
       alive.current = false;
+      inflight.current?.ac.abort();
+      inflight.current = null;
     };
   }, []);
 
@@ -65,32 +69,59 @@ export function useSessions({ diagramId, initial }: { diagramId: string; initial
   const failed = useRef(new Set<string>());
 
   const load = useCallback(
-    async (id: string) => {
+    async (id: string, signal: AbortSignal) => {
       let next: ChatLine[];
       try {
-        const r = await fetch(`/api/diagrams/${encodeURIComponent(diagramId)}/sessions/${encodeURIComponent(id)}`);
+        const r = await fetch(`/api/diagrams/${encodeURIComponent(diagramId)}/sessions/${encodeURIComponent(id)}`, { signal });
         if (!r.ok) throw new Error(`status ${r.status}`);
         const j = (await r.json()) as { messages: Row[] };
         next = messagesToLines(j.messages);
       } catch {
+        // 끊긴 불러오기는 오류가 아니다(끊은 쪽이 이미 줄을 비웠다).
+        if (signal.aborted) return;
         next = [{ id: `${id}-load-failed`, kind: "error", text: LOAD_FAILED }];
         failed.current.add(id);
       }
-      // 불러오는 사이 차례가 줄을 쌓았으면 그대로 둔다.
-      if (alive.current) setAllLines((ls) => (ls[id] === "loading" ? { ...ls, [id]: next } : ls));
+      if (signal.aborted || !alive.current) return;
+      if (inflight.current?.ac.signal === signal) inflight.current = null;
+      // 불러오는 사이 도는 차례가 줄을 쌓았으면 불러온 줄을 앞에 두고, 아직 없는 차례 줄만 뒤에 잇는다.
+      setAllLines((ls) => {
+        const cur = ls[id];
+        if (cur === "loading") return { ...ls, [id]: next };
+        if (cur === undefined) return ls;
+        const have = new Set(next.map((l) => l.id));
+        return { ...ls, [id]: [...next, ...cur.filter((l) => !have.has(l.id))] };
+      });
     },
     [diagramId],
   );
   const select = useCallback(
     (key: SessionKey) => {
       setActive(key);
+      // 다른 세션으로 옮기면 불러오던 것을 끊고, 반쯤 불러온 줄은 비워 다시 고르면 다시 불러오게 한다.
+      const flying = inflight.current;
+      if (flying && flying.id !== key) {
+        flying.ac.abort();
+        inflight.current = null;
+        if (linesRef.current[flying.id] === "loading") {
+          const { [flying.id]: _gone, ...rest } = linesRef.current;
+          linesRef.current = rest;
+          setAllLines((ls) => {
+            if (ls[flying.id] !== "loading") return ls;
+            const { [flying.id]: _drop, ...others } = ls;
+            return others;
+          });
+        }
+      }
       if (key === "main" || key === NEW_SESSION) return;
       const have = linesRef.current[key];
       if (have !== undefined && !failed.current.has(key)) return;
       failed.current.delete(key);
       linesRef.current = { ...linesRef.current, [key]: "loading" };
       setAllLines((ls) => ({ ...ls, [key]: "loading" }));
-      void load(key);
+      const ac = new AbortController();
+      inflight.current = { id: key, ac };
+      void load(key, ac.signal);
     },
     [load],
   );
