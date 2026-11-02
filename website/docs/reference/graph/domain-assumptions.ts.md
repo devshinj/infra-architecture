@@ -1,6 +1,6 @@
 ---
 title: "domain/assumptions.ts"
-sidebar_position: 35
+sidebar_position: 32
 ---
 # domain/assumptions.ts
 
@@ -32,7 +32,7 @@ sidebar_position: 35
 - [intent.ts](intent.ts.md) (2 shared connections)
 - [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (2 shared connections)
 - [설계 문서와 계획](설계_문서와_계획.md) (1 shared connections)
-- [ref_react](ref_react.md) (1 shared connections)
+- [schema.ts](schema.ts.md) (1 shared connections)
 - [MentionInput](MentionInput.md) (1 shared connections)
 
 ## Source Files

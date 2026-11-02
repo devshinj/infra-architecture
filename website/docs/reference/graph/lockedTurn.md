@@ -1,6 +1,6 @@
 ---
 title: "lockedTurn()"
-sidebar_position: 63
+sidebar_position: 55
 sidebar_label: "핵심 노드: lockedTurn()"
 ---
 # lockedTurn()
@@ -20,16 +20,16 @@ sidebar_label: "핵심 노드: lockedTurn()"
 - emptyState() `EXTRACTED`
 - applyCommand() `EXTRACTED`
 - listMessages() `EXTRACTED`
+- createJsonlParser() `EXTRACTED`
 - createThinkStripper() `EXTRACTED`
 - checkWarnings() `EXTRACTED`
 - runChatTurn() `EXTRACTED`
-- createJsonlParser() `EXTRACTED`
 - createMessage() `EXTRACTED`
 - .emit() `EXTRACTED`
 - resolveIntent() `EXTRACTED`
+- normalizeAiCommand() `EXTRACTED`
 - pruneEmptyGroups() `EXTRACTED`
 - buildMessages() `EXTRACTED`
-- normalizeAiCommand() `EXTRACTED`
 - streamFailure() `EXTRACTED`
 - turnSignals() `EXTRACTED`
 - parseMentions() `EXTRACTED`

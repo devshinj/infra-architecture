@@ -1,6 +1,6 @@
 ---
 title: "SkipTally"
-sidebar_position: 56
+sidebar_position: 49
 ---
 # SkipTally
 

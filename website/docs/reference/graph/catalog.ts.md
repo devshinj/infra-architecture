@@ -1,24 +1,19 @@
 ---
 title: "catalog.ts"
-sidebar_position: 31
+sidebar_position: 43
 ---
 # catalog.ts
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 14 nodes · cohesion 0.19
+> 9 nodes · cohesion 0.25
 
 ## Key Concepts
 
 - **catalog.ts** (32 connections) — `src/domain/catalog.ts`
-- **EDGE_KINDS** (9 connections) — `src/domain/catalog.ts`
-- **GroupBox.tsx** (8 connections) — `src/canvas/GroupBox.tsx`
-- **nodeTypes.ts** (6 connections) — `src/canvas/nodeTypes.ts`
-- **GROUP_KINDS** (5 connections) — `src/domain/catalog.ts`
-- **GroupKind** (5 connections) — `src/domain/catalog.ts`
-- **GroupBoxData** (3 connections) — `src/canvas/GroupBox.tsx`
-- **GroupBox()** (2 connections) — `src/canvas/GroupBox.tsx`
-- **nodeTypes** (2 connections) — `src/canvas/nodeTypes.ts`
+- **icons.tsx** (7 connections) — `src/canvas/icons.tsx`
+- **Category** (5 connections) — `src/domain/catalog.ts`
+- **PATHS** (1 connections) — `src/canvas/icons.tsx`
 - **DATA** (1 connections) — `src/domain/catalog.ts`
 - **GUARD** (1 connections) — `src/domain/catalog.ts`
 - **nk()** (1 connections) — `src/domain/catalog.ts`
@@ -27,29 +22,28 @@ sidebar_position: 31
 
 ## Relationships
 
-- [Canvas.tsx](Canvas.tsx.md) (5 shared connections)
-- [NodeCard.tsx](NodeCard.tsx.md) (5 shared connections)
-- [연결선 구간 묶음](연결선_구간_묶음.md) (3 shared connections)
-- [commands.ts](commands.ts.md) (3 shared connections)
-- [경고 규칙과 점검](경고_규칙과_점검.md) (3 shared connections)
-- [prompt.ts](prompt.ts.md) (3 shared connections)
+- [NodeCard.tsx](NodeCard.tsx.md) (6 shared connections)
+- [MissingChecklist.tsx](MissingChecklist.tsx.md) (3 shared connections)
 - [NodeInfo.tsx](NodeInfo.tsx.md) (3 shared connections)
-- [표시 그래프와 버전 비교](표시_그래프와_버전_비교.md) (2 shared connections)
-- [연결선 그리기](연결선_그리기.md) (2 shared connections)
-- [MissingChecklist.tsx](MissingChecklist.tsx.md) (2 shared connections)
-- [흐름 애니메이션](흐름_애니메이션.md) (2 shared connections)
-- [(app)/actions.ts](app-actions.ts.md) (2 shared connections)
+- [domain/warnings.ts](domain-warnings.ts.md) (3 shared connections)
+- [연결선 구간 묶음](연결선_구간_묶음.md) (2 shared connections)
+- [missing.ts](missing.ts.md) (2 shared connections)
+- [Legend.tsx](Legend.tsx.md) (2 shared connections)
+- [Canvas.tsx](Canvas.tsx.md) (1 shared connections)
+- [layout.ts](layout.ts.md) (1 shared connections)
+- [연결선 그리기](연결선_그리기.md) (1 shared connections)
+- [흐름 애니메이션](흐름_애니메이션.md) (1 shared connections)
+- [commands.ts](commands.ts.md) (1 shared connections)
 
 ## Source Files
 
-- `src/canvas/GroupBox.tsx`
-- `src/canvas/nodeTypes.ts`
+- `src/canvas/icons.tsx`
 - `src/domain/catalog.ts`
 
 ## Audit Trail
 
-- EXTRACTED: 58 (97%)
-- INFERRED: 2 (3%)
+- EXTRACTED: 41 (100%)
+- INFERRED: 0 (0%)
 - AMBIGUOUS: 0 (0%)
 
 ---

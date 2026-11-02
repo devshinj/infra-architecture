@@ -1,6 +1,6 @@
 ---
 title: "intent.ts"
-sidebar_position: 55
+sidebar_position: 48
 ---
 # intent.ts
 
@@ -18,9 +18,9 @@ sidebar_position: 55
 
 ## Relationships
 
-- [pipeline.ts](pipeline.ts.md) (5 shared connections)
-- [ask.ts](ask.ts.md) (3 shared connections)
-- [경고 규칙과 점검](경고_규칙과_점검.md) (3 shared connections)
+- [ask.ts](ask.ts.md) (4 shared connections)
+- [pipeline.ts](pipeline.ts.md) (4 shared connections)
+- [clef.ts](clef.ts.md) (3 shared connections)
 - [domain/assumptions.ts](domain-assumptions.ts.md) (2 shared connections)
 - [prompt.ts](prompt.ts.md) (1 shared connections)
 

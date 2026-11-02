@@ -30,13 +30,11 @@ sidebar_position: 26
 
 ## Relationships
 
+- [Canvas.tsx](Canvas.tsx.md) (4 shared connections)
 - [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (3 shared connections)
-- [useCamera.ts](useCamera.ts.md) (2 shared connections)
 - [ChatPanel.tsx](ChatPanel.tsx.md) (2 shared connections)
 - [(app)/actions.ts](app-actions.ts.md) (2 shared connections)
-- [캔버스 이벤트](캔버스_이벤트.md) (1 shared connections)
-- [Canvas.tsx](Canvas.tsx.md) (1 shared connections)
-- [ref_react](ref_react.md) (1 shared connections)
+- [schema.ts](schema.ts.md) (1 shared connections)
 
 ## Source Files
 

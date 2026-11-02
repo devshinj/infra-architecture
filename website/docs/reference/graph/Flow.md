@@ -1,6 +1,6 @@
 ---
 title: "Flow()"
-sidebar_position: 65
+sidebar_position: 57
 sidebar_label: "핵심 노드: Flow()"
 ---
 # Flow()
@@ -9,7 +9,7 @@ sidebar_label: "핵심 노드: Flow()"
 
 > God node · 23 connections · `src/canvas/Canvas.tsx`
 
-**Community:** [캔버스 이벤트](캔버스_이벤트.md)
+**Community:** [Canvas.tsx](Canvas.tsx.md)
 
 ## Connections by Relation
 

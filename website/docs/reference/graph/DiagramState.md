@@ -1,6 +1,6 @@
 ---
 title: "DiagramState"
-sidebar_position: 59
+sidebar_position: 51
 sidebar_label: "핵심 노드: DiagramState"
 ---
 # DiagramState
@@ -32,8 +32,8 @@ sidebar_label: "핵심 노드: DiagramState"
 - versions.ts `EXTRACTED`
 - [MissingChecklist.tsx](MissingChecklist.tsx.md) `EXTRACTED`
 - [useExplanations.ts](useExplanations.ts.md) `EXTRACTED`
-- chat/warnings.ts `EXTRACTED`
-- domain/warnings.ts `EXTRACTED`
+- [chat/warnings.ts](chat-warnings.ts.md) `EXTRACTED`
+- [domain/warnings.ts](domain-warnings.ts.md) `EXTRACTED`
 - [missing.ts](missing.ts.md) `EXTRACTED`
 - display.ts `EXTRACTED`
 - [InfoCard.tsx](InfoCard.tsx.md) `EXTRACTED`

@@ -11,69 +11,61 @@ sidebar_label: "개요"
 
 [인터랙티브 그래프 열기](pathname:///graph/graph.html) — 노드를 끌고 확대해서 전체 연결을 볼 수 있습니다.
 
-**1105 nodes · 2853 edges · 57 communities**
+**1114 nodes · 2871 edges · 49 communities**
 
 ---
 
 ## Communities
 (sorted by size, largest first)
 
-- [(app)/actions.ts](app-actions.ts.md) — 111 nodes
-- [ref_react](ref_react.md) — 60 nodes
-- [경고 규칙과 점검](경고_규칙과_점검.md) — 59 nodes
-- [설계 문서와 계획](설계_문서와_계획.md) — 41 nodes
-- [schema.ts](schema.ts.md) — 39 nodes
-- [설명 생성과 품질 검사](설명_생성과_품질_검사.md) — 37 nodes
-- [명령 적용과 샘플](명령_적용과_샘플.md) — 35 nodes
-- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) — 32 nodes
-- [ELK 자동 배치와 꺾은선](ELK_자동_배치와_꺾은선.md) — 30 nodes
-- [prompt.ts](prompt.ts.md) — 26 nodes
-- [Canvas.tsx](Canvas.tsx.md) — 26 nodes
-- [pipeline.ts](pipeline.ts.md) — 24 nodes
+- [(app)/actions.ts](app-actions.ts.md) — 122 nodes
+- [layout.ts](layout.ts.md) — 70 nodes
+- [Canvas.tsx](Canvas.tsx.md) — 66 nodes
+- [schema.ts](schema.ts.md) — 57 nodes
+- [명령 적용과 샘플](명령_적용과_샘플.md) — 53 nodes
+- [ref_react](ref_react.md) — 50 nodes
+- [설계 문서와 계획](설계_문서와_계획.md) — 36 nodes
+- [설명 생성과 품질 검사](설명_생성과_품질_검사.md) — 36 nodes
+- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) — 36 nodes
+- [useSessions.ts](useSessions.ts.md) — 33 nodes
+- [prompt.ts](prompt.ts.md) — 25 nodes
+- [chat/warnings.ts](chat-warnings.ts.md) — 24 nodes
 - [NodeInfo.tsx](NodeInfo.tsx.md) — 24 nodes
-- [ChatPanel.tsx](ChatPanel.tsx.md) — 22 nodes
-- [MissingChecklist.tsx](MissingChecklist.tsx.md) — 21 nodes
-- [표시 그래프와 버전 비교](표시_그래프와_버전_비교.md) — 20 nodes
-- [useCamera.ts](useCamera.ts.md) — 20 nodes
-- [useSessions.ts](useSessions.ts.md) — 20 nodes
+- [pipeline.ts](pipeline.ts.md) — 21 nodes
+- [ask/route.ts](ask-route.ts.md) — 20 nodes
+- [commands.ts](commands.ts.md) — 20 nodes
+- [연결선 구간 묶음](연결선_구간_묶음.md) — 19 nodes
 - [Explanation.tsx](Explanation.tsx.md) — 19 nodes
-- [연결선 구간 묶음](연결선_구간_묶음.md) — 18 nodes
-- [useChatTurn.ts](useChatTurn.ts.md) — 18 nodes
-- [Review Focus](Review_Focus.md) — 17 nodes
+- [ChatPanel.tsx](ChatPanel.tsx.md) — 18 nodes
+- [MissingChecklist.tsx](MissingChecklist.tsx.md) — 18 nodes
+- [ask.ts](ask.ts.md) — 18 nodes
+- [domain/warnings.ts](domain-warnings.ts.md) — 17 nodes
 - [연결선 그리기](연결선_그리기.md) — 17 nodes
 - [useExplanations.ts](useExplanations.ts.md) — 17 nodes
 - [FlyLayer.tsx](FlyLayer.tsx.md) — 17 nodes
-- [캔버스 이벤트](캔버스_이벤트.md) — 15 nodes
-- [3C-1 계획 작업 목록](3C-1_계획_작업_목록.md) — 15 nodes
-- [InfoCard.tsx](InfoCard.tsx.md) — 15 nodes
-- [commands.ts](commands.ts.md) — 15 nodes
-- [catalog.ts](catalog.ts.md) — 14 nodes
-- [연결선 개발용 화면](연결선_개발용_화면.md) — 14 nodes
-- [MentionInput](MentionInput.md) — 14 nodes
-- [Legend.tsx](Legend.tsx.md) — 14 nodes
+- [\[sessionId\]/route.ts]([sessionId]-route.ts.md) — 17 nodes
+- [연결선 개발용 화면](연결선_개발용_화면.md) — 16 nodes
+- [MentionInput](MentionInput.md) — 15 nodes
+- [NodeCard.tsx](NodeCard.tsx.md) — 15 nodes
+- [Legend.tsx](Legend.tsx.md) — 15 nodes
 - [domain/assumptions.ts](domain-assumptions.ts.md) — 14 nodes
-- [ask.ts](ask.ts.md) — 13 nodes
-- [SessionPicker.tsx](SessionPicker.tsx.md) — 13 nodes
-- [deps.ts](deps.ts.md) — 12 nodes
-- [ask/route.ts](ask-route.ts.md) — 12 nodes
+- [3C-1 계획 작업 목록](3C-1_계획_작업_목록.md) — 13 nodes
+- [InfoCard.tsx](InfoCard.tsx.md) — 13 nodes
+- [domain/explain.ts](domain-explain.ts.md) — 13 nodes
 - [흐름 애니메이션](흐름_애니메이션.md) — 12 nodes
-- [겹침 검사](겹침_검사.md) — 12 nodes
-- [domain/explain.ts](domain-explain.ts.md) — 12 nodes
-- [\[sessionId\]/route.ts]([sessionId]-route.ts.md) — 12 nodes
-- [NodeCard.tsx](NodeCard.tsx.md) — 11 nodes
-- [explain/route.ts](explain-route.ts.md) — 10 nodes
-- [glossary.ts](glossary.ts.md) — 10 nodes
-- [Review Focus](Review_Focus.md) — 9 nodes
-- [ask/route.ts](ask-route.ts.md) — 9 nodes
+- [qwen.ts](qwen.ts.md) — 12 nodes
+- [deps.ts](deps.ts.md) — 11 nodes
+- [clef.ts](clef.ts.md) — 11 nodes
+- [SessionPicker.tsx](SessionPicker.tsx.md) — 11 nodes
+- [missing.ts](missing.ts.md) — 11 nodes
+- [Review Focus](Review_Focus.md) — 10 nodes
+- [catalog.ts](catalog.ts.md) — 9 nodes
+- [normalize.ts](normalize.ts.md) — 9 nodes
+- [createClefClient](createClefClient.md) — 8 nodes
 - [Review Focus](Review_Focus.md) — 8 nodes
-- [qwen.ts](qwen.ts.md) — 8 nodes
-- [auth](auth.md) — 8 nodes
-- [normalize.ts](normalize.ts.md) — 7 nodes
-- [NodeMenu](NodeMenu.md) — 6 nodes
-- [missing.ts](missing.ts.md) — 6 nodes
+- [createThinkStripper](createThinkStripper.md) — 7 nodes
 - [intent.ts](intent.ts.md) — 5 nodes
 - [SkipTally](SkipTally.md) — 5 nodes
-- [createThinkStripper](createThinkStripper.md) — 4 nodes
 - [라우트 재수출](라우트_재수출.md) — 1 nodes
 
 ## God Nodes
