@@ -140,3 +140,10 @@ test("zones get no ask item in the canvas menu", async () => {
   expect(await screen.findByRole("menuitem", { name: "대화에 참조 붙이기" })).toBeInTheDocument();
   expect(screen.queryByRole("menuitem", { name: "이 노드에 대해 물어보기" })).not.toBeInTheDocument();
 });
+
+test("the hidden reason is not a child of the menu", () => {
+  render(<NodeMenu x={0} y={0} onChoose={vi.fn()} onAsk={vi.fn()} askDisabled askReason="막힘" onClose={vi.fn()} />);
+  const menu = screen.getByRole("menu");
+  expect(menu.querySelector(".node-menu__reason")).toBeNull();
+  expect(screen.getByRole("menuitem", { name: "이 노드에 대해 물어보기" })).toHaveAccessibleDescription("막힘");
+});

@@ -56,6 +56,7 @@ export function NodeMenu({ x, y, onChoose, onAsk, askDisabled = false, askReason
   }, []);
 
   return (
+    <>
     <div ref={ref} className="node-menu" role="menu" aria-label="노드 메뉴" style={{ left: x, top: y }}>
       <button
         ref={item}
@@ -85,11 +86,13 @@ export function NodeMenu({ x, y, onChoose, onAsk, askDisabled = false, askReason
           이 노드에 대해 물어보기
         </button>
       )}
-      {onAsk && askDisabled && askReason && (
-        <span id={reasonId} className="node-menu__reason">
-          {askReason}
-        </span>
-      )}
     </div>
+    {/* 메뉴 밖에 둔다: menu 의 자식은 menuitem 만 와야 한다. aria-describedby 로 읽힌다. */}
+    {onAsk && askDisabled && askReason && (
+      <span id={reasonId} className="node-menu__reason">
+        {askReason}
+      </span>
+    )}
+    </>
   );
 }
