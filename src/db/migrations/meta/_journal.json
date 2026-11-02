@@ -29,6 +29,13 @@
       "when": 1793461200569,
       "tag": "0003_giant_vermin",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1793613450357,
+      "tag": "0004_unique_names",
+      "breakpoints": true
     }
   ]
 }

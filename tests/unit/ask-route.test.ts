@@ -51,7 +51,7 @@ function call(body: unknown, contentType = "application/json") {
 
 function signedIn() {
   authMock.mockResolvedValue({ user: { id: "u1" } });
-  ownedMock.mockResolvedValue({ id: DIAGRAM, name: "d", projectId: "p", pinnedPositions: {} });
+  ownedMock.mockResolvedValue({ id: DIAGRAM, name: "d", projectId: "p", projectName: "p", pinnedPositions: {} });
 }
 
 afterEach(() => {

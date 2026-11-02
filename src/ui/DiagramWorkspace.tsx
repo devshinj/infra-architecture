@@ -46,6 +46,8 @@ type Mode =
 export interface DiagramWorkspaceProps {
   diagramId: string;
   name: string;
+  /** 이미지로 내보낼 때 파일 이름에 쓰는 프로젝트 이름. */
+  projectName?: string;
   latest: { number: number; state: DiagramState };
   initialPinned: Pinned;
   samples: { id: string; title: string }[];
@@ -78,7 +80,7 @@ const optionsFor = (state: DiagramState): CanvasOptions => ({ ...defaultDisplayO
 
 const NO_SESSIONS: SessionSummary[] = [];
 
-export function DiagramWorkspace({ diagramId, name, latest, initialPinned, samples, initialChat = [], initialSessions = NO_SESSIONS }: DiagramWorkspaceProps) {
+export function DiagramWorkspace({ diagramId, name, projectName, latest, initialPinned, samples, initialChat = [], initialSessions = NO_SESSIONS }: DiagramWorkspaceProps) {
   const router = useRouter();
   const [current, setCurrent] = useState(latest);
   const [pinned, setPinned] = useState<Pinned>(initialPinned);
@@ -601,6 +603,8 @@ export function DiagramWorkspace({ diagramId, name, latest, initialPinned, sampl
             onImportSample={importSample}
             importing={busy || locked}
             onPlaced={fly.placed}
+            diagramName={name}
+            {...(projectName !== undefined ? { projectName } : {})}
             {...(focusRequest ? { focusRequest } : {})}
             {...(live ? { onMention, onBadgeClick, onAskNode: onAskFromMenu } : {})}
             {...(mode.kind === "compare" ? { diffMarks: mode.marks } : {})}

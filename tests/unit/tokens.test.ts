@@ -2,6 +2,12 @@ import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { expect, test } from "vitest";
 
+// 레이아웃 모듈은 elkjs 번들(약 1.5MB)을 끌어온다. 시험 안에서 await import 하면 그 적재·변환 시간이 5초 시험 제한에
+// 들어가 기계가 바쁠 때 시간 초과가 났다. 파일 맨 위에서 불러 수집 단계에서 적재되게 한다.
+import { azChipWidth, CONTENT_WIDTH, NODE, SUB_PX } from "@/canvas/layout";
+import { textWidth } from "@/canvas/text";
+import { GROUP_KINDS } from "@/domain/catalog";
+
 const read = (p: string) => readFileSync(join(process.cwd(), p), "utf8");
 
 // 한 규칙(선택자 { ... }) 본문을 꺼낸다.
@@ -107,7 +113,6 @@ test("zone tint tokens have exact values", () => {
 });
 
 test("each group kind maps to a tint token", async () => {
-  const { GROUP_KINDS } = await import("@/domain/catalog");
   const css = read("src/styles/tokens.css");
   for (const g of GROUP_KINDS) {
     expect(g.tintToken, g.kind).toMatch(/^--zone-tint-/);
@@ -255,8 +260,6 @@ test("node card text contrast on --bg-node is at least 4.5:1", () => {
 });
 
 test("layout AZ chip width matches .node__az and .node__subrow CSS", async () => {
-  const { azChipWidth, SUB_PX } = await import("@/canvas/layout");
-  const { textWidth } = await import("@/canvas/text");
   const css = read("src/canvas/canvas.css");
   const az = rule(css, ".node__az");
   expect(Number(az.match(/font-size:\s*(\d+)px/)![1])).toBe(SUB_PX);
@@ -268,7 +271,6 @@ test("layout AZ chip width matches .node__az and .node__subrow CSS", async () =>
 });
 
 test("layout truncation width equals the .node CSS content box", async () => {
-  const { NODE, CONTENT_WIDTH } = await import("@/canvas/layout");
   const css = read("src/canvas/canvas.css");
   const node = rule(css, ".node");
   const px = (re: RegExp) => Number(node.match(re)![1]);
