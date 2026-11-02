@@ -6,6 +6,8 @@
 export const USERNAME_PATTERN = /^[a-z0-9_]{3,32}$/;
 export const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export const PASSWORD_MIN = 8;
+/** 재설정 링크가 유효한 시간 */
+export const RESET_TTL_HOURS = 1;
 
 /** 입력하기 전에 보여 주는 안내 */
 export const HINTS = {
@@ -21,6 +23,7 @@ export const MESSAGES = {
   emailInvalid: "이메일 형식이 올바르지 않습니다",
   passwordRequired: "비밀번호를 입력해 주세요",
   passwordShort: `비밀번호는 ${PASSWORD_MIN}자 이상이어야 합니다`,
+  resetLinkExpired: "만료되었거나 이미 사용한 링크입니다. 재설정 링크를 다시 받아 주세요",
 } as const;
 
 export const normalizeEmail = (email: string) => email.trim().toLowerCase();

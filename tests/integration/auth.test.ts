@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, test, vi } from "vitest";
 
-import { requestPasswordReset, resetPassword } from "@/server/auth/reset";
+import { isResetTokenUsable, requestPasswordReset, resetPassword } from "@/server/auth/reset";
 import { signup } from "@/server/auth/signup";
 import { verifyCredentials } from "@/server/auth/password";
 
@@ -42,8 +42,11 @@ describe("auth", () => {
     await signup({ username: "jae", password: "password1", email: "a@b.co" });
     await requestPasswordReset("a@b.co");
     const token = String(spy.mock.calls[0][1]).split("/reset/")[1];
+    expect(await isResetTokenUsable(token)).toBe(true);
+    expect(await resetPassword(token, "short")).toMatchObject({ ok: false, reason: "password" });
     expect((await resetPassword(token, "newpass12")).ok).toBe(true);
-    expect((await resetPassword(token, "again1234")).ok).toBe(false);
+    expect(await isResetTokenUsable(token)).toBe(false);
+    expect(await resetPassword(token, "again1234")).toMatchObject({ ok: false, reason: "token" });
     expect(await verifyCredentials("jae", "newpass12")).not.toBeNull();
   });
 
@@ -55,6 +58,7 @@ describe("auth", () => {
 
   test("unknown token and too-short new password are rejected", async () => {
     expect((await resetPassword("nope", "newpass12")).ok).toBe(false);
+    expect(await isResetTokenUsable("nope")).toBe(false);
   });
 });
 
