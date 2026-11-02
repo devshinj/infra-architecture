@@ -205,27 +205,44 @@ const DIAGRAM_TAKEN = "이 프로젝트에 같은 이름의 구성도가 이미 
 /**
  * 다른 연결이 아직 커밋하지 않은 행을 넣어 둔 채 action 을 시작하고, action 이 그 행의 잠금을 기다리기 시작하면 커밋한다.
  * 미리 검사(커밋 안 된 행은 안 보인다)는 통과하고 DB 유니크 인덱스에서 걸리는 경쟁을 매번 같은 순서로 만든다.
+ *
+ * 기다리는 잠금은 이 DB 에서 바로 그 연결(pid)에 막힌 것만 센다. 막힌 문장이 insert/update 인지도 확인해,
+ * 미리 검사(select 는 행 잠금을 기다리지 않는다)에서 끝나 버린 채 통과하는 일이 없게 한다.
  */
 async function racedBy<T>(
   insert: (tx: postgres.TransactionSql) => Promise<unknown>,
   action: () => Promise<T>,
+  table: "projects" | "diagrams",
 ): Promise<PromiseSettledResult<T>> {
   const other = postgres(process.env.DATABASE_URL!, { max: 1 });
   try {
     let pending: Promise<PromiseSettledResult<T>> | undefined;
+    let blocked = "";
     await other.begin(async (tx) => {
+      const [{ pid }] = await tx<{ pid: number }[]>`select pg_backend_pid() as pid`;
       await insert(tx);
       pending = action().then(
         (value) => ({ status: "fulfilled" as const, value }),
         (reason: unknown) => ({ status: "rejected" as const, reason }),
       );
       for (let i = 0; ; i++) {
-        const rows = await db.execute(sql`select 1 from pg_locks where not granted`);
-        if (rows.length > 0) break;
-        if (i > 300) throw new Error("action 이 잠금을 기다리지 않았다");
+        const rows = await db.execute<{ query: string }>(sql`
+          select a.query
+          from pg_locks l
+          join pg_stat_activity a on a.pid = l.pid
+          where not l.granted
+            and a.datname = current_database()
+            and ${pid}::int = any(pg_blocking_pids(l.pid))`);
+        if (rows.length > 0) {
+          blocked = rows[0].query;
+          break;
+        }
+        if (i > 300) throw new Error("action 이 그 연결의 잠금을 기다리지 않았다");
         await new Promise((r) => setTimeout(r, 10));
       }
     });
+    // 미리 검사를 지나 쓰기 문장이 인덱스에서 그 행을 기다렸다 = 유니크 위반 경로를 탔다.
+    expect(blocked).toMatch(new RegExp(`^\\s*(insert into|update) "${table}"`, "i"));
     return await pending!;
   } finally {
     await other.end();
@@ -255,7 +272,7 @@ describe("unique names under concurrency (DB unique index)", () => {
 
   test("a create that passed the pre-check but loses to a concurrent insert gets the friendly error (case-insensitive)", async () => {
     const a = await user("a");
-    const r = await racedBy((tx) => tx`insert into projects (owner_id, name) values (${a}, ${"Race"})`, () => createProject(a, "race"));
+    const r = await racedBy((tx) => tx`insert into projects (owner_id, name) values (${a}, ${"Race"})`, () => createProject(a, "race"), "projects");
     expectTaken(r, PROJECT_TAKEN);
     const ps = await listProjects(a);
     expect(ps.map((p) => p.name)).toEqual(["Race"]);
@@ -263,6 +280,7 @@ describe("unique names under concurrency (DB unique index)", () => {
     const d = await racedBy(
       (tx) => tx`insert into diagrams (project_id, name) values (${ps[0].id}, ${"운영"})`,
       () => createDiagram(a, ps[0].id, "운영"),
+      "diagrams",
     );
     expectTaken(d, DIAGRAM_TAKEN);
   });
@@ -272,6 +290,7 @@ describe("unique names under concurrency (DB unique index)", () => {
     const r = await racedBy(
       (tx) => tx`insert into projects (owner_id, name) values (${a}, ${"쇼핑몰"})`,
       () => createProjectWithDiagram(a, "쇼핑몰", "새 구성도"),
+      "projects",
     );
     expectTaken(r, PROJECT_TAKEN);
     expect(await listProjects(a)).toEqual([{ id: expect.any(String), name: "쇼핑몰", diagrams: [] }]);
@@ -283,6 +302,7 @@ describe("unique names under concurrency (DB unique index)", () => {
     const r = await racedBy(
       (tx) => tx`insert into projects (owner_id, name) values (${a}, ${"목표"})`,
       () => renameProject(a, q.id, "목표"),
+      "projects",
     );
     expectTaken(r, PROJECT_TAKEN);
     expect((await listProjects(a)).find((p) => p.id === q.id)?.name).toBe("원래");
@@ -291,6 +311,7 @@ describe("unique names under concurrency (DB unique index)", () => {
     const rd = await racedBy(
       (tx) => tx`insert into diagrams (project_id, name) values (${q.id}, ${"둘"})`,
       () => renameDiagram(a, d.id, "둘"),
+      "diagrams",
     );
     expectTaken(rd, DIAGRAM_TAKEN);
     expect((await getDiagram(a, d.id)).name).toBe("하나");
@@ -302,6 +323,7 @@ describe("unique names under concurrency (DB unique index)", () => {
     const r = await racedBy(
       (tx) => tx`insert into diagrams (project_id, name) values (${p.id}, ${"운영 사본"})`,
       () => duplicateDiagram(a, d.id),
+      "diagrams",
     );
     expect(r.status).toBe("fulfilled");
     const copy = (r as PromiseFulfilledResult<{ id: string; name: string }>).value;
@@ -330,15 +352,11 @@ describe("0004 migration renames existing duplicates", () => {
     .split("--> statement-breakpoint")
     .map((x) => x.trim())
     .filter(Boolean);
-  const renames = statements.filter((x) => x.includes("DO $$"));
-  const indexes = statements.filter((x) => x.startsWith("CREATE UNIQUE INDEX"));
+  const kind = (x: string) =>
+    x.includes("DO $$") ? "rename" : x.startsWith("CREATE UNIQUE INDEX") ? "index" : /^(--[^\n]*\n)*LOCK TABLE/.test(x) ? "lock" : "other";
 
-  test("renames come before the unique indexes", () => {
-    expect(renames).toHaveLength(2);
-    expect(indexes).toHaveLength(2);
-    const lastRename = statements.findLastIndex((x) => x.includes("DO $$"));
-    const firstIndex = statements.findIndex((x) => x.startsWith("CREATE UNIQUE INDEX"));
-    expect(firstIndex).toBeGreaterThan(lastRename);
+  test("locks both tables, renames, then creates the unique indexes", () => {
+    expect(statements.map(kind)).toEqual(["lock", "rename", "rename", "index", "index"]);
   });
 
   test("keeps the oldest, numbers the rest with free names within 60 UTF-16 units, then the indexes build", async () => {
@@ -378,8 +396,8 @@ describe("0004 migration renames existing duplicates", () => {
           { projectId: q.id, name: "운영", createdAt: at(5) }, // 다른 프로젝트는 그대로
         ]);
 
-        for (const stmt of renames) await tx.execute(sql.raw(stmt));
-        for (const stmt of indexes) await tx.execute(sql.raw(stmt));
+        // 잠금 → 이름 정리 → 인덱스, 파일 순서 그대로(마이그레이터처럼 한 트랜잭션 안).
+        for (const stmt of statements) await tx.execute(sql.raw(stmt));
 
         const ps = await tx.execute<{ owner_id: string; id: string; name: string }>(
           sql`select owner_id, id, name from projects order by created_at, id`,
