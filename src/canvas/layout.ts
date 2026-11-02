@@ -44,7 +44,6 @@ const BASE_OPTIONS: Record<string, string> = {
 };
 // 나란히 놓는 영역(이중화 묶음·쿠버네티스 클러스터)의 자식 노드는 이름의 숫자 순서(#1, #2, …)로 놓는다.
 const ROW_GROUP_KINDS: ReadonlySet<string> = new Set(["redundancy_group", "k8s_cluster"]);
-const labelOrder = new Intl.Collator("ko", { numeric: true });
 
 /**
  * 끝에 숫자가 붙은 이름("웹 서버 #3", "API 2", "웹 서버 1")을 접두어별로 묶어 숫자 순서로 놓은 id 목록을 돌려준다.
@@ -70,6 +69,27 @@ function sortNumbered<T extends { id: string }>(items: T[], labelOf: (id: string
   for (const cls of numberedClasses(items.map((i) => ({ id: i.id, label: labelOf(i.id) })))) {
     const slots = items.map((it, i) => [it.id, i] as const).filter(([id]) => cls.includes(id)).map(([, i]) => i);
     cls.forEach((id, k) => (out[slots[k]!] = byId.get(id)!));
+  }
+  return out;
+}
+
+/** 서로 다른 두 연결의 토막이 같은 선 위에서 겹치는 쌍: "연결id|연결id". */
+function overlapPairs(edges: Map<string, Pt[]>): Set<string> {
+  const segs = [...edges].flatMap(([id, pts]) => pts.slice(1).map((b, i) => ({ id, a: pts[i]!, b })));
+  const out = new Set<string>();
+  for (let i = 0; i < segs.length; i++) {
+    for (let j = i + 1; j < segs.length; j++) {
+      const u = segs[i]!;
+      const v = segs[j]!;
+      if (u.id === v.id) continue;
+      let o = 0;
+      if (Math.abs(u.a.x - u.b.x) < 0.01 && Math.abs(v.a.x - v.b.x) < 0.01 && Math.abs(u.a.x - v.a.x) <= 1) {
+        o = Math.min(Math.max(u.a.y, u.b.y), Math.max(v.a.y, v.b.y)) - Math.max(Math.min(u.a.y, u.b.y), Math.min(v.a.y, v.b.y));
+      } else if (Math.abs(u.a.y - u.b.y) < 0.01 && Math.abs(v.a.y - v.b.y) < 0.01 && Math.abs(u.a.y - v.a.y) <= 1) {
+        o = Math.min(Math.max(u.a.x, u.b.x), Math.max(v.a.x, v.b.x)) - Math.max(Math.min(u.a.x, u.b.x), Math.min(v.a.x, v.b.x));
+      }
+      if (o > 1) out.add(u.id < v.id ? `${u.id}|${v.id}` : `${v.id}|${u.id}`);
+    }
   }
   return out;
 }
@@ -340,11 +360,12 @@ export async function layoutDiagram(g: DisplayGraph, pinned: Record<string, { x:
         return n;
       };
       const baseOverlaps = overlaps(built.rects);
+      const baseLines = overlapPairs(built.edges);
       const accepted: Move[] = [];
       for (const c of candidates) {
         const trial = build([...accepted, c]);
         const now = crossings(nodeRectsOf(trial.rects), ends, trial.edges);
-        if ([...now].every((k) => base.has(k)) && overlaps(trial.rects) <= baseOverlaps) {
+        if ([...now].every((k) => base.has(k)) && overlaps(trial.rects) <= baseOverlaps && [...overlapPairs(trial.edges)].every((k) => baseLines.has(k))) {
           accepted.push(c);
           built = trial;
         }
