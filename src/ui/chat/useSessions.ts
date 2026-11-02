@@ -31,6 +31,8 @@ const LOAD_FAILED = "대화를 불러오지 못했어요. 다시 시도해 주�
 type Lines = Record<string, ChatLine[] | "loading">;
 type Update = ChatLine[] | ((prev: ChatLine[]) => ChatLine[]);
 
+const without = (ls: Lines, id: string): Lines => Object.fromEntries(Object.entries(ls).filter(([k]) => k !== id));
+
 interface Row {
   id: string;
   role: "user" | "assistant" | "system";
@@ -104,13 +106,8 @@ export function useSessions({ diagramId, initial }: { diagramId: string; initial
         flying.ac.abort();
         inflight.current = null;
         if (linesRef.current[flying.id] === "loading") {
-          const { [flying.id]: _gone, ...rest } = linesRef.current;
-          linesRef.current = rest;
-          setAllLines((ls) => {
-            if (ls[flying.id] !== "loading") return ls;
-            const { [flying.id]: _drop, ...others } = ls;
-            return others;
-          });
+          linesRef.current = without(linesRef.current, flying.id);
+          setAllLines((ls) => (ls[flying.id] === "loading" ? without(ls, flying.id) : ls));
         }
       }
       if (key === "main" || key === NEW_SESSION) return;
