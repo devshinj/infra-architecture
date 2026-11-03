@@ -1,6 +1,15 @@
 "use client";
 
-import { useEffect, useId, useRef } from "react";
+import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
+
+const EDGE = 8;
+
+/** 메뉴가 캔버스 밖으로 넘치면 포인터 반대쪽으로 펼친다(아래쪽 카드·범례에 가리지 않게). */
+export function placeMenu(x: number, y: number, w: number, h: number, boxW: number, boxH: number): { left: number; top: number } {
+  const left = x + w > boxW - EDGE ? Math.max(EDGE, x - w) : x;
+  const top = y + h > boxH - EDGE ? Math.max(EDGE, y - h) : y;
+  return { left, top };
+}
 
 export interface NodeMenuProps {
   /** Pointer position, relative to the canvas wrapper. */
@@ -21,8 +30,16 @@ export function NodeMenu({ x, y, onChoose, onAsk, askDisabled = false, askReason
   const ref = useRef<HTMLDivElement>(null);
   const item = useRef<HTMLButtonElement>(null);
   const reasonId = useId();
+  const [pos, setPos] = useState({ left: x, top: y });
   const close = useRef(onClose);
   close.current = onClose;
+
+  useLayoutEffect(() => {
+    const el = ref.current;
+    const box = el?.offsetParent as HTMLElement | null;
+    if (!el || !box) return setPos({ left: x, top: y });
+    setPos(placeMenu(x, y, el.offsetWidth, el.offsetHeight, box.clientWidth, box.clientHeight));
+  }, [x, y]);
 
   useEffect(() => {
     item.current?.focus();
@@ -57,7 +74,7 @@ export function NodeMenu({ x, y, onChoose, onAsk, askDisabled = false, askReason
 
   return (
     <>
-    <div ref={ref} className="node-menu" role="menu" aria-label="노드 메뉴" style={{ left: x, top: y }}>
+    <div ref={ref} className="node-menu" role="menu" aria-label="노드 메뉴" style={{ left: pos.left, top: pos.top }}>
       <button
         ref={item}
         type="button"

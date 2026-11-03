@@ -272,7 +272,8 @@ test("canvas centers and pulses on focus request", async () => {
   const ow = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "offsetWidth");
   const oh = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "offsetHeight");
   Object.defineProperty(HTMLElement.prototype, "offsetWidth", { configurable: true, get: () => 800 });
-  Object.defineProperty(HTMLElement.prototype, "offsetHeight", { configurable: true, get: () => 600 });
+  // 도구 모음은 높이 40(위 여백 0): 카메라 위쪽 여백은 40 + 8.
+  Object.defineProperty(HTMLElement.prototype, "offsetHeight", { configurable: true, get(this: HTMLElement) { return this.classList.contains("canvas__toolbar") ? 40 : 600; } });
   vi.stubGlobal("matchMedia", (q: string) => ({ matches: q.includes("reduce"), media: q, addEventListener() {}, removeEventListener() {}, addListener() {}, removeListener() {} }));
   try {
     const props = { ...baseProps(), cameraInsets: { left: 100, right: 200 } };
@@ -291,9 +292,9 @@ test("canvas centers and pulses on focus request", async () => {
     await waitFor(() => {
       const v = parse();
       expect(v.zoom).toBeGreaterThanOrEqual(0.8);
-      // 노드 가운데가 패널 사이 띠(100..600)의 가운데 350, 높이 600 의 가운데 300 에 온다.
+      // 노드 가운데가 패널 사이 띠(100..600)의 가운데 350, 도구 모음 아래 48..600 의 가운데 324 에 온다.
       expect((Number(pos[1]) + w / 2) * v.zoom + v.x).toBeCloseTo(350, 0);
-      expect((Number(pos[2]) + h / 2) * v.zoom + v.y).toBeCloseTo(300, 0);
+      expect((Number(pos[2]) + h / 2) * v.zoom + v.y).toBeCloseTo(324, 0);
     });
     expect(node.querySelector(".node--pulse")).not.toBeNull();
     expect(container.querySelectorAll(".node--pulse")).toHaveLength(1);
@@ -413,7 +414,7 @@ test("전체 보기 fits", async () => {
   const ow = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "offsetWidth");
   const oh = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "offsetHeight");
   Object.defineProperty(HTMLElement.prototype, "offsetWidth", { configurable: true, get: () => 800 });
-  Object.defineProperty(HTMLElement.prototype, "offsetHeight", { configurable: true, get: () => 600 });
+  Object.defineProperty(HTMLElement.prototype, "offsetHeight", { configurable: true, get(this: HTMLElement) { return this.classList.contains("canvas__toolbar") ? 40 : 600; } });
   vi.stubGlobal("matchMedia", (q: string) => ({ matches: q.includes("reduce"), media: q, addEventListener() {}, removeEventListener() {}, addListener() {}, removeListener() {} }));
   try {
     const props = baseProps();
@@ -425,8 +426,21 @@ test("전체 보기 fits", async () => {
     // 위치 보기로 카메라를 옮겨 놓는다.
     rerender(<Canvas {...props} focusRequest={{ id: "was-1", token: 1 }} />);
     await waitFor(() => expect(vpEl.style.transform).not.toBe(fitted));
+    const focused = vpEl.style.transform;
     fireEvent.click(screen.getByRole("button", { name: "전체 보기" }));
-    await waitFor(() => expect(vpEl.style.transform).toBe(fitted));
+    // 전체 보기는 읽을 수 있는 줌 바닥 없이 구성도 전체를 담는다: 모든 노드·영역이 도구 모음 아래 800×600 안에 들어온다.
+    await waitFor(() => expect(vpEl.style.transform).not.toBe(focused));
+    const m = /translate\(([-\d.e]+)px, ?([-\d.e]+)px\) scale\(([-\d.e]+)\)/.exec(vpEl.style.transform)!;
+    const [x, y, z] = [Number(m[1]), Number(m[2]), Number(m[3])];
+    expect(z).toBeLessThanOrEqual(Number(/scale\(([-\d.e]+)\)/.exec(fitted)![1]) + 1e-9);
+    for (const el of container.querySelectorAll<HTMLElement>(".react-flow__node")) {
+      const t = /translate\(([-\d.]+)px, ?([-\d.]+)px\)/.exec(el.style.transform)!;
+      const [nx, ny, w, h] = [Number(t[1]), Number(t[2]), parseFloat(el.style.width), parseFloat(el.style.height)];
+      expect(nx * z + x).toBeGreaterThanOrEqual(-0.5);
+      expect(ny * z + y).toBeGreaterThanOrEqual(48 - 0.5); // 도구 모음(40 + 틈 8) 아래
+      expect((nx + w) * z + x).toBeLessThanOrEqual(800.5);
+      expect((ny + h) * z + y).toBeLessThanOrEqual(600.5);
+    }
   } finally {
     if (ow) Object.defineProperty(HTMLElement.prototype, "offsetWidth", ow);
     if (oh) Object.defineProperty(HTMLElement.prototype, "offsetHeight", oh);
@@ -590,7 +604,7 @@ test("node wrappers describe the real keyboard behavior in Korean (no delete; ar
   const props = baseProps();
   const { container, rerender } = render(<div style={{ width: 800, height: 600 }}><Canvas {...props} /></div>);
   const node = await firstNode(container);
-  expect(description(node)).toBe("Enter 나 Space 로 노드를 선택하거나 선택을 풀고, Esc 로 선택을 풉니다.");
+  expect(description(node)).toBe("Enter 나 Space 로 노드를 선택하거나 선택을 풀고, Esc 로 선택을 풉니다. 화살표 키로 가까운 노드나 영역으로 옮겨 가고, Home 과 End 로 처음과 끝으로 갑니다.");
   expect(container.textContent).not.toMatch(/Press|delete/i);
   rerender(<div style={{ width: 800, height: 600 }}><Canvas {...props} editMode /></div>);
   await waitFor(() => expect(description(node)).toContain("편집 모드에서는 선택한 노드를 화살표 키로 옮길 수 있습니다"));

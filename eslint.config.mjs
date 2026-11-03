@@ -23,6 +23,7 @@ const eslintConfig = [
       "test-results/**",
       "next-env.d.ts",
       "docs/**",
+      ".claude/**",
     ],
   },
 ];

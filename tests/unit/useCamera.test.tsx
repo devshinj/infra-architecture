@@ -1,7 +1,7 @@
 import { act, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
-import { fitViewport, focusViewport, useCamera, type CameraInput, type Viewport } from "@/canvas/useCamera";
+import { EDGE_GAP_PX, fitViewport, focusViewport, READABLE_ZOOM, topRow, useCamera, type CameraInput, type Viewport } from "@/canvas/useCamera";
 import type { Rect } from "@/canvas/layout";
 
 beforeEach(() => vi.useFakeTimers());
@@ -237,7 +237,8 @@ test("focus during a turn is not a user move: the final fit still runs", () => {
 });
 
 test("board and final fits keep a bottom margin of at least the collapsed card footprint", () => {
-  const tall: Rect = { x: 0, y: 0, width: 100, height: 2000 };
+  // 읽을 수 있는 줌(READABLE_ZOOM) 위에서 다 담기는 높이.
+  const tall: Rect = { x: 0, y: 0, width: 100, height: 600 };
   const v = fitViewport(tall, SIZE, { left: 0, right: 0, bottom: 66 }, 2);
   expect((tall.y + tall.height) * v.zoom + v.y).toBeLessThanOrEqual(SIZE.height - 66 + 0.001);
   const r = rig({ rects: { a: tall }, insets: { left: 0, right: 0, bottom: 66 } });
@@ -264,4 +265,148 @@ test("focus with the card open lands right of the card on a wide strip, above it
   const closed = focusViewport(r, { width: 1400, height: 800 }, { left: 200, right: 300, bottom: 66 }, 1);
   expect(1050 + closed.x).toBeCloseTo(650);
   expect(425 + closed.y).toBeCloseTo(367);
+});
+
+// ---- 떠 있는 도구 모음과 읽을 수 있는 최소 줌 ----
+test("fits leave the toolbar strip on top: the box is framed between the top and bottom insets", () => {
+  const b = box(0, 0); // 100×50, 가운데 (50, 25)
+  const v = fitViewport(b, SIZE, { left: 0, right: 0, top: 100, bottom: 66 }, 1);
+  expect(25 * v.zoom + v.y).toBeCloseTo(100 + (600 - 100 - 66) / 2);
+  expect(b.y * v.zoom + v.y).toBeGreaterThanOrEqual(100);
+  // 위치 보기도 도구 모음 아래 띠의 가운데에 둔다.
+  const f = focusViewport(b, SIZE, { left: 0, right: 0, top: 100, bottom: 66 }, 1);
+  expect(25 + f.y).toBeCloseTo((100 + 534) / 2);
+});
+
+test("READABLE_ZOOM keeps node names at 10px or more", () => {
+  expect(14 * READABLE_ZOOM).toBeCloseTo(10);
+});
+
+test("a diagram too big for the readable zoom shows its top row, centred, without empty space past its edges", () => {
+  const big: Rect = { x: 0, y: 0, width: 3000, height: 2000 };
+  const insets = { left: 100, right: 100, top: 60, bottom: 40 };
+  const row = { x: 1400, y: 0, width: 200, height: 50 };
+  const v = fitViewport(big, SIZE, insets, 2, { minZoom: READABLE_ZOOM, anchor: row });
+  expect(v.zoom).toBeCloseTo(READABLE_ZOOM);
+  // 위쪽 끝은 도구 모음 아래 EDGE_GAP_PX 에.
+  expect(big.y * v.zoom + v.y).toBeCloseTo(60 + EDGE_GAP_PX);
+  // 맨 윗줄 가운데(1500)가 띠 가운데(100 + 800/2)에.
+  expect(1500 * v.zoom + v.x).toBeCloseTo(500);
+  // 맨 윗줄이 왼쪽 끝에 붙어 있으면 왼쪽 빈 곳이 보이지 않게 구성도 왼쪽 끝을 띠 왼쪽(+여백)에 둔다.
+  const left = fitViewport(big, SIZE, insets, 2, { minZoom: READABLE_ZOOM, anchor: { x: 0, y: 0, width: 100, height: 50 } });
+  expect(big.x * left.zoom + left.x).toBeCloseTo(100 + EDGE_GAP_PX);
+  // 가로는 담기고 세로만 넘치면 가로는 가운데, 세로는 위쪽.
+  const narrowTall: Rect = { x: 0, y: 0, width: 300, height: 3000 };
+  const t = fitViewport(narrowTall, SIZE, insets, 2, { minZoom: READABLE_ZOOM });
+  expect(150 * t.zoom + t.x).toBeCloseTo(500);
+  expect(t.y).toBeCloseTo(60 + EDGE_GAP_PX);
+  // 최소 줌이 없으면 예전처럼 다 담는다.
+  expect(fitViewport(big, SIZE, insets, 2).zoom).toBeLessThan(READABLE_ZOOM);
+});
+
+test("topRow boxes the nodes level with the topmost one", () => {
+  expect(topRow([box(0, 0), box(300, 10), box(100, 200)])).toEqual({ x: 0, y: 0, width: 400, height: 60 });
+  expect(topRow([])).toBeNull();
+});
+
+test("board fit and 자동 정렬 (fitRequest) stop at the readable zoom; the stream follow may zoom further out", () => {
+  const rects = { a: box(0, 0), b: box(1450, 0), z: box(0, 3000) };
+  const r = rig({ rects, fitRequest: 0 });
+  expect(r.vp().zoom).toBeCloseTo(READABLE_ZOOM);
+  // 위쪽(맨 윗줄 a·b)을 보여 준다.
+  expect(r.vp().y).toBeCloseTo(EDGE_GAP_PX);
+  r.setVp({ x: 0, y: 0, zoom: 1 });
+  r.update({ fitRequest: 1 });
+  expect(r.vp().zoom).toBeCloseTo(READABLE_ZOOM);
+  // 대화가 그리는 동안에는 새 노드를 따라가려고 더 멀리 볼 수 있다.
+  r.update({ streaming: true });
+  act(() => vi.advanceTimersByTime(1000));
+  r.update({ rects: { ...rects, c: box(6000, 0) } });
+  expect(r.vp().zoom).toBeLessThan(READABLE_ZOOM);
+  // 차례가 끝나면 다시 읽을 수 있는 줌.
+  r.update({ streaming: false });
+  expect(r.vp().zoom).toBeCloseTo(READABLE_ZOOM);
+});
+
+test("a diagram just under the strip width (≈95%) is centred, not pinned to the left", () => {
+  const insets = { left: 100, right: 100 };
+  const vw = SIZE.width - 200;
+  // 줌 1(maxZoom 1)에서 너비 760 = 띠 800 의 95%: PADDING 을 넣으면 넘치지만 가장자리 여백 16px 씩은 들어간다.
+  const b: Rect = { x: 0, y: 0, width: 760, height: 100 };
+  const v = fitViewport(b, SIZE, insets, 1, { minZoom: 1 });
+  expect(v.zoom).toBe(1);
+  expect((b.x + b.width / 2) * v.zoom + v.x).toBeCloseTo(100 + vw / 2);
+  // 여백까지 넣어도 넘칠 때만 한쪽에 맞춘다.
+  const wide: Rect = { x: 0, y: 0, width: 790, height: 100 };
+  const w = fitViewport(wide, SIZE, insets, 1, { minZoom: 1, anchor: { x: 0, y: 0, width: 100, height: 50 } });
+  expect(wide.x * w.zoom + w.x).toBeCloseTo(100 + EDGE_GAP_PX);
+});
+
+test("전체 보기 (fitAllRequest) fits the whole diagram even below the readable zoom", () => {
+  const rects = { a: box(0, 0), b: box(1450, 0), z: box(0, 3000) };
+  const r = rig({ rects, fitAllRequest: 0 });
+  expect(r.vp().zoom).toBeCloseTo(READABLE_ZOOM); // 처음 맞춤은 읽을 수 있는 줌
+  r.setViewport.mockClear();
+  r.update({ fitAllRequest: 1 });
+  expect(r.setViewport).toHaveBeenCalledTimes(1);
+  expect(r.vp()).toEqual(fitViewport(unionRectOf(rects), SIZE, { left: 0, right: 0 }, 2));
+  expect(r.vp().zoom).toBeLessThan(READABLE_ZOOM);
+  // 다시 배치하는 중이면 배치가 끝날 때까지 기다린다.
+  r.setViewport.mockClear();
+  r.update({ fitAllRequest: 2, settled: false });
+  expect(r.setViewport).not.toHaveBeenCalled();
+  r.update({ settled: true });
+  expect(r.setViewport).toHaveBeenCalledTimes(1);
+});
+
+function unionRectOf(rects: Record<string, Rect>): Rect {
+  const all = Object.values(rects);
+  const x1 = Math.min(...all.map((r) => r.x)), y1 = Math.min(...all.map((r) => r.y));
+  const x2 = Math.max(...all.map((r) => r.x + r.width)), y2 = Math.max(...all.map((r) => r.y + r.height));
+  return { x: x1, y: y1, width: x2 - x1, height: y2 - y1 };
+}
+
+test("new nodes outside a chat turn (e.g. right after a sample import) are followed at the readable zoom", () => {
+  const r = rig({ rects: { a: box(0, 0) } });
+  r.setViewport.mockClear();
+  r.update({ rects: { a: box(0, 0), b: box(1450, 0), z: box(0, 3000) } });
+  act(() => vi.advanceTimersByTime(1000)); // 맞춤 사이 간격(600ms)
+  expect(r.setViewport).toHaveBeenCalledTimes(1);
+  expect(r.vp().zoom).toBeCloseTo(READABLE_ZOOM);
+});
+
+test("an explicit 전체 보기 wins over pending automatic fits until the next turn", () => {
+  const rects = { a: box(0, 0), b: box(1450, 0), z: box(0, 3000) };
+  const r = rig({ rects, fitAllRequest: 0 });
+  r.update({ streaming: true });
+  act(() => vi.advanceTimersByTime(1000));
+  r.update({ fitAllRequest: 1 }); // 차례가 도는 중에 전체 보기
+  const all = r.vp();
+  expect(all.zoom).toBeLessThan(READABLE_ZOOM);
+  r.setViewport.mockClear();
+  // 차례 끝 맞춤(읽을 수 있는 줌)이 덮지 않는다.
+  r.update({ streaming: false });
+  expect(r.setViewport).not.toHaveBeenCalled();
+  // 대화 밖에서 노드가 늘어도(서버 판 받아오기) 따라가지 않는다.
+  r.update({ rects: { ...rects, c: box(9000, 0) } });
+  act(() => vi.advanceTimersByTime(1000));
+  expect(r.setViewport).not.toHaveBeenCalled();
+  expect(r.vp()).toEqual(all);
+  // 다음 차례에는 다시 따라간다.
+  r.update({ streaming: true });
+  act(() => vi.advanceTimersByTime(1000));
+  r.update({ rects: { ...rects, c: box(9000, 0), d: box(-9000, 0) } });
+  expect(r.setViewport).toHaveBeenCalledTimes(1);
+});
+
+test("자동 정렬 after 전체 보기 fits again by the readable rule", () => {
+  const rects = { a: box(0, 0), b: box(1450, 0), z: box(0, 3000) };
+  const r = rig({ rects, fitAllRequest: 0, fitRequest: 0 });
+  r.update({ fitAllRequest: 1 });
+  r.update({ fitRequest: 1 });
+  expect(r.vp().zoom).toBeCloseTo(READABLE_ZOOM);
+  r.setViewport.mockClear();
+  r.update({ rects: { ...rects, c: box(9000, 0) } });
+  act(() => vi.advanceTimersByTime(1000));
+  expect(r.setViewport).toHaveBeenCalledTimes(1);
 });

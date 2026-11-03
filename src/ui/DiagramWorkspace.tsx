@@ -372,6 +372,24 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
     mentionRef.current?.focus();
   }, [pendingMention, tab, sessions.active]);
 
+  // 대화로 건너뛰기: 대화 탭을 열고(좁은 화면이면 아래 탭도 대화로) 입력 칸에 포커스를 둔다. 입력 칸이 막혀 있으면
+  // (이전 버전 보기 등) 대화 패널 본문으로 간다.
+  const [skipPending, setSkipPending] = useState(false);
+  const skipToChat = () => {
+    showTab("대화");
+    setSkipPending(true);
+  };
+  useEffect(() => {
+    if (!skipPending || tab !== "대화") return;
+    setSkipPending(false);
+    mentionRef.current?.focus();
+    if (document.activeElement?.tagName === "TEXTAREA") return;
+    const body = document.getElementById(RIGHT_PANEL_BODY_ID);
+    if (!body) return;
+    if (!body.hasAttribute("tabindex")) body.setAttribute("tabindex", "-1");
+    body.focus();
+  }, [skipPending, tab]);
+
   // AI server health: once on mount, again whenever a new error line shows up. A failed fetch counts as down.
   const [health, setHealth] = useState<LlmHealth | null>(null);
   const errorLines = chat.lines.filter((l) => l.kind === "error").length;
@@ -641,6 +659,10 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
       data-mview={panelShown ? "panel" : "canvas"}
       style={{ "--canvas-inset-left": `${insetLeft}px`, "--canvas-inset-right": `${insetRight}px` } as React.CSSProperties}
     >
+      {/* 구성도 화면의 첫 Tab 칸: 캔버스 도구·노드를 건너뛰어 대화 입력으로. 포커스를 받을 때만 보인다. */}
+      <button type="button" className={styles.skipLink} onClick={skipToChat}>
+        대화로 건너뛰기
+      </button>
       <section id={CANVAS_ID} className={styles.center} aria-label={name} {...(narrow ? { role: "tabpanel", "aria-labelledby": mobileTabId("구성도") } : {})}>
         {/* 화면에 보이는 구성도 제목이 없어 보조기기용 제목만 둔다. */}
         <h1 className={styles.srOnly}>{name}</h1>
