@@ -35,22 +35,33 @@ const item = (o: Partial<GlossaryItem>): GlossaryItem => ({
 const items = [
   item({ id: "1", term: "Redis" }),
   item({ id: "2", term: "Nginx", fullName: "", category: "웹 서버", definition: "요청을 받아 넘기는 서버입니다.", reviewed: true, source: "ai" }),
+  item({ id: "3", term: "Kafka", fullName: "", category: "메시지 큐", definition: "메시지를 줄 세워 넘기는 시스템입니다.", source: "ai" }),
 ];
 
 test("search and unreviewed filter", async () => {
   render(<GlossaryPage initial={items} />);
   expect(screen.getByRole("heading", { name: "용어 사전" })).toBeInTheDocument();
-  expect(screen.getAllByRole("listitem")).toHaveLength(2);
+  expect(screen.getAllByRole("listitem")).toHaveLength(3);
+  // 배지는 AI 가 만들고 아직 확인하지 않은 항목에만: 기본 제공 Redis(검수 전)·검수한 Nginx 에는 없다.
+  const badgeRow = (term: string) => within(screen.getByRole("button", { name: new RegExp(term) }));
+  expect(badgeRow("Redis").queryByText("AI 설명")).not.toBeInTheDocument();
+  expect(badgeRow("Nginx").queryByText("AI 설명")).not.toBeInTheDocument();
+  expect(badgeRow("Kafka").getByText("AI 설명")).toBeInTheDocument();
+  expect(badgeRow("Kafka").getByText("(사람이 아직 확인하지 않았어요)")).toBeInTheDocument();
+  expect(badgeRow("Kafka").getByText("AI 설명")).not.toHaveAttribute("title");
   await userEvent.type(screen.getByRole("searchbox", { name: "용어 검색" }), "nginx");
   expect(screen.getAllByRole("listitem")).toHaveLength(1);
   expect(screen.getByText("Nginx")).toBeInTheDocument();
   await userEvent.clear(screen.getByRole("searchbox", { name: "용어 검색" }));
+  // 거르개도 같은 기준: AI 가 만들고 아직 확인하지 않은 항목만(기본 제공 Redis 는 검수 전이어도 빠진다).
   await userEvent.click(screen.getByRole("checkbox", { name: "AI 설명만" }));
   const rows = screen.getAllByRole("listitem");
   expect(rows).toHaveLength(1);
-  expect(within(rows[0]!).getByText("Redis")).toBeInTheDocument();
+  expect(within(rows[0]!).getByText("Kafka")).toBeInTheDocument();
   expect(within(rows[0]!).getByText("AI 설명")).toBeInTheDocument();
-  expect(within(rows[0]!).getByText("기본 제공")).toBeInTheDocument();
+  expect(within(rows[0]!).getByText("AI가 추가")).toBeInTheDocument();
+  await userEvent.click(screen.getByRole("checkbox", { name: "AI 설명만" }));
+  expect(within(screen.getByRole("button", { name: /Redis/ })).getByText("기본 제공")).toBeInTheDocument();
 });
 
 test("edit saves and shows errors", async () => {
@@ -71,12 +82,12 @@ test("edit saves and shows errors", async () => {
 });
 
 test("검수 완료 toggles badge", async () => {
-  setTermReviewedAction.mockResolvedValueOnce({ ok: true, term: { ...items[0]!, reviewed: true } });
+  setTermReviewedAction.mockResolvedValueOnce({ ok: true, term: { ...items[2]!, reviewed: true } });
   render(<GlossaryPage initial={items} />);
-  await userEvent.click(screen.getByRole("button", { name: /Redis/ }));
+  await userEvent.click(screen.getByRole("button", { name: /Kafka/ }));
   expect(screen.getByText("AI 설명")).toBeInTheDocument();
   await userEvent.click(screen.getByRole("button", { name: "검수 완료" }));
-  expect(setTermReviewedAction).toHaveBeenCalledWith("1", true);
+  expect(setTermReviewedAction).toHaveBeenCalledWith("3", true);
   expect(await screen.findByRole("button", { name: "검수 취소" })).toBeInTheDocument();
   expect(screen.queryByText("AI 설명")).not.toBeInTheDocument();
 });

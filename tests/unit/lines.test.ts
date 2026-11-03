@@ -133,6 +133,7 @@ test("summary: nothing applied but commands skipped says the reply could not be 
   // 건너뛴 수는 보이지 않고, 바꾼 곳 수만 쉬운 말로 보인다.
   expect(summaryText({ version: 2, status: "complete", applied: 4, skipped: 35, nodes: 12, edges: 15 }, false)).toBe("노드 12 · 연결 15 · 4곳 바꿨어요");
   expect(summaryText({ version: 2, status: "aborted", applied: 0, skipped: 3 }, false)).toBe("중단됨 · 바꾼 곳이 없어요");
+  expect(summaryText({ version: 3, status: "complete", applied: 0, skipped: 2, nodes: 5, edges: 4 }, false)).toBe("노드 5 · 연결 4 · 바꾼 곳이 없어요");
   const lines = messagesToLines([
     { id: "u1", role: "user", content: "IP는 10.0.2.11", meta: {} },
     { id: "a1", role: "assistant", content: "", meta: { intent: "missing_info_answer", applied: 0, skipped: 1, version: null, status: "complete" } },

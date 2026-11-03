@@ -210,7 +210,7 @@ describe("explainTarget", () => {
     const r = await explainTarget("u", "d", "node", "lb", {}, { qwen, clef: fakeClef().clef, repo });
     expect(r).toEqual({
       ok: true,
-      explanation: { ...data, term: L4_ROW.term, definition: L4_DEF, reviewed: true, why: L4_ROW.why, compare: L4_ROW.compare },
+      explanation: { ...data, term: L4_ROW.term, definition: L4_DEF, reviewed: true, termSource: "seed", why: L4_ROW.why, compare: L4_ROW.compare },
       signature: sig,
     });
     expect(calls).toHaveLength(0);
@@ -357,7 +357,7 @@ describe("explainTarget", () => {
     const expected = {
       ok: false,
       message: "설명을 만들지 못했어요. 다시 시도해 주세요.",
-      partial: { term: "L4 로드밸런서", definition: L4_DEF, definitionSource: "glossary", reviewed: true, why: L4_ROW.why, compare: L4_ROW.compare },
+      partial: { term: "L4 로드밸런서", definition: L4_DEF, definitionSource: "glossary", reviewed: true, termSource: "seed", why: L4_ROW.why, compare: L4_ROW.compare },
     };
     expect(await explainTarget("u", "d", "node", "lb", {}, { qwen: null, clef: fakeClef().clef, repo })).toEqual(expected);
     expect(await explainTarget("u", "d", "node", "lb", {}, { qwen: fakeQwen(new Error("down")).qwen, clef: fakeClef().clef, repo })).toEqual(expected);

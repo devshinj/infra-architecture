@@ -6,6 +6,7 @@ import { setTermReviewedAction, updateTermAction, type ActionResult } from "@/ap
 
 import type { GlossaryItem } from "@/domain/glossary-types";
 
+import { AI_BADGE, AI_BADGE_SR, isUnreviewedAi } from "./aiBadge";
 import styles from "./glossary.module.css";
 
 const FIELDS = [
@@ -19,11 +20,7 @@ const FIELDS = [
 type FieldKey = (typeof FIELDS)[number][0];
 type Draft = Record<FieldKey, string>;
 
-/** "AI 설명" 배지의 풀이. 마우스는 title, 화면 읽기는 숨긴 글로 듣는다(설명 패널과 같은 말). */
-const UNREVIEWED_HINT = "사람이 아직 확인하지 않은 AI 설명이에요";
-const UNREVIEWED_SR = " (사람이 아직 확인하지 않았어요)";
-
-const toDraft =(t: GlossaryItem): Draft => ({
+const toDraft = (t: GlossaryItem): Draft => ({
   term: t.term,
   fullName: t.fullName,
   category: t.category,
@@ -44,7 +41,7 @@ export function GlossaryPage({ initial }: { initial: GlossaryItem[] }) {
   const needle = q.trim().toLowerCase();
   const shown = items.filter(
     (t) =>
-      (!unreviewedOnly || !t.reviewed) &&
+      (!unreviewedOnly || isUnreviewedAi(t)) &&
       (!needle || [t.term, t.fullName, t.definition].some((s) => s.toLowerCase().includes(needle))),
   );
   const selected = items.find((t) => t.id === selectedId) ?? null;
@@ -122,10 +119,10 @@ export function GlossaryPage({ initial }: { initial: GlossaryItem[] }) {
                   <span className={styles.head}>
                     <strong>{t.term}</strong>
                     {t.category && <span className={styles.meta}>{t.category}</span>}
-                    {!t.reviewed && (
+                    {isUnreviewedAi(t) && (
                       <>
-                        <span className={styles.badge} title={UNREVIEWED_HINT}>AI 설명</span>
-                        <span className={styles.srOnly}>{UNREVIEWED_SR}</span>
+                        <span className={styles.badge}>{AI_BADGE}</span>
+                        <span className={styles.srOnly}>{AI_BADGE_SR}</span>
                       </>
                     )}
                     {editing(t) && <span className={styles.badge}>수정 중</span>}
