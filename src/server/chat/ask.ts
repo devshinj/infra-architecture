@@ -6,7 +6,7 @@ import { createThinkStripper } from "@/server/llm/think";
 import { getOwnedDiagram, NotFoundError, ValidationError } from "@/server/projects";
 import { getLatestState } from "@/server/versions";
 
-import { NODE_GONE_MESSAGE, type ChatEvent, type MessageMeta } from "./events";
+import { NODE_GONE_MESSAGE, sessionPayload, type ChatEvent, type MessageMeta } from "./events";
 import { resolveIntent } from "./intent";
 import { withDiagramLock } from "./lock";
 import { createMessage, listMessages } from "./messages";
@@ -53,7 +53,8 @@ export async function runAskTurn(args: AskArgs, deps: ChatDeps): Promise<AskTurn
   if (args.sessionId !== null) {
     session = await getSession(args.diagramId, args.sessionId);
     if (!session) throw new NotFoundError();
-    if (session.nodeId !== args.nodeId) throw new ValidationError("세션의 노드와 맞지 않아요");
+    // 구성도 대화 세션은 /chat 으로만 이어 간다.
+    if (session.kind !== "node" || session.nodeId !== args.nodeId) throw new ValidationError("세션의 노드와 맞지 않아요");
   }
   const emit = guardEmit(args.emit, "ask");
   const gone = (): AskTurnResult => {
@@ -80,9 +81,8 @@ async function lockedAsk(args: AskArgs, existing: SessionRow | null, deps: ChatD
 
   let session = existing;
   if (!session) {
-    session = await createSession(diagramId, nodeId, state.nodes[nodeId]!.label, args.text);
-    const { id, title, nodeLabel, updatedAt } = session;
-    emit({ t: "session", session: { id, nodeId, nodeLabel, title, updatedAt: updatedAt.toISOString() } });
+    session = await createSession(diagramId, { kind: "node", nodeId, nodeLabel: state.nodes[nodeId]!.label }, args.text);
+    emit({ t: "session", session: sessionPayload(session) });
   }
   const sessionId = session.id;
   // 예상치 못한 예외로 끝나도 세션 순서(최근 이어감)는 갱신한다.

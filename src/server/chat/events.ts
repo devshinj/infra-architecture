@@ -2,6 +2,21 @@
 import type { Command } from "@/domain/commands";
 import type { Warning } from "@/domain/types";
 
+/** 세션 행을 session 이벤트 모양으로. */
+export function sessionPayload(s: {
+  id: string;
+  kind: "node" | "diagram";
+  nodeId: string | null;
+  nodeLabel: string | null;
+  title: string;
+  updatedAt: Date;
+}): SessionEventPayload {
+  const base = { id: s.id, title: s.title, updatedAt: s.updatedAt.toISOString() };
+  return s.kind === "node" && s.nodeId !== null && s.nodeLabel !== null
+    ? { ...base, kind: "node", nodeId: s.nodeId, nodeLabel: s.nodeLabel }
+    : { ...base, kind: "diagram", nodeId: null, nodeLabel: null };
+}
+
 /** 노드 질문: 노드가 지금 구성도에 없을 때. 질문 세션 화면도 같은 문구를 안내로 보인다. */
 export const NODE_GONE_MESSAGE = "이 노드는 지금 구성도에 없어서 이어서 물을 수 없어요.";
 
@@ -26,9 +41,14 @@ export interface MessageMeta {
   handoffText?: string;
 }
 
+/** 새로 만든 세션(session 이벤트). 노드 질문 세션은 노드가 있고, 구성도 대화 세션은 nodeId·nodeLabel 이 null. */
+export type SessionEventPayload =
+  | { id: string; kind: "node"; nodeId: string; nodeLabel: string; title: string; updatedAt: string }
+  | { id: string; kind: "diagram"; nodeId: null; nodeLabel: null; title: string; updatedAt: string };
+
 export type ChatEvent =
-  // 노드 질문에서 새 세션을 만들었을 때만, start 바로 앞
-  | { t: "session"; session: { id: string; nodeId: string; nodeLabel: string; title: string; updatedAt: string } }
+  // 새 세션(노드 질문의 첫 질문, 새 구성도 대화의 첫 메시지)을 만들었을 때만, start 바로 앞
+  | { t: "session"; session: SessionEventPayload }
   | { t: "start"; messageId: string; intent: string | null }
   | { t: "status"; phase: "thinking" | "drawing" | "answering" | "checking" }
   | { t: "say"; text: string }

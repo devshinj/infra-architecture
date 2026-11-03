@@ -54,7 +54,8 @@ export async function POST(request: Request, ctx: { params: Promise<{ id: string
     if (sessionId !== null) {
       const row = await getSession(id, sessionId);
       if (!row) return json(NOT_FOUND, 404);
-      if (row.nodeId !== nodeId) return json(BAD_BODY, 400);
+      // 구성도 대화 세션은 /chat 으로만 이어 간다.
+      if (row.kind !== "node" || row.nodeId !== nodeId) return json(BAD_BODY, 400);
     }
   } catch (err) {
     if (err instanceof NotFoundError) return json(NOT_FOUND, 404);

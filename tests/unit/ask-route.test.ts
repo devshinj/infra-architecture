@@ -33,6 +33,7 @@ const NOT_FOUND = "구성도를 찾을 수 없어요.";
 const row: SessionRow = {
   id: SESSION,
   diagramId: DIAGRAM,
+  kind: "node",
   nodeId: "was-1",
   nodeLabel: "WAS#1",
   title: "t",
