@@ -82,5 +82,6 @@ test("second pointerdown mid-drag is ignored and unmount restores user-select", 
 
 test("handle sits on the floating panel's left edge (offset + width)", () => {
   render(<PanelResizer width={400} min={320} max={720} defaultWidth={360} onChange={() => {}} offset={12} />);
-  expect(screen.getByRole("separator", { name: "대화 패널 너비" }).style.right).toBe("412px");
+  // 노치 안전 영역 몫(--safe-r)을 더한다: 보통 화면은 0 이라 412px.
+  expect(screen.getByRole("separator", { name: "대화 패널 너비" }).style.right).toBe("calc(412px + var(--safe-r, 0px))");
 });

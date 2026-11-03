@@ -1,15 +1,21 @@
 /* App shell, sidebar, right panel, workspace. Tokens only. */
 /* 캔버스가 바탕 전체를 채우고, 사이드바·오른쪽 패널은 사방 --panel-gap 을 두고 유리 판으로 떠 있다. */
-.shell { position: fixed; inset: 0; overflow: hidden; background: var(--bg-canvas); color: var(--text-primary); }
+.shell {
+  position: fixed; inset: 0; overflow: hidden; background: var(--bg-canvas); color: var(--text-primary);
+  /* 노치·홈 표시줄(가로 휴대폰): 떠 있는 판의 바깥 여백이 max(--panel-gap, 안전 영역)이 되도록 더할 몫. 보통 화면은 0. */
+  --safe-l: max(0px, calc(env(safe-area-inset-left) - var(--panel-gap)));
+  --safe-r: max(0px, calc(env(safe-area-inset-right) - var(--panel-gap)));
+  --safe-b: max(0px, calc(env(safe-area-inset-bottom) - var(--panel-gap)));
+}
 .main { position: absolute; inset: 0; min-width: 0; min-height: 0; }
 /* 캔버스가 아닌 화면은 떠 있는 사이드바 오른쪽에서 시작한다(--shell-inset-left 는 Shell.tsx 가 준다). */
-.emptyState { height: 100%; display: grid; place-content: center; text-align: center; gap: 8px; padding: 24px; padding-left: calc(var(--shell-inset-left, 0px) + 24px); }
+.emptyState { height: 100%; display: grid; place-content: center; text-align: center; gap: 8px; padding: 24px; padding-left: calc(var(--shell-inset-left, 0px) + var(--safe-l, 0px) + 24px); }
 .emptyState h1 { margin: 0; font-size: 16px; font-weight: 600; }
 .emptyState p { margin: 0; font-size: 13px; line-height: 1.6; color: var(--text-secondary); max-width: 360px; }
 .emptyActions { margin-top: 8px; display: flex; justify-content: center; }
 
 .sidebar {
-  position: absolute; top: var(--panel-gap); bottom: var(--panel-gap); left: var(--panel-gap); z-index: 40; width: 240px;
+  position: absolute; top: var(--panel-gap); bottom: calc(var(--panel-gap) + var(--safe-b, 0px)); left: calc(var(--panel-gap) + var(--safe-l, 0px)); z-index: 40; width: 240px;
   display: flex; flex-direction: column; min-height: 0;
   background: var(--glass-bg); backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur));
   border: 1px solid var(--glass-line); border-top-color: var(--glass-highlight); border-radius: var(--radius-panel);
@@ -128,12 +134,13 @@
 .resizer:hover, .resizer:focus-visible { background: var(--text-secondary); }
 /* 캔버스는 작업 영역 전체(떠 있는 패널 밑까지)를 채운다. */
 .center { position: absolute; inset: 0; min-width: 0; min-height: 0; display: flex; flex-direction: column; }
-.panelDock { position: absolute; top: var(--panel-gap); bottom: var(--panel-gap); right: var(--panel-gap); z-index: 40; display: flex; min-height: 0; }
+/* 너비(--panel-width)는 DiagramWorkspace 가 인라인으로 준다. */
+.panelDock { position: absolute; top: var(--panel-gap); bottom: calc(var(--panel-gap) + var(--safe-b, 0px)); right: calc(var(--panel-gap) + var(--safe-r, 0px)); z-index: 40; display: flex; min-height: 0; width: var(--panel-width, 360px); }
 .canvasWrap { flex: 1; min-height: 0; position: relative; }
 /* 보기·비교·오류 띠: 떠 있는 패널 사이의 보이는 캔버스 폭에 맞춘다. */
 .banner {
   display: flex; align-items: center; gap: 12px; padding: 8px 14px; font-size: 13px;
-  margin: var(--panel-gap) var(--canvas-inset-right, 0px) 0 var(--canvas-inset-left, 0px);
+  margin: var(--panel-gap) calc(var(--canvas-inset-right, 0px) + var(--safe-r, 0px)) 0 calc(var(--canvas-inset-left, 0px) + var(--safe-l, 0px));
   background: var(--bg-node); border: 1px solid var(--line-node); border-radius: var(--radius-zone); color: var(--text-primary);
 }
 .banner button { font: inherit; font-size: 12px; color: var(--text-primary); background: transparent; border: 1px solid var(--line-node); border-radius: 6px; padding: 3px 9px; cursor: pointer; }
@@ -166,4 +173,114 @@
 /* 흐림을 못 그리는 브라우저: 반투명 칠 대신 불투명한 사이드바 바탕으로 글자를 읽히게 한다. */
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   .sidebar, .panel { background: var(--bg-sidebar); }
+}
+
+/*
+ * 좁은 화면(휴대폰, Shell.tsx 의 NARROW_QUERY 와 같은 값). 위에 얇은 막대(☰ + 프로젝트 / 구성도), 작업 화면 아래에 탭 막대를 두고
+ * 구성도·대화·설명·이력을 한 화면씩 본다. 막대 내용과 서랍은 하이드레이션 뒤에 그려지므로, 그 자리(띠)와
+ * 숨길 넓은 화면 요소는 여기서 첫 칠부터 맞춘다(넓은 화면 마크업이 먼저 와도 사이드바·패널이 캔버스를 덮지 않는다).
+ */
+@media (max-width: 640px) {
+  .shell {
+    --topbar-h: calc(48px + env(safe-area-inset-top));
+    --tabbar-h: calc(56px + env(safe-area-inset-bottom));
+    --shell-inset-left: 0px !important;
+  }
+  /* 위 막대 자리: 막대가 그려지기 전에도 같은 칠의 띠가 있어 내용이 밀리지 않는다. */
+  .shell::before {
+    content: ""; position: absolute; top: 0; left: 0; right: 0; height: var(--topbar-h); box-sizing: border-box;
+    background: var(--bg-sidebar); border-bottom: 1px solid var(--line-shell);
+  }
+  .main { top: var(--topbar-h); }
+  /* 빈 홈 화면: 한국어는 어절 단위로 줄을 바꾸고, 시작 버튼은 손가락 크기로. */
+  .emptyState { padding: 24px 20px; }
+  .emptyState p { word-break: keep-all; }
+  .emptyActions .primaryBtn { min-height: 44px; padding: 10px 18px; font-size: 14px; }
+  /* 떠 있는 사이드바·레일은 서랍(.drawerNav)으로 바뀐다. */
+  .sidebar:not(.drawerNav) { display: none; }
+
+  /* 작업 화면: 캔버스는 양옆 여백만 비우고(인라인 값은 하이드레이션 전의 넓은 화면 값일 수 있다) 탭 막대 위까지 채운다. */
+  .workspace { --canvas-inset-left: var(--panel-gap) !important; --canvas-inset-right: 0px !important; }
+  .workspace::after {
+    content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: var(--tabbar-h); box-sizing: border-box;
+    background: var(--bg-sidebar); border-top: 1px solid var(--line-shell);
+  }
+  .center { bottom: var(--tabbar-h); }
+  .resizer { display: none; }
+  .panelDock { top: 0; right: 0; left: 0; bottom: var(--tabbar-h); width: auto; }
+  /* 화면을 다 채우는 패널: 유리 판 대신 사이드바 바탕, 모서리·테두리 없이. 탭은 아래 막대가 맡는다. */
+  .panel { border: 0; border-radius: 0; background: var(--bg-sidebar); backdrop-filter: none; -webkit-backdrop-filter: none; }
+  .panel > .tabs { display: none; }
+  /* 한 번에 한 화면. 숨긴 쪽도 크기를 지켜(visibility) 캔버스 카메라·대화 스크롤이 돌아왔을 때 그대로다. */
+  .workspace[data-mview="canvas"] .panelDock,
+  .workspace[data-mview="panel"] .center { visibility: hidden; }
+  /* 오류 띠는 패널 탭을 보는 중에도 보인다: 숨긴 캔버스 안에서 다시 보이게 하고 위 막대 바로 밑에 띄운다. */
+  .workspace[data-mview="panel"] .alertBanner {
+    visibility: visible; position: fixed; z-index: 70; top: calc(var(--topbar-h) + 8px); left: var(--panel-gap); right: var(--panel-gap); margin: 0;
+  }
+}
+
+/* 좁은 화면 위 막대: ☰ 와 지금 보는 프로젝트 / 구성도 이름. */
+.topbar {
+  position: absolute; top: 0; left: 0; right: 0; z-index: 50; height: var(--topbar-h, 48px); box-sizing: border-box;
+  display: flex; align-items: center; gap: 4px; padding: env(safe-area-inset-top) max(12px, env(safe-area-inset-right)) 0 max(2px, env(safe-area-inset-left));
+  background: var(--bg-sidebar); border-bottom: 1px solid var(--line-shell);
+}
+.topbarBtn {
+  flex: none; display: grid; place-items: center; width: 44px; height: 44px; padding: 0;
+  color: var(--text-secondary); background: transparent; border: 0; border-radius: 10px; cursor: pointer;
+}
+.topbarBtn:hover, .topbarBtn[aria-expanded="true"] { color: var(--text-primary); background: var(--bg-panel-raised); }
+.topbarBtn:focus-visible { outline: 1.5px solid var(--text-secondary); outline-offset: -2px; }
+.topbarTitle { flex: 1; min-width: 0; margin: 0; display: flex; align-items: baseline; gap: 6px; font-size: 14px; white-space: nowrap; }
+/* 긴 이름은 프로젝트를 먼저 줄이고 구성도 이름을 남긴다. */
+.topbarProject { flex: 0 1 auto; min-width: 0; max-width: 45%; overflow: hidden; text-overflow: ellipsis; color: var(--text-secondary); }
+.topbarSep { flex: none; color: var(--text-secondary); opacity: 0.6; }
+.topbarDiagram { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; font-weight: 600; color: var(--text-primary); }
+.topbarBrand { display: flex; align-items: center; gap: 8px; font-weight: 600; letter-spacing: -0.01em; }
+
+/* 좁은 화면 서랍: 왼쪽에서 나오는 펼친 사이드바. 바탕을 누르거나 Esc·닫기로 닫는다. */
+.drawerBackdrop { position: fixed; inset: 0; z-index: 90; background: color-mix(in srgb, var(--bg-canvas) 70%, transparent); }
+.drawer { position: fixed; top: 0; bottom: 0; left: 0; z-index: 91; width: min(300px, 86vw); display: flex; }
+.sidebar.drawerNav {
+  position: relative; inset: auto; flex: 1; width: auto; min-width: 0;
+  padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom) env(safe-area-inset-left);
+  background: var(--bg-sidebar); backdrop-filter: none; -webkit-backdrop-filter: none;
+  border: 0; border-right: 1px solid var(--line-shell); border-radius: 0;
+}
+/* 손가락으로 누르는 서랍: 줄·버튼을 44px 높이로. */
+.drawerNav .sideHead { padding: 4px 4px 4px 16px; }
+.drawerNav .iconBtn { width: 44px; height: 44px; border-radius: 10px; }
+.drawerNav .rowMain { min-height: 44px; padding: 10px 8px; font-size: 14px; }
+.drawerNav .menuBtn { min-width: 44px; min-height: 44px; }
+.drawerNav .addRow { min-height: 44px; font-size: 13px; }
+.drawerNav .sideLink, .drawerNav .btn { min-height: 44px; box-sizing: border-box; display: flex; align-items: center; font-size: 14px; }
+.drawerNav .btn { justify-content: center; }
+.drawerNav .linkBtn { min-height: 44px; padding: 0 8px; font-size: 13px; }
+@media (prefers-reduced-motion: no-preference) {
+  .drawer { animation: drawer-in 0.2s cubic-bezier(0.16, 1, 0.3, 1); }
+  .drawerBackdrop { animation: backdrop-in 0.2s ease-out; }
+}
+@keyframes drawer-in { from { transform: translateX(-100%); } }
+@keyframes backdrop-in { from { opacity: 0; } }
+
+/* 좁은 화면 작업 화면 아래 탭 막대: 구성도 | 대화 | 설명 | 이력. 고른 탭은 오른쪽 패널 알약 탭과 같은 칠. */
+.tabbar {
+  position: absolute; left: 0; right: 0; bottom: 0; z-index: 60; height: var(--tabbar-h, 56px); box-sizing: border-box;
+  display: flex; gap: 4px; padding: 4px max(6px, env(safe-area-inset-right)) env(safe-area-inset-bottom) max(6px, env(safe-area-inset-left));
+  background: var(--bg-sidebar); border-top: 1px solid var(--line-shell);
+}
+.tabbarTab {
+  flex: 1; min-width: 0; min-height: 48px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  font: inherit; font-size: 12px; color: var(--text-secondary); background: transparent; border: 0; border-radius: 12px; cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.tabbarTab:hover { color: var(--text-primary); }
+.tabbarTab[aria-selected="true"] { color: var(--text-primary); font-weight: 600; background: var(--bg-panel-raised); }
+.tabbarTab:focus-visible { outline: 1.5px solid var(--text-secondary); outline-offset: -2px; }
+.tabbarIcon { position: relative; display: grid; place-items: center; }
+/* 구성도를 보는 중에 고른 노드의 설명이 설명 탭에 있다는 표시(선택 색 = 강조색). */
+.tabbarDot { position: absolute; top: -4px; right: -7px; width: 7px; height: 7px; border: 2px solid var(--bg-sidebar); border-radius: 50%; background: var(--accent); }
+@media (prefers-reduced-motion: no-preference) {
+  .tabbarTab, .topbarBtn { transition: background-color 0.15s, color 0.15s; }
 }

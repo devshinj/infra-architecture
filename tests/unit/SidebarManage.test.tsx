@@ -381,17 +381,164 @@ test("빈 홈 화면의 시작 버튼은 사이드바와 같은 대화상자를 
   expect(within(dialog).getByLabelText("이름")).toHaveAccessibleDescription(/‘빈 프로젝트’/);
 });
 
-test("좁은 화면은 저장값이 없을 때 레일로 시작하고, 저장값이 있으면 그것을 따른다", () => {
-  const mm = vi.fn().mockReturnValue({ matches: true });
+test("좁은 화면은 서랍(☰)이고, 저장값이 없으면 접힌 채로 시작해 넓히면 레일, 저장값이 있으면 그것을 따른다", () => {
+  // 좁은 화면에서 시작해 창을 넓힌다(change 이벤트).
+  let narrow = true;
+  const listeners = new Set<() => void>();
+  const mm = vi.fn((q: string) => ({
+    get matches() {
+      return (q === "(max-width: 640px)" || q === "(max-width: 900px)") && narrow;
+    },
+    media: q,
+    addEventListener: (_: string, fn: () => void) => listeners.add(fn),
+    removeEventListener: (_: string, fn: () => void) => listeners.delete(fn),
+  }));
   vi.stubGlobal("matchMedia", mm);
+  const widen = () =>
+    act(() => {
+      narrow = false;
+      listeners.forEach((fn) => fn());
+    });
   try {
     view();
+    expect(screen.getByRole("button", { name: "프로젝트 목록 열기" })).toBeInTheDocument();
+    expect(screen.queryByRole("navigation", { name: "프로젝트" })).toBeNull();
+    widen();
     expect(screen.getByRole("button", { name: "프로젝트 영역 펼치기" })).toBeInTheDocument();
+    cleanup();
+    narrow = true;
+    window.localStorage.setItem("infrasketch.sidebarCollapsed", "0");
+    view();
+    widen();
+    expect(screen.getByRole("button", { name: "프로젝트 영역 접기" })).toBeInTheDocument();
+  } finally {
+    vi.unstubAllGlobals();
+  }
+});
+
+// ── 좁은 화면 서랍: 위 막대 ☰ 로 열고, 바탕·Esc·닫기로 닫으며 포커스를 가두고 돌려준다 ──
+const stubNarrow = () =>
+  vi.stubGlobal("matchMedia", (q: string) => ({ matches: q === "(max-width: 640px)", media: q, addEventListener() {}, removeEventListener() {} }));
+
+test("narrow top bar names the open project / diagram, and the drawer is a modal dialog with focus trap, Esc and focus return", () => {
+  stubNarrow();
+  nav.params = { projectId: "p1", diagramId: "d2" };
+  try {
+    view();
+    const banner = screen.getByRole("banner");
+    expect(banner).toHaveTextContent("쇼핑몰/개발");
+    const open = screen.getByRole("button", { name: "프로젝트 목록 열기" });
+    expect(open).toHaveAttribute("aria-expanded", "false");
+    fireEvent.click(open);
+    const drawer = screen.getByRole("dialog", { name: "프로젝트 목록" });
+    expect(drawer).toHaveAttribute("aria-modal", "true");
+    expect(open).toHaveAttribute("aria-expanded", "true");
+    const close = within(drawer).getByRole("button", { name: "프로젝트 목록 닫기" });
+    expect(close).toHaveFocus();
+    // 처음에서 Shift+Tab → 마지막(로그아웃), 마지막에서 Tab → 처음
+    fireEvent.keyDown(close, { key: "Tab", shiftKey: true });
+    const logout = within(drawer).getByRole("button", { name: "로그아웃" });
+    expect(logout).toHaveFocus();
+    fireEvent.keyDown(logout, { key: "Tab" });
+    expect(close).toHaveFocus();
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(screen.queryByRole("dialog", { name: "프로젝트 목록" })).toBeNull();
+    expect(open).toHaveFocus();
+    // 닫기 버튼으로도 닫고 ☰ 로 돌아온다
+    fireEvent.click(open);
+    fireEvent.click(screen.getByRole("button", { name: "프로젝트 목록 닫기" }));
+    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(open).toHaveFocus();
+  } finally {
+    nav.params = {};
+    vi.unstubAllGlobals();
+  }
+});
+
+test("narrow drawer: a row menu's Esc closes only the menu; choosing a diagram navigates; the current one just closes", () => {
+  stubNarrow();
+  nav.params = { projectId: "p1", diagramId: "d1" };
+  nav.push.mockClear();
+  try {
+    view();
+    fireEvent.click(screen.getByRole("button", { name: "프로젝트 목록 열기" }));
+    const drawer = screen.getByRole("dialog", { name: "프로젝트 목록" });
+    fireEvent.click(within(drawer).getByRole("button", { name: "개발 메뉴" }));
+    fireEvent.keyDown(within(drawer).getByRole("menu"), { key: "Escape" });
+    expect(screen.queryByRole("menu")).toBeNull();
+    expect(screen.getByRole("dialog", { name: "프로젝트 목록" })).toBeInTheDocument();
+    fireEvent.click(within(drawer).getByRole("button", { name: "개발" }));
+    expect(nav.push).toHaveBeenCalledWith("/p/p1/d/d2");
+    fireEvent.click(within(drawer).getByRole("button", { name: "운영" }));
+    expect(screen.queryByRole("dialog", { name: "프로젝트 목록" })).toBeNull();
+  } finally {
+    nav.params = {};
+    vi.unstubAllGlobals();
+  }
+});
+
+test("narrow: the empty-home start button still opens the create dialog without the drawer", () => {
+  stubNarrow();
+  try {
+    render(
+      <ShellProvider>
+        <Sidebar projects={[]} userName="재석" />
+        <CreateButton>첫 프로젝트 만들기</CreateButton>
+      </ShellProvider>,
+    );
+    expect(screen.getByRole("banner")).toHaveTextContent("InfraSketch");
+    fireEvent.click(screen.getByRole("button", { name: "첫 프로젝트 만들기" }));
+    expect(screen.getByRole("dialog", { name: "새 프로젝트" })).toBeInTheDocument();
+  } finally {
+    vi.unstubAllGlobals();
+  }
+});
+
+test("641–900px starts with the sidebar collapsed to the rail unless a preference is saved", () => {
+  vi.stubGlobal("matchMedia", (q: string) => ({ matches: q === "(max-width: 900px)", media: q, addEventListener() {}, removeEventListener() {} }));
+  try {
+    window.localStorage.removeItem("infrasketch.sidebarCollapsed");
+    view();
+    expect(screen.getByRole("button", { name: "프로젝트 영역 펼치기" })).toBeInTheDocument();
+    expect(screen.queryByRole("banner")).toBeNull(); // 위 막대·서랍은 휴대폰 너비에서만
     cleanup();
     window.localStorage.setItem("infrasketch.sidebarCollapsed", "0");
     view();
     expect(screen.getByRole("button", { name: "프로젝트 영역 접기" })).toBeInTheDocument();
   } finally {
+    window.localStorage.removeItem("infrasketch.sidebarCollapsed");
+    vi.unstubAllGlobals();
+  }
+});
+
+test("narrow drawer makes the background inert while open and skips tabindex=-1 items in the focus trap", () => {
+  stubNarrow();
+  nav.params = { projectId: "p1", diagramId: "d1" };
+  try {
+    render(
+      <ShellProvider>
+        <Sidebar projects={P} userName="재석" />
+        <main data-testid="main"><button type="button">캔버스 버튼</button></main>
+      </ShellProvider>,
+    );
+    const open = screen.getByRole("button", { name: "프로젝트 목록 열기" });
+    fireEvent.click(open);
+    const drawer = screen.getByRole("dialog", { name: "프로젝트 목록" });
+    expect(screen.getByTestId("main")).toHaveAttribute("inert");
+    expect(document.querySelector("header")).toHaveAttribute("inert");
+    expect(drawer).not.toHaveAttribute("inert");
+    // 행 메뉴를 연 채 마지막(로그아웃)에서 Tab → 메뉴 항목(tabindex=-1)이 아니라 처음(닫기)으로
+    fireEvent.click(within(drawer).getByRole("button", { name: "운영 메뉴" }));
+    const logout = within(drawer).getByRole("button", { name: "로그아웃" });
+    logout.focus();
+    fireEvent.keyDown(logout, { key: "Tab" });
+    expect(within(drawer).getByRole("button", { name: "프로젝트 목록 닫기" })).toHaveFocus();
+    fireEvent.click(within(drawer).getByRole("button", { name: "프로젝트 목록 닫기" }));
+    expect(screen.getByTestId("main")).not.toHaveAttribute("inert");
+    expect(document.querySelector("header")).not.toHaveAttribute("inert");
+    expect(open).toHaveFocus();
+  } finally {
+    nav.params = {};
     vi.unstubAllGlobals();
   }
 });

@@ -20,6 +20,7 @@ import styles from "./app.module.css";
 import { useShell } from "./Shell";
 
 const ACCOUNT_POP_ID = "sidebar-account";
+const DRAWER_ID = "sidebar-drawer";
 
 export interface SidebarProject {
   id: string;
@@ -77,6 +78,65 @@ export function Sidebar({ projects, userName }: { projects: SidebarProject[]; us
   const shell = useShell();
   const [account, setAccount] = useState(false);
   const glossaryCurrent = pathname === "/glossary";
+  const { narrow } = shell;
+
+  // 좁은 화면: 사이드바는 위 막대의 ☰ 로 여는 서랍이다. 다른 화면으로 가거나 넓은 화면이 되면 닫는다.
+  const [drawer, setDrawer] = useState(false);
+  const drawerBtn = useRef<HTMLButtonElement>(null);
+  const drawerRef = useRef<HTMLDivElement>(null);
+  const drawerWasOpen = useRef(false);
+  useEffect(() => {
+    setDrawer(false);
+  }, [pathname, narrow]);
+  // 열면 서랍 첫 버튼(닫기)으로, 닫으면 ☰ 로 포커스를 옮긴다.
+  useEffect(() => {
+    if (drawer) {
+      drawerWasOpen.current = true;
+      drawerRef.current?.querySelector<HTMLElement>("button, a[href]")?.focus();
+    } else if (drawerWasOpen.current) {
+      drawerWasOpen.current = false;
+      drawerBtn.current?.focus();
+    }
+  }, [drawer]);
+  // Esc 는 서랍을 닫는다. 대화상자·행 메뉴가 먼저 받은 Esc(preventDefault)는 건드리지 않는다.
+  useEffect(() => {
+    if (!drawer) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape" || e.defaultPrevented) return;
+      setMenu(null);
+      setDrawer(false);
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [drawer]);
+  // 서랍이 열린 동안 뒤(위 막대·작업 화면)는 inert: 포인터·포커스·보조기기가 닿지 않는다. 연 뒤에 생기는 대화상자는 건드리지 않는다.
+  useEffect(() => {
+    const el = drawerRef.current;
+    const parent = el?.parentElement;
+    if (!drawer || !el || !parent) return;
+    const made = Array.from(parent.children).filter(
+      (c): c is HTMLElement => c instanceof HTMLElement && c !== el && !c.hasAttribute("data-drawer-backdrop") && !c.hasAttribute("inert"),
+    );
+    made.forEach((c) => c.setAttribute("inert", ""));
+    return () => made.forEach((c) => c.removeAttribute("inert"));
+  }, [drawer]);
+  // 포커스를 서랍 안에 가둔다(Tab·Shift+Tab 이 끝에서 처음으로 돈다).
+  const trapDrawer = (e: React.KeyboardEvent) => {
+    if (e.key !== "Tab" || !drawerRef.current) return;
+    // 행 메뉴 항목(tabindex=-1)처럼 Tab 으로 닿지 않는 것은 뺀다.
+    const f = Array.from(
+      drawerRef.current.querySelectorAll<HTMLElement>('button:not(:disabled):not([tabindex="-1"]), a[href]:not([tabindex="-1"]), input:not([tabindex="-1"])'),
+    );
+    if (f.length === 0) return;
+    const first = f[0], last = f[f.length - 1];
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    }
+  };
 
   // 접기·펼치기 버튼은 바뀌는 순간 사라진다: 사용자가 누른 경우에만 짝 버튼으로 포커스를 옮긴다(마운트 뒤 복원은 제외).
   const toggleRef = useRef<HTMLButtonElement>(null);
@@ -143,7 +203,7 @@ export function Sidebar({ projects, userName }: { projects: SidebarProject[]; us
     returnFocus.current = null;
     // 대화상자가 사라지고 목록이 다시 그려진 뒤에 옮긴다.
     setTimeout(() => {
-      const target = back?.isConnected ? back : (newProjectBtn.current ?? toggleRef.current);
+      const target = back?.isConnected ? back : (newProjectBtn.current ?? toggleRef.current ?? drawerBtn.current);
       target?.focus();
     }, 0);
   };
@@ -161,7 +221,11 @@ export function Sidebar({ projects, userName }: { projects: SidebarProject[]; us
       else n.add(id);
       return n;
     });
-  const goDiagram = (projectId: string, diagramId: string) => router.push(diagramPath(projectId, diagramId));
+  const goDiagram = (projectId: string, diagramId: string) => {
+    // 지금 연 구성도를 다시 눌러도 주소가 그대로라 닫히지 않으므로 직접 닫는다.
+    if (diagramId === params.diagramId) setDrawer(false);
+    router.push(diagramPath(projectId, diagramId));
+  };
 
   const newProjectDialog = (): NameDialog => ({
     kind: "name",
@@ -300,6 +364,7 @@ export function Sidebar({ projects, userName }: { projects: SidebarProject[]; us
       href="/glossary"
       className={rail ? `${styles.railBtn} ${glossaryCurrent ? styles.railBtnActive : ""}` : `${styles.sideLink} ${glossaryCurrent ? styles.sideLinkActive : ""}`}
       aria-current={glossaryCurrent ? "page" : undefined}
+      onClick={() => setDrawer(false)}
       {...(rail ? { "aria-label": "용어 사전", title: "용어 사전" } : {})}
     >
       {rail ? <IconBook /> : "용어 사전"}
@@ -313,6 +378,54 @@ export function Sidebar({ projects, userName }: { projects: SidebarProject[]; us
       </form>
     </>
   );
+
+  if (narrow) {
+    const project = projects.find((p) => p.id === params.projectId);
+    const diagram = project?.diagrams.find((d) => d.id === params.diagramId);
+    return (
+      <>
+        <header className={styles.topbar}>
+          <button
+            ref={drawerBtn}
+            type="button"
+            className={styles.topbarBtn}
+            aria-label="프로젝트 목록 열기"
+            aria-haspopup="dialog"
+            aria-expanded={drawer}
+            aria-controls={drawer ? DRAWER_ID : undefined}
+            onClick={() => setDrawer(true)}
+          >
+            <IconMenu />
+          </button>
+          <p className={styles.topbarTitle}>
+            {project && diagram ? (
+              <>
+                <span className={styles.topbarProject} title={project.name}>{project.name}</span>
+                <span className={styles.topbarSep} aria-hidden="true">/</span>
+                <span className={styles.topbarDiagram} title={diagram.name}>{diagram.name}</span>
+              </>
+            ) : glossaryCurrent ? (
+              <span className={styles.topbarDiagram}>용어 사전</span>
+            ) : (
+              <span className={styles.topbarBrand}>
+                <LogoMark size={18} />
+                InfraSketch
+              </span>
+            )}
+          </p>
+        </header>
+        {drawer && (
+          <>
+            <div className={styles.drawerBackdrop} data-drawer-backdrop="" aria-hidden="true" onClick={() => setDrawer(false)} />
+            <div ref={drawerRef} id={DRAWER_ID} className={styles.drawer} role="dialog" aria-modal="true" aria-label="프로젝트 목록" onKeyDown={trapDrawer}>
+              {expandedNav(true)}
+            </div>
+          </>
+        )}
+        {dialogView}
+      </>
+    );
+  }
 
   if (shell.collapsed) {
     return (
@@ -341,24 +454,38 @@ export function Sidebar({ projects, userName }: { projects: SidebarProject[]; us
 
   return (
     <>
-      <nav className={styles.sidebar} aria-label="프로젝트">
+      {expandedNav(false)}
+      {dialogView}
+    </>
+  );
+
+  /** 펼친 사이드바. inDrawer 면 좁은 화면 서랍 안에 그리고, 접기 대신 닫기 버튼을 둔다. */
+  function expandedNav(inDrawer: boolean) {
+    return (
+      <nav className={inDrawer ? `${styles.sidebar} ${styles.drawerNav}` : styles.sidebar} aria-label="프로젝트">
         <div className={styles.sideHead}>
           {/* 로고는 제목이 아니다(페이지 제목 h1 은 작업 화면·용어 사전이 각자 둔다). */}
           <p className={styles.brand}>
             <LogoMark size={18} />
             InfraSketch
           </p>
-          <button
-            ref={toggleRef}
-            type="button"
-            className={styles.iconBtn}
-            aria-label="프로젝트 영역 접기"
-            title="프로젝트 영역 접기"
-            aria-expanded={true}
-            onClick={() => setShellCollapsed(true)}
-          >
-            <IconCollapse />
-          </button>
+          {inDrawer ? (
+            <button ref={toggleRef} type="button" className={styles.iconBtn} aria-label="프로젝트 목록 닫기" onClick={() => setDrawer(false)}>
+              <IconClose />
+            </button>
+          ) : (
+            <button
+              ref={toggleRef}
+              type="button"
+              className={styles.iconBtn}
+              aria-label="프로젝트 영역 접기"
+              title="프로젝트 영역 접기"
+              aria-expanded={true}
+              onClick={() => setShellCollapsed(true)}
+            >
+              <IconCollapse />
+            </button>
+          )}
         </div>
         {projects.length === 0 && <p className={styles.treeEmpty}>아직 프로젝트가 없어요</p>}
         <ul className={styles.tree} data-scroll-root="">
@@ -424,9 +551,8 @@ export function Sidebar({ projects, userName }: { projects: SidebarProject[]; us
           <div className={styles.user}>{accountRow}</div>
         </div>
       </nav>
-      {dialogView}
-    </>
-  );
+    );
+  }
 }
 
 /** 행의 ⋯ 메뉴. 열면 첫 항목에 포커스, ↑↓·Home·End 로 옮기고, Esc 는 닫고 ⋯ 버튼으로 돌아간다. Tab 은 닫는다. */
@@ -554,6 +680,8 @@ const IconCollapse = () => <Svg><rect x="2.5" y="3" width="13" height="12" rx="2
 const IconExpand = () => <Svg><rect x="2.5" y="3" width="13" height="12" rx="2" /><path d="M6.5 3v12M9.5 7l2 2-2 2" /></Svg>;
 const IconPlus = () => <Svg><path d="M9 4v10M4 9h10" /></Svg>;
 const IconBook = () => <Svg><path d="M3.5 3.5h4a1.5 1.5 0 0 1 1.5 1.5v9a1.2 1.2 0 0 0-1.2-1.2H3.5zM14.5 3.5h-4A1.5 1.5 0 0 0 9 5v9a1.2 1.2 0 0 1 1.2-1.2h4.3z" /></Svg>;
+const IconMenu = () => <Svg><path d="M3 5h12M3 9h12M3 13h12" /></Svg>;
+const IconClose = () => <Svg><path d="M4.5 4.5l9 9M13.5 4.5l-9 9" /></Svg>;
 const IconUser = () => <Svg><circle cx="9" cy="6.5" r="2.75" /><path d="M3.75 15a5.25 5.25 0 0 1 10.5 0" /></Svg>;
 
 const focusables = (root: HTMLElement) => Array.from(root.querySelectorAll<HTMLElement>("input, button:not(:disabled)"));

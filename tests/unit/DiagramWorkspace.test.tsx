@@ -48,7 +48,9 @@ vi.mock("@/ui/chat/useChatTurn", () => ({
   },
 }));
 
-import { clearPinnedAction, confirmAssumptionAction, getVersionAction, listVersionsAction, saveFieldsAction, setWarningIgnoredAction } from "@/app/(app)/actions";
+import { readFileSync } from "node:fs";
+
+import { clearPinnedAction, confirmAssumptionAction, getVersionAction, importSampleAction, listVersionsAction, saveFieldsAction, setWarningIgnoredAction } from "@/app/(app)/actions";
 import { emptyState } from "@/domain/types";
 import { DiagramWorkspace } from "@/ui/DiagramWorkspace";
 import { ShellProvider } from "@/ui/Shell";
@@ -358,7 +360,7 @@ test("selecting a node shows its explanation in 설명", async () => {
 // ---- 대화 패널 너비 ----
 const KEY = "infrasketch.panelWidth";
 // 떠 있는 패널의 너비(패널을 감싼 자리 잡기 상자의 인라인 너비).
-const panelCols = (c: HTMLElement) => (within(c).getByRole("complementary", { name: "오른쪽 패널" }).parentElement as HTMLElement).style.width;
+const panelCols = (c: HTMLElement) => (within(c).getByRole("complementary", { name: "오른쪽 패널" }).parentElement as HTMLElement).style.getPropertyValue("--panel-width");
 
 test("width is saved and restored from localStorage after mount", () => {
   window.localStorage.clear();
@@ -712,4 +714,181 @@ test("the workspace has a single h1 with the diagram name", () => {
   const h1 = screen.getAllByRole("heading", { level: 1 });
   expect(h1).toHaveLength(1);
   expect(h1[0]).toHaveTextContent("운영 구성도");
+});
+
+// ── 좁은 화면(휴대폰): 아래 탭 막대로 구성도·대화·설명·이력을 한 화면씩 본다 ──
+const stubNarrow = () =>
+  vi.stubGlobal("matchMedia", (q: string) => ({ matches: q === "(max-width: 640px)", media: q, addEventListener() {}, removeEventListener() {} }));
+const narrowUi = (latest: ReturnType<typeof mk> | ReturnType<typeof two>) => <ShellProvider>{ui(latest as never)}</ShellProvider>;
+const bottomTabs = () => screen.getByRole("tablist", { name: "작업 화면" });
+const bottomTab = (name: string | RegExp) => within(bottomTabs()).getByRole("tab", { name });
+const mview = () => (document.querySelector("[data-workspace]") as HTMLElement).getAttribute("data-mview");
+
+test("narrow: one bottom tablist with 4 tabs replaces the panel tabs; 구성도 first, choice is persisted", () => {
+  hookState.busy = false;
+  window.sessionStorage.clear();
+  stubNarrow();
+  render(narrowUi(two()));
+  expect(within(bottomTabs()).getAllByRole("tab").map((t) => t.textContent)).toEqual(["구성도", "대화", "설명", "이력"]);
+  expect(screen.getAllByRole("tablist")).toHaveLength(1); // 패널 안 탭 줄은 그리지 않는다
+  expect(screen.queryByRole("separator", { name: "대화 패널 너비" })).toBeNull();
+  expect(bottomTab("구성도")).toHaveAttribute("aria-selected", "true");
+  expect(bottomTab("구성도")).toHaveAttribute("aria-controls", "workspace-canvas");
+  expect(mview()).toBe("canvas");
+  fireEvent.click(bottomTab("대화"));
+  expect(bottomTab("대화")).toHaveAttribute("aria-selected", "true");
+  expect(mview()).toBe("panel");
+  expect(screen.getByRole("tabpanel", { name: "대화" })).toHaveAttribute("id", "right-panel-body");
+  expect(JSON.parse(window.sessionStorage.getItem("infrasketch.mobileView")!)).toEqual({ diagramId: "d", view: "대화" });
+  // 로빙 tabindex + 방향키
+  expect(bottomTab("대화")).toHaveAttribute("tabindex", "0");
+  expect(bottomTab("구성도")).toHaveAttribute("tabindex", "-1");
+  fireEvent.keyDown(bottomTab("대화"), { key: "ArrowRight" });
+  expect(bottomTab(/^설명/)).toHaveAttribute("aria-selected", "true");
+  expect(bottomTab(/^설명/)).toHaveFocus();
+  fireEvent.keyDown(bottomTab(/^설명/), { key: "Home" });
+  expect(bottomTab("구성도")).toHaveAttribute("aria-selected", "true");
+  expect(mview()).toBe("canvas");
+  expect(JSON.parse(window.sessionStorage.getItem("infrasketch.mobileView")!)).toEqual({ diagramId: "d", view: "구성도" });
+  window.sessionStorage.clear();
+});
+
+test("narrow: the last bottom tab is restored from sessionStorage (이력 loads versions)", () => {
+  hookState.busy = false;
+  window.sessionStorage.setItem("infrasketch.mobileView", JSON.stringify({ diagramId: "d", view: "이력" }));
+  vi.mocked(listVersionsAction).mockClear();
+  stubNarrow();
+  render(narrowUi(two()));
+  expect(bottomTab("이력")).toHaveAttribute("aria-selected", "true");
+  expect(mview()).toBe("panel");
+  expect(listVersionsAction).toHaveBeenCalled();
+  window.sessionStorage.clear();
+});
+
+test("narrow: selecting a node on the canvas stays on 구성도 and marks 설명; choosing 설명 shows it", () => {
+  hookState.busy = false;
+  window.sessionStorage.clear();
+  stubNarrow();
+  render(narrowUi(two()));
+  expect(bottomTab(/^설명/)).toHaveTextContent(/^설명$/);
+  fireEvent.click(screen.getByRole("button", { name: "선택b" }));
+  expect(bottomTab("구성도")).toHaveAttribute("aria-selected", "true");
+  expect(mview()).toBe("canvas");
+  expect(bottomTab(/^설명/)).toHaveAccessibleName("설명, 고른 항목의 설명 있음");
+  fireEvent.click(bottomTab(/^설명/));
+  expect(mview()).toBe("panel");
+  expect(bottomTab("설명")).toHaveAttribute("aria-selected", "true");
+  // 선택을 풀어도 손으로 고른 설명 탭에 남는다
+  fireEvent.click(screen.getByRole("button", { name: "선택해제" }));
+  expect(bottomTab("설명")).toHaveAttribute("aria-selected", "true");
+});
+
+test("narrow: programmatic tab switches also switch the bottom tab (history, mention, warn badge, ask menu, warnings chip)", () => {
+  hookState.busy = false;
+  window.sessionStorage.clear();
+  stubNarrow();
+  render(narrowUi(two()));
+  // 대화가 이력을 연다
+  act(() => (hookState.turn as unknown as { onOpenHistory(): void }).onOpenHistory());
+  expect(bottomTab("이력")).toHaveAttribute("aria-selected", "true");
+  expect(mview()).toBe("panel");
+  // 캔버스 메뉴의 참조 붙이기 → 대화
+  fireEvent.click(bottomTab("구성도"));
+  fireEvent.click(screen.getByRole("button", { name: "멘션a" }));
+  expect(bottomTab("대화")).toHaveAttribute("aria-selected", "true");
+  // 노드의 경고 배지 → 그 노드의 주의할 점(설명)
+  fireEvent.click(bottomTab("구성도"));
+  fireEvent.click(screen.getByRole("button", { name: "경고배지b" }));
+  expect(bottomTab("설명")).toHaveAttribute("aria-selected", "true");
+  expect(mview()).toBe("panel");
+  // 우클릭 메뉴 ‘질문하기’ → 설명 탭의 질문 칸
+  fireEvent.click(bottomTab("구성도"));
+  fireEvent.click(screen.getByRole("button", { name: "메뉴로 묻기a" }));
+  expect(bottomTab("설명")).toHaveAttribute("aria-selected", "true");
+  expect(mview()).toBe("panel");
+});
+
+test("wide screens keep the panel's own tabs, the resizer and no bottom bar", () => {
+  hookState.busy = false;
+  vi.stubGlobal("matchMedia", () => ({ matches: false, addEventListener() {}, removeEventListener() {} }));
+  render(<ShellProvider>{ui(two() as never)}</ShellProvider>);
+  expect(screen.queryByRole("tablist", { name: "작업 화면" })).toBeNull();
+  expect(screen.getByRole("separator", { name: "대화 패널 너비" })).toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: "경고배지b" }));
+  expect(screen.getByRole("tab", { name: "설명" })).toHaveAttribute("aria-selected", "true");
+  // 넓은 화면은 예전처럼 선택이 풀리면 앞 탭(대화)으로 돌아간다
+  fireEvent.click(screen.getByRole("button", { name: "선택해제" }));
+  expect(screen.getByRole("tab", { name: "대화" })).toHaveAttribute("aria-selected", "true");
+});
+
+test("narrow: a different diagram always starts on 구성도 (the stored tab belongs to the diagram it was saved for)", () => {
+  hookState.busy = false;
+  window.sessionStorage.setItem("infrasketch.mobileView", JSON.stringify({ diagramId: "other", view: "이력" }));
+  stubNarrow();
+  render(narrowUi(two()));
+  expect(bottomTab("구성도")).toHaveAttribute("aria-selected", "true");
+  expect(mview()).toBe("canvas");
+  expect(JSON.parse(window.sessionStorage.getItem("infrasketch.mobileView")!)).toEqual({ diagramId: "d", view: "구성도" });
+  window.sessionStorage.clear();
+});
+
+test("narrow: the 설명 dot does not come back for an item whose explanation was already viewed", () => {
+  hookState.busy = false;
+  window.sessionStorage.clear();
+  stubNarrow();
+  render(narrowUi(two()));
+  fireEvent.click(screen.getByRole("button", { name: "선택b" }));
+  expect(bottomTab(/^설명/)).toHaveAccessibleName("설명, 고른 항목의 설명 있음");
+  fireEvent.click(bottomTab(/^설명/));
+  fireEvent.click(bottomTab("구성도"));
+  expect(bottomTab(/^설명/)).toHaveAccessibleName("설명");
+  // 다른 노드는 아직 안 봤으니 점이 찍히고, 본 노드로 돌아오면 다시 찍지 않는다
+  fireEvent.click(screen.getByRole("button", { name: "선택a" }));
+  expect(bottomTab(/^설명/)).toHaveAccessibleName("설명, 고른 항목의 설명 있음");
+  fireEvent.click(screen.getByRole("button", { name: "선택b" }));
+  expect(bottomTab(/^설명/)).toHaveAccessibleName("설명");
+});
+
+test("narrow: the canvas tabpanel is labelled by its 구성도 tab", () => {
+  hookState.busy = false;
+  window.sessionStorage.clear();
+  stubNarrow();
+  render(narrowUi(two()));
+  expect(screen.getByRole("tabpanel", { name: "구성도" })).toHaveAttribute("id", "workspace-canvas");
+});
+
+test("chat placeholder drops the right-click hint on phones only", () => {
+  hookState.busy = false;
+  window.sessionStorage.clear();
+  stubNarrow();
+  render(narrowUi(two()));
+  fireEvent.click(bottomTab("대화"));
+  expect(screen.getByRole("textbox", { name: "메시지 입력" })).toHaveAttribute("placeholder", "만들고 싶은 서비스나 바꾸고 싶은 점을 말해 주세요.");
+  cleanup();
+  vi.stubGlobal("matchMedia", () => ({ matches: false, addEventListener() {}, removeEventListener() {} }));
+  render(<ShellProvider>{ui(two() as never)}</ShellProvider>);
+  expect(screen.getByRole("textbox", { name: "메시지 입력" })).toHaveAttribute(
+    "placeholder",
+    "만들고 싶은 서비스나 바꾸고 싶은 점을 말해 주세요. 노드를 오른쪽 클릭하면 참조를 붙일 수 있어요.",
+  );
+});
+
+test("narrow: an error alert stays visible on panel tabs (fixed under the top bar)", async () => {
+  hookState.busy = false;
+  window.sessionStorage.clear();
+  stubNarrow();
+  vi.mocked(importSampleAction).mockRejectedValueOnce(new Error("가져오지 못했어요"));
+  render(narrowUi(mk(1, [])));
+  fireEvent.click(screen.getByRole("button", { name: "샘플 불러오기" }));
+  const alert = await screen.findByRole("alert");
+  expect(alert).toHaveTextContent("가져오지 못했어요");
+  fireEvent.click(bottomTab("대화"));
+  expect(mview()).toBe("panel");
+  expect(alert.className).toMatch(/alertBanner/);
+  // CSS: 패널 탭에서도 숨긴 캔버스 안의 오류 띠는 다시 보이고 위 막대 밑에 고정된다
+  const css = readFileSync("src/ui/app.module.css", "utf8");
+  const rule = css.match(/\.workspace\[data-mview="panel"\] \.alertBanner \{([^}]*)\}/)?.[1] ?? "";
+  expect(rule).toContain("visibility: visible");
+  expect(rule).toContain("position: fixed");
+  expect(rule).toContain("top: calc(var(--topbar-h)");
 });

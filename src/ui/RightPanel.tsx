@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import type { DiagramState } from "@/domain/types";
 
@@ -11,7 +11,8 @@ import { HistoryPanel, type HistoryPanelProps } from "./HistoryPanel";
 import { NodeInfo, type NodeInfoProps } from "./NodeInfo";
 
 export type Tab = "대화" | "설명" | "이력";
-const TABS: Tab[] = ["대화", "설명", "이력"];
+export const TABS: Tab[] = ["대화", "설명", "이력"];
+export const RIGHT_PANEL_BODY_ID = "right-panel-body";
 
 export interface RightPanelProps {
   state: DiagramState;
@@ -37,9 +38,14 @@ export interface RightPanelProps {
   ask?: NodeInfoProps["ask"];
   /** 현재 판을 보고 있음(기본 true). 이전 버전 보기·비교에서는 대화를 못 하므로 빈 구성도 인사말을 숨긴다. */
   live?: boolean;
+  /**
+   * 바깥 탭 막대(좁은 화면의 아래 탭)가 탭을 고른다: 패널 안 탭 줄을 숨기고, 본문은 tabIdOf(tab) 로 이름 붙인다.
+   * 없으면 패널 안 탭 줄을 그린다.
+   */
+  externalTabs?: { tabIdOf(tab: Tab): string; request: { tab: Tab; token: number } | null };
 }
 
-export function RightPanel({ state, selectedId, onSelect, onMention, mentionDisabled, history, chat, onHistoryOpen, tab: controlledTab, onTabChange, cautions, warningState, explain, ask, live = true }: RightPanelProps) {
+export function RightPanel({ state, selectedId, onSelect, onMention, mentionDisabled, history, chat, onHistoryOpen, tab: controlledTab, onTabChange, cautions, warningState, explain, ask, live = true, externalTabs }: RightPanelProps) {
   const [innerTab, setInnerTab] = useState<Tab>("대화");
   const tab = controlledTab ?? innerTab;
   const setTab = (t: Tab) => {
@@ -71,16 +77,27 @@ export function RightPanel({ state, selectedId, onSelect, onMention, mentionDisa
     if (t === "이력") onHistoryOpen?.();
   };
 
+  // 바깥 탭 막대에서 고른 탭: 패널 안 탭을 누른 것과 같다. 그리기 전에 바꿔 옛 탭이 한 번 비치지 않게.
+  const request = externalTabs?.request ?? null;
+  const handled = useRef(request?.token ?? 0);
+  useLayoutEffect(() => {
+    if (!request || request.token === handled.current) return;
+    handled.current = request.token;
+    choose(request.tab);
+  });
+
   return (
     <aside className={styles.panel} aria-label="오른쪽 패널">
-      <div className={styles.tabs} role="tablist">
-        {TABS.map((t) => (
-          <button key={t} type="button" role="tab" id={`tab-${t}`} aria-selected={tab === t} aria-controls="right-panel-body" className={styles.tab} onClick={() => choose(t)}>
-            {t}
-          </button>
-        ))}
-      </div>
-      <div className={styles.panelBody} role="tabpanel" id="right-panel-body" aria-labelledby={`tab-${tab}`}>
+      {!externalTabs && (
+        <div className={styles.tabs} role="tablist">
+          {TABS.map((t) => (
+            <button key={t} type="button" role="tab" id={`tab-${t}`} aria-selected={tab === t} aria-controls={RIGHT_PANEL_BODY_ID} className={styles.tab} onClick={() => choose(t)}>
+              {t}
+            </button>
+          ))}
+        </div>
+      )}
+      <div className={styles.panelBody} role="tabpanel" id={RIGHT_PANEL_BODY_ID} aria-labelledby={externalTabs ? externalTabs.tabIdOf(tab) : `tab-${tab}`}>
         {tab === "대화" && (
           <ChatPanel
             {...chat}

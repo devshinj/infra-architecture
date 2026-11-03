@@ -33,9 +33,10 @@ import { Legend, legendPlacement } from "./canvas/Legend";
 import { FlyLayer, useFly } from "./FlyLayer";
 import type { ExplanationProps } from "./explain/Explanation";
 import { type TargetKind, useExplanations } from "./explain/useExplanations";
-import { PANEL_DEFAULT, PANEL_MAX, PANEL_MIN, PanelResizer } from "./PanelResizer";
+import { MOBILE_VIEWS, MobileTabBar, type MobileView, mobileTabId } from "./MobileTabBar";
+import { PANEL_DEFAULT, PANEL_MAX, PANEL_MIN, PANEL_MIN_COMPACT, PanelResizer } from "./PanelResizer";
 import { PANEL_GAP, useShell } from "./Shell";
-import { RightPanel, type Tab } from "./RightPanel";
+import { RIGHT_PANEL_BODY_ID, RightPanel, type Tab } from "./RightPanel";
 
 type Pinned = Record<string, { x: number; y: number }>;
 type Mode =
@@ -70,6 +71,11 @@ const hasId = (s: DiagramState, id: string) => id in s.nodes || id in s.edges ||
 const PANEL_WIDTH_KEY = "infrasketch.panelWidth";
 
 const MISSING_BADGES_KEY = "infrasketch.showMissingBadges";
+/** 좁은 화면에서 마지막으로 본 구성도와 아래 탭 `{ diagramId, view }`(이번 탭 세션 동안). 같은 구성도를 다시 열 때만 되살린다. */
+export const MOBILE_VIEW_KEY = "infrasketch.mobileView";
+/** 이보다 좁은 작업 영역(사이드바·패널이 함께 뜨는 태블릿 너비)은 패널을 PANEL_MIN_COMPACT 까지 줄여 캔버스 띠를 넓힌다. */
+const COMPACT_WIDTH = 900;
+const CANVAS_ID = "workspace-canvas";
 
 /** 구성 정보 카드의 접힌 줄 높이·카드 너비(재기 전 기본값, infoCard.module.css 와 맞춘다). */
 const CARD_LINE_HEIGHT = 42;
@@ -113,7 +119,7 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
     try {
       const raw = window.localStorage.getItem(PANEL_WIDTH_KEY);
       const n = raw === null ? NaN : Number(raw);
-      if (Number.isFinite(n) && n >= PANEL_MIN && n <= PANEL_MAX) setPanelWidth(Math.round(n));
+      if (Number.isFinite(n) && n >= PANEL_MIN_COMPACT && n <= PANEL_MAX) setPanelWidth(Math.round(n));
     } catch {
       /* 저장소를 못 읽으면 기본 너비 */
     }
@@ -130,12 +136,15 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
   }, []);
   // 떠 있는 패널이 가리는 좌우 폭(패널 바깥 여백 + 너비 + 안쪽 숨 쉴 여백). 캔버스 맞춤은 그 사이 띠에 한다.
   // 사이드바를 접거나 패널 너비를 바꿔도 카메라는 움직이지 않고, 다음 맞춤부터 새 값을 쓴다.
-  const { sidebarExtent } = useShell();
+  // 좁은 화면(narrow)은 패널이 캔버스 위에 뜨지 않고 아래 탭으로 갈마든다: 캔버스는 양옆 여백만 비운다.
+  const { sidebarExtent, narrow } = useShell();
   const insetLeft = sidebarExtent + PANEL_GAP;
+  // 태블릿 너비는 패널을 조금 더 줄일 수 있게 한다(사이드바·패널 사이 캔버스 띠가 카드 하나도 못 담지 않게).
+  const panelMin = workspaceW > 0 && workspaceW <= COMPACT_WIDTH ? PANEL_MIN_COMPACT : PANEL_MIN;
   // 보이는 캔버스 띠가 360px 보다 좁아지지 않게 최대를 줄인다(너비를 모르면 줄이지 않는다).
-  const panelMax = workspaceW > 0 ? Math.max(PANEL_MIN, Math.min(PANEL_MAX, workspaceW - insetLeft - 2 * PANEL_GAP - 360)) : PANEL_MAX;
-  const shownPanelWidth = Math.min(panelWidth, panelMax);
-  const insetRight = PANEL_GAP + shownPanelWidth + PANEL_GAP;
+  const panelMax = workspaceW > 0 ? Math.max(panelMin, Math.min(PANEL_MAX, workspaceW - insetLeft - 2 * PANEL_GAP - 360)) : PANEL_MAX;
+  const shownPanelWidth = Math.max(panelMin, Math.min(panelWidth, panelMax));
+  const insetRight = narrow ? PANEL_GAP : PANEL_GAP + shownPanelWidth + PANEL_GAP;
   // 아래: 접힌 구성 정보 카드 줄(+ 위아래 여백)은 늘 비운다. 카드가 열려 있으면 위치 보기가 카드를 피한다.
   const [cardOpen, setCardOpen] = useState(false);
   const [cardSize, setCardSize] = useState<CardMeasure | null>(null);
@@ -194,8 +203,50 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
     [showMissing],
   );
   const [tab, setTab] = useState<Tab>("대화");
+  // 좁은 화면의 아래 탭: 구성도(캔버스)냐 패널이냐. 패널이면 보이는 탭은 tab 이다. 넓은 화면에서는 CSS 가 이 값을 쓰지 않는다.
+  const [panelShown, setPanelShown] = useState(false);
+  const mobileView: MobileView = panelShown ? tab : "구성도";
+  /** 패널 탭을 연다. 좁은 화면이면 아래 탭도 그 패널로 옮긴다(넓은 화면은 패널이 늘 보여 탭만 바뀐다). */
+  const showTab = useCallback((t: Tab) => {
+    setTab(t);
+    setPanelShown(true);
+  }, []);
+  // 아래 탭 막대에서 고른 패널 탭: RightPanel 이 손으로 고른 것처럼 처리한다(선택이 풀려도 그 탭에 남고, 이력이면 목록을 불러온다).
+  const [tabRequest, setTabRequest] = useState<{ tab: Tab; token: number } | null>(null);
+  const chooseView = (v: MobileView) => {
+    if (v === "구성도") return setPanelShown(false);
+    setTabRequest((r) => ({ tab: v, token: (r?.token ?? 0) + 1 }));
+    showTab(v);
+  };
+  // 마지막 아래 탭을 이번 탭 세션 동안 기억한다(좁은 화면에서만 읽고 쓴다). 다른 구성도를 열면 늘 구성도 탭부터.
+  const restoredView = useRef(false);
+  useEffect(() => {
+    if (!narrow) return;
+    if (!restoredView.current) {
+      restoredView.current = true;
+      try {
+        const raw = window.sessionStorage.getItem(MOBILE_VIEW_KEY);
+        const saved = raw ? (JSON.parse(raw) as { diagramId?: unknown; view?: unknown }) : null;
+        const view = saved?.view as MobileView;
+        if (saved?.diagramId === diagramId && view !== mobileView && MOBILE_VIEWS.includes(view)) {
+          chooseView(view);
+          return;
+        }
+      } catch {
+        /* 저장소를 못 읽으면 구성도부터 */
+      }
+    }
+    try {
+      window.sessionStorage.setItem(MOBILE_VIEW_KEY, JSON.stringify({ diagramId, view: mobileView }));
+    } catch {
+      /* 저장 실패는 이번 화면에만 영향 */
+    }
+    // chooseView 는 매 렌더 새로 만들어지지만 상태 setter 만 쓴다.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [narrow, mobileView, diagramId]);
   // 대화 차례의 add_node: 진행 카드의 현재 단계 점에서 그 노드로 빛점이 날아간다(배치가 끝나 좌표가 나오면).
-  const fly = useFly({ motion, chatVisible: tab === "대화" });
+  // 좁은 화면은 대화와 캔버스가 한 화면에 함께 보이지 않아 날리지 않는다.
+  const fly = useFly({ motion, chatVisible: tab === "대화" && !narrow });
   const clearFly = fly.clear;
   useEffect(() => clearFly(), [diagramId, board, clearFly]); // 다른 구성도·새 판: 기다리던 빛점을 버린다
   const fail = (e: unknown) => setError(e instanceof Error ? e.message : "처리하지 못했어요");
@@ -252,7 +303,7 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
     // 차례가 끝나도 빛점은 비우지 않는다: 출발점은 queue 때 잡아 두어, done 뒤 배치에서도 마지막 노드로 날 수 있다.
     onDone: refreshFromServer,
     onOpenHistory: () => {
-      setTab("이력");
+      showTab("이력");
       loadVersions();
     },
     onInterrupted: () => {
@@ -295,13 +346,21 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
   }
   const mentionRef = useRef<MentionInputHandle>(null);
 
+  // 설명 탭의 점: 구성도를 보는 중에 고른 항목의 설명을 아직 안 봤을 때만. 한 번 본 항목은 다시 골라도 찍지 않는다.
+  const [seenExplain, setSeenExplain] = useState<ReadonlySet<string>>(() => new Set());
+  useEffect(() => {
+    if (mobileView !== "설명" || selId === null || seenExplain.has(selId)) return;
+    setSeenExplain((s) => new Set(s).add(selId));
+  }, [mobileView, selId, seenExplain]);
+  const explainWaiting = selId !== null && !panelShown && !seenExplain.has(selId);
+
   // Attach a node/group to the chat input: open the 대화 tab, then insert once the input has rendered.
   const [pendingMention, setPendingMention] = useState<{ id: string; label: string } | null>(null);
   // 참조는 구성도 대화에 붙인다(질문 세션을 보고 있었으면 구성도 대화로 바꾼다).
   const onMention = (id: string) => {
     if (!live) return;
     const label = shown.nodes[id]?.label ?? shown.groups[id]?.label ?? id;
-    setTab("대화");
+    showTab("대화");
     if (sessions.active !== "main") sessions.select("main");
     setPendingMention({ id, label });
   };
@@ -360,7 +419,7 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
     const label = labelOf(nodeId);
     const t = text.trim();
     if (!live || chat.busy || label === null || !t) return false;
-    setTab("대화");
+    showTab("대화");
     sessions.startNew({ nodeId, nodeLabel: label, text: t });
     void chat.send(t, { kind: "ask", nodeId, sessionId: null });
     return true;
@@ -418,7 +477,9 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
     setCardOpen(o);
     if (!o) setFocus(null); // 다시 펼쳐도 옛 대상으로 뛰지 않는다
   };
+  // 대화의 주의 칩: 카드는 캔버스에 있으므로 좁은 화면이면 구성도 탭으로 간다.
   const openWarnings = () => {
+    setPanelShown(false);
     setCardOpen(true);
     setWarnScroll((n) => n + 1);
   };
@@ -436,6 +497,19 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
     if (selectedRef.current === id) setTab("설명");
     setOptions((o) => ({ ...o, selectedId: id }));
   }, []);
+  // 노드의 경고 배지: 그 노드의 주의할 점(설명 탭)을 보려는 것이라 좁은 화면이면 설명 탭으로 간다.
+  // 넓은 화면은 이전처럼 선택만 하고(설명 탭으로 가는 것은 RightPanel 이 한다), 선택이 풀리면 앞 탭으로 돌아간다.
+  const narrowRef = useRef(narrow);
+  useEffect(() => {
+    narrowRef.current = narrow;
+  });
+  const onWarnBadge = useCallback(
+    (id: string) => {
+      selectNode(id);
+      if (narrowRef.current) showTab("설명");
+    },
+    [selectNode, showTab],
+  );
   // 카드 주의 항목: 선택에 더해 카메라도 그 노드로 옮긴다(열린 카드를 피해 가운데에 둔다). 같은 항목을 다시 눌러도 새 토큰으로 다시 간다.
   const onSelectWarning = useCallback(
     (id: string) => {
@@ -456,7 +530,7 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
   const onAskFromMenu = (id: string) => {
     if (askLocked) return;
     selectNode(id);
-    setTab("설명");
+    showTab("설명");
     seq.current += 1;
     setAskFocus({ id, token: seq.current });
   };
@@ -506,7 +580,9 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
     !locked &&
     run(async () => {
       const state = await getVersionAction(diagramId, number);
-      if (state) enter({ kind: "view", number, state }, state);
+      if (!state) return;
+      enter({ kind: "view", number, state }, state);
+      setPanelShown(false); // 좁은 화면: 그 버전 그림을 보러 구성도 탭으로
     });
 
   const compare = (number: number) =>
@@ -516,6 +592,7 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
       if (!old) return;
       const marks = diffStates(old, current.state);
       enter({ kind: "compare", number, state: old, marks }, unionState(old, current.state));
+      setPanelShown(false);
     });
 
   const restore = (number: number) =>
@@ -561,9 +638,10 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
       ref={workspaceRef}
       className={styles.workspace}
       data-workspace=""
+      data-mview={panelShown ? "panel" : "canvas"}
       style={{ "--canvas-inset-left": `${insetLeft}px`, "--canvas-inset-right": `${insetRight}px` } as React.CSSProperties}
     >
-      <section className={styles.center} aria-label={name}>
+      <section id={CANVAS_ID} className={styles.center} aria-label={name} {...(narrow ? { role: "tabpanel", "aria-labelledby": mobileTabId("구성도") } : {})}>
         {/* 화면에 보이는 구성도 제목이 없어 보조기기용 제목만 둔다. */}
         <h1 className={styles.srOnly}>{name}</h1>
         {banner && (
@@ -579,7 +657,8 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
             )}
           </div>
         )}
-        {error && <div className={styles.banner} role="alert">{error}</div>}
+        {/* 좁은 화면은 어느 탭에서든 보이게 위 막대 바로 밑에 띄운다(app.module.css .alertBanner). */}
+        {error && <div className={`${styles.banner} ${styles.alertBanner}`} role="alert">{error}</div>}
         <div className={styles.canvasWrap}>
           <Canvas
             state={shown}
@@ -600,7 +679,7 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
             fitRequest={arranged}
             onEditModeChange={(v) => live && !locked && setEditMode(v)}
             onMotionChange={setMotion}
-            onWarnBadgeClick={selectNode}
+            onWarnBadgeClick={onWarnBadge}
             samples={samples}
             onImportSample={importSample}
             importing={busy || locked}
@@ -637,8 +716,8 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
           <Legend hideAux={canvasOptions.hideAux} empty={Object.keys(shown.nodes).length === 0} onMeasure={setLegendWidth} {...(legendBottom !== undefined ? { bottom: legendBottom } : {})} />
         </div>
       </section>
-      <PanelResizer width={shownPanelWidth} min={PANEL_MIN} max={panelMax} defaultWidth={PANEL_DEFAULT} onChange={changePanelWidth} offset={PANEL_GAP} />
-      <div className={styles.panelDock} style={{ width: shownPanelWidth }}>
+      {!narrow && <PanelResizer width={shownPanelWidth} min={panelMin} max={panelMax} defaultWidth={PANEL_DEFAULT} onChange={changePanelWidth} offset={PANEL_GAP} />}
+      <div className={styles.panelDock} style={{ "--panel-width": `${shownPanelWidth}px` } as React.CSSProperties}>
         <RightPanel
           state={shown}
           selectedId={options.selectedId}
@@ -650,6 +729,7 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
           warningState={mode.kind === "compare" ? current.state : shown}
           onHistoryOpen={loadVersions}
           live={live}
+          {...(narrow ? { externalTabs: { tabIdOf: mobileTabId, request: tabRequest } } : {})}
           {...(explain ? { explain } : {})}
           {...(selKind === "node"
             ? {
@@ -686,6 +766,14 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
           }}
         />
       </div>
+      {narrow && (
+        <MobileTabBar
+          current={mobileView}
+          onChange={chooseView}
+          controls={(v) => (v === "구성도" ? CANVAS_ID : RIGHT_PANEL_BODY_ID)}
+          explainWaiting={explainWaiting}
+        />
+      )}
       <FlyLayer ref={fly.layerRef} />
     </div>
   );
