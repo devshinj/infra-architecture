@@ -578,3 +578,61 @@ test("toolbar offers 이미지 저장, disabled with a reason while the diagram 
   await waitFor(() => expect(screen.getByRole("button", { name: "이미지 저장" })).toBeEnabled());
   expect(within(screen.getByRole("toolbar", { name: "캔버스 도구" })).getByRole("group", { name: "이미지" })).toBeInTheDocument();
 });
+
+// ---- 키보드·보조기기 안내 (접근성 점검) ----
+const firstNode = async (container: HTMLElement) => {
+  await waitFor(() => expect(container.querySelectorAll(".react-flow__node-infra").length).toBeGreaterThan(0));
+  return container.querySelector(".react-flow__node-infra") as HTMLElement;
+};
+const description = (el: HTMLElement) => document.getElementById(el.getAttribute("aria-describedby")!)?.textContent ?? "";
+
+test("node wrappers describe the real keyboard behavior in Korean (no delete; arrows only in edit mode)", async () => {
+  const props = baseProps();
+  const { container, rerender } = render(<div style={{ width: 800, height: 600 }}><Canvas {...props} /></div>);
+  const node = await firstNode(container);
+  expect(description(node)).toBe("Enter 나 Space 로 노드를 선택하거나 선택을 풀고, Esc 로 선택을 풉니다.");
+  expect(container.textContent).not.toMatch(/Press|delete/i);
+  rerender(<div style={{ width: 800, height: 600 }}><Canvas {...props} editMode /></div>);
+  await waitFor(() => expect(description(node)).toContain("편집 모드에서는 선택한 노드를 화살표 키로 옮길 수 있습니다"));
+  expect(description(node)).not.toMatch(/지우|삭제/);
+});
+
+test("Enter or Space on a focused node selects it like a click; Escape clears the selection", async () => {
+  const props = baseProps();
+  const { container, rerender } = render(<div style={{ width: 800, height: 600 }}><Canvas {...props} /></div>);
+  const node = await firstNode(container);
+  const id = node.getAttribute("data-id")!;
+  node.focus();
+  fireEvent.keyDown(node, { key: "Enter" });
+  expect(props.onSelect).toHaveBeenLastCalledWith(id);
+  fireEvent.keyDown(node, { key: " " });
+  expect(props.onSelect).toHaveBeenLastCalledWith(id);
+  rerender(<div style={{ width: 800, height: 600 }}><Canvas {...props} options={{ ...props.options, selectedId: id }} /></div>);
+  fireEvent.keyDown(node, { key: " " });
+  expect(props.onSelect).toHaveBeenLastCalledWith(null);
+  vi.mocked(props.onSelect).mockClear();
+  fireEvent.keyDown(node, { key: "Escape" });
+  expect(props.onSelect).toHaveBeenCalledWith(null);
+});
+
+test("arrow keys move the selected node only in edit mode and save its position when the key is released", async () => {
+  const props = baseProps();
+  const { container, rerender } = render(<div style={{ width: 800, height: 600 }}><Canvas {...props} /></div>);
+  const node = await firstNode(container);
+  const id = node.getAttribute("data-id")!;
+  const selectedOpts = { ...props.options, selectedId: id };
+  rerender(<div style={{ width: 800, height: 600 }}><Canvas {...props} options={selectedOpts} /></div>);
+  node.focus();
+  fireEvent.keyDown(node, { key: "ArrowRight" });
+  fireEvent.keyUp(node, { key: "ArrowRight" });
+  expect(props.onPinnedChange).not.toHaveBeenCalled();
+  rerender(<div style={{ width: 800, height: 600 }}><Canvas {...props} options={selectedOpts} editMode /></div>);
+  const before = node.style.transform;
+  fireEvent.keyDown(node, { key: "ArrowRight" });
+  await waitFor(() => expect(node.style.transform).not.toBe(before));
+  fireEvent.keyUp(node, { key: "ArrowRight" });
+  expect(props.onPinnedChange).toHaveBeenCalledTimes(1);
+  const saved = vi.mocked(props.onPinnedChange).mock.calls[0][0][id];
+  expect(saved).toBeDefined();
+  expect(node.style.transform).toContain(`${saved.x}px`);
+});
