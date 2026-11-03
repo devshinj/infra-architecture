@@ -177,7 +177,20 @@ test("chat bubbles and progress dots follow the restrained spec", () => {
   expect(css).toMatch(/\.dots span \{[^}]*animation: dot 1\.2s/);
   // 움직임 줄이기: 점 애니메이션이 없다.
   expect(css).toMatch(/@media \(prefers-reduced-motion: reduce\) \{ \.dots span \{ animation: none;/);
+  // 말풍선·아바타·진행 점은 금색을 쓰지 않는다.
+  for (const sel of [".user", ".mono", ".dots span"]) expect(rule(css, sel), sel).not.toContain("var(--accent");
+  // 대화에서 금색은 보내기 버튼 하나뿐이다(사용자 결정: 작업 화면의 유일한 주 동작). 금색 칠을 쓰는 규칙은 .primaryBtn 뿐이고,
+  // 그 칠(var(--accent-fill))은 .primaryBtn 본 규칙 하나에만 있다.
+  const goldRules = [...css.matchAll(/([^{}]+)\{([^{}]*var\(--accent[^{}]*)\}/g)].map((m) => m[1].trim().split(/\r?\n/).pop()!.trim());
+  expect(goldRules.length).toBeGreaterThan(0);
+  for (const sel of goldRules) expect(sel).toMatch(/^\.primaryBtn(:[a-z():-]+)?$/);
+  expect(rule(css, ".primaryBtn")).toContain("background: var(--accent-fill)");
+  expect(css.replace(/(^|\n)\.primaryBtn \{[^}]*\}/, "")).not.toContain("var(--accent-fill)");
   expect(css).not.toContain("var(--accent)");
+  // ChatPanel 에서 primaryBtn 을 쓰는 버튼은 보내기 하나다.
+  const panel = read("src/ui/chat/ChatPanel.tsx");
+  expect(panel.match(/styles\.primaryBtn/g)).toHaveLength(1);
+  expect(panel).toMatch(/styles\.primaryBtn[^\n]*\n\s*보내기/);
   expect(css).not.toMatch(/gradient|box-shadow/);
 });
 
@@ -300,5 +313,5 @@ test("primary button text on the accent fill reaches 4.5:1 in every state, and i
   for (const fill of [token("accent"), mixed("accent-fill-hover"), mixed("accent-fill-active")]) {
     expect(contrast(on, fill), fill).toBeGreaterThanOrEqual(4.5);
   }
-  for (const bg of ["bg-node", "bg-canvas"]) expect(contrast(mixed("line-input"), token(bg)), bg).toBeGreaterThanOrEqual(3);
+  for (const bg of ["bg-panel-raised", "bg-node", "bg-canvas"]) expect(contrast(mixed("line-input"), token(bg)), bg).toBeGreaterThanOrEqual(3);
 });
