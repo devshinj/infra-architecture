@@ -6,6 +6,7 @@ import { setTermReviewedAction, updateTermAction, type ActionResult } from "@/ap
 
 import type { GlossaryItem } from "@/domain/glossary-types";
 
+import { AI_BADGE, AI_BADGE_SR, isUnreviewedAi } from "./aiBadge";
 import styles from "./glossary.module.css";
 
 const FIELDS = [
@@ -40,7 +41,7 @@ export function GlossaryPage({ initial }: { initial: GlossaryItem[] }) {
   const needle = q.trim().toLowerCase();
   const shown = items.filter(
     (t) =>
-      (!unreviewedOnly || !t.reviewed) &&
+      (!unreviewedOnly || isUnreviewedAi(t)) &&
       (!needle || [t.term, t.fullName, t.definition].some((s) => s.toLowerCase().includes(needle))),
   );
   const selected = items.find((t) => t.id === selectedId) ?? null;
@@ -104,7 +105,7 @@ export function GlossaryPage({ initial }: { initial: GlossaryItem[] }) {
         />
         <label>
           <input type="checkbox" checked={unreviewedOnly} onChange={(e) => setUnreviewedOnly(e.target.checked)} />
-          미검수만
+          AI 설명만
         </label>
       </div>
       <div className={styles.body}>
@@ -118,9 +119,14 @@ export function GlossaryPage({ initial }: { initial: GlossaryItem[] }) {
                   <span className={styles.head}>
                     <strong>{t.term}</strong>
                     {t.category && <span className={styles.meta}>{t.category}</span>}
-                    {!t.reviewed && <span className={styles.badge}>미검수</span>}
+                    {isUnreviewedAi(t) && (
+                      <>
+                        <span className={styles.badge}>{AI_BADGE}</span>
+                        <span className={styles.srOnly}>{AI_BADGE_SR}</span>
+                      </>
+                    )}
                     {editing(t) && <span className={styles.badge}>수정 중</span>}
-                    <span className={styles.meta}>{t.source === "seed" ? "초기" : "AI"}</span>
+                    <span className={styles.meta}>{t.source === "seed" ? "기본 제공" : "AI가 추가"}</span>
                   </span>
                   <p className={styles.snippet}>{t.definition}</p>
                 </button>

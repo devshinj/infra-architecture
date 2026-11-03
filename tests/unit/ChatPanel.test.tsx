@@ -124,7 +124,7 @@ test("chat has no assumption chips, checklist or missing chip; warnings collapse
         lines: [
           card({ mode: "build", step: "checking", changes: 3, end: "done", nodes: 3, edges: 1 }),
           { id: "p", kind: "progress", text: "웹 서버를 놓을게요", ...T },
-          { id: "s", kind: "summary", text: "노드 3 · 연결 1 · 적용 2 · 건너뜀 1", ...T },
+          { id: "s", kind: "summary", text: "노드 3 · 연결 1 · 2곳 바꿨어요", ...T },
           { id: "w", kind: "warning", text: "주의 2", ...T },
         ],
       })}
@@ -132,7 +132,7 @@ test("chat has no assumption chips, checklist or missing chip; warnings collapse
   );
   const ai = screen.getByRole("group", { name: "InfraSketch 메시지" });
   const chips = within(ai).getByRole("list", { name: "이번 차례 결과" });
-  expect(within(chips).getAllByRole("listitem").map((li) => li.textContent)).toEqual(["노드 3 · 연결 1 · 적용 2 · 건너뜀 1", "주의 2"]);
+  expect(within(chips).getAllByRole("listitem").map((li) => li.textContent)).toEqual(["노드 3 · 연결 1 · 2곳 바꿨어요", "주의 2"]);
   // 본문(say)은 칩 위에 있다.
   const body = within(ai).getByText("웹 서버를 놓을게요");
   expect(body.compareDocumentPosition(chips) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
@@ -257,7 +257,7 @@ test("ask session hides progress card and chips", () => {
           { id: "u", kind: "user", text: "왜 두 대예요?" },
           card({ mode: "build", step: "checking", changes: 0, end: "aborted" }),
           { id: "a", kind: "assistant", text: "이중화 때문이에요.", ...T },
-          { id: "s", kind: "summary", text: "중단됨 · 적용 0 · 건너뜀 0", ...T },
+          { id: "s", kind: "summary", text: "중단됨 · 바꾼 곳이 없어요", ...T },
           { id: "w", kind: "warning", text: "주의 1", ...T },
         ],
       })}

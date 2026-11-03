@@ -27,7 +27,7 @@ async function buildS1(page: Page) {
   await page.getByPlaceholder(PLACEHOLDER).fill("결제랑 카카오 로그인 붙는 쇼핑몰");
   await page.getByRole("button", { name: "보내기" }).click();
   await expect(nodes(page)).toHaveCount(S1_NODE_COUNT, { timeout: 30_000 });
-  await expect(page.getByText(/노드 \d+ · 연결 \d+ · 적용 \d+ · 건너뜀 \d+/)).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByText(/노드 \d+ · 연결 \d+ · (?:\d+곳 바꿨어요|바꾼 곳이 없어요)/)).toBeVisible({ timeout: 30_000 });
 }
 
 const was1 = (page: Page) => nodes(page).filter({ has: page.getByTitle("WAS #1") });
@@ -127,7 +127,7 @@ test("reload: no reminder line in chat, the card keeps the count", async ({ page
   await page.getByRole("tab", { name: "대화" }).click();
   // 다시 불러와도 같은 모양: 접힌 완료 카드와 요약 칩. 빠진 정보 칩은 대화에 없다.
   await expect(page.getByText(/^완료 · 노드 \d+ · 연결 \d+$/)).toBeVisible({ timeout: 15_000 });
-  await expect(page.getByText(/노드 \d+ · 연결 \d+ · 적용 \d+ · 건너뜀 \d+/)).toBeVisible();
+  await expect(page.getByText(/노드 \d+ · 연결 \d+ · (?:\d+곳 바꿨어요|바꾼 곳이 없어요)/)).toBeVisible();
   await expect(page.getByText(REMINDER)).toHaveCount(0);
   // 카드는 접힌 채 같은 수를 보이고, 누르면 블록이 접힌 채로 펼쳐진다.
   await expect(cardToggle(page)).toHaveAttribute("aria-expanded", "false");

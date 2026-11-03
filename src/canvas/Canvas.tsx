@@ -7,6 +7,7 @@ import { computeMissing } from "@/domain/missing";
 import type { DiagramState } from "@/domain/types";
 import { mergeWarnings, warningsByNode } from "@/domain/warnings";
 
+import { canvasAriaLabels } from "./ariaLabels";
 import "./canvas.css";
 import { EdgeLayerPortal } from "./EdgeLayer";
 import { emphasisOf } from "./emphasis";
@@ -349,6 +350,8 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
         data,
         // 키보드 포커스를 받는 래퍼의 이름표: 화면에서 잘려도 전체 이름(과 보조 글자)을 읽어 준다.
         ariaLabel: n.sub ? `${n.label} · ${n.sub}` : n.label,
+        // React Flow 의 선택을 화면 선택과 맞춘다(편집 모드 화살표 옮기기는 React Flow 가 선택한 노드에만 한다).
+        selected: ln.id === selected,
         zIndex: 10,
         draggable: editMode,
         width: ln.width,
@@ -363,7 +366,7 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
   useEffect(() => setNodes(computed), [computed]);
 
   // Camera: fit on board change, follow new nodes calmly while a turn streams (see useCamera).
-  const { getViewport, setViewport, flowToScreenPosition } = useReactFlow();
+  const { getViewport, setViewport, flowToScreenPosition, getNode, getNodes } = useReactFlow();
   const width = useStore((s) => s.width);
   const height = useStore((s) => s.height);
   const bounds = useMemo(() => unionRect([...Object.values(layout.nodes), ...Object.values(layout.groups)]), [layout]);
@@ -442,9 +445,53 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
     if (!onMention) setMenu(null);
   }, [onMention]);
   const onNodesChange = useCallback((changes: NodeChange[]) => setNodes((ns) => applyNodeChanges(changes, ns)), []);
+  const ariaLabelConfig = useMemo(() => canvasAriaLabels(editMode), [editMode]);
+  // 키보드: React Flow 는 Enter·Space·Esc 를 자기 선택에만 쓰므로 화면 선택(onSelect)으로 잇는다(클릭과 같다).
+  // 편집 모드 화살표 옮기기는 React Flow 가 하고, 키를 놓을 때 실제로 움직인 노드만 한 번에 고정 위치로 저장한다.
+  // 캡처 단계에서 받아 React Flow 가 첫 칸을 옮기기 전의 시작 위치를 적는다.
+  const keyMove = useRef<Map<string, { x: number; y: number }> | null>(null);
+  useEffect(() => {
+    keyMove.current = null;
+  }, [selected]);
+  const onFlowKeyDownCapture = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    const el = e.target as HTMLElement;
+    const id = el.classList.contains("react-flow__node") ? el.dataset.id : undefined;
+    if (!id) return;
+    const infra = el.classList.contains("react-flow__node-infra");
+    if (e.key === "Enter" || e.key === " ") {
+      if (e.key === " ") e.preventDefault();
+      if (e.repeat) return;
+      // 영역을 누르면 클릭처럼 선택을 푼다.
+      onSelect(infra && id !== selected ? id : null);
+    } else if (e.key === "Escape") {
+      if (selected !== null) onSelect(null);
+    } else if (e.key.startsWith("Arrow") && editMode && infra && keyMove.current === null && getNode(id)?.selected) {
+      // 함께 선택된 노드가 모두 같이 움직이므로 모두의 시작 위치를 적는다.
+      keyMove.current = new Map(getNodes().filter((n) => n.selected && n.type === "infra").map((n) => [n.id, { ...n.position }]));
+    }
+  };
+  const onFlowKeyUp = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    const starts = keyMove.current;
+    if (!e.key.startsWith("Arrow") || starts === null) return;
+    keyMove.current = null;
+    if (!editMode) return;
+    const next = { ...pinned };
+    let moved = false;
+    for (const [id, from] of starts) {
+      const p = getNode(id)?.position;
+      if (!p || (p.x === from.x && p.y === from.y)) continue;
+      next[id] = { x: p.x, y: p.y };
+      moved = true;
+    }
+    if (moved) onPinnedChange(next);
+  };
+  // 캔버스 밖으로 포커스가 나가면 옮기던 상태를 버린다(나중에 다른 곳에서 키를 놓아도 저장하지 않는다).
+  const onFlowBlur = (e: React.FocusEvent<HTMLDivElement>) => {
+    if (!e.currentTarget.contains(e.relatedTarget as globalThis.Node | null)) keyMove.current = null;
+  };
 
   return (
-    <div ref={wrap} tabIndex={-1} className="canvas__flow" data-zoom={far ? "far" : "near"}>
+    <div ref={wrap} tabIndex={-1} className="canvas__flow" data-zoom={far ? "far" : "near"} onKeyDownCapture={onFlowKeyDownCapture} onKeyUp={onFlowKeyUp} onBlur={onFlowBlur}>
       <ReactFlow
         nodes={nodes}
         edges={[]}
@@ -454,6 +501,7 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
         nodesConnectable={false}
         elementsSelectable
         deleteKeyCode={null}
+        ariaLabelConfig={ariaLabelConfig}
         minZoom={0.2}
         maxZoom={2}
         proOptions={{ hideAttribution: true }}

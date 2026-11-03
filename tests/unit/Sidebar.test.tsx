@@ -132,3 +132,17 @@ test("account popover closes on Esc (focus back) and on outside click", () => {
   expect(screen.queryByRole("button", { name: "로그아웃" })).not.toBeInTheDocument();
   window.localStorage.clear();
 });
+
+// ---- 제목·랜드마크 (접근성 점검) ----
+test("the sidebar logo is not a heading (pages own their h1)", () => {
+  path = "/";
+  render(<Sidebar projects={[]} userName="a" />);
+  expect(screen.getByText("InfraSketch")).toBeInTheDocument();
+  expect(screen.queryByRole("heading", { level: 1 })).not.toBeInTheDocument();
+});
+
+test("app layout wraps page content in a main landmark (resizer and glossary tools sit inside it)", async () => {
+  const { readFileSync } = await import("node:fs");
+  const src = readFileSync(`${process.cwd()}/src/app/(app)/layout.tsx`, "utf8");
+  expect(src).toContain("<main className={styles.main}>{children}</main>");
+});

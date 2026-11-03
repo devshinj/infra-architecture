@@ -4,11 +4,12 @@
  */
 .card {
   position: absolute;
-  left: var(--canvas-inset-left, var(--panel-gap));
-  bottom: var(--panel-gap);
+  left: calc(var(--canvas-inset-left, var(--panel-gap)) + var(--safe-l, 0px));
+  bottom: calc(var(--panel-gap) + var(--safe-b, 0px));
   z-index: 30;
   width: 300px;
-  max-width: calc(100% - var(--canvas-inset-left, var(--panel-gap)) - var(--panel-gap));
+  /* 오른쪽 떠 있는 패널(--canvas-inset-right)까지는 넘지 않는다: 좁은 태블릿 너비에서는 카드가 줄어든다. */
+  max-width: calc(100% - var(--canvas-inset-left, var(--panel-gap)) - max(var(--panel-gap), var(--canvas-inset-right, 0px)) - var(--safe-l, 0px) - var(--safe-r, 0px));
   max-height: 70%;
   box-sizing: border-box;
   display: flex;

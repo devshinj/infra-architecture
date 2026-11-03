@@ -251,6 +251,7 @@ export async function listTermsAction(): Promise<TermEntry[]> {
       definition: r.definition,
       aliases: r.aliases,
       reviewed: r.reviewed,
+      source: r.source,
       why: r.why,
       compare: r.compare,
     }));
