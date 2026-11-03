@@ -5,6 +5,8 @@ import { useEffect, useRef } from "react";
 import styles from "./app.module.css";
 
 export const PANEL_MIN = 320;
+/** 태블릿 너비(작업 영역 900px 이하)에서 허용하는 최소 너비: 캔버스 띠에 구성 정보 카드가 들어갈 자리를 남긴다. */
+export const PANEL_MIN_COMPACT = 280;
 export const PANEL_MAX = 720;
 export const PANEL_DEFAULT = 360;
 
