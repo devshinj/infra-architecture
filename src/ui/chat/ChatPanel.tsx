@@ -41,6 +41,8 @@ export interface ChatPanelProps {
   loading?: boolean;
   /** 대화가 비어 있고 시작 인사도 없을 때 가운데 보일 안내(새 구성도 대화 등). */
   emptyHint?: string;
+  /** `구성도 대화로 보내기` 가 옮겨 갈 구성도 대화(마지막으로 쓴 구성도 대화, 없으면 기본 대화). */
+  handoffTo?: string;
 }
 
 const PLACEHOLDER_BASE = "만들고 싶은 서비스나 바꾸고 싶은 점을 말해 주세요.";
@@ -186,6 +188,7 @@ export function ChatPanel({
   elsewhereBusy = false,
   loading = false,
   emptyHint,
+  handoffTo = "main",
 }: ChatPanelProps) {
   const { narrow } = useShell();
   const lines = ask ? allLines.filter((l) => !HIDDEN_IN_ASK.has(l.kind)) : allLines;
@@ -227,7 +230,7 @@ export function ChatPanel({
   const handoff = (text: string) => {
     if (!ask || ask.nodeLabel === null) return;
     setFill({ mention: { id: ask.nodeId, label: ask.nodeLabel }, text });
-    picker?.onSelect("main");
+    picker?.onSelect(handoffTo);
   };
   useEffect(() => {
     if (!fill || ask) return;
@@ -347,7 +350,7 @@ export function ChatPanel({
 
   return (
     <div className={styles.chat}>
-      {picker && <SessionPicker {...picker} />}
+      {picker && <SessionPicker fallbackFocus={() => mentionRef.current?.focus()} {...picker} />}
       {down && (
         <div className={styles.notice} role="status">
           {DOWN}

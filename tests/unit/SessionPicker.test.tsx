@@ -1,6 +1,7 @@
 import "@testing-library/jest-dom/vitest";
 import { cleanup, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { useState } from "react";
 import { afterEach, expect, test, vi } from "vitest";
 
 import { SessionPicker, type SessionPickerProps } from "@/ui/chat/SessionPicker";
@@ -187,4 +188,41 @@ test("delete is disabled while a turn runs; rename still works", async () => {
   await userEvent.click(screen.getByRole("button", { name: "결제 메뉴" }));
   expect(screen.getByRole("menuitem", { name: "삭제" })).toBeDisabled();
   expect(screen.getByRole("menuitem", { name: "이름 바꾸기" })).toBeEnabled();
+});
+
+function DeletingHarness(p: { newDisabled?: boolean; fallbackFocus?(): void }) {
+  const [sessions, setSessions] = useState<SessionSummary[]>([c("x", "결제", today(9, 0))]);
+  return (
+    <SessionPicker
+      sessions={sessions}
+      active="main"
+      labelOf={labelOf}
+      onSelect={vi.fn()}
+      onNew={vi.fn()}
+      onRename={vi.fn()}
+      onDelete={async (id) => setSessions((ss) => ss.filter((s) => s.id !== id))}
+      {...p}
+    />
+  );
+}
+const deleteOnly = async () => {
+  await userEvent.click(screen.getByRole("button", { name: "기본 대화" }));
+  await userEvent.click(screen.getByRole("button", { name: "결제 메뉴" }));
+  await userEvent.click(screen.getByRole("menuitem", { name: "삭제" }));
+  await userEvent.click(within(screen.getByRole("alertdialog")).getByRole("button", { name: "삭제" }));
+  await waitFor(() => expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument());
+};
+
+test("deleting the last session disables the picker, so focus goes to 새 대화", async () => {
+  render(<DeletingHarness />);
+  await deleteOnly();
+  expect(screen.getByRole("button", { name: "기본 대화" })).toBeDisabled();
+  await waitFor(() => expect(screen.getByRole("button", { name: "새 대화" })).toHaveFocus());
+});
+
+test("…and to the fallback (chat input) when 새 대화 is disabled too", async () => {
+  const fallbackFocus = vi.fn();
+  render(<DeletingHarness newDisabled fallbackFocus={fallbackFocus} />);
+  await deleteOnly();
+  await waitFor(() => expect(fallbackFocus).toHaveBeenCalled());
 });

@@ -327,3 +327,19 @@ test("an empty diagram chat session shows its hint instead of the greeting on a 
   expect(screen.queryByText(HINT)).not.toBeInTheDocument();
   expect(screen.getByText(GREETING)).toBeInTheDocument();
 });
+
+test("handoff goes to the given diagram chat (the last one used)", async () => {
+  const onSelect = vi.fn();
+  render(
+    <ChatPanel
+      {...base({
+        ask: ASK,
+        picker: picker("s1", onSelect),
+        handoffTo: "c9",
+        lines: [{ id: "h", kind: "handoff", text: "이중화해 줘", ...T }],
+      })}
+    />,
+  );
+  await userEvent.click(screen.getByRole("button", { name: "구성도 대화로 보내기" }));
+  expect(onSelect).toHaveBeenCalledWith("c9");
+});

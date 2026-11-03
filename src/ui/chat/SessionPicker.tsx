@@ -1,6 +1,6 @@
 "use client";
 
-import { type KeyboardEvent as ReactKeyboardEvent, useEffect, useState } from "react";
+import { type KeyboardEvent as ReactKeyboardEvent, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
 import { usePopover } from "@/canvas/usePopover";
@@ -27,6 +27,8 @@ export interface SessionPickerProps {
   onDelete?(id: string): Promise<string | void>;
   /** 차례가 도는 중: 삭제를 막는다(구성도 잠금이 걸려 있어 서버도 거절한다). */
   deleteDisabled?: boolean;
+  /** 대화상자를 닫은 뒤 고르기·`새 대화` 버튼이 모두 막혀 있을 때 포커스를 둘 곳(대화 입력칸 등). */
+  fallbackFocus?(): void;
 }
 
 /** 세션 없는 구성도 대화. 늘 맨 위에 있고 이름을 바꾸거나 지울 수 없다. */
@@ -89,6 +91,7 @@ export function SessionPicker({
   onRename,
   onDelete,
   deleteDisabled = false,
+  fallbackFocus,
 }: SessionPickerProps) {
   const { open, setOpen, root, trigger } = usePopover(ITEM);
   const current = active === NEW_SESSION ? pending : (sessions.find((s) => s.id === active) ?? null);
@@ -115,11 +118,32 @@ export function SessionPicker({
   }, [menu]);
 
   // 이름 바꾸기·삭제 대화상자. 닫으면 고르기 버튼으로 포커스를 돌린다(행은 목록과 함께 닫혔다).
+  // 마지막 세션을 지워 고르기 버튼이 막혔으면 `새 대화`, 그것도 막혔으면 fallbackFocus(입력칸)로.
   const [dialog, setDialog] = useState<Dialog | null>(null);
+  const newBtn = useRef<HTMLButtonElement>(null);
+  /** 대화상자를 닫고 돌려준 포커스(목록이 늦게 바뀌어 고르기 버튼이 막히면 다시 옮긴다). */
+  const returned = useRef(false);
+  const refocus = () => {
+    const usable = (el: HTMLButtonElement | null) => !!el && el.isConnected && !el.disabled;
+    if (usable(trigger.current)) trigger.current!.focus();
+    else if (usable(newBtn.current)) newBtn.current!.focus();
+    else fallbackFocus?.();
+  };
   const closeDialog = () => {
     setDialog(null);
-    setTimeout(() => trigger.current?.focus(), 0);
+    returned.current = true;
+    setTimeout(refocus, 0);
   };
+  // 삭제 결과가 대화상자를 닫은 뒤에 그려져 고르기 버튼이 막히면, 그 버튼(또는 body)에 남은 포커스를 옮긴다.
+  useEffect(() => {
+    if (!returned.current || canOpen) return;
+    const a = document.activeElement;
+    if (a === trigger.current || a === document.body || a === null) refocus();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- 막힐 때만 다시 본다
+  }, [canOpen]);
+  useEffect(() => {
+    if (open) returned.current = false;
+  }, [open]);
   const act = (action: Action, s: SessionSummary) => {
     setMenu(null);
     setOpen(false);
@@ -218,7 +242,7 @@ export function SessionPicker({
         {canOpen && <Chevron />}
       </button>
       {onNew && (
-        <button type="button" className={styles.newChatBtn} disabled={newDisabled} onClick={onNew}>
+        <button ref={newBtn} type="button" className={styles.newChatBtn} disabled={newDisabled} onClick={onNew}>
           <Plus />
           {NEW_LABEL}
         </button>

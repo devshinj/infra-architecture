@@ -991,3 +991,42 @@ test("choosing an assumption while a diagram chat session is open sends there", 
   expect(screen.getByRole("button", { name: "결제 대화", expanded: false })).toBeInTheDocument();
 });
 
+
+test("from a node session, mentions go to the last diagram chat used, or 기본 대화 once that chat is deleted", async () => {
+  hookState.busy = false;
+  hookState.lines = [];
+  const chatSession = { id: "c1", kind: "diagram" as const, nodeId: null, nodeLabel: null, title: "결제 대화", updatedAt: new Date().toISOString() };
+  const nodeSession = { id: "s1", kind: "node" as const, nodeId: "a", nodeLabel: "a", title: "왜 두 대예요?", updatedAt: new Date().toISOString() };
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async (url: string, init?: RequestInit) => {
+      const u = String(url);
+      if (init?.method === "DELETE") return new Response(null, { status: 204 });
+      if (u.endsWith("/sessions/c1")) return Response.json({ session: chatSession, messages: [] });
+      if (u.endsWith("/sessions/s1")) return Response.json({ session: nodeSession, messages: [] });
+      return Response.json({ qwen: "ok", clef: "ok" });
+    }),
+  );
+  render(<DiagramWorkspace diagramId="d" name="n" latest={mk(1, ["a"]) as never} initialPinned={{}} samples={[]} initialSessions={[chatSession, nodeSession]} />);
+  const trigger = () => screen.getAllByRole("button").find((b) => b.getAttribute("aria-haspopup") === "dialog")!;
+  pickSession("결제 대화");
+  await screen.findByRole("button", { name: "결제 대화", expanded: false });
+  pickSession("a · 왜 두 대예요?");
+  await screen.findByPlaceholderText("이 노드에 대해 더 물어보기");
+  fireEvent.click(screen.getByRole("button", { name: "멘션a" }));
+  expect(trigger()).toHaveTextContent("결제 대화");
+  expect(screen.getByRole("button", { name: "a 참조 제거" })).toBeInTheDocument();
+
+  // 결제 대화를 지운 뒤 노드 질문에서 참조하면 기본 대화로 간다.
+  pickSession("a · 왜 두 대예요?");
+  fireEvent.click(trigger());
+  fireEvent.click(screen.getByRole("button", { name: "결제 대화 메뉴" }));
+  fireEvent.click(screen.getByRole("menuitem", { name: "삭제" }));
+  await act(async () => {
+    fireEvent.click(within(screen.getByRole("alertdialog")).getByRole("button", { name: "삭제" }));
+  });
+  await vi.waitFor(() => expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument());
+  expect(trigger()).toHaveTextContent("a · 왜 두 대예요?");
+  fireEvent.click(screen.getByRole("button", { name: "멘션a" }));
+  expect(trigger()).toHaveTextContent("기본 대화");
+});
