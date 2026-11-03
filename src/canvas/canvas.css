@@ -107,7 +107,8 @@
 }
 button.node__badge { padding: 0; border: 0; font-family: inherit; cursor: pointer; }
 button.node__badge:focus-visible { outline: 1.5px solid var(--text-secondary); outline-offset: 2px; }
-.node__badge--missing { background: var(--state-missing); color: var(--text-primary); }
+/* 빠진 정보 배지: state-missing 을 조금 밝힌 칠 위에 어두운 숫자(5.3:1). 칠은 노드·캔버스 바탕과도 4:1 이상 떨어진다. */
+.node__badge--missing { background: color-mix(in srgb, var(--state-missing) 80%, var(--text-primary)); color: var(--bg-sidebar); }
 .node__badge--warn { background: var(--state-warn); color: var(--bg-node); }
 /* 빠진 정보 배지와 함께면 그 왼쪽에 나란히. 중심이 모서리에서 18px 왼쪽이며 overlap.ts 의 PAIR_BADGE_OFFSET 과 맞춘다. */
 .node__badge--pair { right: 18px; }
@@ -165,11 +166,17 @@ button.node__badge:focus-visible { outline: 1.5px solid var(--text-secondary); o
 .canvas__flow { width: 100%; height: 100%; }
 .canvas__flow .react-flow__node { transition: transform 0.4s ease; }
 .canvas__flow .react-flow__node.dragging { transition: none; }
+/* 키보드 포커스: 노드·영역 래퍼(tabindex=0)에 은빛 링. 선택 링(금색, .node 바깥 4px)보다 안쪽 2px 이라 둘이 겹쳐도 구분된다.
+   선택자에 [data-id] 를 더해 React Flow 기본 규칙(outline: none)보다 앞선다. :focus-visible 이라 마우스 클릭에는 뜨지 않고, 포커스가 없는 내보내기 복제본에도 그려지지 않는다. */
+.canvas__flow .react-flow__node-infra { border-radius: var(--radius-node); }
+.canvas__flow .react-flow__node-zone { border-radius: var(--radius-zone); }
+.canvas__flow .react-flow__node[data-id]:focus { outline: none; }
+.canvas__flow .react-flow__node[data-id]:focus-visible { outline: 1.5px solid var(--focus-ring); outline-offset: 2px; }
 .canvas__toolbar {
   /* 떠 있는 오른쪽 패널에 가리지 않게 그 왼쪽에 둔다(--canvas-inset-right 는 DiagramWorkspace 가 준다). 위 패널과 같은 유리 칠. */
-  position: absolute; top: var(--panel-gap); right: max(var(--panel-gap), var(--canvas-inset-right, 0px)); z-index: 20;
+  position: absolute; top: var(--panel-gap); right: calc(max(var(--panel-gap), var(--canvas-inset-right, 0px)) + var(--safe-r, 0px)); z-index: 20;
   display: flex; flex-wrap: wrap; align-items: center; gap: 2px; padding: 4px; justify-content: flex-end;
-  max-width: min(70%, calc(100% - max(12px, var(--canvas-inset-left, 0px)) - max(12px, var(--canvas-inset-right, 0px))));
+  max-width: min(70%, calc(100% - max(12px, var(--canvas-inset-left, 0px)) - max(12px, var(--canvas-inset-right, 0px)) - var(--safe-l, 0px) - var(--safe-r, 0px)));
   background: var(--glass-bg); backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur));
   border: 1px solid var(--glass-line); border-radius: var(--radius-panel);
 }
@@ -200,7 +207,7 @@ button.node__badge:focus-visible { outline: 1.5px solid var(--text-secondary); o
 .canvas__opt-name { font-size: 13px; color: var(--text-primary); }
 .canvas__opt-desc { font-size: 11.5px; line-height: 1.4; color: var(--text-secondary); }
 .canvas__empty {
-  position: absolute; inset: 0 var(--canvas-inset-right, 0px) 0 var(--canvas-inset-left, 0px); margin: auto; height: fit-content; max-width: 360px; text-align: center;
+  position: absolute; inset: 0 calc(var(--canvas-inset-right, 0px) + var(--safe-r, 0px)) 0 calc(var(--canvas-inset-left, 0px) + var(--safe-l, 0px)); margin: auto; height: fit-content; max-width: 360px; text-align: center;
   font-size: 13px; line-height: 1.6; color: var(--text-secondary);
 }
 [data-zoom="far"] .node__sub,
@@ -270,3 +277,8 @@ button.node__badge:focus-visible { outline: 1.5px solid var(--text-secondary); o
 /* 메뉴가 열려 있으면 알림을 감춘다(같은 자리에 겹친다). */
 .canvas__export:has(.canvas__export-menu) .canvas__export-note { visibility: hidden; }
 .canvas__export-note--error { border-color: color-mix(in srgb, var(--state-missing) 60%, var(--glass-line)); white-space: normal; width: max-content; max-width: 280px; }
+
+/* 좁은 화면(Shell.tsx NARROW_QUERY): 오른쪽 패널이 캔버스 위에 뜨지 않으므로 도구 모음이 캔버스 폭을 다 써서 줄 수를 줄인다. */
+@media (max-width: 640px) {
+  .canvas__toolbar { max-width: calc(100% - 2 * var(--panel-gap)); }
+}

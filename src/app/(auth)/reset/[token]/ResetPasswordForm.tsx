@@ -37,7 +37,7 @@ export function ResetPasswordForm({ token, usable }: { token: string; usable: bo
             <p className={styles.alert} role="alert">
               {errors.form ?? MESSAGES.resetLinkExpired}
             </p>
-            <Link href="/reset" ref={renewRef} className={styles.linkButton}>
+            <Link href="/reset" ref={renewRef} className={`${styles.linkButton} ${styles.primary}`}>
               재설정 링크 다시 받기
             </Link>
           </>

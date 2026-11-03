@@ -150,6 +150,7 @@ export const LIGHT_TOKENS: Readonly<Record<string, string>> = {
   "--motion-capsule": "#94603F",
   "--motion-sheen": "#3F7F55",
   "--state-missing": "#B8402F",
+  "--state-missing-text": "#713433",
   "--state-warn": "#9A6E22",
   "--zone-region": "#93A5BE",
   "--zone-vpc": "#869CBE",

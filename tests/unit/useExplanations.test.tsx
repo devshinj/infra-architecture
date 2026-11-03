@@ -7,6 +7,7 @@ const REDIS_TERM = vi.hoisted(() => ({
   definition: "메모리 저장소",
   aliases: ["elasticache"],
   reviewed: false,
+  source: "seed" as const,
   why: "빠르게 읽으려고",
   compare: "",
 }));
@@ -249,7 +250,7 @@ test("glossary definition shows at once while loading and on error without parti
   const { posts, result } = setup({}, { state: s });
   await waitFor(() => expect(result.current.terms).toHaveLength(1));
   await waitFor(() => expect(posts).toHaveLength(1));
-  const glossary = { term: "Redis", definition: "메모리 저장소", definitionSource: "glossary", reviewed: false, why: "빠르게 읽으려고" };
+  const glossary = { term: "Redis", definition: "메모리 저장소", definitionSource: "glossary", reviewed: false, termSource: "seed", why: "빠르게 읽으려고" };
   expect(result.current.get("node", "a")).toEqual({ status: "loading", partial: glossary });
   expect(result.current.get("node", "b")).toEqual({ status: "loading", partial: glossary });
   // 사전에 없는 노드·연결은 그대로.

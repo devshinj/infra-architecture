@@ -50,7 +50,7 @@ button.result:focus-visible { outline: 1.5px solid var(--text-secondary); outlin
 .chip { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: var(--text-primary); background: var(--bg-panel-raised); border: 1px solid var(--line-node); border-radius: 999px; padding: 2px 4px 2px 10px; }
 .chipX { font: inherit; font-size: 13px; line-height: 1; color: var(--text-secondary); background: transparent; border: 0; border-radius: 50%; width: 18px; height: 18px; cursor: pointer; }
 .chipX:hover { color: var(--text-primary); }
-.textarea { font: inherit; font-size: 13px; line-height: 1.5; resize: none; color: var(--text-primary); background: var(--bg-panel-raised); border: 1px solid var(--line-node); border-radius: var(--radius-node); padding: 8px 10px; }
+.textarea { font: inherit; font-size: 13px; line-height: 1.5; resize: none; color: var(--text-primary); background: var(--bg-panel-raised); border: 1px solid var(--line-input); border-radius: var(--radius-node); padding: 8px 10px; }
 .textarea::placeholder { color: var(--text-secondary); }
 .textarea:disabled { opacity: 0.5; }
 .actions { display: flex; justify-content: flex-end; gap: 8px; }
@@ -58,6 +58,16 @@ button.result:focus-visible { outline: 1.5px solid var(--text-secondary); outlin
 .btn:hover:not(:disabled) { border-color: var(--text-secondary); }
 .btn:disabled { opacity: 0.5; cursor: default; }
 .btn:focus-visible, .chipX:focus-visible, .textarea:focus-visible, .log:focus-visible { outline: 1.5px solid var(--text-secondary); outline-offset: 2px; }
+/* 보내기 — 작업 화면의 유일한 주 동작(금색 칠). 보낼 수 있을 때만 이 칠을 쓰고, 입력이 비었거나 차례가 도는 동안은
+   .btn(무채색 비활성)으로 그린다(ChatPanel). 중단·저장 같은 나머지는 위 .btn 그대로. */
+.primaryBtn { font: inherit; font-size: 13px; font-weight: 600; color: var(--on-accent); background: var(--accent-fill); border: 1px solid var(--accent-fill); border-radius: 6px; padding: 6px 12px; cursor: pointer; }
+.primaryBtn:hover:not(:disabled) { background: var(--accent-fill-hover); border-color: var(--accent-fill-hover); }
+.primaryBtn:active:not(:disabled) { background: var(--accent-fill-active); border-color: var(--accent-fill-active); }
+/* 패널의 버튼 포커스 규칙보다 앞서도록 .actions 를 붙인다. 은빛 링을 바탕 한 줄 띄워 금색과 떼어 놓는다. */
+.actions .primaryBtn:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+@media (prefers-reduced-motion: no-preference) {
+  .primaryBtn { transition: background-color 0.15s, border-color 0.15s, opacity 0.15s; }
+}
 .assumptions { margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 6px; }
 .assumptionItem { position: relative; }
 .assumptionChip { font: inherit; font-size: 12px; color: var(--text-primary); background: var(--bg-panel-raised); border: 1px solid var(--line-node); border-radius: 999px; padding: 3px 10px; cursor: pointer; }
@@ -72,7 +82,7 @@ button.result:focus-visible { outline: 1.5px solid var(--text-secondary); outlin
 .assumptionChoice:hover:not(:disabled) { background: var(--line-node); }
 .assumptionChoice:disabled { opacity: 0.5; cursor: default; }
 .assumptionChip:focus-visible, .assumptionChoice:focus-visible { outline: 1.5px solid var(--text-secondary); outline-offset: 2px; }
-/* 빠진 정보 체크리스트(캔버스 구성 정보 카드 안). 노드별 블록을 접고 펼친다. 남은 수만 --state-missing. */
+/* 빠진 정보 체크리스트(캔버스 구성 정보 카드 안). 노드별 블록을 접고 펼친다. 남은 수만 --state-missing-text. */
 .checklist { margin: 0 -6px; display: flex; flex-direction: column; gap: 2px; }
 .missingBlock { border-radius: var(--radius-node); }
 .missingBlock[data-open] { background: color-mix(in srgb, var(--bg-panel-raised) 55%, transparent); }
@@ -84,12 +94,12 @@ button.result:focus-visible { outline: 1.5px solid var(--text-secondary); outlin
 .blockTitle { flex: 1; min-width: 0; padding: 4px 2px; font: inherit; font-size: 13px; font-weight: 500; text-align: left; color: var(--text-primary); background: transparent; border: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 button.blockTitle { cursor: pointer; }
 button.blockTitle:hover { text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--text-secondary); }
-.blockCount { flex: none; font-size: 11.5px; font-weight: 600; color: var(--state-missing); font-variant-numeric: tabular-nums; }
+.blockCount { flex: none; font-size: 11.5px; font-weight: 600; color: var(--state-missing-text); font-variant-numeric: tabular-nums; }
 .blockCount[data-zero] { color: var(--text-secondary); font-weight: 400; opacity: 0.6; }
 .blockBody { display: flex; flex-direction: column; gap: 6px; padding: 2px 8px 10px 30px; }
 .missingRow { display: grid; grid-template-columns: 72px 1fr auto; align-items: center; gap: 8px; }
 .missingLabel { font-size: 12px; color: var(--text-secondary); }
-.missingInput { font: inherit; font-size: 13px; min-width: 0; color: var(--text-primary); background: var(--bg-panel-raised); border: 1px solid var(--line-node); border-radius: 6px; padding: 4px 8px; }
+.missingInput { font: inherit; font-size: 13px; min-width: 0; color: var(--text-primary); background: var(--bg-panel-raised); border: 1px solid var(--line-input); border-radius: 6px; padding: 4px 8px; }
 .missingInput:disabled { opacity: 0.5; }
 .missingUnknown { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: var(--text-secondary); cursor: pointer; }
 .missingError { margin: 0; font-size: 12px; color: var(--text-primary); border: 1px solid var(--state-missing); border-radius: var(--radius-node); padding: 5px 8px; }

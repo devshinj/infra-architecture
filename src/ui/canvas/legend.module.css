@@ -5,11 +5,11 @@
  */
 .legend {
   position: absolute;
-  right: max(var(--panel-gap), var(--canvas-inset-right, 0px));
-  bottom: var(--panel-gap);
+  right: calc(max(var(--panel-gap), var(--canvas-inset-right, 0px)) + var(--safe-r, 0px));
+  bottom: calc(var(--panel-gap) + var(--safe-b, 0px));
   z-index: 30;
   box-sizing: border-box;
-  max-width: calc(100% - var(--canvas-inset-left, var(--panel-gap)) - max(var(--panel-gap), var(--canvas-inset-right, 0px)));
+  max-width: calc(100% - var(--canvas-inset-left, var(--panel-gap)) - max(var(--panel-gap), var(--canvas-inset-right, 0px)) - var(--safe-l, 0px) - var(--safe-r, 0px));
   max-height: 70%;
   display: flex;
   flex-direction: column-reverse;

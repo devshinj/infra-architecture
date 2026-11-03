@@ -4,6 +4,7 @@ import { useState } from "react";
 
 import { normalizeTerm, type EdgeExplanation, type NodeExplanation } from "@/domain/explain";
 
+import { AI_BADGE, AI_BADGE_SR, isUnreviewedAi } from "../glossary/aiBadge";
 import styles from "../panel.module.css";
 import { TermText, type GlossaryTerm } from "./TermText";
 
@@ -87,7 +88,7 @@ function Retry({ message, onRetry, busy }: { message?: string; onRetry?: () => v
 
 const ADR_LABELS = ["결정", "이유", "대안", "대가"] as const;
 
-/** 정의(+미검수)와 사전에 있으면 필요한 이유·비교. 다 만든 설명과, 만드는 중·실패 때 사전 정의에 같이 쓴다. */
+/** 정의(+AI 설명 배지)와 사전에 있으면 필요한 이유·비교. 다 만든 설명과, 만드는 중·실패 때 사전 정의에 같이 쓴다. */
 function DefinitionPart({ d, terms }: { d: Partial<NodeExplanation> & { definition: string }; terms: GlossaryTerm[] }) {
   const own = d.term ? normalizeTerm(d.term) : undefined;
   return (
@@ -95,7 +96,12 @@ function DefinitionPart({ d, terms }: { d: Partial<NodeExplanation> & { definiti
       <Section title="정의">
         <p className={styles.explainText}>
           <TermText text={d.definition} terms={terms} exclude={own} />
-          {d.reviewed === false && <span className={styles.unreviewed}>미검수</span>}
+          {isUnreviewedAi({ source: d.termSource ?? (d.definitionSource === "ai" ? "ai" : undefined), reviewed: d.reviewed }) && (
+            <>
+              <span className={styles.unreviewed}>{AI_BADGE}</span>
+              <span className={styles.srOnly}>{AI_BADGE_SR}</span>
+            </>
+          )}
         </p>
       </Section>
       {d.why && (
@@ -120,7 +126,7 @@ function NodeBody({ d, terms }: { d: NodeExplanation; terms: GlossaryTerm[] }) {
       <Section title="이 구성에서의 역할">
         <p className={styles.explainText}><TermText text={d.role} terms={terms} /></p>
       </Section>
-      <Section title="결정 기록(ADR)">
+      <Section title="왜 이렇게 짰나요">
         <dl className={styles.adr}>
           {ADR_LABELS.map((label, i) => (
             <div key={label} className={styles.adrRow}>
@@ -161,7 +167,7 @@ export function Explanation({ status, data, partial, message, terms, onRewrite, 
   const known = !isEdge && partial?.definition ? { ...partial, definition: partial.definition } : null;
 
   if (status === "loading") {
-    const slots = isEdge ? ["무엇이 오가나", "방식", "왜 연결됐나", "방화벽 규칙"] : known ? ["이 구성에서의 역할", "결정 기록(ADR)"] : ["정의", "이 구성에서의 역할", "결정 기록(ADR)"];
+    const slots = isEdge ? ["무엇이 오가나", "방식", "왜 연결됐나", "방화벽 규칙"] : known ? ["이 구성에서의 역할", "왜 이렇게 짰나요"] : ["정의", "이 구성에서의 역할", "왜 이렇게 짰나요"];
     return (
       <div className={styles.explain} aria-busy="true">
         {known && <DefinitionPart d={known} terms={terms} />}
