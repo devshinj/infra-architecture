@@ -274,6 +274,18 @@ export function Canvas(props: CanvasProps) {
   );
 }
 
+/**
+ * 캔버스 줌을 래퍼의 CSS 변수 --zoom 으로 둔다. canvas.css 가 작은 단추(접기·배지)의 누르는 자리를 화면에서 24px 이상으로
+ * 넓히는 데 쓴다. 줌이 바뀔 때 Flow 전체를 다시 그리지 않게 이 컴포넌트만 구독한다.
+ */
+function ZoomVar({ target }: { target: React.RefObject<HTMLDivElement | null> }) {
+  const zoom = useStore((s) => s.transform[2]);
+  useLayoutEffect(() => {
+    target.current?.style.setProperty("--zoom", String(zoom));
+  }, [zoom, target]);
+  return null;
+}
+
 interface FlowProps extends CanvasProps {
   layout: Layout;
   settled: boolean;
@@ -593,6 +605,7 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
         }}
       >
         <Background />
+        <ZoomVar target={wrap} />
         <EdgeLayerPortal
           layout={layout}
           edges={display.edges}

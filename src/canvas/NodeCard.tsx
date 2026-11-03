@@ -91,7 +91,7 @@ export function NodeCard({ data, dragging }: Pick<NodeProps, "data"> & Partial<N
         <button
           type="button"
           tabIndex={-1}
-          className="node__badge node__badge--missing nodrag nopan nokey"
+          className={`node__badge node__badge--missing${warn > 0 ? " node__badge--pair-end" : ""} nodrag nopan nokey`}
           aria-label={`빠진 정보 ${missing}개`}
           onClick={(e) => {
             e.stopPropagation();
