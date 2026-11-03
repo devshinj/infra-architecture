@@ -219,6 +219,9 @@ button.node__badge:focus-visible { outline: 1.5px solid var(--text-secondary); o
 
 .canvas__flow { position: relative; }
 .canvas__flow:focus { outline: none; }
+/* 연결선 층(EdgeLayer 의 ViewportPortal): 영역(z 0~8, 안쪽일수록 위) 위, 노드(z 10) 아래. stacking.ts 의 EDGE_Z 와 맞춘다.
+   .canvas__flow 로 묶지 않는다: 이미지 내보내기 복제본(.export-stage)에서도 같은 순서로 그려야 한다. */
+.react-flow__viewport-portal { z-index: 9; }
 .node-menu {
   position: absolute; z-index: 30; min-width: 140px; padding: 4px;
   background: var(--bg-node); border: 1px solid var(--line-node); border-radius: var(--radius-node);

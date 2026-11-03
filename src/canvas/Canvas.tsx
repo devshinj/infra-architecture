@@ -19,6 +19,7 @@ import { outermostCollapsedAncestor, type DisplayGraph, type DisplayOptions } fr
 import type { Layout, Rect } from "./layout";
 import { NodeMenu } from "./NodeMenu";
 import { nodeTypes } from "./nodeTypes";
+import { NODE_Z, zoneZ } from "./stacking";
 import { prefersReducedMotion, unionRect, useCamera, type Insets, type Viewport } from "./useCamera";
 import { useDiagramView } from "./useDiagramView";
 import { moveMenuFocus, usePopover } from "./usePopover";
@@ -304,7 +305,8 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
         type: "zone",
         position: { x: lg.x, y: lg.y },
         data,
-        zIndex: 0,
+        // 안쪽 영역일수록 위(stacking.ts): 바깥 영역이 안쪽 영역의 접기 단추를 가리지 않는다.
+        zIndex: zoneZ(layout.groups, g.id),
         draggable: false,
         selectable: false,
         width: lg.width,
@@ -352,7 +354,7 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
         ariaLabel: n.sub ? `${n.label} · ${n.sub}` : n.label,
         // React Flow 의 선택을 화면 선택과 맞춘다(편집 모드 화살표 옮기기는 React Flow 가 선택한 노드에만 한다).
         selected: ln.id === selected,
-        zIndex: 10,
+        zIndex: NODE_Z,
         draggable: editMode,
         width: ln.width,
         height: ln.height,
