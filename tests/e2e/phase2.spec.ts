@@ -29,7 +29,7 @@ const nodes = (page: Page) => page.locator(".react-flow__node-infra");
 async function buildS1(page: Page) {
   await send(page, "결제랑 카카오 로그인 붙는 쇼핑몰");
   await expect(nodes(page)).toHaveCount(S1_NODE_COUNT, { timeout: 30_000 });
-  await expect(page.getByText(/노드 \d+ · 연결 \d+ · 적용 \d+ · 건너뜀 \d+/)).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByText(/노드 \d+ · 연결 \d+ · (?:\d+곳 바꿨어요|바꾼 곳이 없어요)/)).toBeVisible({ timeout: 30_000 });
 }
 
 test("대화로 구성도 생성 → 노드가 하나씩 나타남 → 요약·버전", async ({ page }) => {
@@ -51,7 +51,7 @@ test("대화로 구성도 생성 → 노드가 하나씩 나타남 → 요약·�
 
   await expect(nodes(page)).toHaveCount(S1_NODE_COUNT);
   // 요약 칩과 접힌 완료 카드가 같은 노드 수를 보인다.
-  await expect(page.getByText(new RegExp(`^노드 ${S1_NODE_COUNT} · 연결 \\d+ · 적용`))).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByText(new RegExp(`^노드 ${S1_NODE_COUNT} · 연결 \\d+ · \\d+곳 바꿨어요`))).toBeVisible({ timeout: 30_000 });
   await expect(page.getByText(new RegExp(`^완료 · 노드 ${S1_NODE_COUNT} · 연결 \\d+$`))).toBeVisible();
 
   await page.getByRole("tab", { name: "이력" }).click();

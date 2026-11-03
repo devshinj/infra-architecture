@@ -12,10 +12,10 @@ test("reload has no missing-info line (the canvas card shows it)", () => {
     ["user", "그려줘"],
     ["card", ""],
     ["assistant", "네"],
-    ["summary", "적용 1 · 건너뜀 0"],
+    ["summary", "1곳 바꿨어요"],
     ["card", ""],
     ["assistant", "끝"],
-    ["summary", "적용 1 · 건너뜀 0"],
+    ["summary", "1곳 바꿨어요"],
   ]);
   expect(new Set(lines.map((l) => l.id)).size).toBe(lines.length);
 });
@@ -29,7 +29,7 @@ test("reload collapses a turn's warnings into one 주의 N chip after the summar
   expect(lines.map((l) => [l.kind, l.text])).toEqual([
     ["card", ""],
     ["assistant", "네"],
-    ["summary", "적용 1 · 건너뜀 0"],
+    ["summary", "1곳 바꿨어요"],
     ["warning", "주의 2"],
     ["user", "다음"],
   ]);
@@ -58,11 +58,11 @@ test("reload renders the same structure with a collapsed done card", () => {
     ["card", ""],
     ["progress", "웹 서버를 놓을게요"],
     ["progress", "DB 를 붙일게요"],
-    ["summary", "노드 3 · 연결 2 · 적용 5 · 건너뜀 1"],
+    ["summary", "노드 3 · 연결 2 · 5곳 바꿨어요"],
     ["user", "뭐야?"],
     ["assistant", "로드밸런서예요"],
     ["card", ""],
-    ["summary", "중단됨 · 노드 4 · 연결 2 · 적용 1 · 건너뜀 0"],
+    ["summary", "중단됨 · 노드 4 · 연결 2 · 1곳 바꿨어요"],
   ]);
   expect(lines[1]!.card).toEqual({ mode: "build", step: "checking", changes: 0, end: "done", nodes: 3, edges: 2 });
   expect(lines[7]!.card).toMatchObject({ end: "aborted" });
@@ -130,6 +130,9 @@ test("summary: nothing applied but commands skipped says the reply could not be 
   expect(summaryText({ version: null, status: "complete", applied: 0, skipped: 1 }, false, "missing_info_answer")).toBe(msg);
   expect(summaryText({ version: null, status: "complete", applied: 0, skipped: 0 }, false, "missing_info_answer")).toBe("변경 사항이 없어요.");
   expect(summaryText({ version: null, status: "complete", applied: 0, skipped: 2 }, false, "layout")).toBeNull();
+  // 건너뛴 수는 보이지 않고, 바꾼 곳 수만 쉬운 말로 보인다.
+  expect(summaryText({ version: 2, status: "complete", applied: 4, skipped: 35, nodes: 12, edges: 15 }, false)).toBe("노드 12 · 연결 15 · 4곳 바꿨어요");
+  expect(summaryText({ version: 2, status: "aborted", applied: 0, skipped: 3 }, false)).toBe("중단됨 · 바꾼 곳이 없어요");
   const lines = messagesToLines([
     { id: "u1", role: "user", content: "IP는 10.0.2.11", meta: {} },
     { id: "a1", role: "assistant", content: "", meta: { intent: "missing_info_answer", applied: 0, skipped: 1, version: null, status: "complete" } },
