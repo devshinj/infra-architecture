@@ -158,3 +158,19 @@ test("a normal stop makes exactly one call", async () => {
   expect(q.calls).toHaveLength(1);
   expect(store.versions).toEqual([{ status: "complete", nodes: 1, edges: 0 }]);
 });
+
+test("assumption-only turn: applied and versioned, but zero changed places in done and meta", async () => {
+  const q = fakeQwen([{ text: `${j({ op: "set_assumption", key: "redundancy", value: "DB 이중화" })}\n`, finish: "stop" }]);
+  const events = await turn(q);
+  expect(store.versions).toEqual([{ status: "complete", nodes: 0, edges: 0 }]);
+  expect(events.at(-1)).toMatchObject({ t: "done", applied: 1, changed: 0, version: 1 });
+  expect(store.created.at(-1)?.meta).toMatchObject({ applied: 1, changed: 0, version: 1 });
+});
+
+test("changed counts only structural commands", async () => {
+  const q = fakeQwen([
+    { text: [j({ op: "set_assumption", key: "scale", value: "작게" }), node("a"), node("b"), edge("a", "b"), j({ op: "update_node", id: "a", attrs: { ram: "8GB" } })].join("\n"), finish: "stop" },
+  ]);
+  const events = await turn(q);
+  expect(events.at(-1)).toMatchObject({ t: "done", applied: 5, changed: 4 });
+});

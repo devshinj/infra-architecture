@@ -1,6 +1,6 @@
 import { computeMissing } from "@/domain/missing";
 import { applyCommand, pruneEmptyGroups } from "@/domain/apply";
-import { COMMAND_OPS, parseCommand } from "@/domain/commands";
+import { COMMAND_OPS, isStructural, parseCommand } from "@/domain/commands";
 import { emptyState, type DiagramState, type Warning } from "@/domain/types";
 import type { ClefClient, Intent } from "@/server/llm/clef";
 import { createJsonlParser } from "@/server/llm/jsonl";
@@ -183,7 +183,7 @@ async function lockedTurn(args: TurnArgs, sessionId: string | null, followUp: bo
     emit({ t: "start", messageId: userMsg.id, intent: null });
     emit({ t: "error", message: AI_UNAVAILABLE_MESSAGE });
     // 응답 메시지는 남기지 않는다. 클라이언트가 깨끗이 정리하도록 done 을 보낸다.
-    emit({ t: "done", version: null, status: "complete", applied: 0, skipped: 0, missing: computeMissing(state).count, ...counts(), assistantMessageId: "" });
+    emit({ t: "done", version: null, status: "complete", applied: 0, changed: 0, skipped: 0, missing: computeMissing(state).count, ...counts(), assistantMessageId: "" });
     return;
   }
 
@@ -203,6 +203,7 @@ async function lockedTurn(args: TurnArgs, sessionId: string | null, followUp: bo
   const says: string[] = [];
   let answer = "";
   let applied = 0;
+  let changed = 0; // 구성을 바꾼 명령만(가정 제외)
   const tally = createSkipTally();
   let status: "complete" | "aborted" | "error" = "complete";
 
@@ -243,6 +244,7 @@ async function lockedTurn(args: TurnArgs, sessionId: string | null, followUp: bo
       state = r.state;
       if (applied === 0) emit({ t: "status", phase: "drawing" });
       applied++;
+      if (isStructural(parsed.cmd)) changed++;
       emit({ t: "cmd", cmd: parsed.cmd });
     };
     const onBad = () => {
@@ -334,6 +336,7 @@ async function lockedTurn(args: TurnArgs, sessionId: string | null, followUp: bo
   const meta: MessageMeta = {
     ...(intent ? { intent } : {}),
     applied,
+    changed,
     skipped,
     version,
     status,
@@ -349,6 +352,7 @@ async function lockedTurn(args: TurnArgs, sessionId: string | null, followUp: bo
     version,
     status: status === "complete" ? "complete" : "aborted",
     applied,
+    changed,
     skipped,
     missing,
     ...counts(),

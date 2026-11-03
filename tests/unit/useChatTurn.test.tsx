@@ -19,8 +19,10 @@ function streamOf(chunks: string[], signal?: AbortSignal, hang = false): Respons
   return new Response(body, { status: 200 });
 }
 
+// changed(바꾼 곳)는 따로 주지 않으면 applied 와 같다(가정만 바꾼 차례는 changed 를 직접 준다).
 const done = (o: Partial<Extract<ChatEvent, { t: "done" }>> = {}): ChatEvent => ({
   t: "done", version: 2, status: "complete", applied: 2, skipped: 1, nodes: 3, edges: 1, assistantMessageId: "m", missing: 0, ...o,
+  changed: o.changed ?? o.applied ?? 2,
 });
 const add = (id: string): Command => ({ op: "add_node", id, kind: "server", label: id, parent: null });
 
@@ -254,6 +256,22 @@ test("a continuation status keeps counting changes and shows the part on the car
   await act(async () => { s.emit(done({ nodes: 2, edges: 0, applied: 2 })); s.close(); });
   await act(() => p);
   expect(cardOf(h.result.current.lines)).toMatchObject({ end: "done", changes: 2 });
+});
+
+test("structure change: a say-only turn shows no notice; an assumption-only turn shows the notice and drops the card", async () => {
+  const notice = "요청을 반영하지 못했어요. 다시 말해 주세요.";
+  const run = async (evs: ChatEvent[]) => {
+    vi.stubGlobal("fetch", vi.fn(async () => streamOf([nd(evs)])));
+    const h = setup();
+    await act(() => h.result.current.send("모든 DB 이중화"));
+    return h.result.current.lines;
+  };
+  const start: ChatEvent = { t: "start", messageId: "m", intent: "structure_change" };
+  const sayOnly = await run([start, { t: "say", text: "DB 를 이중화합니다." }, done({ version: null, applied: 0, skipped: 0 })]);
+  expect(sayOnly.some((l) => l.kind === "summary")).toBe(false);
+  const assumption = await run([start, { t: "cmd", cmd: { op: "set_assumption", key: "redundancy", value: "이중화" } as Command }, done({ version: 3, applied: 1, changed: 0, skipped: 0 })]);
+  expect(assumption.find((l) => l.kind === "summary")?.text).toBe(notice);
+  expect(assumption.some((l) => l.kind === "card")).toBe(false);
 });
 
 test("answer mode shows single step", async () => {

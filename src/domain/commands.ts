@@ -26,6 +26,12 @@ export const commandSchema = z.discriminatedUnion("op", [
 
 export type Command = z.infer<typeof commandSchema>;
 
+/**
+ * 구성(노드·연결·영역과 그 속성)을 바꾸는 명령인지. 요약의 "바꾼 곳" 은 이것만 센다.
+ * set_assumption(가정)은 적용·저장하지만 바꾼 곳으로 세지 않는다.
+ */
+export const isStructural = (cmd: Command): boolean => cmd.op !== "set_assumption";
+
 /** 스키마가 받는 명령 이름 전부(스키마에서 뽑는다). */
 export const COMMAND_OPS: readonly Command["op"][] = commandSchema.options.map((o) => o.shape.op.value);
 

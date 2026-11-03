@@ -134,6 +134,7 @@ export function useChatTurn(args: UseChatTurnArgs) {
       const removeCard = () => !ask && update((ls) => ls.filter((l) => l.id !== cardId));
 
       let answerId: string | null = null;
+      let said = false; // 이 차례에 안내(say) 글이 왔는지
       let gotDone = false;
       let cmds = 0;
       let errored = false;
@@ -172,6 +173,7 @@ export function useChatTurn(args: UseChatTurnArgs) {
             break;
           }
           case "say":
+            if (ev.text.trim()) said = true;
             pushT({ kind: "progress", text: ev.text });
             break;
           case "cmd": {
@@ -209,7 +211,7 @@ export function useChatTurn(args: UseChatTurnArgs) {
               const end = ev.status === "aborted" ? "aborted" : "done";
               patchCard((c) => ({ ...c, end, nodes: ev.nodes, edges: ev.edges }));
             } else removeCard();
-            const s = summaryText(ev, answerId !== null, intent);
+            const s = summaryText(ev, answerId !== null || said, intent);
             if (s) pushT({ kind: "summary", text: s });
             pushWarnings();
             a.onDone(ev);

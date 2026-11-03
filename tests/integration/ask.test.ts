@@ -162,6 +162,7 @@ describe("runAskTurn", () => {
       version: null,
       status: "complete",
       applied: 0,
+      changed: 0,
       skipped: 0,
       missing: expect.any(Number),
       nodes: 2,

@@ -116,6 +116,7 @@ async function askInSession(
     version: null,
     status,
     applied: 0,
+    changed: 0,
     skipped: 0,
     missing: computeMissing(state).count,
     ...counts,
@@ -186,6 +187,7 @@ async function askInSession(
   const meta: MessageMeta = {
     ...(intent ? { intent } : {}),
     applied: 0,
+    changed: 0,
     skipped: 0,
     version: null,
     status,
