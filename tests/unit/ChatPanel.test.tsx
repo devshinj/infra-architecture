@@ -327,3 +327,11 @@ test("an empty diagram chat session shows its hint instead of the greeting on a 
   expect(screen.queryByText(HINT)).not.toBeInTheDocument();
   expect(screen.getByText(GREETING)).toBeInTheDocument();
 });
+
+test("continuing a cut-off drawing shows which request it is on", () => {
+  const { rerender } = render(<ChatPanel {...base({ busy: true, lines: [card({ mode: "build", step: "drawing", changes: 120, part: { n: 2, of: 3 } })] })} />);
+  expect(steps()[1]).toHaveTextContent("이어서 그리는 중 (2/3) · 변경 120개");
+  expect(screen.getByRole("status")).toHaveTextContent(/^이어서 그리는 중 \(2\/3\)$/);
+  rerender(<ChatPanel {...base({ busy: true, lines: [card({ mode: "build", step: "drawing", changes: 200, part: { n: 3, of: 3 } })] })} />);
+  expect(steps()[1]).toHaveTextContent("이어서 그리는 중 (3/3) · 변경 200개");
+});

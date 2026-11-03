@@ -241,6 +241,21 @@ test("progress card steps and node count update", async () => {
   expect(turns.size).toBe(1);
 });
 
+test("a continuation status keeps counting changes and shows the part on the card", async () => {
+  const s = controlled();
+  vi.stubGlobal("fetch", vi.fn(async () => s.res));
+  const h = setup();
+  let p!: Promise<void>;
+  act(() => { p = h.result.current.send("x"); });
+  await act(async () => { s.emit({ t: "start", messageId: "m", intent: "structure_change" }, { t: "status", phase: "drawing" }, { t: "cmd", cmd: add("a") }); });
+  await waitFor(() => expect(cardOf(h.result.current.lines)).toMatchObject({ step: "drawing", changes: 1 }));
+  await act(async () => { s.emit({ t: "status", phase: "drawing", part: { n: 2, of: 3 } }, { t: "cmd", cmd: add("b") }); });
+  await waitFor(() => expect(cardOf(h.result.current.lines)).toMatchObject({ step: "drawing", changes: 2, part: { n: 2, of: 3 } }));
+  await act(async () => { s.emit(done({ nodes: 2, edges: 0, applied: 2 })); s.close(); });
+  await act(() => p);
+  expect(cardOf(h.result.current.lines)).toMatchObject({ end: "done", changes: 2 });
+});
+
 test("answer mode shows single step", async () => {
   const s = controlled();
   vi.stubGlobal("fetch", vi.fn(async () => s.res));

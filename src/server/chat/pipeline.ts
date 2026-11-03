@@ -23,7 +23,7 @@ import { createSession, getSession, touchSession } from "./sessions";
 export interface ChatDeps {
   qwen: QwenClient | null;
   clef: ClefClient;
-  /** 차례 전체 상한(기본 120초). 테스트에서만 바꾼다. */
+  /** 차례 전체 상한(기본 240초, 이어 쓰기 포함). 테스트에서만 바꾼다. */
   turnTimeoutMs?: number;
 }
 
@@ -37,7 +37,9 @@ export const LAYOUT_REPLY = "구성도를 다시 정렬했어요.";
 export const TIMEOUT_MESSAGE = "응답 시간이 너무 길어 중단했어요.";
 export const GENERIC_ERROR_MESSAGE = "응답을 처리하지 못했어요. 잠시 뒤 다시 시도해 주세요.";
 
-const TURN_TIMEOUT_MS = 120_000;
+const TURN_TIMEOUT_MS = 240_000;
+/** 출력 한도(finish_reason "length")로 끊긴 명령 차례를 이어 쓰게 하는 최대 횟수. 처음 요청까지 최대 1+2 번 부른다. */
+export const MAX_CONTINUATIONS = 2;
 export const HISTORY_FETCH = 40;
 const OP_MAX = 40;
 
@@ -113,6 +115,8 @@ export function streamFailure(
   emit({ t: "error", message: GENERIC_ERROR_MESSAGE });
   return "error";
 }
+
+const abortError = () => new DOMException("The operation was aborted.", "AbortError");
 
 function opName(raw: unknown): string {
   const op = raw && typeof raw === "object" ? (raw as { op?: unknown }).op : undefined;
@@ -241,9 +245,9 @@ async function lockedTurn(args: TurnArgs, sessionId: string | null, followUp: bo
       applied++;
       emit({ t: "cmd", cmd: parsed.cmd });
     };
-    const parser = createJsonlParser(onLine, () => {
+    const onBad = () => {
       if (!signal.aborted) skip("읽을 수 없는 줄", skipKey("bad_json"));
-    });
+    };
 
     // 답변 경로: <think> 를 지운 글만 보내고, 보낸 글 그대로 모아 저장한다(중단·오류여도).
     let answering = false;
@@ -258,17 +262,38 @@ async function lockedTurn(args: TurnArgs, sessionId: string | null, followUp: bo
       emit({ t: "answer", delta: text });
     });
     try {
-      await deps.qwen.streamCompletion(messages, {
-        signal,
-        onDelta(delta) {
-          if (signal.aborted) return;
-          if (answerMode) stripper.push(delta);
-          else parser.push(delta);
-        },
-      });
-      if (signal.aborted) throw new DOMException("The operation was aborted.", "AbortError");
-      if (answerMode) stripper.end();
-      else parser.end();
+      if (answerMode) {
+        await deps.qwen.streamCompletion(messages, {
+          signal,
+          onDelta(delta) {
+            if (!signal.aborted) stripper.push(delta);
+          },
+        });
+        if (signal.aborted) throw abortError();
+        stripper.end();
+      } else {
+        // 명령 경로: 출력 한도로 끊기면(finish_reason "length") 지금까지 반영한 상태를 다시 보내 이어 쓰게 한다.
+        // 같은 차례라 cmd 는 계속 같은 스트림으로 가고, 버전은 차례 끝에 한 번만 만든다.
+        let msgs = messages;
+        for (let part = 1; ; part++) {
+          const parser = createJsonlParser(onLine, onBad);
+          const r = await deps.qwen.streamCompletion(msgs, {
+            signal,
+            onDelta(delta) {
+              if (!signal.aborted) parser.push(delta);
+            },
+          });
+          if (signal.aborted) throw abortError();
+          const more = r.finishReason === "length" && part <= MAX_CONTINUATIONS;
+          // 이어 쓸 때만 끊긴 마지막 줄을 조용히 버린다(마지막 시도까지 끊기면 지금처럼 건너뜀으로 센다).
+          parser.end({ dropPartial: more });
+          if (!more) break;
+          const n = part + 1;
+          console.info("[chat] output cut by length, continuing", { diagramId, part: n });
+          emit({ t: "status", phase: "drawing", part: { n, of: MAX_CONTINUATIONS + 1 } });
+          msgs = buildMessages({ intent, text: clean, state, mentions, history, missing: openMissing, continuation: true });
+        }
+      }
     } catch (err) {
       status = streamFailure(err, { outer: args.signal, signal, timeout }, emit);
     }

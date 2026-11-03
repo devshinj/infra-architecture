@@ -20,6 +20,8 @@ export interface ProgressCard {
   end?: "done" | "aborted";
   nodes?: number;
   edges?: number;
+  /** 출력 한도로 끊겨 이어 그리는 중이면 몇 번째 요청인지(`이어서 그리는 중 (n/of)`). */
+  part?: { n: number; of: number };
 }
 
 export interface ChatLine {
@@ -163,7 +165,10 @@ export function useChatTurn(args: UseChatTurnArgs) {
             break;
           case "status": {
             const p = ev.phase;
-            patchCard((c) => (p === "answering" ? { ...c, mode: "answer" } : { ...c, step: p === "thinking" ? "review" : p }));
+            const part = ev.part;
+            patchCard((c) =>
+              p === "answering" ? { ...c, mode: "answer" } : { ...c, step: p === "thinking" ? "review" : p, ...(part ? { part } : {}) },
+            );
             break;
           }
           case "say":

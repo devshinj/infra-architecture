@@ -50,7 +50,8 @@ export type ChatEvent =
   // 새 세션(노드 질문의 첫 질문, 새 구성도 대화의 첫 메시지)을 만들었을 때만, start 바로 앞
   | { t: "session"; session: SessionEventPayload }
   | { t: "start"; messageId: string; intent: string | null }
-  | { t: "status"; phase: "thinking" | "drawing" | "answering" | "checking" }
+  // part: 출력 한도로 끊겨 이어 그리는 중일 때만(n 번째 요청 / 최대 of 번). 진행 카드에 `이어서 그리는 중 (n/of)`.
+  | { t: "status"; phase: "thinking" | "drawing" | "answering" | "checking"; part?: { n: number; of: number } }
   | { t: "say"; text: string }
   | { t: "cmd"; cmd: Command } // 서버에서 적용 성공한 명령만
   | { t: "skip"; reason: string } // 깨진 줄·거부된 명령

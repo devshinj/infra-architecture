@@ -140,6 +140,12 @@ export function parseMentions(text: string, state: DiagramState): { clean: strin
   return { clean, mentions };
 }
 
+/** 출력 한도로 끊긴 명령 응답을 이어 쓰게 할 때 요청 뒤에 붙인다. */
+export const CONTINUE_NOTE = `이어 쓰기: 이 요청에 대한 앞 응답이 출력 길이 한도에 닿아 중간에 끊겼다. 위 "현재 구성"은 이 요청을 지금까지 반영한 결과다.
+- 끊긴 곳부터 이어서 남은 명령만 낸다. 처음부터 다시 하지 않는다.
+- 현재 구성에 이미 있는 그룹·노드·연결 id 는 다시 만들지 않고, 지우거나 옮기지도 않는다(이미 반영된 것이다).
+- 남은 그룹·노드를 마저 낸 뒤 연결을 낸다. 이미 낸 say·set_assumption 은 반복하지 않는다.`;
+
 export function buildMessages(input: {
   intent: Intent | null;
   text: string;
@@ -147,13 +153,16 @@ export function buildMessages(input: {
   mentions: Mention[];
   history: { role: "user" | "assistant"; content: string }[];
   missing?: MissingItem[];
+  /** 앞 응답이 출력 한도로 끊겨 이어 쓰게 하는 요청이면 true. state 는 지금까지 반영한 상태다. */
+  continuation?: boolean;
 }): ChatMessage[] {
   const system = input.intent === "question" || input.intent === "other" ? ANSWER_PROMPT : SYSTEM_PROMPT;
   const labelOf = (id: string, fallback: string) => input.state.nodes[id]?.label ?? input.state.groups[id]?.label ?? fallback;
   const refs = input.mentions.length ? input.mentions.map((m) => `${m.id} ${labelOf(m.id, m.label).replace(/\s+/g, " ")}`).join("\n") : "없음";
   const open = input.intent === "missing_info_answer" ? (input.missing ?? []).filter((m) => !m.unknown).slice(0, MISSING_LINES_MAX) : [];
   const missingBlock = open.length ? `채워야 할 정보:\n${open.map((m) => `${m.targetId} ${m.key}(${m.label})`).join("\n")}\n\n${MISSING_FORMAT_NOTE}\n\n` : "";
-  const user = `현재 구성:\n${summarizeState(input.state)}\n\n참조 노드:\n${refs}\n\n${missingBlock}요청: ${input.text}`;
+  const cont = input.continuation ? `\n\n${CONTINUE_NOTE}` : "";
+  const user = `현재 구성:\n${summarizeState(input.state)}\n\n참조 노드:\n${refs}\n\n${missingBlock}요청: ${input.text}${cont}`;
   return [
     { role: "system", content: system },
     ...input.history.slice(-HISTORY_LIMIT).map((h) => ({ role: h.role, content: h.content })),

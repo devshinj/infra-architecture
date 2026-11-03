@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 
-import { S1_NODE_COUNT } from "./fake-llm";
+import { CUT_NODE_COUNT, S1_NODE_COUNT } from "./fake-llm";
 
 const uid = () => Math.random().toString(36).slice(2, 8);
 const PLACEHOLDER = "만들고 싶은 서비스나 바꾸고 싶은 점을 말해 주세요. 노드를 오른쪽 클릭하면 참조를 붙일 수 있어요.";
@@ -108,4 +108,14 @@ test("가정 칩에서 대안을 고르면 확정되고 대화가 이어짐", as
   await expect(page.getByRole("button", { name: /^규모: 대규모\(일 10만 명 이상\)\s*확정/ })).toBeVisible({ timeout: 15_000 });
   await expect(page.getByText("가정 변경: 규모 → 대규모(일 10만 명 이상)")).toBeVisible();
   await expect(page.getByText("네, 알겠습니다.")).toBeVisible({ timeout: 15_000 });
+});
+
+test("출력 한도로 끊긴 응답은 같은 차례에서 이어 그리고 버전 하나로 남는다", async ({ page }) => {
+  await setup(page);
+  await send(page, "끊김 구성 그려 줘");
+  await expect(page.getByText(/^이어서 그리는 중 \(2\/3\)/).first()).toBeVisible({ timeout: 30_000 });
+  await expect(nodes(page)).toHaveCount(CUT_NODE_COUNT, { timeout: 30_000 });
+  await expect(page.getByText(new RegExp(`^노드 ${CUT_NODE_COUNT} · 연결 2 · 5곳 바꿨어요`))).toBeVisible({ timeout: 30_000 });
+  await page.getByRole("tab", { name: "이력" }).click();
+  await expect(page.getByText("AI", { exact: true })).toHaveCount(1);
 });

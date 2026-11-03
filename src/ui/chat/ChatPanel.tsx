@@ -126,7 +126,8 @@ type StepState = "done" | "current" | "todo";
 function stepRows(card: ProgressCard): { key: string; label: string; state: StepState }[] {
   if (card.mode === "answer") return [{ key: "answer", label: "답변 작성 중", state: "current" }];
   const at = BUILD_STEPS.indexOf(card.step);
-  const label = { review: "구성 검토", drawing: `그리는 중 (변경 ${card.changes}개)`, checking: "위험 요소 점검" };
+  const drawing = card.part ? `이어서 그리는 중 (${card.part.n}/${card.part.of}) · 변경 ${card.changes}개` : `그리는 중 (변경 ${card.changes}개)`;
+  const label = { review: "구성 검토", drawing, checking: "위험 요소 점검" };
   return [
     ...BUILD_STEPS.map((s, i) => ({ key: s, label: label[s], state: (i < at ? "done" : i === at ? "current" : "todo") as StepState })),
     { key: "done", label: "완료", state: "todo" as const },
@@ -137,7 +138,8 @@ function stepRows(card: ProgressCard): { key: string; label: string; state: Step
 function stepName(card: ProgressCard): string {
   if (card.end) return card.end === "done" ? "완료" : "중단됨";
   if (card.mode === "answer") return "답변 작성 중";
-  return { review: "구성 검토", drawing: "그리는 중", checking: "위험 요소 점검" }[card.step];
+  const drawing = card.part ? `이어서 그리는 중 (${card.part.n}/${card.part.of})` : "그리는 중";
+  return { review: "구성 검토", drawing, checking: "위험 요소 점검" }[card.step];
 }
 
 /** 진행 카드: 진행 중이면 단계 목록, 끝나면 접힌 한 줄(`완료 · 노드 N · 연결 M` / `중단됨`). */
