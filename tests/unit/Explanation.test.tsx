@@ -24,7 +24,7 @@ const terms = [{ key: "was", term: "WAS", definition: "애플리케이션 서버
 test("node sections in spec order with 미검수 badge", () => {
   render(<Explanation status="ready" data={node} terms={terms} />);
   const heads = screen.getAllByRole("heading", { level: 3 }).map((h) => h.textContent);
-  expect(heads).toEqual(["정의", "필요한 이유", "비교", "이 구성에서의 역할", "결정 기록(ADR)"]);
+  expect(heads).toEqual(["정의", "필요한 이유", "비교", "이 구성에서의 역할", "왜 이렇게 짰나요"]);
   expect(screen.getByText("미검수")).toBeInTheDocument();
   for (const l of ["결정", "이유", "대안", "대가"]) expect(screen.getByText(l)).toBeInTheDocument();
   expect(document.querySelector("abbr.term")).toHaveTextContent("WAS");
@@ -57,7 +57,7 @@ test("loading shows the glossary definition at once; role and ADR wait", () => {
     />,
   );
   const heads = screen.getAllByRole("heading", { level: 3 }).map((h) => h.textContent);
-  expect(heads).toEqual(["정의", "필요한 이유", "비교", "이 구성에서의 역할", "결정 기록(ADR)"]);
+  expect(heads).toEqual(["정의", "필요한 이유", "비교", "이 구성에서의 역할", "왜 이렇게 짰나요"]);
   expect(screen.getByText("메모리 저장소입니다.")).toBeInTheDocument();
   expect(screen.getByText("미검수")).toBeInTheDocument();
   expect(screen.getByText("빠르게 읽으려고")).toBeInTheDocument();

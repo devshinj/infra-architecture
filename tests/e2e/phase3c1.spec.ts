@@ -42,7 +42,7 @@ test("explanations and glossary", async ({ page }) => {
   await expect(definition.getByText("미검수")).toBeVisible();
   const role = page.locator("section").filter({ has: page.getByRole("heading", { name: "이 구성에서의 역할" }) });
   await expect(role.getByText("가짜 역할")).toBeVisible({ timeout: 30_000 });
-  await expect(page.getByRole("heading", { name: "결정 기록(ADR)" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "왜 이렇게 짰나요" })).toBeVisible();
 
   // 다시 쓰기
   await page.getByRole("button", { name: "다시 쓰기" }).click();

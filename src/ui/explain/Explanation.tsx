@@ -120,7 +120,7 @@ function NodeBody({ d, terms }: { d: NodeExplanation; terms: GlossaryTerm[] }) {
       <Section title="이 구성에서의 역할">
         <p className={styles.explainText}><TermText text={d.role} terms={terms} /></p>
       </Section>
-      <Section title="결정 기록(ADR)">
+      <Section title="왜 이렇게 짰나요">
         <dl className={styles.adr}>
           {ADR_LABELS.map((label, i) => (
             <div key={label} className={styles.adrRow}>
@@ -161,7 +161,7 @@ export function Explanation({ status, data, partial, message, terms, onRewrite, 
   const known = !isEdge && partial?.definition ? { ...partial, definition: partial.definition } : null;
 
   if (status === "loading") {
-    const slots = isEdge ? ["무엇이 오가나", "방식", "왜 연결됐나", "방화벽 규칙"] : known ? ["이 구성에서의 역할", "결정 기록(ADR)"] : ["정의", "이 구성에서의 역할", "결정 기록(ADR)"];
+    const slots = isEdge ? ["무엇이 오가나", "방식", "왜 연결됐나", "방화벽 규칙"] : known ? ["이 구성에서의 역할", "왜 이렇게 짰나요"] : ["정의", "이 구성에서의 역할", "왜 이렇게 짰나요"];
     return (
       <div className={styles.explain} aria-busy="true">
         {known && <DefinitionPart d={known} terms={terms} />}
