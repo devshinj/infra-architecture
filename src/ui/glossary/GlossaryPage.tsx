@@ -129,7 +129,7 @@ export function GlossaryPage({ initial }: { initial: GlossaryItem[] }) {
                       </>
                     )}
                     {editing(t) && <span className={styles.badge}>수정 중</span>}
-                    <span className={styles.meta}>{t.source === "seed" ? "초기" : "AI"}</span>
+                    <span className={styles.meta}>{t.source === "seed" ? "기본 제공" : "AI가 추가"}</span>
                   </span>
                   <p className={styles.snippet}>{t.definition}</p>
                 </button>

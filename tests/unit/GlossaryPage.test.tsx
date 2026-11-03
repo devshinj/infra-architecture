@@ -50,7 +50,7 @@ test("search and unreviewed filter", async () => {
   expect(rows).toHaveLength(1);
   expect(within(rows[0]!).getByText("Redis")).toBeInTheDocument();
   expect(within(rows[0]!).getByText("AI 설명")).toBeInTheDocument();
-  expect(within(rows[0]!).getByText("초기")).toBeInTheDocument();
+  expect(within(rows[0]!).getByText("기본 제공")).toBeInTheDocument();
 });
 
 test("edit saves and shows errors", async () => {
