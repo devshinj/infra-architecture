@@ -639,6 +639,7 @@ function DialogView({ dialog, onClose }: { dialog: Dialog; onClose(): void }) {
 
   const blank = isName && value.trim() === "";
   const unchanged = isName && dialog.initial !== "" && value.trim() === dialog.initial.trim();
+  const submitDisabled = pending || blank || unchanged;
   const describedBy = [isName && dialog.hint ? DIALOG_HINT_ID : "", error ? DIALOG_ERROR_ID : ""].filter(Boolean).join(" ") || undefined;
   const submitLabel = dialog.kind === "name" ? (pending ? dialog.pendingLabel : dialog.submit) : pending ? "삭제하는 중…" : "삭제";
 
@@ -690,7 +691,8 @@ function DialogView({ dialog, onClose }: { dialog: Dialog; onClose(): void }) {
         {error && <p id={DIALOG_ERROR_ID} className={styles.error} role="alert">{error}</p>}
         <div className={styles.dialogActions}>
           <button ref={cancel} type="button" className={styles.btn} disabled={pending} onClick={close}>취소</button>
-          <button type="submit" className={isName ? styles.primaryBtn : styles.dangerBtn} disabled={pending || blank || unchanged}>
+          {/* 이름 확인 버튼은 보내기와 같이 누를 수 있을 때만 금색, 비었거나 그대로이거나 진행 중이면 무채색 비활성. 삭제는 늘 빠진 정보 색. */}
+          <button type="submit" className={!isName ? styles.dangerBtn : submitDisabled ? styles.btn : styles.primaryBtn} disabled={submitDisabled}>
             {submitLabel}
           </button>
         </div>
