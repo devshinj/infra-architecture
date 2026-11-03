@@ -118,8 +118,8 @@ button.blockTitle:hover { text-decoration: underline; text-underline-offset: 3px
 .example:focus-visible { outline: 1.5px solid var(--text-secondary); outline-offset: 2px; }
 
 /* 대화 세션 고르기(대화 탭 맨 위). 팝오버는 보기 옵션과 같은 유리 칠. */
-.sessionBar { position: relative; flex: none; padding: 8px 12px; border-bottom: 1px solid var(--line-node); }
-.sessionBtn { display: inline-flex; align-items: center; gap: 6px; max-width: 100%; font: inherit; font-size: 13px; font-weight: 600; color: var(--text-primary); background: transparent; border: 0; border-radius: 6px; padding: 4px 6px; margin-left: -6px; cursor: pointer; }
+.sessionBar { position: relative; flex: none; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 12px; border-bottom: 1px solid var(--line-node); }
+.sessionBtn { flex: 0 1 auto; min-width: 0; display: inline-flex; align-items: center; gap: 6px; max-width: 100%; font: inherit; font-size: 13px; font-weight: 600; color: var(--text-primary); background: transparent; border: 0; border-radius: 6px; padding: 4px 6px; margin-left: -6px; cursor: pointer; }
 .sessionBtn:hover:not(:disabled), .sessionBtn[aria-expanded="true"] { background: var(--bg-panel-raised); }
 .sessionBtn:disabled { cursor: default; }
 .sessionBtn:focus-visible, .sessionItem:focus-visible { outline: 1.5px solid var(--text-secondary); outline-offset: 1px; }
@@ -135,6 +135,26 @@ button.blockTitle:hover { text-decoration: underline; text-underline-offset: 3px
 .sessionItem[aria-current="true"] { font-weight: 600; }
 .sessionItem .sessionLabel { flex: 1; }
 .sessionTime { flex: none; font-size: 11px; font-weight: 400; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+/* 무리 이름(구성도 대화 / 노드 질문)과 행. 행의 ⋯ 메뉴는 행 오른쪽에 붙어 아래(자리가 모자라면 위)로 열린다. */
+.sessionGroup { margin: 0; padding: 8px 8px 2px; font-size: 11px; font-weight: 600; color: var(--text-secondary); }
+.sessionList section + section { margin-top: 4px; padding-top: 4px; border-top: 1px solid var(--glass-line); }
+.sessionRows { margin: 0; padding: 0; list-style: none; }
+.sessionRow { position: relative; display: flex; align-items: center; gap: 2px; }
+.sessionRow .sessionItem { flex: 1; min-width: 0; }
+.sessionMenuBtn:focus-visible { outline: 1.5px solid var(--text-secondary); outline-offset: 1px; }
+/* 새 구성도 대화: 고르기 버튼 옆의 조용한 글 버튼(금색은 보내기 몫). */
+.newChatBtn { flex: none; display: inline-flex; align-items: center; gap: 4px; font: inherit; font-size: 12px; color: var(--text-secondary); background: transparent; border: 1px solid var(--line-node); border-radius: 6px; padding: 3px 8px; cursor: pointer; }
+.newChatBtn:hover:not(:disabled) { color: var(--text-primary); border-color: var(--text-secondary); }
+.newChatBtn:disabled { opacity: 0.5; cursor: default; }
+.newChatBtn:focus-visible { outline: 1.5px solid var(--text-secondary); outline-offset: 2px; }
+.newChatIcon { flex: none; }
+/* 휴대폰(대화 탭): 손가락으로 누르는 줄·버튼은 44px. */
+@media (max-width: 640px) {
+  .sessionBtn, .newChatBtn { min-height: 44px; }
+  .newChatBtn { padding: 0 12px; font-size: 13px; }
+  .sessionItem { min-height: 44px; align-items: center; font-size: 14px; }
+  .sessionMenuBtn { min-width: 44px; min-height: 44px; }
+}
 /* 질문 세션: 구성도 대화로 넘기는 버튼(결과 칩과 같은 모양). */
 .handoff { cursor: pointer; }
 .handoff:disabled { opacity: 0.5; cursor: default; }

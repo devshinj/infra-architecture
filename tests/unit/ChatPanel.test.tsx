@@ -243,7 +243,7 @@ test("greeting disappears after the first message and when the diagram has nodes
 });
 
 const ASK = { nodeId: "n1", nodeLabel: "API 서버" };
-const askSession = { id: "s1", nodeId: "n1", nodeLabel: "API 서버", title: "왜 두 대예요?", updatedAt: "2026-11-01T00:00:00.000Z" };
+const askSession = { id: "s1", kind: "node" as const, nodeId: "n1", nodeLabel: "API 서버", title: "왜 두 대예요?", updatedAt: "2026-11-01T00:00:00.000Z" };
 const picker = (active: string, onSelect: (key: string) => void = vi.fn()) => ({ sessions: [askSession], active, labelOf: (id: string) => (id === "n1" ? "API 서버" : null), onSelect });
 
 test("ask session hides progress card and chips", () => {
@@ -308,10 +308,22 @@ test("handoff button fills the main input with mention and text", async () => {
   }
   render(<Harness />);
   await userEvent.click(screen.getByRole("button", { name: "구성도 대화로 보내기" }));
-  expect(screen.getByRole("button", { name: "구성도 대화" })).toBeInTheDocument();
+  // 노드 질문 세션에서 넘기면 기본 대화로 간다.
+  expect(screen.getByRole("button", { name: "기본 대화" })).toBeInTheDocument();
   expect(screen.getByRole("button", { name: "API 서버 참조 제거" })).toBeInTheDocument();
   const box = screen.getByRole("textbox");
   expect(box).toHaveValue("이중화해 줘");
   expect(box).toHaveAttribute("placeholder", expect.stringContaining("만들고 싶은 서비스"));
   expect(onSend).not.toHaveBeenCalled();
+});
+
+test("an empty diagram chat session shows its hint instead of the greeting on a non-empty diagram", () => {
+  const HINT = "새 대화예요.";
+  const { rerender } = render(<ChatPanel {...base({ emptyHint: HINT })} />);
+  expect(screen.getByText(HINT)).toBeInTheDocument();
+  rerender(<ChatPanel {...base({ emptyHint: HINT, lines: [{ id: "u", kind: "user", text: "hi" }] })} />);
+  expect(screen.queryByText(HINT)).not.toBeInTheDocument();
+  rerender(<ChatPanel {...base({ emptyHint: HINT, emptyDiagram: true })} />);
+  expect(screen.queryByText(HINT)).not.toBeInTheDocument();
+  expect(screen.getByText(GREETING)).toBeInTheDocument();
 });

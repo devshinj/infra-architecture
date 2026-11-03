@@ -39,6 +39,8 @@ export interface ChatPanelProps {
   elsewhereBusy?: boolean;
   /** 세션 줄을 불러오는 중: 보내기를 막는다. */
   loading?: boolean;
+  /** 대화가 비어 있고 시작 인사도 없을 때 가운데 보일 안내(새 구성도 대화 등). */
+  emptyHint?: string;
 }
 
 const PLACEHOLDER_BASE = "만들고 싶은 서비스나 바꾸고 싶은 점을 말해 주세요.";
@@ -183,6 +185,7 @@ export function ChatPanel({
   ask,
   elsewhereBusy = false,
   loading = false,
+  emptyHint,
 }: ChatPanelProps) {
   const { narrow } = useShell();
   const lines = ask ? allLines.filter((l) => !HIDDEN_IN_ASK.has(l.kind)) : allLines;
@@ -363,6 +366,11 @@ export function ChatPanel({
         }}
       >
         {!ask && emptyDiagram && lines.length === 0 && renderGreeting()}
+        {!ask && !emptyDiagram && !loading && lines.length === 0 && emptyHint && (
+          <p className={`${styles.line} ${styles.system}`} data-kind="system">
+            {emptyHint}
+          </p>
+        )}
         {toBlocks(lines).map((b) => (b.kind === "line" ? renderLine(b.line, false) : renderTurn(b.id, b.lines)))}
         {footer}
       </div>
