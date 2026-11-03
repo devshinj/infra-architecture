@@ -591,7 +591,7 @@ test("node wrappers describe the real keyboard behavior in Korean (no delete; ar
   const props = baseProps();
   const { container, rerender } = render(<div style={{ width: 800, height: 600 }}><Canvas {...props} /></div>);
   const node = await firstNode(container);
-  expect(description(node)).toBe("Enter 나 Space 로 노드를 선택하거나 선택을 풀고, Esc 로 선택을 풉니다.");
+  expect(description(node)).toBe("Enter 나 Space 로 노드를 선택하거나 선택을 풀고, Esc 로 선택을 풉니다. 화살표 키로 가까운 노드나 영역으로 옮겨 가고, Home 과 End 로 처음과 끝으로 갑니다.");
   expect(container.textContent).not.toMatch(/Press|delete/i);
   rerender(<div style={{ width: 800, height: 600 }}><Canvas {...props} editMode /></div>);
   await waitFor(() => expect(description(node)).toContain("편집 모드에서는 선택한 노드를 화살표 키로 옮길 수 있습니다"));

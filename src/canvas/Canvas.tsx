@@ -1,13 +1,13 @@
 import { applyNodeChanges, Background, ReactFlow, ReactFlowProvider, useReactFlow, useStore, type Node, type NodeChange } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
 
 import { categoryOf } from "@/domain/catalog";
 import { computeMissing } from "@/domain/missing";
 import type { DiagramState } from "@/domain/types";
 import { mergeWarnings, warningsByNode } from "@/domain/warnings";
 
-import { canvasAriaLabels } from "./ariaLabels";
+import { canvasAriaLabels, zoneDescription } from "./ariaLabels";
 import "./canvas.css";
 import { EdgeLayerPortal } from "./EdgeLayer";
 import { emphasisOf } from "./emphasis";
@@ -19,6 +19,7 @@ import { outermostCollapsedAncestor, type DisplayGraph, type DisplayOptions } fr
 import type { Layout, Rect } from "./layout";
 import { NodeMenu } from "./NodeMenu";
 import { nodeTypes } from "./nodeTypes";
+import { NAV_KEYS, navItems, readingOrder, step, tabStop } from "./roving";
 import { NODE_Z, zoneZ } from "./stacking";
 import { prefersReducedMotion, unionRect, useCamera, type Insets, type Viewport } from "./useCamera";
 import { useDiagramView } from "./useDiagramView";
@@ -302,17 +303,28 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
   }, [fitKey, resetHover]);
   // 위치 보기 강조: 강조할 그려진 노드 id 와 토큰(같은 노드를 다시 눌러도 링이 처음부터 돈다).
   const [pulse, setPulse] = useState<{ ids: Set<string>; token: number } | null>(null);
+  const toggleGroup = useCallback(
+    (id: string) => {
+      const collapsed = new Set(options.collapsed);
+      if (collapsed.has(id)) collapsed.delete(id);
+      else collapsed.add(id);
+      onOptionsChange({ ...options, collapsed });
+    },
+    [options, onOptionsChange],
+  );
+  // 키보드 이동(roving.ts): 캔버스는 Tab 한 칸이다. tabindex 0 은 한 곳(선택 → 마지막 포커스 → 읽는 순서 첫 노드)뿐이고,
+  // 안에서는 화살표·Home·End 로 옮겨 다닌다.
+  const nav = useMemo(() => navItems(layout, display), [layout, display]);
+  const order = useMemo(() => readingOrder(nav), [nav]);
+  const [lastFocus, setLastFocus] = useState<string | null>(null);
+  const stop = tabStop(nav, order, selected, lastFocus);
+  const descId = useId();
+  const zoneDesc = { open: `${descId}-zone`, collapsed: `${descId}-zone-collapsed` };
 
   const computed = useMemo<Node[]>(() => {
     // 선택이 있으면 선택 기준으로만 흐리고, 호버는 선택이 없을 때만 쓴다.
     const sel = emphasisOf(display.edges, selected);
     const hov = emphasisOf(display.edges, hoverId, known);
-    const toggleGroup = (id: string) => {
-      const collapsed = new Set(options.collapsed);
-      if (collapsed.has(id)) collapsed.delete(id);
-      else collapsed.add(id);
-      onOptionsChange({ ...options, collapsed });
-    };
     const out: Node[] = [];
     for (const lg of Object.values(layout.groups)) {
       const g = display.groups[lg.id];
@@ -325,6 +337,8 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
         data,
         // 안쪽 영역일수록 위(stacking.ts): 바깥 영역이 안쪽 영역의 접기 단추를 가리지 않는다.
         zIndex: zoneZ(layout.groups, g.id),
+        ariaLabel: g.label,
+        domAttributes: { tabIndex: g.id === stop ? 0 : -1, "aria-describedby": g.collapsed ? zoneDesc.collapsed : zoneDesc.open },
         draggable: false,
         selectable: false,
         width: lg.width,
@@ -370,6 +384,7 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
         data,
         // 키보드 포커스를 받는 래퍼의 이름표: 화면에서 잘려도 전체 이름(과 보조 글자)을 읽어 준다.
         ariaLabel: n.sub ? `${n.label} · ${n.sub}` : n.label,
+        domAttributes: { tabIndex: n.id === stop ? 0 : -1 },
         // React Flow 의 선택을 화면 선택과 맞춘다(편집 모드 화살표 옮기기는 React Flow 가 선택한 노드에만 한다).
         selected: ln.id === selected,
         zIndex: NODE_Z,
@@ -380,7 +395,8 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
       });
     }
     return out;
-  }, [layout, display, selected, appearing, updated, editMode, options, onOptionsChange, diffMarks, missingByNode, warnByNode, onBadgeClick, onWarnBadgeClick, pulse, hoverId, known]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- zoneDesc 는 useId 에서 나와 바뀌지 않는다
+  }, [layout, display, selected, appearing, updated, editMode, options, toggleGroup, diffMarks, missingByNode, warnByNode, onBadgeClick, onWarnBadgeClick, pulse, hoverId, known, stop]);
 
   const [nodes, setNodes] = useState<Node[]>(computed);
   useEffect(() => setNodes(computed), [computed]);
@@ -473,16 +489,29 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
   useEffect(() => {
     keyMove.current = null;
   }, [selected]);
+  const focusItem = (id: string) => {
+    for (const el of wrap.current?.querySelectorAll<HTMLElement>(".react-flow__node") ?? []) {
+      if (el.dataset.id === id) return el.focus();
+    }
+  };
   const onFlowKeyDownCapture = (e: React.KeyboardEvent<HTMLDivElement>) => {
     const el = e.target as HTMLElement;
     const id = el.classList.contains("react-flow__node") ? el.dataset.id : undefined;
     if (!id) return;
     const infra = el.classList.contains("react-flow__node-infra");
+    // 화살표는 포커스를 옮긴다. 노드를 옮기는 것은 편집 모드에서 선택한 노드에 있을 때뿐이다(React Flow 가 옮긴다).
+    if (NAV_KEYS.has(e.key) && !(e.key.startsWith("Arrow") && editMode && infra && getNode(id)?.selected)) {
+      e.preventDefault();
+      const next = step(nav, order, id, e.key);
+      if (next !== null && next !== id) focusItem(next);
+      return;
+    }
     if (e.key === "Enter" || e.key === " ") {
       if (e.key === " ") e.preventDefault();
       if (e.repeat) return;
-      // 영역을 누르면 클릭처럼 선택을 푼다.
-      onSelect(infra && id !== selected ? id : null);
+      // 영역: Space 는 접고 펴고, Enter 는 클릭처럼 선택을 푼다.
+      if (!infra && e.key === " ") toggleGroup(id);
+      else onSelect(infra && id !== selected ? id : null);
     } else if (e.key === "Escape") {
       if (selected !== null) onSelect(null);
     } else if (e.key.startsWith("Arrow") && editMode && infra && keyMove.current === null && getNode(id)?.selected) {
@@ -509,9 +538,17 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
   const onFlowBlur = (e: React.FocusEvent<HTMLDivElement>) => {
     if (!e.currentTarget.contains(e.relatedTarget as globalThis.Node | null)) keyMove.current = null;
   };
+  // 포커스를 받은 노드·영역이 다음에 Tab 으로 들어올 곳이 된다(선택이 없을 때).
+  const onFlowFocus = (e: React.FocusEvent<HTMLDivElement>) => {
+    const el = e.target as HTMLElement;
+    const id = el.classList.contains("react-flow__node") ? el.dataset.id : undefined;
+    if (id && id !== lastFocus) setLastFocus(id);
+  };
 
   return (
-    <div ref={wrap} tabIndex={-1} className="canvas__flow" data-zoom={far ? "far" : "near"} onKeyDownCapture={onFlowKeyDownCapture} onKeyUp={onFlowKeyUp} onBlur={onFlowBlur}>
+    <div ref={wrap} tabIndex={-1} className="canvas__flow" data-zoom={far ? "far" : "near"} onKeyDownCapture={onFlowKeyDownCapture} onKeyUp={onFlowKeyUp} onBlur={onFlowBlur} onFocus={onFlowFocus}>
+      <div id={zoneDesc.open} hidden>{zoneDescription(false)}</div>
+      <div id={zoneDesc.collapsed} hidden>{zoneDescription(true)}</div>
       <ReactFlow
         nodes={nodes}
         edges={[]}
