@@ -230,6 +230,8 @@ export function ChatPanel({
 
   const reason = disabledReason ?? (elsewhereBusy ? ELSEWHERE_BUSY : undefined);
   const blocked = busy || elsewhereBusy || loading || !!disabledReason;
+  // 보낼 수 있을 때만 금색. 비었거나 차례가 도는 동안은 무채색 비활성(중단이 그때의 동작이다).
+  const canSubmit = !blocked && hasContent;
   const lastCard = lines.findLast((l) => l.kind === "card" && l.card)?.card;
   const down = health !== null && health.qwen !== "ok";
 
@@ -387,7 +389,7 @@ export function ChatPanel({
                 중단
               </button>
             )}
-            <button type="button" className={styles.btn} disabled={blocked || !hasContent} onClick={() => mentionRef.current?.submit()}>
+            <button type="button" className={canSubmit ? styles.primaryBtn : styles.btn} disabled={!canSubmit} onClick={() => mentionRef.current?.submit()}>
               보내기
             </button>
           </div>

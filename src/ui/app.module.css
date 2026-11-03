@@ -83,17 +83,18 @@
 }
 .btn:hover:not(:disabled) { border-color: var(--text-secondary); }
 .btn:disabled { opacity: 0.5; cursor: default; }
-/* 대화상자의 주 동작·빈 화면 시작 버튼(금색 테두리), 삭제(빠진 정보 색). */
+/* 대화상자의 주 동작·빈 화면 시작 버튼(금색 칠 — 화면마다 하나), 삭제(빠진 정보 색, 금색 아님). */
 .primaryBtn, .dangerBtn {
   font: inherit; font-size: 13px; font-weight: 600; background: var(--bg-node);
   border: 1px solid; border-radius: 6px; padding: 6px 12px; cursor: pointer;
 }
-.primaryBtn { color: var(--text-primary); border-color: var(--accent); }
-.primaryBtn:hover:not(:disabled) { background: var(--bg-panel-raised); }
+.primaryBtn { color: var(--on-accent); background: var(--accent-fill); border-color: var(--accent-fill); }
+.primaryBtn:hover:not(:disabled) { background: var(--accent-fill-hover); border-color: var(--accent-fill-hover); }
+.primaryBtn:active:not(:disabled) { background: var(--accent-fill-active); border-color: var(--accent-fill-active); }
 .dangerBtn { color: var(--state-missing-text); border-color: var(--state-missing); }
 .dangerBtn:hover:not(:disabled) { background: var(--bg-panel-raised); }
 .primaryBtn:disabled, .dangerBtn:disabled { opacity: 0.5; cursor: default; }
-.primaryBtn:focus-visible, .dangerBtn:focus-visible { outline: 1.5px solid var(--text-secondary); outline-offset: 2px; }
+.dangerBtn:focus-visible { outline: 1.5px solid var(--text-secondary); outline-offset: 2px; }
 .linkBtn { font: inherit; font-size: 12px; color: var(--text-secondary); background: transparent; border: 0; cursor: pointer; padding: 2px 4px; }
 .linkBtn:hover { color: var(--text-primary); }
 .sideLink { font-size: 13px; color: var(--text-secondary); text-decoration: none; padding: 4px; border-radius: 4px; }
@@ -101,6 +102,11 @@
 .sideLink:hover { color: var(--text-primary); }
 .sideLink:focus-visible { outline: 1.5px solid var(--text-secondary); outline-offset: 2px; }
 .sidebar button:focus-visible, .panel button:focus-visible, .banner button:focus-visible, .dialog button:focus-visible, .dialog input:focus-visible { outline: 1.5px solid var(--text-secondary); outline-offset: 2px; }
+/* 금색 칠 버튼의 포커스: 은빛 링(--focus-ring)을 바탕 한 줄 띄워 두른다(링·금색 1.4:1 이라 붙이면 묻힌다, 띄우면 바탕과 9:1 이상). */
+.primaryBtn:focus-visible, .dialog .primaryBtn:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+@media (prefers-reduced-motion: no-preference) {
+  .primaryBtn { transition: background-color 0.15s, border-color 0.15s, opacity 0.15s; }
+}
 
 .backdrop { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; background: color-mix(in srgb, var(--bg-canvas) 70%, transparent); }
 .dialog { width: min(320px, calc(100vw - 32px)); box-sizing: border-box; display: flex; flex-direction: column; gap: 12px; padding: 16px; background: var(--bg-node); border: 1px solid var(--line-node); border-radius: var(--radius-zone); }
@@ -109,7 +115,7 @@
 .dialog .dialogHint { font-size: 12px; color: var(--text-secondary); }
 .dialog input::placeholder { color: var(--text-secondary); opacity: 0.7; }
 .dialog label { display: flex; flex-direction: column; gap: 6px; font-size: 12px; color: var(--text-secondary); }
-.dialog input { font: inherit; font-size: 13px; color: var(--text-primary); background: var(--bg-canvas); border: 1px solid var(--line-node); border-radius: var(--radius-node); padding: 7px 9px; }
+.dialog input { font: inherit; font-size: 13px; color: var(--text-primary); background: var(--bg-canvas); border: 1px solid var(--line-input); border-radius: var(--radius-node); padding: 7px 9px; }
 .dialogActions { display: flex; justify-content: flex-end; gap: 8px; }
 .error { margin: 0; color: var(--state-missing-text); font-size: 12px; }
 
