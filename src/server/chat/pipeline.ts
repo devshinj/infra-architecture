@@ -6,10 +6,10 @@ import type { ClefClient, Intent } from "@/server/llm/clef";
 import { createJsonlParser } from "@/server/llm/jsonl";
 import { createThinkStripper } from "@/server/llm/think";
 import type { QwenClient } from "@/server/llm/qwen";
-import { getOwnedDiagram } from "@/server/projects";
+import { getOwnedDiagram, NotFoundError, ValidationError } from "@/server/projects";
 import { createVersion, getLatestState } from "@/server/versions";
 
-import type { ChatEvent, MessageMeta } from "./events";
+import { sessionPayload, type ChatEvent, type MessageMeta } from "./events";
 import { BUSY_MESSAGE } from "./busy";
 import { withDiagramLock } from "./lock";
 import { resolveIntent } from "./intent";
@@ -18,6 +18,7 @@ import { normalizeAiCommand } from "./normalize";
 import { checkWarnings } from "./warnings";
 import { createSkipTally, skipKey } from "./skips";
 import { buildMessages, parseMentions } from "./prompt";
+import { createSession, getSession, touchSession } from "./sessions";
 
 export interface ChatDeps {
   qwen: QwenClient | null;
@@ -40,19 +41,37 @@ const TURN_TIMEOUT_MS = 120_000;
 export const HISTORY_FETCH = 40;
 const OP_MAX = 40;
 
+/**
+ * 구성도 대화의 어느 줄기에 쌓을지: 없으면 기본 대화(session_id null), `{ id }` 면 그 구성도 대화 세션,
+ * `"new"` 면 이 첫 메시지로 새 구성도 대화 세션을 만든다(만들면 session 이벤트로 id 를 알린다).
+ */
+export type ChatSessionTarget = { id: string } | "new";
+
 interface TurnArgs {
   userId: string;
   diagramId: string;
   text: string;
+  session?: ChatSessionTarget;
   signal: AbortSignal;
   emit(e: ChatEvent): void;
 }
 
+/**
+ * 구성도 대화 한 차례. 구성도는 하나라 세션이 달라도 같은 상태를 바꾸고, 잠금도 구성도 하나에 하나다.
+ * 남의 구성도·세션은 NotFoundError, 노드 질문 세션 id 면 ValidationError 를 던진다.
+ */
 export async function runChatTurn(args: TurnArgs, deps: ChatDeps): Promise<ChatTurnResult> {
   await getOwnedDiagram(args.userId, args.diagramId); // NotFoundError 는 그대로 던진다
+  const target = args.session;
+  if (target !== undefined && target !== "new") {
+    const row = await getSession(args.diagramId, target.id);
+    if (!row) throw new NotFoundError();
+    // 노드 질문 세션은 /ask 로만 이어 간다(구성을 바꾸지 않는다).
+    if (row.kind !== "diagram") throw new ValidationError("구성도 대화 세션이 아니에요");
+  }
   const emit = guardEmit(args.emit);
   const turnArgs = { ...args, emit };
-  const locked = await withDiagramLock(args.diagramId, () => lockedTurn(turnArgs, deps));
+  const locked = await withDiagramLock(args.diagramId, () => sessionTurn(turnArgs, deps));
   if (!locked.ok) {
     emit({ t: "error", message: BUSY_MESSAGE });
     return { status: "busy" };
@@ -116,7 +135,26 @@ function prunedOrder(before: DiagramState, after: DiagramState): string[] {
     .sort((a, b) => depth(b) - depth(a));
 }
 
-async function lockedTurn(args: TurnArgs, deps: ChatDeps): Promise<void> {
+/** 잠금 안: 새 세션이면 만들고 알린 뒤 차례를 돌리고, 세션이면 최근 이어간 순서를 갱신한다. */
+async function sessionTurn(args: TurnArgs, deps: ChatDeps): Promise<void> {
+  const target = args.session;
+  if (target === undefined) return lockedTurn(args, null, false, deps);
+  let sessionId: string;
+  if (target === "new") {
+    const row = await createSession(args.diagramId, { kind: "diagram" }, args.text);
+    args.emit({ t: "session", session: sessionPayload(row) });
+    sessionId = row.id;
+  } else sessionId = target.id;
+  // 예상치 못한 예외로 끝나도 세션 순서(최근 이어감)는 갱신한다.
+  try {
+    await lockedTurn(args, sessionId, target !== "new", deps);
+  } finally {
+    await touchSession(sessionId).catch((err) => console.error("chat touch session failed", err));
+  }
+}
+
+/** sessionId 가 null 이면 기본 대화. followUp 이 false 인 새 세션은 기록이 없어 읽지 않는다. */
+async function lockedTurn(args: TurnArgs, sessionId: string | null, followUp: boolean, deps: ChatDeps): Promise<void> {
   const { diagramId, emit } = args;
   const { signal, timeout } = turnSignals(args.signal, deps);
 
@@ -124,13 +162,16 @@ async function lockedTurn(args: TurnArgs, deps: ChatDeps): Promise<void> {
   let state: DiagramState = latest?.state ?? emptyState();
   const turnStartState = state;
   const prevWarnings = latest?.state.warnings; // 차례 시작 상태의 경고
-  // 구성도 대화만 본다(질문 세션 글은 섞지 않는다).
-  const history = (await listMessages(diagramId, HISTORY_FETCH, null))
-    .filter((m) => m.role === "user" || m.role === "assistant")
-    .map((m) => ({ role: m.role as "user" | "assistant", content: m.content }));
+  // 이 대화 줄기만 본다(다른 구성도 대화 세션·질문 세션 글은 섞지 않는다).
+  const history =
+    sessionId === null || followUp
+      ? (await listMessages(diagramId, HISTORY_FETCH, sessionId))
+          .filter((m) => m.role === "user" || m.role === "assistant")
+          .map((m) => ({ role: m.role as "user" | "assistant", content: m.content }))
+      : [];
   const lastAssistant = history.findLast((m) => m.role === "assistant")?.content;
   const { clean, mentions } = parseMentions(args.text, state);
-  const userMsg = await createMessage(diagramId, "user", args.text, { mentions: mentions.map((m) => m.id) });
+  const userMsg = await createMessage(diagramId, "user", args.text, { mentions: mentions.map((m) => m.id) }, sessionId);
 
   const counts = () => ({ nodes: Object.keys(state.nodes).length, edges: Object.keys(state.edges).length });
 
@@ -276,7 +317,7 @@ async function lockedTurn(args: TurnArgs, deps: ChatDeps): Promise<void> {
     ...(fresh.length > 0 ? { warnings: fresh } : {}),
     ...counts(),
   };
-  const assistant = await createMessage(diagramId, "assistant", content, meta);
+  const assistant = await createMessage(diagramId, "assistant", content, meta, sessionId);
   if (fresh.length > 0) emit({ t: "warnings", items: fresh });
   emit({
     t: "done",
