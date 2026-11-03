@@ -109,10 +109,24 @@ export function Sidebar({ projects, userName }: { projects: SidebarProject[]; us
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
   }, [drawer]);
+  // 서랍이 열린 동안 뒤(위 막대·작업 화면)는 inert: 포인터·포커스·보조기기가 닿지 않는다. 연 뒤에 생기는 대화상자는 건드리지 않는다.
+  useEffect(() => {
+    const el = drawerRef.current;
+    const parent = el?.parentElement;
+    if (!drawer || !el || !parent) return;
+    const made = Array.from(parent.children).filter(
+      (c): c is HTMLElement => c instanceof HTMLElement && c !== el && !c.hasAttribute("data-drawer-backdrop") && !c.hasAttribute("inert"),
+    );
+    made.forEach((c) => c.setAttribute("inert", ""));
+    return () => made.forEach((c) => c.removeAttribute("inert"));
+  }, [drawer]);
   // 포커스를 서랍 안에 가둔다(Tab·Shift+Tab 이 끝에서 처음으로 돈다).
   const trapDrawer = (e: React.KeyboardEvent) => {
     if (e.key !== "Tab" || !drawerRef.current) return;
-    const f = Array.from(drawerRef.current.querySelectorAll<HTMLElement>("button:not(:disabled), a[href], input"));
+    // 행 메뉴 항목(tabindex=-1)처럼 Tab 으로 닿지 않는 것은 뺀다.
+    const f = Array.from(
+      drawerRef.current.querySelectorAll<HTMLElement>('button:not(:disabled):not([tabindex="-1"]), a[href]:not([tabindex="-1"]), input:not([tabindex="-1"])'),
+    );
     if (f.length === 0) return;
     const first = f[0], last = f[f.length - 1];
     if (e.shiftKey && document.activeElement === first) {
@@ -402,7 +416,7 @@ export function Sidebar({ projects, userName }: { projects: SidebarProject[]; us
         </header>
         {drawer && (
           <>
-            <div className={styles.drawerBackdrop} aria-hidden="true" onClick={() => setDrawer(false)} />
+            <div className={styles.drawerBackdrop} data-drawer-backdrop="" aria-hidden="true" onClick={() => setDrawer(false)} />
             <div ref={drawerRef} id={DRAWER_ID} className={styles.drawer} role="dialog" aria-modal="true" aria-label="프로젝트 목록" onKeyDown={trapDrawer}>
               {expandedNav(true)}
             </div>

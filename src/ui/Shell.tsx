@@ -15,6 +15,8 @@ export const SIDEBAR_COLLAPSED_KEY = "infrasketch.sidebarCollapsed";
  * (app.module.css 의 같은 미디어 쿼리가 첫 칠을 맞춘다). 저장값이 없으면 접힌 채로 시작해, 넓혀도 레일로 남는다.
  */
 export const NARROW_QUERY = "(max-width: 640px)";
+/** 태블릿 너비(641–900px)까지: 저장값이 없으면 사이드바를 레일로 접은 채 시작해 캔버스·패널 자리를 남긴다. */
+export const COMPACT_QUERY = "(max-width: 900px)";
 
 /** 사이드바 밖(빈 홈 화면 등)에서 사이드바의 ‘새 프로젝트’·‘새 구성도’ 대화상자를 연다. projectId 가 있으면 그 프로젝트에 구성도를 만든다. */
 export type CreateRequest = (projectId?: string) => void;
@@ -51,7 +53,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     try {
       const saved = window.localStorage.getItem(SIDEBAR_COLLAPSED_KEY);
-      if (saved === "1" || (saved === null && window.matchMedia?.(NARROW_QUERY).matches)) setState(true);
+      if (saved === "1" || (saved === null && window.matchMedia?.(COMPACT_QUERY).matches)) setState(true);
     } catch {
       /* 저장소를 못 읽으면 펼친 채로 */
     }
