@@ -256,6 +256,7 @@ function glossaryPart(row: GlossaryRow, source: NodeExplanation["definitionSourc
     definition: row.definition,
     definitionSource: source,
     reviewed: row.reviewed,
+    termSource: row.source,
     ...(row.why ? { why: row.why } : {}),
     ...(row.compare ? { compare: row.compare } : {}),
   };

@@ -45,6 +45,8 @@ export interface TermEntry {
   definition: string;
   aliases: string[];
   reviewed: boolean;
+  /** 사전 항목을 누가 만들었나(기본 제공 seed / AI). "AI 설명" 배지는 AI 가 만든 항목에만 붙는다. */
+  source: "seed" | "ai";
   why: string;
   compare: string;
 }
@@ -67,6 +69,7 @@ export interface NodeExplanation {
   definition: string;
   definitionSource: "glossary" | "ai";
   reviewed: boolean; // 사전 항목의 검수 상태(ai 생성 직후 false)
+  termSource?: "seed" | "ai"; // 정의를 가져온 사전 항목의 출처. 사전에 없던 AI 정의면 없다(definitionSource 가 ai).
   why?: string; // 사전에 있으면
   compare?: string; // 사전에 있으면
   role: string;

@@ -19,7 +19,8 @@ export interface TurnResult {
 }
 
 /**
- * 차례 끝 요약 칩 글. 바뀐 것이 없는데 건너뛴 명령이 있으면 반영하지 못했다고 알린다.
+ * 차례 끝 요약 칩 글. 바꾼 곳 수만 쉬운 말로 보이고 건너뛴 수는 보이지 않는다.
+ * 바뀐 것이 없는데 건너뛴 명령이 있으면 반영하지 못했다고 알린다.
  * 건너뛴 것도 없고 답도 없으면 "변경 사항이 없어요.", 답만 한 차례면 없음.
  * 재정렬(layout) 차례는 "다시 정렬했어요" 안내와 어긋나므로 칩을 두지 않는다.
  */
@@ -28,7 +29,7 @@ export function summaryText(r: TurnResult, hadAnswer: boolean, intent?: string |
     if (r.skipped > 0 && intent !== "layout") return "요청을 반영하지 못했어요. 다시 말해 주세요.";
     return hadAnswer || intent === "layout" ? null : "변경 사항이 없어요.";
   }
-  const counts = `적용 ${r.applied} · 건너뜀 ${r.skipped}`;
+  const counts = r.applied > 0 ? `${r.applied}곳 바꿨어요` : "바꾼 곳이 없어요";
   const base = r.nodes === undefined || r.edges === undefined ? counts : `노드 ${r.nodes} · 연결 ${r.edges} · ${counts}`;
   return r.status === "aborted" ? `중단됨 · ${base}` : base;
 }

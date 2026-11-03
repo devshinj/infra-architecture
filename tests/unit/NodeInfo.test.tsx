@@ -189,5 +189,5 @@ test("explanation precedes 주의할 점 when warnings exist", () => {
   const { container } = render(<NodeInfo state={risky()} selectedId="w" onSelect={vi.fn()} explain={{ status: "loading", terms: [] }} />);
   const heads = [...container.querySelectorAll("h3")].map((h) => h.textContent);
   expect(heads).toContain("주의할 점");
-  expect(heads.indexOf("결정 기록(ADR)")).toBeLessThan(heads.indexOf("주의할 점"));
+  expect(heads.indexOf("왜 이렇게 짰나요")).toBeLessThan(heads.indexOf("주의할 점"));
 });

@@ -233,6 +233,7 @@ export function useExplanations({ diagramId, state, live, busy, selectedId, fetc
         definition: t.definition,
         definitionSource: "glossary",
         reviewed: t.reviewed,
+        termSource: t.source,
         ...(t.why ? { why: t.why } : {}),
         ...(t.compare ? { compare: t.compare } : {}),
       };
