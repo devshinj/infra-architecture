@@ -230,7 +230,7 @@ tests/e2e/fake-llm.ts   (수정) noul 응답, 경고 문구 응답
   - 중단·오류면 이미 abort 된 signal 로 불러 코드 규칙만 받는다.
   - 결과 `warnings` 를 `state.warnings` 에 넣은 뒤 `createVersion` 한다. 다른 상태 필드는 그대로다.
   - `fresh.length > 0` 이면 `warnings` 이벤트를 `done` 앞에 보내고 `meta.warnings` 에 저장한다.
-  - 점검 단계도 차례 전체 상한(120초) 안이다.
+  - 점검 단계도 차례 전체 상한(120초, 2026-11-03 부터 240초) 안이다.
 
 - [ ] **Step 1: 실패하는 통합 테스트**
   - `turn saves warnings into the version and emits fresh ones before done`. 가짜 qwen 이 공개 구역 DB 를 만들게 한다.

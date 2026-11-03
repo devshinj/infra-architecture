@@ -6,7 +6,7 @@ import { createThinkStripper } from "@/server/llm/think";
 import { getOwnedDiagram, NotFoundError, ValidationError } from "@/server/projects";
 import { getLatestState } from "@/server/versions";
 
-import { NODE_GONE_MESSAGE, type ChatEvent, type MessageMeta } from "./events";
+import { NODE_GONE_MESSAGE, SESSION_GONE_MESSAGE, sessionPayload, type ChatEvent, type MessageMeta } from "./events";
 import { resolveIntent } from "./intent";
 import { withDiagramLock } from "./lock";
 import { createMessage, listMessages } from "./messages";
@@ -53,7 +53,8 @@ export async function runAskTurn(args: AskArgs, deps: ChatDeps): Promise<AskTurn
   if (args.sessionId !== null) {
     session = await getSession(args.diagramId, args.sessionId);
     if (!session) throw new NotFoundError();
-    if (session.nodeId !== args.nodeId) throw new ValidationError("세션의 노드와 맞지 않아요");
+    // 구성도 대화 세션은 /chat 으로만 이어 간다.
+    if (session.kind !== "node" || session.nodeId !== args.nodeId) throw new ValidationError("세션의 노드와 맞지 않아요");
   }
   const emit = guardEmit(args.emit, "ask");
   const gone = (): AskTurnResult => {
@@ -68,11 +69,18 @@ export async function runAskTurn(args: AskArgs, deps: ChatDeps): Promise<AskTurn
     emit({ t: "error", message: BUSY_MESSAGE });
     return { status: "busy" };
   }
+  if (locked.value === "session_gone") {
+    emit({ t: "error", message: SESSION_GONE_MESSAGE });
+    return { status: "session_gone" };
+  }
   return locked.value === "gone" ? gone() : { status: "ok" };
 }
 
-async function lockedAsk(args: AskArgs, existing: SessionRow | null, deps: ChatDeps): Promise<"ok" | "gone"> {
+async function lockedAsk(args: AskArgs, existing: SessionRow | null, deps: ChatDeps): Promise<"ok" | "gone" | "session_gone"> {
   const { diagramId, nodeId, emit } = args;
+
+  // 잠금을 기다리는 사이 세션이 지워졌을 수 있다(삭제도 같은 잠금을 쓴다). 그러면 아무것도 쓰지 않는다.
+  if (existing && !(await getSession(diagramId, existing.id))) return "session_gone";
 
   // 잠금을 기다리는 사이 구성도 대화가 노드를 지웠을 수 있어 다시 읽는다.
   const state = (await getLatestState(diagramId))?.state;
@@ -80,9 +88,8 @@ async function lockedAsk(args: AskArgs, existing: SessionRow | null, deps: ChatD
 
   let session = existing;
   if (!session) {
-    session = await createSession(diagramId, nodeId, state.nodes[nodeId]!.label, args.text);
-    const { id, title, nodeLabel, updatedAt } = session;
-    emit({ t: "session", session: { id, nodeId, nodeLabel, title, updatedAt: updatedAt.toISOString() } });
+    session = await createSession(diagramId, { kind: "node", nodeId, nodeLabel: state.nodes[nodeId]!.label }, args.text);
+    emit({ t: "session", session: sessionPayload(session) });
   }
   const sessionId = session.id;
   // 예상치 못한 예외로 끝나도 세션 순서(최근 이어감)는 갱신한다.
@@ -116,6 +123,7 @@ async function askInSession(
     version: null,
     status,
     applied: 0,
+    changed: 0,
     skipped: 0,
     missing: computeMissing(state).count,
     ...counts,
@@ -186,6 +194,7 @@ async function askInSession(
   const meta: MessageMeta = {
     ...(intent ? { intent } : {}),
     applied: 0,
+    changed: 0,
     skipped: 0,
     version: null,
     status,

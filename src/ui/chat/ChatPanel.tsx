@@ -39,6 +39,10 @@ export interface ChatPanelProps {
   elsewhereBusy?: boolean;
   /** 세션 줄을 불러오는 중: 보내기를 막는다. */
   loading?: boolean;
+  /** 대화가 비어 있고 시작 인사도 없을 때 가운데 보일 안내(새 구성도 대화 등). */
+  emptyHint?: string;
+  /** `구성도 대화로 보내기` 가 옮겨 갈 구성도 대화(마지막으로 쓴 구성도 대화, 없으면 기본 대화). */
+  handoffTo?: string;
 }
 
 const PLACEHOLDER_BASE = "만들고 싶은 서비스나 바꾸고 싶은 점을 말해 주세요.";
@@ -124,7 +128,8 @@ type StepState = "done" | "current" | "todo";
 function stepRows(card: ProgressCard): { key: string; label: string; state: StepState }[] {
   if (card.mode === "answer") return [{ key: "answer", label: "답변 작성 중", state: "current" }];
   const at = BUILD_STEPS.indexOf(card.step);
-  const label = { review: "구성 검토", drawing: `그리는 중 (변경 ${card.changes}개)`, checking: "위험 요소 점검" };
+  const drawing = card.part ? `이어서 그리는 중 (${card.part.n}/${card.part.of}) · 변경 ${card.changes}개` : `그리는 중 (변경 ${card.changes}개)`;
+  const label = { review: "구성 검토", drawing, checking: "위험 요소 점검" };
   return [
     ...BUILD_STEPS.map((s, i) => ({ key: s, label: label[s], state: (i < at ? "done" : i === at ? "current" : "todo") as StepState })),
     { key: "done", label: "완료", state: "todo" as const },
@@ -135,7 +140,8 @@ function stepRows(card: ProgressCard): { key: string; label: string; state: Step
 function stepName(card: ProgressCard): string {
   if (card.end) return card.end === "done" ? "완료" : "중단됨";
   if (card.mode === "answer") return "답변 작성 중";
-  return { review: "구성 검토", drawing: "그리는 중", checking: "위험 요소 점검" }[card.step];
+  const drawing = card.part ? `이어서 그리는 중 (${card.part.n}/${card.part.of})` : "그리는 중";
+  return { review: "구성 검토", drawing, checking: "위험 요소 점검" }[card.step];
 }
 
 /** 진행 카드: 진행 중이면 단계 목록, 끝나면 접힌 한 줄(`완료 · 노드 N · 연결 M` / `중단됨`). */
@@ -183,6 +189,8 @@ export function ChatPanel({
   ask,
   elsewhereBusy = false,
   loading = false,
+  emptyHint,
+  handoffTo = "main",
 }: ChatPanelProps) {
   const { narrow } = useShell();
   const lines = ask ? allLines.filter((l) => !HIDDEN_IN_ASK.has(l.kind)) : allLines;
@@ -224,7 +232,7 @@ export function ChatPanel({
   const handoff = (text: string) => {
     if (!ask || ask.nodeLabel === null) return;
     setFill({ mention: { id: ask.nodeId, label: ask.nodeLabel }, text });
-    picker?.onSelect("main");
+    picker?.onSelect(handoffTo);
   };
   useEffect(() => {
     if (!fill || ask) return;
@@ -344,7 +352,7 @@ export function ChatPanel({
 
   return (
     <div className={styles.chat}>
-      {picker && <SessionPicker {...picker} />}
+      {picker && <SessionPicker fallbackFocus={() => mentionRef.current?.focus()} {...picker} />}
       {down && (
         <div className={styles.notice} role="status">
           {DOWN}
@@ -363,6 +371,11 @@ export function ChatPanel({
         }}
       >
         {!ask && emptyDiagram && lines.length === 0 && renderGreeting()}
+        {!ask && !emptyDiagram && !loading && lines.length === 0 && emptyHint && (
+          <p className={`${styles.line} ${styles.system}`} data-kind="system">
+            {emptyHint}
+          </p>
+        )}
         {toBlocks(lines).map((b) => (b.kind === "line" ? renderLine(b.line, false) : renderTurn(b.id, b.lines)))}
         {footer}
       </div>

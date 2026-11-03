@@ -27,7 +27,7 @@ import { ELSEWHERE_BUSY, type LlmHealth } from "./chat/ChatPanel";
 import type { MentionInputHandle } from "./chat/MentionInput";
 import type { ChecklistDrafts, ChecklistExpanded, MissingChecklistProps } from "./chat/MissingChecklist";
 import { type ChatLine, useChatTurn } from "./chat/useChatTurn";
-import { NEW_SESSION, type SessionSummary, useSessions } from "./chat/useSessions";
+import { NEW_SESSION, type SessionKey, type SessionPaging, type SessionSummary, useSessions } from "./chat/useSessions";
 import { type CardMeasure, InfoCard } from "./canvas/InfoCard";
 import { Legend, legendPlacement } from "./canvas/Legend";
 import { FlyLayer, useFly } from "./FlyLayer";
@@ -37,6 +37,9 @@ import { MOBILE_VIEWS, MobileTabBar, type MobileView, mobileTabId } from "./Mobi
 import { PANEL_DEFAULT, PANEL_MAX, PANEL_MIN, PANEL_MIN_COMPACT, PanelResizer } from "./PanelResizer";
 import { PANEL_GAP, useShell } from "./Shell";
 import { RIGHT_PANEL_BODY_ID, RightPanel, type Tab } from "./RightPanel";
+
+/** 비어 있는 구성도 대화 세션의 안내. */
+const NEW_CHAT_HINT = "새 대화예요. 구성도는 그대로 이어서 바꾸고, 대화 기록만 따로 쌓여요.";
 
 type Pinned = Record<string, { x: number; y: number }>;
 type Mode =
@@ -56,6 +59,8 @@ export interface DiagramWorkspaceProps {
   initialChat?: ChatLine[];
   /** 노드 질문 세션 목록(최근에 이어간 순). */
   initialSessions?: SessionSummary[];
+  /** 무리마다 다음 쪽 커서(없으면 더 없음)와 마지막으로 맞춘 시각. 없으면 더 불러올 것이 없다. */
+  initialPaging?: SessionPaging;
 }
 
 /** Compare view draws current ∪ old so removed nodes appear as ghosts beside the live ones. */
@@ -86,7 +91,7 @@ const optionsFor = (state: DiagramState): CanvasOptions => ({ ...defaultDisplayO
 
 const NO_SESSIONS: SessionSummary[] = [];
 
-export function DiagramWorkspace({ diagramId, name, projectName, latest, initialPinned, samples, initialChat = [], initialSessions = NO_SESSIONS }: DiagramWorkspaceProps) {
+export function DiagramWorkspace({ diagramId, name, projectName, latest, initialPinned, samples, initialChat = [], initialSessions = NO_SESSIONS, initialPaging }: DiagramWorkspaceProps) {
   const router = useRouter();
   const [current, setCurrent] = useState(latest);
   const [pinned, setPinned] = useState<Pinned>(initialPinned);
@@ -287,12 +292,12 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
     timer.current = setTimeout(refreshFromServer, 1500);
   };
   // 대화 세션: 구성도 대화(main)와 노드 질문 세션. 새로고침하면 구성도 대화로 연다.
-  const sessions = useSessions({ diagramId, initial: initialSessions });
+  const sessions = useSessions({ diagramId, initial: initialSessions, paging: initialPaging });
   const chat = useChatTurn({
     diagramId,
     initial: initialChat,
     onSession: sessions.upsert,
-    onAskLines: sessions.setLines,
+    onSessionLines: sessions.setLines,
     onCommand: (cmd) => {
       const next = applyCommand(current.state, cmd).state;
       setCurrent((c) => ({ number: c.number, state: applyCommand(c.state, cmd).state }));
@@ -327,7 +332,8 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
   const locked = chat.busy;
   // 도는 차례의 세션(가짜 훅처럼 모르면 구성도 대화로 친다).
   const runningKey = chat.busy ? (chat.runningKey ?? "main") : null;
-  const mainTurn = runningKey === "main";
+  // 구성도를 바꾸는 차례(기본 대화·구성도 대화 세션). 노드 질문 차례는 구성도를 바꾸지 않는다.
+  const mainTurn = chat.busy && !chat.runningAsk;
 
   // 설명: 대화가 끝나거나 구성도를 열면 낡은 노드를 차례로 만든다. 이력 보기·비교에서는 멈춘다.
   const explanations = useExplanations({ diagramId, state: shown, live, busy: chat.busy, selectedId: options.selectedId });
@@ -354,23 +360,45 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
   }, [mobileView, selId, seenExplain]);
   const explainWaiting = selId !== null && !panelShown && !seenExplain.has(selId);
 
+  const activeSummary = sessions.active === "main" ? null : sessions.summaryOf(sessions.active);
+  /** 보고 있는 노드 질문 세션(구성도 대화면 null). */
+  const activeSession = activeSummary?.kind === "node" ? activeSummary : null;
+  /** 구성도를 바꾸는 대화(기본 대화 또는 구성도 대화 세션)를 보는 중. */
+  const inDiagramChat = sessions.active === "main" || activeSummary?.kind === "diagram";
+  // 마지막으로 쓴(본) 구성도 대화. 아직 보내지 않은 새 대화 초안은 치지 않는다(떠나면 사라진다).
+  const [lastDiagram, setLastDiagram] = useState<SessionKey>("main");
+  useEffect(() => {
+    if (inDiagramChat && sessions.active !== NEW_SESSION) setLastDiagram(sessions.active);
+  }, [inDiagramChat, sessions.active]);
+  // 그 세션이 지워졌으면 기본 대화.
+  const lastDiagramKey =
+    lastDiagram === "main" || sessions.sessions.some((s) => s.id === lastDiagram && s.kind === "diagram") ? lastDiagram : "main";
+  /**
+   * 구성도를 바꾸는 차례가 갈 대화: 지금 보는 구성도 대화, 노드 질문 세션을 보고 있으면 마지막으로 쓴 구성도 대화
+   * (없거나 지워졌으면 기본 대화). 참조·가정 칩·넘겨주기처럼 구성도 대화에 글을 보내는 곳이 모두 이 규칙을 따른다.
+   */
+  const diagramKey = inDiagramChat ? sessions.active : lastDiagramKey;
+  /** 노드 질문 세션을 보고 있으면 diagramKey 의 구성도 대화로 옮긴다. */
+  const toDiagramChat = () => {
+    if (!inDiagramChat) sessions.select(diagramKey);
+  };
   // Attach a node/group to the chat input: open the 대화 tab, then insert once the input has rendered.
   const [pendingMention, setPendingMention] = useState<{ id: string; label: string } | null>(null);
-  // 참조는 구성도 대화에 붙인다(질문 세션을 보고 있었으면 구성도 대화로 바꾼다).
+  // 참조는 지금 보는 구성도 대화(기본 대화 또는 구성도 대화 세션)에 붙인다. 노드 질문 세션을 보고 있었으면 기본 대화로 바꾼다.
   const onMention = (id: string) => {
     if (!live) return;
     const label = shown.nodes[id]?.label ?? shown.groups[id]?.label ?? id;
     showTab("대화");
-    if (sessions.active !== "main") sessions.select("main");
+    toDiagramChat();
     setPendingMention({ id, label });
   };
   useEffect(() => {
-    if (!pendingMention || tab !== "대화" || sessions.active !== "main") return;
+    if (!pendingMention || tab !== "대화" || !inDiagramChat) return;
     const m = pendingMention;
     setPendingMention(null);
     mentionRef.current?.insertMention(m);
     mentionRef.current?.focus();
-  }, [pendingMention, tab, sessions.active]);
+  }, [pendingMention, tab, inDiagramChat]);
 
   // 대화로 건너뛰기: 대화 탭을 열고(좁은 화면이면 아래 탭도 대화로) 입력 칸에 포커스를 둔다. 입력 칸이 막혀 있으면
   // (이전 버전 보기 등) 대화 패널 본문으로 간다.
@@ -392,7 +420,7 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
 
   // AI server health: once on mount, again whenever a new error line shows up. A failed fetch counts as down.
   const [health, setHealth] = useState<LlmHealth | null>(null);
-  const errorLines = chat.lines.filter((l) => l.kind === "error").length;
+  const errorLines = (chat.errors ?? 0) + chat.lines.filter((l) => l.kind === "error").length;
   useEffect(() => {
     let alive = true;
     (async () => {
@@ -411,17 +439,37 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
   }, [errorLines]);
   /** 지금 구성도의 노드 이름. 노드가 없으면 null(지워진 노드의 세션). */
   const labelOf = (nodeId: string) => current.state.nodes[nodeId]?.label ?? null;
-  const activeSession = sessions.active === "main" ? null : sessions.summaryOf(sessions.active);
-  /** 구성도 대화(main)로만 보낸다. 구조를 바꾸는 가정 변경처럼 질문 세션으로 가면 안 되는 차례가 쓴다. */
+  /** 차례 밖의 줄(가정 확정 실패 등)을 그 구성도 대화에 쌓는다. */
+  const lineSeq = useRef(0);
+  const pushDiagramLine = (line: Omit<ChatLine, "id">) => {
+    if (diagramKey === "main") return chat.pushLine(line);
+    lineSeq.current += 1;
+    const id = `w-${lineSeq.current}`;
+    sessions.setLines(diagramKey, (ls) => [...ls, { id, ...line }]);
+  };
+  /** 구성도 대화(diagramKey)로만 보낸다. 구조를 바꾸는 가정 변경처럼 질문 세션으로 가면 안 되는 차례가 쓴다. */
   const sendMain = (text: string) => {
     if (!live || chat.busy) return;
     setEditMode(false);
     adoptAfterChat.current = false;
-    void chat.send(text);
+    if (diagramKey === "main") return void chat.send(text);
+    if (diagramKey === NEW_SESSION) {
+      // 새 구성도 대화의 첫 메시지: 서버가 세션을 만들고 id 를 준다. 앞서 실패한 첫 메시지 줄은 비우고 다시 시작한다.
+      sessions.startNewDiagram(text);
+      return void chat.send(text, { kind: "diagram", sessionId: null });
+    }
+    if (activeSummary) sessions.upsert({ ...activeSummary, updatedAt: new Date().toISOString() });
+    void chat.send(text, { kind: "diagram", sessionId: diagramKey });
   };
-  // 대화 패널의 보내기: 질문 세션을 보고 있으면 그 세션으로, 아니면 구성도 대화로.
+  /** `새 대화`: 새 구성도 대화를 열고 입력칸으로 간다. 서버 세션은 첫 메시지를 보낼 때 만든다. */
+  const newChat = () => {
+    if (!live || runningKey === NEW_SESSION) return;
+    sessions.startNewDiagram();
+    skipToChat();
+  };
+  // 대화 패널의 보내기: 질문 세션을 보고 있으면 그 세션으로, 아니면 보고 있는 구성도 대화로.
   const sendChat = (text: string) => {
-    if (sessions.active === "main") return sendMain(text);
+    if (inDiagramChat) return sendMain(text);
     if (!live || chat.busy) return;
     // 질문 세션: 노드가 지금 구성도에 있을 때만 이어 묻는다. 새 세션은 서버가 id 를 줄 때까지 sessionId 없이 보낸다.
     if (!activeSession || labelOf(activeSession.nodeId) === null) return;
@@ -448,28 +496,28 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
     try {
       const r = await confirmAssumptionAction(diagramId, key, value);
       if (!r.ok) {
-        chat.pushLine({ kind: "error", text: r.error });
+        pushDiagramLine({ kind: "error", text: r.error });
         return false;
       }
       setCurrent((c) => ({ number: c.number, state: confirmAssumption(c.state, key, value) }));
       refreshFromServer();
       return true;
     } catch {
-      chat.pushLine({ kind: "error", text: "가정을 확정하지 못했어요. 다시 시도해 주세요." });
+      pushDiagramLine({ kind: "error", text: "가정을 확정하지 못했어요. 다시 시도해 주세요." });
       return false;
     }
   };
   const onChooseAssumption = async (key: string, value: string) => {
     if (!live || chat.busy) return;
-    // 구조를 다시 맞추는 차례라 질문 세션이 아니라 구성도 대화로 보낸다. 확정 실패 줄도 보이게 먼저 옮겨 간다.
-    sessions.select("main");
+    // 구조를 다시 맞추는 차례라 질문 세션이 아니라 구성도 대화(diagramKey)로 보낸다. 확정 실패 줄도 보이게 먼저 옮겨 간다.
+    toDiagramChat();
     if (!(await confirmKey(key, value))) return;
     sendMain(assumptionChangeMessage(key, value));
   };
   const onConfirmAssumption = (key: string) => {
     const a = current.state.assumptions[key];
     if (!live || chat.busy || !a) return;
-    sessions.select("main"); // 실패 줄이 보이게
+    toDiagramChat(); // 실패 줄이 보이게
     void confirmKey(key, a.value);
   };
 
@@ -777,8 +825,23 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
             loading: chatLines === "loading",
             busy: chat.busy && runningKey === sessions.active,
             elsewhereBusy: chat.busy && runningKey !== sessions.active,
-            picker: { sessions: sessions.sessions, active: sessions.active, labelOf, onSelect: sessions.select, pending: sessions.pending },
+            picker: {
+              sessions: sessions.sessions,
+              active: sessions.active,
+              labelOf,
+              onSelect: sessions.select,
+              pending: sessions.pending,
+              onNew: newChat,
+              newDisabled: !live || runningKey === NEW_SESSION,
+              onRename: sessions.rename,
+              onDelete: sessions.remove,
+              deleteDisabled: chat.busy,
+              more: sessions.more,
+              onMore: sessions.loadMore,
+            },
             ...(activeSession ? { ask: { nodeId: activeSession.nodeId, nodeLabel: labelOf(activeSession.nodeId) } } : {}),
+            ...(activeSummary?.kind === "diagram" ? { emptyHint: NEW_CHAT_HINT } : {}),
+            handoffTo: diagramKey,
             onSend: sendChat,
             onStop: chat.stop,
             onOpenWarnings: openWarnings,

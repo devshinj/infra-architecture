@@ -33,6 +33,7 @@ const NOT_FOUND = "구성도를 찾을 수 없어요.";
 const row: SessionRow = {
   id: SESSION,
   diagramId: DIAGRAM,
+  kind: "node",
   nodeId: "was-1",
   nodeLabel: "WAS#1",
   title: "t",
@@ -129,7 +130,7 @@ describe("POST /api/diagrams/:id/ask", () => {
   test("streams ndjson events for a running turn", async () => {
     signedIn();
     sessionMock.mockResolvedValueOnce(row);
-    const done: ChatEvent = { t: "done", version: null, status: "complete", applied: 0, skipped: 0, missing: 0, nodes: 1, edges: 0, assistantMessageId: "m2" };
+    const done: ChatEvent = { t: "done", version: null, status: "complete", applied: 0, changed: 0, skipped: 0, missing: 0, nodes: 1, edges: 0, assistantMessageId: "m2" };
     runMock.mockImplementationOnce(async ({ emit }) => {
       emit({ t: "start", messageId: "m1", intent: "question" });
       emit({ t: "answer", delta: "답" });

@@ -12,7 +12,8 @@ export function usePopover(firstItem: string) {
     if (!open) return;
     root.current?.querySelector<HTMLElement>(firstItem)?.focus();
     const onKey = (e: KeyboardEvent) => {
-      if (e.key !== "Escape") return;
+      // 팝오버 안의 행 메뉴처럼 안쪽에서 이미 Esc 를 처리했으면(preventDefault) 팝오버는 그대로 둔다.
+      if (e.key !== "Escape" || e.defaultPrevented) return;
       setOpen(false);
       trigger.current?.focus();
     };

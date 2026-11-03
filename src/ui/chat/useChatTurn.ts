@@ -20,6 +20,8 @@ export interface ProgressCard {
   end?: "done" | "aborted";
   nodes?: number;
   edges?: number;
+  /** 출력 한도로 끊겨 이어 그리는 중이면 몇 번째 요청인지(`이어서 그리는 중 (n/of)`). */
+  part?: { n: number; of: number };
 }
 
 export interface ChatLine {
@@ -43,8 +45,14 @@ export interface ChatLine {
 
 type DoneEvent = Extract<ChatEvent, { t: "done" }>;
 
-/** 차례를 보낼 곳: 구성도 대화, 또는 노드 질문 세션(sessionId null 이면 새 세션). */
-export type TurnTarget = { kind: "main" } | { kind: "ask"; nodeId: string; sessionId: string | null };
+/**
+ * 차례를 보낼 곳: 기본 대화(main), 구성도 대화 세션(diagram, sessionId null 이면 새 세션),
+ * 또는 노드 질문 세션(ask, sessionId null 이면 새 세션).
+ */
+export type TurnTarget =
+  | { kind: "main" }
+  | { kind: "diagram"; sessionId: string | null }
+  | { kind: "ask"; nodeId: string; sessionId: string | null };
 const MAIN: TurnTarget = { kind: "main" };
 
 export interface UseChatTurnArgs {
@@ -57,10 +65,10 @@ export interface UseChatTurnArgs {
   onRelayout?(): void;
   /** The stream ended without `done` (user abort, network cut, error after commands): the saved version may differ from the canvas. */
   onInterrupted?(): void;
-  /** 노드 질문에서 서버가 새 세션을 만들었다(`session` 이벤트). */
+  /** 서버가 새 세션(노드 질문·구성도 대화)을 만들었다(`session` 이벤트). */
   onSession?(session: SessionSummary): void;
-  /** 질문 세션 차례의 줄은 이 함수로 그 세션에 쌓는다(useSessions.setLines). 구성도 대화 줄은 이 훅이 가진다. */
-  onAskLines?(key: SessionKey, update: (lines: ChatLine[]) => ChatLine[]): void;
+  /** 세션 차례의 줄은 이 함수로 그 세션에 쌓는다(useSessions.setLines). 기본 대화 줄은 이 훅이 가진다. */
+  onSessionLines?(key: SessionKey, update: (lines: ChatLine[]) => ChatLine[]): void;
 }
 
 const GENERIC_ERROR = "응답을 받지 못했어요. 다시 시도해 주세요.";
@@ -78,6 +86,10 @@ export function useChatTurn(args: UseChatTurnArgs) {
   const [busy, setBusy] = useState(false);
   /** 도는 차례의 세션. 새 질문 세션은 서버가 id 를 줄 때까지 NEW_SESSION. */
   const [runningKey, setRunningKey] = useState<SessionKey | null>(null);
+  /** 도는 차례가 노드 질문이면 true(구성도를 바꾸지 않는다). */
+  const [runningAsk, setRunningAsk] = useState(false);
+  /** 어느 대화에서든 차례가 남긴 오류 줄 수(AI 서버 상태를 다시 확인하는 계기). */
+  const [errors, setErrors] = useState(0);
   const argsRef = useRef(args);
   useEffect(() => {
     argsRef.current = args;
@@ -99,11 +111,17 @@ export function useChatTurn(args: UseChatTurnArgs) {
       abortRef.current = ctrl;
       // 질문 세션 차례: 진행 카드·요약·주의 칩 없이 말풍선과 답만 그 세션에 쌓는다. 구성도는 바꾸지 않는다.
       const ask = target.kind === "ask" ? target : null;
-      let key: SessionKey = ask ? (ask.sessionId ?? NEW_SESSION) : "main";
+      // 구성도 대화 세션 차례: 기본 대화와 똑같이 돌고, 줄만 그 세션에 쌓는다.
+      const inSession = target.kind !== "main";
+      let key: SessionKey = target.kind === "main" ? "main" : (target.sessionId ?? NEW_SESSION);
       setBusy(true);
       setRunningKey(key);
-      const update = (fn: (ls: ChatLine[]) => ChatLine[]) => (ask ? argsRef.current.onAskLines?.(key, fn) : setLines(fn));
-      const add = (line: Omit<ChatLine, "id"> & { id?: string }) => update((ls) => [...ls, { id: nextId("l"), ...line }]);
+      setRunningAsk(!!ask);
+      const update = (fn: (ls: ChatLine[]) => ChatLine[]) => (inSession ? argsRef.current.onSessionLines?.(key, fn) : setLines(fn));
+      const add = (line: Omit<ChatLine, "id"> & { id?: string }) => {
+        if (line.kind === "error") setErrors((n) => n + 1);
+        update((ls) => [...ls, { id: nextId("l"), ...line }]);
+      };
       // 서버 응답 전에 내 말풍선과 진행 카드를 바로 띄운다.
       const turn = nextId("t");
       const at = Date.now();
@@ -112,10 +130,11 @@ export function useChatTurn(args: UseChatTurnArgs) {
       add({ kind: "user", text: trimmed, at });
       if (!ask) add({ id: cardId, kind: "card", text: "", card: { mode: "build", step: "review", changes: 0 }, turn, at });
       const patchCard = (fn: (c: ProgressCard) => ProgressCard) =>
-        !ask && setLines((ls) => ls.map((l) => (l.id === cardId && l.card ? { ...l, card: fn(l.card) } : l)));
-      const removeCard = () => !ask && setLines((ls) => ls.filter((l) => l.id !== cardId));
+        !ask && update((ls) => ls.map((l) => (l.id === cardId && l.card ? { ...l, card: fn(l.card) } : l)));
+      const removeCard = () => !ask && update((ls) => ls.filter((l) => l.id !== cardId));
 
       let answerId: string | null = null;
+      let said = false; // 이 차례에 안내(say) 글이 왔는지
       let gotDone = false;
       let cmds = 0;
       let errored = false;
@@ -133,7 +152,7 @@ export function useChatTurn(args: UseChatTurnArgs) {
         const a = argsRef.current;
         switch (ev.t) {
           case "session":
-            if (!ask) break;
+            if (!inSession) break;
             key = ev.session.id;
             setRunningKey(key);
             a.onSession?.(ev.session);
@@ -147,10 +166,14 @@ export function useChatTurn(args: UseChatTurnArgs) {
             break;
           case "status": {
             const p = ev.phase;
-            patchCard((c) => (p === "answering" ? { ...c, mode: "answer" } : { ...c, step: p === "thinking" ? "review" : p }));
+            const part = ev.part;
+            patchCard((c) =>
+              p === "answering" ? { ...c, mode: "answer" } : { ...c, step: p === "thinking" ? "review" : p, ...(part ? { part } : {}) },
+            );
             break;
           }
           case "say":
+            if (ev.text.trim()) said = true;
             pushT({ kind: "progress", text: ev.text });
             break;
           case "cmd": {
@@ -188,7 +211,7 @@ export function useChatTurn(args: UseChatTurnArgs) {
               const end = ev.status === "aborted" ? "aborted" : "done";
               patchCard((c) => ({ ...c, end, nodes: ev.nodes, edges: ev.edges }));
             } else removeCard();
-            const s = summaryText(ev, answerId !== null, intent);
+            const s = summaryText(ev, answerId !== null || said, intent);
             if (s) pushT({ kind: "summary", text: s });
             pushWarnings();
             a.onDone(ev);
@@ -205,7 +228,11 @@ export function useChatTurn(args: UseChatTurnArgs) {
 
       try {
         const base = `/api/diagrams/${encodeURIComponent(argsRef.current.diagramId)}`;
-        const body = ask ? { nodeId: ask.nodeId, text: trimmed, ...(ask.sessionId ? { sessionId: ask.sessionId } : {}) } : { text: trimmed };
+        const body = ask
+          ? { nodeId: ask.nodeId, text: trimmed, ...(ask.sessionId ? { sessionId: ask.sessionId } : {}) }
+          : target.kind === "diagram"
+            ? { text: trimmed, ...(target.sessionId ? { sessionId: target.sessionId } : { newSession: true }) }
+            : { text: trimmed };
         const res = await fetch(ask ? `${base}/ask` : `${base}/chat`, {
           method: "POST",
           headers: { "content-type": "application/json" },
@@ -270,6 +297,7 @@ export function useChatTurn(args: UseChatTurnArgs) {
         abortRef.current = null;
         setBusy(false);
         setRunningKey(null);
+        setRunningAsk(false);
         if (!ask && !gotDone && (ctrl.signal.aborted || cmds > 0)) argsRef.current.onInterrupted?.();
       }
     },
@@ -278,5 +306,5 @@ export function useChatTurn(args: UseChatTurnArgs) {
 
   const stop = useCallback(() => abortRef.current?.abort(), []);
 
-  return { lines, busy, runningKey, send, stop, pushLine: push };
+  return { lines, busy, runningKey, runningAsk, errors, send, stop, pushLine: push };
 }

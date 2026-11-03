@@ -35,11 +35,26 @@ export const S1_NODE_COUNT = Object.keys(s1.state.nodes).length;
 
 type Msg = { role: string; content: string };
 
-async function linesFor(messages: Msg[]): Promise<{ lines: string[]; delay: number }> {
+/**
+ * 출력 한도 E2E("끊김"): 첫 요청은 노드 둘과 끊긴 줄로 finish_reason "length", 이어 쓰기 요청(현재 구성에 cut-2 가 있음)은
+ * 남은 노드와 연결로 끝낸다. 한 차례에 노드 3 · 연결 2 가 되고 버전은 하나다.
+ */
+export const CUT_NODE_COUNT = 3;
+function cutLines(last: string): { lines: string[]; delay: number; finish: "stop" | "length"; tail?: string } {
+  const n = (id: string) => JSON.stringify({ op: "add_node", id, kind: "was", label: `끊김 서버 ${id.slice(-1)}`, parent: null });
+  const e = (a: string, b: string) => JSON.stringify({ op: "add_edge", id: `e-${a}-${b}`, from: a, to: b, edge_kind: "request" });
+  if (!last.includes("노드 cut-2 ")) {
+    return { delay: SLOW_MS, finish: "length", lines: [JSON.stringify({ op: "say", text: "큰 구성을 그립니다." }), n("cut-1"), n("cut-2")], tail: '{"op":"add_node","id":"cut-3","la' };
+  }
+  return { delay: SLOW_MS, finish: "stop", lines: [n("cut-3"), e("cut-1", "cut-2"), e("cut-2", "cut-3")] };
+}
+
+async function linesFor(messages: Msg[]): Promise<{ lines: string[]; delay: number; finish?: "stop" | "length"; tail?: string }> {
   const last = [...messages].reverse().find((m) => m.role === "user")?.content ?? "";
   const reqAt = last.lastIndexOf("요청: ");
   const request = reqAt >= 0 ? last.slice(reqAt + 4) : last;
   const delay = request.includes("천천히") ? SLOW_MS : FAST_MS;
+  if (request.includes("끊김")) return cutLines(last);
   const refs = /참조 노드:\n([\s\S]*?)\n\n요청: /.exec(last)?.[1] ?? "없음";
   if (refs !== "없음") {
     const id = refs.split("\n")[0]!.split(" ")[0]!;
@@ -169,7 +184,7 @@ export function startFakeLlm(): Promise<http.Server> {
       const sys = body.messages.find((m) => m.role === "system")?.content;
       const askQuestion = sys === ASK_PROMPT ? ([...body.messages].reverse().find((m) => m.role === "user")?.content.split("질문: ").pop() ?? "") : null;
       const explainKind = sys === EXPLAIN_NODE_PROMPT ? "node" : sys === EXPLAIN_EDGE_PROMPT ? "edge" : null;
-      const { lines, delay } = askQuestion !== null
+      const { lines, delay, finish, tail }: { lines: string[]; delay: number; finish?: "stop" | "length"; tail?: string } = askQuestion !== null
         ? { lines: [`가짜 답이에요. ${askQuestion}`], delay: FAST_MS }
         : explainKind
         ? { lines: [explainJson(body.messages, explainKind)], delay: FAST_MS }
@@ -185,7 +200,8 @@ export function startFakeLlm(): Promise<http.Server> {
         await new Promise((r) => setTimeout(r, delay));
       }
       if (closed) return;
-      res.write(chunk(null, "stop"));
+      if (tail) res.write(chunk(tail, null));
+      res.write(chunk(null, finish ?? "stop"));
       res.write("data: [DONE]\n\n");
       res.end();
       return;

@@ -4,6 +4,7 @@ import { z } from "zod";
 import { auth } from "@/auth";
 import { NODE_GONE_MESSAGE, runAskTurn, type AskTurnResult } from "@/server/chat/ask";
 import { defaultChatDeps } from "@/server/chat/deps";
+import { SESSION_GONE_MESSAGE } from "@/server/chat/events";
 import { BUSY_MESSAGE, GENERIC_ERROR_MESSAGE } from "@/server/chat/pipeline";
 import { getSession } from "@/server/chat/sessions";
 import { streamTurn } from "@/server/chat/stream";
@@ -11,6 +12,8 @@ import { getOwnedDiagram, NotFoundError, ValidationError } from "@/server/projec
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+// 차례 전체 상한(240초, 출력 한도 이어 쓰기 포함)이 플랫폼 시간 제한에 먼저 잘리지 않게 한다.
+export const maxDuration = 300;
 
 const BodySchema = z.object({
   nodeId: z.string().min(1).max(200),
@@ -54,7 +57,8 @@ export async function POST(request: Request, ctx: { params: Promise<{ id: string
     if (sessionId !== null) {
       const row = await getSession(id, sessionId);
       if (!row) return json(NOT_FOUND, 404);
-      if (row.nodeId !== nodeId) return json(BAD_BODY, 400);
+      // 구성도 대화 세션은 /chat 으로만 이어 간다.
+      if (row.kind !== "node" || row.nodeId !== nodeId) return json(BAD_BODY, 400);
     }
   } catch (err) {
     if (err instanceof NotFoundError) return json(NOT_FOUND, 404);
@@ -69,6 +73,7 @@ export async function POST(request: Request, ctx: { params: Promise<{ id: string
       if (!outcome.ok && outcome.err instanceof NotFoundError) return json(NOT_FOUND, 404);
       if (!outcome.ok && outcome.err instanceof ValidationError) return json(BAD_BODY, 400);
       if (outcome.ok && outcome.result.status === "busy") return json(BUSY_MESSAGE, 409);
+      if (outcome.ok && outcome.result.status === "session_gone") return json(SESSION_GONE_MESSAGE, 404);
       if (outcome.ok && outcome.result.status === "gone") return json(NODE_GONE_MESSAGE, 409);
       return null;
     },

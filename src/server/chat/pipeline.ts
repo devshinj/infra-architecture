@@ -1,15 +1,15 @@
 import { computeMissing } from "@/domain/missing";
 import { applyCommand, pruneEmptyGroups } from "@/domain/apply";
-import { COMMAND_OPS, parseCommand } from "@/domain/commands";
+import { COMMAND_OPS, isStructural, parseCommand } from "@/domain/commands";
 import { emptyState, type DiagramState, type Warning } from "@/domain/types";
 import type { ClefClient, Intent } from "@/server/llm/clef";
 import { createJsonlParser } from "@/server/llm/jsonl";
 import { createThinkStripper } from "@/server/llm/think";
 import type { QwenClient } from "@/server/llm/qwen";
-import { getOwnedDiagram } from "@/server/projects";
+import { getOwnedDiagram, NotFoundError, ValidationError } from "@/server/projects";
 import { createVersion, getLatestState } from "@/server/versions";
 
-import type { ChatEvent, MessageMeta } from "./events";
+import { SESSION_GONE_MESSAGE, sessionPayload, type ChatEvent, type MessageMeta } from "./events";
 import { BUSY_MESSAGE } from "./busy";
 import { withDiagramLock } from "./lock";
 import { resolveIntent } from "./intent";
@@ -18,16 +18,20 @@ import { normalizeAiCommand } from "./normalize";
 import { checkWarnings } from "./warnings";
 import { createSkipTally, skipKey } from "./skips";
 import { buildMessages, parseMentions } from "./prompt";
+import { createSession, getSession, touchSession } from "./sessions";
 
 export interface ChatDeps {
   qwen: QwenClient | null;
   clef: ClefClient;
-  /** 차례 전체 상한(기본 120초). 테스트에서만 바꾼다. */
+  /** 차례 전체 상한(기본 240초, 이어 쓰기 포함). 테스트에서만 바꾼다. */
   turnTimeoutMs?: number;
 }
 
-/** `busy` 면 잠금을 얻지 못한 것(이미 `error` 이벤트를 보냈다). 호출자는 409 로 바꾼다. */
-export type ChatTurnResult = { status: "ok" } | { status: "busy" };
+/**
+ * `busy` 면 잠금을 얻지 못한 것, `session_gone` 이면 잠금을 기다리는 사이 세션이 지워진 것(둘 다 이미 `error`
+ * 이벤트를 보냈고 아무것도 저장하지 않았다). 호출자는 409·404 로 바꾼다.
+ */
+export type ChatTurnResult = { status: "ok" } | { status: "busy" } | { status: "session_gone" };
 
 export { BUSY_MESSAGE };
 export const AI_UNAVAILABLE_MESSAGE = "AI 서버에 연결할 수 없어요. 잠시 뒤 다시 시도하거나 관리자에게 문의해 주세요.";
@@ -36,26 +40,50 @@ export const LAYOUT_REPLY = "구성도를 다시 정렬했어요.";
 export const TIMEOUT_MESSAGE = "응답 시간이 너무 길어 중단했어요.";
 export const GENERIC_ERROR_MESSAGE = "응답을 처리하지 못했어요. 잠시 뒤 다시 시도해 주세요.";
 
-const TURN_TIMEOUT_MS = 120_000;
+const TURN_TIMEOUT_MS = 240_000;
+/** 출력 한도(finish_reason "length")로 끊긴 명령 차례를 이어 쓰게 하는 최대 횟수. 처음 요청까지 최대 1+2 번 부른다. */
+export const MAX_CONTINUATIONS = 2;
 export const HISTORY_FETCH = 40;
 const OP_MAX = 40;
+
+/**
+ * 구성도 대화의 어느 줄기에 쌓을지: 없으면 기본 대화(session_id null), `{ id }` 면 그 구성도 대화 세션,
+ * `"new"` 면 이 첫 메시지로 새 구성도 대화 세션을 만든다(만들면 session 이벤트로 id 를 알린다).
+ */
+export type ChatSessionTarget = { id: string } | "new";
 
 interface TurnArgs {
   userId: string;
   diagramId: string;
   text: string;
+  session?: ChatSessionTarget;
   signal: AbortSignal;
   emit(e: ChatEvent): void;
 }
 
+/**
+ * 구성도 대화 한 차례. 구성도는 하나라 세션이 달라도 같은 상태를 바꾸고, 잠금도 구성도 하나에 하나다.
+ * 남의 구성도·세션은 NotFoundError, 노드 질문 세션 id 면 ValidationError 를 던진다.
+ */
 export async function runChatTurn(args: TurnArgs, deps: ChatDeps): Promise<ChatTurnResult> {
   await getOwnedDiagram(args.userId, args.diagramId); // NotFoundError 는 그대로 던진다
+  const target = args.session;
+  if (target !== undefined && target !== "new") {
+    const row = await getSession(args.diagramId, target.id);
+    if (!row) throw new NotFoundError();
+    // 노드 질문 세션은 /ask 로만 이어 간다(구성을 바꾸지 않는다).
+    if (row.kind !== "diagram") throw new ValidationError("구성도 대화 세션이 아니에요");
+  }
   const emit = guardEmit(args.emit);
   const turnArgs = { ...args, emit };
-  const locked = await withDiagramLock(args.diagramId, () => lockedTurn(turnArgs, deps));
+  const locked = await withDiagramLock(args.diagramId, () => sessionTurn(turnArgs, deps));
   if (!locked.ok) {
     emit({ t: "error", message: BUSY_MESSAGE });
     return { status: "busy" };
+  }
+  if (locked.value === "session_gone") {
+    emit({ t: "error", message: SESSION_GONE_MESSAGE });
+    return { status: "session_gone" };
   }
   return { status: "ok" };
 }
@@ -95,6 +123,8 @@ export function streamFailure(
   return "error";
 }
 
+const abortError = () => new DOMException("The operation was aborted.", "AbortError");
+
 function opName(raw: unknown): string {
   const op = raw && typeof raw === "object" ? (raw as { op?: unknown }).op : undefined;
   return typeof op === "string" ? op.slice(0, OP_MAX) : "?";
@@ -116,7 +146,34 @@ function prunedOrder(before: DiagramState, after: DiagramState): string[] {
     .sort((a, b) => depth(b) - depth(a));
 }
 
-async function lockedTurn(args: TurnArgs, deps: ChatDeps): Promise<void> {
+/** 잠금 안: 새 세션이면 만들고 알린 뒤 차례를 돌리고, 세션이면 최근 이어간 순서를 갱신한다. */
+async function sessionTurn(args: TurnArgs, deps: ChatDeps): Promise<"ok" | "session_gone"> {
+  const target = args.session;
+  if (target === undefined) {
+    await lockedTurn(args, null, false, deps);
+    return "ok";
+  }
+  let sessionId: string;
+  if (target === "new") {
+    const row = await createSession(args.diagramId, { kind: "diagram" }, args.text);
+    args.emit({ t: "session", session: sessionPayload(row) });
+    sessionId = row.id;
+  } else {
+    // 잠금 전에 확인했지만, 잠금을 기다리는 사이 지워졌을 수 있다(삭제도 같은 잠금을 쓴다). 그러면 아무것도 쓰지 않는다.
+    if (!(await getSession(args.diagramId, target.id))) return "session_gone";
+    sessionId = target.id;
+  }
+  // 예상치 못한 예외로 끝나도 세션 순서(최근 이어감)는 갱신한다.
+  try {
+    await lockedTurn(args, sessionId, target !== "new", deps);
+    return "ok";
+  } finally {
+    await touchSession(sessionId).catch((err) => console.error("chat touch session failed", err));
+  }
+}
+
+/** sessionId 가 null 이면 기본 대화. followUp 이 false 인 새 세션은 기록이 없어 읽지 않는다. */
+async function lockedTurn(args: TurnArgs, sessionId: string | null, followUp: boolean, deps: ChatDeps): Promise<void> {
   const { diagramId, emit } = args;
   const { signal, timeout } = turnSignals(args.signal, deps);
 
@@ -124,13 +181,16 @@ async function lockedTurn(args: TurnArgs, deps: ChatDeps): Promise<void> {
   let state: DiagramState = latest?.state ?? emptyState();
   const turnStartState = state;
   const prevWarnings = latest?.state.warnings; // 차례 시작 상태의 경고
-  // 구성도 대화만 본다(질문 세션 글은 섞지 않는다).
-  const history = (await listMessages(diagramId, HISTORY_FETCH, null))
-    .filter((m) => m.role === "user" || m.role === "assistant")
-    .map((m) => ({ role: m.role as "user" | "assistant", content: m.content }));
+  // 이 대화 줄기만 본다(다른 구성도 대화 세션·질문 세션 글은 섞지 않는다).
+  const history =
+    sessionId === null || followUp
+      ? (await listMessages(diagramId, HISTORY_FETCH, sessionId))
+          .filter((m) => m.role === "user" || m.role === "assistant")
+          .map((m) => ({ role: m.role as "user" | "assistant", content: m.content }))
+      : [];
   const lastAssistant = history.findLast((m) => m.role === "assistant")?.content;
   const { clean, mentions } = parseMentions(args.text, state);
-  const userMsg = await createMessage(diagramId, "user", args.text, { mentions: mentions.map((m) => m.id) });
+  const userMsg = await createMessage(diagramId, "user", args.text, { mentions: mentions.map((m) => m.id) }, sessionId);
 
   const counts = () => ({ nodes: Object.keys(state.nodes).length, edges: Object.keys(state.edges).length });
 
@@ -138,7 +198,7 @@ async function lockedTurn(args: TurnArgs, deps: ChatDeps): Promise<void> {
     emit({ t: "start", messageId: userMsg.id, intent: null });
     emit({ t: "error", message: AI_UNAVAILABLE_MESSAGE });
     // 응답 메시지는 남기지 않는다. 클라이언트가 깨끗이 정리하도록 done 을 보낸다.
-    emit({ t: "done", version: null, status: "complete", applied: 0, skipped: 0, missing: computeMissing(state).count, ...counts(), assistantMessageId: "" });
+    emit({ t: "done", version: null, status: "complete", applied: 0, changed: 0, skipped: 0, missing: computeMissing(state).count, ...counts(), assistantMessageId: "" });
     return;
   }
 
@@ -158,6 +218,7 @@ async function lockedTurn(args: TurnArgs, deps: ChatDeps): Promise<void> {
   const says: string[] = [];
   let answer = "";
   let applied = 0;
+  let changed = 0; // 구성을 바꾼 명령만(가정 제외)
   const tally = createSkipTally();
   let status: "complete" | "aborted" | "error" = "complete";
 
@@ -198,11 +259,12 @@ async function lockedTurn(args: TurnArgs, deps: ChatDeps): Promise<void> {
       state = r.state;
       if (applied === 0) emit({ t: "status", phase: "drawing" });
       applied++;
+      if (isStructural(parsed.cmd)) changed++;
       emit({ t: "cmd", cmd: parsed.cmd });
     };
-    const parser = createJsonlParser(onLine, () => {
+    const onBad = () => {
       if (!signal.aborted) skip("읽을 수 없는 줄", skipKey("bad_json"));
-    });
+    };
 
     // 답변 경로: <think> 를 지운 글만 보내고, 보낸 글 그대로 모아 저장한다(중단·오류여도).
     let answering = false;
@@ -217,17 +279,40 @@ async function lockedTurn(args: TurnArgs, deps: ChatDeps): Promise<void> {
       emit({ t: "answer", delta: text });
     });
     try {
-      await deps.qwen.streamCompletion(messages, {
-        signal,
-        onDelta(delta) {
-          if (signal.aborted) return;
-          if (answerMode) stripper.push(delta);
-          else parser.push(delta);
-        },
-      });
-      if (signal.aborted) throw new DOMException("The operation was aborted.", "AbortError");
-      if (answerMode) stripper.end();
-      else parser.end();
+      if (answerMode) {
+        await deps.qwen.streamCompletion(messages, {
+          signal,
+          onDelta(delta) {
+            if (!signal.aborted) stripper.push(delta);
+          },
+        });
+        if (signal.aborted) throw abortError();
+        stripper.end();
+      } else {
+        // 명령 경로: 출력 한도로 끊기면(finish_reason "length") 지금까지 반영한 상태를 다시 보내 이어 쓰게 한다.
+        // 같은 차례라 cmd 는 계속 같은 스트림으로 가고, 버전은 차례 끝에 한 번만 만든다.
+        let msgs = messages;
+        for (let part = 1; ; part++) {
+          const appliedBefore = applied;
+          const parser = createJsonlParser(onLine, onBad);
+          const r = await deps.qwen.streamCompletion(msgs, {
+            signal,
+            onDelta(delta) {
+              if (!signal.aborted) parser.push(delta);
+            },
+          });
+          if (signal.aborted) throw abortError();
+          // 이번 호출이 아무것도 반영하지 못했으면(같은 걸 되풀이하는 등) 더 이어 쓰지 않는다.
+          const more = r.finishReason === "length" && part <= MAX_CONTINUATIONS && applied > appliedBefore;
+          // 이어 쓸 때만 끊긴 마지막 줄을 조용히 버린다(마지막 시도까지 끊기면 지금처럼 건너뜀으로 센다).
+          parser.end({ dropPartial: more });
+          if (!more) break;
+          const n = part + 1;
+          console.info("[chat] output cut by length, continuing", { diagramId, part: n });
+          emit({ t: "status", phase: "drawing", part: { n, of: MAX_CONTINUATIONS + 1 } });
+          msgs = buildMessages({ intent, text: clean, state, mentions, history, missing: openMissing, continuation: true });
+        }
+      }
     } catch (err) {
       status = streamFailure(err, { outer: args.signal, signal, timeout }, emit);
     }
@@ -268,6 +353,7 @@ async function lockedTurn(args: TurnArgs, deps: ChatDeps): Promise<void> {
   const meta: MessageMeta = {
     ...(intent ? { intent } : {}),
     applied,
+    changed,
     skipped,
     version,
     status,
@@ -276,13 +362,14 @@ async function lockedTurn(args: TurnArgs, deps: ChatDeps): Promise<void> {
     ...(fresh.length > 0 ? { warnings: fresh } : {}),
     ...counts(),
   };
-  const assistant = await createMessage(diagramId, "assistant", content, meta);
+  const assistant = await createMessage(diagramId, "assistant", content, meta, sessionId);
   if (fresh.length > 0) emit({ t: "warnings", items: fresh });
   emit({
     t: "done",
     version,
     status: status === "complete" ? "complete" : "aborted",
     applied,
+    changed,
     skipped,
     missing,
     ...counts(),

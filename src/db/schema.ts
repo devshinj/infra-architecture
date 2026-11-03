@@ -1,6 +1,7 @@
 import { sql } from "drizzle-orm";
 import {
   boolean,
+  check,
   index,
   integer,
   jsonb,
@@ -77,20 +78,31 @@ export const diagrams = pgTable(
 
 export type MessageRole = "user" | "assistant" | "system";
 
-// 노드에 대해 물어보는 대화 세션(§6.8). 구성도 대화는 세션 없이 session_id null 로 쌓인다.
+export type ChatSessionKind = "diagram" | "node";
+
+// 대화 세션(§6.8). kind 가 node 면 노드에 대해 물어보는 질문 세션, diagram 이면 구성도를 바꾸는 대화를 따로 이어 가는 세션이다.
+// 세션이 없는 구성도 대화(기본 대화)는 session_id null 로 쌓인다.
 export const chatSessions = pgTable(
   "chat_sessions",
   {
     id: uuid("id").primaryKey().defaultRandom(),
     diagramId: uuid("diagram_id").notNull().references(() => diagrams.id, { onDelete: "cascade" }),
-    nodeId: text("node_id").notNull(),
+    kind: text("kind").$type<ChatSessionKind>().notNull().default("node"),
+    // 질문 세션만 노드가 있다(구성도 대화 세션은 둘 다 null).
+    nodeId: text("node_id"),
     // 만들 때의 노드 이름 스냅숏. 노드가 지워지거나 이름이 바뀌어도 목록에서 알아볼 수 있게.
-    nodeLabel: text("node_label").notNull(),
+    nodeLabel: text("node_label"),
     title: text("title").notNull(),
     createdAt: createdAt(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [index("chat_sessions_diagram_updated_idx").on(t.diagramId, t.updatedAt)],
+  (t) => [
+    index("chat_sessions_diagram_updated_idx").on(t.diagramId, t.updatedAt),
+    check(
+      "chat_sessions_kind_node_check",
+      sql`(${t.kind} = 'node' AND ${t.nodeId} IS NOT NULL AND ${t.nodeLabel} IS NOT NULL) OR (${t.kind} = 'diagram' AND ${t.nodeId} IS NULL AND ${t.nodeLabel} IS NULL)`,
+    ),
+  ],
 );
 
 export const messages = pgTable(

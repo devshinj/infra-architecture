@@ -2,31 +2,52 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import type { MessageMeta } from "@/server/chat/events";
+import type { MessageMeta, SessionEventPayload } from "@/server/chat/events";
 
 import { messagesToLines } from "./lines";
 import type { ChatLine } from "./useChatTurn";
 
-/** 구성도 대화는 "main", 질문 세션은 세션 id. */
+/** 기본 대화(세션 없는 구성도 대화)는 "main", 그 밖의 세션은 세션 id. */
 export type SessionKey = "main" | string;
 
-export interface SessionSummary {
-  id: string;
-  nodeId: string;
-  /** 세션을 만들 때의 노드 이름(노드가 지워졌을 때 보인다). */
-  nodeLabel: string;
-  title: string;
-  updatedAt: string;
-}
+/**
+ * 세션 요약. kind "node" 는 노드 질문 세션(nodeLabel 은 만들 때의 노드 이름, 노드가 지워졌을 때 보인다),
+ * kind "diagram" 은 구성도 대화 세션(노드 없음).
+ */
+export type SessionSummary = SessionEventPayload;
 
-/** 첫 질문을 보냈지만 서버가 아직 세션 id 를 주지 않은 세션. 한 번에 한 차례라 하나뿐이다. */
+/**
+ * 서버가 아직 id 를 주지 않은 새 세션: 첫 질문을 보낸 노드 질문 세션, 또는 `+ 새 대화` 로 연 구성도 대화 세션.
+ * 한 번에 하나뿐이다(새로 열면 앞의 것을 바꾼다).
+ */
 export const NEW_SESSION = "new";
 
 const TITLE_MAX = 60;
-/** 서버(createSession)와 같은 규칙: 공백을 한 칸으로 접고 60자. */
-const titleOf = (text: string) => [...text.replace(/\s+/g, " ").trim()].slice(0, TITLE_MAX).join("").trimEnd();
+/** 서버(foldTitle)와 같은 규칙: 공백을 한 칸으로 접고 60자. */
+export const titleOf = (text: string) => [...text.replace(/\s+/g, " ").trim()].slice(0, TITLE_MAX).join("").trimEnd();
+/** 첫 메시지를 보내기 전의 새 구성도 대화 이름. */
+export const NEW_CHAT_TITLE = "새 대화";
+
+/** 무리(세션 종류). 대화 고르기는 무리마다 쪽을 넘긴다. */
+export type SessionKind = SessionSummary["kind"];
+/** 무리마다 다음 쪽 커서(null 이면 더 없음)와 서버와 마지막으로 맞춘 시각(since). */
+export type SessionPaging = Record<SessionKind, { cursor: string | null; syncedAt: string }>;
+/** 무리의 `더 보기` 상태: none = 더 없음, idle = 누를 수 있음, loading, error = 실패(다시 누를 수 있음). */
+export type MoreState = "none" | "idle" | "loading" | "error";
 
 const LOAD_FAILED = "대화를 불러오지 못했어요. 다시 시도해 주세요.";
+const RENAME_FAILED = "이름을 바꾸지 못했어요. 잠시 후 다시 시도해 주세요.";
+const DELETE_FAILED = "대화를 삭제하지 못했어요. 잠시 후 다시 시도해 주세요.";
+
+/** 응답의 오류 글(없으면 fallback). */
+async function errorOf(r: Response, fallback: string): Promise<string> {
+  try {
+    const j = (await r.json()) as { error?: unknown };
+    return typeof j.error === "string" && j.error ? j.error : fallback;
+  } catch {
+    return fallback;
+  }
+}
 
 type Lines = Record<string, ChatLine[] | "loading">;
 type Update = ChatLine[] | ((prev: ChatLine[]) => ChatLine[]);
@@ -63,12 +84,36 @@ interface Row {
 }
 
 /**
- * 대화 탭의 세션 목록과 고른 세션. 구성도 대화 줄은 useChatTurn 이 가지므로 여기에는 질문 세션 줄만 둔다.
+ * 대화 탭의 세션 목록과 고른 세션. 기본 대화 줄은 useChatTurn 이 가지므로 여기에는 세션(구성도 대화·노드 질문) 줄만 둔다.
  * 세션 줄은 처음 고를 때 서버에서 한 번 불러 캐시하고, 도는 차례는 setLines 로 그 세션에 쌓는다.
  * 새로고침하면 늘 구성도 대화로 연다.
  */
-export function useSessions({ diagramId, initial }: { diagramId: string; initial: SessionSummary[] }) {
+/** 받은 세션을 id 로 합친다. 이미 있으면 더 최근에 이어간 쪽을 남긴다(이 탭에서 막 이어간 세션을 덮지 않게). */
+function mergeSessions(have: SessionSummary[], incoming: SessionSummary[]): { list: SessionSummary[]; added: string[] } {
+  const byId = new Map(have.map((s) => [s.id, s]));
+  const added: string[] = [];
+  for (const s of incoming) {
+    const cur = byId.get(s.id);
+    if (!cur) added.push(s.id);
+    if (!cur || Date.parse(s.updatedAt) > Date.parse(cur.updatedAt)) byId.set(s.id, s);
+  }
+  return { list: [...byId.values()], added };
+}
+
+const NO_PAGING: SessionPaging = { diagram: { cursor: null, syncedAt: "" }, node: { cursor: null, syncedAt: "" } };
+
+export function useSessions({ diagramId, initial, paging = NO_PAGING }: { diagramId: string; initial: SessionSummary[]; paging?: SessionPaging }) {
   const [sessions, setSessions] = useState<SessionSummary[]>(initial);
+  const [pages, setPages] = useState<SessionPaging>(paging);
+  const [moreStatus, setMoreStatus] = useState<Record<SessionKind, "idle" | "loading" | "error">>({ diagram: "idle", node: "idle" });
+  const pagesRef = useRef(pages);
+  useEffect(() => {
+    pagesRef.current = pages;
+  });
+  const sessionsRef = useRef(sessions);
+  useEffect(() => {
+    sessionsRef.current = sessions;
+  });
   const [active, setActive] = useState<SessionKey>("main");
   const [lines, setAllLines] = useState<Lines>({});
   const [pending, setPending] = useState<SessionSummary | null>(null);
@@ -160,7 +205,18 @@ export function useSessions({ diagramId, initial }: { diagramId: string; initial
 
   /** 새 질문 세션을 열고 고른다. 서버가 세션 id 를 주면 upsert 가 그 id 로 옮긴다. */
   const startNew = useCallback(({ nodeId, nodeLabel, text }: { nodeId: string; nodeLabel: string; text: string }) => {
-    setPending({ id: NEW_SESSION, nodeId, nodeLabel, title: titleOf(text), updatedAt: new Date().toISOString() });
+    setPending({ id: NEW_SESSION, kind: "node", nodeId, nodeLabel, title: titleOf(text), updatedAt: new Date().toISOString() });
+    setAllLines((ls) => ({ ...ls, [NEW_SESSION]: [] }));
+    setActive(NEW_SESSION);
+  }, []);
+
+  /**
+   * 새 구성도 대화를 열고 고른다(`+ 새 대화`, 또는 그 대화의 첫 메시지를 다시 보낼 때). 서버 세션은 첫 메시지를 보낼 때
+   * 만들어지고, 그때 upsert 가 이 줄을 그 id 로 옮긴다. text 가 없으면 아직 보내지 않은 빈 대화다.
+   */
+  const startNewDiagram = useCallback((text?: string) => {
+    const title = text ? titleOf(text) : NEW_CHAT_TITLE;
+    setPending({ id: NEW_SESSION, kind: "diagram", nodeId: null, nodeLabel: null, title, updatedAt: new Date().toISOString() });
     setAllLines((ls) => ({ ...ls, [NEW_SESSION]: [] }));
     setActive(NEW_SESSION);
   }, []);
@@ -178,7 +234,7 @@ export function useSessions({ diagramId, initial }: { diagramId: string; initial
       delete rest[NEW_SESSION];
       return rest;
     });
-    setPending((p) => (p && p.nodeId === summary.nodeId ? null : p));
+    setPending((p) => (p && p.kind === summary.kind && p.nodeId === summary.nodeId ? null : p));
     setActive((a) => (a === NEW_SESSION ? summary.id : a));
   }, []);
 
@@ -190,5 +246,89 @@ export function useSessions({ diagramId, initial }: { diagramId: string; initial
     [pending, sessions],
   );
 
-  return { sessions, active, select, linesOf, upsert, setLines, startNew, summaryOf, pending };
+  /**
+   * 무리의 다음 쪽(50개)을 불러와 합친다. 그 사이 바뀐 세션(changed)도 함께 합쳐 빠지는 행이 없게 한다.
+   * 새로 목록에 들어온 세션 id 를 돌려준다(포커스를 옮기는 데 쓴다). 실패하면 상태가 error 가 된다.
+   */
+  const loadMore = useCallback(
+    async (kind: SessionKind): Promise<string[]> => {
+      const p = pagesRef.current[kind];
+      if (p.cursor === null) return [];
+      setMoreStatus((m) => ({ ...m, [kind]: "loading" }));
+      const q = new URLSearchParams({ kind, cursor: p.cursor, ...(p.syncedAt ? { since: p.syncedAt } : {}) });
+      try {
+        const r = await fetch(`/api/diagrams/${encodeURIComponent(diagramId)}/sessions?${q}`);
+        if (!r.ok) throw new Error(`status ${r.status}`);
+        const j = (await r.json()) as { items: SessionSummary[]; nextCursor: string | null; changed: SessionSummary[]; syncedAt: string };
+        if (!alive.current) return [];
+        const incoming = [...j.changed, ...j.items];
+        const { added } = mergeSessions(sessionsRef.current, incoming);
+        setSessions((ss) => mergeSessions(ss, incoming).list);
+        setPages((ps) => ({ ...ps, [kind]: { cursor: j.nextCursor, syncedAt: j.syncedAt } }));
+        setMoreStatus((m) => ({ ...m, [kind]: "idle" }));
+        return added;
+      } catch {
+        if (alive.current) setMoreStatus((m) => ({ ...m, [kind]: "error" }));
+        return [];
+      }
+    },
+    [diagramId],
+  );
+  const more: Record<SessionKind, MoreState> = {
+    diagram: pages.diagram.cursor === null ? "none" : moreStatus.diagram,
+    node: pages.node.cursor === null ? "none" : moreStatus.node,
+  };
+
+  /** 이름 바꾸기. 실패하면 보일 오류 글을 돌려준다. 목록 순서(최근 이어감)는 그대로다. */
+  const rename = useCallback(
+    async (id: string, title: string): Promise<string | void> => {
+      let r: Response;
+      try {
+        r = await fetch(`/api/diagrams/${encodeURIComponent(diagramId)}/sessions/${encodeURIComponent(id)}`, {
+          method: "PATCH",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ title }),
+        });
+      } catch {
+        return RENAME_FAILED;
+      }
+      if (!r.ok) return errorOf(r, RENAME_FAILED);
+      let next: string;
+      try {
+        next = ((await r.json()) as { session: { title: string } }).session.title;
+      } catch {
+        next = titleOf(title);
+      }
+      if (!alive.current) return;
+      setSessions((ss) => ss.map((s) => (s.id === id ? { ...s, title: next } : s)));
+    },
+    [diagramId],
+  );
+
+  /** 세션과 그 메시지를 지운다. 보던 세션이면 기본 대화로 돌아간다. 실패하면 보일 오류 글을 돌려준다. */
+  const remove = useCallback(
+    async (id: string): Promise<string | void> => {
+      let r: Response;
+      try {
+        r = await fetch(`/api/diagrams/${encodeURIComponent(diagramId)}/sessions/${encodeURIComponent(id)}`, { method: "DELETE" });
+      } catch {
+        return DELETE_FAILED;
+      }
+      // 이미 없는 세션(다른 탭에서 지움)도 목록에서 뺀다.
+      if (!r.ok && r.status !== 404) return errorOf(r, DELETE_FAILED);
+      if (!alive.current) return;
+      if (inflight.current?.id === id) {
+        inflight.current.ac.abort();
+        inflight.current = null;
+      }
+      failed.current.delete(id);
+      linesRef.current = without(linesRef.current, id);
+      setSessions((ss) => ss.filter((s) => s.id !== id));
+      setAllLines((ls) => without(ls, id));
+      setActive((a) => (a === id ? "main" : a));
+    },
+    [diagramId],
+  );
+
+  return { sessions, active, select, linesOf, upsert, setLines, startNew, startNewDiagram, rename, remove, summaryOf, pending, more, loadMore };
 }

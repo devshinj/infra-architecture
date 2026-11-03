@@ -138,7 +138,7 @@ describe("runAskTurn", () => {
     expect(row).toMatchObject({ nodeId: "was-1", nodeLabel: "WAS#1", title: "이건 뭐 하는 거야?" });
     expect(events[0]).toEqual({
       t: "session",
-      session: { id: row!.id, nodeId: "was-1", nodeLabel: "WAS#1", title: "이건 뭐 하는 거야?", updatedAt: expect.any(String) },
+      session: { id: row!.id, kind: "node", nodeId: "was-1", nodeLabel: "WAS#1", title: "이건 뭐 하는 거야?", updatedAt: expect.any(String) },
     });
     expect(events[1]).toMatchObject({ t: "start", intent: "question" });
 
@@ -162,6 +162,7 @@ describe("runAskTurn", () => {
       version: null,
       status: "complete",
       applied: 0,
+      changed: 0,
       skipped: 0,
       missing: expect.any(Number),
       nodes: 2,

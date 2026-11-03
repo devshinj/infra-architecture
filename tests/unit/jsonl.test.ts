@@ -1,15 +1,24 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+
 import { describe, expect, test } from "vitest";
 
 import { createJsonlParser } from "@/server/llm/jsonl";
 
-function run(chunks: string[]) {
+function run(chunks: string[], opts?: { dropPartial?: boolean }) {
   const values: unknown[] = [];
   const bad: string[] = [];
   const p = createJsonlParser((v) => values.push(v), (t) => bad.push(t));
   for (const c of chunks) p.push(c);
-  p.end();
+  p.end(opts);
   return { values, bad };
 }
+
+// 실제 Qwen 출력(스트레스 시험에서 저장, 앞뒤를 잘라 둠).
+const raw = (name: string) => readFileSync(join(__dirname, "../fixtures/qwen-raw", name), "utf8");
+/** 글을 작은 조각으로 나눠 스트리밍처럼 넣는다. */
+const pieces = (text: string, size = 7) => Array.from({ length: Math.ceil(text.length / size) }, (_, i) => text.slice(i * size, (i + 1) * size));
+const ops = (values: unknown[]) => values.map((v) => (v as { op?: string }).op);
 
 describe("createJsonlParser", () => {
   test("splits across chunk boundaries", () => {
@@ -127,6 +136,85 @@ describe("createJsonlParser", () => {
   test("brace on the next line stays one object", () => {
     const { values, bad } = run(['{\n  "op": "update_node",\n  "id": "x",\n  "attrs":\n  {\n    "ip": "1"\n  }\n}\n']);
     expect(values).toEqual([{ op: "update_node", id: "x", attrs: { ip: "1" } }]);
+    expect(bad).toEqual([]);
+  });
+
+  test("real sample: a pretty-printed say alone is one command", () => {
+    const { values, bad } = run(pieces(raw("say-only-pretty.jsonl")));
+    expect(ops(values)).toEqual(["say"]);
+    expect(bad).toEqual([]);
+  });
+
+  test("real sample: pretty-printed bulk edit objects all parse, even in small chunks", () => {
+    const { values, bad } = run(pieces(raw("bulk-pretty.jsonl"), 5));
+    expect(ops(values)).toEqual(["say", "set_assumption", "add_node", "add_node", "add_node"]);
+    expect((values[2] as { attrs: { storage: string } }).attrs.storage).toBe("500GB");
+    expect(bad).toEqual([]);
+    const mixed = run(pieces(raw("mixed-head.jsonl"), 11));
+    expect(mixed.values.length).toBeGreaterThanOrEqual(5);
+    expect(mixed.bad).toEqual([]);
+  });
+
+  test("real sample: a length-truncated tail is dropped silently with dropPartial, reported without", () => {
+    const text = raw("length-tail.jsonl");
+    const dropped = run(pieces(text), { dropPartial: true });
+    expect(ops(dropped.values)).toEqual(["add_node", "add_node", "add_node", "add_node", "add_group"]);
+    expect(dropped.bad).toEqual([]);
+    const kept = run(pieces(text));
+    expect(kept.values).toHaveLength(5);
+    expect(kept.bad).toHaveLength(1);
+  });
+
+  test("a truncated pretty object spanning lines is dropped with dropPartial", () => {
+    const { values, bad } = run(['{"op":"a"}\n{\n  "op": "b",\n  "attrs": {\n'], { dropPartial: true });
+    expect(values).toEqual([{ op: "a" }]);
+    expect(bad).toEqual([]);
+  });
+
+  test("pretty objects inside a ```json fence", () => {
+    const { values, bad } = run(['```json\n{\n  "op": "a"\n}\n{\n  "op": "b"\n}\n```\n']);
+    expect(values).toEqual([{ op: "a" }, { op: "b" }]);
+    expect(bad).toEqual([]);
+  });
+
+  test("a fence line while collecting reports the broken object and goes on", () => {
+    const { values, bad } = run(['{\n  "op": "a",\n```\n{"op":"b"}\n']);
+    expect(values).toEqual([{ op: "b" }]);
+    expect(bad).toHaveLength(1);
+  });
+
+  test("braces, quotes and escapes inside strings do not end the object", () => {
+    const text = '{\n "op": "say",\n "text": "a {b} }} \\"{\\" \\\\"\n}\n';
+    const { values, bad } = run([text]);
+    expect(values).toEqual([{ op: "say", text: 'a {b} }} "{" ' + "\\" }]);
+    expect(bad).toEqual([]);
+  });
+
+  test("array wrappers and commas between objects are ignored", () => {
+    const pretty = run(['[\n  {\n    "op": "a"\n  },\n  {\n    "op": "b"\n  }\n]\n']);
+    expect(pretty.values).toEqual([{ op: "a" }, { op: "b" }]);
+    expect(pretty.bad).toEqual([]);
+    const oneLine = run(['[{"op":"a"},{"op":"b"}]\n{"op":"c"},\n']);
+    expect(oneLine.values).toEqual([{ op: "a" }, { op: "b" }, { op: "c" }]);
+    expect(oneLine.bad).toEqual([]);
+  });
+
+  test("several objects on one line give several commands", () => {
+    const { values, bad } = run(['{"op":"a"}{"op":"b"} {"op":"c"}\n']);
+    expect(values).toEqual([{ op: "a" }, { op: "b" }, { op: "c" }]);
+    expect(bad).toEqual([]);
+  });
+
+  test("prose outside objects is still a bad line", () => {
+    const { values, bad } = run(['설명입니다\n{"op":"a"}\n']);
+    expect(values).toEqual([{ op: "a" }]);
+    expect(bad).toEqual(["설명입니다"]);
+  });
+
+  test("one-line objects without an op inside a pretty command stay part of it", () => {
+    const text = '{\n  "op": "update_node",\n  "id": "x",\n  "attrs": [\n    {"k":1},\n    {"k":2}\n  ]\n}\n{"op":"say","text":"끝"}\n';
+    const { values, bad } = run(pieces(text, 6));
+    expect(values).toEqual([{ op: "update_node", id: "x", attrs: [{ k: 1 }, { k: 2 }] }, { op: "say", text: "끝" }]);
     expect(bad).toEqual([]);
   });
 });

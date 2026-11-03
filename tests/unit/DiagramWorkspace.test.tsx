@@ -2,7 +2,7 @@ import "@testing-library/jest-dom/vitest";
 import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
-const hookState = vi.hoisted(() => ({ send: vi.fn(), busy: false, onCommand: null as null | ((c: unknown) => void), badgeFns: [] as unknown[], warnFns: [] as unknown[], lines: [] as unknown[], insets: [] as unknown[], focus: [] as unknown[], turn: null as null | { onDone(): void; onInterrupted(): void; onRelayout?(): void; onAskLines?(key: string, fn: (ls: { id: string; kind: string; text: string }[]) => { id: string; kind: string; text: string }[]): void }, pushLine: vi.fn(), pinned: [] as unknown[], fitRequest: [] as unknown[], placed: null as null | ((locate: (id: string) => { x: number; y: number } | null) => void) }));
+const hookState = vi.hoisted(() => ({ send: vi.fn(), busy: false, onCommand: null as null | ((c: unknown) => void), badgeFns: [] as unknown[], warnFns: [] as unknown[], lines: [] as unknown[], insets: [] as unknown[], focus: [] as unknown[], turn: null as null | { onDone(): void; onInterrupted(): void; onRelayout?(): void; onSessionLines?(key: string, fn: (ls: { id: string; kind: string; text: string }[]) => { id: string; kind: string; text: string }[]): void }, pushLine: vi.fn(), pinned: [] as unknown[], fitRequest: [] as unknown[], placed: null as null | ((locate: (id: string) => { x: number; y: number } | null) => void) }));
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
 vi.mock("@/app/(app)/actions", () => ({
@@ -540,7 +540,7 @@ test("queued fly dots survive turn done (post-done settle launches them) but are
 test("question sessions: picking one shows its saved lines; a canvas mention returns to 구성도 대화", async () => {
   hookState.busy = false;
   hookState.lines = [];
-  const session = { id: "s1", nodeId: "a", nodeLabel: "a", title: "왜 두 대예요?", updatedAt: new Date().toISOString() };
+  const session = { id: "s1", kind: "node" as const, nodeId: "a", nodeLabel: "a", title: "왜 두 대예요?", updatedAt: new Date().toISOString() };
   vi.stubGlobal(
     "fetch",
     vi.fn(async (url: string) =>
@@ -551,17 +551,26 @@ test("question sessions: picking one shows its saved lines; a canvas mention ret
   );
   try {
     render(<DiagramWorkspace diagramId="d" name="n" latest={mk(1, ["a"]) as never} initialPinned={{}} samples={[]} initialSessions={[session]} />);
-    fireEvent.click(screen.getByRole("button", { name: "구성도 대화" }));
-    fireEvent.click(screen.getByRole("menuitem", { name: /a · 왜 두 대예요\?/ }));
+    pickSession("a · 왜 두 대예요?");
     expect(await screen.findByText("왜 두 대예요?", { selector: "p" })).toBeInTheDocument();
     expect(screen.getByRole("textbox")).toHaveAttribute("placeholder", "이 노드에 대해 더 물어보기");
     fireEvent.click(screen.getByRole("button", { name: "멘션a" }));
-    expect(screen.getByRole("button", { name: "구성도 대화" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "기본 대화" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "a 참조 제거" })).toBeInTheDocument();
   } finally {
     vi.unstubAllGlobals();
   }
 });
+
+/** 대화 고르기를 펼쳐 이름이 name 으로 시작하는 세션 행을 누른다. */
+const pickSession = (name: string) => {
+  fireEvent.click(screen.getAllByRole("button").find((b) => b.getAttribute("aria-haspopup") === "dialog")!);
+  const list = screen.getByRole("dialog", { name: "대화 고르기" });
+  const row = within(list)
+    .getAllByRole("button")
+    .find((b) => b.hasAttribute("data-session-item") && (b.textContent ?? "").startsWith(name));
+  fireEvent.click(row!);
+};
 
 const stubFetch = () => vi.stubGlobal("fetch", vi.fn(async (url: string) => (String(url).includes("/explain") ? new Response("{}", { status: 200 }) : Response.json({ qwen: "ok", clef: "ok" }))));
 
@@ -629,15 +638,14 @@ test("choosing an assumption while a question session is open goes to the main c
   hookState.busy = false;
   hookState.lines = [];
   hookState.send.mockClear();
-  const session = { id: "s1", nodeId: "a", nodeLabel: "a", title: "왜 두 대예요?", updatedAt: new Date().toISOString() };
+  const session = { id: "s1", kind: "node" as const, nodeId: "a", nodeLabel: "a", title: "왜 두 대예요?", updatedAt: new Date().toISOString() };
   vi.stubGlobal(
     "fetch",
     vi.fn(async (url: string) => (String(url).endsWith("/sessions/s1") ? Response.json({ session, messages: [] }) : Response.json({ qwen: "ok", clef: "ok" }))),
   );
   const latest = { number: 1, state: { ...emptyState(), nodes: Object.fromEntries([web("a")]), assumptions: { scale: { key: "scale", value: "중규모(일 1만 명)", confirmed: false } } } };
   render(<DiagramWorkspace diagramId="d" name="n" latest={latest as never} initialPinned={{}} samples={[]} initialSessions={[session]} />);
-  fireEvent.click(screen.getByRole("button", { name: "구성도 대화" }));
-  fireEvent.click(screen.getByRole("menuitem", { name: /a · 왜 두 대예요\?/ }));
+  pickSession("a · 왜 두 대예요?");
   await screen.findByRole("button", { name: /a · 왜 두 대예요\?/ });
   fireEvent.click(cardToggle());
   fireEvent.click(screen.getByRole("button", { name: /^규모: 중규모/ }));
@@ -648,10 +656,10 @@ test("choosing an assumption while a question session is open goes to the main c
   expect(hookState.send.mock.calls[0]![0]).toMatch(/^가정 변경:/);
   // 질문 세션 옵션(kind: "ask")이 없는 구성도 대화 전송이다.
   expect(hookState.send.mock.calls[0]![1]).toBeUndefined();
-  expect(screen.getByRole("button", { name: "구성도 대화" })).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "기본 대화" })).toBeInTheDocument();
 });
 
-const askSession = { id: "s1", nodeId: "a", nodeLabel: "a", title: "왜 두 대예요?", updatedAt: new Date().toISOString() };
+const askSession = { id: "s1", kind: "node" as const, nodeId: "a", nodeLabel: "a", title: "왜 두 대예요?", updatedAt: new Date().toISOString() };
 const assumptionLatest = () => ({ number: 1, state: { ...emptyState(), nodes: Object.fromEntries([web("a")]), assumptions: { scale: { key: "scale", value: "중규모(일 1만 명)", confirmed: false } } } });
 const openAskSession = async () => {
   vi.stubGlobal(
@@ -659,8 +667,7 @@ const openAskSession = async () => {
     vi.fn(async (url: string) => (String(url).endsWith("/sessions/s1") ? Response.json({ session: askSession, messages: [] }) : Response.json({ qwen: "ok", clef: "ok" }))),
   );
   render(<DiagramWorkspace diagramId="d" name="n" latest={assumptionLatest() as never} initialPinned={{}} samples={[]} initialSessions={[askSession]} />);
-  fireEvent.click(screen.getByRole("button", { name: "구성도 대화" }));
-  fireEvent.click(screen.getByRole("menuitem", { name: /a · 왜 두 대예요\?/ }));
+  pickSession("a · 왜 두 대예요?");
   await screen.findByRole("button", { name: /a · 왜 두 대예요\?/ });
 };
 
@@ -676,7 +683,7 @@ test("a failed assumption confirm while a question session is shown switches to 
     fireEvent.click(screen.getByRole("button", { name: "대규모(일 10만 명 이상)" }));
   });
   expect(hookState.pushLine).toHaveBeenCalledWith({ kind: "error", text: "확정하지 못했어요" });
-  expect(screen.getByRole("button", { name: "구성도 대화" })).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "기본 대화" })).toBeInTheDocument();
   expect(hookState.send).not.toHaveBeenCalled();
 });
 
@@ -688,7 +695,7 @@ test("a first question that failed leaves no old lines when it is asked again fr
   hookState.send.mockImplementation(async (text: string, target: { sessionId: string | null }) => {
     const key = target.sessionId ?? "new";
     const retry = hookState.send.mock.calls.length > 1;
-    hookState.turn!.onAskLines!(key, (ls) => [
+    hookState.turn!.onSessionLines!(key, (ls) => [
       ...ls,
       { id: `u-${text}`, kind: "user", text },
       retry ? { id: "ans", kind: "assistant", text: "답이에요" } : { id: "err", kind: "error", text: "다른 응답을 처리하고 있어요" },
@@ -918,4 +925,108 @@ test("narrow: 대화로 건너뛰기 also switches the bottom tab to 대화", ()
   expect(mview()).toBe("panel");
   expect(screen.getByRole("textbox")).toHaveFocus();
   window.sessionStorage.clear();
+});
+
+// ---- 구성도 대화 세션 ----
+const newChatButton = () => screen.getAllByRole("button", { name: "새 대화" }).find((b) => !b.hasAttribute("aria-expanded"))!;
+type TurnWithSession = { onSession(s: unknown): void };
+
+test("새 대화 opens an empty diagram chat; its first message creates the session via /chat, then mentions and follow-ups stay there", async () => {
+  stubFetch();
+  hookState.busy = false;
+  hookState.lines = [{ id: "m1", kind: "user", text: "기본 대화 글" }];
+  hookState.send.mockReset();
+  try {
+    render(ui(two() as never));
+    expect(screen.getByText("기본 대화 글")).toBeInTheDocument();
+    fireEvent.click(newChatButton());
+    expect(screen.getByRole("button", { name: "새 대화", expanded: false })).toBeInTheDocument();
+    expect(screen.queryByText("기본 대화 글")).not.toBeInTheDocument();
+    expect(screen.getByText(/^새 대화예요\./)).toBeInTheDocument();
+    expect(screen.getByRole("textbox")).toHaveAttribute("placeholder", expect.stringContaining("만들고 싶은 서비스"));
+
+    fireEvent.change(screen.getByRole("textbox"), { target: { value: "결제 붙여 줘" } });
+    fireEvent.click(screen.getByRole("button", { name: "보내기" }));
+    expect(hookState.send).toHaveBeenLastCalledWith("결제 붙여 줘", { kind: "diagram", sessionId: null });
+    expect(screen.getByRole("button", { name: "결제 붙여 줘", expanded: false })).toBeInTheDocument();
+
+    act(() =>
+      (hookState.turn as unknown as TurnWithSession).onSession({ id: "c1", kind: "diagram", nodeId: null, nodeLabel: null, title: "결제 붙여 줘", updatedAt: new Date().toISOString() }),
+    );
+    // 참조는 지금 보는 구성도 대화에 붙는다(기본 대화로 옮기지 않는다).
+    fireEvent.click(screen.getByRole("button", { name: "멘션a" }));
+    expect(screen.getByRole("button", { name: "결제 붙여 줘", expanded: false })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "a 참조 제거" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "보내기" }));
+    expect(hookState.send).toHaveBeenLastCalledWith(expect.stringContaining("@[a](node:a)"), { kind: "diagram", sessionId: "c1" });
+
+    // 기본 대화로 돌아가면 그 기록이 보인다.
+    pickSession("기본 대화");
+    expect(screen.getByText("기본 대화 글")).toBeInTheDocument();
+  } finally {
+    hookState.lines = [];
+  }
+});
+
+test("choosing an assumption while a diagram chat session is open sends there", async () => {
+  hookState.busy = false;
+  hookState.lines = [];
+  hookState.send.mockReset();
+  const chatSession = { id: "c1", kind: "diagram" as const, nodeId: null, nodeLabel: null, title: "결제 대화", updatedAt: new Date().toISOString() };
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async (url: string) => (String(url).endsWith("/sessions/c1") ? Response.json({ session: chatSession, messages: [] }) : Response.json({ qwen: "ok", clef: "ok" }))),
+  );
+  render(<DiagramWorkspace diagramId="d" name="n" latest={assumptionLatest() as never} initialPinned={{}} samples={[]} initialSessions={[chatSession]} />);
+  pickSession("결제 대화");
+  await screen.findByRole("button", { name: "결제 대화", expanded: false });
+  fireEvent.click(cardToggle());
+  fireEvent.click(screen.getByRole("button", { name: /^규모: 중규모/ }));
+  await act(async () => {
+    fireEvent.click(screen.getByRole("button", { name: "대규모(일 10만 명 이상)" }));
+  });
+  expect(hookState.send).toHaveBeenCalledTimes(1);
+  expect(hookState.send.mock.calls[0]![0]).toMatch(/^가정 변경:/);
+  expect(hookState.send.mock.calls[0]![1]).toEqual({ kind: "diagram", sessionId: "c1" });
+  expect(screen.getByRole("button", { name: "결제 대화", expanded: false })).toBeInTheDocument();
+});
+
+
+test("from a node session, mentions go to the last diagram chat used, or 기본 대화 once that chat is deleted", async () => {
+  hookState.busy = false;
+  hookState.lines = [];
+  const chatSession = { id: "c1", kind: "diagram" as const, nodeId: null, nodeLabel: null, title: "결제 대화", updatedAt: new Date().toISOString() };
+  const nodeSession = { id: "s1", kind: "node" as const, nodeId: "a", nodeLabel: "a", title: "왜 두 대예요?", updatedAt: new Date().toISOString() };
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async (url: string, init?: RequestInit) => {
+      const u = String(url);
+      if (init?.method === "DELETE") return new Response(null, { status: 204 });
+      if (u.endsWith("/sessions/c1")) return Response.json({ session: chatSession, messages: [] });
+      if (u.endsWith("/sessions/s1")) return Response.json({ session: nodeSession, messages: [] });
+      return Response.json({ qwen: "ok", clef: "ok" });
+    }),
+  );
+  render(<DiagramWorkspace diagramId="d" name="n" latest={mk(1, ["a"]) as never} initialPinned={{}} samples={[]} initialSessions={[chatSession, nodeSession]} />);
+  const trigger = () => screen.getAllByRole("button").find((b) => b.getAttribute("aria-haspopup") === "dialog")!;
+  pickSession("결제 대화");
+  await screen.findByRole("button", { name: "결제 대화", expanded: false });
+  pickSession("a · 왜 두 대예요?");
+  await screen.findByPlaceholderText("이 노드에 대해 더 물어보기");
+  fireEvent.click(screen.getByRole("button", { name: "멘션a" }));
+  expect(trigger()).toHaveTextContent("결제 대화");
+  expect(screen.getByRole("button", { name: "a 참조 제거" })).toBeInTheDocument();
+
+  // 결제 대화를 지운 뒤 노드 질문에서 참조하면 기본 대화로 간다.
+  pickSession("a · 왜 두 대예요?");
+  fireEvent.click(trigger());
+  fireEvent.click(screen.getByRole("button", { name: "결제 대화 메뉴" }));
+  fireEvent.click(screen.getByRole("menuitem", { name: "삭제" }));
+  await act(async () => {
+    fireEvent.click(within(screen.getByRole("alertdialog")).getByRole("button", { name: "삭제" }));
+  });
+  await vi.waitFor(() => expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument());
+  expect(trigger()).toHaveTextContent("a · 왜 두 대예요?");
+  fireEvent.click(screen.getByRole("button", { name: "멘션a" }));
+  expect(trigger()).toHaveTextContent("기본 대화");
 });
