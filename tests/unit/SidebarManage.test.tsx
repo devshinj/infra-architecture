@@ -58,10 +58,18 @@ test("새 프로젝트: 안내를 보이고 Enter 로 만든 뒤 첫 구성도�
   expect(document.activeElement).toBe(input);
   expect(input).toHaveAccessibleDescription(/빈 구성도/);
   expect(input).toHaveAttribute("placeholder", "예: 쇼핑몰");
-  expect(within(dialog).getByRole("button", { name: "만들기" })).toBeDisabled();
+  // 이름이 비면 무채색 비활성, 이름이 생기면 금색 주 동작(보내기와 같다).
+  const make = within(dialog).getByRole("button", { name: "만들기" });
+  expect(make).toBeDisabled();
+  expect(make.className).toMatch(/_btn_/);
+  expect(make.className).not.toMatch(/primaryBtn/);
   fireEvent.change(input, { target: { value: "  예약 서비스 " } });
+  expect(make).toBeEnabled();
+  expect(make.className).toMatch(/primaryBtn/);
   fireEvent.submit(dialog);
-  expect(await within(dialog).findByRole("button", { name: "만드는 중…" })).toBeDisabled();
+  const busy = await within(dialog).findByRole("button", { name: "만드는 중…" });
+  expect(busy).toBeDisabled();
+  expect(busy.className).not.toMatch(/primaryBtn/);
   // 진행 중에는 두 번 보내지 않고, Esc·취소로도 닫히지 않는다.
   fireEvent.submit(dialog);
   fireEvent.keyDown(document, { key: "Escape" });
