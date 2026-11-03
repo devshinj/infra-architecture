@@ -14,7 +14,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   return (
     <ShellProvider>
       <Sidebar projects={projects} userName={session.user.name ?? ""} />
-      <div className={styles.main}>{children}</div>
+      <main className={styles.main}>{children}</main>
     </ShellProvider>
   );
 }

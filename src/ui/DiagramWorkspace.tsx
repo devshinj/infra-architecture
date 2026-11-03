@@ -564,6 +564,8 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
       style={{ "--canvas-inset-left": `${insetLeft}px`, "--canvas-inset-right": `${insetRight}px` } as React.CSSProperties}
     >
       <section className={styles.center} aria-label={name}>
+        {/* 화면에 보이는 구성도 제목이 없어 보조기기용 제목만 둔다. */}
+        <h1 className={styles.srOnly}>{name}</h1>
         {banner && (
           <div className={styles.banner} role="status">
             <span>{banner}</span>
