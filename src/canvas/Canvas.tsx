@@ -332,6 +332,10 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
   const order = useMemo(() => readingOrder(nav), [nav]);
   const [lastFocus, setLastFocus] = useState<string | null>(null);
   const stop = tabStop(nav, order, selected, lastFocus);
+  // 노드 목록(computed)은 stop 으로 다시 만들지 않는다(화살표마다 노드 전부를 새로 만들게 된다): 만들 때의 값만 읽고,
+  // stop 이 바뀌면 아래 효과가 tabindex 가 달라진 두 노드만 고친다.
+  const stopRef = useRef(stop);
+  stopRef.current = stop;
   const descId = useId();
   const zoneDesc = { open: `${descId}-zone`, collapsed: `${descId}-zone-collapsed` };
 
@@ -352,7 +356,7 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
         // 안쪽 영역일수록 위(stacking.ts): 바깥 영역이 안쪽 영역의 접기 단추를 가리지 않는다.
         zIndex: zoneZ(layout.groups, g.id),
         ariaLabel: g.label,
-        domAttributes: { tabIndex: g.id === stop ? 0 : -1, "aria-describedby": g.collapsed ? zoneDesc.collapsed : zoneDesc.open },
+        domAttributes: { tabIndex: g.id === stopRef.current ? 0 : -1, "aria-describedby": g.collapsed ? zoneDesc.collapsed : zoneDesc.open },
         draggable: false,
         selectable: false,
         width: lg.width,
@@ -398,7 +402,7 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
         data,
         // 키보드 포커스를 받는 래퍼의 이름표: 화면에서 잘려도 전체 이름(과 보조 글자)을 읽어 준다.
         ariaLabel: n.sub ? `${n.label} · ${n.sub}` : n.label,
-        domAttributes: { tabIndex: n.id === stop ? 0 : -1 },
+        domAttributes: { tabIndex: n.id === stopRef.current ? 0 : -1 },
         // React Flow 의 선택을 화면 선택과 맞춘다(편집 모드 화살표 옮기기는 React Flow 가 선택한 노드에만 한다).
         selected: ln.id === selected,
         zIndex: NODE_Z,
@@ -410,10 +414,22 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
     }
     return out;
     // eslint-disable-next-line react-hooks/exhaustive-deps -- zoneDesc 는 useId 에서 나와 바뀌지 않는다
-  }, [layout, display, selected, appearing, updated, editMode, options, toggleGroup, diffMarks, missingByNode, warnByNode, onBadgeClick, onWarnBadgeClick, pulse, hoverId, known, stop]);
+  }, [layout, display, selected, appearing, updated, editMode, options, toggleGroup, diffMarks, missingByNode, warnByNode, onBadgeClick, onWarnBadgeClick, pulse, hoverId, known]);
 
   const [nodes, setNodes] = useState<Node[]>(computed);
   useEffect(() => setNodes(computed), [computed]);
+  useEffect(() => {
+    setNodes((ns) => {
+      let changed = false;
+      const out = ns.map((n) => {
+        const want = n.id === stop ? 0 : -1;
+        if (n.domAttributes?.tabIndex === want) return n;
+        changed = true;
+        return { ...n, domAttributes: { ...n.domAttributes, tabIndex: want } };
+      });
+      return changed ? out : ns;
+    });
+  }, [stop]);
 
   // Camera: fit on board change, follow new nodes calmly while a turn streams (see useCamera).
   const { getViewport, setViewport, flowToScreenPosition, getNode, getNodes } = useReactFlow();
@@ -501,6 +517,8 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
   // 편집 모드 화살표 옮기기는 React Flow 가 하고, 키를 놓을 때 실제로 움직인 노드만 한 번에 고정 위치로 저장한다.
   // 캡처 단계에서 받아 React Flow 가 첫 칸을 옮기기 전의 시작 위치를 적는다.
   const keyMove = useRef<Map<string, { x: number; y: number }> | null>(null);
+  // 캔버스 안 노드·영역에 키보드 포커스가 있는가(사라진 노드에서 포커스를 되찾을지 가른다).
+  const focusInside = useRef(false);
   useEffect(() => {
     keyMove.current = null;
   }, [selected]);
@@ -515,7 +533,9 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
     if (!id) return;
     const infra = el.classList.contains("react-flow__node-infra");
     // 화살표는 포커스를 옮긴다. 노드를 옮기는 것은 편집 모드에서 선택한 노드에 있을 때뿐이다(React Flow 가 옮긴다).
-    if (NAV_KEYS.has(e.key) && !(e.key.startsWith("Arrow") && editMode && infra && getNode(id)?.selected)) {
+    // Alt·Ctrl·Cmd 와 함께 누른 키는 브라우저·보조기기 단축키라 가로채지 않는다.
+    const plain = !e.altKey && !e.ctrlKey && !e.metaKey;
+    if (plain && NAV_KEYS.has(e.key) && !(e.key.startsWith("Arrow") && editMode && infra && getNode(id)?.selected)) {
       e.preventDefault();
       const next = step(nav, order, id, e.key);
       if (next !== null && next !== id) focusItem(next);
@@ -552,13 +572,43 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
   // 캔버스 밖으로 포커스가 나가면 옮기던 상태를 버린다(나중에 다른 곳에서 키를 놓아도 저장하지 않는다).
   const onFlowBlur = (e: React.FocusEvent<HTMLDivElement>) => {
     if (!e.currentTarget.contains(e.relatedTarget as globalThis.Node | null)) keyMove.current = null;
+    // 포커스가 캔버스 밖 다른 곳으로 갔으면 되찾지 않는다. 받는 곳이 없으면(포커스 받은 노드가 지워져 빠졌거나 빈 곳을 눌렀거나)
+    // 그 노드가 아직 붙어 있을 때만 나간 것으로 친다.
+    const rel = e.relatedTarget as globalThis.Node | null;
+    if (rel && !e.currentTarget.contains(rel)) focusInside.current = false;
+    else if (!rel) {
+      const el = e.target as HTMLElement;
+      queueMicrotask(() => {
+        if (el.isConnected) focusInside.current = false;
+      });
+    }
   };
   // 포커스를 받은 노드·영역이 다음에 Tab 으로 들어올 곳이 된다(선택이 없을 때).
   const onFlowFocus = (e: React.FocusEvent<HTMLDivElement>) => {
     const el = e.target as HTMLElement;
     const id = el.classList.contains("react-flow__node") ? el.dataset.id : undefined;
+    if (id) focusInside.current = true;
     if (id && id !== lastFocus) setLastFocus(id);
   };
+  // 포커스 받은 노드가 사라지면(지워지거나 영역이 접혀) 포커스를 캔버스 안에 남긴다: 접혀 숨었으면 그 접힌 영역, 아니면 Tab 칸.
+  // React Flow 는 노드 래퍼를 다음 그리기에서 붙이므로 다음 프레임에 옮긴다.
+  useEffect(() => {
+    if (!focusInside.current || lastFocus === null || order.includes(lastFocus)) return;
+    const a = document.activeElement;
+    if (a && a !== document.body && !wrap.current?.contains(a)) return;
+    const shown = drawnId(state, options.collapsed, lastFocus);
+    const target = shown !== null && order.includes(shown) ? shown : tabStop(nav, order, selected, null);
+    if (target === null) return;
+    let tries = 0;
+    let raf = 0;
+    const go = () => {
+      for (const el of wrap.current?.querySelectorAll<HTMLElement>(".react-flow__node") ?? []) if (el.dataset.id === target) return el.focus();
+      if (++tries < 5) raf = requestAnimationFrame(go);
+    };
+    go();
+    return () => cancelAnimationFrame(raf);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- 보이는 것이 바뀔 때만 본다
+  }, [order]);
 
   return (
     <div ref={wrap} tabIndex={-1} className="canvas__flow" data-zoom={far ? "far" : "near"} onKeyDownCapture={onFlowKeyDownCapture} onKeyUp={onFlowKeyUp} onBlur={onFlowBlur} onFocus={onFlowFocus}>

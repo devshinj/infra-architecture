@@ -146,3 +146,63 @@ test("zones are named and described; Space folds the focused zone, Enter still c
   fireEvent.keyDown(zone, { key: "Enter" });
   expect(p.onSelect).toHaveBeenCalledWith(null);
 });
+
+test("arrows and Home/End with Alt, Ctrl or Cmd are left to the browser", async () => {
+  const p = baseProps();
+  const { container } = render(ui(p));
+  await ready(container);
+  const first = stops(container)[0];
+  first.focus();
+  for (const mod of [{ altKey: true }, { ctrlKey: true }, { metaKey: true }]) {
+    for (const key of ["ArrowDown", "ArrowRight", "End"]) {
+      const ev = new KeyboardEvent("keydown", { key, bubbles: true, cancelable: true, ...mod });
+      first.dispatchEvent(ev);
+      expect(ev.defaultPrevented, `${key} ${JSON.stringify(mod)}`).toBe(false);
+      expect(document.activeElement).toBe(first);
+    }
+  }
+});
+
+test("when the focused node is folded away, focus lands on the folded zone", async () => {
+  const p = baseProps();
+  const { container, rerender } = render(ui(p));
+  await ready(container);
+  const node = wrappers(container).find((w) => w.dataset.id === "was-1")!;
+  node.focus();
+  expect(document.activeElement).toBe(node);
+  rerender(ui({ ...p, options: { ...p.options, collapsed: new Set([...p.options.collapsed, "was-pair"]) } }));
+  await waitFor(() => expect((document.activeElement as HTMLElement).dataset.id).toBe("was-pair"));
+});
+
+test("when the focused node is deleted, focus stays in the canvas on its tab stop", async () => {
+  const p = baseProps();
+  const { container, rerender } = render(ui(p));
+  await ready(container);
+  const node = wrappers(container).find((w) => w.dataset.id === "was-1")!;
+  node.focus();
+  const nodes = { ...p.state.nodes };
+  delete nodes["was-1"];
+  const edges = Object.fromEntries(Object.entries(p.state.edges).filter(([, e]) => e.from !== "was-1" && e.to !== "was-1"));
+  rerender(ui({ ...p, state: { ...p.state, nodes, edges } }));
+  await waitFor(() => {
+    const a = document.activeElement as HTMLElement;
+    expect(a.classList.contains("react-flow__node")).toBe(true);
+    expect(a.dataset.id).not.toBe("was-1");
+    expect(a).toHaveAttribute("tabindex", "0");
+  });
+});
+
+test("focus that left the canvas is not pulled back when a node disappears", async () => {
+  const p = baseProps();
+  const outside = document.createElement("button");
+  document.body.appendChild(outside);
+  const { container, rerender } = render(ui(p));
+  await ready(container);
+  wrappers(container).find((w) => w.dataset.id === "was-1")!.focus();
+  outside.focus();
+  rerender(ui({ ...p, options: { ...p.options, collapsed: new Set([...p.options.collapsed, "was-pair"]) } }));
+  await new Promise((r) => setTimeout(r, 50));
+  expect(document.activeElement).toBe(outside);
+  outside.remove();
+});
+
