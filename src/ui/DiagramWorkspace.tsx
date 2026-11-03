@@ -71,7 +71,7 @@ const hasId = (s: DiagramState, id: string) => id in s.nodes || id in s.edges ||
 const PANEL_WIDTH_KEY = "infrasketch.panelWidth";
 
 const MISSING_BADGES_KEY = "infrasketch.showMissingBadges";
-/** 좁은 화면에서 마지막으로 본 아래 탭(이번 탭 세션 동안 기억한다). */
+/** 좁은 화면에서 마지막으로 본 구성도와 아래 탭 `{ diagramId, view }`(이번 탭 세션 동안). 같은 구성도를 다시 열 때만 되살린다. */
 export const MOBILE_VIEW_KEY = "infrasketch.mobileView";
 /** 이보다 좁은 작업 영역(사이드바·패널이 함께 뜨는 태블릿 너비)은 패널을 PANEL_MIN_COMPACT 까지 줄여 캔버스 띠를 넓힌다. */
 const COMPACT_WIDTH = 900;
@@ -218,16 +218,18 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
     setTabRequest((r) => ({ tab: v, token: (r?.token ?? 0) + 1 }));
     showTab(v);
   };
-  // 마지막 아래 탭을 이번 탭 세션 동안 기억한다(좁은 화면에서만 읽고 쓴다).
+  // 마지막 아래 탭을 이번 탭 세션 동안 기억한다(좁은 화면에서만 읽고 쓴다). 다른 구성도를 열면 늘 구성도 탭부터.
   const restoredView = useRef(false);
   useEffect(() => {
     if (!narrow) return;
     if (!restoredView.current) {
       restoredView.current = true;
       try {
-        const saved = window.sessionStorage.getItem(MOBILE_VIEW_KEY) as MobileView | null;
-        if (saved && saved !== mobileView && MOBILE_VIEWS.includes(saved)) {
-          chooseView(saved);
+        const raw = window.sessionStorage.getItem(MOBILE_VIEW_KEY);
+        const saved = raw ? (JSON.parse(raw) as { diagramId?: unknown; view?: unknown }) : null;
+        const view = saved?.view as MobileView;
+        if (saved?.diagramId === diagramId && view !== mobileView && MOBILE_VIEWS.includes(view)) {
+          chooseView(view);
           return;
         }
       } catch {
@@ -235,13 +237,13 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
       }
     }
     try {
-      window.sessionStorage.setItem(MOBILE_VIEW_KEY, mobileView);
+      window.sessionStorage.setItem(MOBILE_VIEW_KEY, JSON.stringify({ diagramId, view: mobileView }));
     } catch {
       /* 저장 실패는 이번 화면에만 영향 */
     }
     // chooseView 는 매 렌더 새로 만들어지지만 상태 setter 만 쓴다.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [narrow, mobileView]);
+  }, [narrow, mobileView, diagramId]);
   // 대화 차례의 add_node: 진행 카드의 현재 단계 점에서 그 노드로 빛점이 날아간다(배치가 끝나 좌표가 나오면).
   // 좁은 화면은 대화와 캔버스가 한 화면에 함께 보이지 않아 날리지 않는다.
   const fly = useFly({ motion, chatVisible: tab === "대화" && !narrow });
@@ -343,6 +345,14 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
     };
   }
   const mentionRef = useRef<MentionInputHandle>(null);
+
+  // 설명 탭의 점: 구성도를 보는 중에 고른 항목의 설명을 아직 안 봤을 때만. 한 번 본 항목은 다시 골라도 찍지 않는다.
+  const [seenExplain, setSeenExplain] = useState<ReadonlySet<string>>(() => new Set());
+  useEffect(() => {
+    if (mobileView !== "설명" || selId === null || seenExplain.has(selId)) return;
+    setSeenExplain((s) => new Set(s).add(selId));
+  }, [mobileView, selId, seenExplain]);
+  const explainWaiting = selId !== null && !panelShown && !seenExplain.has(selId);
 
   // Attach a node/group to the chat input: open the 대화 tab, then insert once the input has rendered.
   const [pendingMention, setPendingMention] = useState<{ id: string; label: string } | null>(null);
@@ -631,7 +641,7 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
       data-mview={panelShown ? "panel" : "canvas"}
       style={{ "--canvas-inset-left": `${insetLeft}px`, "--canvas-inset-right": `${insetRight}px` } as React.CSSProperties}
     >
-      <section id={CANVAS_ID} className={styles.center} aria-label={name} {...(narrow ? { role: "tabpanel" } : {})}>
+      <section id={CANVAS_ID} className={styles.center} aria-label={name} {...(narrow ? { role: "tabpanel", "aria-labelledby": mobileTabId("구성도") } : {})}>
         {/* 화면에 보이는 구성도 제목이 없어 보조기기용 제목만 둔다. */}
         <h1 className={styles.srOnly}>{name}</h1>
         {banner && (
@@ -647,7 +657,8 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
             )}
           </div>
         )}
-        {error && <div className={styles.banner} role="alert">{error}</div>}
+        {/* 좁은 화면은 어느 탭에서든 보이게 위 막대 바로 밑에 띄운다(app.module.css .alertBanner). */}
+        {error && <div className={`${styles.banner} ${styles.alertBanner}`} role="alert">{error}</div>}
         <div className={styles.canvasWrap}>
           <Canvas
             state={shown}
@@ -760,7 +771,7 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
           current={mobileView}
           onChange={chooseView}
           controls={(v) => (v === "구성도" ? CANVAS_ID : RIGHT_PANEL_BODY_ID)}
-          explainWaiting={options.selectedId !== null && !panelShown}
+          explainWaiting={explainWaiting}
         />
       )}
       <FlyLayer ref={fly.layerRef} />

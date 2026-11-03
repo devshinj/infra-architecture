@@ -53,7 +53,8 @@ export function PanelResizer({ width, min, max, defaultWidth, onChange, offset =
       aria-valuenow={width}
       tabIndex={0}
       className={styles.resizer}
-      style={{ right: offset + width }}
+      // 노치(가로 휴대폰)에서는 패널이 안전 영역만큼 안쪽에 서므로 손잡이도 따라간다(--safe-r, 보통 0).
+      style={{ right: `calc(${offset + width}px + var(--safe-r, 0px))` }}
       onPointerDown={(e) => {
         // 끄는 중에 들어온 다른 포인터는 무시한다(시작점·이전 user-select 를 덮어쓰지 않게).
         if (drag.current) return;

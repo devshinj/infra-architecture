@@ -1,15 +1,21 @@
 /* App shell, sidebar, right panel, workspace. Tokens only. */
 /* 캔버스가 바탕 전체를 채우고, 사이드바·오른쪽 패널은 사방 --panel-gap 을 두고 유리 판으로 떠 있다. */
-.shell { position: fixed; inset: 0; overflow: hidden; background: var(--bg-canvas); color: var(--text-primary); }
+.shell {
+  position: fixed; inset: 0; overflow: hidden; background: var(--bg-canvas); color: var(--text-primary);
+  /* 노치·홈 표시줄(가로 휴대폰): 떠 있는 판의 바깥 여백이 max(--panel-gap, 안전 영역)이 되도록 더할 몫. 보통 화면은 0. */
+  --safe-l: max(0px, calc(env(safe-area-inset-left) - var(--panel-gap)));
+  --safe-r: max(0px, calc(env(safe-area-inset-right) - var(--panel-gap)));
+  --safe-b: max(0px, calc(env(safe-area-inset-bottom) - var(--panel-gap)));
+}
 .main { position: absolute; inset: 0; min-width: 0; min-height: 0; }
 /* 캔버스가 아닌 화면은 떠 있는 사이드바 오른쪽에서 시작한다(--shell-inset-left 는 Shell.tsx 가 준다). */
-.emptyState { height: 100%; display: grid; place-content: center; text-align: center; gap: 8px; padding: 24px; padding-left: calc(var(--shell-inset-left, 0px) + 24px); }
+.emptyState { height: 100%; display: grid; place-content: center; text-align: center; gap: 8px; padding: 24px; padding-left: calc(var(--shell-inset-left, 0px) + var(--safe-l, 0px) + 24px); }
 .emptyState h1 { margin: 0; font-size: 16px; font-weight: 600; }
 .emptyState p { margin: 0; font-size: 13px; line-height: 1.6; color: var(--text-secondary); max-width: 360px; }
 .emptyActions { margin-top: 8px; display: flex; justify-content: center; }
 
 .sidebar {
-  position: absolute; top: var(--panel-gap); bottom: var(--panel-gap); left: var(--panel-gap); z-index: 40; width: 240px;
+  position: absolute; top: var(--panel-gap); bottom: calc(var(--panel-gap) + var(--safe-b, 0px)); left: calc(var(--panel-gap) + var(--safe-l, 0px)); z-index: 40; width: 240px;
   display: flex; flex-direction: column; min-height: 0;
   background: var(--glass-bg); backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur));
   border: 1px solid var(--glass-line); border-top-color: var(--glass-highlight); border-radius: var(--radius-panel);
@@ -129,12 +135,12 @@
 /* 캔버스는 작업 영역 전체(떠 있는 패널 밑까지)를 채운다. */
 .center { position: absolute; inset: 0; min-width: 0; min-height: 0; display: flex; flex-direction: column; }
 /* 너비(--panel-width)는 DiagramWorkspace 가 인라인으로 준다. */
-.panelDock { position: absolute; top: var(--panel-gap); bottom: var(--panel-gap); right: var(--panel-gap); z-index: 40; display: flex; min-height: 0; width: var(--panel-width, 360px); }
+.panelDock { position: absolute; top: var(--panel-gap); bottom: calc(var(--panel-gap) + var(--safe-b, 0px)); right: calc(var(--panel-gap) + var(--safe-r, 0px)); z-index: 40; display: flex; min-height: 0; width: var(--panel-width, 360px); }
 .canvasWrap { flex: 1; min-height: 0; position: relative; }
 /* 보기·비교·오류 띠: 떠 있는 패널 사이의 보이는 캔버스 폭에 맞춘다. */
 .banner {
   display: flex; align-items: center; gap: 12px; padding: 8px 14px; font-size: 13px;
-  margin: var(--panel-gap) var(--canvas-inset-right, 0px) 0 var(--canvas-inset-left, 0px);
+  margin: var(--panel-gap) calc(var(--canvas-inset-right, 0px) + var(--safe-r, 0px)) 0 calc(var(--canvas-inset-left, 0px) + var(--safe-l, 0px));
   background: var(--bg-node); border: 1px solid var(--line-node); border-radius: var(--radius-zone); color: var(--text-primary);
 }
 .banner button { font: inherit; font-size: 12px; color: var(--text-primary); background: transparent; border: 1px solid var(--line-node); border-radius: 6px; padding: 3px 9px; cursor: pointer; }
@@ -208,6 +214,10 @@
   /* 한 번에 한 화면. 숨긴 쪽도 크기를 지켜(visibility) 캔버스 카메라·대화 스크롤이 돌아왔을 때 그대로다. */
   .workspace[data-mview="canvas"] .panelDock,
   .workspace[data-mview="panel"] .center { visibility: hidden; }
+  /* 오류 띠는 패널 탭을 보는 중에도 보인다: 숨긴 캔버스 안에서 다시 보이게 하고 위 막대 바로 밑에 띄운다. */
+  .workspace[data-mview="panel"] .alertBanner {
+    visibility: visible; position: fixed; z-index: 70; top: calc(var(--topbar-h) + 8px); left: var(--panel-gap); right: var(--panel-gap); margin: 0;
+  }
 }
 
 /* 좁은 화면 위 막대: ☰ 와 지금 보는 프로젝트 / 구성도 이름. */

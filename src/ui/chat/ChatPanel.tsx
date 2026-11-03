@@ -5,6 +5,7 @@ import { type ReactNode, type RefObject, useEffect, useLayoutEffect, useRef, use
 import { NODE_GONE_MESSAGE } from "@/server/chat/events";
 
 import { FLY_ORIGIN_ATTR } from "../FlyLayer";
+import { useShell } from "../Shell";
 
 import styles from "./chat.module.css";
 import { type Mention, MentionInput, type MentionInputHandle } from "./MentionInput";
@@ -40,7 +41,10 @@ export interface ChatPanelProps {
   loading?: boolean;
 }
 
-const PLACEHOLDER = "만들고 싶은 서비스나 바꾸고 싶은 점을 말해 주세요. 노드를 오른쪽 클릭하면 참조를 붙일 수 있어요.";
+const PLACEHOLDER_BASE = "만들고 싶은 서비스나 바꾸고 싶은 점을 말해 주세요.";
+const PLACEHOLDER = `${PLACEHOLDER_BASE} 노드를 오른쪽 클릭하면 참조를 붙일 수 있어요.`;
+/** 휴대폰(터치)에는 오른쪽 클릭이 없어 참조 안내를 뺀다. */
+const PLACEHOLDER_NARROW = PLACEHOLDER_BASE;
 const ASK_PLACEHOLDER = "이 노드에 대해 더 물어보기";
 export const ELSEWHERE_BUSY = "다른 대화가 답하는 중이에요.";
 const HANDOFF_LABEL = "구성도 대화로 보내기";
@@ -180,6 +184,7 @@ export function ChatPanel({
   elsewhereBusy = false,
   loading = false,
 }: ChatPanelProps) {
+  const { narrow } = useShell();
   const lines = ask ? allLines.filter((l) => !HIDDEN_IN_ASK.has(l.kind)) : allLines;
   const gone = !!ask && ask.nodeLabel === null;
   const list = useRef<HTMLDivElement>(null);
@@ -377,7 +382,7 @@ export function ChatPanel({
           <MentionInput
             key={sessionKey}
             ref={mentionRef}
-            placeholder={ask ? ASK_PLACEHOLDER : PLACEHOLDER}
+            placeholder={ask ? ASK_PLACEHOLDER : narrow ? PLACEHOLDER_NARROW : PLACEHOLDER}
             canSend={!blocked}
             disabled={blocked}
             onSend={send}
