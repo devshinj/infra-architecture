@@ -38,6 +38,12 @@
   /* 강조 (유일한 강조색 — 흐름 점·선택·방금 수정됨) */
   --accent: #D4AE6C;
 
+  /* 주 동작 버튼 — 화면마다 하나만 금색으로 채운다. --accent 에서 섞어 만들어 흰 바탕 내보내기 토큰과 따로 맞출 필요가 없다. */
+  --accent-fill: var(--accent); /* 칠 */
+  --accent-fill-hover: color-mix(in srgb, var(--accent) 85%, var(--text-primary)); /* 올렸을 때 조금 밝게 */
+  --accent-fill-active: color-mix(in srgb, var(--accent) 88%, var(--bg-sidebar)); /* 누를 때 조금 어둡게 */
+  --on-accent: var(--bg-sidebar); /* 금색 위 글자(대비 8.4:1, 올림 9.1:1, 누름 6.7:1) */
+
   /* 노드 분류 (아이콘 + 옅은 색조 원) */
   --cat-client: #A5B2C2; /* 사용자 */
   --cat-network: #86AED3; /* 네트워크·진입 */

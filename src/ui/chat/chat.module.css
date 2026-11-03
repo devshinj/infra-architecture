@@ -58,6 +58,16 @@ button.result:focus-visible { outline: 1.5px solid var(--text-secondary); outlin
 .btn:hover:not(:disabled) { border-color: var(--text-secondary); }
 .btn:disabled { opacity: 0.5; cursor: default; }
 .btn:focus-visible, .chipX:focus-visible, .textarea:focus-visible, .log:focus-visible { outline: 1.5px solid var(--text-secondary); outline-offset: 2px; }
+/* 보내기 — 작업 화면의 유일한 주 동작(금색 칠). 중단·저장 같은 나머지는 위 .btn 그대로. */
+.primaryBtn { font: inherit; font-size: 13px; font-weight: 600; color: var(--on-accent); background: var(--accent-fill); border: 1px solid var(--accent-fill); border-radius: 6px; padding: 6px 12px; cursor: pointer; }
+.primaryBtn:hover:not(:disabled) { background: var(--accent-fill-hover); border-color: var(--accent-fill-hover); }
+.primaryBtn:active:not(:disabled) { background: var(--accent-fill-active); border-color: var(--accent-fill-active); }
+.primaryBtn:disabled { opacity: 0.5; cursor: default; }
+/* 패널의 버튼 포커스 규칙보다 앞서도록 .actions 를 붙인다. 은빛 링을 바탕 한 줄 띄워 금색과 떼어 놓는다. */
+.actions .primaryBtn:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+@media (prefers-reduced-motion: no-preference) {
+  .primaryBtn { transition: background-color 0.15s, border-color 0.15s, opacity 0.15s; }
+}
 .assumptions { margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 6px; }
 .assumptionItem { position: relative; }
 .assumptionChip { font: inherit; font-size: 12px; color: var(--text-primary); background: var(--bg-panel-raised); border: 1px solid var(--line-node); border-radius: 999px; padding: 3px 10px; cursor: pointer; }

@@ -138,6 +138,34 @@
   opacity: 0.6;
   cursor: progress;
 }
+/* 화면의 주 동작(제출) — 화면마다 하나만 금색으로 채운다. 나머지 버튼은 위 .button 그대로. */
+.primary {
+  background: var(--accent-fill);
+  border-color: var(--accent-fill);
+  color: var(--on-accent);
+  font-weight: 600;
+}
+.primary:hover:not(:disabled) {
+  background: var(--accent-fill-hover);
+  border-color: var(--accent-fill-hover);
+}
+.primary:active:not(:disabled) {
+  background: var(--accent-fill-active);
+  border-color: var(--accent-fill-active);
+}
+/* 보내는 중: 덜 흐리게 해 진행 문구를 읽을 수 있게 둔다(바탕 위 약 5.3:1). */
+.primary:disabled {
+  opacity: 0.75;
+}
+/* 은빛 링이 금색과 붙으면 구분이 약해(1.4:1) 바탕이 한 줄 보이게 띄운다(바탕과 10:1). */
+.primary:focus-visible {
+  outline-offset: 2px;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .primary {
+    transition: background-color 0.15s, border-color 0.15s, opacity 0.15s;
+  }
+}
 .links {
   display: flex;
   flex-wrap: wrap;

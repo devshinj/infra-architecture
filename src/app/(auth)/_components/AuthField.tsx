@@ -79,7 +79,7 @@ export function AuthField({ label, name, type = "text", autoComplete, hint, erro
 
 export function AuthSubmit({ pending, label, pendingLabel }: { pending: boolean; label: string; pendingLabel: string }) {
   return (
-    <button type="submit" disabled={pending} aria-busy={pending || undefined} className={styles.button}>
+    <button type="submit" disabled={pending} aria-busy={pending || undefined} className={`${styles.button} ${styles.primary}`}>
       {pending ? pendingLabel : label}
     </button>
   );

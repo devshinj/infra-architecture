@@ -387,7 +387,7 @@ export function ChatPanel({
                 중단
               </button>
             )}
-            <button type="button" className={styles.btn} disabled={blocked || !hasContent} onClick={() => mentionRef.current?.submit()}>
+            <button type="button" className={styles.primaryBtn} disabled={blocked || !hasContent} onClick={() => mentionRef.current?.submit()}>
               보내기
             </button>
           </div>
