@@ -1,6 +1,6 @@
 ---
 title: "Sidebar()"
-sidebar_position: 73
+sidebar_position: 68
 sidebar_label: "핵심 노드: Sidebar()"
 ---
 # Sidebar()
@@ -22,9 +22,10 @@ sidebar_label: "핵심 노드: Sidebar()"
 - renameDiagramAction() `EXTRACTED`
 - renameProjectAction() `EXTRACTED`
 - deleteProjectAction() `EXTRACTED`
-- AppLayout() `EXTRACTED`
-- LogoMark() `EXTRACTED`
 - DialogView() `EXTRACTED`
+- AppLayout() `EXTRACTED`
+- RowMenu() `EXTRACTED`
+- LogoMark() `EXTRACTED`
 - IconBook() `EXTRACTED`
 - IconMenu() `EXTRACTED`
 - IconExpand() `EXTRACTED`
@@ -33,7 +34,6 @@ sidebar_label: "핵심 노드: Sidebar()"
 - .setCollapsed() `EXTRACTED`
 - diagramPath() `EXTRACTED`
 - .setCreateHandler() `EXTRACTED`
-- deleteMessage() `EXTRACTED`
 - *…and 3 more `calls` connection(s) not listed (lowest-degree first to go)*
 
 ### contains

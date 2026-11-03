@@ -1,54 +1,50 @@
 ---
-title: "DiagramWorkspace"
-sidebar_position: 45
+title: "DiagramWorkspace()"
+sidebar_position: 61
+sidebar_label: "핵심 노드: DiagramWorkspace()"
 ---
-# DiagramWorkspace
+# DiagramWorkspace()
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 13 nodes · cohesion 0.35
+> God node · 39 connections · `src/ui/DiagramWorkspace.tsx`
 
-## Key Concepts
+**Community:** [(app)/actions.ts](app-actions.ts.md)
 
-- **DiagramWorkspace()** (39 connections) — `src/ui/DiagramWorkspace.tsx`
-- **run()** (14 connections) — `src/app/(app)/actions.ts`
-- **runResult()** (13 connections) — `src/app/(app)/actions.ts`
-- **restoreVersionAction()** (9 connections) — `src/app/(app)/actions.ts`
-- **refreshDiagram()** (8 connections) — `src/app/(app)/actions.ts`
-- **getVersionAction()** (7 connections) — `src/app/(app)/actions.ts`
-- **setWarningIgnoredAction()** (7 connections) — `src/app/(app)/actions.ts`
-- **clearPinnedAction()** (6 connections) — `src/app/(app)/actions.ts`
-- **confirmAssumptionAction()** (6 connections) — `src/app/(app)/actions.ts`
-- **importSampleAction()** (6 connections) — `src/app/(app)/actions.ts`
-- **saveFieldsAction()** (6 connections) — `src/app/(app)/actions.ts`
-- **savePinnedAction()** (6 connections) — `src/app/(app)/actions.ts`
-- **validVersion()** (3 connections) — `src/app/(app)/actions.ts`
+## Connections by Relation
 
-## Relationships
+### calls
+- useChatTurn() `EXTRACTED`
+- Canvas() `EXTRACTED`
+- applyCommand() `EXTRACTED`
+- run() `EXTRACTED`
+- useExplanations() `EXTRACTED`
+- InfoCard() `EXTRACTED`
+- useSessions() `EXTRACTED`
+- restoreVersionAction() `EXTRACTED`
+- RightPanel() `EXTRACTED`
+- DiagramPage() `EXTRACTED`
+- useShell() `EXTRACTED`
+- setWarningIgnoredAction() `EXTRACTED`
+- getVersionAction() `EXTRACTED`
+- diffStates() `EXTRACTED`
+- Legend() `EXTRACTED`
+- useFly() `EXTRACTED`
+- listVersionsAction() `EXTRACTED`
+- confirmAssumptionAction() `EXTRACTED`
+- confirmAssumption() `EXTRACTED`
+- saveFieldsAction() `EXTRACTED`
+- *…and 15 more `calls` connection(s) not listed (lowest-degree first to go)*
 
-- [(app)/actions.ts](app-actions.ts.md) (16 shared connections)
-- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (13 shared connections)
-- [getOwnedDiagram](getOwnedDiagram.md) (7 shared connections)
-- [Sidebar.tsx](Sidebar.tsx.md) (7 shared connections)
-- [schema.ts](schema.ts.md) (3 shared connections)
-- [GlossaryPage.tsx](GlossaryPage.tsx.md) (3 shared connections)
-- [\[sessionId\]/route.ts]([sessionId]-route.ts.md) (3 shared connections)
-- [domain/explain.ts](domain-explain.ts.md) (2 shared connections)
-- [auth](auth.md) (2 shared connections)
-- [Legend.tsx](Legend.tsx.md) (2 shared connections)
-- [FlyLayer.tsx](FlyLayer.tsx.md) (2 shared connections)
-- [명령 적용과 샘플](명령_적용과_샘플.md) (2 shared connections)
+### contains
+- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) `EXTRACTED`
 
-## Source Files
+### imports
+- \[diagramId\]/page.tsx `EXTRACTED`
 
-- `src/app/(app)/actions.ts`
-- `src/ui/DiagramWorkspace.tsx`
-
-## Audit Trail
-
-- EXTRACTED: 100 (97%)
-- INFERRED: 3 (3%)
-- AMBIGUOUS: 0 (0%)
+### references
+- InfraSketch 3D단계: 화면·사용성 개선 구현 계획 `INFERRED`
+- Task 4: 질문 시작하기(설명 패널·우클릭 메뉴) `INFERRED`
 
 ---
 

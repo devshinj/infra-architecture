@@ -1,6 +1,6 @@
 ---
 title: "Legend.tsx"
-sidebar_position: 41
+sidebar_position: 44
 ---
 # Legend.tsx
 
@@ -30,12 +30,13 @@ sidebar_position: 41
 
 - [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (3 shared connections)
 - [연결선 그리기](연결선_그리기.md) (2 shared connections)
-- [명령 적용과 샘플](명령_적용과_샘플.md) (2 shared connections)
 - [catalog.ts](catalog.ts.md) (2 shared connections)
-- [DiagramWorkspace](DiagramWorkspace.md) (2 shared connections)
+- [(app)/actions.ts](app-actions.ts.md) (2 shared connections)
 - [motion.ts](motion.ts.md) (1 shared connections)
 - [segments.ts](segments.ts.md) (1 shared connections)
+- [useChatTurn.ts](useChatTurn.ts.md) (1 shared connections)
 - [prompt.ts](prompt.ts.md) (1 shared connections)
+- [samples.ts](samples.ts.md) (1 shared connections)
 - [NodeInfo.tsx](NodeInfo.tsx.md) (1 shared connections)
 - [DiagramState](DiagramState.md) (1 shared connections)
 

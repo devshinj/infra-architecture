@@ -32,10 +32,10 @@ sidebar_position: 39
 - [연결선 그리기](연결선_그리기.md) (10 shared connections)
 - [motion.ts](motion.ts.md) (3 shared connections)
 - [catalog.ts](catalog.ts.md) (2 shared connections)
-- [display.ts](display.ts.md) (2 shared connections)
+- [missing.ts](missing.ts.md) (2 shared connections)
 - [Legend.tsx](Legend.tsx.md) (1 shared connections)
 - [연결선 개발용 화면](연결선_개발용_화면.md) (1 shared connections)
-- [domain/warnings.ts](domain-warnings.ts.md) (1 shared connections)
+- [display.ts](display.ts.md) (1 shared connections)
 
 ## Source Files
 

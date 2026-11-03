@@ -1,57 +1,74 @@
 ---
 title: "schema.ts"
-sidebar_position: 82
+sidebar_position: 76
 ---
 # schema.ts
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 17 nodes · cohesion 0.17
+> 56 nodes · cohesion 0.07
 
 ## Key Concepts
 
-- **schema.ts** (35 connections) — `src/db/schema.ts`
+- **schema.ts** (36 connections) — `src/db/schema.ts`
+- **sessions.ts** (32 connections) — `src/server/chat/sessions.ts`
+- **glossary.ts** (27 connections) — `src/server/glossary.ts`
 - **versions.ts** (27 connections) — `src/server/versions.ts`
-- **getVersion()** (5 connections) — `src/server/versions.ts`
+- **sessions/route.ts** (18 connections) — `src/app/api/diagrams/[id]/sessions/route.ts`
+- **signup.ts** (18 connections) — `src/server/auth/signup.ts`
+- **messages.ts** (16 connections) — `src/server/chat/messages.ts`
+- **client.ts** (14 connections) — `src/db/client.ts`
+- **password.ts** (13 connections) — `src/server/auth/password.ts`
+- **ref_drizzle_orm** (11 connections)
+- **db** (10 connections) — `src/db/client.ts`
+- **GET()** (8 connections) — `src/app/api/diagrams/[id]/sessions/route.ts`
+- **asRow()** (6 connections) — `src/server/chat/sessions.ts`
+- **listSessionPage()** (6 connections) — `src/server/chat/sessions.ts`
+- **hashPassword()** (5 connections) — `src/server/auth/password.ts`
 - **restoreVersion()** (5 connections) — `src/server/versions.ts`
 - **restoreVersionWithMessage()** (5 connections) — `src/server/versions.ts`
+- **users** (4 connections) — `src/db/schema.ts`
+- **isDbTimestamp()** (4 connections) — `src/server/chat/sessions.ts`
+- **parseCursor()** (4 connections) — `src/server/chat/sessions.ts`
 - **diagramVersions** (3 connections) — `src/db/schema.ts`
+- **MessageRole** (3 connections) — `src/db/schema.ts`
 - **VersionSource** (3 connections) — `src/db/schema.ts`
 - **VersionStatus** (3 connections) — `src/db/schema.ts`
-- **CreateVersionOpts** (3 connections) — `src/server/versions.ts`
-- **diagrams** (2 connections) — `src/db/schema.ts`
-- **explanations** (2 connections) — `src/db/schema.ts`
-- **messages** (2 connections) — `src/db/schema.ts`
-- **passwordResetTokens** (2 connections) — `src/db/schema.ts`
-- **projects** (2 connections) — `src/db/schema.ts`
-- **accounts** (1 connections) — `src/db/schema.ts`
-- **createdAt()** (1 connections) — `src/db/schema.ts`
-- **GlossarySource** (1 connections) — `src/db/schema.ts`
+- **glossary-seed.ts** (3 connections) — `src/domain/glossary-seed.ts`
+- *... and 31 more nodes in this community*
 
 ## Relationships
 
-- [schema.ts](schema.ts.md) (10 shared connections)
-- [pipeline.ts](pipeline.ts.md) (9 shared connections)
-- [(app)/actions.ts](app-actions.ts.md) (9 shared connections)
-- [getOwnedDiagram](getOwnedDiagram.md) (6 shared connections)
-- [display.ts](display.ts.md) (4 shared connections)
-- [설명 생성과 품질 검사](설명_생성과_품질_검사.md) (4 shared connections)
-- [domain/explain.ts](domain-explain.ts.md) (3 shared connections)
-- [DiagramWorkspace](DiagramWorkspace.md) (3 shared connections)
-- [\[sessionId\]/route.ts]([sessionId]-route.ts.md) (2 shared connections)
-- [glossary.ts](glossary.ts.md) (2 shared connections)
-- [useChatTurn.ts](useChatTurn.ts.md) (2 shared connections)
-- [명령 적용과 샘플](명령_적용과_샘플.md) (1 shared connections)
+- [(app)/actions.ts](app-actions.ts.md) (28 shared connections)
+- [schema.ts](schema.ts.md) (25 shared connections)
+- [ask.ts](ask.ts.md) (16 shared connections)
+- [설명 생성과 품질 검사](설명_생성과_품질_검사.md) (10 shared connections)
+- [auth](auth.md) (8 shared connections)
+- [ask/route.ts](ask-route.ts.md) (8 shared connections)
+- [\[sessionId\]/route.ts]([sessionId]-route.ts.md) (7 shared connections)
+- [GlossaryPage.tsx](GlossaryPage.tsx.md) (5 shared connections)
+- [pipeline.ts](pipeline.ts.md) (4 shared connections)
+- [useExplanations.ts](useExplanations.ts.md) (4 shared connections)
+- [Explanation.tsx](Explanation.tsx.md) (2 shared connections)
+- [domain/warnings.ts](domain-warnings.ts.md) (2 shared connections)
 
 ## Source Files
 
+- `src/app/api/diagrams/[id]/sessions/route.ts`
+- `src/db/client.ts`
 - `src/db/schema.ts`
+- `src/domain/glossary-seed.ts`
+- `src/server/auth/password.ts`
+- `src/server/auth/signup.ts`
+- `src/server/chat/messages.ts`
+- `src/server/chat/sessions.ts`
+- `src/server/glossary.ts`
 - `src/server/versions.ts`
 
 ## Audit Trail
 
-- EXTRACTED: 79 (100%)
-- INFERRED: 0 (0%)
+- EXTRACTED: 226 (99%)
+- INFERRED: 2 (1%)
 - AMBIGUOUS: 0 (0%)
 
 ---

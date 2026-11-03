@@ -1,6 +1,6 @@
 ---
 title: "exportImage.ts"
-sidebar_position: 15
+sidebar_position: 20
 ---
 # exportImage.ts
 
@@ -37,10 +37,11 @@ sidebar_position: 15
 
 ## Relationships
 
-- [layout.ts](layout.ts.md) (5 shared connections)
 - [Canvas.tsx](Canvas.tsx.md) (5 shared connections)
 - [ExportMenu.tsx](ExportMenu.tsx.md) (4 shared connections)
+- [text.ts](text.ts.md) (3 shared connections)
 - [연결선 개발용 화면](연결선_개발용_화면.md) (2 shared connections)
+- [layout.ts](layout.ts.md) (2 shared connections)
 - [Layout](Layout.md) (1 shared connections)
 - [display.ts](display.ts.md) (1 shared connections)
 

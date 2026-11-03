@@ -1,6 +1,6 @@
 ---
 title: "ChatPanelProps"
-sidebar_position: 66
+sidebar_position: 59
 ---
 # ChatPanelProps
 
@@ -20,7 +20,7 @@ sidebar_position: 66
 - [DiagramState](DiagramState.md) (2 shared connections)
 - [ChatPanel.tsx](ChatPanel.tsx.md) (2 shared connections)
 - [useChatTurn.ts](useChatTurn.ts.md) (1 shared connections)
-- [SessionPicker.tsx](SessionPicker.tsx.md) (1 shared connections)
+- [SessionPickerProps](SessionPickerProps.md) (1 shared connections)
 - [MentionInput](MentionInput.md) (1 shared connections)
 
 ## Source Files

@@ -1,6 +1,6 @@
 ---
 title: "DiagramState"
-sidebar_position: 79
+sidebar_position: 74
 ---
 # DiagramState
 
@@ -8,7 +8,7 @@ sidebar_position: 79
 
 > God node · 37 connections · `src/domain/types.ts`
 
-**Community:** [display.ts](display.ts.md)
+**Community:** [domain/warnings.ts](domain-warnings.ts.md)
 
 ## Connections by Relation
 
@@ -16,21 +16,21 @@ sidebar_position: 79
 - [types.ts](types.ts.md) `EXTRACTED`
 
 ### imports
-- [Canvas.tsx](Canvas.tsx.md) `EXTRACTED`
 - [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) `EXTRACTED`
+- [Canvas.tsx](Canvas.tsx.md) `EXTRACTED`
+- [pipeline.ts](pipeline.ts.md) `EXTRACTED`
 - [(app)/actions.ts](app-actions.ts.md) `EXTRACTED`
 - server/explain.ts `EXTRACTED`
-- [pipeline.ts](pipeline.ts.md) `EXTRACTED`
 - projects.ts `EXTRACTED`
-- ask.ts `EXTRACTED`
+- [ask.ts](ask.ts.md) `EXTRACTED`
 - [prompt.ts](prompt.ts.md) `EXTRACTED`
-- [NodeInfo.tsx](NodeInfo.tsx.md) `EXTRACTED`
 - [schema.ts](schema.ts.md) `EXTRACTED`
-- samples.ts `EXTRACTED`
+- [NodeInfo.tsx](NodeInfo.tsx.md) `EXTRACTED`
+- [samples.ts](samples.ts.md) `EXTRACTED`
 - [domain/explain.ts](domain-explain.ts.md) `EXTRACTED`
 - versions.ts `EXTRACTED`
 - [MissingChecklist.tsx](MissingChecklist.tsx.md) `EXTRACTED`
-- useExplanations.ts `EXTRACTED`
+- [useExplanations.ts](useExplanations.ts.md) `EXTRACTED`
 - [chat/warnings.ts](chat-warnings.ts.md) `EXTRACTED`
 - [display.ts](display.ts.md) `EXTRACTED`
 - [domain/warnings.ts](domain-warnings.ts.md) `EXTRACTED`

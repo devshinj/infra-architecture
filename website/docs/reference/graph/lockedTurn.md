@@ -1,13 +1,13 @@
 ---
 title: "lockedTurn()"
-sidebar_position: 75
+sidebar_position: 67
 sidebar_label: "핵심 노드: lockedTurn()"
 ---
 # lockedTurn()
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> God node · 26 connections · `src/server/chat/pipeline.ts`
+> God node · 28 connections · `src/server/chat/pipeline.ts`
 
 **Community:** [pipeline.ts](pipeline.ts.md)
 
@@ -23,7 +23,7 @@ sidebar_label: "핵심 노드: lockedTurn()"
 - createJsonlParser() `EXTRACTED`
 - createThinkStripper() `EXTRACTED`
 - checkWarnings() `EXTRACTED`
-- runChatTurn() `EXTRACTED`
+- sessionTurn() `EXTRACTED`
 - createMessage() `EXTRACTED`
 - .emit() `EXTRACTED`
 - resolveIntent() `EXTRACTED`
@@ -34,7 +34,7 @@ sidebar_label: "핵심 노드: lockedTurn()"
 - turnSignals() `EXTRACTED`
 - parseMentions() `EXTRACTED`
 - createSkipTally() `EXTRACTED`
-- *…and 5 more `calls` connection(s) not listed (lowest-degree first to go)*
+- *…and 7 more `calls` connection(s) not listed (lowest-degree first to go)*
 
 ### contains
 - [pipeline.ts](pipeline.ts.md) `EXTRACTED`

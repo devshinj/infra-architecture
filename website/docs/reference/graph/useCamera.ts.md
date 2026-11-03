@@ -1,12 +1,12 @@
 ---
 title: "useCamera.ts"
-sidebar_position: 16
+sidebar_position: 21
 ---
 # useCamera.ts
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 23 nodes · cohesion 0.12
+> 24 nodes · cohesion 0.12
 
 ## Key Concepts
 
@@ -18,6 +18,7 @@ sidebar_position: 16
 - **Insets** (3 connections) — `src/canvas/useCamera.ts`
 - **topRow()** (3 connections) — `src/canvas/useCamera.ts`
 - **.getViewport()** (2 connections) — `src/canvas/useCamera.ts`
+- **FitOptions** (2 connections) — `src/canvas/useCamera.ts`
 - **fitViewport()** (2 connections) — `src/canvas/useCamera.ts`
 - **focusViewport()** (2 connections) — `src/canvas/useCamera.ts`
 - **idsKey()** (2 connections) — `src/canvas/useCamera.ts`
@@ -48,7 +49,7 @@ sidebar_position: 16
 
 ## Audit Trail
 
-- EXTRACTED: 47 (100%)
+- EXTRACTED: 48 (100%)
 - INFERRED: 0 (0%)
 - AMBIGUOUS: 0 (0%)
 

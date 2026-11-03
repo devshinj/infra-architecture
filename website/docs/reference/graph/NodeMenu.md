@@ -1,6 +1,6 @@
 ---
 title: "NodeMenu"
-sidebar_position: 62
+sidebar_position: 58
 ---
 # NodeMenu
 
