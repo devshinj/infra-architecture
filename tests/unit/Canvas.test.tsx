@@ -636,3 +636,97 @@ test("arrow keys move the selected node only in edit mode and save its position 
   expect(saved).toBeDefined();
   expect(node.style.transform).toContain(`${saved.x}px`);
 });
+
+// ---- 키보드 다듬기 (리뷰 반영) ----
+const flowUi = (props: CanvasProps, extra: Partial<CanvasProps> = {}) => (
+  <div style={{ width: 800, height: 600 }}><Canvas {...props} {...extra} /></div>
+);
+const selectedEditing = async (extra: Partial<CanvasProps> = {}) => {
+  const props = baseProps();
+  const { container, rerender } = render(flowUi(props));
+  const node = await firstNode(container);
+  const id = node.getAttribute("data-id")!;
+  const opts = { ...props.options, selectedId: id };
+  rerender(flowUi(props, { options: opts, editMode: true, ...extra }));
+  node.focus();
+  return { props, container, rerender, node, id, opts };
+};
+
+test("held Enter/Space (key repeat) is ignored and Space does not scroll", async () => {
+  const props = baseProps();
+  const { container } = render(flowUi(props));
+  const node = await firstNode(container);
+  node.focus();
+  fireEvent.keyDown(node, { key: "Enter", repeat: true });
+  expect(props.onSelect).not.toHaveBeenCalled();
+  const space = new KeyboardEvent("keydown", { key: " ", bubbles: true, cancelable: true });
+  node.dispatchEvent(space);
+  expect(space.defaultPrevented).toBe(true);
+  expect(props.onSelect).toHaveBeenCalledTimes(1);
+});
+
+test("Enter on a zone clears the selection like a click", async () => {
+  const props = baseProps();
+  const { container } = render(flowUi(props, { options: { ...props.options, selectedId: "x" } }));
+  await waitFor(() => expect(container.querySelector(".react-flow__node-zone")).not.toBeNull());
+  const zone = container.querySelector(".react-flow__node-zone") as HTMLElement;
+  zone.focus();
+  fireEvent.keyDown(zone, { key: "Enter" });
+  expect(props.onSelect).toHaveBeenCalledWith(null);
+});
+
+test("releasing an arrow when the node ended where it started saves nothing", async () => {
+  const { props, node } = await selectedEditing();
+  const before = node.style.transform;
+  // 오른쪽·왼쪽을 한 번씩: 제자리로 돌아온다.
+  fireEvent.keyDown(node, { key: "ArrowRight" });
+  await waitFor(() => expect(node.style.transform).not.toBe(before));
+  fireEvent.keyDown(node, { key: "ArrowLeft" });
+  await waitFor(() => expect(node.style.transform).toBe(before));
+  fireEvent.keyUp(node, { key: "ArrowLeft" });
+  expect(props.onPinnedChange).not.toHaveBeenCalled();
+  // 화살표가 아닌 키를 놓아도 저장하지 않는다.
+  fireEvent.keyUp(node, { key: "Shift" });
+  expect(props.onPinnedChange).not.toHaveBeenCalled();
+});
+
+test("leaving edit mode before the key is released saves nothing", async () => {
+  const { props, node, rerender, opts } = await selectedEditing();
+  fireEvent.keyDown(node, { key: "ArrowRight" });
+  rerender(flowUi(props, { options: opts, editMode: false }));
+  fireEvent.keyUp(node, { key: "ArrowRight" });
+  expect(props.onPinnedChange).not.toHaveBeenCalled();
+});
+
+test("focus leaving the canvas or a selection change drops a pending move", async () => {
+  const { props, node, rerender, opts } = await selectedEditing();
+  fireEvent.keyDown(node, { key: "ArrowRight" });
+  const outside = document.createElement("button");
+  document.body.appendChild(outside);
+  outside.focus();
+  fireEvent.keyUp(node, { key: "ArrowRight" });
+  expect(props.onPinnedChange).not.toHaveBeenCalled();
+  node.focus();
+  fireEvent.keyDown(node, { key: "ArrowRight" });
+  rerender(flowUi(props, { options: { ...opts, selectedId: null }, editMode: true }));
+  fireEvent.keyUp(node, { key: "ArrowRight" });
+  expect(props.onPinnedChange).not.toHaveBeenCalled();
+  outside.remove();
+});
+
+test("with several nodes selected, every moved node is saved in one call", async () => {
+  const { props, container, node, id } = await selectedEditing();
+  const other = [...container.querySelectorAll<HTMLElement>(".react-flow__node-infra")].find((n) => n.getAttribute("data-id") !== id)!;
+  const otherId = other.getAttribute("data-id")!;
+  fireEvent.keyDown(document, { key: "Control" });
+  fireEvent.click(other);
+  fireEvent.keyUp(document, { key: "Control" });
+  await waitFor(() => expect(other).toHaveClass("selected"));
+  expect(node).toHaveClass("selected");
+  node.focus();
+  fireEvent.keyDown(node, { key: "ArrowDown" });
+  fireEvent.keyUp(node, { key: "ArrowDown" });
+  expect(props.onPinnedChange).toHaveBeenCalledTimes(1);
+  const saved = vi.mocked(props.onPinnedChange).mock.calls[0][0];
+  expect(Object.keys(saved).sort()).toEqual([id, otherId].sort());
+});
