@@ -72,7 +72,7 @@ button.result:focus-visible { outline: 1.5px solid var(--text-secondary); outlin
 .assumptionChoice:hover:not(:disabled) { background: var(--line-node); }
 .assumptionChoice:disabled { opacity: 0.5; cursor: default; }
 .assumptionChip:focus-visible, .assumptionChoice:focus-visible { outline: 1.5px solid var(--text-secondary); outline-offset: 2px; }
-/* 빠진 정보 체크리스트(캔버스 구성 정보 카드 안). 노드별 블록을 접고 펼친다. 남은 수만 --state-missing. */
+/* 빠진 정보 체크리스트(캔버스 구성 정보 카드 안). 노드별 블록을 접고 펼친다. 남은 수만 --state-missing-text. */
 .checklist { margin: 0 -6px; display: flex; flex-direction: column; gap: 2px; }
 .missingBlock { border-radius: var(--radius-node); }
 .missingBlock[data-open] { background: color-mix(in srgb, var(--bg-panel-raised) 55%, transparent); }
@@ -84,7 +84,7 @@ button.result:focus-visible { outline: 1.5px solid var(--text-secondary); outlin
 .blockTitle { flex: 1; min-width: 0; padding: 4px 2px; font: inherit; font-size: 13px; font-weight: 500; text-align: left; color: var(--text-primary); background: transparent; border: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 button.blockTitle { cursor: pointer; }
 button.blockTitle:hover { text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--text-secondary); }
-.blockCount { flex: none; font-size: 11.5px; font-weight: 600; color: var(--state-missing); font-variant-numeric: tabular-nums; }
+.blockCount { flex: none; font-size: 11.5px; font-weight: 600; color: var(--state-missing-text); font-variant-numeric: tabular-nums; }
 .blockCount[data-zero] { color: var(--text-secondary); font-weight: 400; opacity: 0.6; }
 .blockBody { display: flex; flex-direction: column; gap: 6px; padding: 2px 8px 10px 30px; }
 .missingRow { display: grid; grid-template-columns: 72px 1fr auto; align-items: center; gap: 8px; }

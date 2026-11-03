@@ -704,3 +704,12 @@ test("a first question that failed leaves no old lines when it is asked again fr
   expect(screen.queryByText("첫 질문", { selector: "p" })).not.toBeInTheDocument();
   expect(screen.queryByText("다른 응답을 처리하고 있어요")).not.toBeInTheDocument();
 });
+
+// ---- 제목·랜드마크 (접근성 점검) ----
+test("the workspace has a single h1 with the diagram name", () => {
+  hookState.busy = false;
+  render(<DiagramWorkspace diagramId="d" name="운영 구성도" latest={mk(1, ["a"]) as never} initialPinned={{}} samples={[]} />);
+  const h1 = screen.getAllByRole("heading", { level: 1 });
+  expect(h1).toHaveLength(1);
+  expect(h1[0]).toHaveTextContent("운영 구성도");
+});

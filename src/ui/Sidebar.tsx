@@ -343,10 +343,11 @@ export function Sidebar({ projects, userName }: { projects: SidebarProject[]; us
     <>
       <nav className={styles.sidebar} aria-label="프로젝트">
         <div className={styles.sideHead}>
-          <h1 className={styles.brand}>
+          {/* 로고는 제목이 아니다(페이지 제목 h1 은 작업 화면·용어 사전이 각자 둔다). */}
+          <p className={styles.brand}>
             <LogoMark size={18} />
             InfraSketch
-          </h1>
+          </p>
           <button
             ref={toggleRef}
             type="button"

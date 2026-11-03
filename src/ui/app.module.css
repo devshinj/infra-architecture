@@ -73,7 +73,7 @@
 .menu button { font: inherit; font-size: 13px; color: var(--text-primary); background: transparent; border: 0; text-align: left; padding: 6px 8px; border-radius: 4px; cursor: pointer; }
 .menu button:hover:not(:disabled), .menu button:focus-visible { background: var(--bg-canvas); outline: none; }
 .menu button:disabled { opacity: 0.5; cursor: default; }
-.menu .menuDanger { color: var(--state-missing); }
+.menu .menuDanger { color: var(--state-missing-text); }
 .sideFoot { padding: 8px; border-top: 1px solid var(--glass-line); display: flex; flex-direction: column; gap: 8px; }
 .user { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 12px; color: var(--text-secondary); padding: 0 4px; }
 .user span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -90,7 +90,7 @@
 }
 .primaryBtn { color: var(--text-primary); border-color: var(--accent); }
 .primaryBtn:hover:not(:disabled) { background: var(--bg-panel-raised); }
-.dangerBtn { color: var(--state-missing); border-color: var(--state-missing); }
+.dangerBtn { color: var(--state-missing-text); border-color: var(--state-missing); }
 .dangerBtn:hover:not(:disabled) { background: var(--bg-panel-raised); }
 .primaryBtn:disabled, .dangerBtn:disabled { opacity: 0.5; cursor: default; }
 .primaryBtn:focus-visible, .dangerBtn:focus-visible { outline: 1.5px solid var(--text-secondary); outline-offset: 2px; }
@@ -111,7 +111,7 @@
 .dialog label { display: flex; flex-direction: column; gap: 6px; font-size: 12px; color: var(--text-secondary); }
 .dialog input { font: inherit; font-size: 13px; color: var(--text-primary); background: var(--bg-canvas); border: 1px solid var(--line-node); border-radius: var(--radius-node); padding: 7px 9px; }
 .dialogActions { display: flex; justify-content: flex-end; gap: 8px; }
-.error { margin: 0; color: var(--state-missing); font-size: 12px; }
+.error { margin: 0; color: var(--state-missing-text); font-size: 12px; }
 
 .workspace { position: relative; height: 100%; min-height: 0; }
 /* 떠 있는 패널 왼쪽 가장자리의 너비 조절 손잡이: 평소 투명, 호버·포커스에서만 선이 보인다. 위치(right)는 인라인으로 준다. */
