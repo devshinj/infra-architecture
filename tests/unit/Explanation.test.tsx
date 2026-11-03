@@ -21,11 +21,13 @@ const node: NodeExplanation = {
 };
 const terms = [{ key: "was", term: "WAS", definition: "애플리케이션 서버" }];
 
-test("node sections in spec order with 미검수 badge", () => {
+test("node sections in spec order with the AI 설명 badge", () => {
   render(<Explanation status="ready" data={node} terms={terms} />);
   const heads = screen.getAllByRole("heading", { level: 3 }).map((h) => h.textContent);
   expect(heads).toEqual(["정의", "필요한 이유", "비교", "이 구성에서의 역할", "왜 이렇게 짰나요"]);
-  expect(screen.getByText("미검수")).toBeInTheDocument();
+  expect(screen.getByText("AI 설명")).toHaveAttribute("title", "사람이 아직 확인하지 않은 AI 설명이에요");
+  // 화면 읽기에도 배지 뜻이 들린다(title 만 기대지 않는다).
+  expect(screen.getByText("(사람이 아직 확인하지 않았어요)")).toBeInTheDocument();
   for (const l of ["결정", "이유", "대안", "대가"]) expect(screen.getByText(l)).toBeInTheDocument();
   expect(document.querySelector("abbr.term")).toHaveTextContent("WAS");
 });
@@ -34,7 +36,7 @@ test("term node shows 필요한 이유 and 비교", () => {
   render(<Explanation status="ready" data={{ ...node, reviewed: true }} terms={[]} />);
   expect(screen.getByText("정적 파일을 빠르게 내보내려고 둡니다.")).toBeInTheDocument();
   expect(screen.getByText("Apache 보다 가볍습니다.")).toBeInTheDocument();
-  expect(screen.queryByText("미검수")).not.toBeInTheDocument();
+  expect(screen.queryByText("AI 설명")).not.toBeInTheDocument();
 });
 
 test("no why/compare headings without glossary entry", () => {
@@ -59,16 +61,16 @@ test("loading shows the glossary definition at once; role and ADR wait", () => {
   const heads = screen.getAllByRole("heading", { level: 3 }).map((h) => h.textContent);
   expect(heads).toEqual(["정의", "필요한 이유", "비교", "이 구성에서의 역할", "왜 이렇게 짰나요"]);
   expect(screen.getByText("메모리 저장소입니다.")).toBeInTheDocument();
-  expect(screen.getByText("미검수")).toBeInTheDocument();
+  expect(screen.getByText("AI 설명")).toBeInTheDocument();
   expect(screen.getByText("빠르게 읽으려고")).toBeInTheDocument();
   expect(screen.getAllByText("설명을 만드는 중…")).toHaveLength(2);
 });
 
-test("error shows 미검수 with an unreviewed partial definition", () => {
+test("error shows the AI 설명 badge with an unreviewed partial definition", () => {
   const { rerender } = render(<Explanation status="error" partial={{ definition: "사전 정의입니다.", reviewed: false }} message="x" terms={[]} />);
-  expect(screen.getByText("미검수")).toBeInTheDocument();
+  expect(screen.getByText("AI 설명")).toBeInTheDocument();
   rerender(<Explanation status="error" partial={{ definition: "사전 정의입니다.", reviewed: true }} message="x" terms={[]} />);
-  expect(screen.queryByText("미검수")).not.toBeInTheDocument();
+  expect(screen.queryByText("AI 설명")).not.toBeInTheDocument();
 });
 
 test("error shows partial definition, message and retry", async () => {

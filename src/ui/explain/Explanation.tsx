@@ -87,7 +87,11 @@ function Retry({ message, onRetry, busy }: { message?: string; onRetry?: () => v
 
 const ADR_LABELS = ["결정", "이유", "대안", "대가"] as const;
 
-/** 정의(+미검수)와 사전에 있으면 필요한 이유·비교. 다 만든 설명과, 만드는 중·실패 때 사전 정의에 같이 쓴다. */
+/** 사람이 아직 확인하지 않은 정의에 붙는 "AI 설명" 배지의 풀이. 마우스는 title, 화면 읽기는 숨긴 글로 듣는다. */
+const UNREVIEWED_HINT = "사람이 아직 확인하지 않은 AI 설명이에요";
+const UNREVIEWED_SR = " (사람이 아직 확인하지 않았어요)";
+
+/** 정의(+AI 설명 배지)와 사전에 있으면 필요한 이유·비교. 다 만든 설명과, 만드는 중·실패 때 사전 정의에 같이 쓴다. */
 function DefinitionPart({ d, terms }: { d: Partial<NodeExplanation> & { definition: string }; terms: GlossaryTerm[] }) {
   const own = d.term ? normalizeTerm(d.term) : undefined;
   return (
@@ -95,7 +99,12 @@ function DefinitionPart({ d, terms }: { d: Partial<NodeExplanation> & { definiti
       <Section title="정의">
         <p className={styles.explainText}>
           <TermText text={d.definition} terms={terms} exclude={own} />
-          {d.reviewed === false && <span className={styles.unreviewed}>미검수</span>}
+          {d.reviewed === false && (
+            <>
+              <span className={styles.unreviewed} title={UNREVIEWED_HINT}>AI 설명</span>
+              <span className={styles.srOnly}>{UNREVIEWED_SR}</span>
+            </>
+          )}
         </p>
       </Section>
       {d.why && (

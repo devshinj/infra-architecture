@@ -19,7 +19,11 @@ const FIELDS = [
 type FieldKey = (typeof FIELDS)[number][0];
 type Draft = Record<FieldKey, string>;
 
-const toDraft = (t: GlossaryItem): Draft => ({
+/** "AI 설명" 배지의 풀이. 마우스는 title, 화면 읽기는 숨긴 글로 듣는다(설명 패널과 같은 말). */
+const UNREVIEWED_HINT = "사람이 아직 확인하지 않은 AI 설명이에요";
+const UNREVIEWED_SR = " (사람이 아직 확인하지 않았어요)";
+
+const toDraft =(t: GlossaryItem): Draft => ({
   term: t.term,
   fullName: t.fullName,
   category: t.category,
@@ -104,7 +108,7 @@ export function GlossaryPage({ initial }: { initial: GlossaryItem[] }) {
         />
         <label>
           <input type="checkbox" checked={unreviewedOnly} onChange={(e) => setUnreviewedOnly(e.target.checked)} />
-          미검수만
+          AI 설명만
         </label>
       </div>
       <div className={styles.body}>
@@ -118,7 +122,12 @@ export function GlossaryPage({ initial }: { initial: GlossaryItem[] }) {
                   <span className={styles.head}>
                     <strong>{t.term}</strong>
                     {t.category && <span className={styles.meta}>{t.category}</span>}
-                    {!t.reviewed && <span className={styles.badge}>미검수</span>}
+                    {!t.reviewed && (
+                      <>
+                        <span className={styles.badge} title={UNREVIEWED_HINT}>AI 설명</span>
+                        <span className={styles.srOnly}>{UNREVIEWED_SR}</span>
+                      </>
+                    )}
                     {editing(t) && <span className={styles.badge}>수정 중</span>}
                     <span className={styles.meta}>{t.source === "seed" ? "초기" : "AI"}</span>
                   </span>

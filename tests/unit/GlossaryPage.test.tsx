@@ -45,11 +45,11 @@ test("search and unreviewed filter", async () => {
   expect(screen.getAllByRole("listitem")).toHaveLength(1);
   expect(screen.getByText("Nginx")).toBeInTheDocument();
   await userEvent.clear(screen.getByRole("searchbox", { name: "용어 검색" }));
-  await userEvent.click(screen.getByRole("checkbox", { name: "미검수만" }));
+  await userEvent.click(screen.getByRole("checkbox", { name: "AI 설명만" }));
   const rows = screen.getAllByRole("listitem");
   expect(rows).toHaveLength(1);
   expect(within(rows[0]!).getByText("Redis")).toBeInTheDocument();
-  expect(within(rows[0]!).getByText("미검수")).toBeInTheDocument();
+  expect(within(rows[0]!).getByText("AI 설명")).toBeInTheDocument();
   expect(within(rows[0]!).getByText("초기")).toBeInTheDocument();
 });
 
@@ -74,11 +74,11 @@ test("검수 완료 toggles badge", async () => {
   setTermReviewedAction.mockResolvedValueOnce({ ok: true, term: { ...items[0]!, reviewed: true } });
   render(<GlossaryPage initial={items} />);
   await userEvent.click(screen.getByRole("button", { name: /Redis/ }));
-  expect(screen.getByText("미검수")).toBeInTheDocument();
+  expect(screen.getByText("AI 설명")).toBeInTheDocument();
   await userEvent.click(screen.getByRole("button", { name: "검수 완료" }));
   expect(setTermReviewedAction).toHaveBeenCalledWith("1", true);
   expect(await screen.findByRole("button", { name: "검수 취소" })).toBeInTheDocument();
-  expect(screen.queryByText("미검수")).not.toBeInTheDocument();
+  expect(screen.queryByText("AI 설명")).not.toBeInTheDocument();
 });
 
 test("drafts are kept per item and save clears them", async () => {
