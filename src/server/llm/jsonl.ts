@@ -30,10 +30,11 @@ function step(ch: string, st: Scan): void {
   else if (ch === "}") st.depth--;
 }
 
-function isCompleteJson(t: string): boolean {
+/** 그 글만으로 "op" 키가 있는 완전한 JSON 객체인지(새 명령의 시작으로 볼지). */
+function isCommandLine(t: string): boolean {
   try {
-    JSON.parse(t);
-    return true;
+    const v: unknown = JSON.parse(t);
+    return typeof v === "object" && v !== null && !Array.isArray(v) && Object.hasOwn(v, "op");
   } catch {
     return false;
   }
@@ -122,10 +123,10 @@ export function createJsonlParser(
         skipping = false;
         return;
       }
-      // 그 줄만으로 완전한 JSON 객체인 줄이 오면, 앞의 것은 깨진 한 줄로 알리고 이 줄은 새 명령으로 읽는다.
-      // 그렇지 않으면 계속 모은다(여는 괄호만 다음 줄에 있는 객체도 온전히 읽는다).
+      // 그 줄만으로 "op" 가 있는 완전한 JSON 객체인 줄이 오면, 앞의 것은 깨진 한 줄로 알리고 이 줄은 새 명령으로 읽는다.
+      // 그렇지 않으면 계속 모은다(여는 괄호만 다음 줄에 있는 객체, attrs 안 배열의 객체 줄도 온전히 읽는다).
       const core = stripWrap(t);
-      if (core.startsWith("{") && isCompleteJson(core)) {
+      if (core.startsWith("{") && isCommandLine(core)) {
         flushPendingBad();
         skipping = false;
       }

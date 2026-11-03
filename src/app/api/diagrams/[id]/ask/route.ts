@@ -11,6 +11,8 @@ import { getOwnedDiagram, NotFoundError, ValidationError } from "@/server/projec
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+// 차례 전체 상한(240초, 출력 한도 이어 쓰기 포함)이 플랫폼 시간 제한에 먼저 잘리지 않게 한다.
+export const maxDuration = 300;
 
 const BodySchema = z.object({
   nodeId: z.string().min(1).max(200),

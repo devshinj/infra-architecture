@@ -278,6 +278,7 @@ async function lockedTurn(args: TurnArgs, sessionId: string | null, followUp: bo
         // 같은 차례라 cmd 는 계속 같은 스트림으로 가고, 버전은 차례 끝에 한 번만 만든다.
         let msgs = messages;
         for (let part = 1; ; part++) {
+          const appliedBefore = applied;
           const parser = createJsonlParser(onLine, onBad);
           const r = await deps.qwen.streamCompletion(msgs, {
             signal,
@@ -286,7 +287,8 @@ async function lockedTurn(args: TurnArgs, sessionId: string | null, followUp: bo
             },
           });
           if (signal.aborted) throw abortError();
-          const more = r.finishReason === "length" && part <= MAX_CONTINUATIONS;
+          // 이번 호출이 아무것도 반영하지 못했으면(같은 걸 되풀이하는 등) 더 이어 쓰지 않는다.
+          const more = r.finishReason === "length" && part <= MAX_CONTINUATIONS && applied > appliedBefore;
           // 이어 쓸 때만 끊긴 마지막 줄을 조용히 버린다(마지막 시도까지 끊기면 지금처럼 건너뜀으로 센다).
           parser.end({ dropPartial: more });
           if (!more) break;

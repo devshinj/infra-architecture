@@ -174,3 +174,17 @@ test("changed counts only structural commands", async () => {
   const events = await turn(q);
   expect(events.at(-1)).toMatchObject({ t: "done", applied: 5, changed: 4 });
 });
+
+test("a cut-off call that applied nothing is not continued again", async () => {
+  const q = fakeQwen([
+    { text: `${node("a")}\n{"op":"add_node","id":"b`, finish: "length" },
+    // 이어 쓰기가 이미 있는 노드만 되풀이: 반영 0 → 더 부르지 않는다.
+    { text: `${node("a")}\n{"op":"add_node","id":"c`, finish: "length" },
+    { text: `${node("d")}\n`, finish: "stop" },
+  ]);
+  const events = await turn(q);
+  expect(q.calls).toHaveLength(2);
+  expect(events.filter((e) => e.t === "cmd")).toHaveLength(1);
+  expect(store.versions).toHaveLength(1);
+  expect(events.at(-1)).toMatchObject({ t: "done", status: "complete", applied: 1 });
+});

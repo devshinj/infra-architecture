@@ -16,6 +16,8 @@ import { getOwnedDiagram, NotFoundError, ValidationError } from "@/server/projec
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+// 차례 전체 상한(240초, 출력 한도 이어 쓰기 포함)이 플랫폼 시간 제한에 먼저 잘리지 않게 한다.
+export const maxDuration = 300;
 
 // sessionId: 이어 갈 구성도 대화 세션. newSession: 이 메시지로 새 구성도 대화 세션을 만든다. 둘 다 없으면 기본 대화.
 const BodySchema = z

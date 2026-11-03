@@ -33,12 +33,25 @@ const changedOf = (r: Pick<TurnResult, "applied" | "changed">) => r.changed ?? r
  * 재정렬(layout) 차례는 "다시 정렬했어요" 안내와 어긋나므로 칩을 두지 않는다.
  */
 export function summaryText(r: TurnResult, hadAnswer: boolean, intent?: string | null): string | null {
-  const changed = changedOf(r);
+  // 옛 메시지(changed 없음)는 예전 규칙 그대로 보인다.
+  if (r.changed === undefined) return legacySummaryText(r, hadAnswer, intent);
+  const changed = r.changed;
   if (changed === 0 && r.status === "complete") {
     if (!hadAnswer && intent !== "layout" && (intent === "structure_change" || (r.version === null && r.skipped > 0))) return NOT_APPLIED_MESSAGE;
     if (r.version === null) return hadAnswer || intent === "layout" ? null : "변경 사항이 없어요.";
   }
   const counts = changed > 0 ? `${changed}곳 바꿨어요` : "바꾼 곳이 없어요";
+  const base = r.nodes === undefined || r.edges === undefined ? counts : `노드 ${r.nodes} · 연결 ${r.edges} · ${counts}`;
+  return r.status === "aborted" ? `중단됨 · ${base}` : base;
+}
+
+/** changed 가 없던 때의 요약 규칙(옛 메시지를 다시 불러올 때만). */
+function legacySummaryText(r: TurnResult, hadAnswer: boolean, intent?: string | null): string | null {
+  if (r.version === null && r.applied === 0 && r.status === "complete") {
+    if (r.skipped > 0 && intent !== "layout") return NOT_APPLIED_MESSAGE;
+    return hadAnswer || intent === "layout" ? null : "변경 사항이 없어요.";
+  }
+  const counts = r.applied > 0 ? `${r.applied}곳 바꿨어요` : "바꾼 곳이 없어요";
   const base = r.nodes === undefined || r.edges === undefined ? counts : `노드 ${r.nodes} · 연결 ${r.edges} · ${counts}`;
   return r.status === "aborted" ? `중단됨 · ${base}` : base;
 }
@@ -99,7 +112,9 @@ export function messagesToLines(rows: Row[]): ChatLine[] {
       continue;
     }
     // 안내(say)도 AI 가 낸 글이다: 글이 있으면 반영 못 함 안내를 두지 않는다(살아 있는 차례와 같게).
-    const s = summaryText(r, answer.trim() !== "" || says.some((x) => x.trim() !== ""), meta.intent);
+    // 옛 메시지(changed 없음)는 예전처럼 답 글만 본다.
+    const wrote = answer.trim() !== "" || (meta.changed !== undefined && says.some((x) => x.trim() !== ""));
+    const s = summaryText(r, wrote, meta.intent);
     if (s) out.push({ id: `${m.id}-summary`, kind: "summary", text: s, ...t });
     // 빠진 정보(meta.missing)는 대화에 줄을 두지 않는다: 캔버스 카드가 지금 상태로 보여 준다.
     const chip = warningsChip(meta.warnings ?? []);

@@ -210,4 +210,11 @@ describe("createJsonlParser", () => {
     expect(values).toEqual([{ op: "a" }]);
     expect(bad).toEqual(["설명입니다"]);
   });
+
+  test("one-line objects without an op inside a pretty command stay part of it", () => {
+    const text = '{\n  "op": "update_node",\n  "id": "x",\n  "attrs": [\n    {"k":1},\n    {"k":2}\n  ]\n}\n{"op":"say","text":"끝"}\n';
+    const { values, bad } = run(pieces(text, 6));
+    expect(values).toEqual([{ op: "update_node", id: "x", attrs: [{ k: 1 }, { k: 2 }] }, { op: "say", text: "끝" }]);
+    expect(bad).toEqual([]);
+  });
 });

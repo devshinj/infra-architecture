@@ -183,3 +183,17 @@ test("summary: assumptions are applied and versioned but are not counted as chan
     ["progress", "DB 를 이중화합니다."],
   ]);
 });
+
+test("old messages without changed render exactly as before", () => {
+  const old = { intent: "structure_change", applied: 0, skipped: 0, version: null, status: "complete" as const };
+  const lines = messagesToLines([
+    { id: "u1", role: "user", content: "DB 이중화", meta: {} },
+    { id: "a1", role: "assistant", content: "", meta: old },
+  ]);
+  expect(lines.map((l) => [l.kind, l.text])).toEqual([["user", "DB 이중화"], ["summary", "변경 사항이 없어요."]]);
+  expect(summaryText({ version: null, status: "complete", applied: 0, skipped: 0 }, false, "structure_change")).toBe("변경 사항이 없어요.");
+  // 예전처럼 건너뛴 명령이 있으면 답이 있어도 알린다.
+  expect(summaryText({ version: null, status: "complete", applied: 0, skipped: 1 }, true, "missing_info_answer")).toBe("요청을 반영하지 못했어요. 다시 말해 주세요.");
+  // 새 차례(changed 있음)만 새 규칙.
+  expect(summaryText({ version: null, status: "complete", applied: 0, changed: 0, skipped: 0 }, false, "structure_change")).toBe("요청을 반영하지 못했어요. 다시 말해 주세요.");
+});
