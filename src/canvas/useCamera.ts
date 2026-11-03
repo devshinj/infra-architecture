@@ -158,7 +158,8 @@ const idsKey = (rects: Record<string, Rect>) => Object.keys(rects).sort().join("
  * - a user pan/zoom during a turn stops auto fits until the turn ends (the final fit too);
  * - focus(rect) (위치 보기) → 500ms centre on it, cancelling a scheduled stream fit; a programmatic move, never a user move;
  * - fitRequest change (re-arrange) → fit at once like a board change, once the new layout is settled;
- * - fitAllRequest change (전체 보기) → fit the whole diagram at once, below READABLE_ZOOM if needed;
+ * - fitAllRequest change (전체 보기) → fit the whole diagram at once, below READABLE_ZOOM if needed; it is the user's
+ *   choice, so no automatic fit (follow, end of turn) overrides it until the next board, re-arrange or turn start;
  * - reduced motion → every move is instant.
  */
 export function useCamera(input: CameraInput): { onMoveStart(event: unknown): void; focus(r: Rect): void } {
@@ -175,6 +176,8 @@ export function useCamera(input: CameraInput): { onMoveStart(event: unknown): vo
     lastFit: -Infinity,
     timer: null as ReturnType<typeof setTimeout> | null,
     userMoved: false,
+    /** 사용자가 전체 보기를 눌렀다: 다음 판·자동 정렬·대화 차례 시작 전까지 자동 맞춤(따라가기·차례 끝 맞춤)이 덮지 않는다. */
+    manual: false,
     streaming: input.streaming,
     fitRequest: input.fitRequest,
     fitAllRequest: input.fitAllRequest,
@@ -219,7 +222,7 @@ export function useCamera(input: CameraInput): { onMoveStart(event: unknown): vo
     }
     return false;
   };
-  const stopped = () => st.current.streaming && st.current.userMoved;
+  const stopped = () => (st.current.streaming && st.current.userMoved) || st.current.manual;
   const flush = () => {
     const s = st.current;
     if (!stopped() && ready() && anyPendingOff()) apply(BOARD_MAX_ZOOM, STREAM_FIT_DURATION, true);
@@ -251,6 +254,7 @@ export function useCamera(input: CameraInput): { onMoveStart(event: unknown): vo
     const ids = key === "" ? [] : key.split(",");
     if (s.board !== boardKey) {
       s.board = boardKey;
+      s.manual = false;
       s.ids = new Set(ids);
       s.pending.clear();
       clearTimer();
@@ -285,6 +289,7 @@ export function useCamera(input: CameraInput): { onMoveStart(event: unknown): vo
       s.fitPending = false;
       clearTimer();
       s.pending.clear();
+      s.manual = false;
       apply(s.streaming ? FINAL_MAX_ZOOM : BOARD_MAX_ZOOM, 0, false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- helpers read refs only
@@ -307,6 +312,7 @@ export function useCamera(input: CameraInput): { onMoveStart(event: unknown): vo
       clearTimer();
       s.pending.clear();
       apply(s.streaming ? FINAL_MAX_ZOOM : BOARD_MAX_ZOOM, 0, false, true);
+      s.manual = true;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- helpers read refs only
   }, [fitAllRequest, settled, layoutFailed, sizeReady]);
@@ -318,11 +324,12 @@ export function useCamera(input: CameraInput): { onMoveStart(event: unknown): vo
     s.streaming = streaming;
     if (streaming) {
       s.userMoved = false;
+      s.manual = false;
       return;
     }
     clearTimer();
     s.pending.clear();
-    if (!s.userMoved) apply(FINAL_MAX_ZOOM, FINAL_FIT_DURATION, false);
+    if (!s.userMoved && !s.manual) apply(FINAL_MAX_ZOOM, FINAL_FIT_DURATION, false);
     s.userMoved = false;
     // eslint-disable-next-line react-hooks/exhaustive-deps -- helpers read refs only
   }, [streaming]);

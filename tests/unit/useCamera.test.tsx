@@ -374,3 +374,39 @@ test("new nodes outside a chat turn (e.g. right after a sample import) are follo
   expect(r.setViewport).toHaveBeenCalledTimes(1);
   expect(r.vp().zoom).toBeCloseTo(READABLE_ZOOM);
 });
+
+test("an explicit 전체 보기 wins over pending automatic fits until the next turn", () => {
+  const rects = { a: box(0, 0), b: box(1450, 0), z: box(0, 3000) };
+  const r = rig({ rects, fitAllRequest: 0 });
+  r.update({ streaming: true });
+  act(() => vi.advanceTimersByTime(1000));
+  r.update({ fitAllRequest: 1 }); // 차례가 도는 중에 전체 보기
+  const all = r.vp();
+  expect(all.zoom).toBeLessThan(READABLE_ZOOM);
+  r.setViewport.mockClear();
+  // 차례 끝 맞춤(읽을 수 있는 줌)이 덮지 않는다.
+  r.update({ streaming: false });
+  expect(r.setViewport).not.toHaveBeenCalled();
+  // 대화 밖에서 노드가 늘어도(서버 판 받아오기) 따라가지 않는다.
+  r.update({ rects: { ...rects, c: box(9000, 0) } });
+  act(() => vi.advanceTimersByTime(1000));
+  expect(r.setViewport).not.toHaveBeenCalled();
+  expect(r.vp()).toEqual(all);
+  // 다음 차례에는 다시 따라간다.
+  r.update({ streaming: true });
+  act(() => vi.advanceTimersByTime(1000));
+  r.update({ rects: { ...rects, c: box(9000, 0), d: box(-9000, 0) } });
+  expect(r.setViewport).toHaveBeenCalledTimes(1);
+});
+
+test("자동 정렬 after 전체 보기 fits again by the readable rule", () => {
+  const rects = { a: box(0, 0), b: box(1450, 0), z: box(0, 3000) };
+  const r = rig({ rects, fitAllRequest: 0, fitRequest: 0 });
+  r.update({ fitAllRequest: 1 });
+  r.update({ fitRequest: 1 });
+  expect(r.vp().zoom).toBeCloseTo(READABLE_ZOOM);
+  r.setViewport.mockClear();
+  r.update({ rects: { ...rects, c: box(9000, 0) } });
+  act(() => vi.advanceTimersByTime(1000));
+  expect(r.setViewport).toHaveBeenCalledTimes(1);
+});

@@ -24,6 +24,9 @@ const nodes = (page: Page) => page.locator(".react-flow__node-infra");
 const redis = (page: Page) => nodes(page).filter({ has: page.getByTitle("Redis Cluster") });
 
 async function selectRedis(page: Page) {
+  // 1280×720 에서는 화면 맞춤이 노드 이름을 읽을 수 있는 줌(10px)에서 멈추고 위쪽부터 보여 줘, 맨 아랫줄 Redis 는
+  // 창 아래로 나간다. 사용자처럼 전체 보기로 구성도 전체를 띄운 뒤 누른다.
+  await page.getByRole("button", { name: "전체 보기" }).click();
   await redis(page).click();
   await expect(page.getByRole("tab", { name: "설명" })).toHaveAttribute("aria-selected", "true");
 }
