@@ -107,7 +107,8 @@
 }
 button.node__badge { padding: 0; border: 0; font-family: inherit; cursor: pointer; }
 button.node__badge:focus-visible { outline: 1.5px solid var(--text-secondary); outline-offset: 2px; }
-.node__badge--missing { background: var(--state-missing); color: var(--text-primary); }
+/* 빠진 정보 배지: state-missing 을 조금 밝힌 칠 위에 어두운 숫자(5.3:1). 칠은 노드·캔버스 바탕과도 4:1 이상 떨어진다. */
+.node__badge--missing { background: color-mix(in srgb, var(--state-missing) 80%, var(--text-primary)); color: var(--bg-sidebar); }
 .node__badge--warn { background: var(--state-warn); color: var(--bg-node); }
 /* 빠진 정보 배지와 함께면 그 왼쪽에 나란히. 중심이 모서리에서 18px 왼쪽이며 overlap.ts 의 PAIR_BADGE_OFFSET 과 맞춘다. */
 .node__badge--pair { right: 18px; }

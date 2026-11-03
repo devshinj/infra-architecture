@@ -85,9 +85,9 @@
   font-size: 12px;
   margin: 0;
 }
-/* --state-missing 그대로는 바탕과의 대비가 낮아(약 2.7:1) 글자에는 밝게 섞어 쓴다(약 6:1). */
+/* --state-missing 그대로는 바탕과의 대비가 낮아(약 2.7:1) 글자에는 밝게 섞은 글자 토큰을 쓴다(약 6:1). */
 .error {
-  color: color-mix(in srgb, var(--state-missing) 55%, var(--text-primary));
+  color: var(--state-missing-text);
   font-size: 13px;
   margin: 0;
 }

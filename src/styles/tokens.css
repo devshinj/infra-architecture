@@ -58,7 +58,8 @@
   --motion-sheen: #D5E9DB; /* 복제 광택 */
 
   /* 상태 배지 */
-  --state-missing: #C9574A; /* 빠진 정보 */
+  --state-missing: #C9574A; /* 빠진 정보 — 테두리·칠. 글자에 그대로 쓰면 바탕과 대비가 모자라다(2.7~4.1:1). */
+  --state-missing-text: #D79A94; /* 빠진 정보·위험 글자 = state-missing 55% + text-primary (모든 바탕에서 4.9:1 이상) */
   --state-warn: #D4AE6C; /* 경고 */
 
   /* 영역 테두리 */

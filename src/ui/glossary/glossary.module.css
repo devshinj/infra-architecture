@@ -8,6 +8,7 @@
   border: 1px solid var(--line-node); border-radius: var(--radius-node); padding: 7px 9px;
 }
 .search { width: 260px; }
+.search::placeholder { color: var(--text-secondary); }
 .body { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; align-items: start; }
 .list { margin: 0; padding: 0; list-style: none; background: var(--bg-panel); border: 1px solid var(--line-shell); border-radius: 6px; }
 .list li + li { border-top: 1px solid var(--line-shell); }
@@ -30,4 +31,4 @@
 .actions button:hover:not(:disabled) { border-color: var(--text-secondary); }
 .actions button:disabled { opacity: 0.5; cursor: default; }
 .page button:focus-visible, .page input:focus-visible, .page textarea:focus-visible { outline: 1.5px solid var(--text-secondary); outline-offset: 2px; }
-.error { margin: 0; font-size: 12px; color: var(--state-missing); }
+.error { margin: 0; font-size: 12px; color: var(--state-missing-text); }
