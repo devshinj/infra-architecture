@@ -365,3 +365,12 @@ function unionRectOf(rects: Record<string, Rect>): Rect {
   const x2 = Math.max(...all.map((r) => r.x + r.width)), y2 = Math.max(...all.map((r) => r.y + r.height));
   return { x: x1, y: y1, width: x2 - x1, height: y2 - y1 };
 }
+
+test("new nodes outside a chat turn (e.g. right after a sample import) are followed at the readable zoom", () => {
+  const r = rig({ rects: { a: box(0, 0) } });
+  r.setViewport.mockClear();
+  r.update({ rects: { a: box(0, 0), b: box(1450, 0), z: box(0, 3000) } });
+  act(() => vi.advanceTimersByTime(1000)); // 맞춤 사이 간격(600ms)
+  expect(r.setViewport).toHaveBeenCalledTimes(1);
+  expect(r.vp().zoom).toBeCloseTo(READABLE_ZOOM);
+});

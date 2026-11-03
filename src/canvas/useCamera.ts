@@ -197,7 +197,10 @@ export function useCamera(input: CameraInput): { onMoveStart(event: unknown): vo
     const { rects, bounds, size, insets, reducedMotion, getViewport, setViewport } = latest.current;
     const b = bounds ?? unionRect(Object.values(rects));
     if (!b || !ready()) return;
-    const opts: FitOptions = { anchor: topRow(Object.values(rects)), ...(follow || all ? {} : { minZoom: READABLE_ZOOM }) };
+    // 읽을 수 있는 줌 바닥이 없는 것은 전체 보기와, 대화가 그리는 동안의 따라가기뿐이다. 대화 밖에서 노드가 새로 생겨
+    // 따라갈 때(샘플 가져오기 직후 등)는 바닥을 지킨다.
+    const floorless = all || (follow && st.current.streaming);
+    const opts: FitOptions = { anchor: topRow(Object.values(rects)), ...(floorless ? {} : { minZoom: READABLE_ZOOM }) };
     let v = fitViewport(b, size, insets, maxZoom, opts);
     if (follow) {
       const cur = getViewport().zoom;
