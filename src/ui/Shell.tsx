@@ -3,22 +3,28 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 
 import styles from "./app.module.css";
+import { useMediaQuery } from "./useMediaQuery";
 
 /** 펼친 사이드바·접힌 레일 너비와 떠 있는 패널 여백(tokens.css --panel-gap 과 같다). */
 export const SIDEBAR_WIDTH = 240;
 export const RAIL_WIDTH = 56;
 export const PANEL_GAP = 12;
 export const SIDEBAR_COLLAPSED_KEY = "infrasketch.sidebarCollapsed";
-/** 이보다 좁은 화면은 저장값이 없을 때 레일로 시작해 캔버스·안내를 가리지 않는다. */
+/**
+ * 휴대폰 너비. 이보다 좁으면 사이드바는 위 막대의 ☰ 서랍이 되고, 작업 화면은 아래 탭 막대로 한 화면씩 본다
+ * (app.module.css 의 같은 미디어 쿼리가 첫 칠을 맞춘다). 저장값이 없으면 접힌 채로 시작해, 넓혀도 레일로 남는다.
+ */
 export const NARROW_QUERY = "(max-width: 640px)";
 
 /** 사이드바 밖(빈 홈 화면 등)에서 사이드바의 ‘새 프로젝트’·‘새 구성도’ 대화상자를 연다. projectId 가 있으면 그 프로젝트에 구성도를 만든다. */
 export type CreateRequest = (projectId?: string) => void;
 
 interface ShellValue {
+  /** 휴대폰 너비(NARROW_QUERY). 하이드레이션 첫 렌더는 false. */
+  narrow: boolean;
   collapsed: boolean;
   setCollapsed(v: boolean): void;
-  /** 화면 왼쪽 가장자리에서 사이드바 바깥 끝까지(여백 + 너비). */
+  /** 화면 왼쪽 가장자리에서 사이드바 바깥 끝까지(여백 + 너비). 좁은 화면은 사이드바가 서랍이라 0. */
   sidebarExtent: number;
   requestCreate: CreateRequest;
   /** 사이드바가 대화상자를 여는 함수를 등록한다(null 이면 해제). */
@@ -28,6 +34,7 @@ interface ShellValue {
 const extentOf = (collapsed: boolean) => PANEL_GAP + (collapsed ? RAIL_WIDTH : SIDEBAR_WIDTH);
 
 const ShellContext = createContext<ShellValue>({
+  narrow: false,
   collapsed: false,
   setCollapsed: () => {},
   sidebarExtent: extentOf(false),
@@ -40,6 +47,7 @@ export const useShell = () => useContext(ShellContext);
 /** 캔버스를 바탕 전체에 깔고 사이드바 접힘 상태를 기억하는 앱 셸. 첫 렌더는 펼침(하이드레이션 일치), 마운트 뒤 저장값을 읽는다. */
 export function ShellProvider({ children }: { children: React.ReactNode }) {
   const [collapsed, setState] = useState(false);
+  const narrow = useMediaQuery(NARROW_QUERY);
   useEffect(() => {
     try {
       const saved = window.localStorage.getItem(SIDEBAR_COLLAPSED_KEY);
@@ -62,8 +70,8 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     createHandler.current = fn;
   }, []);
   const value = useMemo(
-    () => ({ collapsed, setCollapsed, sidebarExtent: extentOf(collapsed), requestCreate, setCreateHandler }),
-    [collapsed, setCollapsed, requestCreate, setCreateHandler],
+    () => ({ narrow, collapsed, setCollapsed, sidebarExtent: narrow ? 0 : extentOf(collapsed), requestCreate, setCreateHandler }),
+    [narrow, collapsed, setCollapsed, requestCreate, setCreateHandler],
   );
   return (
     <ShellContext.Provider value={value}>

@@ -277,3 +277,8 @@ button.node__badge:focus-visible { outline: 1.5px solid var(--text-secondary); o
 /* 메뉴가 열려 있으면 알림을 감춘다(같은 자리에 겹친다). */
 .canvas__export:has(.canvas__export-menu) .canvas__export-note { visibility: hidden; }
 .canvas__export-note--error { border-color: color-mix(in srgb, var(--state-missing) 60%, var(--glass-line)); white-space: normal; width: max-content; max-width: 280px; }
+
+/* 좁은 화면(Shell.tsx NARROW_QUERY): 오른쪽 패널이 캔버스 위에 뜨지 않으므로 도구 모음이 캔버스 폭을 다 써서 줄 수를 줄인다. */
+@media (max-width: 640px) {
+  .canvas__toolbar { max-width: calc(100% - 2 * var(--panel-gap)); }
+}
