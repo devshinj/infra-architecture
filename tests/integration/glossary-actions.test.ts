@@ -53,6 +53,7 @@ test("listTermsAction carries aliases, review state, why and compare for the pan
     definition: seed.definition,
     aliases: seed.aliases,
     reviewed: false,
+    source: "seed",
     why: seed.why,
     compare: seed.compare,
   });
