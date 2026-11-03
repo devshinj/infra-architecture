@@ -1,7 +1,7 @@
 import { act, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
-import { fitViewport, focusViewport, useCamera, type CameraInput, type Viewport } from "@/canvas/useCamera";
+import { EDGE_GAP_PX, fitViewport, focusViewport, READABLE_ZOOM, topRow, useCamera, type CameraInput, type Viewport } from "@/canvas/useCamera";
 import type { Rect } from "@/canvas/layout";
 
 beforeEach(() => vi.useFakeTimers());
@@ -237,7 +237,8 @@ test("focus during a turn is not a user move: the final fit still runs", () => {
 });
 
 test("board and final fits keep a bottom margin of at least the collapsed card footprint", () => {
-  const tall: Rect = { x: 0, y: 0, width: 100, height: 2000 };
+  // 읽을 수 있는 줌(READABLE_ZOOM) 위에서 다 담기는 높이.
+  const tall: Rect = { x: 0, y: 0, width: 100, height: 600 };
   const v = fitViewport(tall, SIZE, { left: 0, right: 0, bottom: 66 }, 2);
   expect((tall.y + tall.height) * v.zoom + v.y).toBeLessThanOrEqual(SIZE.height - 66 + 0.001);
   const r = rig({ rects: { a: tall }, insets: { left: 0, right: 0, bottom: 66 } });
@@ -264,4 +265,65 @@ test("focus with the card open lands right of the card on a wide strip, above it
   const closed = focusViewport(r, { width: 1400, height: 800 }, { left: 200, right: 300, bottom: 66 }, 1);
   expect(1050 + closed.x).toBeCloseTo(650);
   expect(425 + closed.y).toBeCloseTo(367);
+});
+
+// ---- 떠 있는 도구 모음과 읽을 수 있는 최소 줌 ----
+test("fits leave the toolbar strip on top: the box is framed between the top and bottom insets", () => {
+  const b = box(0, 0); // 100×50, 가운데 (50, 25)
+  const v = fitViewport(b, SIZE, { left: 0, right: 0, top: 100, bottom: 66 }, 1);
+  expect(25 * v.zoom + v.y).toBeCloseTo(100 + (600 - 100 - 66) / 2);
+  expect(b.y * v.zoom + v.y).toBeGreaterThanOrEqual(100);
+  // 위치 보기도 도구 모음 아래 띠의 가운데에 둔다.
+  const f = focusViewport(b, SIZE, { left: 0, right: 0, top: 100, bottom: 66 }, 1);
+  expect(25 + f.y).toBeCloseTo((100 + 534) / 2);
+});
+
+test("READABLE_ZOOM keeps node names at 10px or more", () => {
+  expect(14 * READABLE_ZOOM).toBeCloseTo(10);
+});
+
+test("a diagram too big for the readable zoom shows its top row, centred, without empty space past its edges", () => {
+  const big: Rect = { x: 0, y: 0, width: 3000, height: 2000 };
+  const insets = { left: 100, right: 100, top: 60, bottom: 40 };
+  const row = { x: 1400, y: 0, width: 200, height: 50 };
+  const v = fitViewport(big, SIZE, insets, 2, { minZoom: READABLE_ZOOM, anchor: row });
+  expect(v.zoom).toBeCloseTo(READABLE_ZOOM);
+  // 위쪽 끝은 도구 모음 아래 EDGE_GAP_PX 에.
+  expect(big.y * v.zoom + v.y).toBeCloseTo(60 + EDGE_GAP_PX);
+  // 맨 윗줄 가운데(1500)가 띠 가운데(100 + 800/2)에.
+  expect(1500 * v.zoom + v.x).toBeCloseTo(500);
+  // 맨 윗줄이 왼쪽 끝에 붙어 있으면 왼쪽 빈 곳이 보이지 않게 구성도 왼쪽 끝을 띠 왼쪽(+여백)에 둔다.
+  const left = fitViewport(big, SIZE, insets, 2, { minZoom: READABLE_ZOOM, anchor: { x: 0, y: 0, width: 100, height: 50 } });
+  expect(big.x * left.zoom + left.x).toBeCloseTo(100 + EDGE_GAP_PX);
+  // 가로는 담기고 세로만 넘치면 가로는 가운데, 세로는 위쪽.
+  const narrowTall: Rect = { x: 0, y: 0, width: 300, height: 3000 };
+  const t = fitViewport(narrowTall, SIZE, insets, 2, { minZoom: READABLE_ZOOM });
+  expect(150 * t.zoom + t.x).toBeCloseTo(500);
+  expect(t.y).toBeCloseTo(60 + EDGE_GAP_PX);
+  // 최소 줌이 없으면 예전처럼 다 담는다.
+  expect(fitViewport(big, SIZE, insets, 2).zoom).toBeLessThan(READABLE_ZOOM);
+});
+
+test("topRow boxes the nodes level with the topmost one", () => {
+  expect(topRow([box(0, 0), box(300, 10), box(100, 200)])).toEqual({ x: 0, y: 0, width: 400, height: 60 });
+  expect(topRow([])).toBeNull();
+});
+
+test("board fit and 전체 보기 stop at the readable zoom; the stream follow may zoom further out", () => {
+  const rects = { a: box(0, 0), b: box(1450, 0), z: box(0, 3000) };
+  const r = rig({ rects, fitRequest: 0 });
+  expect(r.vp().zoom).toBeCloseTo(READABLE_ZOOM);
+  // 위쪽(맨 윗줄 a·b)을 보여 준다.
+  expect(r.vp().y).toBeCloseTo(EDGE_GAP_PX);
+  r.setVp({ x: 0, y: 0, zoom: 1 });
+  r.update({ fitRequest: 1 });
+  expect(r.vp().zoom).toBeCloseTo(READABLE_ZOOM);
+  // 대화가 그리는 동안에는 새 노드를 따라가려고 더 멀리 볼 수 있다.
+  r.update({ streaming: true });
+  act(() => vi.advanceTimersByTime(1000));
+  r.update({ rects: { ...rects, c: box(6000, 0) } });
+  expect(r.vp().zoom).toBeLessThan(READABLE_ZOOM);
+  // 차례가 끝나면 다시 읽을 수 있는 줌.
+  r.update({ streaming: false });
+  expect(r.vp().zoom).toBeCloseTo(READABLE_ZOOM);
 });

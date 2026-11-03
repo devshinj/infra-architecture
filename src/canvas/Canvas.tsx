@@ -1,6 +1,6 @@
 import { applyNodeChanges, Background, ReactFlow, ReactFlowProvider, useReactFlow, useStore, type Node, type NodeChange } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 
 import { categoryOf } from "@/domain/catalog";
 import { computeMissing } from "@/domain/missing";
@@ -87,6 +87,8 @@ export const FAR_ZOOM = 0.6;
 /** 위치 보기 강조 시간(은빛 링 2회). canvas.css 의 node-pulse 와 맞춘다. */
 export const PULSE_MS = 1600;
 const NO_INSETS: Insets = { left: 0, right: 0 };
+/** 도구 모음 아래 숨 쉴 틈(화면 px). 맞춤은 도구 모음 아래 끝 + 이만큼부터 쓴다. */
+const TOOLBAR_GAP = 8;
 const LAYOUT_FAILED_MESSAGE = "구성도를 배치하지 못했어요. 새로고침하거나 구성을 다시 확인해 주세요.";
 const EMPTY_MESSAGE = "아직 구성도가 비어 있어요. 오른쪽 대화에서 만들고 싶은 서비스를 설명해 보세요.";
 const EXPORT_LAYOUT_FAILED_REASON = "구성도를 배치하지 못해 저장할 그림이 없어요.";
@@ -186,6 +188,22 @@ export function Canvas(props: CanvasProps) {
   const flip = (key: ToggleKey) => onOptionsChange({ ...options, [key]: !options[key] });
   // 이미지로 내보내기: 화면에 그려진 뷰포트를 복제해 구성도 전체를 찍는다(exportImage.ts).
   const rootRef = useRef<HTMLDivElement>(null);
+  // 떠 있는 도구 모음이 가리는 위쪽 띠: 화면 맞춤이 맨 윗줄 노드를 그 밑에 두지 않게 카메라 위쪽 여백으로 준다.
+  // 좁은 화면에서는 두 줄로 접히므로 크기가 바뀔 때마다 다시 잰다. 첫 맞춤 전에 값이 있도록 레이아웃 효과에서 잰다.
+  const toolbarRef = useRef<HTMLDivElement>(null);
+  const [toolbarBottom, setToolbarBottom] = useState(0);
+  useLayoutEffect(() => {
+    const el = toolbarRef.current;
+    if (!el) return;
+    const measure = () => setToolbarBottom(el.offsetHeight > 0 ? el.offsetTop + el.offsetHeight : 0);
+    measure();
+    if (typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  const parentInsets = props.cameraInsets ?? NO_INSETS;
+  const insets = useMemo<Insets>(() => (toolbarBottom > 0 ? { ...parentInsets, top: Math.max(parentInsets.top ?? 0, toolbarBottom + TOOLBAR_GAP) } : parentInsets), [parentInsets, toolbarBottom]);
   // 다시 배치하는 중(settled 아님)에는 화면과 배치가 어긋날 수 있어 막는다.
   const exportBlocked = empty || !view.settled || !view.baseLayout || !view.baseDisplay;
   const onExport = async (format: ExportFormat, background: ExportBackground) => {
@@ -204,7 +222,7 @@ export function Canvas(props: CanvasProps) {
 
   return (
     <div ref={rootRef} className="canvas">
-      <div className="canvas__toolbar" role="toolbar" aria-label="캔버스 도구">
+      <div ref={toolbarRef} className="canvas__toolbar" role="toolbar" aria-label="캔버스 도구">
         <div className="canvas__group" role="group" aria-label="보기">
           <ViewMenu options={options} onFlip={flip} />
         </div>
@@ -247,7 +265,7 @@ export function Canvas(props: CanvasProps) {
       ) : (
         view.layout && (
           <ReactFlowProvider>
-            <Flow {...props} fitRequest={(props.fitRequest ?? 0) + fitTick} layout={view.layout} settled={view.settled} layoutFailed={view.layoutFailed} display={view.display} appearing={view.appearing} updated={view.updated} />
+            <Flow {...props} cameraInsets={insets} fitRequest={(props.fitRequest ?? 0) + fitTick} layout={view.layout} settled={view.settled} layoutFailed={view.layoutFailed} display={view.display} appearing={view.appearing} updated={view.updated} />
           </ReactFlowProvider>
         )
       )}
@@ -430,7 +448,7 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
       const box = wrap.current?.getBoundingClientRect();
       if (!r || !d.nodes[id] || !box) return null;
       const p = flowToScreenPosition({ x: r.x + r.width / 2, y: r.y + r.height / 2 });
-      const visible = p.x >= box.left + ins.left && p.x <= box.right - ins.right && p.y >= box.top && p.y <= box.bottom - (ins.bottom ?? 0);
+      const visible = p.x >= box.left + ins.left && p.x <= box.right - ins.right && p.y >= box.top + (ins.top ?? 0) && p.y <= box.bottom - (ins.bottom ?? 0);
       return visible ? p : null;
     },
     [flowToScreenPosition],

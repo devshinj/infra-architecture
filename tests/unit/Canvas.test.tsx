@@ -272,7 +272,8 @@ test("canvas centers and pulses on focus request", async () => {
   const ow = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "offsetWidth");
   const oh = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "offsetHeight");
   Object.defineProperty(HTMLElement.prototype, "offsetWidth", { configurable: true, get: () => 800 });
-  Object.defineProperty(HTMLElement.prototype, "offsetHeight", { configurable: true, get: () => 600 });
+  // 도구 모음은 높이 40(위 여백 0): 카메라 위쪽 여백은 40 + 8.
+  Object.defineProperty(HTMLElement.prototype, "offsetHeight", { configurable: true, get(this: HTMLElement) { return this.classList.contains("canvas__toolbar") ? 40 : 600; } });
   vi.stubGlobal("matchMedia", (q: string) => ({ matches: q.includes("reduce"), media: q, addEventListener() {}, removeEventListener() {}, addListener() {}, removeListener() {} }));
   try {
     const props = { ...baseProps(), cameraInsets: { left: 100, right: 200 } };
@@ -291,9 +292,9 @@ test("canvas centers and pulses on focus request", async () => {
     await waitFor(() => {
       const v = parse();
       expect(v.zoom).toBeGreaterThanOrEqual(0.8);
-      // 노드 가운데가 패널 사이 띠(100..600)의 가운데 350, 높이 600 의 가운데 300 에 온다.
+      // 노드 가운데가 패널 사이 띠(100..600)의 가운데 350, 도구 모음 아래 48..600 의 가운데 324 에 온다.
       expect((Number(pos[1]) + w / 2) * v.zoom + v.x).toBeCloseTo(350, 0);
-      expect((Number(pos[2]) + h / 2) * v.zoom + v.y).toBeCloseTo(300, 0);
+      expect((Number(pos[2]) + h / 2) * v.zoom + v.y).toBeCloseTo(324, 0);
     });
     expect(node.querySelector(".node--pulse")).not.toBeNull();
     expect(container.querySelectorAll(".node--pulse")).toHaveLength(1);
