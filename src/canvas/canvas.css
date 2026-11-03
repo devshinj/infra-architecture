@@ -238,7 +238,7 @@ button.node__badge--pair-end::before { left: -1px; transform: none; }
    .canvas__flow 로 묶지 않는다: 이미지 내보내기 복제본(.export-stage)에서도 같은 순서로 그려야 한다. */
 .react-flow__viewport-portal { z-index: 9; }
 .node-menu {
-  position: absolute; z-index: 30; min-width: 140px; padding: 4px;
+  position: absolute; z-index: 40; /* 정보 카드·범례(30) 위에 뜬다 */ min-width: 140px; padding: 4px;
   background: var(--bg-node); border: 1px solid var(--line-node); border-radius: var(--radius-node);
 }
 .node-menu__item {
