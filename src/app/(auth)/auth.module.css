@@ -41,7 +41,7 @@
   width: 100%;
   min-height: 40px;
   background: var(--bg-node);
-  border: 1px solid var(--line-node);
+  border: 1px solid var(--line-input);
   border-radius: var(--radius-node);
   color: var(--text-primary);
   padding: 8px 10px;

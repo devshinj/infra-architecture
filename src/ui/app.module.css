@@ -115,7 +115,7 @@
 .dialog .dialogHint { font-size: 12px; color: var(--text-secondary); }
 .dialog input::placeholder { color: var(--text-secondary); opacity: 0.7; }
 .dialog label { display: flex; flex-direction: column; gap: 6px; font-size: 12px; color: var(--text-secondary); }
-.dialog input { font: inherit; font-size: 13px; color: var(--text-primary); background: var(--bg-canvas); border: 1px solid var(--line-node); border-radius: var(--radius-node); padding: 7px 9px; }
+.dialog input { font: inherit; font-size: 13px; color: var(--text-primary); background: var(--bg-canvas); border: 1px solid var(--line-input); border-radius: var(--radius-node); padding: 7px 9px; }
 .dialogActions { display: flex; justify-content: flex-end; gap: 8px; }
 .error { margin: 0; color: var(--state-missing); font-size: 12px; }
 

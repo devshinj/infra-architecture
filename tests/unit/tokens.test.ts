@@ -284,3 +284,21 @@ test("layout truncation width equals the .node CSS content box", async () => {
   const cssContent = NODE.maxWidth - 2 * border - padLeftCss - padRightCss - icon - gap;
   expect(CONTENT_WIDTH).toBe(cssContent);
 });
+
+// ---- 주 동작 버튼·입력칸 테두리 대비 ----
+test("primary button text on the accent fill reaches 4.5:1 in every state, and input borders reach 3:1", () => {
+  const css = read("src/styles/tokens.css");
+  const token = (name: string) => css.match(new RegExp(`--${name}:[ ]*(#[0-9A-Fa-f]{6});`))![1];
+  // 섞기 토큰은 color-mix(in srgb, var(--a) N%, var(--b)) 꼴 그대로 읽어 계산한다.
+  const mixed = (name: string) => {
+    const m = css.match(new RegExp(String.raw`--${name}:\s*color-mix\(in srgb, var\(--([a-z-]+)\) (\d+)%, var\(--([a-z-]+)\)\);`))!;
+    return mix(token(m[1]), Number(m[2]), token(m[3]));
+  };
+  expect(css).toContain("--accent-fill: var(--accent);");
+  expect(css).toContain("--on-accent: var(--bg-sidebar);");
+  const on = token("bg-sidebar");
+  for (const fill of [token("accent"), mixed("accent-fill-hover"), mixed("accent-fill-active")]) {
+    expect(contrast(on, fill), fill).toBeGreaterThanOrEqual(4.5);
+  }
+  for (const bg of ["bg-node", "bg-canvas"]) expect(contrast(mixed("line-input"), token(bg)), bg).toBeGreaterThanOrEqual(3);
+});
