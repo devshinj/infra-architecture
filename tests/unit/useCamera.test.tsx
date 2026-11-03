@@ -309,7 +309,7 @@ test("topRow boxes the nodes level with the topmost one", () => {
   expect(topRow([])).toBeNull();
 });
 
-test("board fit and 전체 보기 stop at the readable zoom; the stream follow may zoom further out", () => {
+test("board fit and 자동 정렬 (fitRequest) stop at the readable zoom; the stream follow may zoom further out", () => {
   const rects = { a: box(0, 0), b: box(1450, 0), z: box(0, 3000) };
   const r = rig({ rects, fitRequest: 0 });
   expect(r.vp().zoom).toBeCloseTo(READABLE_ZOOM);
@@ -327,3 +327,41 @@ test("board fit and 전체 보기 stop at the readable zoom; the stream follow m
   r.update({ streaming: false });
   expect(r.vp().zoom).toBeCloseTo(READABLE_ZOOM);
 });
+
+test("a diagram just under the strip width (≈95%) is centred, not pinned to the left", () => {
+  const insets = { left: 100, right: 100 };
+  const vw = SIZE.width - 200;
+  // 줌 1(maxZoom 1)에서 너비 760 = 띠 800 의 95%: PADDING 을 넣으면 넘치지만 가장자리 여백 16px 씩은 들어간다.
+  const b: Rect = { x: 0, y: 0, width: 760, height: 100 };
+  const v = fitViewport(b, SIZE, insets, 1, { minZoom: 1 });
+  expect(v.zoom).toBe(1);
+  expect((b.x + b.width / 2) * v.zoom + v.x).toBeCloseTo(100 + vw / 2);
+  // 여백까지 넣어도 넘칠 때만 한쪽에 맞춘다.
+  const wide: Rect = { x: 0, y: 0, width: 790, height: 100 };
+  const w = fitViewport(wide, SIZE, insets, 1, { minZoom: 1, anchor: { x: 0, y: 0, width: 100, height: 50 } });
+  expect(wide.x * w.zoom + w.x).toBeCloseTo(100 + EDGE_GAP_PX);
+});
+
+test("전체 보기 (fitAllRequest) fits the whole diagram even below the readable zoom", () => {
+  const rects = { a: box(0, 0), b: box(1450, 0), z: box(0, 3000) };
+  const r = rig({ rects, fitAllRequest: 0 });
+  expect(r.vp().zoom).toBeCloseTo(READABLE_ZOOM); // 처음 맞춤은 읽을 수 있는 줌
+  r.setViewport.mockClear();
+  r.update({ fitAllRequest: 1 });
+  expect(r.setViewport).toHaveBeenCalledTimes(1);
+  expect(r.vp()).toEqual(fitViewport(unionRectOf(rects), SIZE, { left: 0, right: 0 }, 2));
+  expect(r.vp().zoom).toBeLessThan(READABLE_ZOOM);
+  // 다시 배치하는 중이면 배치가 끝날 때까지 기다린다.
+  r.setViewport.mockClear();
+  r.update({ fitAllRequest: 2, settled: false });
+  expect(r.setViewport).not.toHaveBeenCalled();
+  r.update({ settled: true });
+  expect(r.setViewport).toHaveBeenCalledTimes(1);
+});
+
+function unionRectOf(rects: Record<string, Rect>): Rect {
+  const all = Object.values(rects);
+  const x1 = Math.min(...all.map((r) => r.x)), y1 = Math.min(...all.map((r) => r.y));
+  const x2 = Math.max(...all.map((r) => r.x + r.width)), y2 = Math.max(...all.map((r) => r.y + r.height));
+  return { x: x1, y: y1, width: x2 - x1, height: y2 - y1 };
+}

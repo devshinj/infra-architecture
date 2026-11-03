@@ -26,6 +26,8 @@ export interface CameraInput {
   reducedMotion: boolean;
   /** Changes to ask for one full fit at once (자동 정렬·대화 재정렬). It waits until `settled`. */
   fitRequest?: number;
+  /** Changes to ask for one fit of the WHOLE diagram (전체 보기): no READABLE_ZOOM floor. It waits until `settled`. */
+  fitAllRequest?: number;
   /** False while the layout for the current inputs is still being computed (default true). */
   settled?: boolean;
   /** True when the last layout run failed: a pending fitRequest is dropped (its layout will not come). */
@@ -87,8 +89,10 @@ export function fitViewport(b: Rect, size: { width: number; height: number }, in
   const fit = Math.min(vw / Math.max(1, b.width * (1 + PADDING)), vh / Math.max(1, b.height * (1 + PADDING)));
   const floor = Math.min(maxZoom, Math.max(MIN_ZOOM, opts.minZoom ?? MIN_ZOOM));
   const zoom = opts.zoom ?? Math.max(floor, Math.min(maxZoom, fit));
-  const fitsX = b.width * (1 + PADDING) * zoom <= vw + 0.5;
-  const fitsY = b.height * (1 + PADDING) * zoom <= vh + 0.5;
+  // 가장자리 여백(EDGE_GAP_PX)까지 넣어 담기지 않을 때만 한쪽에 붙인다. 맞춤 여백(PADDING)으로 재면 띠의 91~97%
+  // 너비인 구성도가 가운데가 아니라 왼쪽에 붙는다.
+  const fitsX = b.width * zoom + 2 * EDGE_GAP_PX <= vw + 0.5;
+  const fitsY = b.height * zoom + 2 * EDGE_GAP_PX <= vh + 0.5;
   let x = insets.left + vw / 2 - (b.x + b.width / 2) * zoom;
   if (!fitsX) {
     const a = opts.anchor ?? b;
@@ -145,7 +149,7 @@ const idsKey = (rects: Record<string, Rect>) => Object.keys(rects).sort().join("
 
 /**
  * Camera rules while a diagram is shown:
- * - every fit frames the box between the insets (side panels, toolbar, bottom card/legend); except the stream follow it
+ * - every fit frames the box between the insets (side panels, toolbar, bottom card/legend); except the stream follow and 전체 보기 it
  *   never shrinks below READABLE_ZOOM (node names ≥ 10px): a diagram too big for that shows its top row instead;
  * - board change → fit at once (max zoom 2, or 1 if it happens mid-turn);
  * - new nodes → fit only when one is off-screen, at most every 600ms (changes in between are batched),
@@ -154,6 +158,7 @@ const idsKey = (rects: Record<string, Rect>) => Object.keys(rects).sort().join("
  * - a user pan/zoom during a turn stops auto fits until the turn ends (the final fit too);
  * - focus(rect) (위치 보기) → 500ms centre on it, cancelling a scheduled stream fit; a programmatic move, never a user move;
  * - fitRequest change (re-arrange) → fit at once like a board change, once the new layout is settled;
+ * - fitAllRequest change (전체 보기) → fit the whole diagram at once, below READABLE_ZOOM if needed;
  * - reduced motion → every move is instant.
  */
 export function useCamera(input: CameraInput): { onMoveStart(event: unknown): void; focus(r: Rect): void } {
@@ -172,6 +177,8 @@ export function useCamera(input: CameraInput): { onMoveStart(event: unknown): vo
     userMoved: false,
     streaming: input.streaming,
     fitRequest: input.fitRequest,
+    fitAllRequest: input.fitAllRequest,
+    fitAllPending: false,
     fitPending: false,
   });
 
@@ -186,11 +193,11 @@ export function useCamera(input: CameraInput): { onMoveStart(event: unknown): vo
    * below READABLE_ZOOM so arriving nodes stay in view. Every other fit (board, 전체 보기·자동 정렬, end of turn) stops at
    * READABLE_ZOOM and, if the diagram is still too big, shows its top (the user/client row) instead.
    */
-  const apply = (maxZoom: number, duration: number, follow: boolean) => {
+  const apply = (maxZoom: number, duration: number, follow: boolean, all = false) => {
     const { rects, bounds, size, insets, reducedMotion, getViewport, setViewport } = latest.current;
     const b = bounds ?? unionRect(Object.values(rects));
     if (!b || !ready()) return;
-    const opts: FitOptions = { anchor: topRow(Object.values(rects)), ...(follow ? {} : { minZoom: READABLE_ZOOM }) };
+    const opts: FitOptions = { anchor: topRow(Object.values(rects)), ...(follow || all ? {} : { minZoom: READABLE_ZOOM }) };
     let v = fitViewport(b, size, insets, maxZoom, opts);
     if (follow) {
       const cur = getViewport().zoom;
@@ -279,6 +286,27 @@ export function useCamera(input: CameraInput): { onMoveStart(event: unknown): vo
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- helpers read refs only
   }, [fitRequest, settled, layoutFailed, sizeReady]);
+
+  // 전체 보기: 구성도 전체를 담는다(읽을 수 있는 줌 바닥 없음). 도구 모음·카드 여백은 그대로 피한다.
+  const { fitAllRequest } = input;
+  useEffect(() => {
+    const s = st.current;
+    if (s.fitAllRequest !== fitAllRequest) {
+      s.fitAllRequest = fitAllRequest;
+      s.fitAllPending = true;
+    }
+    if (layoutFailed) {
+      s.fitAllPending = false;
+      return;
+    }
+    if (s.fitAllPending && settled && sizeReady) {
+      s.fitAllPending = false;
+      clearTimer();
+      s.pending.clear();
+      apply(s.streaming ? FINAL_MAX_ZOOM : BOARD_MAX_ZOOM, 0, false, true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- helpers read refs only
+  }, [fitAllRequest, settled, layoutFailed, sizeReady]);
 
   // Turn start / end.
   useEffect(() => {

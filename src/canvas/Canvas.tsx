@@ -184,7 +184,7 @@ export function Canvas(props: CanvasProps) {
   const { state, pinned, editMode, options, onOptionsChange, onAutoArrange, autoArrangeDisabled = false, motion } = props;
   const view = useDiagramView(state, pinned, options);
   const empty = Object.keys(state.nodes).length === 0 && Object.keys(state.groups).length === 0;
-  // 전체 보기: 카메라의 화면 맞춤 요청(fitRequest)을 올린다. 부모 요청과 합쳐 어느 쪽이든 늘기만 한다.
+  // 전체 보기: 구성도 전체를 담는 맞춤 요청(fitAllRequest). 자동 정렬 등 부모의 fitRequest 는 읽을 수 있는 줌 규칙을 따른다.
   const [fitTick, setFitTick] = useState(0);
   const flip = (key: ToggleKey) => onOptionsChange({ ...options, [key]: !options[key] });
   // 이미지로 내보내기: 화면에 그려진 뷰포트를 복제해 구성도 전체를 찍는다(exportImage.ts).
@@ -266,7 +266,7 @@ export function Canvas(props: CanvasProps) {
       ) : (
         view.layout && (
           <ReactFlowProvider>
-            <Flow {...props} cameraInsets={insets} fitRequest={(props.fitRequest ?? 0) + fitTick} layout={view.layout} settled={view.settled} layoutFailed={view.layoutFailed} display={view.display} appearing={view.appearing} updated={view.updated} />
+            <Flow {...props} cameraInsets={insets} fitAllRequest={fitTick} layout={view.layout} settled={view.settled} layoutFailed={view.layoutFailed} display={view.display} appearing={view.appearing} updated={view.updated} />
           </ReactFlowProvider>
         )
       )}
@@ -287,6 +287,8 @@ function ZoomVar({ target }: { target: React.RefObject<HTMLDivElement | null> })
 }
 
 interface FlowProps extends CanvasProps {
+  /** 전체 보기 요청(Canvas 의 도구 모음). */
+  fitAllRequest: number;
   layout: Layout;
   settled: boolean;
   layoutFailed: boolean;
@@ -295,7 +297,7 @@ interface FlowProps extends CanvasProps {
   updated: Set<string>;
 }
 
-function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onPinnedChange, motion, layout, settled, layoutFailed, fitRequest, display, appearing, updated, diffMarks, fitKey, streaming = false, cameraInsets = NO_INSETS, focusRequest, onMention, onAskNode, askDisabled, askReason, onBadgeClick, onWarnBadgeClick, onPlaced }: FlowProps) {
+function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onPinnedChange, motion, layout, settled, layoutFailed, fitRequest, fitAllRequest, display, appearing, updated, diffMarks, fitKey, streaming = false, cameraInsets = NO_INSETS, focusRequest, onMention, onAskNode, askDisabled, askReason, onBadgeClick, onWarnBadgeClick, onPlaced }: FlowProps) {
   const far = useStore((s) => s.transform[2] < FAR_ZOOM);
   const selected = drawnId(state, options.collapsed, options.selectedId);
   const missingByNode = useMemo(() => computeMissing(state).byNode, [state]);
@@ -427,6 +429,7 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
     insets: cameraInsets,
     streaming,
     fitRequest,
+    fitAllRequest,
     settled,
     layoutFailed,
     reducedMotion: prefersReducedMotion(),
