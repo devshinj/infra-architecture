@@ -1,12 +1,12 @@
 ---
 title: "display.ts"
-sidebar_position: 26
+sidebar_position: 21
 ---
 # display.ts
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 19 nodes · cohesion 0.16
+> 22 nodes · cohesion 0.14
 
 ## Key Concepts
 
@@ -15,7 +15,9 @@ sidebar_position: 26
 - **useDiagramView()** (7 connections) — `src/canvas/useDiagramView.ts`
 - **diffStates()** (7 connections) — `src/domain/diff.ts`
 - **buildDisplayGraph()** (6 connections) — `src/canvas/display.ts`
+- **elbowRoute()** (6 connections) — `src/canvas/elbow.ts`
 - **diff.ts** (6 connections) — `src/domain/diff.ts`
+- **elbow.ts** (5 connections) — `src/canvas/elbow.ts`
 - **defaultDisplayOptions()** (4 connections) — `src/canvas/display.ts`
 - **outermostCollapsedAncestor()** (4 connections) — `src/canvas/display.ts`
 - **equal()** (4 connections) — `src/domain/diff.ts`
@@ -26,29 +28,31 @@ sidebar_position: 26
 - **DisplayGroup** (2 connections) — `src/canvas/display.ts`
 - **initialCollapsed()** (2 connections) — `src/canvas/display.ts`
 - **isBus()** (2 connections) — `src/canvas/display.ts`
+- **Pt** (1 connections) — `src/canvas/elbow.ts`
 - **APPEARING_MS** (1 connections) — `src/canvas/useDiagramView.ts`
 - **Pinned** (1 connections) — `src/canvas/useDiagramView.ts`
 - **UPDATED_MS** (1 connections) — `src/canvas/useDiagramView.ts`
 
 ## Relationships
 
+- [layout.ts](layout.ts.md) (9 shared connections)
 - [Canvas.tsx](Canvas.tsx.md) (7 shared connections)
-- [layout.ts](layout.ts.md) (7 shared connections)
+- [types.ts](types.ts.md) (7 shared connections)
 - [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (5 shared connections)
-- [types.ts](types.ts.md) (4 shared connections)
 - [Layout](Layout.md) (4 shared connections)
-- [useExplanations.ts](useExplanations.ts.md) (3 shared connections)
 - [연결선 그리기](연결선_그리기.md) (3 shared connections)
 - [catalog.ts](catalog.ts.md) (2 shared connections)
 - [설계 문서와 계획](설계_문서와_계획.md) (2 shared connections)
 - [(app)/actions.ts](app-actions.ts.md) (2 shared connections)
 - [Flow](Flow.md) (1 shared connections)
 - [segments.ts](segments.ts.md) (1 shared connections)
+- [missing.ts](missing.ts.md) (1 shared connections)
 
 ## Source Files
 
 - `src/canvas/Canvas.tsx`
 - `src/canvas/display.ts`
+- `src/canvas/elbow.ts`
 - `src/canvas/useDiagramView.ts`
 - `src/domain/diff.ts`
 - `src/domain/types.ts`
@@ -56,7 +60,7 @@ sidebar_position: 26
 
 ## Audit Trail
 
-- EXTRACTED: 74 (100%)
+- EXTRACTED: 81 (100%)
 - INFERRED: 0 (0%)
 - AMBIGUOUS: 0 (0%)
 

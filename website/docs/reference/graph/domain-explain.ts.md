@@ -1,6 +1,6 @@
 ---
 title: "domain/explain.ts"
-sidebar_position: 44
+sidebar_position: 40
 ---
 # domain/explain.ts
 
@@ -26,18 +26,18 @@ sidebar_position: 44
 
 ## Relationships
 
-- [useExplanations.ts](useExplanations.ts.md) (8 shared connections)
+- [useExplanations.ts](useExplanations.ts.md) (11 shared connections)
 - [설명 생성과 품질 검사](설명_생성과_품질_검사.md) (7 shared connections)
-- [glossary.ts](glossary.ts.md) (5 shared connections)
+- [(app)/actions.ts](app-actions.ts.md) (5 shared connections)
 - [3C-1 계획 작업 목록](3C-1_계획_작업_목록.md) (2 shared connections)
-- [chat/warnings.ts](chat-warnings.ts.md) (2 shared connections)
-- [(app)/actions.ts](app-actions.ts.md) (2 shared connections)
+- [missing.ts](missing.ts.md) (2 shared connections)
+- [types.ts](types.ts.md) (2 shared connections)
 - [prompt.ts](prompt.ts.md) (2 shared connections)
-- [projects.ts](projects.ts.md) (1 shared connections)
-- [GlossaryPage.tsx](GlossaryPage.tsx.md) (1 shared connections)
-- [설계 문서와 계획](설계_문서와_계획.md) (1 shared connections)
+- [chat/warnings.ts](chat-warnings.ts.md) (1 shared connections)
 - [schema.ts](schema.ts.md) (1 shared connections)
 - [catalog.ts](catalog.ts.md) (1 shared connections)
+- [Explanation.tsx](Explanation.tsx.md) (1 shared connections)
+- [ask.ts](ask.ts.md) (1 shared connections)
 
 ## Source Files
 

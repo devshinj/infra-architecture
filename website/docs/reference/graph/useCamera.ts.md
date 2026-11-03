@@ -6,7 +6,7 @@ sidebar_position: 29
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 17 nodes · cohesion 0.17
+> 18 nodes · cohesion 0.16
 
 ## Key Concepts
 
@@ -15,6 +15,7 @@ sidebar_position: 29
 - **CameraInput** (4 connections) — `src/canvas/useCamera.ts`
 - **unionRect()** (4 connections) — `src/canvas/useCamera.ts`
 - **.setViewport()** (3 connections) — `src/canvas/useCamera.ts`
+- **Insets** (3 connections) — `src/canvas/useCamera.ts`
 - **.getViewport()** (2 connections) — `src/canvas/useCamera.ts`
 - **fitViewport()** (2 connections) — `src/canvas/useCamera.ts`
 - **focusViewport()** (2 connections) — `src/canvas/useCamera.ts`
@@ -30,11 +31,11 @@ sidebar_position: 29
 
 ## Relationships
 
-- [Canvas.tsx](Canvas.tsx.md) (4 shared connections)
+- [Canvas.tsx](Canvas.tsx.md) (5 shared connections)
 - [Flow](Flow.md) (4 shared connections)
 - [layout.ts](layout.ts.md) (3 shared connections)
 - [FlyLayer.tsx](FlyLayer.tsx.md) (2 shared connections)
-- [ref_react](ref_react.md) (1 shared connections)
+- [ExportMenu.tsx](ExportMenu.tsx.md) (1 shared connections)
 
 ## Source Files
 
@@ -42,7 +43,7 @@ sidebar_position: 29
 
 ## Audit Trail
 
-- EXTRACTED: 37 (100%)
+- EXTRACTED: 39 (100%)
 - INFERRED: 0 (0%)
 - AMBIGUOUS: 0 (0%)
 

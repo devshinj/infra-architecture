@@ -1,6 +1,6 @@
 ---
 title: "Legend.tsx"
-sidebar_position: 42
+sidebar_position: 39
 ---
 # Legend.tsx
 
@@ -31,7 +31,7 @@ sidebar_position: 42
 - [catalog.ts](catalog.ts.md) (2 shared connections)
 - [(app)/actions.ts](app-actions.ts.md) (2 shared connections)
 - [연결선 그리기](연결선_그리기.md) (1 shared connections)
-- [ref_react](ref_react.md) (1 shared connections)
+- [ExportMenu.tsx](ExportMenu.tsx.md) (1 shared connections)
 
 ## Source Files
 

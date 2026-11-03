@@ -1,6 +1,6 @@
 ---
 title: "MentionInput"
-sidebar_position: 39
+sidebar_position: 34
 ---
 # MentionInput
 
@@ -29,14 +29,17 @@ sidebar_position: 39
 ## Relationships
 
 - [ChatPanel.tsx](ChatPanel.tsx.md) (7 shared connections)
-- [types.ts](types.ts.md) (4 shared connections)
-- [MissingChecklist.tsx](MissingChecklist.tsx.md) (2 shared connections)
+- [SessionPicker.tsx](SessionPicker.tsx.md) (2 shared connections)
 - [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (2 shared connections)
-- [NodeInfo.tsx](NodeInfo.tsx.md) (1 shared connections)
+- [Review Focus](Review_Focus.md) (1 shared connections)
+- [useChatTurn.ts](useChatTurn.ts.md) (1 shared connections)
+- [useSessions.ts](useSessions.ts.md) (1 shared connections)
 - [설계 문서와 계획](설계_문서와_계획.md) (1 shared connections)
 - [pipeline.ts](pipeline.ts.md) (1 shared connections)
-- [ref_react](ref_react.md) (1 shared connections)
-- [DiagramState](DiagramState.md) (1 shared connections)
+- [types.ts](types.ts.md) (1 shared connections)
+- [MissingChecklist.tsx](MissingChecklist.tsx.md) (1 shared connections)
+- [ExportMenu.tsx](ExportMenu.tsx.md) (1 shared connections)
+- [ChatPanelProps](ChatPanelProps.md) (1 shared connections)
 
 ## Source Files
 

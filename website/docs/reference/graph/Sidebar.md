@@ -1,13 +1,13 @@
 ---
 title: "Sidebar()"
-sidebar_position: 62
+sidebar_position: 61
 sidebar_label: "핵심 노드: Sidebar()"
 ---
 # Sidebar()
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> God node · 26 connections · `src/ui/Sidebar.tsx`
+> God node · 27 connections · `src/ui/Sidebar.tsx`
 
 **Community:** [Sidebar.tsx](Sidebar.tsx.md)
 
@@ -15,21 +15,21 @@ sidebar_label: "핵심 노드: Sidebar()"
 
 ### calls
 - deleteDiagramAction() `EXTRACTED`
+- useShell() `EXTRACTED`
 - duplicateDiagramAction() `EXTRACTED`
 - createProjectAction() `EXTRACTED`
 - createDiagramAction() `EXTRACTED`
 - renameDiagramAction() `EXTRACTED`
 - renameProjectAction() `EXTRACTED`
 - deleteProjectAction() `EXTRACTED`
-- useShell() `EXTRACTED`
 - AppLayout() `EXTRACTED`
 - LogoMark() `EXTRACTED`
 - DialogView() `EXTRACTED`
 - IconBook() `EXTRACTED`
+- IconMenu() `EXTRACTED`
 - IconExpand() `EXTRACTED`
 - IconPlus() `EXTRACTED`
 - IconUser() `EXTRACTED`
-- IconCollapse() `EXTRACTED`
 - .setCollapsed() `EXTRACTED`
 - diagramPath() `EXTRACTED`
 - .setCreateHandler() `EXTRACTED`
@@ -38,6 +38,7 @@ sidebar_label: "핵심 노드: Sidebar()"
 
 ### contains
 - [Sidebar.tsx](Sidebar.tsx.md) `EXTRACTED`
+- expandedNav() `EXTRACTED`
 
 ### imports
 - (app)/layout.tsx `EXTRACTED`

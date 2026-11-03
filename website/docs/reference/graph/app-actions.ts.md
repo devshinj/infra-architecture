@@ -1,73 +1,84 @@
 ---
 title: "(app)/actions.ts"
-sidebar_position: 12
+sidebar_position: 2
 ---
 # (app)/actions.ts
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 30 nodes · cohesion 0.16
+> 113 nodes · cohesion 0.06
 
 ## Key Concepts
 
 - **(app)/actions.ts** (81 connections) — `src/app/(app)/actions.ts`
-- **DiagramWorkspace()** (37 connections) — `src/ui/DiagramWorkspace.tsx`
+- **projects.ts** (62 connections) — `src/server/projects.ts`
+- **DiagramWorkspace()** (39 connections) — `src/ui/DiagramWorkspace.tsx`
+- **getOwnedDiagram()** (34 connections) — `src/server/projects.ts`
+- **glossary.ts** (27 connections) — `src/server/glossary.ts`
+- **versions.ts** (27 connections) — `src/server/versions.ts`
+- **ValidationError** (26 connections) — `src/server/projects.ts`
+- **fields.ts** (19 connections) — `src/server/fields.ts`
 - **[diagramId]/page.tsx** (17 connections) — `src/app/(app)/p/[projectId]/d/[diagramId]/page.tsx`
+- **NotFoundError** (17 connections) — `src/server/projects.ts`
+- **createVersion()** (17 connections) — `src/server/versions.ts`
+- **getLatestState()** (16 connections) — `src/server/versions.ts`
+- **emptyState()** (15 connections) — `src/domain/types.ts`
+- **ignore.ts** (15 connections) — `src/server/ignore.ts`
 - **run()** (14 connections) — `src/app/(app)/actions.ts`
-- **listMessages()** (12 connections) — `src/server/chat/messages.ts`
+- **runAskTurn()** (14 connections) — `src/server/chat/ask.ts`
+- **runResult()** (13 connections) — `src/app/(app)/actions.ts`
+- **server/assumptions.ts** (12 connections) — `src/server/assumptions.ts`
+- **withDiagramLock()** (12 connections) — `src/server/chat/lock.ts`
+- **saveFieldsFor()** (12 connections) — `src/server/fields.ts`
+- **glossary/page.tsx** (11 connections) — `src/app/(app)/glossary/page.tsx`
+- **ensureSeeded()** (10 connections) — `src/server/glossary.ts`
+- **createDiagram()** (10 connections) — `src/server/projects.ts`
 - **restoreVersionAction()** (9 connections) — `src/app/(app)/actions.ts`
-- **refreshDiagram()** (8 connections) — `src/app/(app)/actions.ts`
-- **getVersionAction()** (7 connections) — `src/app/(app)/actions.ts`
-- **setWarningIgnoredAction()** (7 connections) — `src/app/(app)/actions.ts`
-- **DiagramPage()** (7 connections) — `src/app/(app)/p/[projectId]/d/[diagramId]/page.tsx`
-- **clearPinnedAction()** (6 connections) — `src/app/(app)/actions.ts`
-- **confirmAssumptionAction()** (6 connections) — `src/app/(app)/actions.ts`
-- **importSampleAction()** (6 connections) — `src/app/(app)/actions.ts`
-- **listVersionsAction()** (6 connections) — `src/app/(app)/actions.ts`
-- **saveFieldsAction()** (6 connections) — `src/app/(app)/actions.ts`
-- **savePinnedAction()** (6 connections) — `src/app/(app)/actions.ts`
-- **savePinnedPositions()** (6 connections) — `src/server/projects.ts`
-- **getVersion()** (5 connections) — `src/server/versions.ts`
-- **restoreVersion()** (5 connections) — `src/server/versions.ts`
-- **restoreVersionWithMessage()** (5 connections) — `src/server/versions.ts`
-- **listMessagesAction()** (4 connections) — `src/app/(app)/actions.ts`
-- **userId()** (4 connections) — `src/app/(app)/actions.ts`
-- **clearPinnedPositions()** (4 connections) — `src/server/projects.ts`
-- **logoutAction()** (3 connections) — `src/app/(app)/actions.ts`
-- **validVersion()** (3 connections) — `src/app/(app)/actions.ts`
-- *... and 5 more nodes in this community*
+- **confirmAssumptionFor()** (9 connections) — `src/server/assumptions.ts`
+- *... and 88 more nodes in this community*
 
 ## Relationships
 
-- [projects.ts](projects.ts.md) (38 shared connections)
-- [Sidebar.tsx](Sidebar.tsx.md) (20 shared connections)
-- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (15 shared connections)
-- [GlossaryPage.tsx](GlossaryPage.tsx.md) (14 shared connections)
-- [ask/route.ts](ask-route.ts.md) (6 shared connections)
-- [명령 적용과 샘플](명령_적용과_샘플.md) (6 shared connections)
-- [types.ts](types.ts.md) (6 shared connections)
-- [schema.ts](schema.ts.md) (5 shared connections)
-- [versions.ts](versions.ts.md) (5 shared connections)
-- [useExplanations.ts](useExplanations.ts.md) (3 shared connections)
-- [auth/actions.ts](auth-actions.ts.md) (3 shared connections)
-- [ask.ts](ask.ts.md) (3 shared connections)
+- [ask.ts](ask.ts.md) (28 shared connections)
+- [schema.ts](schema.ts.md) (22 shared connections)
+- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (18 shared connections)
+- [auth](auth.md) (17 shared connections)
+- [Sidebar.tsx](Sidebar.tsx.md) (17 shared connections)
+- [types.ts](types.ts.md) (16 shared connections)
+- [pipeline.ts](pipeline.ts.md) (16 shared connections)
+- [ask/route.ts](ask-route.ts.md) (16 shared connections)
+- [명령 적용과 샘플](명령_적용과_샘플.md) (13 shared connections)
+- [useExplanations.ts](useExplanations.ts.md) (12 shared connections)
+- [Explanation.tsx](Explanation.tsx.md) (10 shared connections)
+- [설명 생성과 품질 검사](설명_생성과_품질_검사.md) (10 shared connections)
 
 ## Source Files
 
+- `docs/superpowers/plans/2026-10-30-infrasketch-phase3b-warnings.md`
 - `src/app/(app)/actions.ts`
+- `src/app/(app)/glossary/page.tsx`
 - `src/app/(app)/p/[projectId]/d/[diagramId]/page.tsx`
 - `src/auth.ts`
-- `src/server/chat/messages.ts`
+- `src/db/schema.ts`
+- `src/domain/assumptions.ts`
+- `src/domain/glossary-seed.ts`
+- `src/domain/glossary-types.ts`
+- `src/domain/types.ts`
+- `src/server/assumptions.ts`
+- `src/server/chat/ask.ts`
+- `src/server/chat/lock.ts`
 - `src/server/chat/sessions.ts`
+- `src/server/fields.ts`
+- `src/server/glossary.ts`
+- `src/server/ignore.ts`
 - `src/server/projects.ts`
 - `src/server/samples.ts`
 - `src/server/versions.ts`
-- `src/ui/DiagramWorkspace.tsx`
 
 ## Audit Trail
 
-- EXTRACTED: 213 (98%)
-- INFERRED: 5 (2%)
+- EXTRACTED: 571 (97%)
+- INFERRED: 16 (3%)
 - AMBIGUOUS: 0 (0%)
 
 ---

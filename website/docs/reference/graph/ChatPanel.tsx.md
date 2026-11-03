@@ -1,6 +1,6 @@
 ---
 title: "ChatPanel.tsx"
-sidebar_position: 21
+sidebar_position: 22
 ---
 # ChatPanel.tsx
 
@@ -10,8 +10,9 @@ sidebar_position: 21
 
 ## Key Concepts
 
-- **ChatPanel.tsx** (38 connections) — `src/ui/chat/ChatPanel.tsx`
-- **ChatPanel()** (13 connections) — `src/ui/chat/ChatPanel.tsx`
+- **ChatPanel.tsx** (40 connections) — `src/ui/chat/ChatPanel.tsx`
+- **ChatPanel()** (14 connections) — `src/ui/chat/ChatPanel.tsx`
+- **useShell()** (8 connections) — `src/ui/Shell.tsx`
 - **CardView()** (5 connections) — `src/ui/chat/ChatPanel.tsx`
 - **hhmm()** (3 connections) — `src/ui/chat/ChatPanel.tsx`
 - **Check()** (2 connections) — `src/ui/chat/ChatPanel.tsx`
@@ -23,7 +24,6 @@ sidebar_position: 21
 - **stepName()** (2 connections) — `src/ui/chat/ChatPanel.tsx`
 - **stepRows()** (2 connections) — `src/ui/chat/ChatPanel.tsx`
 - **toBlocks()** (2 connections) — `src/ui/chat/ChatPanel.tsx`
-- **ProgressCard** (2 connections) — `src/ui/chat/useChatTurn.ts`
 - **Block** (1 connections) — `src/ui/chat/ChatPanel.tsx`
 - **BUILD_STEPS** (1 connections) — `src/ui/chat/ChatPanel.tsx`
 - **CHIP_KINDS** (1 connections) — `src/ui/chat/ChatPanel.tsx`
@@ -34,24 +34,28 @@ sidebar_position: 21
 
 ## Relationships
 
-- [types.ts](types.ts.md) (8 shared connections)
 - [MentionInput](MentionInput.md) (7 shared connections)
-- [DiagramState](DiagramState.md) (5 shared connections)
-- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (3 shared connections)
+- [SessionPicker.tsx](SessionPicker.tsx.md) (4 shared connections)
+- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (4 shared connections)
+- [ChatPanelProps](ChatPanelProps.md) (3 shared connections)
+- [auth](auth.md) (3 shared connections)
+- [DiagramState](DiagramState.md) (3 shared connections)
+- [Sidebar.tsx](Sidebar.tsx.md) (3 shared connections)
+- [useChatTurn.ts](useChatTurn.ts.md) (2 shared connections)
+- [ask.ts](ask.ts.md) (2 shared connections)
 - [FlyLayer.tsx](FlyLayer.tsx.md) (2 shared connections)
-- [ask/route.ts](ask-route.ts.md) (1 shared connections)
-- [ref_react](ref_react.md) (1 shared connections)
-- [명령 적용과 샘플](명령_적용과_샘플.md) (1 shared connections)
+- [ExportMenu.tsx](ExportMenu.tsx.md) (1 shared connections)
+- [(app)/actions.ts](app-actions.ts.md) (1 shared connections)
 
 ## Source Files
 
+- `src/ui/Shell.tsx`
 - `src/ui/chat/ChatPanel.tsx`
-- `src/ui/chat/useChatTurn.ts`
 
 ## Audit Trail
 
-- EXTRACTED: 55 (96%)
-- INFERRED: 2 (4%)
+- EXTRACTED: 63 (97%)
+- INFERRED: 2 (3%)
 - AMBIGUOUS: 0 (0%)
 
 ---

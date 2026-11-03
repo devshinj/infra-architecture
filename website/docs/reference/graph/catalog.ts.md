@@ -1,6 +1,6 @@
 ---
 title: "catalog.ts"
-sidebar_position: 41
+sidebar_position: 38
 ---
 # catalog.ts
 
@@ -27,18 +27,18 @@ sidebar_position: 41
 
 ## Relationships
 
+- [ref_react](ref_react.md) (6 shared connections)
 - [Canvas.tsx](Canvas.tsx.md) (5 shared connections)
-- [types.ts](types.ts.md) (5 shared connections)
-- [ref_react](ref_react.md) (4 shared connections)
-- [NodeInfo.tsx](NodeInfo.tsx.md) (4 shared connections)
+- [명령 적용과 샘플](명령_적용과_샘플.md) (5 shared connections)
 - [segments.ts](segments.ts.md) (3 shared connections)
-- [chat/warnings.ts](chat-warnings.ts.md) (3 shared connections)
+- [missing.ts](missing.ts.md) (3 shared connections)
 - [prompt.ts](prompt.ts.md) (3 shared connections)
+- [NodeInfo.tsx](NodeInfo.tsx.md) (3 shared connections)
 - [display.ts](display.ts.md) (2 shared connections)
 - [연결선 그리기](연결선_그리기.md) (2 shared connections)
 - [motion.ts](motion.ts.md) (2 shared connections)
-- [MissingChecklist.tsx](MissingChecklist.tsx.md) (2 shared connections)
-- [명령 적용과 샘플](명령_적용과_샘플.md) (2 shared connections)
+- [types.ts](types.ts.md) (2 shared connections)
+- [chat/warnings.ts](chat-warnings.ts.md) (2 shared connections)
 
 ## Source Files
 

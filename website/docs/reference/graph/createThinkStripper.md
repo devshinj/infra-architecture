@@ -1,6 +1,6 @@
 ---
 title: "createThinkStripper"
-sidebar_position: 51
+sidebar_position: 52
 ---
 # createThinkStripper
 
@@ -20,9 +20,9 @@ sidebar_position: 51
 
 ## Relationships
 
-- [pipeline.ts](pipeline.ts.md) (6 shared connections)
+- [pipeline.ts](pipeline.ts.md) (7 shared connections)
 - [chat/warnings.ts](chat-warnings.ts.md) (4 shared connections)
-- [ask.ts](ask.ts.md) (4 shared connections)
+- [ask.ts](ask.ts.md) (3 shared connections)
 - [설계 문서와 계획](설계_문서와_계획.md) (1 shared connections)
 
 ## Source Files

@@ -6,7 +6,7 @@ sidebar_position: 17
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 24 nodes · cohesion 0.12
+> 25 nodes · cohesion 0.11
 
 ## Key Concepts
 
@@ -21,6 +21,7 @@ sidebar_position: 17
 - **decodeSvgDataUrl()** (2 connections) — `src/canvas/exportImage.ts`
 - **download()** (2 connections) — `src/canvas/exportImage.ts`
 - **edgeLabels()** (2 connections) — `src/canvas/exportImage.ts`
+- **LIGHT_BACKGROUND** (2 connections) — `src/canvas/exportImage.ts`
 - **sanitizeFileName()** (2 connections) — `src/canvas/exportImage.ts`
 - **html-to-image** (1 connections) — `html-to-image`
 - **ref_html_to_image** (1 connections)
@@ -52,7 +53,7 @@ sidebar_position: 17
 
 ## Audit Trail
 
-- EXTRACTED: 50 (98%)
+- EXTRACTED: 51 (98%)
 - INFERRED: 1 (2%)
 - AMBIGUOUS: 0 (0%)
 

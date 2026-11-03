@@ -9,7 +9,7 @@ sidebar_label: "핵심 노드: getOwnedDiagram()"
 
 > God node · 34 connections · `src/server/projects.ts`
 
-**Community:** [projects.ts](projects.ts.md)
+**Community:** [(app)/actions.ts](app-actions.ts.md)
 
 ## Connections by Relation
 
@@ -37,7 +37,7 @@ sidebar_label: "핵심 노드: getOwnedDiagram()"
 - *…and 2 more `calls` connection(s) not listed (lowest-degree first to go)*
 
 ### contains
-- [projects.ts](projects.ts.md) `EXTRACTED`
+- projects.ts `EXTRACTED`
 
 ### imports
 - [(app)/actions.ts](app-actions.ts.md) `EXTRACTED`

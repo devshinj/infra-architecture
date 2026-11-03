@@ -1,6 +1,6 @@
 ---
 title: "Layout"
-sidebar_position: 46
+sidebar_position: 43
 ---
 # Layout
 
@@ -30,7 +30,7 @@ sidebar_position: 46
 - [Canvas.tsx](Canvas.tsx.md) (3 shared connections)
 - [연결선 그리기](연결선_그리기.md) (3 shared connections)
 - [Flow](Flow.md) (1 shared connections)
-- [chat/warnings.ts](chat-warnings.ts.md) (1 shared connections)
+- [missing.ts](missing.ts.md) (1 shared connections)
 - [연결선 개발용 화면](연결선_개발용_화면.md) (1 shared connections)
 - [exportImage.ts](exportImage.ts.md) (1 shared connections)
 - [설계 문서와 계획](설계_문서와_계획.md) (1 shared connections)

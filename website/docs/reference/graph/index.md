@@ -11,81 +11,81 @@ sidebar_label: "개요"
 
 [인터랙티브 그래프 열기](pathname:///graph/graph.html) — 노드를 끌고 확대해서 전체 연결을 볼 수 있습니다.
 
-**1215 nodes · 3146 edges · 55 communities**
+**1243 nodes · 3213 edges · 55 communities**
 
 ---
 
 ## Communities
 (sorted by size, largest first)
 
-- [ask/route.ts](ask-route.ts.md) — 69 nodes
-- [types.ts](types.ts.md) — 63 nodes
-- [MissingChecklist.tsx](MissingChecklist.tsx.md) — 62 nodes
-- [명령 적용과 샘플](명령_적용과_샘플.md) — 53 nodes
-- [설계 문서와 계획](설계_문서와_계획.md) — 51 nodes
-- [NodeInfo.tsx](NodeInfo.tsx.md) — 50 nodes
-- [Sidebar.tsx](Sidebar.tsx.md) — 38 nodes
-- [chat/warnings.ts](chat-warnings.ts.md) — 36 nodes
+- [(app)/actions.ts](app-actions.ts.md) — 113 nodes
+- [schema.ts](schema.ts.md) — 93 nodes
+- [auth](auth.md) — 55 nodes
+- [설계 문서와 계획](설계_문서와_계획.md) — 49 nodes
+- [Sidebar.tsx](Sidebar.tsx.md) — 47 nodes
+- [명령 적용과 샘플](명령_적용과_샘플.md) — 46 nodes
 - [설명 생성과 품질 검사](설명_생성과_품질_검사.md) — 33 nodes
-- [layout.ts](layout.ts.md) — 32 nodes
-- [(app)/actions.ts](app-actions.ts.md) — 30 nodes
-- [schema.ts](schema.ts.md) — 29 nodes
-- [signup/page.tsx](signup-page.tsx.md) — 27 nodes
-- [prompt.ts](prompt.ts.md) — 25 nodes
-- [projects.ts](projects.ts.md) — 24 nodes
-- [exportImage.ts](exportImage.ts.md) — 24 nodes
-- [projects.ts](projects.ts.md) — 24 nodes
-- [Canvas.tsx](Canvas.tsx.md) — 24 nodes
-- [reset.ts](reset.ts.md) — 23 nodes
+- [chat/warnings.ts](chat-warnings.ts.md) — 30 nodes
+- [ask.ts](ask.ts.md) — 29 nodes
+- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) — 28 nodes
+- [prompt.ts](prompt.ts.md) — 27 nodes
+- [layout.ts](layout.ts.md) — 27 nodes
+- [pipeline.ts](pipeline.ts.md) — 27 nodes
+- [Canvas.tsx](Canvas.tsx.md) — 27 nodes
+- [useChatTurn.ts](useChatTurn.ts.md) — 27 nodes
+- [exportImage.ts](exportImage.ts.md) — 25 nodes
+- [Explanation.tsx](Explanation.tsx.md) — 25 nodes
+- [ask/route.ts](ask-route.ts.md) — 24 nodes
+- [NodeInfo.tsx](NodeInfo.tsx.md) — 23 nodes
+- [display.ts](display.ts.md) — 22 nodes
 - [ChatPanel.tsx](ChatPanel.tsx.md) — 21 nodes
-- [DiagramState](DiagramState.md) — 21 nodes
-- [pipeline.ts](pipeline.ts.md) — 20 nodes
+- [ExportMenu.tsx](ExportMenu.tsx.md) — 21 nodes
+- [segments.ts](segments.ts.md) — 20 nodes
 - [연결선 그리기](연결선_그리기.md) — 20 nodes
-- [GlossaryPage.tsx](GlossaryPage.tsx.md) — 20 nodes
-- [display.ts](display.ts.md) — 19 nodes
-- [ExportMenu.tsx](ExportMenu.tsx.md) — 19 nodes
-- [segments.ts](segments.ts.md) — 18 nodes
-- [useCamera.ts](useCamera.ts.md) — 17 nodes
-- [Shell.tsx](Shell.tsx.md) — 17 nodes
-- [3C-1 계획 작업 목록](3C-1_계획_작업_목록.md) — 17 nodes
+- [useExplanations.ts](useExplanations.ts.md) — 20 nodes
+- [deps.ts](deps.ts.md) — 19 nodes
+- [DiagramState](DiagramState.md) — 19 nodes
+- [useCamera.ts](useCamera.ts.md) — 18 nodes
+- [clef.ts](clef.ts.md) — 18 nodes
+- [MissingChecklist.tsx](MissingChecklist.tsx.md) — 17 nodes
+- [types.ts](types.ts.md) — 17 nodes
 - [FlyLayer.tsx](FlyLayer.tsx.md) — 17 nodes
-- [ask.ts](ask.ts.md) — 17 nodes
-- [auth/actions.ts](auth-actions.ts.md) — 17 nodes
-- [useExplanations.ts](useExplanations.ts.md) — 16 nodes
-- [연결선 개발용 화면](연결선_개발용_화면.md) — 15 nodes
-- [Flow](Flow.md) — 15 nodes
-- [glossary.ts](glossary.ts.md) — 15 nodes
 - [MentionInput](MentionInput.md) — 15 nodes
-- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) — 14 nodes
+- [InfoCard.tsx](InfoCard.tsx.md) — 14 nodes
+- [연결선 개발용 화면](연결선_개발용_화면.md) — 14 nodes
+- [Flow](Flow.md) — 14 nodes
 - [catalog.ts](catalog.ts.md) — 14 nodes
 - [Legend.tsx](Legend.tsx.md) — 14 nodes
-- [clef.ts](clef.ts.md) — 14 nodes
 - [domain/explain.ts](domain-explain.ts.md) — 13 nodes
-- [ref_next](ref_next.md) — 13 nodes
+- [SessionPicker.tsx](SessionPicker.tsx.md) — 12 nodes
+- [3C-1 계획 작업 목록](3C-1_계획_작업_목록.md) — 12 nodes
 - [Layout](Layout.md) — 12 nodes
-- [motion.ts](motion.ts.md) — 12 nodes
+- [ref_react](ref_react.md) — 12 nodes
+- [missing.ts](missing.ts.md) — 11 nodes
+- [motion.ts](motion.ts.md) — 11 nodes
+- [text.ts](text.ts.md) — 11 nodes
+- [Review Focus](Review_Focus.md) — 9 nodes
 - [normalize.ts](normalize.ts.md) — 9 nodes
-- [ref_react](ref_react.md) — 9 nodes
-- [text.ts](text.ts.md) — 9 nodes
+- [useSessions.ts](useSessions.ts.md) — 9 nodes
+- [Review Focus](Review_Focus.md) — 8 nodes
 - [createThinkStripper](createThinkStripper.md) — 7 nodes
 - [NodeMenu](NodeMenu.md) — 6 nodes
-- [ClefClient](ClefClient.md) — 5 nodes
-- [versions.ts](versions.ts.md) — 5 nodes
+- [ChatPanelProps](ChatPanelProps.md) — 6 nodes
 - [SkipTally](SkipTally.md) — 5 nodes
 - [라우트 재수출](라우트_재수출.md) — 1 nodes
 
 ## God Nodes
 (most connected concepts — the load-bearing abstractions)
 
+- [DiagramWorkspace()](DiagramWorkspace.md) — 39 connections
 - [DiagramState](DiagramState.md) — 37 connections
-- [DiagramWorkspace()](DiagramWorkspace.md) — 37 connections
 - [getOwnedDiagram()](getOwnedDiagram.md) — 34 connections
 - [InfraSketch 설계 문서](InfraSketch_설계_문서.md) — 34 connections
+- [Sidebar()](Sidebar.md) — 27 connections
 - [ValidationError](ValidationError.md) — 26 connections
-- [Sidebar()](Sidebar.md) — 26 connections
 - [lockedTurn()](lockedTurn.md) — 26 connections
 - [explainTarget()](explainTarget.md) — 24 connections
-- [Flow()](Flow_2.md) — 23 connections
+- [Flow()](Flow_2.md) — 24 connections
 - [auth](auth.md) — 22 connections
 
 ---
