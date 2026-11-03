@@ -27,7 +27,7 @@ import { ELSEWHERE_BUSY, type LlmHealth } from "./chat/ChatPanel";
 import type { MentionInputHandle } from "./chat/MentionInput";
 import type { ChecklistDrafts, ChecklistExpanded, MissingChecklistProps } from "./chat/MissingChecklist";
 import { type ChatLine, useChatTurn } from "./chat/useChatTurn";
-import { NEW_SESSION, type SessionKey, type SessionSummary, useSessions } from "./chat/useSessions";
+import { NEW_SESSION, type SessionKey, type SessionPaging, type SessionSummary, useSessions } from "./chat/useSessions";
 import { type CardMeasure, InfoCard } from "./canvas/InfoCard";
 import { Legend, legendPlacement } from "./canvas/Legend";
 import { FlyLayer, useFly } from "./FlyLayer";
@@ -59,6 +59,8 @@ export interface DiagramWorkspaceProps {
   initialChat?: ChatLine[];
   /** 노드 질문 세션 목록(최근에 이어간 순). */
   initialSessions?: SessionSummary[];
+  /** 무리마다 다음 쪽 커서(없으면 더 없음)와 마지막으로 맞춘 시각. 없으면 더 불러올 것이 없다. */
+  initialPaging?: SessionPaging;
 }
 
 /** Compare view draws current ∪ old so removed nodes appear as ghosts beside the live ones. */
@@ -89,7 +91,7 @@ const optionsFor = (state: DiagramState): CanvasOptions => ({ ...defaultDisplayO
 
 const NO_SESSIONS: SessionSummary[] = [];
 
-export function DiagramWorkspace({ diagramId, name, projectName, latest, initialPinned, samples, initialChat = [], initialSessions = NO_SESSIONS }: DiagramWorkspaceProps) {
+export function DiagramWorkspace({ diagramId, name, projectName, latest, initialPinned, samples, initialChat = [], initialSessions = NO_SESSIONS, initialPaging }: DiagramWorkspaceProps) {
   const router = useRouter();
   const [current, setCurrent] = useState(latest);
   const [pinned, setPinned] = useState<Pinned>(initialPinned);
@@ -290,7 +292,7 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
     timer.current = setTimeout(refreshFromServer, 1500);
   };
   // 대화 세션: 구성도 대화(main)와 노드 질문 세션. 새로고침하면 구성도 대화로 연다.
-  const sessions = useSessions({ diagramId, initial: initialSessions });
+  const sessions = useSessions({ diagramId, initial: initialSessions, paging: initialPaging });
   const chat = useChatTurn({
     diagramId,
     initial: initialChat,
@@ -834,6 +836,8 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
               onRename: sessions.rename,
               onDelete: sessions.remove,
               deleteDisabled: chat.busy,
+              more: sessions.more,
+              onMore: sessions.loadMore,
             },
             ...(activeSession ? { ask: { nodeId: activeSession.nodeId, nodeLabel: labelOf(activeSession.nodeId) } } : {}),
             ...(activeSummary?.kind === "diagram" ? { emptyHint: NEW_CHAT_HINT } : {}),

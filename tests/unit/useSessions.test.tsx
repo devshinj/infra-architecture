@@ -231,3 +231,73 @@ test("remove DELETEs the session, drops its lines, and leaves it for 기본 대�
   expect(result.current.sessions.map((x) => x.id)).toEqual(["b"]);
   expect(result.current.linesOf("a")).toEqual([]);
 });
+
+test("loadMore fetches the next page of one kind, merges items and changed by id, and tracks more state", async () => {
+  const later = (id: string, at: string) => s(id, at);
+  const fetchMock = vi
+    .fn<(u: string) => Promise<Response>>()
+    .mockResolvedValueOnce(
+      Response.json({
+        items: [later("old1", "2026-10-01T00:00:00Z"), later("old2", "2026-09-01T00:00:00Z")],
+        // 이 탭에서 막 이어간 a 는 덮지 않고, 다른 탭에서 이어간 z 는 새로 들어온다.
+        changed: [later("a", "2026-11-01T00:00:00Z"), later("z", "2026-11-02T00:00:00Z")],
+        nextCursor: "next",
+        syncedAt: "2026-11-03 00:00:00.000001+00",
+      }),
+    )
+    .mockResolvedValueOnce(new Response("{}", { status: 500 }));
+  vi.stubGlobal("fetch", fetchMock);
+  const { result } = renderHook(() =>
+    useSessions({
+      diagramId: "d1",
+      initial: [s("a", "2026-11-01T00:00:00Z")],
+      paging: { diagram: { cursor: null, syncedAt: "t0" }, node: { cursor: "c1", syncedAt: "t0" } },
+    }),
+  );
+  act(() => result.current.upsert(s("a", "2026-11-05T00:00:00Z")));
+  expect(result.current.more).toEqual({ diagram: "none", node: "idle" });
+  let added: string[] = [];
+  await act(async () => {
+    added = await result.current.loadMore("node");
+  });
+  expect(fetchMock.mock.calls[0]![0]).toBe("/api/diagrams/d1/sessions?kind=node&cursor=c1&since=t0");
+  expect(added).toEqual(["z", "old1", "old2"]);
+  expect(result.current.sessions.map((x) => x.id).sort()).toEqual(["a", "old1", "old2", "z"]);
+  expect(result.current.sessions.find((x) => x.id === "a")!.updatedAt).toBe("2026-11-05T00:00:00Z");
+  expect(result.current.more.node).toBe("idle");
+  // 다음 쪽은 받은 커서·시각으로, 실패하면 error(다시 누를 수 있다).
+  await act(async () => {
+    await result.current.loadMore("node");
+  });
+  expect(fetchMock.mock.calls[1]![0]).toBe(`/api/diagrams/d1/sessions?kind=node&cursor=next&since=${encodeURIComponent("2026-11-03 00:00:00.000001+00").replace(/%20/g, "+")}`);
+  expect(result.current.more.node).toBe("error");
+});
+
+test("loadMore with no next page is a no-op; renaming/deleting a loaded older session works", async () => {
+  const fetchMock = vi
+    .fn<(u: string, i?: RequestInit) => Promise<Response>>()
+    .mockResolvedValueOnce(Response.json({ items: [s("old", "2026-01-01T00:00:00Z")], changed: [], nextCursor: null, syncedAt: "t1" }))
+    .mockResolvedValueOnce(Response.json({ session: { ...s("old", "2026-01-01T00:00:00Z"), title: "새 이름" } }))
+    .mockResolvedValueOnce(new Response(null, { status: 204 }));
+  vi.stubGlobal("fetch", fetchMock);
+  const { result } = renderHook(() =>
+    useSessions({ diagramId: "d1", initial: [s("a", "2026-11-01T00:00:00Z")], paging: { diagram: { cursor: null, syncedAt: "" }, node: { cursor: "c1", syncedAt: "t0" } } }),
+  );
+  await act(async () => {
+    await result.current.loadMore("node");
+  });
+  expect(result.current.more.node).toBe("none");
+  await act(async () => {
+    expect(await result.current.loadMore("node")).toEqual([]);
+  });
+  expect(fetchMock).toHaveBeenCalledTimes(1);
+  await act(async () => {
+    await result.current.rename("old", "새 이름");
+  });
+  expect(result.current.sessions.find((x) => x.id === "old")!.title).toBe("새 이름");
+  await act(async () => {
+    await result.current.remove("old");
+  });
+  expect(result.current.sessions.map((x) => x.id)).toEqual(["a"]);
+  expect(result.current.more.node).toBe("none");
+});

@@ -5,7 +5,7 @@ import { useState } from "react";
 import { afterEach, expect, test, vi } from "vitest";
 
 import { SessionPicker, type SessionPickerProps } from "@/ui/chat/SessionPicker";
-import type { SessionSummary } from "@/ui/chat/useSessions";
+import type { MoreState, SessionSummary } from "@/ui/chat/useSessions";
 
 afterEach(cleanup);
 
@@ -225,4 +225,48 @@ test("…and to the fallback (chat input) when 새 대화 is disabled too", asyn
   render(<DeletingHarness newDisabled fallbackFocus={fallbackFocus} />);
   await deleteOnly();
   await waitFor(() => expect(fallbackFocus).toHaveBeenCalled());
+});
+
+// ---- 무리마다 `더 보기` ----
+function PagingHarness({ fail = false }: { fail?: boolean }) {
+  const [sessions, setSessions] = useState<SessionSummary[]>([c("x", "결제", today(9, 0)), s("b", "n1", "API 서버", "왜?", today(9, 5))]);
+  const [more, setMore] = useState<Record<"diagram" | "node", MoreState>>({ diagram: "none", node: "idle" });
+  const onMore = async (kind: "diagram" | "node") => {
+    setMore((m) => ({ ...m, [kind]: "loading" }));
+    await Promise.resolve();
+    if (fail) {
+      setMore((m) => ({ ...m, [kind]: "error" }));
+      return [];
+    }
+    setSessions((ss) => [...ss, s("o1", "n2", "주문 DB", "옛 질문", "2026-03-04T10:00:00Z"), s("o2", "n2", "주문 DB", "더 옛 질문", "2026-03-01T10:00:00Z")]);
+    setMore((m) => ({ ...m, [kind]: "none" }));
+    return ["o1", "o2"];
+  };
+  return <SessionPicker sessions={sessions} active="main" labelOf={labelOf} onSelect={vi.fn()} onRename={vi.fn()} onDelete={vi.fn()} more={more} onMore={onMore} />;
+}
+
+test("a group with more sessions ends with 더 보기; keyboard loads the next page, focuses the first new row and announces it", async () => {
+  render(<PagingHarness />);
+  await userEvent.click(screen.getByRole("button", { name: "기본 대화" }));
+  expect(within(group("구성도 대화")).queryByRole("button", { name: /더 보기/ })).not.toBeInTheDocument();
+  const moreBtn = within(group("노드 질문")).getByRole("button", { name: "노드 질문 더 보기" });
+  // ↑↓ 로 닿는다(마지막 줄).
+  await userEvent.keyboard("{ArrowUp}");
+  expect(moreBtn).toHaveFocus();
+  await userEvent.keyboard("{Enter}");
+  await waitFor(() => expect(within(group("노드 질문")).queryByRole("button", { name: /더 보기/ })).not.toBeInTheDocument());
+  const rows = within(group("노드 질문")).getAllByRole("button").filter((b) => b.hasAttribute("data-session-item"));
+  expect(rows.map((r) => r.textContent)).toEqual(["API 서버 · 왜?09:05", "주문 DB · 옛 질문3/4", "주문 DB · 더 옛 질문3/1"]);
+  await waitFor(() => expect(rows[1]).toHaveFocus());
+  expect(screen.getByRole("status")).toHaveTextContent("노드 질문 2개를 더 불러왔어요.");
+  // 불러온 옛 세션도 행 메뉴가 있다.
+  expect(screen.getByRole("button", { name: "주문 DB · 옛 질문 메뉴" })).toBeInTheDocument();
+});
+
+test("a failed page shows 다시 불러오기 and keeps focus there", async () => {
+  render(<PagingHarness fail />);
+  await userEvent.click(screen.getByRole("button", { name: "기본 대화" }));
+  await userEvent.click(screen.getByRole("button", { name: "노드 질문 더 보기" }));
+  const retry = await screen.findByRole("button", { name: "노드 질문 다시 불러오기" });
+  expect(retry).toHaveFocus();
 });
