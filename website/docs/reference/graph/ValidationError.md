@@ -1,6 +1,6 @@
 ---
 title: "ValidationError"
-sidebar_position: 62
+sidebar_position: 74
 sidebar_label: "핵심 노드: ValidationError"
 ---
 # ValidationError
@@ -34,11 +34,11 @@ sidebar_label: "핵심 노드: ValidationError"
 ### imports
 - [(app)/actions.ts](app-actions.ts.md) `EXTRACTED`
 - server/explain.ts `EXTRACTED`
-- [ask.ts](ask.ts.md) `EXTRACTED`
+- ask.ts `EXTRACTED`
 - [ask/route.ts](ask-route.ts.md) `EXTRACTED`
-- glossary.ts `EXTRACTED`
+- [glossary.ts](glossary.ts.md) `EXTRACTED`
 - fields.ts `EXTRACTED`
-- explain/route.ts `EXTRACTED`
+- [explain/route.ts](explain-route.ts.md) `EXTRACTED`
 - ignore.ts `EXTRACTED`
 - server/assumptions.ts `EXTRACTED`
 

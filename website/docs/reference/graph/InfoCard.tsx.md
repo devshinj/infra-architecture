@@ -1,6 +1,6 @@
 ---
 title: "InfoCard.tsx"
-sidebar_position: 35
+sidebar_position: 43
 ---
 # InfoCard.tsx
 
@@ -27,18 +27,18 @@ sidebar_position: 35
 
 ## Relationships
 
-- [types.ts](types.ts.md) (6 shared connections)
 - [MissingChecklist.tsx](MissingChecklist.tsx.md) (5 shared connections)
-- [chat/warnings.ts](chat-warnings.ts.md) (4 shared connections)
+- [domain/warnings.ts](domain-warnings.ts.md) (3 shared connections)
+- [missing.ts](missing.ts.md) (3 shared connections)
+- [display.ts](display.ts.md) (3 shared connections)
+- [types.ts](types.ts.md) (3 shared connections)
 - [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (3 shared connections)
-- [Flow](Flow.md) (2 shared connections)
 - [NodeInfo.tsx](NodeInfo.tsx.md) (2 shared connections)
-- [pipeline.ts](pipeline.ts.md) (2 shared connections)
-- [(app)/actions.ts](app-actions.ts.md) (2 shared connections)
+- [DiagramWorkspace](DiagramWorkspace.md) (2 shared connections)
 - [Review Focus](Review_Focus.md) (1 shared connections)
+- [Flow](Flow.md) (1 shared connections)
 - [Canvas.tsx](Canvas.tsx.md) (1 shared connections)
-- [ExportMenu.tsx](ExportMenu.tsx.md) (1 shared connections)
-- [missing.ts](missing.ts.md) (1 shared connections)
+- [useChatTurn.ts](useChatTurn.ts.md) (1 shared connections)
 
 ## Source Files
 

@@ -1,12 +1,12 @@
 ---
 title: "motion.ts"
-sidebar_position: 46
+sidebar_position: 56
 ---
 # motion.ts
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 11 nodes · cohesion 0.29
+> 9 nodes · cohesion 0.39
 
 ## Key Concepts
 
@@ -17,25 +17,23 @@ sidebar_position: 46
 - **dashAlong()** (2 connections) — `src/canvas/motion.ts`
 - **hostOf()** (2 connections) — `src/canvas/motion.ts`
 - **make()** (2 connections) — `src/canvas/motion.ts`
-- **MotionKind** (2 connections) — `src/canvas/motion.ts`
-- **BASE_SPEED** (2 connections) — `src/canvas/segments.ts`
 - **CAPSULE** (1 connections) — `src/canvas/motion.ts`
 - **COMET_LAYERS** (1 connections) — `src/canvas/motion.ts`
 
 ## Relationships
 
-- [segments.ts](segments.ts.md) (4 shared connections)
-- [연결선 그리기](연결선_그리기.md) (4 shared connections)
-- [catalog.ts](catalog.ts.md) (2 shared connections)
+- [연결선 그리기](연결선_그리기.md) (5 shared connections)
+- [segments.ts](segments.ts.md) (3 shared connections)
+- [Legend.tsx](Legend.tsx.md) (1 shared connections)
+- [catalog.ts](catalog.ts.md) (1 shared connections)
 
 ## Source Files
 
 - `src/canvas/motion.ts`
-- `src/canvas/segments.ts`
 
 ## Audit Trail
 
-- EXTRACTED: 26 (100%)
+- EXTRACTED: 24 (100%)
 - INFERRED: 0 (0%)
 - AMBIGUOUS: 0 (0%)
 

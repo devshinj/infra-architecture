@@ -1,25 +1,23 @@
 ---
 title: "ask/route.ts"
-sidebar_position: 19
+sidebar_position: 20
 ---
 # ask/route.ts
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 24 nodes · cohesion 0.12
+> 22 nodes · cohesion 0.13
 
 ## Key Concepts
 
 - **ask/route.ts** (28 connections) — `src/app/api/diagrams/[id]/ask/route.ts`
 - **chat/route.ts** (21 connections) — `src/app/api/diagrams/[id]/chat/route.ts`
+- **runAskTurn()** (14 connections) — `src/server/chat/ask.ts`
 - **POST()** (8 connections) — `src/app/api/diagrams/[id]/ask/route.ts`
 - **stream.ts** (8 connections) — `src/server/chat/stream.ts`
-- **ref_zod** (7 connections)
-- **BUSY_MESSAGE** (7 connections) — `src/server/chat/busy.ts`
+- **getSession()** (7 connections) — `src/server/chat/sessions.ts`
 - **POST()** (6 connections) — `src/app/api/diagrams/[id]/chat/route.ts`
 - **streamTurn()** (6 connections) — `src/server/chat/stream.ts`
-- **busy.ts** (4 connections) — `src/server/chat/busy.ts`
-- **GENERIC_ERROR_MESSAGE** (4 connections) — `src/server/chat/pipeline.ts`
 - **src_server_chat_pipeline_busy_message** (3 connections)
 - **ChatTurnResult** (3 connections) — `src/server/chat/pipeline.ts`
 - **json()** (2 connections) — `src/app/api/diagrams/[id]/ask/route.ts`
@@ -37,27 +35,29 @@ sidebar_position: 19
 
 ## Relationships
 
-- [(app)/actions.ts](app-actions.ts.md) (16 shared connections)
-- [ask.ts](ask.ts.md) (13 shared connections)
-- [pipeline.ts](pipeline.ts.md) (8 shared connections)
-- [auth](auth.md) (7 shared connections)
+- [pipeline.ts](pipeline.ts.md) (18 shared connections)
+- [getOwnedDiagram](getOwnedDiagram.md) (9 shared connections)
+- [(app)/actions.ts](app-actions.ts.md) (7 shared connections)
 - [deps.ts](deps.ts.md) (6 shared connections)
-- [schema.ts](schema.ts.md) (3 shared connections)
-- [명령 적용과 샘플](명령_적용과_샘플.md) (1 shared connections)
+- [\[sessionId\]/route.ts]([sessionId]-route.ts.md) (6 shared connections)
+- [auth](auth.md) (4 shared connections)
+- [schema.ts](schema.ts.md) (4 shared connections)
+- [auth.ts](auth.ts.md) (2 shared connections)
+- [Review Focus](Review_Focus.md) (1 shared connections)
 
 ## Source Files
 
 - `src/app/api/diagrams/[id]/ask/route.ts`
 - `src/app/api/diagrams/[id]/chat/route.ts`
 - `src/server/chat/ask.ts`
-- `src/server/chat/busy.ts`
 - `src/server/chat/pipeline.ts`
+- `src/server/chat/sessions.ts`
 - `src/server/chat/stream.ts`
 
 ## Audit Trail
 
-- EXTRACTED: 87 (100%)
-- INFERRED: 0 (0%)
+- EXTRACTED: 87 (99%)
+- INFERRED: 1 (1%)
 - AMBIGUOUS: 0 (0%)
 
 ---

@@ -1,17 +1,15 @@
 ---
 title: "types.ts"
-sidebar_position: 32
+sidebar_position: 42
 ---
 # types.ts
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 17 nodes · cohesion 0.19
+> 14 nodes · cohesion 0.22
 
 ## Key Concepts
 
-- **types.ts** (46 connections) — `src/domain/types.ts`
-- **DiagramState** (37 connections) — `src/domain/types.ts`
 - **domain/assumptions.ts** (12 connections) — `src/domain/assumptions.ts`
 - **AssumptionChips.tsx** (12 connections) — `src/ui/chat/AssumptionChips.tsx`
 - **AssumptionChips()** (8 connections) — `src/ui/chat/AssumptionChips.tsx`
@@ -26,22 +24,18 @@ sidebar_position: 32
 - **labelOf()** (2 connections) — `src/ui/chat/AssumptionChips.tsx`
 - **orderedKeys()** (2 connections) — `src/ui/chat/AssumptionChips.tsx`
 - **STRUCTURAL_KEYS** (1 connections) — `src/domain/assumptions.ts`
-- **Attrs** (1 connections) — `src/domain/types.ts`
 
 ## Relationships
 
-- [(app)/actions.ts](app-actions.ts.md) (16 shared connections)
-- [display.ts](display.ts.md) (7 shared connections)
-- [chat/warnings.ts](chat-warnings.ts.md) (7 shared connections)
-- [InfoCard.tsx](InfoCard.tsx.md) (6 shared connections)
-- [missing.ts](missing.ts.md) (5 shared connections)
-- [pipeline.ts](pipeline.ts.md) (4 shared connections)
-- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (4 shared connections)
-- [명령 적용과 샘플](명령_적용과_샘플.md) (4 shared connections)
-- [ask.ts](ask.ts.md) (3 shared connections)
-- [설명 생성과 품질 검사](설명_생성과_품질_검사.md) (3 shared connections)
-- [MissingChecklist.tsx](MissingChecklist.tsx.md) (3 shared connections)
-- [useExplanations.ts](useExplanations.ts.md) (3 shared connections)
+- [display.ts](display.ts.md) (4 shared connections)
+- [getOwnedDiagram](getOwnedDiagram.md) (3 shared connections)
+- [InfoCard.tsx](InfoCard.tsx.md) (3 shared connections)
+- [pipeline.ts](pipeline.ts.md) (2 shared connections)
+- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (2 shared connections)
+- [설계 문서와 계획](설계_문서와_계획.md) (1 shared connections)
+- [DiagramWorkspace](DiagramWorkspace.md) (1 shared connections)
+- [DiagramState](DiagramState.md) (1 shared connections)
+- [MentionInput](MentionInput.md) (1 shared connections)
 
 ## Source Files
 
@@ -52,7 +46,7 @@ sidebar_position: 32
 
 ## Audit Trail
 
-- EXTRACTED: 116 (100%)
+- EXTRACTED: 38 (100%)
 - INFERRED: 0 (0%)
 - AMBIGUOUS: 0 (0%)
 
