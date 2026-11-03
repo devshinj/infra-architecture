@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 
-import { messagesToLines, summaryText } from "@/ui/chat/lines";
+import { keepsCard, messagesToLines, summaryText } from "@/ui/chat/lines";
 
 test("reload has no missing-info line (the canvas card shows it)", () => {
   const lines = messagesToLines([
@@ -139,4 +139,61 @@ test("summary: nothing applied but commands skipped says the reply could not be 
     { id: "a1", role: "assistant", content: "", meta: { intent: "missing_info_answer", applied: 0, skipped: 1, version: null, status: "complete" } },
   ]);
   expect(lines.map((l) => [l.kind, l.text])).toEqual([["user", "IP는 10.0.2.11"], ["summary", msg]]);
+});
+
+test("summary: a structure change that changed nothing and wrote nothing says it was not applied", () => {
+  const msg = "요청을 반영하지 못했어요. 다시 말해 주세요.";
+  const none = { version: null, status: "complete" as const, applied: 0, changed: 0, skipped: 0 };
+  expect(summaryText(none, false, "structure_change")).toBe(msg);
+  // AI 가 글(안내·답)을 냈으면 알리지 않는다.
+  expect(summaryText(none, true, "structure_change")).toBeNull();
+  expect(summaryText({ ...none, skipped: 2 }, true, "missing_info_answer")).toBeNull();
+  // 질문·답변, 빠진 정보 답, 재정렬 차례는 그대로다.
+  expect(summaryText(none, true, "question")).toBeNull();
+  expect(summaryText(none, false, "other")).toBe("변경 사항이 없어요.");
+  expect(summaryText(none, false, "missing_info_answer")).toBe("변경 사항이 없어요.");
+  expect(summaryText(none, false, "layout")).toBeNull();
+  expect(summaryText({ ...none, version: 3, applied: 2, changed: 2 }, false, "structure_change")).toBe("2곳 바꿨어요");
+});
+
+test("summary: assumptions are applied and versioned but are not counted as changed places", () => {
+  const msg = "요청을 반영하지 못했어요. 다시 말해 주세요.";
+  const onlyAssumption = { version: 4, status: "complete" as const, applied: 1, changed: 0, skipped: 0, nodes: 50, edges: 60 };
+  expect(summaryText(onlyAssumption, false, "structure_change")).toBe(msg);
+  expect(keepsCard(onlyAssumption)).toBe(false);
+  // 글이 있거나 구성 변경 요청이 아니면 바꾼 곳이 없다고만 보인다.
+  expect(summaryText(onlyAssumption, true, "structure_change")).toBe("노드 50 · 연결 60 · 바꾼 곳이 없어요");
+  expect(summaryText(onlyAssumption, false, "missing_info_answer")).toBe("노드 50 · 연결 60 · 바꾼 곳이 없어요");
+  // 가정 + 노드 둘: 바꾼 곳은 둘.
+  const mixed = { ...onlyAssumption, applied: 3, changed: 2 };
+  expect(summaryText(mixed, false, "structure_change")).toBe("노드 50 · 연결 60 · 2곳 바꿨어요");
+  expect(keepsCard(mixed)).toBe(true);
+  // 옛 메시지(changed 없음)는 applied 로 센다.
+  expect(summaryText({ version: 2, status: "complete", applied: 4, skipped: 0 }, false, "structure_change")).toBe("4곳 바꿨어요");
+  // 다시 불러와도 같다.
+  const reload = (meta: Record<string, unknown>, content = "") =>
+    messagesToLines([
+      { id: "u1", role: "user", content: "모든 DB 를 이중화해 줘", meta: {} },
+      { id: "a1", role: "assistant", content, meta: { intent: "structure_change", skipped: 0, status: "complete", nodes: 50, edges: 60, ...meta } },
+    ]).map((l) => [l.kind, l.text]);
+  expect(reload({ applied: 1, changed: 0, version: 4 })).toEqual([["user", "모든 DB 를 이중화해 줘"], ["summary", msg]]);
+  // 안내 한 줄만 내고 멈춘 차례는 알리지 않는다(사용자 결정).
+  expect(reload({ applied: 0, changed: 0, version: null, says: ["DB 를 이중화합니다."] }, "DB 를 이중화합니다.")).toEqual([
+    ["user", "모든 DB 를 이중화해 줘"],
+    ["progress", "DB 를 이중화합니다."],
+  ]);
+});
+
+test("old messages without changed render exactly as before", () => {
+  const old = { intent: "structure_change", applied: 0, skipped: 0, version: null, status: "complete" as const };
+  const lines = messagesToLines([
+    { id: "u1", role: "user", content: "DB 이중화", meta: {} },
+    { id: "a1", role: "assistant", content: "", meta: old },
+  ]);
+  expect(lines.map((l) => [l.kind, l.text])).toEqual([["user", "DB 이중화"], ["summary", "변경 사항이 없어요."]]);
+  expect(summaryText({ version: null, status: "complete", applied: 0, skipped: 0 }, false, "structure_change")).toBe("변경 사항이 없어요.");
+  // 예전처럼 건너뛴 명령이 있으면 답이 있어도 알린다.
+  expect(summaryText({ version: null, status: "complete", applied: 0, skipped: 1 }, true, "missing_info_answer")).toBe("요청을 반영하지 못했어요. 다시 말해 주세요.");
+  // 새 차례(changed 있음)만 새 규칙.
+  expect(summaryText({ version: null, status: "complete", applied: 0, changed: 0, skipped: 0 }, false, "structure_change")).toBe("요청을 반영하지 못했어요. 다시 말해 주세요.");
 });

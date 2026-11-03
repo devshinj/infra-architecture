@@ -28,7 +28,10 @@ async function setup(page: Page) {
 
 const nodes = (page: Page) => page.locator(".react-flow__node-infra");
 const askInput = (page: Page) => page.getByPlaceholder("예: 이 서버는 왜 두 대예요?");
-const picker = (page: Page) => page.getByRole("button", { name: /^구성도 대화$|WAS #1 · / });
+const picker = (page: Page) => page.getByRole("button", { name: /^기본 대화$|^WAS #1 · /, expanded: false });
+/** 펼친 대화 고르기에서 글이 맞는 세션 행(⋯ 메뉴 버튼 말고). */
+const sessionRow = (page: Page, text: string | RegExp) =>
+  page.getByRole("dialog", { name: "대화 고르기" }).locator("[data-session-item]").filter({ hasText: text });
 
 async function askFromExplanation(page: Page, text: string) {
   await page.getByTitle("WAS #1").click();
@@ -53,7 +56,7 @@ test("follow-up stays in the session and main chat is untouched", async ({ page 
   await expect(page.getByText(Q1, { exact: true }).first()).toBeVisible();
 
   await picker(page).click();
-  await page.getByRole("menu", { name: "대화 고르기" }).getByRole("menuitem", { name: /^구성도 대화$/ }).click();
+  await sessionRow(page, /^기본 대화$/).click();
   await expect(page.getByPlaceholder(PLACEHOLDER)).toBeVisible();
   await expect(page.getByText(Q1)).toHaveCount(0);
   await expect(page.getByText(Q2)).toHaveCount(0);
@@ -91,6 +94,6 @@ test("sessions survive reload", async ({ page }) => {
   await page.getByRole("tab", { name: "대화" }).click();
   await expect(page.getByPlaceholder(PLACEHOLDER)).toBeVisible();
   await picker(page).click();
-  await page.getByRole("menu", { name: "대화 고르기" }).getByRole("menuitem", { name: new RegExp(`WAS #1 · ${Q1.slice(0, 6)}`) }).click();
+  await sessionRow(page, new RegExp(`^WAS #1 · ${Q1.slice(0, 6)}`)).click();
   await expect(page.getByText(`가짜 답이에요. ${Q1}`)).toBeVisible({ timeout: 15_000 });
 });

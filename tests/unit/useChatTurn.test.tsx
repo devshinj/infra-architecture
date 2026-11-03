@@ -19,8 +19,10 @@ function streamOf(chunks: string[], signal?: AbortSignal, hang = false): Respons
   return new Response(body, { status: 200 });
 }
 
+// changed(바꾼 곳)는 따로 주지 않으면 applied 와 같다(가정만 바꾼 차례는 changed 를 직접 준다).
 const done = (o: Partial<Extract<ChatEvent, { t: "done" }>> = {}): ChatEvent => ({
   t: "done", version: 2, status: "complete", applied: 2, skipped: 1, nodes: 3, edges: 1, assistantMessageId: "m", missing: 0, ...o,
+  changed: o.changed ?? o.applied ?? 2,
 });
 const add = (id: string): Command => ({ op: "add_node", id, kind: "server", label: id, parent: null });
 
@@ -241,6 +243,37 @@ test("progress card steps and node count update", async () => {
   expect(turns.size).toBe(1);
 });
 
+test("a continuation status keeps counting changes and shows the part on the card", async () => {
+  const s = controlled();
+  vi.stubGlobal("fetch", vi.fn(async () => s.res));
+  const h = setup();
+  let p!: Promise<void>;
+  act(() => { p = h.result.current.send("x"); });
+  await act(async () => { s.emit({ t: "start", messageId: "m", intent: "structure_change" }, { t: "status", phase: "drawing" }, { t: "cmd", cmd: add("a") }); });
+  await waitFor(() => expect(cardOf(h.result.current.lines)).toMatchObject({ step: "drawing", changes: 1 }));
+  await act(async () => { s.emit({ t: "status", phase: "drawing", part: { n: 2, of: 3 } }, { t: "cmd", cmd: add("b") }); });
+  await waitFor(() => expect(cardOf(h.result.current.lines)).toMatchObject({ step: "drawing", changes: 2, part: { n: 2, of: 3 } }));
+  await act(async () => { s.emit(done({ nodes: 2, edges: 0, applied: 2 })); s.close(); });
+  await act(() => p);
+  expect(cardOf(h.result.current.lines)).toMatchObject({ end: "done", changes: 2 });
+});
+
+test("structure change: a say-only turn shows no notice; an assumption-only turn shows the notice and drops the card", async () => {
+  const notice = "요청을 반영하지 못했어요. 다시 말해 주세요.";
+  const run = async (evs: ChatEvent[]) => {
+    vi.stubGlobal("fetch", vi.fn(async () => streamOf([nd(evs)])));
+    const h = setup();
+    await act(() => h.result.current.send("모든 DB 이중화"));
+    return h.result.current.lines;
+  };
+  const start: ChatEvent = { t: "start", messageId: "m", intent: "structure_change" };
+  const sayOnly = await run([start, { t: "say", text: "DB 를 이중화합니다." }, done({ version: null, applied: 0, skipped: 0 })]);
+  expect(sayOnly.some((l) => l.kind === "summary")).toBe(false);
+  const assumption = await run([start, { t: "cmd", cmd: { op: "set_assumption", key: "redundancy", value: "이중화" } as Command }, done({ version: 3, applied: 1, changed: 0, skipped: 0 })]);
+  expect(assumption.find((l) => l.kind === "summary")?.text).toBe(notice);
+  expect(assumption.some((l) => l.kind === "card")).toBe(false);
+});
+
 test("answer mode shows single step", async () => {
   const s = controlled();
   vi.stubGlobal("fetch", vi.fn(async () => s.res));
@@ -304,11 +337,11 @@ function askSetup() {
   const onSession = vi.fn();
   const onDone = vi.fn();
   const onInterrupted = vi.fn();
-  const onAskLines = (key: string, fn: (ls: import("@/ui/chat/useChatTurn").ChatLine[]) => import("@/ui/chat/useChatTurn").ChatLine[]) => {
+  const onSessionLines = (key: string, fn: (ls: import("@/ui/chat/useChatTurn").ChatLine[]) => import("@/ui/chat/useChatTurn").ChatLine[]) => {
     store[key] = fn(store[key] ?? []);
   };
   const hook = renderHook(() =>
-    useChatTurn({ diagramId: "d1", initial: [], onCommand: vi.fn(), onDone, onOpenHistory: vi.fn(), onInterrupted, onSession, onAskLines }),
+    useChatTurn({ diagramId: "d1", initial: [], onCommand: vi.fn(), onDone, onOpenHistory: vi.fn(), onInterrupted, onSession, onSessionLines }),
   );
   return { ...hook, store, onSession, onDone, onInterrupted };
 }
@@ -330,7 +363,7 @@ test("ask target posts to /ask with nodeId and sessionId", async () => {
 });
 
 test("session event is reported", async () => {
-  const session = { id: "s9", nodeId: "n1", nodeLabel: "API 서버", title: "왜?", updatedAt: "2026-11-01T00:00:00.000Z" };
+  const session = { id: "s9", kind: "node" as const, nodeId: "n1", nodeLabel: "API 서버", title: "왜?", updatedAt: "2026-11-01T00:00:00.000Z" };
   const fetchMock = vi.fn<(u: string, i: RequestInit) => Promise<Response>>(async () => streamOf([nd([{ t: "session", session }, { t: "start", messageId: "m", intent: null }, { t: "answer", delta: "답" }, askDone])]));
   vi.stubGlobal("fetch", fetchMock);
   const h = askSetup();
@@ -360,4 +393,43 @@ test("handoff line has a send-to-main action", async () => {
   ]);
   // 안내와 넘기기 버튼은 한 AI 메시지다.
   expect(new Set(h.store.s1!.slice(1).map((l) => l.turn)).size).toBe(1);
+});
+
+test("a new diagram chat posts newSession to /chat, keeps the card and summary in that session, and reports the session", async () => {
+  const session = { id: "c1", kind: "diagram" as const, nodeId: null, nodeLabel: null, title: "웹 하나", updatedAt: "2026-11-01T00:00:00.000Z" };
+  const fetchMock = vi.fn<(u: string, i: RequestInit) => Promise<Response>>(async () =>
+    streamOf([nd([{ t: "session", session }, { t: "start", messageId: "m", intent: "structure_change" }, { t: "cmd", cmd: add("a") }, done()])]),
+  );
+  vi.stubGlobal("fetch", fetchMock);
+  const h = askSetup();
+  // useSessions.upsert 처럼 새 세션 줄을 받은 id 로 옮긴다.
+  h.onSession.mockImplementation((x: { id: string }) => {
+    h.store[x.id] = h.store.new ?? [];
+    delete h.store.new;
+  });
+  let p!: Promise<void>;
+  act(() => { p = h.result.current.send("웹 하나", { kind: "diagram", sessionId: null }); });
+  expect(h.result.current.runningKey).toBe("new");
+  expect(h.result.current.runningAsk).toBe(false);
+  await act(() => p);
+  const [url, init] = fetchMock.mock.calls[0]!;
+  expect(url).toBe("/api/diagrams/d1/chat");
+  expect(JSON.parse(init.body as string)).toEqual({ text: "웹 하나", newSession: true });
+  expect(h.onSession).toHaveBeenCalledWith(session);
+  expect(h.onDone).toHaveBeenCalled();
+  // 기본 대화 줄은 그대로이고, 진행 카드·요약은 새 세션 줄에 있다.
+  expect(h.result.current.lines).toEqual([]);
+  expect(h.store.c1!.map((l) => l.kind)).toEqual(["user", "card", "summary"]);
+  expect(h.store.c1!.find((l) => l.kind === "card")?.card).toMatchObject({ end: "done" });
+});
+
+test("an existing diagram chat posts its sessionId; errors are counted", async () => {
+  const fetchMock = vi.fn<(u: string, i: RequestInit) => Promise<Response>>(async () => new Response(JSON.stringify({ error: "다른 응답을 처리하고 있어요." }), { status: 409 }));
+  vi.stubGlobal("fetch", fetchMock);
+  const h = askSetup();
+  expect(h.result.current.errors).toBe(0);
+  await act(() => h.result.current.send("또", { kind: "diagram", sessionId: "c1" }));
+  expect(JSON.parse(fetchMock.mock.calls[0]![1].body as string)).toEqual({ text: "또", sessionId: "c1" });
+  expect(h.store.c1!.map((l) => [l.kind, l.text])).toEqual([["user", "또"], ["error", "다른 응답을 처리하고 있어요."]]);
+  expect(h.result.current.errors).toBe(1);
 });
