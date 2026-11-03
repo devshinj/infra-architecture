@@ -140,3 +140,25 @@ test("summary: nothing applied but commands skipped says the reply could not be 
   ]);
   expect(lines.map((l) => [l.kind, l.text])).toEqual([["user", "IP는 10.0.2.11"], ["summary", msg]]);
 });
+
+test("summary: a structure change that applied and skipped nothing still says it was not applied", () => {
+  const msg = "요청을 반영하지 못했어요. 다시 말해 주세요.";
+  const none = { version: null, status: "complete" as const, applied: 0, skipped: 0 };
+  expect(summaryText(none, false, "structure_change")).toBe(msg);
+  // 질문·답변, 빠진 정보 답, 재정렬, 이력 차례는 그대로다.
+  expect(summaryText(none, true, "question")).toBeNull();
+  expect(summaryText(none, false, "other")).toBe("변경 사항이 없어요.");
+  expect(summaryText(none, false, "missing_info_answer")).toBe("변경 사항이 없어요.");
+  expect(summaryText(none, false, "layout")).toBeNull();
+  expect(summaryText({ ...none, version: 3, applied: 2 }, false, "structure_change")).toBe("2곳 바꿨어요");
+  // 다시 불러와도 같다: 안내(say)만 남은 구성 변경 차례.
+  const lines = messagesToLines([
+    { id: "u1", role: "user", content: "모든 DB 를 이중화해 줘", meta: {} },
+    { id: "a1", role: "assistant", content: "DB 를 이중화합니다.", meta: { intent: "structure_change", applied: 0, skipped: 0, version: null, status: "complete", says: ["DB 를 이중화합니다."] } },
+  ]);
+  expect(lines.map((l) => [l.kind, l.text])).toEqual([
+    ["user", "모든 DB 를 이중화해 줘"],
+    ["progress", "DB 를 이중화합니다."],
+    ["summary", msg],
+  ]);
+});

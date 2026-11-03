@@ -9,6 +9,8 @@ export function warningsChip(ws: readonly Warning[]): Omit<ChatLine, "id"> | nul
   return ws.length > 0 ? { kind: "warning", text: `주의 ${ws.length}` } : null;
 }
 
+export const NOT_APPLIED_MESSAGE = "요청을 반영하지 못했어요. 다시 말해 주세요.";
+
 export interface TurnResult {
   version: number | null;
   status: "complete" | "aborted";
@@ -20,13 +22,14 @@ export interface TurnResult {
 
 /**
  * 차례 끝 요약 칩 글. 바꾼 곳 수만 쉬운 말로 보이고 건너뛴 수는 보이지 않는다.
- * 바뀐 것이 없는데 건너뛴 명령이 있으면 반영하지 못했다고 알린다.
+ * 바뀐 것이 없는데 건너뛴 명령이 있으면 반영하지 못했다고 알린다. 구성 변경 요청(structure_change)이면
+ * 건너뛴 것이 없어도(AI 가 안내 한 줄만 내고 멈춘 경우) 같은 글로 알린다.
  * 건너뛴 것도 없고 답도 없으면 "변경 사항이 없어요.", 답만 한 차례면 없음.
  * 재정렬(layout) 차례는 "다시 정렬했어요" 안내와 어긋나므로 칩을 두지 않는다.
  */
 export function summaryText(r: TurnResult, hadAnswer: boolean, intent?: string | null): string | null {
   if (r.version === null && r.applied === 0 && r.status === "complete") {
-    if (r.skipped > 0 && intent !== "layout") return "요청을 반영하지 못했어요. 다시 말해 주세요.";
+    if ((r.skipped > 0 && intent !== "layout") || intent === "structure_change") return NOT_APPLIED_MESSAGE;
     return hadAnswer || intent === "layout" ? null : "변경 사항이 없어요.";
   }
   const counts = r.applied > 0 ? `${r.applied}곳 바꿨어요` : "바꾼 곳이 없어요";
