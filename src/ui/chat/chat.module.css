@@ -148,6 +148,10 @@ button.blockTitle:hover { text-decoration: underline; text-underline-offset: 3px
 .newChatBtn:disabled { opacity: 0.5; cursor: default; }
 .newChatBtn:focus-visible { outline: 1.5px solid var(--text-secondary); outline-offset: 2px; }
 .newChatIcon { flex: none; }
+/* 무리 끝 `더 보기`: 세션 행과 같은 크기의 조용한 글. */
+.sessionMore { color: var(--text-secondary); }
+.sessionMore:hover { color: var(--text-primary); }
+.sessionMore[aria-disabled="true"] { cursor: default; opacity: 0.7; }
 /* 휴대폰(대화 탭): 손가락으로 누르는 줄·버튼은 44px. */
 @media (max-width: 640px) {
   .sessionBtn, .newChatBtn { min-height: 44px; }

@@ -28,6 +28,13 @@ export const titleOf = (text: string) => [...text.replace(/\s+/g, " ").trim()].s
 /** 첫 메시지를 보내기 전의 새 구성도 대화 이름. */
 export const NEW_CHAT_TITLE = "새 대화";
 
+/** 무리(세션 종류). 대화 고르기는 무리마다 쪽을 넘긴다. */
+export type SessionKind = SessionSummary["kind"];
+/** 무리마다 다음 쪽 커서(null 이면 더 없음)와 서버와 마지막으로 맞춘 시각(since). */
+export type SessionPaging = Record<SessionKind, { cursor: string | null; syncedAt: string }>;
+/** 무리의 `더 보기` 상태: none = 더 없음, idle = 누를 수 있음, loading, error = 실패(다시 누를 수 있음). */
+export type MoreState = "none" | "idle" | "loading" | "error";
+
 const LOAD_FAILED = "대화를 불러오지 못했어요. 다시 시도해 주세요.";
 const RENAME_FAILED = "이름을 바꾸지 못했어요. 잠시 후 다시 시도해 주세요.";
 const DELETE_FAILED = "대화를 삭제하지 못했어요. 잠시 후 다시 시도해 주세요.";
@@ -81,8 +88,32 @@ interface Row {
  * 세션 줄은 처음 고를 때 서버에서 한 번 불러 캐시하고, 도는 차례는 setLines 로 그 세션에 쌓는다.
  * 새로고침하면 늘 구성도 대화로 연다.
  */
-export function useSessions({ diagramId, initial }: { diagramId: string; initial: SessionSummary[] }) {
+/** 받은 세션을 id 로 합친다. 이미 있으면 더 최근에 이어간 쪽을 남긴다(이 탭에서 막 이어간 세션을 덮지 않게). */
+function mergeSessions(have: SessionSummary[], incoming: SessionSummary[]): { list: SessionSummary[]; added: string[] } {
+  const byId = new Map(have.map((s) => [s.id, s]));
+  const added: string[] = [];
+  for (const s of incoming) {
+    const cur = byId.get(s.id);
+    if (!cur) added.push(s.id);
+    if (!cur || Date.parse(s.updatedAt) > Date.parse(cur.updatedAt)) byId.set(s.id, s);
+  }
+  return { list: [...byId.values()], added };
+}
+
+const NO_PAGING: SessionPaging = { diagram: { cursor: null, syncedAt: "" }, node: { cursor: null, syncedAt: "" } };
+
+export function useSessions({ diagramId, initial, paging = NO_PAGING }: { diagramId: string; initial: SessionSummary[]; paging?: SessionPaging }) {
   const [sessions, setSessions] = useState<SessionSummary[]>(initial);
+  const [pages, setPages] = useState<SessionPaging>(paging);
+  const [moreStatus, setMoreStatus] = useState<Record<SessionKind, "idle" | "loading" | "error">>({ diagram: "idle", node: "idle" });
+  const pagesRef = useRef(pages);
+  useEffect(() => {
+    pagesRef.current = pages;
+  });
+  const sessionsRef = useRef(sessions);
+  useEffect(() => {
+    sessionsRef.current = sessions;
+  });
   const [active, setActive] = useState<SessionKey>("main");
   const [lines, setAllLines] = useState<Lines>({});
   const [pending, setPending] = useState<SessionSummary | null>(null);
@@ -215,6 +246,39 @@ export function useSessions({ diagramId, initial }: { diagramId: string; initial
     [pending, sessions],
   );
 
+  /**
+   * 무리의 다음 쪽(50개)을 불러와 합친다. 그 사이 바뀐 세션(changed)도 함께 합쳐 빠지는 행이 없게 한다.
+   * 새로 목록에 들어온 세션 id 를 돌려준다(포커스를 옮기는 데 쓴다). 실패하면 상태가 error 가 된다.
+   */
+  const loadMore = useCallback(
+    async (kind: SessionKind): Promise<string[]> => {
+      const p = pagesRef.current[kind];
+      if (p.cursor === null) return [];
+      setMoreStatus((m) => ({ ...m, [kind]: "loading" }));
+      const q = new URLSearchParams({ kind, cursor: p.cursor, ...(p.syncedAt ? { since: p.syncedAt } : {}) });
+      try {
+        const r = await fetch(`/api/diagrams/${encodeURIComponent(diagramId)}/sessions?${q}`);
+        if (!r.ok) throw new Error(`status ${r.status}`);
+        const j = (await r.json()) as { items: SessionSummary[]; nextCursor: string | null; changed: SessionSummary[]; syncedAt: string };
+        if (!alive.current) return [];
+        const incoming = [...j.changed, ...j.items];
+        const { added } = mergeSessions(sessionsRef.current, incoming);
+        setSessions((ss) => mergeSessions(ss, incoming).list);
+        setPages((ps) => ({ ...ps, [kind]: { cursor: j.nextCursor, syncedAt: j.syncedAt } }));
+        setMoreStatus((m) => ({ ...m, [kind]: "idle" }));
+        return added;
+      } catch {
+        if (alive.current) setMoreStatus((m) => ({ ...m, [kind]: "error" }));
+        return [];
+      }
+    },
+    [diagramId],
+  );
+  const more: Record<SessionKind, MoreState> = {
+    diagram: pages.diagram.cursor === null ? "none" : moreStatus.diagram,
+    node: pages.node.cursor === null ? "none" : moreStatus.node,
+  };
+
   /** 이름 바꾸기. 실패하면 보일 오류 글을 돌려준다. 목록 순서(최근 이어감)는 그대로다. */
   const rename = useCallback(
     async (id: string, title: string): Promise<string | void> => {
@@ -266,5 +330,5 @@ export function useSessions({ diagramId, initial }: { diagramId: string; initial
     [diagramId],
   );
 
-  return { sessions, active, select, linesOf, upsert, setLines, startNew, startNewDiagram, rename, remove, summaryOf, pending };
+  return { sessions, active, select, linesOf, upsert, setLines, startNew, startNewDiagram, rename, remove, summaryOf, pending, more, loadMore };
 }

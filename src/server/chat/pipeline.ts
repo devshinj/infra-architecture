@@ -9,7 +9,7 @@ import type { QwenClient } from "@/server/llm/qwen";
 import { getOwnedDiagram, NotFoundError, ValidationError } from "@/server/projects";
 import { createVersion, getLatestState } from "@/server/versions";
 
-import { sessionPayload, type ChatEvent, type MessageMeta } from "./events";
+import { SESSION_GONE_MESSAGE, sessionPayload, type ChatEvent, type MessageMeta } from "./events";
 import { BUSY_MESSAGE } from "./busy";
 import { withDiagramLock } from "./lock";
 import { resolveIntent } from "./intent";
@@ -27,8 +27,11 @@ export interface ChatDeps {
   turnTimeoutMs?: number;
 }
 
-/** `busy` 면 잠금을 얻지 못한 것(이미 `error` 이벤트를 보냈다). 호출자는 409 로 바꾼다. */
-export type ChatTurnResult = { status: "ok" } | { status: "busy" };
+/**
+ * `busy` 면 잠금을 얻지 못한 것, `session_gone` 이면 잠금을 기다리는 사이 세션이 지워진 것(둘 다 이미 `error`
+ * 이벤트를 보냈고 아무것도 저장하지 않았다). 호출자는 409·404 로 바꾼다.
+ */
+export type ChatTurnResult = { status: "ok" } | { status: "busy" } | { status: "session_gone" };
 
 export { BUSY_MESSAGE };
 export const AI_UNAVAILABLE_MESSAGE = "AI 서버에 연결할 수 없어요. 잠시 뒤 다시 시도하거나 관리자에게 문의해 주세요.";
@@ -77,6 +80,10 @@ export async function runChatTurn(args: TurnArgs, deps: ChatDeps): Promise<ChatT
   if (!locked.ok) {
     emit({ t: "error", message: BUSY_MESSAGE });
     return { status: "busy" };
+  }
+  if (locked.value === "session_gone") {
+    emit({ t: "error", message: SESSION_GONE_MESSAGE });
+    return { status: "session_gone" };
   }
   return { status: "ok" };
 }
@@ -140,18 +147,26 @@ function prunedOrder(before: DiagramState, after: DiagramState): string[] {
 }
 
 /** 잠금 안: 새 세션이면 만들고 알린 뒤 차례를 돌리고, 세션이면 최근 이어간 순서를 갱신한다. */
-async function sessionTurn(args: TurnArgs, deps: ChatDeps): Promise<void> {
+async function sessionTurn(args: TurnArgs, deps: ChatDeps): Promise<"ok" | "session_gone"> {
   const target = args.session;
-  if (target === undefined) return lockedTurn(args, null, false, deps);
+  if (target === undefined) {
+    await lockedTurn(args, null, false, deps);
+    return "ok";
+  }
   let sessionId: string;
   if (target === "new") {
     const row = await createSession(args.diagramId, { kind: "diagram" }, args.text);
     args.emit({ t: "session", session: sessionPayload(row) });
     sessionId = row.id;
-  } else sessionId = target.id;
+  } else {
+    // 잠금 전에 확인했지만, 잠금을 기다리는 사이 지워졌을 수 있다(삭제도 같은 잠금을 쓴다). 그러면 아무것도 쓰지 않는다.
+    if (!(await getSession(args.diagramId, target.id))) return "session_gone";
+    sessionId = target.id;
+  }
   // 예상치 못한 예외로 끝나도 세션 순서(최근 이어감)는 갱신한다.
   try {
     await lockedTurn(args, sessionId, target !== "new", deps);
+    return "ok";
   } finally {
     await touchSession(sessionId).catch((err) => console.error("chat touch session failed", err));
   }

@@ -27,7 +27,7 @@ import { ELSEWHERE_BUSY, type LlmHealth } from "./chat/ChatPanel";
 import type { MentionInputHandle } from "./chat/MentionInput";
 import type { ChecklistDrafts, ChecklistExpanded, MissingChecklistProps } from "./chat/MissingChecklist";
 import { type ChatLine, useChatTurn } from "./chat/useChatTurn";
-import { NEW_SESSION, type SessionSummary, useSessions } from "./chat/useSessions";
+import { NEW_SESSION, type SessionKey, type SessionPaging, type SessionSummary, useSessions } from "./chat/useSessions";
 import { type CardMeasure, InfoCard } from "./canvas/InfoCard";
 import { Legend, legendPlacement } from "./canvas/Legend";
 import { FlyLayer, useFly } from "./FlyLayer";
@@ -59,6 +59,8 @@ export interface DiagramWorkspaceProps {
   initialChat?: ChatLine[];
   /** 노드 질문 세션 목록(최근에 이어간 순). */
   initialSessions?: SessionSummary[];
+  /** 무리마다 다음 쪽 커서(없으면 더 없음)와 마지막으로 맞춘 시각. 없으면 더 불러올 것이 없다. */
+  initialPaging?: SessionPaging;
 }
 
 /** Compare view draws current ∪ old so removed nodes appear as ghosts beside the live ones. */
@@ -89,7 +91,7 @@ const optionsFor = (state: DiagramState): CanvasOptions => ({ ...defaultDisplayO
 
 const NO_SESSIONS: SessionSummary[] = [];
 
-export function DiagramWorkspace({ diagramId, name, projectName, latest, initialPinned, samples, initialChat = [], initialSessions = NO_SESSIONS }: DiagramWorkspaceProps) {
+export function DiagramWorkspace({ diagramId, name, projectName, latest, initialPinned, samples, initialChat = [], initialSessions = NO_SESSIONS, initialPaging }: DiagramWorkspaceProps) {
   const router = useRouter();
   const [current, setCurrent] = useState(latest);
   const [pinned, setPinned] = useState<Pinned>(initialPinned);
@@ -290,7 +292,7 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
     timer.current = setTimeout(refreshFromServer, 1500);
   };
   // 대화 세션: 구성도 대화(main)와 노드 질문 세션. 새로고침하면 구성도 대화로 연다.
-  const sessions = useSessions({ diagramId, initial: initialSessions });
+  const sessions = useSessions({ diagramId, initial: initialSessions, paging: initialPaging });
   const chat = useChatTurn({
     diagramId,
     initial: initialChat,
@@ -363,14 +365,22 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
   const activeSession = activeSummary?.kind === "node" ? activeSummary : null;
   /** 구성도를 바꾸는 대화(기본 대화 또는 구성도 대화 세션)를 보는 중. */
   const inDiagramChat = sessions.active === "main" || activeSummary?.kind === "diagram";
+  // 마지막으로 쓴(본) 구성도 대화. 아직 보내지 않은 새 대화 초안은 치지 않는다(떠나면 사라진다).
+  const [lastDiagram, setLastDiagram] = useState<SessionKey>("main");
+  useEffect(() => {
+    if (inDiagramChat && sessions.active !== NEW_SESSION) setLastDiagram(sessions.active);
+  }, [inDiagramChat, sessions.active]);
+  // 그 세션이 지워졌으면 기본 대화.
+  const lastDiagramKey =
+    lastDiagram === "main" || sessions.sessions.some((s) => s.id === lastDiagram && s.kind === "diagram") ? lastDiagram : "main";
   /**
-   * 구성도를 바꾸는 차례가 갈 대화: 지금 보는 구성도 대화, 노드 질문 세션을 보고 있으면 기본 대화.
-   * 참조·가정 칩·넘겨주기처럼 구성도 대화에 글을 보내는 곳이 모두 이 규칙을 따른다.
+   * 구성도를 바꾸는 차례가 갈 대화: 지금 보는 구성도 대화, 노드 질문 세션을 보고 있으면 마지막으로 쓴 구성도 대화
+   * (없거나 지워졌으면 기본 대화). 참조·가정 칩·넘겨주기처럼 구성도 대화에 글을 보내는 곳이 모두 이 규칙을 따른다.
    */
-  const diagramKey = inDiagramChat ? sessions.active : "main";
-  /** 노드 질문 세션을 보고 있으면 기본 대화로 옮긴다. */
+  const diagramKey = inDiagramChat ? sessions.active : lastDiagramKey;
+  /** 노드 질문 세션을 보고 있으면 diagramKey 의 구성도 대화로 옮긴다. */
   const toDiagramChat = () => {
-    if (!inDiagramChat) sessions.select("main");
+    if (!inDiagramChat) sessions.select(diagramKey);
   };
   // Attach a node/group to the chat input: open the 대화 tab, then insert once the input has rendered.
   const [pendingMention, setPendingMention] = useState<{ id: string; label: string } | null>(null);
@@ -826,9 +836,12 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
               onRename: sessions.rename,
               onDelete: sessions.remove,
               deleteDisabled: chat.busy,
+              more: sessions.more,
+              onMore: sessions.loadMore,
             },
             ...(activeSession ? { ask: { nodeId: activeSession.nodeId, nodeLabel: labelOf(activeSession.nodeId) } } : {}),
             ...(activeSummary?.kind === "diagram" ? { emptyHint: NEW_CHAT_HINT } : {}),
+            handoffTo: diagramKey,
             onSend: sendChat,
             onStop: chat.stop,
             onOpenWarnings: openWarnings,

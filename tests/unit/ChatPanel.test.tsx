@@ -335,3 +335,19 @@ test("continuing a cut-off drawing shows which request it is on", () => {
   rerender(<ChatPanel {...base({ busy: true, lines: [card({ mode: "build", step: "drawing", changes: 200, part: { n: 3, of: 3 } })] })} />);
   expect(steps()[1]).toHaveTextContent("이어서 그리는 중 (3/3) · 변경 200개");
 });
+
+test("handoff goes to the given diagram chat (the last one used)", async () => {
+  const onSelect = vi.fn();
+  render(
+    <ChatPanel
+      {...base({
+        ask: ASK,
+        picker: picker("s1", onSelect),
+        handoffTo: "c9",
+        lines: [{ id: "h", kind: "handoff", text: "이중화해 줘", ...T }],
+      })}
+    />,
+  );
+  await userEvent.click(screen.getByRole("button", { name: "구성도 대화로 보내기" }));
+  expect(onSelect).toHaveBeenCalledWith("c9");
+});
