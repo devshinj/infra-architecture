@@ -5,7 +5,7 @@ import { afterEach, beforeAll, expect, test, vi } from "vitest";
 
 import { Canvas, type CanvasOptions, type CanvasProps } from "@/canvas/Canvas";
 import { defaultDisplayOptions } from "@/canvas/display";
-import { NodeMenu } from "@/canvas/NodeMenu";
+import { NodeMenu, placeMenu } from "@/canvas/NodeMenu";
 
 import { fx } from "../fixtures/spike";
 
@@ -146,4 +146,14 @@ test("the hidden reason is not a child of the menu", () => {
   const menu = screen.getByRole("menu");
   expect(menu.querySelector(".node-menu__reason")).toBeNull();
   expect(screen.getByRole("menuitem", { name: "이 노드에 대해 물어보기" })).toHaveAccessibleDescription("막힘");
+});
+
+test("placeMenu: opens toward the pointer when it fits", () => {
+  expect(placeMenu(100, 100, 150, 80, 800, 600)).toEqual({ left: 100, top: 100 });
+});
+test("placeMenu: flips up near the bottom and left near the right edge", () => {
+  expect(placeMenu(700, 560, 150, 80, 800, 600)).toEqual({ left: 550, top: 480 });
+});
+test("placeMenu: never goes past the top-left edge", () => {
+  expect(placeMenu(50, 40, 150, 80, 120, 90)).toEqual({ left: 8, top: 8 });
 });

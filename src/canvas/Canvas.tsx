@@ -1,13 +1,13 @@
 import { applyNodeChanges, Background, ReactFlow, ReactFlowProvider, useReactFlow, useStore, type Node, type NodeChange } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
 
 import { categoryOf } from "@/domain/catalog";
 import { computeMissing } from "@/domain/missing";
 import type { DiagramState } from "@/domain/types";
 import { mergeWarnings, warningsByNode } from "@/domain/warnings";
 
-import { canvasAriaLabels } from "./ariaLabels";
+import { canvasAriaLabels, zoneDescription } from "./ariaLabels";
 import "./canvas.css";
 import { EdgeLayerPortal } from "./EdgeLayer";
 import { emphasisOf } from "./emphasis";
@@ -19,6 +19,8 @@ import { outermostCollapsedAncestor, type DisplayGraph, type DisplayOptions } fr
 import type { Layout, Rect } from "./layout";
 import { NodeMenu } from "./NodeMenu";
 import { nodeTypes } from "./nodeTypes";
+import { NAV_KEYS, navItems, readingOrder, step, tabStop } from "./roving";
+import { NODE_Z, zoneZ } from "./stacking";
 import { prefersReducedMotion, unionRect, useCamera, type Insets, type Viewport } from "./useCamera";
 import { useDiagramView } from "./useDiagramView";
 import { moveMenuFocus, usePopover } from "./usePopover";
@@ -86,6 +88,8 @@ export const FAR_ZOOM = 0.6;
 /** 위치 보기 강조 시간(은빛 링 2회). canvas.css 의 node-pulse 와 맞춘다. */
 export const PULSE_MS = 1600;
 const NO_INSETS: Insets = { left: 0, right: 0 };
+/** 도구 모음 아래 숨 쉴 틈(화면 px). 맞춤은 도구 모음 아래 끝 + 이만큼부터 쓴다. */
+const TOOLBAR_GAP = 8;
 const LAYOUT_FAILED_MESSAGE = "구성도를 배치하지 못했어요. 새로고침하거나 구성을 다시 확인해 주세요.";
 const EMPTY_MESSAGE = "아직 구성도가 비어 있어요. 오른쪽 대화에서 만들고 싶은 서비스를 설명해 보세요.";
 const EXPORT_LAYOUT_FAILED_REASON = "구성도를 배치하지 못해 저장할 그림이 없어요.";
@@ -180,11 +184,27 @@ export function Canvas(props: CanvasProps) {
   const { state, pinned, editMode, options, onOptionsChange, onAutoArrange, autoArrangeDisabled = false, motion } = props;
   const view = useDiagramView(state, pinned, options);
   const empty = Object.keys(state.nodes).length === 0 && Object.keys(state.groups).length === 0;
-  // 전체 보기: 카메라의 화면 맞춤 요청(fitRequest)을 올린다. 부모 요청과 합쳐 어느 쪽이든 늘기만 한다.
+  // 전체 보기: 구성도 전체를 담는 맞춤 요청(fitAllRequest). 자동 정렬 등 부모의 fitRequest 는 읽을 수 있는 줌 규칙을 따른다.
   const [fitTick, setFitTick] = useState(0);
   const flip = (key: ToggleKey) => onOptionsChange({ ...options, [key]: !options[key] });
   // 이미지로 내보내기: 화면에 그려진 뷰포트를 복제해 구성도 전체를 찍는다(exportImage.ts).
   const rootRef = useRef<HTMLDivElement>(null);
+  // 떠 있는 도구 모음이 가리는 위쪽 띠: 화면 맞춤이 맨 윗줄 노드를 그 밑에 두지 않게 카메라 위쪽 여백으로 준다.
+  // 좁은 화면에서는 두 줄로 접히므로 크기가 바뀔 때마다 다시 잰다. 첫 맞춤 전에 값이 있도록 레이아웃 효과에서 잰다.
+  const toolbarRef = useRef<HTMLDivElement>(null);
+  const [toolbarBottom, setToolbarBottom] = useState(0);
+  useLayoutEffect(() => {
+    const el = toolbarRef.current;
+    if (!el) return;
+    const measure = () => setToolbarBottom(el.offsetHeight > 0 ? el.offsetTop + el.offsetHeight : 0);
+    measure();
+    if (typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  const parentInsets = props.cameraInsets ?? NO_INSETS;
+  const insets = useMemo<Insets>(() => (toolbarBottom > 0 ? { ...parentInsets, top: Math.max(parentInsets.top ?? 0, toolbarBottom + TOOLBAR_GAP) } : parentInsets), [parentInsets, toolbarBottom]);
   // 다시 배치하는 중(settled 아님)에는 화면과 배치가 어긋날 수 있어 막는다.
   const exportBlocked = empty || !view.settled || !view.baseLayout || !view.baseDisplay;
   const onExport = async (format: ExportFormat, background: ExportBackground) => {
@@ -203,7 +223,7 @@ export function Canvas(props: CanvasProps) {
 
   return (
     <div ref={rootRef} className="canvas">
-      <div className="canvas__toolbar" role="toolbar" aria-label="캔버스 도구">
+      <div ref={toolbarRef} className="canvas__toolbar" role="toolbar" aria-label="캔버스 도구">
         <div className="canvas__group" role="group" aria-label="보기">
           <ViewMenu options={options} onFlip={flip} />
         </div>
@@ -246,7 +266,7 @@ export function Canvas(props: CanvasProps) {
       ) : (
         view.layout && (
           <ReactFlowProvider>
-            <Flow {...props} fitRequest={(props.fitRequest ?? 0) + fitTick} layout={view.layout} settled={view.settled} layoutFailed={view.layoutFailed} display={view.display} appearing={view.appearing} updated={view.updated} />
+            <Flow {...props} cameraInsets={insets} fitAllRequest={fitTick} layout={view.layout} settled={view.settled} layoutFailed={view.layoutFailed} display={view.display} appearing={view.appearing} updated={view.updated} />
           </ReactFlowProvider>
         )
       )}
@@ -254,7 +274,21 @@ export function Canvas(props: CanvasProps) {
   );
 }
 
+/**
+ * 캔버스 줌을 래퍼의 CSS 변수 --zoom 으로 둔다. canvas.css 가 작은 단추(접기·배지)의 누르는 자리를 화면에서 24px 이상으로
+ * 넓히는 데 쓴다. 줌이 바뀔 때 Flow 전체를 다시 그리지 않게 이 컴포넌트만 구독한다.
+ */
+function ZoomVar({ target }: { target: React.RefObject<HTMLDivElement | null> }) {
+  const zoom = useStore((s) => s.transform[2]);
+  useLayoutEffect(() => {
+    target.current?.style.setProperty("--zoom", String(zoom));
+  }, [zoom, target]);
+  return null;
+}
+
 interface FlowProps extends CanvasProps {
+  /** 전체 보기 요청(Canvas 의 도구 모음). */
+  fitAllRequest: number;
   layout: Layout;
   settled: boolean;
   layoutFailed: boolean;
@@ -263,7 +297,7 @@ interface FlowProps extends CanvasProps {
   updated: Set<string>;
 }
 
-function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onPinnedChange, motion, layout, settled, layoutFailed, fitRequest, display, appearing, updated, diffMarks, fitKey, streaming = false, cameraInsets = NO_INSETS, focusRequest, onMention, onAskNode, askDisabled, askReason, onBadgeClick, onWarnBadgeClick, onPlaced }: FlowProps) {
+function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onPinnedChange, motion, layout, settled, layoutFailed, fitRequest, fitAllRequest, display, appearing, updated, diffMarks, fitKey, streaming = false, cameraInsets = NO_INSETS, focusRequest, onMention, onAskNode, askDisabled, askReason, onBadgeClick, onWarnBadgeClick, onPlaced }: FlowProps) {
   const far = useStore((s) => s.transform[2] < FAR_ZOOM);
   const selected = drawnId(state, options.collapsed, options.selectedId);
   const missingByNode = useMemo(() => computeMissing(state).byNode, [state]);
@@ -283,17 +317,32 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
   }, [fitKey, resetHover]);
   // 위치 보기 강조: 강조할 그려진 노드 id 와 토큰(같은 노드를 다시 눌러도 링이 처음부터 돈다).
   const [pulse, setPulse] = useState<{ ids: Set<string>; token: number } | null>(null);
+  const toggleGroup = useCallback(
+    (id: string) => {
+      const collapsed = new Set(options.collapsed);
+      if (collapsed.has(id)) collapsed.delete(id);
+      else collapsed.add(id);
+      onOptionsChange({ ...options, collapsed });
+    },
+    [options, onOptionsChange],
+  );
+  // 키보드 이동(roving.ts): 캔버스는 Tab 한 칸이다. tabindex 0 은 한 곳(선택 → 마지막 포커스 → 읽는 순서 첫 노드)뿐이고,
+  // 안에서는 화살표·Home·End 로 옮겨 다닌다.
+  const nav = useMemo(() => navItems(layout, display), [layout, display]);
+  const order = useMemo(() => readingOrder(nav), [nav]);
+  const [lastFocus, setLastFocus] = useState<string | null>(null);
+  const stop = tabStop(nav, order, selected, lastFocus);
+  // 노드 목록(computed)은 stop 으로 다시 만들지 않는다(화살표마다 노드 전부를 새로 만들게 된다): 만들 때의 값만 읽고,
+  // stop 이 바뀌면 아래 효과가 tabindex 가 달라진 두 노드만 고친다.
+  const stopRef = useRef(stop);
+  stopRef.current = stop;
+  const descId = useId();
+  const zoneDesc = { open: `${descId}-zone`, collapsed: `${descId}-zone-collapsed` };
 
   const computed = useMemo<Node[]>(() => {
     // 선택이 있으면 선택 기준으로만 흐리고, 호버는 선택이 없을 때만 쓴다.
     const sel = emphasisOf(display.edges, selected);
     const hov = emphasisOf(display.edges, hoverId, known);
-    const toggleGroup = (id: string) => {
-      const collapsed = new Set(options.collapsed);
-      if (collapsed.has(id)) collapsed.delete(id);
-      else collapsed.add(id);
-      onOptionsChange({ ...options, collapsed });
-    };
     const out: Node[] = [];
     for (const lg of Object.values(layout.groups)) {
       const g = display.groups[lg.id];
@@ -304,7 +353,10 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
         type: "zone",
         position: { x: lg.x, y: lg.y },
         data,
-        zIndex: 0,
+        // 안쪽 영역일수록 위(stacking.ts): 바깥 영역이 안쪽 영역의 접기 단추를 가리지 않는다.
+        zIndex: zoneZ(layout.groups, g.id),
+        ariaLabel: g.label,
+        domAttributes: { tabIndex: g.id === stopRef.current ? 0 : -1, "aria-describedby": g.collapsed ? zoneDesc.collapsed : zoneDesc.open },
         draggable: false,
         selectable: false,
         width: lg.width,
@@ -350,9 +402,10 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
         data,
         // 키보드 포커스를 받는 래퍼의 이름표: 화면에서 잘려도 전체 이름(과 보조 글자)을 읽어 준다.
         ariaLabel: n.sub ? `${n.label} · ${n.sub}` : n.label,
+        domAttributes: { tabIndex: n.id === stopRef.current ? 0 : -1 },
         // React Flow 의 선택을 화면 선택과 맞춘다(편집 모드 화살표 옮기기는 React Flow 가 선택한 노드에만 한다).
         selected: ln.id === selected,
-        zIndex: 10,
+        zIndex: NODE_Z,
         draggable: editMode,
         width: ln.width,
         height: ln.height,
@@ -360,10 +413,23 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
       });
     }
     return out;
-  }, [layout, display, selected, appearing, updated, editMode, options, onOptionsChange, diffMarks, missingByNode, warnByNode, onBadgeClick, onWarnBadgeClick, pulse, hoverId, known]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- zoneDesc 는 useId 에서 나와 바뀌지 않는다
+  }, [layout, display, selected, appearing, updated, editMode, options, toggleGroup, diffMarks, missingByNode, warnByNode, onBadgeClick, onWarnBadgeClick, pulse, hoverId, known]);
 
   const [nodes, setNodes] = useState<Node[]>(computed);
   useEffect(() => setNodes(computed), [computed]);
+  useEffect(() => {
+    setNodes((ns) => {
+      let changed = false;
+      const out = ns.map((n) => {
+        const want = n.id === stop ? 0 : -1;
+        if (n.domAttributes?.tabIndex === want) return n;
+        changed = true;
+        return { ...n, domAttributes: { ...n.domAttributes, tabIndex: want } };
+      });
+      return changed ? out : ns;
+    });
+  }, [stop]);
 
   // Camera: fit on board change, follow new nodes calmly while a turn streams (see useCamera).
   const { getViewport, setViewport, flowToScreenPosition, getNode, getNodes } = useReactFlow();
@@ -379,6 +445,7 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
     insets: cameraInsets,
     streaming,
     fitRequest,
+    fitAllRequest,
     settled,
     layoutFailed,
     reducedMotion: prefersReducedMotion(),
@@ -428,7 +495,7 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
       const box = wrap.current?.getBoundingClientRect();
       if (!r || !d.nodes[id] || !box) return null;
       const p = flowToScreenPosition({ x: r.x + r.width / 2, y: r.y + r.height / 2 });
-      const visible = p.x >= box.left + ins.left && p.x <= box.right - ins.right && p.y >= box.top && p.y <= box.bottom - (ins.bottom ?? 0);
+      const visible = p.x >= box.left + ins.left && p.x <= box.right - ins.right && p.y >= box.top + (ins.top ?? 0) && p.y <= box.bottom - (ins.bottom ?? 0);
       return visible ? p : null;
     },
     [flowToScreenPosition],
@@ -450,19 +517,36 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
   // 편집 모드 화살표 옮기기는 React Flow 가 하고, 키를 놓을 때 실제로 움직인 노드만 한 번에 고정 위치로 저장한다.
   // 캡처 단계에서 받아 React Flow 가 첫 칸을 옮기기 전의 시작 위치를 적는다.
   const keyMove = useRef<Map<string, { x: number; y: number }> | null>(null);
+  // 캔버스 안 노드·영역에 키보드 포커스가 있는가(사라진 노드에서 포커스를 되찾을지 가른다).
+  const focusInside = useRef(false);
   useEffect(() => {
     keyMove.current = null;
   }, [selected]);
+  const focusItem = (id: string) => {
+    for (const el of wrap.current?.querySelectorAll<HTMLElement>(".react-flow__node") ?? []) {
+      if (el.dataset.id === id) return el.focus();
+    }
+  };
   const onFlowKeyDownCapture = (e: React.KeyboardEvent<HTMLDivElement>) => {
     const el = e.target as HTMLElement;
     const id = el.classList.contains("react-flow__node") ? el.dataset.id : undefined;
     if (!id) return;
     const infra = el.classList.contains("react-flow__node-infra");
+    // 화살표는 포커스를 옮긴다. 노드를 옮기는 것은 편집 모드에서 선택한 노드에 있을 때뿐이다(React Flow 가 옮긴다).
+    // Alt·Ctrl·Cmd 와 함께 누른 키는 브라우저·보조기기 단축키라 가로채지 않는다.
+    const plain = !e.altKey && !e.ctrlKey && !e.metaKey;
+    if (plain && NAV_KEYS.has(e.key) && !(e.key.startsWith("Arrow") && editMode && infra && getNode(id)?.selected)) {
+      e.preventDefault();
+      const next = step(nav, order, id, e.key);
+      if (next !== null && next !== id) focusItem(next);
+      return;
+    }
     if (e.key === "Enter" || e.key === " ") {
       if (e.key === " ") e.preventDefault();
       if (e.repeat) return;
-      // 영역을 누르면 클릭처럼 선택을 푼다.
-      onSelect(infra && id !== selected ? id : null);
+      // 영역: Space 는 접고 펴고, Enter 는 클릭처럼 선택을 푼다.
+      if (!infra && e.key === " ") toggleGroup(id);
+      else onSelect(infra && id !== selected ? id : null);
     } else if (e.key === "Escape") {
       if (selected !== null) onSelect(null);
     } else if (e.key.startsWith("Arrow") && editMode && infra && keyMove.current === null && getNode(id)?.selected) {
@@ -488,10 +572,48 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
   // 캔버스 밖으로 포커스가 나가면 옮기던 상태를 버린다(나중에 다른 곳에서 키를 놓아도 저장하지 않는다).
   const onFlowBlur = (e: React.FocusEvent<HTMLDivElement>) => {
     if (!e.currentTarget.contains(e.relatedTarget as globalThis.Node | null)) keyMove.current = null;
+    // 포커스가 캔버스 밖 다른 곳으로 갔으면 되찾지 않는다. 받는 곳이 없으면(포커스 받은 노드가 지워져 빠졌거나 빈 곳을 눌렀거나)
+    // 그 노드가 아직 붙어 있을 때만 나간 것으로 친다.
+    const rel = e.relatedTarget as globalThis.Node | null;
+    if (rel && !e.currentTarget.contains(rel)) focusInside.current = false;
+    else if (!rel) {
+      const el = e.target as HTMLElement;
+      queueMicrotask(() => {
+        if (el.isConnected) focusInside.current = false;
+      });
+    }
   };
+  // 포커스를 받은 노드·영역이 다음에 Tab 으로 들어올 곳이 된다(선택이 없을 때).
+  const onFlowFocus = (e: React.FocusEvent<HTMLDivElement>) => {
+    const el = e.target as HTMLElement;
+    const id = el.classList.contains("react-flow__node") ? el.dataset.id : undefined;
+    if (id) focusInside.current = true;
+    if (id && id !== lastFocus) setLastFocus(id);
+  };
+  // 포커스 받은 노드가 사라지면(지워지거나 영역이 접혀) 포커스를 캔버스 안에 남긴다: 접혀 숨었으면 그 접힌 영역, 아니면 Tab 칸.
+  // React Flow 는 노드 래퍼를 다음 그리기에서 붙이므로 다음 프레임에 옮긴다.
+  useEffect(() => {
+    if (!focusInside.current || lastFocus === null || order.includes(lastFocus)) return;
+    const a = document.activeElement;
+    if (a && a !== document.body && !wrap.current?.contains(a)) return;
+    const shown = drawnId(state, options.collapsed, lastFocus);
+    const target = shown !== null && order.includes(shown) ? shown : tabStop(nav, order, selected, null);
+    if (target === null) return;
+    let tries = 0;
+    let raf = 0;
+    const go = () => {
+      for (const el of wrap.current?.querySelectorAll<HTMLElement>(".react-flow__node") ?? []) if (el.dataset.id === target) return el.focus();
+      if (++tries < 5) raf = requestAnimationFrame(go);
+    };
+    go();
+    return () => cancelAnimationFrame(raf);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- 보이는 것이 바뀔 때만 본다
+  }, [order]);
 
   return (
-    <div ref={wrap} tabIndex={-1} className="canvas__flow" data-zoom={far ? "far" : "near"} onKeyDownCapture={onFlowKeyDownCapture} onKeyUp={onFlowKeyUp} onBlur={onFlowBlur}>
+    <div ref={wrap} tabIndex={-1} className="canvas__flow" data-zoom={far ? "far" : "near"} onKeyDownCapture={onFlowKeyDownCapture} onKeyUp={onFlowKeyUp} onBlur={onFlowBlur} onFocus={onFlowFocus}>
+      <div id={zoneDesc.open} hidden>{zoneDescription(false)}</div>
+      <div id={zoneDesc.collapsed} hidden>{zoneDescription(true)}</div>
       <ReactFlow
         nodes={nodes}
         edges={[]}
@@ -536,6 +658,7 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
         }}
       >
         <Background />
+        <ZoomVar target={wrap} />
         <EdgeLayerPortal
           layout={layout}
           edges={display.edges}

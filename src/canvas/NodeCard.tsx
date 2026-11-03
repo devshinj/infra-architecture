@@ -72,9 +72,11 @@ export function NodeCard({ data, dragging }: Pick<NodeProps, "data"> & Partial<N
           </span>
         )}
       </span>
+      {/* 배지는 Tab 칸이 아니다(캔버스는 Tab 한 칸). 키보드로는 노드를 선택하면 설명 탭의 주의할 점, 빠진 정보는 구성 정보 카드에서 본다. */}
       {warn > 0 && (
         <button
           type="button"
+          tabIndex={-1}
           className={`node__badge node__badge--warn${missing > 0 ? " node__badge--pair" : ""} nodrag nopan nokey`}
           aria-label={`경고 ${warn}개`}
           onClick={(e) => {
@@ -88,7 +90,8 @@ export function NodeCard({ data, dragging }: Pick<NodeProps, "data"> & Partial<N
       {missing > 0 && (
         <button
           type="button"
-          className="node__badge node__badge--missing nodrag nopan nokey"
+          tabIndex={-1}
+          className={`node__badge node__badge--missing${warn > 0 ? " node__badge--pair-end" : ""} nodrag nopan nokey`}
           aria-label={`빠진 정보 ${missing}개`}
           onClick={(e) => {
             e.stopPropagation();

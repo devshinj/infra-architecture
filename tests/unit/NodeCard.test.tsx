@@ -65,15 +65,19 @@ test("warn badge is a nodrag button with label", () => {
 test("collapsed group shows hidden count and expand action", () => {
   const onToggle = vi.fn();
   wrap(<GroupBox data={{ label: "내부 구역", groupKind: "subnet_private", collapsed: true, hiddenCount: 7, onToggle }} {...rfProps} />);
-  const btn = screen.getByRole("button", { name: "펼치기 · 노드 7개" });
-  expect(btn).toBeInTheDocument();
+  // 이름 앞에 영역 이름이 붙고(화면에는 숨김), 따로 Tab 칸이 아니며, 펼침 상태를 알린다.
+  const btn = screen.getByRole("button", { name: "내부 구역 펼치기 · 노드 7개" });
+  expect(btn).toHaveAttribute("tabindex", "-1");
+  expect(btn).toHaveAttribute("aria-expanded", "false");
   fireEvent.click(btn);
   expect(onToggle).toHaveBeenCalledOnce();
 });
 
 test("expanded group shows fold button", () => {
   wrap(<GroupBox data={{ label: "VPC", groupKind: "vpc", collapsed: false, hiddenCount: 0, onToggle: vi.fn() }} {...rfProps} />);
-  expect(screen.getByRole("button", { name: "접기" })).toBeInTheDocument();
+  const btn = screen.getByRole("button", { name: "VPC 접기" });
+  expect(btn).toHaveAttribute("aria-expanded", "true");
+  expect(btn).toHaveAttribute("tabindex", "-1");
 });
 
 test("node uses its category color variable on the card root", () => {

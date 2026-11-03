@@ -892,3 +892,30 @@ test("narrow: an error alert stays visible on panel tabs (fixed under the top ba
   expect(rule).toContain("position: fixed");
   expect(rule).toContain("top: calc(var(--topbar-h)");
 });
+
+// ── 대화로 건너뛰기 ──
+test("the first tab stop of the workspace skips to the chat input (from another panel tab too)", () => {
+  hookState.busy = false;
+  render(ui(mk(1, ["a"])));
+  const skip = screen.getByRole("button", { name: "대화로 건너뛰기" });
+  const ws = document.querySelector("[data-workspace]") as HTMLElement;
+  const focusables = ws.querySelectorAll('button, [href], input, textarea, select, [tabindex]:not([tabindex="-1"])');
+  expect(focusables[0]).toBe(skip);
+  fireEvent.click(screen.getByRole("tab", { name: "설명" }));
+  fireEvent.click(skip);
+  expect(screen.getByRole("tab", { name: "대화" })).toHaveAttribute("aria-selected", "true");
+  expect(screen.getByRole("textbox")).toHaveFocus();
+});
+
+test("narrow: 대화로 건너뛰기 also switches the bottom tab to 대화", () => {
+  hookState.busy = false;
+  window.sessionStorage.clear();
+  stubNarrow();
+  render(narrowUi(two()));
+  expect(bottomTab("구성도")).toHaveAttribute("aria-selected", "true");
+  fireEvent.click(screen.getByRole("button", { name: "대화로 건너뛰기" }));
+  expect(bottomTab("대화")).toHaveAttribute("aria-selected", "true");
+  expect(mview()).toBe("panel");
+  expect(screen.getByRole("textbox")).toHaveFocus();
+  window.sessionStorage.clear();
+});
