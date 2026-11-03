@@ -1,0 +1,79 @@
+{
+ "op": "say",
+ "text": "모든 DB 를 이중화하기 위해 각 DB 를 Active/Standby 구조로 변경하고 복제 연결을 추가합니다."
+}
+{
+ "op": "set_assumption",
+ "key": "redundancy",
+ "value": "WAS 는 2 대 이중화, DB 는 Active/Standby 이중화"
+}
+{
+ "op": "add_group",
+ "id": "order-db-vip",
+ "group_kind": "redundancy_group",
+ "label": "주문 DB VIP",
+ "parent": "kr-data"
+}
+{
+ "op": "add_group",
+ "id": "payment-db-vip",
+ "group_kind": "redundancy_group",
+ "label": "결제 DB VIP",
+ "parent": "jp-data"
+}
+{
+ "op": "add_group",
+ "id": "member-db-vip",
+ "group_kind": "redundancy_group",
+ "label": "회원 DB VIP",
+ "parent": "kr-data"
+}
+{
+ "op": "add_group",
+ "id": "product-db-vip",
+ "group_kind": "redundancy_group",
+ "label": "상품 DB VIP",
+ "parent": "jp-data"
+}
+{
+ "op": "add_group",
+ "id": "stock-db-vip",
+ "group_kind": "redundancy_group",
+ "label": "재고 DB VIP",
+ "parent": "kr-data"
+}
+{
+ "op": "add_group",
+ "id": "delivery-db-vip",
+ "group_kind": "redundancy_group",
+ "label": "배송 DB VIP",
+ "parent": "jp-data"
+}
+{
+ "op": "add_group",
+ "id": "review-db-vip",
+ "group_kind": "redundancy_group",
+ "label": "리뷰 DB VIP",
+ "parent": "kr-data"
+}
+{
+ "op": "add_group",
+ "id": "search-db-vip",
+ "group_kind": "redundancy_group",
+ "label": "검색 DB VIP",
+ "parent": "jp-data"
+}
+{
+ "op": "add_group",
+ "id": "coupon-db-vip",
+ "group_kind": "redundancy_group",
+ "label": "쿠폰 DB VIP",
+ "parent": "kr-data"
+}
+{
+ "op": "add_group",
+ "id": "settle-db-vip",
+ "group_kind": "redundancy_group",
+ "label": "정산 DB VIP",
+ "parent": "jp-data"
+}

@@ -1,0 +1,6 @@
+{"op":"add_node","id":"kr-support-was-2","kind":"was","label":"고객센터 WAS #2","sub":"Tomcat 10","parent":"kr-support-vip","attrs":{"sw":"Tomcat 10","hostname":null,"cpu":"4","ram":"16GB","ip":null,"az":"2c"}}
+{"op":"add_node","id":"kr-support-db-a","kind":"db_rdb","label":"고객센터 DB Active","sub":"MySQL 8.0","parent":"kr-data","attrs":{"sw":"MySQL 8.0","hostname":null,"cpu":"4","ram":"16GB","ip":null,"az":"2a","storage":"500GB"}}
+{"op":"add_node","id":"kr-support-db-s","kind":"db_rdb","label":"고객센터 DB Standby","sub":"MySQL 8.0","parent":"kr-data","attrs":{"sw":"MySQL 8.0","hostname":null,"cpu":"4","ram":"16GB","ip":null,"az":"2c","storage":"500GB"}}
+{"op":"add_node","id":"kr-support-cache","kind":"cache","label":"고객센터 캐시","sub":"Redis 7","parent":"kr-data","attrs":{"sw":"ElastiCache Redis","version":"7.1","az":"2a"}}
+{"op":"add_group","id":"jp-support-vip","group_kind":"redundancy_group","label":"고객센터 WAS VIP","parent":"jp-app"}
+{"op":"add_node","id":"jp-support-was-1","kind":"was","label":"고객센터

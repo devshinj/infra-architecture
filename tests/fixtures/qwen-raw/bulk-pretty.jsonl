@@ -1,0 +1,60 @@
+{
+ "op": "say",
+ "text": "모든 DB를 Active/Standby 이중화 구성으로 변경합니다. 각 DB마다 Standby 노드를 추가하고 복제 연결을 그립니다."
+}
+{
+ "op": "set_assumption",
+ "key": "redundancy",
+ "value": "WAS는 2대 이중화, DB는 Active/Standby 이중화"
+}
+{
+ "op": "add_node",
+ "id": "order-db-standby",
+ "kind": "db_rdb",
+ "label": "주문 DB Standby",
+ "sub": "MySQL 8.0",
+ "parent": "kr-data",
+ "attrs": {
+  "sw": "MySQL 8.0",
+  "hostname": null,
+  "cpu": "4",
+  "ram": "16GB",
+  "ip": null,
+  "az": "2c",
+  "storage": "500GB"
+ }
+}
+{
+ "op": "add_node",
+ "id": "payment-db-standby",
+ "kind": "db_rdb",
+ "label": "결제 DB Standby",
+ "sub": "MySQL 8.0",
+ "parent": "kr-data",
+ "attrs": {
+  "sw": "MySQL 8.0",
+  "hostname": null,
+  "cpu": "4",
+  "ram": "16GB",
+  "ip": null,
+  "az": "2c",
+  "storage": "500GB"
+ }
+}
+{
+ "op": "add_node",
+ "id": "member-db-standby",
+ "kind": "db_rdb",
+ "label": "회원 DB Standby",
+ "sub": "MySQL 8.0",
+ "parent": "kr-data",
+ "attrs": {
+  "sw": "MySQL 8.0",
+  "hostname": null,
+  "cpu": "4",
+  "ram": "16GB",
+  "ip": null,
+  "az": "2c",
+  "storage": "500GB"
+ }
+}
