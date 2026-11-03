@@ -17,6 +17,9 @@ export function sessionPayload(s: {
     : { ...base, kind: "diagram", nodeId: null, nodeLabel: null };
 }
 
+/** 잠금을 기다리는 사이 세션이 지워졌을 때(다른 탭에서 삭제 등). */
+export const SESSION_GONE_MESSAGE = "대화를 찾을 수 없어요.";
+
 /** 노드 질문: 노드가 지금 구성도에 없을 때. 질문 세션 화면도 같은 문구를 안내로 보인다. */
 export const NODE_GONE_MESSAGE = "이 노드는 지금 구성도에 없어서 이어서 물을 수 없어요.";
 

@@ -359,4 +359,41 @@ describe("PATCH/DELETE /sessions/:sessionId", () => {
     expect((await listMessages(ids.diagramId)).map((m) => m.content)).toEqual(["기본"]);
     expect((await remove(ids.diagramId, s.id)).status).toBe(404);
   });
+
+  test("while a real turn runs in the session: delete is 409 (the turn finishes and saves), rename is allowed", async () => {
+    const ids = await makeOwnedDiagram();
+    const s = await createSession(ids.diagramId, { kind: "diagram" }, "a");
+    authMock.mockResolvedValue({ user: { id: ids.userId } });
+    let release!: () => void;
+    const gate = new Promise<void>((r) => (release = r));
+    let started!: () => void;
+    const inTurn = new Promise<void>((r) => (started = r));
+    setChatDepsForTest({
+      clef: structure,
+      qwen: {
+        async streamCompletion(m, { onDelta }) {
+          if (m.some((x) => x.content.includes("경고 목록"))) return { text: "", finishReason: "stop" };
+          started();
+          await gate;
+          const text = JSON.stringify({ op: "say", text: "됐어요" });
+          onDelta(text);
+          return { text, finishReason: "stop" };
+        },
+      },
+    });
+    const running = chat(ids.diagramId, { text: "도는 차례", sessionId: s.id });
+    await inTurn;
+
+    const busy = await remove(ids.diagramId, s.id);
+    expect(busy.status).toBe(409);
+    expect(await busy.json()).toEqual({ error: "다른 응답을 처리하고 있어요. 끝난 뒤 다시 보내 주세요." });
+    // 이름 바꾸기는 잠금을 쓰지 않는다(차례가 쓰는 칸과 겹치지 않는다).
+    expect((await rename(ids.diagramId, s.id, { title: "바뀐 이름" })).status).toBe(200);
+
+    release();
+    const evs = await events(await running);
+    expect(evs.at(-1)).toMatchObject({ t: "done" });
+    expect((await listMessages(ids.diagramId, 100, s.id)).map((m) => m.role)).toEqual(["user", "assistant"]);
+    expect((await getSession(ids.diagramId, s.id))?.title).toBe("바뀐 이름");
+  });
 });

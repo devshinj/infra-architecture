@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { auth } from "@/auth";
 import { defaultChatDeps } from "@/server/chat/deps";
+import { SESSION_GONE_MESSAGE } from "@/server/chat/events";
 import {
   BUSY_MESSAGE,
   GENERIC_ERROR_MESSAGE,
@@ -76,6 +77,7 @@ export async function POST(request: Request, ctx: { params: Promise<{ id: string
       if (!outcome.ok && outcome.err instanceof NotFoundError) return NextResponse.json({ error: NOT_FOUND }, { status: 404 });
       if (!outcome.ok && outcome.err instanceof ValidationError) return NextResponse.json({ error: BAD_BODY }, { status: 400 });
       if (outcome.ok && outcome.result.status === "busy") return NextResponse.json({ error: BUSY_MESSAGE }, { status: 409 });
+      if (outcome.ok && outcome.result.status === "session_gone") return NextResponse.json({ error: SESSION_GONE_MESSAGE }, { status: 404 });
       return null;
     },
     errorMessage: GENERIC_ERROR_MESSAGE,

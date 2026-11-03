@@ -6,7 +6,7 @@ import { createThinkStripper } from "@/server/llm/think";
 import { getOwnedDiagram, NotFoundError, ValidationError } from "@/server/projects";
 import { getLatestState } from "@/server/versions";
 
-import { NODE_GONE_MESSAGE, sessionPayload, type ChatEvent, type MessageMeta } from "./events";
+import { NODE_GONE_MESSAGE, SESSION_GONE_MESSAGE, sessionPayload, type ChatEvent, type MessageMeta } from "./events";
 import { resolveIntent } from "./intent";
 import { withDiagramLock } from "./lock";
 import { createMessage, listMessages } from "./messages";
@@ -69,11 +69,18 @@ export async function runAskTurn(args: AskArgs, deps: ChatDeps): Promise<AskTurn
     emit({ t: "error", message: BUSY_MESSAGE });
     return { status: "busy" };
   }
+  if (locked.value === "session_gone") {
+    emit({ t: "error", message: SESSION_GONE_MESSAGE });
+    return { status: "session_gone" };
+  }
   return locked.value === "gone" ? gone() : { status: "ok" };
 }
 
-async function lockedAsk(args: AskArgs, existing: SessionRow | null, deps: ChatDeps): Promise<"ok" | "gone"> {
+async function lockedAsk(args: AskArgs, existing: SessionRow | null, deps: ChatDeps): Promise<"ok" | "gone" | "session_gone"> {
   const { diagramId, nodeId, emit } = args;
+
+  // 잠금을 기다리는 사이 세션이 지워졌을 수 있다(삭제도 같은 잠금을 쓴다). 그러면 아무것도 쓰지 않는다.
+  if (existing && !(await getSession(diagramId, existing.id))) return "session_gone";
 
   // 잠금을 기다리는 사이 구성도 대화가 노드를 지웠을 수 있어 다시 읽는다.
   const state = (await getLatestState(diagramId))?.state;

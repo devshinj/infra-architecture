@@ -4,6 +4,7 @@ import { z } from "zod";
 import { auth } from "@/auth";
 import { NODE_GONE_MESSAGE, runAskTurn, type AskTurnResult } from "@/server/chat/ask";
 import { defaultChatDeps } from "@/server/chat/deps";
+import { SESSION_GONE_MESSAGE } from "@/server/chat/events";
 import { BUSY_MESSAGE, GENERIC_ERROR_MESSAGE } from "@/server/chat/pipeline";
 import { getSession } from "@/server/chat/sessions";
 import { streamTurn } from "@/server/chat/stream";
@@ -70,6 +71,7 @@ export async function POST(request: Request, ctx: { params: Promise<{ id: string
       if (!outcome.ok && outcome.err instanceof NotFoundError) return json(NOT_FOUND, 404);
       if (!outcome.ok && outcome.err instanceof ValidationError) return json(BAD_BODY, 400);
       if (outcome.ok && outcome.result.status === "busy") return json(BUSY_MESSAGE, 409);
+      if (outcome.ok && outcome.result.status === "session_gone") return json(SESSION_GONE_MESSAGE, 404);
       if (outcome.ok && outcome.result.status === "gone") return json(NODE_GONE_MESSAGE, 409);
       return null;
     },
