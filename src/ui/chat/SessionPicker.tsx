@@ -209,6 +209,7 @@ export function SessionPicker({
         ref={trigger}
         type="button"
         className={styles.sessionBtn}
+        data-session-picker=""
         disabled={!canOpen}
         {...(canOpen ? { "aria-haspopup": "dialog" as const, "aria-expanded": open } : {})}
         onClick={() => setOpen((v) => !v)}
