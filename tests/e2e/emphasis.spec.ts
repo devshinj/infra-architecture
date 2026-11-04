@@ -43,18 +43,25 @@ test("selecting API node overlays its edges and dims unrelated zones", async ({ 
   expect(incident).toBe(API1_EDGES);
 
   await expect(page.locator(".group--dimmed").first()).toBeAttached();
-  expect(await page.locator(".group--dimmed").count()).toBeGreaterThanOrEqual(1);
 });
 
 test("zone names are at least 10px on screen at default view", async ({ page }) => {
   await openS4(page);
-  // 기본 맞춤이 끝날 때까지 배율이 안정되기를 기다린다.
-  await expect.poll(() => zoomOf(page), { timeout: 10_000 }).toBeGreaterThanOrEqual(0.5);
-  await page.waitForTimeout(500);
-  expect(await zoomOf(page)).toBeGreaterThanOrEqual(0.5);
+  // 기본 맞춤이 끝날 때까지(배율을 0.3초 사이 두 번 읽어 같을 때까지) 기다린다.
+  await expect
+    .poll(
+      async () => {
+        const a = await zoomOf(page);
+        await page.evaluate(() => new Promise((r) => setTimeout(r, 300)));
+        const b = await zoomOf(page);
+        return a === b ? a : NaN;
+      },
+      { timeout: 10_000 },
+    )
+    .toBeGreaterThanOrEqual(0.5);
 
   const names = page.locator(".group__name");
   expect(await names.count()).toBeGreaterThan(0);
   const px = await names.evaluateAll((els) => els.map((el) => ({ text: el.textContent, px: el.getBoundingClientRect().height / 1.5 })));
-  for (const n of px) expect(n.px, `${n.text} 의 화면 글자 크기`).toBeGreaterThanOrEqual(10);
+  for (const n of px) expect(n.px, `${n.text} 의 화면 글자 크기`).toBeGreaterThanOrEqual(10 - 0.05); // 소수 계산 오차만 봐준다
 });
