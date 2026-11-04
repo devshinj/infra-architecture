@@ -24,7 +24,9 @@ export const LABEL_PX = 14;
 export const SUB_PX = 11;
 const ROOT = "__root";
 const CHANNEL_MARGIN = 24; // main 오른쪽 끝 ↔ 첫 통로, 마지막 통로 ↔ 외부 열
-const CHANNEL_STEP = 12; // 통로끼리 간격 (spacing.edgeEdge)
+const CHANNEL_STEP = 16; // 통로끼리 간격 (spacing.edgeEdge)
+const LINE_GAP = 16; // 공유 조각이 아닌 서로 다른 선이 나란히 지날 때 띄울 최소 간격
+const ROW_GAP_TIGHT = 5; // LINE_GAP 줄이 다음 층까지 밀려날 때 외부 연결의 가로 토막이 다른 가로 토막과 띄우는 간격(예전 값, 6px 부터 붙는다)
 export const CONTENT_WIDTH = NODE.maxWidth - NODE.padLeft - NODE.padRight;
 
 const elk = new ELK();
@@ -36,7 +38,9 @@ const BASE_OPTIONS: Record<string, string> = {
   "elk.spacing.nodeNode": String(NODE.gap),
   "elk.layered.spacing.nodeNodeBetweenLayers": String(NODE.layerGap),
   "elk.spacing.edgeNode": "18",
-  "elk.spacing.edgeEdge": "12",
+  "elk.spacing.edgeEdge": "16",
+  "elk.layered.spacing.edgeEdgeBetweenLayers": "16",
+  "elk.spacing.portPort": "16",
   "elk.layered.mergeEdges": "true",
   "elk.layered.nodePlacement.strategy": "NETWORK_SIMPLEX",
   // Keep edges that leave a group apart; merged they share one line and you cannot tell which goes where.
@@ -457,25 +461,64 @@ export async function layoutDiagram(g: DisplayGraph, pinned: Record<string, { x:
     // Horizontal runs additionally keep off group bottom borders and off other edges' horizontal runs,
     // so a line never hides along a border or merges with an unrelated line.
     const band = (a: Pt, b: Pt): Rect => ({ x: Math.min(a.x, b.x), y: a.y - 4, width: Math.abs(a.x - b.x), height: 8 });
-    const rowBlockers: Rect[] = [
-      ...obstacles,
-      ...groups.map((x) => rects.get(x.id)!).map((r) => band({ x: r.x, y: r.y + r.height }, { x: r.x + r.width, y: r.y + r.height })),
-      ...[...points.values()].flatMap((pts) => pts.slice(1).flatMap((q, i) => (Math.abs(q.y - pts[i].y) < 0.5 ? [band(pts[i], q)] : []))),
-    ];
+    const borderBands = groups.map((x) => rects.get(x.id)!).map((r) => band({ x: r.x, y: r.y + r.height }, { x: r.x + r.width, y: r.y + r.height }));
     const clear = (a: Pt, b: Pt, blockers: Rect[]): boolean => blockers.every((o) => !touches(segmentRect(a, b), o));
+    // 이미 그린 선의 가로 토막과 세로 토막. 세로 토막의 nodes 는 그 선이 닿는 노드다.
+    const rowsDrawn: { x1: number; x2: number; y: number }[] = [];
+    const cols: { x: number; y1: number; y2: number; nodes: string[] }[] = [];
+    const drawn = (pts: Pt[], nodeIds: string[]): void => {
+      pts.slice(1).forEach((q, i) => {
+        const p = pts[i]!;
+        if (Math.abs(q.y - p.y) < 0.5 && Math.abs(q.x - p.x) > 1) rowsDrawn.push({ x1: Math.min(q.x, p.x), x2: Math.max(q.x, p.x), y: q.y });
+        else if (Math.abs(q.x - p.x) < 0.5 && Math.abs(q.y - p.y) > 1) cols.push({ x: q.x, y1: Math.min(q.y, p.y), y2: Math.max(q.y, p.y), nodes: nodeIds });
+      });
+    };
+    for (const [id, pts] of points) {
+      const de = edgeById.get(id);
+      drawn(pts, de ? [de.from, de.to] : []);
+    }
+    // 가로 토막(xa→xb, y)이 다른 선의 가로 토막과 gap 미만으로 붙지 않는지(정확히 gap 은 된다).
+    const rowFree = (xa: number, xb: number, y: number, gap: number): boolean =>
+      rowsDrawn.every((h) => h.x2 < Math.min(xa, xb) || h.x1 > Math.max(xa, xb) || Math.abs(h.y - y) >= gap);
+    const clearRow = (a: Pt, b: Pt, gap: number): boolean => clear(a, b, obstacles) && clear(a, b, borderBands) && rowFree(a.x, b.x, a.y, gap);
+    // 세로 토막(x, ya→yb)이 다른 선의 세로 토막과 LINE_GAP 이상 떨어지는지. 같은 노드(node)에 닿는 선과는 겹쳐도 된다(공유 조각).
+    const colClear = (x: number, ya: number, yb: number, node: string): boolean =>
+      cols.every((c) => {
+        if (Math.min(c.y2, Math.max(ya, yb)) - Math.max(c.y1, Math.min(ya, yb)) <= 1) return true;
+        const gap = Math.abs(c.x - x);
+        return gap >= LINE_GAP || (gap <= 0.5 && c.nodes.includes(node));
+      });
+    const inside = (v: number, a: number, b: number): boolean => v > Math.min(a, b) + 1 && v < Math.max(a, b) - 1;
+    // 세로 토막(x, ya→yb)이 가로지르는 다른 선의 가로 토막 수와, 가로 토막(xa→xb, y)이 가로지르는 세로 토막 수
+    const stubCrossings = (x: number, ya: number, yb: number): number => rowsDrawn.filter((h) => inside(x, h.x1, h.x2) && inside(h.y, ya, yb)).length;
+    const runCrossings = (xa: number, xb: number, y: number): number => cols.filter((c) => inside(c.x, xa, xb) && inside(y, c.y1, c.y2)).length;
     const span = Math.max(...[...rects.values()].map((r) => r.y + r.height)) + NODE.layerGap;
 
+    // 세로 토막의 x 후보: 노드 가운데, 같은 노드에서 나가는 선이 이미 쓰는 세로줄(가까운 순), 그다음 가운데에서 2px 씩.
+    const stubXs = (id: string, m: Rect): number[] => {
+      const c = m.x + m.width / 2;
+      const own = cols.filter((k) => k.nodes.includes(id) && k.x > m.x && k.x < m.x + m.width && (Math.abs(k.y1 - m.y - m.height) < 0.5 || Math.abs(k.y2 - m.y) < 0.5));
+      const out = [c, ...[...new Set(own.map((k) => k.x))].sort((a, b) => Math.abs(a - c) - Math.abs(b - c))];
+      for (let k = 2; c - k >= m.x + 8 || c + k <= m.x + m.width - 8; k += 2) {
+        if (c - k >= m.x + 8) out.push(c - k);
+        if (c + k <= m.x + m.width - 8) out.push(c + k);
+      }
+      return out;
+    };
     // Main side: the nearest row below the node (else above it) reachable by a clear vertical stub and a
-    // clear horizontal run to the channel; null if there is none.
-    const exitRow = (m: Rect, channelX: number): { y: number; from: Pt } | null => {
-      const x = m.x + m.width / 2;
+    // clear horizontal run to the channel; null if there is none. 가로 토막은 다른 선의 가로 토막과 gap 이상,
+    // 세로 토막은 다른 선의 세로 토막과 LINE_GAP 이상 띄운다. stub·n 은 세로 토막만의, 세로·가로 토막 모두의 교차 수.
+    type Exit = { x: number; y: number; y0: number; stub: number; n: number };
+    const exitRow = (mainId: string, m: Rect, channelX: number, gap: number): Exit | null => {
+      const xs = stubXs(mainId, m);
       for (let d = 8; d <= span; d += 2) {
         for (const dir of [1, -1] as const) {
           const y0 = dir === 1 ? m.y + m.height : m.y;
           const y = y0 + dir * d;
-          if (clear({ x, y: y0 + dir * 5 }, { x, y }, obstacles) && clear({ x, y }, { x: channelX, y }, rowBlockers)) {
-            rowBlockers.push(band({ x, y }, { x: channelX, y }));
-            return { y, from: { x, y: y0 } };
+          const x = xs.find((cx) => colClear(cx, y0, y, mainId));
+          if (x !== undefined && clear({ x, y: y0 + dir * 5 }, { x, y }, obstacles) && clearRow({ x, y }, { x: channelX, y }, gap)) {
+            const stub = stubCrossings(x, y0, y);
+            return { x, y, y0, stub, n: stub + runCrossings(x, channelX, y) };
           }
         }
       }
@@ -493,7 +536,7 @@ export async function layoutDiagram(g: DisplayGraph, pinned: Record<string, { x:
       const n = entries.get(id)!;
       const k = used.get(id) ?? 0;
       used.set(id, k + 1);
-      return t.y + t.height / 2 + (k - (n - 1) / 2) * Math.min(8, (t.height - 8) / Math.max(1, n - 1));
+      return t.y + t.height / 2 + (k - (n - 1) / 2) * Math.min(LINE_GAP, (t.height - 8) / Math.max(1, n - 1));
     };
     // If something sits left of the lane node, come in from above instead: a row in the gap above its
     // lane group (only ~NODE.gap tall, so it can run out), then straight down into the node's top.
@@ -502,15 +545,15 @@ export async function layoutDiagram(g: DisplayGraph, pinned: Record<string, { x:
       const t = nodeBoxes.get(laneId) ?? rects.get(laneId)!;
       const y = entryY(laneId, t);
       const others = [...nodeBoxes.entries()].filter(([id]) => id !== laneId).map(([, r]) => air(r));
-      if (clear({ x: channelX, y }, { x: t.x - 1, y }, [...others, ...nameBands, ...rowBlockers.filter((r) => r.height === 8)])) {
-        rowBlockers.push(band({ x: channelX, y }, { x: t.x, y }));
+      const a = { x: channelX, y };
+      const b = { x: t.x - 1, y };
+      if (clear(a, b, others) && clear(a, b, nameBands) && clear(a, b, borderBands) && rowFree(a.x, b.x, y, LINE_GAP)) {
         return [{ x: channelX, y }, { x: t.x, y }];
       }
       const top = rects.get(topOf(laneId))!;
       const tx = t.x + t.width / 2;
       for (let ry = top.y - 8; ry >= top.y - NODE.gap + 4; ry -= 2) {
-        if (clear({ x: channelX, y: ry }, { x: tx, y: ry }, rowBlockers) && clear({ x: tx, y: ry }, { x: tx, y: t.y - 5 }, others)) {
-          rowBlockers.push(band({ x: channelX, y: ry }, { x: tx, y: ry }));
+        if (clearRow({ x: channelX, y: ry }, { x: tx, y: ry }, LINE_GAP) && clear({ x: tx, y: ry }, { x: tx, y: t.y - 5 }, others)) {
           return [{ x: channelX, y: ry }, { x: tx, y: ry }, { x: tx, y: t.y }];
         }
       }
@@ -524,7 +567,13 @@ export async function layoutDiagram(g: DisplayGraph, pinned: Record<string, { x:
         const mainId = fromLane ? e.to : e.from;
         const laneId = fromLane ? e.from : e.to;
         const channelX = mainRight + CHANNEL_MARGIN + i * CHANNEL_STEP;
-        const exit = exitRow(rects.get(mainId)!, channelX);
+        // 다른 선과 LINE_GAP 이상 띄운 줄을 먼저 찾는다. 노드 사이 한 층에 외부 연결이 몰려 그 줄이 모자라면, 줄은
+        // 다른 선의 가로 토막을 넘어 다음 층까지 내려가 선을 더 가로지른다. 그럴 때만 예전 간격(ROW_GAP_TIGHT)의 줄을 쓴다.
+        const m = rects.get(mainId)!;
+        const wide = exitRow(mainId, m, channelX, LINE_GAP);
+        const tight = exitRow(mainId, m, channelX, ROW_GAP_TIGHT);
+        const spilled = !!wide && !!tight && wide.stub > tight.stub && wide.n > tight.n;
+        const exit = wide && !spilled ? wide : tight;
         const into = exit && laneRoute(laneId, channelX);
         if (!exit || !into) {
           // Never throw on arbitrary diagrams: fall back to an elbow and flag it.
@@ -532,7 +581,8 @@ export async function layoutDiagram(g: DisplayGraph, pinned: Record<string, { x:
           points.set(e.id, elbowRoute(rects.get(e.from)!, rects.get(e.to)!));
           return;
         }
-        const pts = [exit.from, { x: exit.from.x, y: exit.y }, { x: channelX, y: exit.y }, ...into];
+        const pts = [{ x: exit.x, y: exit.y0 }, { x: exit.x, y: exit.y }, { x: channelX, y: exit.y }, ...into];
+        drawn(pts, [mainId]);
         points.set(e.id, fromLane ? pts.reverse() : pts);
       });
     // Edges between two different lane groups (rare): a plain elbow.

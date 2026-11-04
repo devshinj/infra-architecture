@@ -27,6 +27,7 @@ test.each(Object.keys(baseline))("%s: 기본 화면은 기준선보다 나빠지
   const { layout, ends } = await defaultViewLayout(load(name));
   const m = measureLayout(layout, ends, 16);
   expect(m.crossings).toBeLessThanOrEqual(base.crossings);
+  expect(m.parallelPx).toBeLessThanOrEqual(base.parallelPx);
   expect(m.throughNode).toBe(0);
   expect(m.bends).toBeLessThanOrEqual(base.bends * 1.05);
 }, LIMIT);
@@ -40,4 +41,14 @@ test.each(Object.keys(baseline))("%s: 모두 펼친 화면은 기준선보다 �
   const m = measureLayout(layout, ends, 16);
   expect(m.parallelPx).toBeLessThanOrEqual(base.parallelPx);
   expect(m.crossings).toBeLessThanOrEqual(base.crossings * 1.05);
+}, LIMIT);
+
+// 평소 화면(샘플, 40개 이하 구성도, 접힌 기본 화면)에서는 서로 다른 선이 16px 미만으로 나란히 지나지 않는다.
+// s1 은 빠진다: WAS 줄 아래 한 층에 외부 열로 가는 연결 4개가 몰려 16px 줄이 3개뿐이라, 다 벌리면 교차가
+// 기준선을 넘는다. 외부 열 줄기를 다시 짜는 2단계 몫이며, 그때까지는 위 기준선 시험이 나빠지지 않게만 지킨다.
+const EVERYDAY = ["s2", "s3", "s4", "s5", "state-25", "state-50", "state-100"];
+
+test.each(EVERYDAY)("%s: default view has no parallel lines closer than 16px", async (name) => {
+  const { layout, ends } = await defaultViewLayout(load(name));
+  expect(measureLayout(layout, ends, 16).parallelPx).toBe(0);
 }, LIMIT);
