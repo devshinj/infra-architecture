@@ -1,0 +1,164 @@
+{
+  "s1": {
+    "default": {
+      "crossings": 12,
+      "sharedPx": 384,
+      "parallelPx": 1375,
+      "throughNode": 0,
+      "bends": 28,
+      "aspect": 0.7974712643678161
+    },
+    "expanded": {
+      "crossings": 12,
+      "sharedPx": 384,
+      "parallelPx": 1375,
+      "throughNode": 0,
+      "bends": 28,
+      "aspect": 0.7974712643678161
+    }
+  },
+  "s2": {
+    "default": {
+      "crossings": 1,
+      "sharedPx": 112,
+      "parallelPx": 390,
+      "throughNode": 0,
+      "bends": 16,
+      "aspect": 0.4373191489361702
+    },
+    "expanded": {
+      "crossings": 1,
+      "sharedPx": 112,
+      "parallelPx": 390,
+      "throughNode": 0,
+      "bends": 16,
+      "aspect": 0.4373191489361702
+    }
+  },
+  "s3": {
+    "default": {
+      "crossings": 3,
+      "sharedPx": 412,
+      "parallelPx": 485,
+      "throughNode": 0,
+      "bends": 34,
+      "aspect": 1.2239716312056739
+    },
+    "expanded": {
+      "crossings": 3,
+      "sharedPx": 412,
+      "parallelPx": 485,
+      "throughNode": 0,
+      "bends": 34,
+      "aspect": 1.2239716312056739
+    }
+  },
+  "s4": {
+    "default": {
+      "crossings": 29,
+      "sharedPx": 614,
+      "parallelPx": 4087,
+      "throughNode": 0,
+      "bends": 80,
+      "aspect": 1.5058814589665654
+    },
+    "expanded": {
+      "crossings": 29,
+      "sharedPx": 614,
+      "parallelPx": 4087,
+      "throughNode": 0,
+      "bends": 80,
+      "aspect": 1.5058814589665654
+    }
+  },
+  "s5": {
+    "default": {
+      "crossings": 1,
+      "sharedPx": 191,
+      "parallelPx": 174,
+      "throughNode": 0,
+      "bends": 20,
+      "aspect": 0.5181992337164751
+    },
+    "expanded": {
+      "crossings": 1,
+      "sharedPx": 191,
+      "parallelPx": 174,
+      "throughNode": 0,
+      "bends": 20,
+      "aspect": 0.5181992337164751
+    }
+  },
+  "state-25": {
+    "default": {
+      "crossings": 21,
+      "sharedPx": 676,
+      "parallelPx": 2859,
+      "throughNode": 0,
+      "bends": 71,
+      "aspect": 1.9408749999999997
+    },
+    "expanded": {
+      "crossings": 21,
+      "sharedPx": 676,
+      "parallelPx": 2859,
+      "throughNode": 0,
+      "bends": 71,
+      "aspect": 1.9408749999999997
+    }
+  },
+  "state-50": {
+    "default": {
+      "crossings": 1,
+      "sharedPx": 82,
+      "parallelPx": 122,
+      "throughNode": 0,
+      "bends": 9,
+      "aspect": 2.114766355140187
+    },
+    "expanded": {
+      "crossings": 117,
+      "sharedPx": 8034,
+      "parallelPx": 32715,
+      "throughNode": 0,
+      "bends": 243,
+      "aspect": 4.114197324414715
+    }
+  },
+  "state-100": {
+    "default": {
+      "crossings": 3,
+      "sharedPx": 84,
+      "parallelPx": 122,
+      "throughNode": 0,
+      "bends": 13,
+      "aspect": 2.2199065420560746
+    },
+    "expanded": {
+      "crossings": 201,
+      "sharedPx": 16767,
+      "parallelPx": 73299,
+      "throughNode": 0,
+      "bends": 539,
+      "aspect": 8.933892733564013
+    }
+  },
+  "state-200": {
+    "default": {
+      "crossings": 3,
+      "sharedPx": 84,
+      "parallelPx": 122,
+      "throughNode": 0,
+      "bends": 13,
+      "aspect": 2.2199065420560746
+    },
+    "expanded": {
+      "crossings": 841,
+      "sharedPx": 159458,
+      "parallelPx": 447763,
+      "throughNode": 0,
+      "bends": 1213,
+      "aspect": 12.65121380846325
+    }
+  }
+}
