@@ -1,6 +1,6 @@
 ---
 title: "clef.ts"
-sidebar_position: 47
+sidebar_position: 48
 ---
 # clef.ts
 
@@ -27,14 +27,14 @@ sidebar_position: 47
 
 ## Relationships
 
+- [pipeline.ts](pipeline.ts.md) (6 shared connections)
 - [ask.ts](ask.ts.md) (5 shared connections)
-- [pipeline.ts](pipeline.ts.md) (5 shared connections)
-- [설계 문서와 계획](설계_문서와_계획.md) (3 shared connections)
+- [createClefClient](createClefClient.md) (3 shared connections)
 - [types.ts](types.ts.md) (2 shared connections)
-- [deps.ts](deps.ts.md) (2 shared connections)
 - [prompt.ts](prompt.ts.md) (2 shared connections)
 - [chat/warnings.ts](chat-warnings.ts.md) (2 shared connections)
 - [설명 생성과 품질 검사](설명_생성과_품질_검사.md) (2 shared connections)
+- [deps.ts](deps.ts.md) (1 shared connections)
 - [3C-1 계획 작업 목록](3C-1_계획_작업_목록.md) (1 shared connections)
 
 ## Source Files

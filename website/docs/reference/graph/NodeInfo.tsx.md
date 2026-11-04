@@ -36,16 +36,18 @@ sidebar_position: 24
 
 ## Relationships
 
-- [DiagramState](DiagramState.md) (7 shared connections)
-- [missing.ts](missing.ts.md) (6 shared connections)
-- [Explanation.tsx](Explanation.tsx.md) (6 shared connections)
-- [catalog.ts](catalog.ts.md) (5 shared connections)
-- [domain/warnings.ts](domain-warnings.ts.md) (5 shared connections)
+- [domain/warnings.ts](domain-warnings.ts.md) (8 shared connections)
+- [DiagramState](DiagramState.md) (6 shared connections)
+- [missing.ts](missing.ts.md) (5 shared connections)
+- [Explanation.tsx](Explanation.tsx.md) (4 shared connections)
+- [MissingChecklist.tsx](MissingChecklist.tsx.md) (3 shared connections)
 - [InfoCard.tsx](InfoCard.tsx.md) (2 shared connections)
+- [useExplanations.ts](useExplanations.ts.md) (2 shared connections)
+- [SessionPicker.tsx](SessionPicker.tsx.md) (1 shared connections)
 - [Review Focus](Review_Focus.md) (1 shared connections)
-- [Legend.tsx](Legend.tsx.md) (1 shared connections)
-- [설계 문서와 계획](설계_문서와_계획.md) (1 shared connections)
-- [ask/route.ts](ask-route.ts.md) (1 shared connections)
+- [motion.ts](motion.ts.md) (1 shared connections)
+- [ZoneNameLayer.tsx](ZoneNameLayer.tsx.md) (1 shared connections)
+- [chat/warnings.ts](chat-warnings.ts.md) (1 shared connections)
 
 ## Source Files
 

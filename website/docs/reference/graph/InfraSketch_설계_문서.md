@@ -1,6 +1,6 @@
 ---
 title: "InfraSketch 설계 문서"
-sidebar_position: 64
+sidebar_position: 79
 sidebar_label: "핵심 노드: InfraSketch 설계 문서"
 ---
 # InfraSketch 설계 문서
@@ -15,7 +15,7 @@ sidebar_label: "핵심 노드: InfraSketch 설계 문서"
 
 ### references
 - 변경 이력과 비파괴 되돌리기 `EXTRACTED`
-- 2단계 계획: AI 대화 `EXTRACTED`
+- [2단계 계획: AI 대화](2단계_계획-_AI_대화.md) `EXTRACTED`
 - 빠진 정보 채우기 `EXTRACTED`
 - Clef-Flash 판정 모델 `EXTRACTED`
 - 1단계 계획: 기반과 캔버스 `EXTRACTED`

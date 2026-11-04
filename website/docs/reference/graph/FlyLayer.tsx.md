@@ -1,6 +1,6 @@
 ---
 title: "FlyLayer.tsx"
-sidebar_position: 36
+sidebar_position: 43
 ---
 # FlyLayer.tsx
 
@@ -36,7 +36,7 @@ sidebar_position: 36
 - [(app)/actions.ts](app-actions.ts.md) (2 shared connections)
 - [Flow](Flow.md) (1 shared connections)
 - [Canvas.tsx](Canvas.tsx.md) (1 shared connections)
-- [DiagramState](DiagramState.md) (1 shared connections)
+- [SessionPicker.tsx](SessionPicker.tsx.md) (1 shared connections)
 
 ## Source Files
 

@@ -1,6 +1,6 @@
 ---
 title: "NodeMenu"
-sidebar_position: 58
+sidebar_position: 69
 ---
 # NodeMenu
 
@@ -21,7 +21,7 @@ sidebar_position: 58
 ## Relationships
 
 - [Canvas.tsx](Canvas.tsx.md) (2 shared connections)
-- [DiagramState](DiagramState.md) (1 shared connections)
+- [SessionPicker.tsx](SessionPicker.tsx.md) (1 shared connections)
 - [Flow](Flow.md) (1 shared connections)
 - [Review Focus](Review_Focus.md) (1 shared connections)
 

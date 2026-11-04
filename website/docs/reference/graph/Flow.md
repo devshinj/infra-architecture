@@ -1,27 +1,24 @@
 ---
 title: "Flow"
-sidebar_position: 15
+sidebar_position: 36
 ---
 # Flow
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 28 nodes · cohesion 0.10
+> 19 nodes · cohesion 0.16
 
 ## Key Concepts
 
-- **Flow()** (31 connections) — `src/canvas/Canvas.tsx`
+- **Flow()** (33 connections) — `src/canvas/Canvas.tsx`
 - **CanvasProps** (16 connections) — `src/canvas/Canvas.tsx`
-- **roving.ts** (16 connections) — `src/canvas/roving.ts`
+- **Task 5: 화면 — 경고 배지, 설명 패널 "주의할 점", 대화 줄** (7 connections) — `docs/superpowers/plans/2026-10-30-infrasketch-phase3b-warnings.md`
 - **ariaLabels.ts** (5 connections) — `src/canvas/ariaLabels.ts`
-- **step()** (4 connections) — `src/canvas/roving.ts`
+- **warningsByNode()** (4 connections) — `src/domain/warnings.ts`
 - **canvasAriaLabels()** (3 connections) — `src/canvas/ariaLabels.ts`
 - **zoneDescription()** (3 connections) — `src/canvas/ariaLabels.ts`
 - **.onOptionsChange()** (3 connections) — `src/canvas/Canvas.tsx`
 - **.onWarnBadgeClick()** (3 connections) — `src/canvas/Canvas.tsx`
-- **navItems()** (3 connections) — `src/canvas/roving.ts`
-- **readingOrder()** (3 connections) — `src/canvas/roving.ts`
-- **tabStop()** (3 connections) — `src/canvas/roving.ts`
 - **.onAskNode()** (2 connections) — `src/canvas/Canvas.tsx`
 - **.onAutoArrange()** (2 connections) — `src/canvas/Canvas.tsx`
 - **.onBadgeClick()** (2 connections) — `src/canvas/Canvas.tsx`
@@ -30,38 +27,35 @@ sidebar_position: 15
 - **.onPlaced()** (2 connections) — `src/canvas/Canvas.tsx`
 - **.onSelect()** (2 connections) — `src/canvas/Canvas.tsx`
 - **ZoomVar()** (2 connections) — `src/canvas/Canvas.tsx`
-- **gap()** (2 connections) — `src/canvas/roving.ts`
-- **NAV_KEYS** (2 connections) — `src/canvas/roving.ts`
-- **NavItem** (2 connections) — `src/canvas/roving.ts`
 - **DIRECTION** (1 connections) — `src/canvas/ariaLabels.ts`
 - **.onImportSample()** (1 connections) — `src/canvas/Canvas.tsx`
-- *... and 3 more nodes in this community*
 
 ## Relationships
 
-- [Canvas.tsx](Canvas.tsx.md) (18 shared connections)
+- [Canvas.tsx](Canvas.tsx.md) (14 shared connections)
+- [Layout](Layout.md) (5 shared connections)
 - [useCamera.ts](useCamera.ts.md) (4 shared connections)
-- [Layout](Layout.md) (3 shared connections)
-- [layout.ts](layout.ts.md) (3 shared connections)
-- [domain/warnings.ts](domain-warnings.ts.md) (2 shared connections)
-- [useChatTurn.ts](useChatTurn.ts.md) (2 shared connections)
-- [display.ts](display.ts.md) (2 shared connections)
+- [domain/warnings.ts](domain-warnings.ts.md) (3 shared connections)
+- [InfoCard.tsx](InfoCard.tsx.md) (2 shared connections)
+- [(app)/actions.ts](app-actions.ts.md) (2 shared connections)
 - [연결선 그리기](연결선_그리기.md) (2 shared connections)
-- [catalog.ts](catalog.ts.md) (1 shared connections)
-- [(app)/actions.ts](app-actions.ts.md) (1 shared connections)
+- [chat/warnings.ts](chat-warnings.ts.md) (1 shared connections)
+- [useSessions.ts](useSessions.ts.md) (1 shared connections)
+- [lines.ts](lines.ts.md) (1 shared connections)
+- [NodeCard.tsx](NodeCard.tsx.md) (1 shared connections)
 - [missing.ts](missing.ts.md) (1 shared connections)
-- [InfoCard.tsx](InfoCard.tsx.md) (1 shared connections)
 
 ## Source Files
 
+- `docs/superpowers/plans/2026-10-30-infrasketch-phase3b-warnings.md`
 - `src/canvas/Canvas.tsx`
 - `src/canvas/ariaLabels.ts`
-- `src/canvas/roving.ts`
+- `src/domain/warnings.ts`
 
 ## Audit Trail
 
-- EXTRACTED: 80 (99%)
-- INFERRED: 1 (1%)
+- EXTRACTED: 62 (91%)
+- INFERRED: 6 (9%)
 - AMBIGUOUS: 0 (0%)
 
 ---

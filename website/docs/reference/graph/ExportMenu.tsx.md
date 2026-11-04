@@ -1,12 +1,12 @@
 ---
 title: "ExportMenu.tsx"
-sidebar_position: 31
+sidebar_position: 33
 ---
 # ExportMenu.tsx
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 19 nodes · cohesion 0.13
+> 20 nodes · cohesion 0.13
 
 ## Key Concepts
 
@@ -15,6 +15,7 @@ sidebar_position: 31
 - **ExportBackground** (4 connections) — `src/canvas/exportImage.ts`
 - **ExportFormat** (4 connections) — `src/canvas/exportImage.ts`
 - **.onExport()** (4 connections) — `src/canvas/ExportMenu.tsx`
+- **moveMenuFocus()** (3 connections) — `src/canvas/usePopover.ts`
 - **LIGHT_BACKGROUND** (2 connections) — `src/canvas/exportImage.ts`
 - **ExportMenuProps** (2 connections) — `src/canvas/ExportMenu.tsx`
 - **IconChevron()** (2 connections) — `src/canvas/ExportMenu.tsx`
@@ -32,18 +33,19 @@ sidebar_position: 31
 
 ## Relationships
 
-- [Canvas.tsx](Canvas.tsx.md) (9 shared connections)
+- [Canvas.tsx](Canvas.tsx.md) (6 shared connections)
+- [SessionPicker.tsx](SessionPicker.tsx.md) (5 shared connections)
 - [exportImage.ts](exportImage.ts.md) (4 shared connections)
-- [DiagramState](DiagramState.md) (1 shared connections)
 
 ## Source Files
 
 - `src/canvas/ExportMenu.tsx`
 - `src/canvas/exportImage.ts`
+- `src/canvas/usePopover.ts`
 
 ## Audit Trail
 
-- EXTRACTED: 37 (100%)
+- EXTRACTED: 39 (100%)
 - INFERRED: 0 (0%)
 - AMBIGUOUS: 0 (0%)
 

@@ -1,6 +1,6 @@
 ---
 title: "text.ts"
-sidebar_position: 53
+sidebar_position: 63
 ---
 # text.ts
 
@@ -10,8 +10,8 @@ sidebar_position: 53
 
 ## Key Concepts
 
-- **text.ts** (10 connections) — `src/canvas/text.ts`
-- **textWidth()** (8 connections) — `src/canvas/text.ts`
+- **textWidth()** (14 connections) — `src/canvas/text.ts`
+- **text.ts** (12 connections) — `src/canvas/text.ts`
 - **truncate()** (5 connections) — `src/canvas/text.ts`
 - **charWidth()** (4 connections) — `src/canvas/text.ts`
 - **ratio()** (4 connections) — `src/canvas/text.ts`
@@ -22,8 +22,11 @@ sidebar_position: 53
 
 ## Relationships
 
-- [layout.ts](layout.ts.md) (6 shared connections)
+- [layout.ts](layout.ts.md) (7 shared connections)
+- [edgeLabels.ts](edgeLabels.ts.md) (3 shared connections)
 - [exportImage.ts](exportImage.ts.md) (3 shared connections)
+- [layoutMetrics.ts](layoutMetrics.ts.md) (3 shared connections)
+- [ZoneNameLayer.tsx](ZoneNameLayer.tsx.md) (1 shared connections)
 
 ## Source Files
 
@@ -31,7 +34,7 @@ sidebar_position: 53
 
 ## Audit Trail
 
-- EXTRACTED: 23 (100%)
+- EXTRACTED: 31 (100%)
 - INFERRED: 0 (0%)
 - AMBIGUOUS: 0 (0%)
 

@@ -1,6 +1,6 @@
 ---
 title: "auth"
-sidebar_position: 73
+sidebar_position: 87
 ---
 # auth
 
@@ -27,7 +27,7 @@ sidebar_position: 73
 - GET() `EXTRACTED`
 
 ### contains
-- auth.ts `EXTRACTED`
+- [auth.ts](auth.ts.md) `EXTRACTED`
 
 ### imports
 - [(app)/actions.ts](app-actions.ts.md) `EXTRACTED`

@@ -7,14 +7,14 @@ sidebar_label: "핵심 노드: auth"
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 21 nodes · cohesion 0.15
+> 21 nodes · cohesion 0.16
 
 ## Key Concepts
 
 - **Shell.tsx** (22 connections) — `src/ui/Shell.tsx`
 - **(app)/layout.tsx** (11 connections) — `src/app/(app)/layout.tsx`
 - **(app)/page.tsx** (10 connections) — `src/app/(app)/page.tsx`
-- **useShell()** (8 connections) — `src/ui/Shell.tsx`
+- **src_ui_app_module** (9 connections)
 - **AppLayout()** (5 connections) — `src/app/(app)/layout.tsx`
 - **Home()** (5 connections) — `src/app/(app)/page.tsx`
 - **listProjects()** (5 connections) — `src/server/projects.ts`
@@ -35,13 +35,14 @@ sidebar_label: "핵심 노드: auth"
 
 ## Relationships
 
-- [Sidebar.tsx](Sidebar.tsx.md) (7 shared connections)
-- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (6 shared connections)
-- [(app)/actions.ts](app-actions.ts.md) (5 shared connections)
+- [Sidebar.tsx](Sidebar.tsx.md) (9 shared connections)
+- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (5 shared connections)
 - [auth](auth.md) (4 shared connections)
-- [schema.ts](schema.ts.md) (4 shared connections)
-- [ChatPanel.tsx](ChatPanel.tsx.md) (3 shared connections)
-- [DiagramState](DiagramState.md) (2 shared connections)
+- [auth.ts](auth.ts.md) (4 shared connections)
+- [(app)/actions.ts](app-actions.ts.md) (4 shared connections)
+- [SessionPicker.tsx](SessionPicker.tsx.md) (2 shared connections)
+- [DiagramState](DiagramState.md) (1 shared connections)
+- [ChatPanel.tsx](ChatPanel.tsx.md) (1 shared connections)
 
 ## Source Files
 

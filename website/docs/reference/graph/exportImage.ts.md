@@ -1,26 +1,27 @@
 ---
 title: "exportImage.ts"
-sidebar_position: 20
+sidebar_position: 18
 ---
 # exportImage.ts
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 24 nodes · cohesion 0.12
+> 25 nodes · cohesion 0.11
 
 ## Key Concepts
 
 - **exportImage.ts** (35 connections) — `src/canvas/exportImage.ts`
 - **exportDiagramImage()** (11 connections) — `src/canvas/exportImage.ts`
+- **neutralizeClone()** (5 connections) — `src/canvas/exportImage.ts`
 - **exportFileName()** (4 connections) — `src/canvas/exportImage.ts`
 - **diagramBounds()** (3 connections) — `src/canvas/exportImage.ts`
+- **edgeLabels()** (3 connections) — `src/canvas/exportImage.ts`
 - **keepInExport()** (3 connections) — `src/canvas/exportImage.ts`
 - **labelRect()** (3 connections) — `src/canvas/exportImage.ts`
-- **neutralizeClone()** (3 connections) — `src/canvas/exportImage.ts`
+- **제약** (2 connections) — `docs/superpowers/specs/2026-11-04-layout-harmony-stage1-design.md`
 - **buildStage()** (2 connections) — `src/canvas/exportImage.ts`
 - **decodeSvgDataUrl()** (2 connections) — `src/canvas/exportImage.ts`
 - **download()** (2 connections) — `src/canvas/exportImage.ts`
-- **edgeLabels()** (2 connections) — `src/canvas/exportImage.ts`
 - **sanitizeFileName()** (2 connections) — `src/canvas/exportImage.ts`
 - **html-to-image** (1 connections) — `html-to-image`
 - **ref_html_to_image** (1 connections)
@@ -40,20 +41,23 @@ sidebar_position: 20
 - [Canvas.tsx](Canvas.tsx.md) (5 shared connections)
 - [ExportMenu.tsx](ExportMenu.tsx.md) (4 shared connections)
 - [text.ts](text.ts.md) (3 shared connections)
-- [연결선 개발용 화면](연결선_개발용_화면.md) (2 shared connections)
-- [layout.ts](layout.ts.md) (2 shared connections)
-- [Layout](Layout.md) (1 shared connections)
+- [연결선 그리기](연결선_그리기.md) (2 shared connections)
+- [Layout](Layout.md) (2 shared connections)
+- [layoutMetrics.ts](layoutMetrics.ts.md) (2 shared connections)
+- [구성도 배치 조화 1단계 — 선택 강조와 선 간격](구성도_배치_조화_1단계_—_선택_강조와_선_간격.md) (1 shared connections)
 - [display.ts](display.ts.md) (1 shared connections)
+- [layout.ts](layout.ts.md) (1 shared connections)
 
 ## Source Files
 
+- `docs/superpowers/specs/2026-11-04-layout-harmony-stage1-design.md`
 - `html-to-image`
 - `src/canvas/exportImage.ts`
 
 ## Audit Trail
 
-- EXTRACTED: 50 (98%)
-- INFERRED: 1 (2%)
+- EXTRACTED: 51 (93%)
+- INFERRED: 4 (7%)
 - AMBIGUOUS: 0 (0%)
 
 ---
