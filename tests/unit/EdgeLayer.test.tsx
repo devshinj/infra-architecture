@@ -184,3 +184,226 @@ test("appearing edges are not faded by hover", () => {
   expect(document.querySelector('[data-edge-id="e3"]')).not.toHaveClass("edge--faded");
   expect(document.querySelector('[data-edge-id="e1"]')).not.toHaveClass("edge--faded");
 });
+
+const toD = (pts: { x: number; y: number }[]) => pts.map((p, i) => `${i ? "L" : "M"} ${p.x} ${p.y}`).join(" ");
+
+test("selecting a node overlays each incident edge once with its own kind", () => {
+  render(<EdgeLayer layout={fanOutLayout} edges={fanOutEdges} {...base} selectedId="w1" />);
+  expect(document.querySelectorAll(".edge-emph")).toHaveLength(1);
+  expect(document.querySelector(".edge-emph")).toHaveAttribute("data-mode", "select");
+  expect(document.querySelectorAll('[data-emph-edge="e1"]')).toHaveLength(1);
+  expect(document.querySelector('[data-emph-edge="e2"]')).toBeNull();
+  const line = document.querySelector('[data-emph-edge="e1"] path.edge-emph__line')!;
+  expect(line).toHaveClass("edge-line--request");
+  expect(line.getAttribute("d")).toBe(toD(fanOutLayout.edges[0].points));
+  expect(document.querySelectorAll('[data-emph-edge="e1"] path.edge-emph__glow')).toHaveLength(1);
+  expect(document.querySelectorAll('[data-emph-edge="e1"] path.edge-emph__arrow')).toHaveLength(1);
+  // 이어진 선의 바닥 화살표는 겹선 아래로 흐리고, 이어지지 않은 연결은 지금처럼 통째로 흐린다.
+  expect(document.querySelector('[data-edge-id="e1"] .edge-arrow')).toHaveClass("edge--under");
+  expect(document.querySelector('[data-edge-id="e1"]')).not.toHaveClass("edge--dim");
+  expect(document.querySelector('[data-edge-id="e2"]')).toHaveClass("edge--dim");
+  expect(document.querySelector('[data-edge-id="e2"] .edge-arrow')).not.toHaveClass("edge--under");
+});
+
+test("layers are ordered base, emphasis, motion, edges", () => {
+  render(<EdgeLayer layout={fanOutLayout} edges={fanOutEdges} {...base} selectedId="w1" />);
+  const svg = document.querySelector("svg.edge-layer")!;
+  const order = [...svg.children].map((c) =>
+    c.classList.contains("edge-base") ? "base" : c.classList.contains("edge-emph") ? "emph" : c.classList.contains("edge-motion") ? "motion" : c.classList.contains("edge") ? "edge" : "?",
+  );
+  expect(order).toEqual(["base", "emph", "motion", "edge", "edge"]);
+});
+
+test("no overlay without selection or hover", () => {
+  render(<EdgeLayer layout={fanOutLayout} edges={fanOutEdges} {...base} />);
+  expect(document.querySelectorAll(".edge-emph")).toHaveLength(0);
+  expect(document.querySelectorAll(".edge--under")).toHaveLength(0);
+});
+
+test("async edge on a shared request trunk is overlaid as async", () => {
+  const edges = [de("e1", "alb", "w1"), de("e2", "alb", "w2", "async")];
+  render(<EdgeLayer layout={fanOutLayout} edges={edges} {...base} selectedId="e2" />);
+  const line = document.querySelector('[data-emph-edge="e2"] path.edge-emph__line')!;
+  expect(line).toHaveClass("edge-line--async");
+  expect(line).not.toHaveClass("edge-line--request");
+  expect(document.querySelector('[data-emph-edge="e2"] path.edge-emph__arrow')).toHaveClass("edge-arrow--async");
+});
+
+test("replication overlay keeps its core stripe", () => {
+  const layout = lay([{ id: "r", points: [{ x: 10, y: 10 }, { x: 10, y: 80 }] }]);
+  render(<EdgeLayer layout={layout} edges={[de("r", "a", "b", "replication")]} {...base} selectedId="r" />);
+  const g = document.querySelector('[data-emph-edge="r"]')!;
+  expect(g.querySelector("path.edge-emph__line")).toHaveClass("edge-line--replication");
+  expect(g.querySelector("path.edge-line--replication-core")!.getAttribute("d")).toBe(toD(layout.edges[0].points));
+});
+
+test("junction off the selected path is dimmed", () => {
+  const layout = lay([
+    { id: "e1", points: [{ x: 165, y: 52 }, { x: 165, y: 110 }, { x: 85, y: 110 }, { x: 85, y: 170 }] },
+    { id: "e2", points: [{ x: 165, y: 52 }, { x: 165, y: 110 }, { x: 245, y: 110 }, { x: 245, y: 140 }, { x: 225, y: 140 }, { x: 225, y: 200 }] },
+    { id: "e3", points: [{ x: 165, y: 52 }, { x: 165, y: 110 }, { x: 245, y: 110 }, { x: 245, y: 140 }, { x: 265, y: 140 }, { x: 265, y: 200 }] },
+  ]);
+  const edges = [de("e1", "alb", "w1"), de("e2", "alb", "w2"), de("e3", "alb", "w3")];
+  render(<EdgeLayer layout={layout} edges={edges} {...base} selectedId="w1" />);
+  const at = (x: number, y: number) => document.querySelector(`circle[data-junction][cx="${x}"][cy="${y}"]`);
+  expect(at(165, 110)).not.toBeNull();
+  expect(at(245, 140)).not.toBeNull();
+  expect(at(165, 110)).not.toHaveClass("edge--dim");
+  expect(at(245, 140)).toHaveClass("edge--dim");
+});
+
+test("trunk under the overlay is dimmed but its motion is not", () => {
+  render(<EdgeLayer layout={fanOutLayout} edges={fanOutEdges} {...base} motion selectedId="w1" />);
+  const trunk = document.querySelector('g.edge-seg[data-seg-shared="true"]')!;
+  expect(trunk).toHaveClass("edge--under");
+  expect(trunk).not.toHaveClass("edge--dim");
+  expect(trunk.querySelector("[data-motion-seg]")).toBeNull();
+  const segs = [...document.querySelectorAll("[data-motion-seg]")];
+  expect(segs).toHaveLength(document.querySelectorAll("g.edge-seg").length);
+  for (const m of segs) {
+    expect(m.parentElement).toHaveClass("edge-motion");
+    expect(m).toHaveClass("edge-motion__seg");
+  }
+  const trunkKey = [...document.querySelectorAll("g.edge-seg")].indexOf(trunk);
+  const trunkMotion = segs[trunkKey];
+  expect(trunkMotion).not.toHaveClass("edge--dim");
+  expect(trunkMotion).not.toHaveClass("edge--under");
+  expect(trunkMotion).not.toHaveClass("edge--faded");
+  // e2 만 지나는 갈래의 움직임은 바닥과 같이 흐린다.
+  const e2Branch = [...document.querySelectorAll("g.edge-seg")].findIndex((s) => s.getAttribute("data-edge-ids") === "e2");
+  expect(segs[e2Branch]).toHaveClass("edge--dim");
+});
+
+test("hover overlays without glow", () => {
+  render(<EdgeLayer layout={fanOutLayout} edges={fanOutEdges} {...base} hoverId="w1" />);
+  expect(document.querySelectorAll('.edge-emph[data-mode="hover"]')).toHaveLength(1);
+  expect(document.querySelectorAll(".edge-emph__glow")).toHaveLength(0);
+  expect(document.querySelectorAll("[data-emph-edge]")).toHaveLength(1);
+  expect(document.querySelector('[data-emph-edge="e1"]')).not.toBeNull();
+  // 호버는 겹선 아래 바닥 선을 흐리지 않고, 이어지지 않은 선만 지금처럼 0.45로 흐린다.
+  expect(document.querySelectorAll("g.edge-seg.edge--under")).toHaveLength(0);
+  expect(document.querySelector('[data-edge-id="e2"]')).toHaveClass("edge--faded");
+});
+
+test("selecting an original id of a merged edge overlays the display edge", () => {
+  const layout = lay([{ id: "m", points: [{ x: 10, y: 10 }, { x: 10, y: 80 }] }]);
+  const merged: DisplayEdge = { id: "m", from: "a", to: "b", edgeKind: "request", sourceEdgeIds: ["a", "b"] };
+  render(<EdgeLayer layout={layout} edges={[merged]} {...base} selectedId="b" />);
+  expect(document.querySelectorAll("[data-emph-edge]")).toHaveLength(1);
+  expect(document.querySelector('[data-emph-edge="m"]')).not.toBeNull();
+});
+
+test("degraded edge is overlaid along its elbow", () => {
+  const pts = [{ x: 10, y: 10 }, { x: 10, y: 50 }, { x: 90, y: 50 }, { x: 90, y: 100 }];
+  const layout = lay([{ id: "d", points: pts, degraded: true }]);
+  render(<EdgeLayer layout={layout} edges={[de("d", "a", "b")]} {...base} selectedId="d" />);
+  expect(document.querySelector('[data-emph-edge="d"] path.edge-emph__line')!.getAttribute("d")).toBe(toD(pts));
+});
+
+test("hover sinks the incident base arrow under the overlay arrow, not its line", () => {
+  render(<EdgeLayer layout={fanOutLayout} edges={fanOutEdges} {...base} hoverId="w1" />);
+  expect(document.querySelector('[data-edge-id="e1"] .edge-arrow')).toHaveClass("edge--under");
+  expect(document.querySelector('[data-edge-id="e2"] .edge-arrow')).not.toHaveClass("edge--under");
+  expect(document.querySelectorAll("g.edge-seg.edge--under")).toHaveLength(0);
+});
+
+test("motion host of a degraded segment keeps the degraded opacity", () => {
+  const layout = lay([{ id: "d", points: [{ x: 10, y: 10 }, { x: 10, y: 50 }, { x: 90, y: 50 }], degraded: true }]);
+  render(<EdgeLayer layout={layout} edges={[de("d", "a", "b")]} {...base} motion />);
+  const hosts = [...document.querySelectorAll("[data-motion-seg]")];
+  expect(hosts.length).toBeGreaterThan(0);
+  for (const h of hosts) expect(h).toHaveClass("edge--degraded");
+});
+
+// 노드 n(0,0 100×40) 오른쪽 변에서 같은 이름 셋, 다른 이름 하나가 나가고, 이어지지 않은 선에도 같은 이름이 있다.
+const labelled = () => {
+  const layout = lay([
+    { id: "h1", points: [{ x: 100, y: 5 }, { x: 200, y: 5 }], labelAt: { x: 150, y: 5 } },
+    { id: "h2", points: [{ x: 100, y: 15 }, { x: 200, y: 45 }], labelAt: { x: 150, y: 30 } },
+    { id: "h3", points: [{ x: 200, y: 85 }, { x: 100, y: 25 }], labelAt: { x: 150, y: 55 } },
+    { id: "s1", points: [{ x: 100, y: 35 }, { x: 200, y: 125 }], labelAt: { x: 150, y: 80 } },
+    { id: "far", points: [{ x: 10, y: 150 }, { x: 10, y: 220 }], labelAt: { x: 10, y: 185 } },
+  ]);
+  const edges = [
+    de("h1", "n", "a", "request", "HTTP"),
+    de("h2", "n", "b", "request", "HTTP"),
+    de("h3", "c", "n", "request", "HTTP"),
+    de("s1", "n", "d", "request", "SQL"),
+    de("far", "x", "y", "request", "HTTP"),
+  ];
+  return { layout, edges, rect: { x: 0, y: 0, width: 100, height: 40 } };
+};
+const labelTexts = () => [...document.querySelectorAll(".edge-label")].map((t) => t.textContent);
+
+test("selected node shows each label text once", () => {
+  const { layout, edges, rect } = labelled();
+  render(<EdgeLayer layout={layout} edges={edges} {...base} hoverLabels={false} selectedId="n" selectedRect={rect} />);
+  const texts = labelTexts();
+  expect(new Set(texts).size).toBe(texts.length);
+  expect(texts.sort()).toEqual(["HTTP ×3", "SQL"]);
+  const merged = document.querySelector("text.edge-label--merged")!;
+  expect(merged).toHaveTextContent("HTTP ×3");
+  expect(merged.getAttribute("x")).toBe("114");
+  expect(merged.getAttribute("y")).toBe("15");
+  // 오른쪽 변 옆이므로 글자는 그 자리에서 바깥(오른쪽)으로 시작한다.
+  expect(merged.getAttribute("data-anchor")).toBe("start");
+  expect((merged as SVGTextElement).style.textAnchor).toBe("start");
+  // 하나뿐인 이름은 제 선 안에서 원래 자리에 둔다.
+  const sql = document.querySelector('[data-edge-id="s1"] .edge-label')!;
+  expect(sql).toHaveTextContent("SQL");
+  expect(sql).not.toHaveClass("edge-label--merged");
+  expect(sql.getAttribute("x")).toBe("150");
+  for (const id of ["h1", "h2", "h3"]) expect(document.querySelector(`[data-edge-id="${id}"] .edge-label`)).toBeNull();
+});
+
+test("hoverLabels off: labels of non-incident edges are hidden while selected", () => {
+  const layout = lay([
+    { id: "e1", points: [{ x: 10, y: 10 }, { x: 10, y: 80 }], labelAt: { x: 10, y: 45 } },
+    { id: "e2", points: [{ x: 100, y: 10 }, { x: 100, y: 80 }], labelAt: { x: 100, y: 45 } },
+  ]);
+  const edges = [de("e1", "a", "b", "request", "HTTPS"), de("e2", "c", "d", "request", "HTTPS")];
+  const { rerender } = render(<EdgeLayer layout={layout} edges={edges} {...base} hoverLabels={false} />);
+  expect(labelTexts()).toEqual(["HTTPS", "HTTPS"]);
+  rerender(<EdgeLayer layout={layout} edges={edges} {...base} hoverLabels={false} selectedId="a" selectedRect={{ x: 0, y: -30, width: 20, height: 40 }} />);
+  expect(labelTexts()).toEqual(["HTTPS"]);
+  expect(document.querySelector('[data-edge-id="e1"] .edge-label')).not.toBeNull();
+  expect(document.querySelector('[data-edge-id="e2"] .edge-label')).toBeNull();
+});
+
+test("edge selection shows its own label unchanged", () => {
+  const { layout, edges } = labelled();
+  render(<EdgeLayer layout={layout} edges={edges} {...base} hoverLabels={false} selectedId="h2" />);
+  expect(labelTexts()).toEqual(["HTTP"]);
+  const t = document.querySelector('[data-edge-id="h2"] .edge-label')!;
+  expect(t.getAttribute("x")).toBe("150");
+  expect(t.getAttribute("y")).toBe("30");
+  expect(document.querySelector(".edge-label--merged")).toBeNull();
+});
+
+test("hover keeps per-edge labels (no merging)", () => {
+  const { layout, edges } = labelled();
+  render(<EdgeLayer layout={layout} edges={edges} {...base} hoverLabels={false} hoverId="n" />);
+  expect(document.querySelector(".edge-label--merged")).toBeNull();
+  expect(labelTexts().filter((t) => t === "HTTP")).toHaveLength(4);
+});
+
+test("a single label moved off the node is drawn as a placed label, not in its edge", () => {
+  const layout = lay([{ id: "s", points: [{ x: 150, y: 140 }, { x: 150, y: 240 }], labelAt: { x: 150, y: 145 } }]);
+  const edges = [de("s", "n", "x", "request", "SQL")];
+  render(<EdgeLayer layout={layout} edges={edges} {...base} hoverLabels={false} selectedId="n" selectedRect={{ x: 100, y: 100, width: 100, height: 40 }} />);
+  expect(labelTexts()).toEqual(["SQL"]);
+  expect(document.querySelector('[data-edge-id="s"] .edge-label')).toBeNull();
+  const t = document.querySelector("text.edge-label--moved")!;
+  expect(t).toHaveTextContent("SQL");
+  expect(Number(t.getAttribute("y"))).toBeGreaterThan(145);
+});
+
+test("a single label at a labelAt with more than two decimals stays in its edge", () => {
+  const layout = lay([{ id: "s", points: [{ x: 300, y: 20.12345 }, { x: 400, y: 20.12345 }], labelAt: { x: 350.12345, y: 20.12345 } }]);
+  const edges = [de("s", "n", "x", "request", "SQL")];
+  render(<EdgeLayer layout={layout} edges={edges} {...base} hoverLabels={false} selectedId="n" selectedRect={{ x: 0, y: 0, width: 100, height: 40 }} />);
+  expect(document.querySelector(".edge-label--moved")).toBeNull();
+  const t = document.querySelector('[data-edge-id="s"] .edge-label')!;
+  expect(t).toHaveTextContent("SQL");
+  expect(t.getAttribute("x")).toBe("350.12345");
+});

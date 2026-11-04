@@ -7,7 +7,7 @@ import { afterEach, beforeAll, expect, test, vi } from "vitest";
 import { Canvas, type CanvasOptions, type CanvasProps } from "@/canvas/Canvas";
 import { defaultDisplayOptions } from "@/canvas/display";
 import type { Layout } from "@/canvas/layout";
-import { EDGE_Z, NODE_Z, ZONE_Z_MAX, zoneZ } from "@/canvas/stacking";
+import { EDGE_Z, NODE_Z, ZONE_NAME_IN_PORTAL_Z, ZONE_Z_MAX, zoneZ } from "@/canvas/stacking";
 import type { DiagramState } from "@/domain/types";
 
 import { synth } from "../fixtures/spike";
@@ -52,4 +52,28 @@ test("an inner zone's wrapper is stacked above its outer zone, and nodes above e
   expect(z("vpc")).toBe(0);
   expect(z("sub")).toBe(1);
   expect(z("app-0")).toBe(NODE_Z);
+});
+
+test("the zone-name layer sits above the edge layer and below nodes", async () => {
+  // 이름표 층은 연결선 층과 같은 viewport-portal(EDGE_Z, 노드 NODE_Z 아래) 안에서 연결선 그림 위에 놓인다.
+  const css = readFileSync(join(process.cwd(), "src/canvas/edges.css"), "utf8");
+  // 연결선 그림(.edge-layer)은 portal 안에서 z-index 를 갖지 않는다(이름표 층보다 아래).
+  expect(css.match(/^\.edge-layer \{[^}]*\}/m)?.[0]).not.toMatch(/z-index/);
+
+  const state: DiagramState = synth(2);
+  const options: CanvasOptions = { ...defaultDisplayOptions(state), hoverLabels: true, showMissingBadges: false };
+  const props: CanvasProps = {
+    state, pinned: {}, editMode: false, options, motion: false,
+    onOptionsChange: vi.fn(), onSelect: vi.fn(), onPinnedChange: vi.fn(), onAutoArrange: vi.fn(), onEditModeChange: vi.fn(), onMotionChange: vi.fn(),
+  };
+  const { container } = render(<div style={{ width: 800, height: 600 }}><Canvas {...props} /></div>);
+  await waitFor(() => expect(container.querySelector(".zone-names")).not.toBeNull());
+  const layer = container.querySelector<HTMLElement>(".zone-names")!;
+  const edges = container.querySelector(".edge-layer")!;
+  expect(layer.parentElement).toBe(edges.parentElement);
+  expect(layer.parentElement).toHaveClass("react-flow__viewport-portal");
+  expect(layer.style.zIndex).toBe(String(ZONE_NAME_IN_PORTAL_Z));
+  expect(Number(layer.style.zIndex)).toBeGreaterThan(0);
+  expect(edges.getAttribute("style") ?? "").not.toMatch(/z-index/);
+  expect(layer.style.position).toBe("absolute");
 });

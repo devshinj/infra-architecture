@@ -8,6 +8,11 @@ import type { Layout } from "./layout";
 export const ZONE_Z_MAX = 8;
 export const EDGE_Z = 9;
 export const NODE_Z = 10;
+/**
+ * 영역 이름표 층(ZoneNameLayer)의 z-index. 연결선 층과 같은 viewport-portal(EDGE_Z) 안에서 매기는 값이다:
+ * 연결선 그림(.edge-layer, z-index 없음)보다 위라 선이 이름 뒤로 지나가고, portal 전체가 노드(NODE_Z) 아래라 노드·노드 메뉴보다는 아래다.
+ */
+export const ZONE_NAME_IN_PORTAL_Z = 1;
 
 /** 영역 `id` 의 z-index: 바깥 영역 수(깊이). ZONE_Z_MAX 에서 멈춘다(연결선·노드보다 위로 가지 않게). */
 export function zoneZ(groups: Layout["groups"], id: string): number {

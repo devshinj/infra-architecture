@@ -10,7 +10,7 @@ import { mergeWarnings, warningsByNode } from "@/domain/warnings";
 import { canvasAriaLabels, zoneDescription } from "./ariaLabels";
 import "./canvas.css";
 import { EdgeLayerPortal } from "./EdgeLayer";
-import { emphasisOf } from "./emphasis";
+import { emphasisOf, litZones } from "./emphasis";
 import { ExportMenu } from "./ExportMenu";
 import { exportDiagramImage, exportFileName, type ExportBackground, type ExportFormat } from "./exportImage";
 import type { GroupBoxData } from "./GroupBox";
@@ -25,6 +25,7 @@ import { prefersReducedMotion, unionRect, useCamera, type Insets, type Viewport 
 import { useDiagramView } from "./useDiagramView";
 import { moveMenuFocus, usePopover } from "./usePopover";
 import { useHoverEmphasis } from "./useHoverEmphasis";
+import { ZoneNameLayerPortal, type ZoneName } from "./ZoneNameLayer";
 
 export type CanvasOptions = DisplayOptions & { hoverLabels: boolean; showMissingBadges: boolean };
 export type DiffMarks = { added: Set<string>; removed: Set<string>; changed: Set<string> };
@@ -309,6 +310,8 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
   const known = useMemo(() => new Set([...Object.keys(display.nodes), ...Object.keys(display.groups)]), [display]);
   // 선택이 있거나 대상이 사라졌으면 호버는 없는 것으로 친다(노드가 다시 만들어지지 않게 선택 중엔 늘 null).
   const hoverId = selected === null && emphasisOf(display.edges, hover.hoverId, known) !== null ? hover.hoverId : null;
+  // 고른 노드(또는 영역)의 상자: 연결 이름을 합칠 때 그 변 옆에 둔다.
+  const selectedRect: Rect | undefined = selected === null ? undefined : (layout.nodes[selected] ?? layout.groups[selected]);
   // 보드가 바뀌면(fitKey) 호버를 푼다(사라진 노드는 mouseleave 를 보내지 않는다).
   const resetHover = hover.reset;
   useEffect(() => {
@@ -339,15 +342,21 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
   const descId = useId();
   const zoneDesc = { open: `${descId}-zone`, collapsed: `${descId}-zone-collapsed` };
 
+  // 선택이 있으면 선택 기준으로만 흐리고, 호버는 선택이 없을 때만 쓴다.
+  const sel = useMemo(() => emphasisOf(display.edges, selected), [display, selected]);
+  // 고르면 이어진 노드가 없는 영역도 흐린다(호버는 영역을 흐리지 않는다: 선택보다 약하게). 영역 상자와 이름 알약이 함께 쓴다.
+  const lit = useMemo(() => {
+    const parentOf = (id: string): string | null => (display.nodes[id] ?? display.groups[id])?.parent ?? null;
+    return sel ? litZones(parentOf, sel, selected) : null;
+  }, [display, sel, selected]);
+
   const computed = useMemo<Node[]>(() => {
-    // 선택이 있으면 선택 기준으로만 흐리고, 호버는 선택이 없을 때만 쓴다.
-    const sel = emphasisOf(display.edges, selected);
     const hov = emphasisOf(display.edges, hoverId, known);
     const out: Node[] = [];
     for (const lg of Object.values(layout.groups)) {
       const g = display.groups[lg.id];
       if (!g) continue;
-      const data: GroupBoxData = { label: g.label, groupKind: g.groupKind, collapsed: g.collapsed, hiddenCount: g.hiddenCount, selected: g.id === selected, onToggle: () => toggleGroup(g.id) };
+      const data: GroupBoxData = { label: g.label, groupKind: g.groupKind, collapsed: g.collapsed, hiddenCount: g.hiddenCount, selected: g.id === selected, dimmed: lit !== null && !lit.has(g.id), onToggle: () => toggleGroup(g.id) };
       out.push({
         id: g.id,
         type: "zone",
@@ -414,7 +423,18 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
     }
     return out;
     // eslint-disable-next-line react-hooks/exhaustive-deps -- zoneDesc 는 useId 에서 나와 바뀌지 않는다
-  }, [layout, display, selected, appearing, updated, editMode, options, toggleGroup, diffMarks, missingByNode, warnByNode, onBadgeClick, onWarnBadgeClick, pulse, hoverId, known]);
+  }, [layout, display, selected, sel, lit, appearing, updated, editMode, options, toggleGroup, diffMarks, missingByNode, warnByNode, onBadgeClick, onWarnBadgeClick, pulse, hoverId, known]);
+
+  // 영역 이름 알약(연결선 위 층): 영역 노드와 같은 배치·흐림(lit)에서 만든다. 호버·등장 효과로는 다시 만들지 않는다.
+  const zoneNames = useMemo<ZoneName[]>(() => {
+    const out: ZoneName[] = [];
+    for (const lg of Object.values(layout.groups)) {
+      const g = display.groups[lg.id];
+      if (!g) continue;
+      out.push({ id: g.id, x: lg.x, y: lg.y, width: lg.width, label: g.label, groupKind: g.groupKind, collapsed: g.collapsed, hiddenCount: g.hiddenCount, ...(lit !== null && !lit.has(g.id) ? { dimmed: true } : {}) });
+    }
+    return out;
+  }, [layout, display, lit]);
 
   const [nodes, setNodes] = useState<Node[]>(computed);
   useEffect(() => setNodes(computed), [computed]);
@@ -504,6 +524,13 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
     if (settled) latest.current.onPlaced?.(locate);
   }, [layout, settled, locate]);
   const [menu, setMenu] = useState<{ id: string; zone: boolean; x: number; y: number } | null>(null);
+  // 노드·영역(이름 알약 포함)에서 오른쪽 단추: 누른 자리에 메뉴를 연다.
+  const openMenu = (id: string, zone: boolean, e: React.MouseEvent) => {
+    if (!onMention) return;
+    e.preventDefault();
+    const r = wrap.current?.getBoundingClientRect();
+    setMenu({ id, zone, x: e.clientX - (r?.left ?? 0), y: e.clientY - (r?.top ?? 0) });
+  };
   const closeMenu = useCallback(() => {
     setMenu(null);
     wrap.current?.focus({ preventScroll: true });
@@ -632,12 +659,7 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
           else if (node.type === "infra") onSelect(node.id === selected ? null : node.id);
         }}
         onPaneClick={() => onSelect(null)}
-        onNodeContextMenu={(e, node) => {
-          if (!onMention) return;
-          e.preventDefault();
-          const r = wrap.current?.getBoundingClientRect();
-          setMenu({ id: node.id, zone: node.type === "zone", x: e.clientX - (r?.left ?? 0), y: e.clientY - (r?.top ?? 0) });
-        }}
+        onNodeContextMenu={(e, node) => openMenu(node.id, node.type === "zone", e)}
         onMoveStart={(e) => {
           setMenu(null);
           camera.onMoveStart(e);
@@ -663,6 +685,7 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
           layout={layout}
           edges={display.edges}
           selectedId={selected}
+          {...(selectedRect ? { selectedRect } : {})}
           hoverId={hoverId}
           onHover={(id) => {
             if (id !== null) {
@@ -679,6 +702,16 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
           appearing={appearing}
           nodeCount={Object.keys(state.nodes).length}
           onSelect={onSelect}
+        />
+        {/* 영역 이름표는 연결선 층 위(stacking.ts): 영역 머리를 지나는 선이 이름 뒤로 지나간다. 누르면 영역 머리를 누른 것과 같다. */}
+        <ZoneNameLayerPortal
+          zones={zoneNames}
+          onPillClick={(id) => {
+            // 영역 머리를 누르면 영역 래퍼가 포커스를 받았다(다음 Tab 이 돌아올 곳). 알약도 같게 한다.
+            for (const el of wrap.current?.querySelectorAll<HTMLElement>(".react-flow__node-zone") ?? []) if (el.dataset.id === id) el.focus({ preventScroll: true });
+            onSelect(null);
+          }}
+          onPillContextMenu={(id, e) => openMenu(id, true, e)}
         />
       </ReactFlow>
       {menu && onMention && (
