@@ -339,7 +339,7 @@ test("the export clone keeps the zone-name layer with plain (undimmed) pills, on
     expect(pills.map((p) => p.textContent), bg).toEqual(["운영 VPC", "데이터 영역"]);
     expect(stage.getElementsByClassName("group--dimmed"), bg).toHaveLength(0);
     // 자리와 영역 색은 인라인이라 복제본에도 그대로다. 흰 바탕이면 무대가 덮어쓴 토큰을 물려받는다.
-    expect(pills[0].style.left, bg).toBe("70px");
+    expect(pills[0].style.transform, bg).toBe("translate(71px, 56px) translateY(-50%)");
     expect(pills[0].style.getPropertyValue("--tint"), bg).toBe("var(--zone-tint-vpc)");
     if (bg === "light") expect(stage.style.getPropertyValue("--zone-tint-vpc")).toBe(LIGHT_TOKENS["--zone-tint-vpc"]);
   }

@@ -145,14 +145,16 @@ button.node__badge--pair-end::before { left: -1px; transform: none; }
 /* 영역 이름표 층: 연결선 층과 같은 viewport-portal 안, 연결선 그림 위(stacking.ts ZONE_NAME_IN_PORTAL_Z). 층은 누르기를 받지 않고 알약만 받는다.
    .canvas__flow 로 묶지 않는다: 이미지 내보내기 복제본(.export-stage)에서도 같게 그린다. */
 .zone-names { pointer-events: none; }
-/* 영역 이름 알약. 자리(left·top=머리 가운데)와 최대 폭(접기 단추를 비킨다)은 ZoneNameLayer 가 준다.
+/* 영역 이름 알약. 자리(transform: 머리 가운데)와 최대 폭(접기 단추를 비킨다)은 ZoneNameLayer 가 준다.
+   다시 배치될 때 영역 래퍼(.canvas__flow .react-flow__node 의 transform 0.4s ease)와 같이 미끄러진다. 처음 붙을 때는 전환이 없다.
    바탕은 --bg-canvas 와 섞은 불투명 색이라 뒤로 지나는 선이 글자 위로 비치지 않는다. */
 .group__name {
   position: absolute;
-  transform: translateY(-50%);
+  left: 0;
+  top: 0;
   box-sizing: border-box;
   pointer-events: auto;
-  transition: opacity 0.35s ease;
+  transition: opacity 0.35s ease, transform 0.4s ease;
   font-size: clamp(11px, calc(10px / var(--zoom, 1)), 20px);
   font-weight: 600;
   line-height: 1.5;

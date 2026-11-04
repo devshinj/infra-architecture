@@ -15,7 +15,8 @@ import { fx } from "../fixtures/spike";
 // 노드 통과는 0.
 // 1단계에서 받아들인 변화(이전 기준선 대비): state-100 펼친 화면 교차 201→207·꺾임 539→540. s1 기본 화면 평행 270 과
 // state-25 기본 화면 평행 544 는 아래 0 시험에서 빠진다(2단계 몫).
-// zoneHeadCrossings(펼친 영역 이름 알약 자리를 지나는 선)는 재기만 하고 배치는 아직 피하지 않는다(사용자 결정 대기).
+// zoneHeadCrossings(펼친 영역 이름 알약 자리를 지나는 선)는 기하로만 잰다: 사용자 결정으로 알약을 연결선 위 층(ZoneNameLayer)에 그려
+// 선이 알약 뒤로 지나가므로, 배치는 이 자리를 피하지 않는다.
 const baseline = JSON.parse(readFileSync(join(process.cwd(), "tests/fixtures/layout/baseline.json"), "utf8")) as Record<
   string,
   { default: LayoutMetrics; expanded: LayoutMetrics }

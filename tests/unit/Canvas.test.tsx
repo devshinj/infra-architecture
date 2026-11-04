@@ -783,8 +783,14 @@ test("zone names are drawn in their own layer in the viewport portal, not inside
     expect(z.querySelector(".group__toggle-name")).toHaveTextContent(pillEl(container, id)!.textContent!);
   }
   // 이름 알약을 눌러도 영역 머리를 누른 것과 같다: 고른 것을 풀 뿐 영역을 고르지 않는다.
-  fireEvent.click(pillEl(container, zones[0].getAttribute("data-id")!)!);
+  const zoneId = zones[zones.length - 1].getAttribute("data-id")!;
+  fireEvent.click(pillEl(container, zoneId)!);
   expect(props.onSelect).toHaveBeenCalledWith(null);
+  expect(props.onSelect).not.toHaveBeenCalledWith(zoneId);
+  // 머리를 눌렀을 때처럼 영역 래퍼가 포커스를 받고, 다음 Tab 이 돌아올 곳(tabindex 0)이 된다.
+  const wrapper = container.querySelector<HTMLElement>(`.react-flow__node-zone[data-id="${zoneId}"]`)!;
+  expect(document.activeElement).toBe(wrapper);
+  await waitFor(() => expect(wrapper).toHaveAttribute("tabindex", "0"));
 });
 
 test("with a node selected, a zone with no linked node has a dimmed name pill", async () => {

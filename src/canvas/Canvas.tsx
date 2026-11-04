@@ -342,13 +342,16 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
   const descId = useId();
   const zoneDesc = { open: `${descId}-zone`, collapsed: `${descId}-zone-collapsed` };
 
-  const computed = useMemo<Node[]>(() => {
-    // 선택이 있으면 선택 기준으로만 흐리고, 호버는 선택이 없을 때만 쓴다.
-    const sel = emphasisOf(display.edges, selected);
-    const hov = emphasisOf(display.edges, hoverId, known);
-    // 고르면 이어진 노드가 없는 영역도 흐린다(호버는 영역을 흐리지 않는다: 선택보다 약하게).
+  // 선택이 있으면 선택 기준으로만 흐리고, 호버는 선택이 없을 때만 쓴다.
+  const sel = useMemo(() => emphasisOf(display.edges, selected), [display, selected]);
+  // 고르면 이어진 노드가 없는 영역도 흐린다(호버는 영역을 흐리지 않는다: 선택보다 약하게). 영역 상자와 이름 알약이 함께 쓴다.
+  const lit = useMemo(() => {
     const parentOf = (id: string): string | null => (display.nodes[id] ?? display.groups[id])?.parent ?? null;
-    const lit = sel ? litZones(parentOf, sel, selected) : null;
+    return sel ? litZones(parentOf, sel, selected) : null;
+  }, [display, sel, selected]);
+
+  const computed = useMemo<Node[]>(() => {
+    const hov = emphasisOf(display.edges, hoverId, known);
     const out: Node[] = [];
     for (const lg of Object.values(layout.groups)) {
       const g = display.groups[lg.id];
@@ -420,19 +423,18 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
     }
     return out;
     // eslint-disable-next-line react-hooks/exhaustive-deps -- zoneDesc 는 useId 에서 나와 바뀌지 않는다
-  }, [layout, display, selected, appearing, updated, editMode, options, toggleGroup, diffMarks, missingByNode, warnByNode, onBadgeClick, onWarnBadgeClick, pulse, hoverId, known]);
+  }, [layout, display, selected, sel, lit, appearing, updated, editMode, options, toggleGroup, diffMarks, missingByNode, warnByNode, onBadgeClick, onWarnBadgeClick, pulse, hoverId, known]);
 
-  // 영역 이름 알약(연결선 위 층): 영역 노드와 같은 자리·흐림을 쓴다.
-  const zoneNames = useMemo<ZoneName[]>(
-    () =>
-      computed
-        .filter((n) => n.type === "zone")
-        .map((n) => {
-          const d = n.data as GroupBoxData;
-          return { id: n.id, x: n.position.x, y: n.position.y, width: n.width ?? 0, label: d.label, groupKind: d.groupKind, collapsed: d.collapsed, hiddenCount: d.hiddenCount, ...(d.dimmed ? { dimmed: true } : {}) };
-        }),
-    [computed],
-  );
+  // 영역 이름 알약(연결선 위 층): 영역 노드와 같은 배치·흐림(lit)에서 만든다. 호버·등장 효과로는 다시 만들지 않는다.
+  const zoneNames = useMemo<ZoneName[]>(() => {
+    const out: ZoneName[] = [];
+    for (const lg of Object.values(layout.groups)) {
+      const g = display.groups[lg.id];
+      if (!g) continue;
+      out.push({ id: g.id, x: lg.x, y: lg.y, width: lg.width, label: g.label, groupKind: g.groupKind, collapsed: g.collapsed, hiddenCount: g.hiddenCount, ...(lit !== null && !lit.has(g.id) ? { dimmed: true } : {}) });
+    }
+    return out;
+  }, [layout, display, lit]);
 
   const [nodes, setNodes] = useState<Node[]>(computed);
   useEffect(() => setNodes(computed), [computed]);
@@ -522,6 +524,13 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
     if (settled) latest.current.onPlaced?.(locate);
   }, [layout, settled, locate]);
   const [menu, setMenu] = useState<{ id: string; zone: boolean; x: number; y: number } | null>(null);
+  // 노드·영역(이름 알약 포함)에서 오른쪽 단추: 누른 자리에 메뉴를 연다.
+  const openMenu = (id: string, zone: boolean, e: React.MouseEvent) => {
+    if (!onMention) return;
+    e.preventDefault();
+    const r = wrap.current?.getBoundingClientRect();
+    setMenu({ id, zone, x: e.clientX - (r?.left ?? 0), y: e.clientY - (r?.top ?? 0) });
+  };
   const closeMenu = useCallback(() => {
     setMenu(null);
     wrap.current?.focus({ preventScroll: true });
@@ -650,12 +659,7 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
           else if (node.type === "infra") onSelect(node.id === selected ? null : node.id);
         }}
         onPaneClick={() => onSelect(null)}
-        onNodeContextMenu={(e, node) => {
-          if (!onMention) return;
-          e.preventDefault();
-          const r = wrap.current?.getBoundingClientRect();
-          setMenu({ id: node.id, zone: node.type === "zone", x: e.clientX - (r?.left ?? 0), y: e.clientY - (r?.top ?? 0) });
-        }}
+        onNodeContextMenu={(e, node) => openMenu(node.id, node.type === "zone", e)}
         onMoveStart={(e) => {
           setMenu(null);
           camera.onMoveStart(e);
@@ -702,13 +706,12 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
         {/* 영역 이름표는 연결선 층 위(stacking.ts): 영역 머리를 지나는 선이 이름 뒤로 지나간다. 누르면 영역 머리를 누른 것과 같다. */}
         <ZoneNameLayerPortal
           zones={zoneNames}
-          onPillClick={() => onSelect(null)}
-          onPillContextMenu={(id, e) => {
-            if (!onMention) return;
-            e.preventDefault();
-            const r = wrap.current?.getBoundingClientRect();
-            setMenu({ id, zone: true, x: e.clientX - (r?.left ?? 0), y: e.clientY - (r?.top ?? 0) });
+          onPillClick={(id) => {
+            // 영역 머리를 누르면 영역 래퍼가 포커스를 받았다(다음 Tab 이 돌아올 곳). 알약도 같게 한다.
+            for (const el of wrap.current?.querySelectorAll<HTMLElement>(".react-flow__node-zone") ?? []) if (el.dataset.id === id) el.focus({ preventScroll: true });
+            onSelect(null);
           }}
+          onPillContextMenu={(id, e) => openMenu(id, true, e)}
         />
       </ReactFlow>
       {menu && onMention && (

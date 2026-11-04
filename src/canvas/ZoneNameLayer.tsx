@@ -19,13 +19,22 @@ export interface ZoneName {
   dimmed?: boolean;
 }
 
+const BORDER = 1; // .group 테두리(box-sizing: border-box 라 머리 칸은 그 안쪽에서 시작한다)
 const HEAD_H = 30; // .group__head 높이
 const HEAD_PAD = 10; // .group__head 좌우 안쪽 여백
 const HEAD_GAP = 8; // .group__head 의 이름 ↔ 접기 단추 사이
 
-/** 이름 알약의 최대 폭: 머리 칸 폭에서 좌우 여백·사이·접기 단추 폭을 뺀다(알약이 단추를 덮지 않게). */
+/** 이름 알약의 최대 폭: 테두리 안 머리 칸 폭에서 좌우 여백·사이·접기 단추 폭을 뺀다(알약이 단추를 덮지 않게). */
 export function zoneNameMaxWidth(width: number, collapsed: boolean, hiddenCount: number): number {
-  return Math.max(0, width - 2 * HEAD_PAD - HEAD_GAP - groupToggleWidth(collapsed, hiddenCount));
+  return Math.max(0, width - 2 * BORDER - 2 * HEAD_PAD - HEAD_GAP - groupToggleWidth(collapsed, hiddenCount));
+}
+
+/**
+ * 알약 자리(캔버스 좌표): 왼쪽 끝은 테두리·머리 여백 안쪽, 세로는 30px 머리 칸 가운데.
+ * left·top 대신 transform 으로 준다: 영역 래퍼(.react-flow__node)처럼 다시 배치될 때 같은 transform 전환으로 함께 미끄러진다.
+ */
+export function zoneNameTransform(x: number, y: number): string {
+  return `translate(${x + BORDER + HEAD_PAD}px, ${y + BORDER + HEAD_H / 2}px) translateY(-50%)`;
 }
 
 export interface ZoneNameLayerProps {
@@ -38,7 +47,7 @@ export interface ZoneNameLayerProps {
 
 /**
  * 영역 이름 알약 층. 영역 상자(GroupBox) 안이 아니라 연결선 층 위에 따로 그려, 영역 머리를 지나는 선이 이름 뒤로 지나간다.
- * 알약은 GroupBox 머리에 있던 자리(왼쪽 10px, 30px 머리 가운데) 그대로다.
+ * 알약은 GroupBox 머리에 있던 자리(테두리 1px + 왼쪽 여백 10px, 30px 머리 가운데) 그대로다.
  */
 export function ZoneNameLayer({ zones, onPillClick, onPillContextMenu }: ZoneNameLayerProps) {
   return (
@@ -47,8 +56,7 @@ export function ZoneNameLayer({ zones, onPillClick, onPillContextMenu }: ZoneNam
         const def = GROUP_KINDS.find((g) => g.kind === z.groupKind)!;
         const style = {
           "--tint": `var(${def.tintToken})`,
-          left: z.x + HEAD_PAD,
-          top: z.y + HEAD_H / 2,
+          transform: zoneNameTransform(z.x, z.y),
           maxWidth: zoneNameMaxWidth(z.width, z.collapsed, z.hiddenCount),
         } as React.CSSProperties;
         return (

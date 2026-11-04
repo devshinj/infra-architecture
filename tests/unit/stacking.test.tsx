@@ -55,9 +55,7 @@ test("an inner zone's wrapper is stacked above its outer zone, and nodes above e
 });
 
 test("the zone-name layer sits above the edge layer and below nodes", async () => {
-  // 이름표 층은 연결선 층과 같은 viewport-portal(EDGE_Z) 안에서 연결선 그림 위에 놓인다.
-  expect(ZONE_NAME_IN_PORTAL_Z).toBeGreaterThan(0);
-  expect(EDGE_Z + ZONE_NAME_IN_PORTAL_Z / 10).toBeLessThan(NODE_Z);
+  // 이름표 층은 연결선 층과 같은 viewport-portal(EDGE_Z, 노드 NODE_Z 아래) 안에서 연결선 그림 위에 놓인다.
   const css = readFileSync(join(process.cwd(), "src/canvas/edges.css"), "utf8");
   // 연결선 그림(.edge-layer)은 portal 안에서 z-index 를 갖지 않는다(이름표 층보다 아래).
   expect(css.match(/^\.edge-layer \{[^}]*\}/m)?.[0]).not.toMatch(/z-index/);
@@ -75,5 +73,7 @@ test("the zone-name layer sits above the edge layer and below nodes", async () =
   expect(layer.parentElement).toBe(edges.parentElement);
   expect(layer.parentElement).toHaveClass("react-flow__viewport-portal");
   expect(layer.style.zIndex).toBe(String(ZONE_NAME_IN_PORTAL_Z));
+  expect(Number(layer.style.zIndex)).toBeGreaterThan(0);
+  expect(edges.getAttribute("style") ?? "").not.toMatch(/z-index/);
   expect(layer.style.position).toBe("absolute");
 });

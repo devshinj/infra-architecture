@@ -388,7 +388,7 @@ test("zone name font scales with zoom and has no far override", () => {
 test("zone name pill keeps its look in the layer above the edges: opaque tint, dims like its zone, no motion when reduced", () => {
   const css = read("src/canvas/canvas.css");
   const r = rule(css, ".group__name");
-  for (const d of ["font-weight: 600;", "line-height: 1.5;", "padding: 0 9px;", "border-radius: 999px;", "background: color-mix(in srgb, var(--tint) 22%, var(--bg-canvas));", "color: color-mix(in srgb, var(--tint) 55%, var(--text-primary));", "text-overflow: ellipsis;", "box-sizing: border-box;", "pointer-events: auto;", "transition: opacity 0.35s ease;"]) expect(r, d).toContain(d);
+  for (const d of ["font-weight: 600;", "line-height: 1.5;", "padding: 0 9px;", "border-radius: 999px;", "background: color-mix(in srgb, var(--tint) 22%, var(--bg-canvas));", "color: color-mix(in srgb, var(--tint) 55%, var(--text-primary));", "text-overflow: ellipsis;", "box-sizing: border-box;", "pointer-events: auto;", "transition: opacity 0.35s ease, transform 0.4s ease;"]) expect(r, d).toContain(d);
   // 이름표 층 자체는 누르기를 받지 않는다(알약만 받는다).
   expect(rule(css, ".zone-names")).toContain("pointer-events: none;");
   // .group--dimmed 는 영역 상자와 알약 모두에 쓴다.
