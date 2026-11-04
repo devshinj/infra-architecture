@@ -1,4 +1,5 @@
 import type { Rect } from "./layout";
+import { textWidth } from "./text";
 
 type Pt = { x: number; y: number };
 
@@ -6,6 +7,21 @@ type Pt = { x: number; y: number };
 export const MIN_TRUNK = 12;
 /** 함께 지나는 앞부분이 없을 때 노드 상자 변에서 이름까지 띄우는 거리(px). */
 export const LABEL_OFFSET = 14;
+/** 선택 고리가 노드 상자 밖으로 나오는 폭(outline-offset 4px + 굵기 1.5px). 이름 상자는 이 안에 들지 않는다. */
+export const NODE_RING = 6;
+/** 이름 한 줄의 높이(11px 글자 + 둘레 테두리). */
+export const LABEL_LINE = 14;
+/** 이름 상자끼리, 이름과 선택 고리 사이에 두는 틈. */
+export const ROW_GAP = 4;
+/** 같은 변에 쌓는 이름 줄 간격. */
+export const ROW_PITCH = LABEL_LINE + ROW_GAP;
+/** 연결 이름 글자 크기(edges.css .edge-label)와 글자 둘레 테두리(stroke 3px) 몫. */
+const LABEL_FONT = 11;
+const LABEL_HALO = 3;
+/** 공유 구간·제 선을 따라 비킬 자리를 찾는 걸음(px). */
+const SLIDE_STEP = 2;
+/** 변 옆에 쌓을 수 있는 줄 수 상한. */
+const MAX_ROWS = 40;
 /** 같은 점으로 보는 거리(px). */
 const SAME = 0.5;
 
@@ -15,6 +31,21 @@ export type LabelAnchor = "start" | "middle" | "end";
 export interface PlacedLabel { text: string; x: number; y: number; anchor: LabelAnchor; edgeIds: string[] }
 
 export interface IncidentEdge { id: string; label?: string; points: Pt[]; labelAt?: Pt; from: string; to: string }
+
+export interface Box { x1: number; y1: number; x2: number; y2: number }
+
+/** 이름이 그려지는 상자(글자 폭 어림 + 테두리). 글자는 세로 가운데(dominant-baseline: central)에 놓인다. */
+export function labelBox(p: Pick<PlacedLabel, "text" | "x" | "y" | "anchor">): Box {
+  const w = textWidth(p.text, LABEL_FONT) + LABEL_HALO;
+  const x1 = p.anchor === "start" ? p.x - LABEL_HALO / 2 : p.anchor === "end" ? p.x - w + LABEL_HALO / 2 : p.x - w / 2;
+  return { x1, y1: p.y - LABEL_LINE / 2, x2: x1 + w, y2: p.y + LABEL_LINE / 2 };
+}
+
+/** 두 상자가 ROW_GAP 보다 가까운지(ROW_GAP 만큼 떨어져 맞닿는 것은 괜찮다). */
+function tooClose(a: Box, b: Box): boolean {
+  const g = ROW_GAP - 1e-6;
+  return a.x1 < b.x2 + g && b.x1 < a.x2 + g && a.y1 < b.y2 + g && b.y1 < a.y2 + g;
+}
 
 interface Run { x: number; y: number; dx: number; dy: number; len: number }
 
@@ -37,6 +68,8 @@ function runs(pts: Pt[]): Run[] {
   return out;
 }
 
+const totalLength = (rs: Run[]) => rs.reduce((a, r) => a + r.len, 0);
+
 /** 같은 점에서 시작하는 두 꺾은선이 함께 지나는 앞부분 길이. */
 function commonPrefix(a: Run[], b: Run[]): number {
   let total = 0;
@@ -58,6 +91,36 @@ function pointAt(rs: Run[], s: number): Pt {
   }
   const r = rs[rs.length - 1];
   return { x: r.x + r.dx * r.len, y: r.y + r.dy * r.len };
+}
+
+/** 점 p 를 토막들 위에 내렸을 때 시작점에서의 거리. */
+function arcOf(rs: Run[], p: Pt): number {
+  let best = 0;
+  let bestD = Infinity;
+  let acc = 0;
+  for (const r of rs) {
+    const t = Math.max(0, Math.min(r.len, (p.x - r.x) * r.dx + (p.y - r.y) * r.dy));
+    const d = Math.hypot(p.x - (r.x + r.dx * t), p.y - (r.y + r.dy * t));
+    if (d < bestD) {
+      bestD = d;
+      best = acc + t;
+    }
+    acc += r.len;
+  }
+  return best;
+}
+
+/** from..to 안에서 center 에 가까운 순서로 SLIDE_STEP 마다 놓은 거리들(center 먼저). */
+function slides(center: number, from: number, to: number): number[] {
+  const out = [center];
+  for (let k = 1; ; k++) {
+    const up = center + k * SLIDE_STEP;
+    const down = center - k * SLIDE_STEP;
+    if (up > to && down < from) break;
+    if (up <= to) out.push(up);
+    if (down >= from) out.push(down);
+  }
+  return out;
 }
 
 const round = (n: number) => Math.round(n * 100) / 100;
@@ -87,7 +150,12 @@ function sideOf(p: Pt, r: Rect): Side {
   return SIDES.reduce((best, s) => (d[s] < d[best] ? s : best), SIDES[0]);
 }
 
-function besideNode(rect: Rect, starts: Pt[]): Pt & { anchor: LabelAnchor } {
+/** 위·아래 변 옆 이름의 가운데까지 거리: LABEL_OFFSET 이되, 이름 상자가 선택 고리에서 ROW_GAP 만큼 떨어지게. */
+const VERTICAL_OFFSET = Math.max(LABEL_OFFSET, NODE_RING + ROW_GAP + LABEL_LINE / 2);
+
+type Beside = Pt & { anchor: LabelAnchor; side: Side };
+
+function besideNode(rect: Rect, starts: Pt[]): Beside {
   const count = new Map<Side, Pt[]>();
   for (const p of starts) {
     const s = sideOf(p, rect);
@@ -100,28 +168,51 @@ function besideNode(rect: Rect, starts: Pt[]): Pt & { anchor: LabelAnchor } {
   const my = round(on.reduce((a, p) => a + p.y, 0) / on.length);
   switch (side) {
     case "top":
-      return { x: mx, y: rect.y - LABEL_OFFSET, anchor: "middle" };
+      return { x: mx, y: rect.y - VERTICAL_OFFSET, anchor: "middle", side };
     case "right":
-      return { x: rect.x + rect.width + LABEL_OFFSET, y: my, anchor: "start" };
+      return { x: rect.x + rect.width + LABEL_OFFSET, y: my, anchor: "start", side };
     case "bottom":
-      return { x: mx, y: rect.y + rect.height + LABEL_OFFSET, anchor: "middle" };
+      return { x: mx, y: rect.y + rect.height + VERTICAL_OFFSET, anchor: "middle", side };
     case "left":
-      return { x: rect.x - LABEL_OFFSET, y: my, anchor: "end" };
+      return { x: rect.x - LABEL_OFFSET, y: my, anchor: "end", side };
   }
 }
 
-/** 고른 노드에 이어진 연결의 이름 배치. 같은 이름(글자 그대로)은 하나로 합치고 2개 이상이면 "<이름> ×N". */
+/** 변 옆 이름의 줄 후보: 위·아래 변은 바깥으로 한 줄씩, 왼쪽·오른쪽 변은 변을 따라 아래·위로 번갈아. */
+function rows(at: Beside): Pt[] {
+  const out: Pt[] = [];
+  for (let k = 0; k < MAX_ROWS; k++) {
+    if (at.side === "bottom") out.push({ x: at.x, y: at.y + k * ROW_PITCH });
+    else if (at.side === "top") out.push({ x: at.x, y: at.y - k * ROW_PITCH });
+    else out.push({ x: at.x, y: at.y + Math.ceil(k / 2) * (k % 2 === 1 ? 1 : -1) * ROW_PITCH });
+  }
+  return out;
+}
+
+/** 이름 하나를 놓을 계획: 차례(하나뿐인 이름 → 변 옆 → 공유 구간 → 공유 구간에 못 둔 것의 변 옆), 같은 차례는 글자 순. */
+interface Plan { group: number; rank: number; text: string; anchor: LabelAnchor; edgeIds: string[]; candidates: Pt[] }
+
+/**
+ * 고른 노드에 이어진 연결의 이름 배치. 같은 이름(글자 그대로)은 하나로 합치고 2개 이상이면 "<이름> ×N".
+ * 이름 상자끼리, 그리고 선택 고리까지 넓힌 노드 상자와 ROW_GAP 보다 가까이 두지 않는다: 변 옆 이름은 한 줄씩 쌓고,
+ * 공유 구간 위 이름은 그 구간을 따라 비키고(안 되면 나가는 변 옆 줄로), 하나뿐인 이름은 제 선을 따라 비킨다.
+ */
 export function mergedLabels(selectedId: string, selectedRect: Rect, incident: IncidentEdge[]): PlacedLabel[] {
   const groups = new Map<string, IncidentEdge[]>();
   for (const e of incident) {
     if (!e.label || e.points.length < 2) continue;
     groups.set(e.label, [...(groups.get(e.label) ?? []), e]);
   }
-  const out: PlacedLabel[] = [];
-  for (const [text, es] of groups) {
+  const plans: Plan[] = [];
+  let group = 0;
+  for (const [label, es] of groups) {
+    group++;
     if (es.length === 1) {
       const at = es[0].labelAt;
-      if (at) out.push({ text, x: at.x, y: at.y, anchor: "middle", edgeIds: [es[0].id] });
+      if (!at) continue;
+      const rs = runs(es[0].points);
+      const along = rs.length > 0 ? slides(arcOf(rs, at), 0, totalLength(rs)).slice(1).map((s) => pointAt(rs, s)) : [];
+      plans.push({ group, rank: 0, text: label, anchor: "middle", edgeIds: [es[0].id], candidates: [at, ...along] });
       continue;
     }
     const lines = es.map((e) => fromSelected(selectedId, selectedRect, e));
@@ -131,8 +222,44 @@ export function mergedLabels(selectedId: string, selectedRect: Rect, incident: I
     if (starts.every((p) => same(p, starts[0])) && rs.every((r) => r.length > 0)) {
       trunk = Math.min(...rs.slice(1).map((r) => commonPrefix(rs[0], r)));
     }
-    const at = trunk >= MIN_TRUNK ? { ...pointAt(rs[0], trunk / 2), anchor: "middle" as const } : besideNode(selectedRect, starts);
-    out.push({ text: `${text} ×${es.length}`, x: round(at.x), y: round(at.y), anchor: at.anchor, edgeIds: es.map((e) => e.id) });
+    const text = `${label} ×${es.length}`;
+    const edgeIds = es.map((e) => e.id);
+    const side = besideNode(selectedRect, starts);
+    if (trunk >= MIN_TRUNK) {
+      plans.push({ group, rank: 2, text, anchor: "middle", edgeIds, candidates: slides(trunk / 2, 0, trunk).map((s) => pointAt(rs[0], s)) });
+      plans.push({ group, rank: 3, text, anchor: side.anchor, edgeIds, candidates: rows(side) });
+    } else {
+      plans.push({ group, rank: 1, text, anchor: side.anchor, edgeIds, candidates: rows(side) });
+    }
   }
-  return out;
+
+  const ring: Box = {
+    x1: selectedRect.x - NODE_RING,
+    y1: selectedRect.y - NODE_RING,
+    x2: selectedRect.x + selectedRect.width + NODE_RING,
+    y2: selectedRect.y + selectedRect.height + NODE_RING,
+  };
+  const placed = new Map<number, PlacedLabel>();
+  const boxes: Box[] = [];
+  const queue = [...plans].sort((a, b) => a.rank - b.rank || (a.text < b.text ? -1 : a.text > b.text ? 1 : 0) || a.group - b.group);
+  for (const plan of queue) {
+    if (placed.has(plan.group)) continue;
+    const make = (c: Pt): PlacedLabel => ({ text: plan.text, x: round(c.x), y: round(c.y), anchor: plan.anchor, edgeIds: plan.edgeIds });
+    let chosen: PlacedLabel | null = null;
+    for (const c of plan.candidates) {
+      const p = make(c);
+      const b = labelBox(p);
+      if (!tooClose(b, ring) && !boxes.some((o) => tooClose(b, o))) {
+        chosen = p;
+        break;
+      }
+    }
+    // 공유 구간에 둘 곳이 없으면 같은 무리의 변 옆 계획(rank 3)에 넘긴다.
+    if (!chosen && plan.rank === 2) continue;
+    // 후보가 모두 막히면 첫 후보에 둔다(이름이 사라지는 것보다 낫다).
+    chosen ??= make(plan.candidates[0]);
+    placed.set(plan.group, chosen);
+    boxes.push(labelBox(chosen));
+  }
+  return [...placed.entries()].sort((a, b) => a[0] - b[0]).map(([, p]) => p);
 }

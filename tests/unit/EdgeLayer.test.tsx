@@ -386,3 +386,14 @@ test("hover keeps per-edge labels (no merging)", () => {
   expect(document.querySelector(".edge-label--merged")).toBeNull();
   expect(labelTexts().filter((t) => t === "HTTP")).toHaveLength(4);
 });
+
+test("a single label moved off the node is drawn as a placed label, not in its edge", () => {
+  const layout = lay([{ id: "s", points: [{ x: 150, y: 140 }, { x: 150, y: 240 }], labelAt: { x: 150, y: 145 } }]);
+  const edges = [de("s", "n", "x", "request", "SQL")];
+  render(<EdgeLayer layout={layout} edges={edges} {...base} hoverLabels={false} selectedId="n" selectedRect={{ x: 100, y: 100, width: 100, height: 40 }} />);
+  expect(labelTexts()).toEqual(["SQL"]);
+  expect(document.querySelector('[data-edge-id="s"] .edge-label')).toBeNull();
+  const t = document.querySelector("text.edge-label--moved")!;
+  expect(t).toHaveTextContent("SQL");
+  expect(Number(t.getAttribute("y"))).toBeGreaterThan(145);
+});

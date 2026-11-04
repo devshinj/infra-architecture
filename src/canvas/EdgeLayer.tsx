@@ -104,15 +104,21 @@ export function EdgeLayer({ layout, edges, selectedId, selectedRect, hoverId, on
   const emphSet = sel?.edges ?? hov?.edges ?? null;
   const emphLaid = useMemo(() => (emphSet ? laid.filter((l) => emphSet.has(l.id)) : []), [laid, emphSet]);
 
-  // 노드·접힌 영역을 고르면 이어진 연결의 같은 이름을 하나로 합친다(연결을 고르거나 호버일 때는 연결마다 그대로).
+  // 노드·접힌 영역을 고르면 이어진 연결의 같은 이름을 하나로 합치고, 이름끼리·노드와 겹치지 않게 둔다
+  // (연결을 고르거나 호버일 때는 연결마다 그대로). 따로 그리는 것은 합친 이름과 제자리에서 비킨 하나뿐인 이름이다.
   const merged = useMemo(() => {
     if (!sel || selectedId === null || !selectedRect || edges.some((e) => e.id === selectedId || e.sourceEdgeIds.includes(selectedId))) return [];
     const incidentLaid = emphLaid.map((l) => {
       const e = byId.get(l.id)!;
       return { id: l.id, points: l.points, from: e.from, to: e.to, ...(e.label ? { label: e.label } : {}), ...(l.labelAt ? { labelAt: l.labelAt } : {}) };
     });
-    return mergedLabels(selectedId, selectedRect, incidentLaid).filter((p) => p.edgeIds.length > 1);
-  }, [sel, selectedId, selectedRect, edges, emphLaid, byId]);
+    return mergedLabels(selectedId, selectedRect, incidentLaid)
+      .map((p) => {
+        const at = layout.edges.find((l) => l.id === p.edgeIds[0])?.labelAt;
+        return { ...p, moved: p.edgeIds.length === 1 && (!at || at.x !== p.x || at.y !== p.y) };
+      })
+      .filter((p) => p.edgeIds.length > 1 || p.moved);
+  }, [sel, selectedId, selectedRect, edges, emphLaid, byId, layout.edges]);
   const mergedIds = useMemo(() => new Set(merged.flatMap((p) => p.edgeIds)), [merged]);
 
   // Which bundles animate. Over 40 nodes only the ones touching the selection; with fewer, every bundle animates.
@@ -271,12 +277,12 @@ export function EdgeLayer({ layout, edges, selectedId, selectedRect, hoverId, on
         );
       })}
 
-      {/* 5. 고른 노드에 이어진 같은 이름을 하나로 합친 이름 */}
+      {/* 5. 고른 노드에 이어진 같은 이름을 하나로 합친 이름, 겹쳐서 제자리에서 비킨 이름 */}
       {merged.length > 0 && (
         <g className="edge-labels-merged">
           {merged.map((p) => (
             // .edge-label 의 text-anchor(middle)를 이기도록 인라인으로 준다.
-            <text key={p.edgeIds.join(" ")} className="edge-label edge-label--merged" x={p.x} y={p.y} data-anchor={p.anchor} style={{ textAnchor: p.anchor }}>
+            <text key={p.edgeIds.join(" ")} className={`edge-label ${p.moved ? "edge-label--moved" : "edge-label--merged"}`} x={p.x} y={p.y} data-anchor={p.anchor} style={{ textAnchor: p.anchor }}>
               {p.text}
             </text>
           ))}

@@ -346,3 +346,28 @@ test("the export clone keeps the zone-name layer with plain (undimmed) pills, on
   // 화면의 원본은 그대로 흐려 있다.
   expect(host.querySelector(".group__name.group--dimmed")).not.toBeNull();
 });
+
+test("export drops a moved single label and puts the original back at labelAt", () => {
+  const layout: Layout = {
+    nodes: { n: { id: "n", x: 100, y: 100, width: 100, height: 40 } as Layout["nodes"][string] },
+    groups: {},
+    edges: [{ id: "s", points: [{ x: 150, y: 140 }, { x: 150, y: 240 }], labelAt: { x: 150, y: 145 } }],
+    width: 300,
+    height: 260,
+  };
+  const edges: DisplayEdge[] = [{ id: "s", from: "n", to: "x", edgeKind: "request", label: "SQL", sourceEdgeIds: ["s"] }];
+  const host = document.createElement("div");
+  document.body.appendChild(host);
+  render(
+    <EdgeLayer layout={layout} edges={edges} selectedId="n" selectedRect={layout.nodes.n} hoverId={null} hoverLabels={false} motion={false} appearing={new Set()} nodeCount={2} />,
+    { container: host },
+  );
+  expect(host.querySelector(".edge-label--moved")).not.toBeNull();
+  const clone = host.cloneNode(true) as HTMLElement;
+  neutralizeClone(clone, edgeLabels(layout, edges), new Set(["s"]));
+  expect(clone.querySelector(".edge-label--moved")).toBeNull();
+  const t = clone.querySelectorAll(".edge-label");
+  expect(t).toHaveLength(1);
+  expect(t[0].getAttribute("y")).toBe("145");
+  cleanup();
+});
