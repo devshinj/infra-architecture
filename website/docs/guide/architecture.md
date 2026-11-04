@@ -210,6 +210,15 @@ Qwen 요청 하나는 30초 상한이고, 실패하면 "설명을 만들지 못�
 
 `listMessages` 는 `sessionId` 가 null 이면 구성도 대화만, 아니면 그 세션의 것만 돌려줍니다. 그래서 `pipeline.ts` 의 대화 기록과 Clef 에 넘기는 직전 AI 답변(`lastAssistant`)에는 구성도 대화 메시지만 쓰이고, 질문 세션의 글은 섞이지 않습니다.
 
+## 캔버스 그리기와 배치
+
+- **연결선 층 순서**(`EdgeLayer.tsx`): 바닥 선 → 강조 덮개(`g.edge-emph`) → 움직임 층 → 화살표·클릭 영역·이름표 → 합친 이름표 순입니다. 노드를 고르거나 호버하면 닿은 연결을 강조 덮개에 자기 종류 모양 그대로 다시 그립니다. 선택은 2.5px 에 빛(glow)이 있고, 호버는 1.8px 에 빛이 없습니다. 강조 대상이 아닌 선은 `edge--under` 로 아래에 깔립니다.
+- **흐림 단계**(`emphasis.ts`, `canvas.css`): 강조 대상이 아닌 연결은 0.12, 노드는 0.18, 연결된 노드가 하나도 없는 영역은 0.35 로 흐려집니다. 연결된 노드가 있는 영역은 `litZones` 가 골라 흐리지 않습니다.
+- **같은 이름 합치기**(`edgeLabels.ts`의 `mergedLabels`): 고른 노드에 닿은 연결 중 이름표 글이 같은 것은 `<이름> ×N` 한 개로 합쳐 공유 줄기 위나 노드 옆에 보여 줍니다. 여러 개면 줄로 쌓고 선택 고리와 겹치지 않게 비킵니다. 이미지 저장은 합치지 않고 원래 이름표를 모두 그립니다.
+- **영역 이름표 층**(`ZoneNameLayer.tsx`): 영역 이름표는 연결선 포털에서 연결선 위, 노드 아래에 그립니다. 글자 크기는 `clamp(11px, 10px/zoom, 20px)` 로 확대 비율에 따라 보정하고, 접힌 영역의 너비는 `collapsedGroupWidth`(`layout.ts`)가 정합니다.
+- **16px 간격**(`layout.ts`): ELK 의 `edgeEdge`·`edgeEdgeBetweenLayers`·`portPort` 와 우회 통로 간격 `CHANNEL_STEP` 을 16px 로 둡니다. 16px 로 하면 교차가 늘거나 선이 저하(degraded)되거나 노드를 관통하면 기존 통로 경로(lane-route)로 되돌립니다.
+- **배치 측정 회귀**(`layoutMetrics.ts`, `tests/unit/layoutRegression.test.ts`, `tests/fixtures/layout/baseline.json`): 교차 수(crossings), 나란한 길이(parallelPx), 공유 길이(sharedPx), 노드 관통(throughNode), 꺾임(bends), 가로세로 비(aspect), 영역 머리 교차(zoneHeadCrossings)를 고정 상태(25·50·100·200 노드)로 재서 baseline 이하인지 지킵니다.
+
 ## 더 보기
 
 모듈끼리 실제로 어떻게 연결되는지는 상단 메뉴의 **코드 그래프**에서 볼 수 있습니다. 코드에서 자동으로 만든 문서입니다.
