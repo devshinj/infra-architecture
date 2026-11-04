@@ -29,13 +29,17 @@ export interface EdgeLayerProps {
 
 const MANY_NODES = 40;
 const ARROW = { size: 5, spread: 0.5 };
+/** 강조 겹선의 화살표 크기. */
+const EMPH_ARROW = 6.5;
+/** 갈림점이 겹선 위에 있다고 보는 거리(px). */
+const ON_PATH = 0.75;
 type Pt = { x: number; y: number };
 
 const motionOf = (kind: string) => EDGE_KINDS.find((e) => e.kind === kind)!.motion;
 const toD = (pts: Pt[]) => pts.map((p, i) => `${i ? "L" : "M"} ${p.x} ${p.y}`).join(" ");
 
 /** Open chevron (two lines) whose tip is the last point, pointing along the last non-zero step. */
-function arrowD(points: Pt[]): string | null {
+function arrowD(points: Pt[], s: number = ARROW.size): string | null {
   const tip = points[points.length - 1];
   if (!tip) return null;
   let prev: Pt | undefined;
@@ -47,9 +51,23 @@ function arrowD(points: Pt[]): string | null {
   }
   if (!prev) return null;
   const ang = Math.atan2(tip.y - prev.y, tip.x - prev.x);
-  const { size: s, spread } = ARROW;
+  const { spread } = ARROW;
   const f = (n: number) => Math.round(n * 100) / 100;
   return `M${f(tip.x - s * Math.cos(ang - spread))},${f(tip.y - s * Math.sin(ang - spread))} L${tip.x},${tip.y} L${f(tip.x - s * Math.cos(ang + spread))},${f(tip.y - s * Math.sin(ang + spread))}`;
+}
+
+/** 점 p 가 꺾은선 pts 위(ON_PATH 이내)에 있는지. */
+function onPolyline(p: Pt, pts: Pt[]): boolean {
+  for (let i = 1; i < pts.length; i++) {
+    const a = pts[i - 1];
+    const b = pts[i];
+    const dx = b.x - a.x;
+    const dy = b.y - a.y;
+    const len2 = dx * dx + dy * dy;
+    const t = len2 === 0 ? 0 : Math.max(0, Math.min(1, ((p.x - a.x) * dx + (p.y - a.y) * dy) / len2));
+    if (Math.hypot(p.x - (a.x + t * dx), p.y - (a.y + t * dy)) <= ON_PATH) return true;
+  }
+  return false;
 }
 
 function prefersReducedMotion(): boolean {
@@ -73,8 +91,15 @@ export function EdgeLayer({ layout, edges, selectedId, hoverId, onHover, hoverLa
   const incident = useMemo(() => sel?.edges ?? new Set<string>(), [sel]);
   const isSelectedEdge = (e: DisplayEdge) => selectedId !== null && (e.id === selectedId || e.sourceEdgeIds.includes(selectedId));
   const isDim = (ids: string[]) => sel !== null && !ids.some((i) => sel.edges.has(i));
+  // 고른 동안 이어진 선이 지나는 바닥은 겹선 아래로 흐린다(움직임은 따로 남는다).
+  const isUnder = (ids: string[]) => sel !== null && ids.some((i) => sel.edges.has(i));
   // 새로 그려지는 선은 흐리지 않는다.
   const isFaded = (ids: string[]) => hov !== null && !ids.some((i) => hov.edges.has(i) || appearing.has(i));
+
+  // 강조 겹선을 그릴 표시 연결: 고르면 고른 쪽, 아니면 호버 쪽. 배치에 있는 것만.
+  const emphMode: "select" | "hover" | null = sel ? "select" : hov ? "hover" : null;
+  const emphSet = sel?.edges ?? hov?.edges ?? null;
+  const emphLaid = useMemo(() => (emphSet ? laid.filter((l) => emphSet.has(l.id)) : []), [laid, emphSet]);
 
   // Which bundles animate. Over 40 nodes only the ones touching the selection; with fewer, every bundle animates.
   const restrictTo = nodeCount > MANY_NODES ? incident : null;
@@ -111,51 +136,87 @@ export function EdgeLayer({ layout, edges, selectedId, hoverId, onHover, hoverLa
   }, [signature]);
 
   const bundleEdgeIds = (b: Bundle) => b.segments.flatMap((s) => s.edgeIds);
-  const junctionDim = (b: Bundle) => isDim(bundleEdgeIds(b));
+  // 고른 동안 갈림점은 겹선의 점 위에 있을 때만 흐리지 않는다.
+  const junctionDim = (j: Pt) => sel !== null && !emphLaid.some((l) => onPolyline(j, l.points));
   const junctionFaded = (b: Bundle) => isFaded(bundleEdgeIds(b));
 
   return (
     <svg ref={svgRef} className="edge-layer" width={layout.width} height={layout.height} aria-hidden="true">
-      {bundles.map((b) => (
-        <g key={b.id} data-bundle={b.id}>
-          {b.segments.map((s) => {
-            const appear = s.edgeIds.some((i) => appearing.has(i));
-            const degraded = s.edgeIds.every((i) => laid.find((l) => l.id === i)?.degraded);
-            const cls = (extra: string) => `edge-line ${extra}${appear ? " edge-line--appear" : ""}`;
-            const style = appear ? ({ "--len": s.length } as React.CSSProperties) : undefined;
+      {/* 1. 바닥: 묶음·조각·갈림점 */}
+      <g className="edge-base">
+        {bundles.map((b) => (
+          <g key={b.id} data-bundle={b.id}>
+            {b.segments.map((s) => {
+              const appear = s.edgeIds.some((i) => appearing.has(i));
+              const degraded = s.edgeIds.every((i) => laid.find((l) => l.id === i)?.degraded);
+              const cls = (extra: string) => `edge-line ${extra}${appear ? " edge-line--appear" : ""}`;
+              const style = appear ? ({ "--len": s.length } as React.CSSProperties) : undefined;
+              return (
+                <g
+                  key={s.key}
+                  className={`edge-seg${isDim(s.edgeIds) ? " edge--dim" : ""}${isUnder(s.edgeIds) ? " edge--under" : ""}${isFaded(s.edgeIds) ? " edge--faded" : ""}${degraded ? " edge--degraded" : ""}`}
+                  data-seg-shared={s.edgeIds.length > 1 ? "true" : undefined}
+                  data-edge-ids={s.edgeIds.join(" ")}
+                  data-edge-kind={s.edgeKind}
+                >
+                  <path className={cls(`edge-line--${s.edgeKind}`)} d={s.d} style={style} />
+                  {s.edgeKind === "replication" && (
+                    <path
+                      className={cls("edge-line--replication-core")}
+                      d={s.d}
+                      style={{ ...style, stroke: "var(--bg-canvas)" }}
+                    />
+                  )}
+                </g>
+              );
+            })}
+            {b.junctions.map((j) => (
+              <circle
+                key={`${j.x},${j.y}`}
+                className={`edge-junction${junctionDim(j) ? " edge--dim" : ""}${junctionFaded(b) ? " edge--faded" : ""}`}
+                data-junction=""
+                cx={j.x}
+                cy={j.y}
+                r={2}
+              />
+            ))}
+          </g>
+        ))}
+      </g>
+
+      {/* 2. 강조 겹선: 이어진 표시 연결마다 하나, 제 종류 모양 그대로 굵게 */}
+      {emphMode && emphLaid.length > 0 && (
+        <g className="edge-emph" data-mode={emphMode}>
+          {emphLaid.map((l) => {
+            const kind = byId.get(l.id)!.edgeKind;
+            const d = toD(l.points);
+            const arrow = arrowD(l.points, EMPH_ARROW);
             return (
-              <g
-                key={s.key}
-                className={`edge-seg${isDim(s.edgeIds) ? " edge--dim" : ""}${isFaded(s.edgeIds) ? " edge--faded" : ""}${degraded ? " edge--degraded" : ""}`}
-                data-seg-shared={s.edgeIds.length > 1 ? "true" : undefined}
-                data-edge-ids={s.edgeIds.join(" ")}
-                data-edge-kind={s.edgeKind}
-              >
-                <path className={cls(`edge-line--${s.edgeKind}`)} d={s.d} style={style} />
-                {s.edgeKind === "replication" && (
-                  <path
-                    className={cls("edge-line--replication-core")}
-                    d={s.d}
-                    style={{ ...style, stroke: "var(--bg-canvas)" }}
-                  />
-                )}
-                <g data-motion-seg={s.key} />
+              <g key={l.id} data-emph-edge={l.id}>
+                {emphMode === "select" && <path className="edge-emph__glow" d={d} />}
+                <path className={`edge-emph__line edge-line edge-line--${kind}`} d={d} />
+                {kind === "replication" && <path className="edge-emph__core edge-line edge-line--replication-core" d={d} />}
+                {arrow && <path className={`edge-emph__arrow edge-arrow edge-arrow--${kind}`} d={arrow} />}
               </g>
             );
           })}
-          {b.junctions.map((j) => (
-            <circle
-              key={`${j.x},${j.y}`}
-              className={`edge-junction${junctionDim(b) ? " edge--dim" : ""}${junctionFaded(b) ? " edge--faded" : ""}`}
-              data-junction=""
-              cx={j.x}
-              cy={j.y}
-              r={2}
-            />
-          ))}
         </g>
-      ))}
+      )}
 
+      {/* 3. 움직임: 조각마다 하나. 흐림은 바닥과 같되 이어진 선이 지나는 조각은 흐리지 않는다. */}
+      <g className="edge-motion">
+        {bundles.flatMap((b) =>
+          b.segments.map((s) => (
+            <g
+              key={s.key}
+              className={`edge-motion__seg${isDim(s.edgeIds) ? " edge--dim" : ""}${isFaded(s.edgeIds) ? " edge--faded" : ""}`}
+              data-motion-seg={s.key}
+            />
+          )),
+        )}
+      </g>
+
+      {/* 4. 연결마다 화살표·누르는 자리·이름 */}
       {laid.map((l) => {
         const e = byId.get(l.id)!;
         const d = arrowD(l.points);
@@ -164,7 +225,7 @@ export function EdgeLayer({ layout, edges, selectedId, hoverId, onHover, hoverLa
         const showLabel = !!e.label && !!l.labelAt && (!hoverLabels || hovered === e.id || incident.has(e.id));
         return (
           <g key={e.id} className={`edge${dim ? " edge--dim" : ""}${faded ? " edge--faded" : ""}${isSelectedEdge(e) ? " edge--selected" : ""}`} data-edge-id={e.id} data-edge-kind={e.edgeKind}>
-            {d && <path className={`edge-arrow edge-arrow--${e.edgeKind}`} d={d} />}
+            {d && <path className={`edge-arrow edge-arrow--${e.edgeKind}${isUnder([e.id]) ? " edge--under" : ""}`} d={d} />}
             <path
               className="edge-hit"
               d={toD(l.points)}

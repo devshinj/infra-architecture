@@ -232,3 +232,33 @@ test("exportDiagramImage refuses an empty layout", async () => {
   ).rejects.toThrow();
   expect(lib.toBlob).not.toHaveBeenCalled();
 });
+
+test("export removes emphasis overlay", () => {
+  const host = document.createElement("div");
+  host.innerHTML = `
+<div class="react-flow__viewport">
+  <svg class="edge-layer">
+    <g class="edge-base"><g data-bundle="b1">
+      <g class="edge-seg edge--under" data-edge-ids="e1 e2"><path class="edge-line edge-line--request"></path></g>
+      <g class="edge-seg edge--dim" data-edge-ids="e2"><path class="edge-line edge-line--request"></path></g>
+    </g></g>
+    <g class="edge-emph" data-mode="select"><g data-emph-edge="e1">
+      <path class="edge-emph__glow"></path><path class="edge-emph__line edge-line edge-line--request"></path><path class="edge-emph__arrow edge-arrow edge-arrow--request"></path>
+    </g></g>
+    <g class="edge-motion"><g class="edge-motion__seg" data-motion-seg="s1"><path class="motion-path motion-comet"></path></g></g>
+    <g class="edge edge--selected" data-edge-id="e1"><path class="edge-arrow edge-arrow--request edge--under"></path></g>
+    <g class="edge edge--dim" data-edge-id="e2"><path class="edge-arrow edge-arrow--request"></path></g>
+  </svg>
+</div>`;
+  document.body.appendChild(host);
+  const viewport = host.querySelector<HTMLElement>(".react-flow__viewport")!;
+  const clone = viewport.cloneNode(true) as HTMLElement;
+  neutralizeClone(clone, [], new Set(["e1", "e2"]));
+  expect(clone.querySelectorAll(".edge-emph")).toHaveLength(0);
+  expect(clone.querySelectorAll("[data-emph-edge]")).toHaveLength(0);
+  expect(clone.getElementsByClassName("edge--under")).toHaveLength(0);
+  expect(clone.getElementsByClassName("edge--dim")).toHaveLength(0);
+  expect(clone.querySelectorAll(".edge-seg")).toHaveLength(2);
+  expect(clone.querySelectorAll("g[data-edge-id] .edge-arrow")).toHaveLength(2);
+  expect(viewport.querySelectorAll(".edge-emph")).toHaveLength(1);
+});

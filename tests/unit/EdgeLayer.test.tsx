@@ -184,3 +184,118 @@ test("appearing edges are not faded by hover", () => {
   expect(document.querySelector('[data-edge-id="e3"]')).not.toHaveClass("edge--faded");
   expect(document.querySelector('[data-edge-id="e1"]')).not.toHaveClass("edge--faded");
 });
+
+const toD = (pts: { x: number; y: number }[]) => pts.map((p, i) => `${i ? "L" : "M"} ${p.x} ${p.y}`).join(" ");
+
+test("selecting a node overlays each incident edge once with its own kind", () => {
+  render(<EdgeLayer layout={fanOutLayout} edges={fanOutEdges} {...base} selectedId="w1" />);
+  expect(document.querySelectorAll(".edge-emph")).toHaveLength(1);
+  expect(document.querySelector(".edge-emph")).toHaveAttribute("data-mode", "select");
+  expect(document.querySelectorAll('[data-emph-edge="e1"]')).toHaveLength(1);
+  expect(document.querySelector('[data-emph-edge="e2"]')).toBeNull();
+  const line = document.querySelector('[data-emph-edge="e1"] path.edge-emph__line')!;
+  expect(line).toHaveClass("edge-line--request");
+  expect(line.getAttribute("d")).toBe(toD(fanOutLayout.edges[0].points));
+  expect(document.querySelectorAll('[data-emph-edge="e1"] path.edge-emph__glow')).toHaveLength(1);
+  expect(document.querySelectorAll('[data-emph-edge="e1"] path.edge-emph__arrow')).toHaveLength(1);
+  // 이어진 선의 바닥 화살표는 겹선 아래로 흐리고, 이어지지 않은 연결은 지금처럼 통째로 흐린다.
+  expect(document.querySelector('[data-edge-id="e1"] .edge-arrow')).toHaveClass("edge--under");
+  expect(document.querySelector('[data-edge-id="e1"]')).not.toHaveClass("edge--dim");
+  expect(document.querySelector('[data-edge-id="e2"]')).toHaveClass("edge--dim");
+  expect(document.querySelector('[data-edge-id="e2"] .edge-arrow')).not.toHaveClass("edge--under");
+});
+
+test("layers are ordered base, emphasis, motion, edges", () => {
+  render(<EdgeLayer layout={fanOutLayout} edges={fanOutEdges} {...base} selectedId="w1" />);
+  const svg = document.querySelector("svg.edge-layer")!;
+  const order = [...svg.children].map((c) =>
+    c.classList.contains("edge-base") ? "base" : c.classList.contains("edge-emph") ? "emph" : c.classList.contains("edge-motion") ? "motion" : c.classList.contains("edge") ? "edge" : "?",
+  );
+  expect(order).toEqual(["base", "emph", "motion", "edge", "edge"]);
+});
+
+test("no overlay without selection or hover", () => {
+  render(<EdgeLayer layout={fanOutLayout} edges={fanOutEdges} {...base} />);
+  expect(document.querySelectorAll(".edge-emph")).toHaveLength(0);
+  expect(document.querySelectorAll(".edge--under")).toHaveLength(0);
+});
+
+test("async edge on a shared request trunk is overlaid as async", () => {
+  const edges = [de("e1", "alb", "w1"), de("e2", "alb", "w2", "async")];
+  render(<EdgeLayer layout={fanOutLayout} edges={edges} {...base} selectedId="e2" />);
+  const line = document.querySelector('[data-emph-edge="e2"] path.edge-emph__line')!;
+  expect(line).toHaveClass("edge-line--async");
+  expect(line).not.toHaveClass("edge-line--request");
+  expect(document.querySelector('[data-emph-edge="e2"] path.edge-emph__arrow')).toHaveClass("edge-arrow--async");
+});
+
+test("replication overlay keeps its core stripe", () => {
+  const layout = lay([{ id: "r", points: [{ x: 10, y: 10 }, { x: 10, y: 80 }] }]);
+  render(<EdgeLayer layout={layout} edges={[de("r", "a", "b", "replication")]} {...base} selectedId="r" />);
+  const g = document.querySelector('[data-emph-edge="r"]')!;
+  expect(g.querySelector("path.edge-emph__line")).toHaveClass("edge-line--replication");
+  expect(g.querySelector("path.edge-line--replication-core")!.getAttribute("d")).toBe(toD(layout.edges[0].points));
+});
+
+test("junction off the selected path is dimmed", () => {
+  const layout = lay([
+    { id: "e1", points: [{ x: 165, y: 52 }, { x: 165, y: 110 }, { x: 85, y: 110 }, { x: 85, y: 170 }] },
+    { id: "e2", points: [{ x: 165, y: 52 }, { x: 165, y: 110 }, { x: 245, y: 110 }, { x: 245, y: 140 }, { x: 225, y: 140 }, { x: 225, y: 200 }] },
+    { id: "e3", points: [{ x: 165, y: 52 }, { x: 165, y: 110 }, { x: 245, y: 110 }, { x: 245, y: 140 }, { x: 265, y: 140 }, { x: 265, y: 200 }] },
+  ]);
+  const edges = [de("e1", "alb", "w1"), de("e2", "alb", "w2"), de("e3", "alb", "w3")];
+  render(<EdgeLayer layout={layout} edges={edges} {...base} selectedId="w1" />);
+  const at = (x: number, y: number) => document.querySelector(`circle[data-junction][cx="${x}"][cy="${y}"]`);
+  expect(at(165, 110)).not.toBeNull();
+  expect(at(245, 140)).not.toBeNull();
+  expect(at(165, 110)).not.toHaveClass("edge--dim");
+  expect(at(245, 140)).toHaveClass("edge--dim");
+});
+
+test("trunk under the overlay is dimmed but its motion is not", () => {
+  render(<EdgeLayer layout={fanOutLayout} edges={fanOutEdges} {...base} motion selectedId="w1" />);
+  const trunk = document.querySelector('g.edge-seg[data-seg-shared="true"]')!;
+  expect(trunk).toHaveClass("edge--under");
+  expect(trunk).not.toHaveClass("edge--dim");
+  expect(trunk.querySelector("[data-motion-seg]")).toBeNull();
+  const segs = [...document.querySelectorAll("[data-motion-seg]")];
+  expect(segs).toHaveLength(document.querySelectorAll("g.edge-seg").length);
+  for (const m of segs) {
+    expect(m.parentElement).toHaveClass("edge-motion");
+    expect(m).toHaveClass("edge-motion__seg");
+  }
+  const trunkKey = [...document.querySelectorAll("g.edge-seg")].indexOf(trunk);
+  const trunkMotion = segs[trunkKey];
+  expect(trunkMotion).not.toHaveClass("edge--dim");
+  expect(trunkMotion).not.toHaveClass("edge--under");
+  expect(trunkMotion).not.toHaveClass("edge--faded");
+  // e2 만 지나는 갈래의 움직임은 바닥과 같이 흐린다.
+  const e2Branch = [...document.querySelectorAll("g.edge-seg")].findIndex((s) => s.getAttribute("data-edge-ids") === "e2");
+  expect(segs[e2Branch]).toHaveClass("edge--dim");
+});
+
+test("hover overlays without glow", () => {
+  render(<EdgeLayer layout={fanOutLayout} edges={fanOutEdges} {...base} hoverId="w1" />);
+  expect(document.querySelectorAll('.edge-emph[data-mode="hover"]')).toHaveLength(1);
+  expect(document.querySelectorAll(".edge-emph__glow")).toHaveLength(0);
+  expect(document.querySelectorAll("[data-emph-edge]")).toHaveLength(1);
+  expect(document.querySelector('[data-emph-edge="e1"]')).not.toBeNull();
+  // 호버는 겹선 아래 바닥을 흐리지 않고, 이어지지 않은 선만 지금처럼 0.45로 흐린다.
+  expect(document.querySelectorAll(".edge--under")).toHaveLength(0);
+  expect(document.querySelector('[data-edge-id="e2"]')).toHaveClass("edge--faded");
+});
+
+test("selecting an original id of a merged edge overlays the display edge", () => {
+  const layout = lay([{ id: "m", points: [{ x: 10, y: 10 }, { x: 10, y: 80 }] }]);
+  const merged: DisplayEdge = { id: "m", from: "a", to: "b", edgeKind: "request", sourceEdgeIds: ["a", "b"] };
+  render(<EdgeLayer layout={layout} edges={[merged]} {...base} selectedId="b" />);
+  expect(document.querySelectorAll("[data-emph-edge]")).toHaveLength(1);
+  expect(document.querySelector('[data-emph-edge="m"]')).not.toBeNull();
+});
+
+test("degraded edge is overlaid along its elbow", () => {
+  const pts = [{ x: 10, y: 10 }, { x: 10, y: 50 }, { x: 90, y: 50 }, { x: 90, y: 100 }];
+  const layout = lay([{ id: "d", points: pts, degraded: true }]);
+  render(<EdgeLayer layout={layout} edges={[de("d", "a", "b")]} {...base} selectedId="d" />);
+  expect(document.querySelector('[data-emph-edge="d"] path.edge-emph__line')!.getAttribute("d")).toBe(toD(pts));
+});

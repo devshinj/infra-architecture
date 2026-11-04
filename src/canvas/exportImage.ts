@@ -175,8 +175,9 @@ export const LIGHT_TOKENS: Readonly<Record<string, string>> = {
   "--zone-tint-onprem": "#667283",
 };
 
-/** 내보낸 그림에 남기지 않는 화면 장치: 말풍선·배지·접기 버튼·강조 링·움직임·클릭 영역·React Flow 도구. */
+/** 내보낸 그림에 남기지 않는 화면 장치: 말풍선·배지·접기 버튼·강조 링·강조 겹선·움직임·클릭 영역·React Flow 도구. */
 const CHROME = [
+  "edge-emph",
   "name-tooltip",
   "node__badge",
   "node__pulse",
@@ -214,6 +215,7 @@ const NEUTRAL_SWAPS: [string, string | null][] = [
   ["group--selected", null],
   ["group--dimmed", null],
   ["edge--dim", null],
+  ["edge--under", null],
   ["edge--faded", null],
   ["edge--selected", null],
   ["edge-line--appear", null],
