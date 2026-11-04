@@ -135,6 +135,7 @@ export function EdgeLayer({ layout, edges, selectedId, hoverId, onHover, hoverLa
     return () => stops.forEach((stop) => stop());
   }, [signature]);
 
+  const isDegraded = (ids: string[]) => ids.every((i) => laid.find((l) => l.id === i)?.degraded);
   const bundleEdgeIds = (b: Bundle) => b.segments.flatMap((s) => s.edgeIds);
   // 고른 동안 갈림점은 겹선의 점 위에 있을 때만 흐리지 않는다.
   const junctionDim = (j: Pt) => sel !== null && !emphLaid.some((l) => onPolyline(j, l.points));
@@ -148,7 +149,7 @@ export function EdgeLayer({ layout, edges, selectedId, hoverId, onHover, hoverLa
           <g key={b.id} data-bundle={b.id}>
             {b.segments.map((s) => {
               const appear = s.edgeIds.some((i) => appearing.has(i));
-              const degraded = s.edgeIds.every((i) => laid.find((l) => l.id === i)?.degraded);
+              const degraded = isDegraded(s.edgeIds);
               const cls = (extra: string) => `edge-line ${extra}${appear ? " edge-line--appear" : ""}`;
               const style = appear ? ({ "--len": s.length } as React.CSSProperties) : undefined;
               return (
@@ -209,7 +210,7 @@ export function EdgeLayer({ layout, edges, selectedId, hoverId, onHover, hoverLa
           b.segments.map((s) => (
             <g
               key={s.key}
-              className={`edge-motion__seg${isDim(s.edgeIds) ? " edge--dim" : ""}${isFaded(s.edgeIds) ? " edge--faded" : ""}`}
+              className={`edge-motion__seg${isDim(s.edgeIds) ? " edge--dim" : ""}${isFaded(s.edgeIds) ? " edge--faded" : ""}${isDegraded(s.edgeIds) ? " edge--degraded" : ""}`}
               data-motion-seg={s.key}
             />
           )),
@@ -222,10 +223,12 @@ export function EdgeLayer({ layout, edges, selectedId, hoverId, onHover, hoverLa
         const d = arrowD(l.points);
         const dim = isDim([e.id]);
         const faded = isFaded([e.id]);
+        // 겹선 화살표가 있는 연결(선택·호버 모두)의 바닥 화살표는 그 아래로 흐린다.
+        const arrowUnder = emphLaid.some((x) => x.id === e.id);
         const showLabel = !!e.label && !!l.labelAt && (!hoverLabels || hovered === e.id || incident.has(e.id));
         return (
           <g key={e.id} className={`edge${dim ? " edge--dim" : ""}${faded ? " edge--faded" : ""}${isSelectedEdge(e) ? " edge--selected" : ""}`} data-edge-id={e.id} data-edge-kind={e.edgeKind}>
-            {d && <path className={`edge-arrow edge-arrow--${e.edgeKind}${isUnder([e.id]) ? " edge--under" : ""}`} d={d} />}
+            {d && <path className={`edge-arrow edge-arrow--${e.edgeKind}${arrowUnder ? " edge--under" : ""}`} d={d} />}
             <path
               className="edge-hit"
               d={toD(l.points)}

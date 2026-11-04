@@ -280,8 +280,8 @@ test("hover overlays without glow", () => {
   expect(document.querySelectorAll(".edge-emph__glow")).toHaveLength(0);
   expect(document.querySelectorAll("[data-emph-edge]")).toHaveLength(1);
   expect(document.querySelector('[data-emph-edge="e1"]')).not.toBeNull();
-  // 호버는 겹선 아래 바닥을 흐리지 않고, 이어지지 않은 선만 지금처럼 0.45로 흐린다.
-  expect(document.querySelectorAll(".edge--under")).toHaveLength(0);
+  // 호버는 겹선 아래 바닥 선을 흐리지 않고, 이어지지 않은 선만 지금처럼 0.45로 흐린다.
+  expect(document.querySelectorAll("g.edge-seg.edge--under")).toHaveLength(0);
   expect(document.querySelector('[data-edge-id="e2"]')).toHaveClass("edge--faded");
 });
 
@@ -298,4 +298,19 @@ test("degraded edge is overlaid along its elbow", () => {
   const layout = lay([{ id: "d", points: pts, degraded: true }]);
   render(<EdgeLayer layout={layout} edges={[de("d", "a", "b")]} {...base} selectedId="d" />);
   expect(document.querySelector('[data-emph-edge="d"] path.edge-emph__line')!.getAttribute("d")).toBe(toD(pts));
+});
+
+test("hover sinks the incident base arrow under the overlay arrow, not its line", () => {
+  render(<EdgeLayer layout={fanOutLayout} edges={fanOutEdges} {...base} hoverId="w1" />);
+  expect(document.querySelector('[data-edge-id="e1"] .edge-arrow')).toHaveClass("edge--under");
+  expect(document.querySelector('[data-edge-id="e2"] .edge-arrow')).not.toHaveClass("edge--under");
+  expect(document.querySelectorAll("g.edge-seg.edge--under")).toHaveLength(0);
+});
+
+test("motion host of a degraded segment keeps the degraded opacity", () => {
+  const layout = lay([{ id: "d", points: [{ x: 10, y: 10 }, { x: 10, y: 50 }, { x: 90, y: 50 }], degraded: true }]);
+  render(<EdgeLayer layout={layout} edges={[de("d", "a", "b")]} {...base} motion />);
+  const hosts = [...document.querySelectorAll("[data-motion-seg]")];
+  expect(hosts.length).toBeGreaterThan(0);
+  for (const h of hosts) expect(h).toHaveClass("edge--degraded");
 });
