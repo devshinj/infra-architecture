@@ -378,3 +378,9 @@ test("edges.css: dim, under and faded win over degraded on segments, edges and m
     expect(resolvedOpacity(css, [host, "edge--degraded", "edge--under"]), host).toBe("0.12");
   }
 });
+
+test("zone name font scales with zoom and has no far override", () => {
+  const css = read("src/canvas/canvas.css");
+  expect(rule(css, ".group__name")).toContain("font-size: clamp(11px, calc(10px / var(--zoom, 1)), 19px);");
+  expect(css).not.toMatch(/\[data-zoom="far"\]\s+\.group__name/);
+});

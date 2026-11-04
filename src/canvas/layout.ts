@@ -20,6 +20,16 @@ export interface Layout { nodes: Record<string, LaidOutNode>; groups: Record<str
 type Pt = { x: number; y: number };
 
 const EMPTY_GROUP = { width: 160, height: 56 };
+// 접힌 영역 상자 폭의 위쪽 한계.
+export const COLLAPSED_MAX_WIDTH = 320;
+const GROUP_NAME_PX = 11;
+
+// 접힌 영역은 이름 알약과 "펼치기 · 노드 N개" 단추가 한 줄에 들어갈 만큼 넓힌다(보이는 글만 잰다).
+export function collapsedGroupWidth(label: string, hiddenCount: number): number {
+  const head = 20 + 18 + textWidth(label, GROUP_NAME_PX);
+  const toggle = textWidth(`펼치기 · 노드 ${hiddenCount}개`, GROUP_NAME_PX) + 12 + 2;
+  return Math.min(COLLAPSED_MAX_WIDTH, Math.max(EMPTY_GROUP.width, head + 8 + toggle));
+}
 export const LABEL_PX = 14;
 export const SUB_PX = 11;
 const ROOT = "__root";
@@ -221,7 +231,7 @@ export async function layoutDiagram(g: DisplayGraph, pinned: Record<string, { x:
             children: [],
             edges: [],
           }
-        : { id: grp.id, width: EMPTY_GROUP.width, height: EMPTY_GROUP.height };
+        : { id: grp.id, width: g.groups[grp.id].collapsed ? collapsedGroupWidth(g.groups[grp.id].label, g.groups[grp.id].hiddenCount) : EMPTY_GROUP.width, height: EMPTY_GROUP.height };
       elkById.set(grp.id, n);
       elkById.get(containerOf(grp.id))!.children!.push(n);
     }

@@ -2,7 +2,7 @@ import { expect, test } from "vitest";
 
 import { buildDisplayGraph, defaultDisplayOptions } from "@/canvas/display";
 import { elbowRoute } from "@/canvas/elbow";
-import { CONTENT_WIDTH, GROUP_PAD, SUB_PX, azChipWidth, layoutDiagram, type Layout, type Rect } from "@/canvas/layout";
+import { COLLAPSED_MAX_WIDTH, CONTENT_WIDTH, GROUP_PAD, collapsedGroupWidth, SUB_PX, azChipWidth, layoutDiagram, type Layout, type Rect } from "@/canvas/layout";
 import { measureLayout } from "@/canvas/layoutMetrics";
 import { findOverlaps, PAIR_BADGE_OFFSET } from "@/canvas/overlap";
 import { textWidth, truncate } from "@/canvas/text";
@@ -213,13 +213,36 @@ test("empty state and empty group", async () => {
   expect(l.groups.vpc).toMatchObject({ width: 160, height: 56 });
 });
 
-test("collapsed group renders as a 160×56 box", async () => {
+test("collapsed group renders as a 56-high box sized to its name", async () => {
   const st = fx("s2");
   const opts = { ...defaultDisplayOptions(st), collapsed: new Set(["was-pair"]) };
   const l = await layoutDiagram(buildDisplayGraph(st, opts), {});
-  expect(l.groups["was-pair"]).toMatchObject({ width: 160, height: 56 });
+  expect(l.groups["was-pair"]).toMatchObject({ height: 56 });
+  expect(l.groups["was-pair"].width).toBeGreaterThanOrEqual(160);
   expect(l.nodes["was-1"]).toBeUndefined();
   expect(findOverlaps(l)).toEqual([]);
+});
+
+async function collapsedWith(label: string) {
+  const st = fx("s2");
+  const opts = { ...defaultDisplayOptions(st), collapsed: new Set(["was-pair"]) };
+  const g = buildDisplayGraph(st, opts);
+  g.groups["was-pair"] = { ...g.groups["was-pair"], label };
+  return { l: await layoutDiagram(g, {}), n: g.groups["was-pair"].hiddenCount };
+}
+
+test("collapsed group widens to fit its name", async () => {
+  const label = "운영 웹 애플리케이션 서버 영역";
+  const { l, n } = await collapsedWith(label);
+  expect(l.groups["was-pair"].width).toBe(collapsedGroupWidth(label, n));
+  expect(l.groups["was-pair"].width).toBeGreaterThan(160);
+  expect(findOverlaps(l)).toEqual([]);
+});
+
+test("collapsed group width is capped", async () => {
+  const { l } = await collapsedWith("아주 긴 영역 이름 ".repeat(20));
+  expect(l.groups["was-pair"].width).toBe(COLLAPSED_MAX_WIDTH);
+  expect(COLLAPSED_MAX_WIDTH).toBe(320);
 });
 
 test("pinned node keeps its position and gets an elbow edge", async () => {
