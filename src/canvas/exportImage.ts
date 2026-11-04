@@ -175,9 +175,10 @@ export const LIGHT_TOKENS: Readonly<Record<string, string>> = {
   "--zone-tint-onprem": "#667283",
 };
 
-/** 내보낸 그림에 남기지 않는 화면 장치: 말풍선·배지·접기 버튼·강조 링·강조 겹선·움직임·클릭 영역·React Flow 도구. */
+/** 내보낸 그림에 남기지 않는 화면 장치: 말풍선·배지·접기 버튼·강조 링·강조 겹선·합친 연결 이름·움직임·클릭 영역·React Flow 도구. */
 const CHROME = [
   "edge-emph",
+  "edge-label--merged",
   "name-tooltip",
   "node__badge",
   "node__pulse",

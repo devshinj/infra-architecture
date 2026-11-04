@@ -1,7 +1,10 @@
+import "@testing-library/jest-dom/vitest";
+import { cleanup, render } from "@testing-library/react";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
 import type { DisplayEdge } from "@/canvas/display";
-import { buildStage, exportDiagramImage, LIGHT_TOKENS, neutralizeClone, PNG_PIXEL_RATIO } from "@/canvas/exportImage";
+import { EdgeLayer } from "@/canvas/EdgeLayer";
+import { buildStage, edgeLabels, exportDiagramImage, LIGHT_TOKENS, neutralizeClone, PNG_PIXEL_RATIO } from "@/canvas/exportImage";
 import type { Layout } from "@/canvas/layout";
 
 const lib = vi.hoisted(() => ({
@@ -261,4 +264,47 @@ test("export removes emphasis overlay", () => {
   expect(clone.querySelectorAll(".edge-seg")).toHaveLength(2);
   expect(clone.querySelectorAll("g[data-edge-id] .edge-arrow")).toHaveLength(2);
   expect(viewport.querySelectorAll(".edge-emph")).toHaveLength(1);
+});
+
+test("export keeps every original label while a node is selected", () => {
+  const layout: Layout = {
+    nodes: { n: { id: "n", x: 0, y: 0, width: 100, height: 40 } as Layout["nodes"][string] },
+    groups: {},
+    edges: [
+      { id: "h1", points: [{ x: 100, y: 5 }, { x: 200, y: 5 }], labelAt: { x: 150, y: 5 } },
+      { id: "h2", points: [{ x: 100, y: 15 }, { x: 200, y: 45 }], labelAt: { x: 150, y: 30 } },
+      { id: "s1", points: [{ x: 100, y: 35 }, { x: 200, y: 125 }], labelAt: { x: 150, y: 80 } },
+      { id: "far", points: [{ x: 10, y: 150 }, { x: 10, y: 220 }], labelAt: { x: 10, y: 185 } },
+    ],
+    width: 300,
+    height: 240,
+  };
+  const edges: DisplayEdge[] = [
+    { id: "h1", from: "n", to: "a", edgeKind: "request", label: "HTTP", sourceEdgeIds: ["h1"] },
+    { id: "h2", from: "n", to: "b", edgeKind: "request", label: "HTTP", sourceEdgeIds: ["h2"] },
+    { id: "s1", from: "n", to: "d", edgeKind: "request", label: "SQL", sourceEdgeIds: ["s1"] },
+    { id: "far", from: "x", to: "y", edgeKind: "request", label: "관리", sourceEdgeIds: ["far"] },
+  ];
+  const host = document.createElement("div");
+  host.className = "react-flow__viewport";
+  document.body.appendChild(host);
+  render(
+    <EdgeLayer layout={layout} edges={edges} selectedId="n" selectedRect={layout.nodes.n} hoverId={null} hoverLabels={false} motion={false} appearing={new Set()} nodeCount={5} />,
+    { container: host },
+  );
+  // 화면에는 합친 이름이 있다.
+  expect(host.querySelector(".edge-label--merged")).toHaveTextContent("HTTP ×2");
+  const clone = host.cloneNode(true) as HTMLElement;
+  neutralizeClone(clone, edgeLabels(layout, edges), new Set(edges.map((e) => e.id)));
+  expect(clone.textContent).not.toContain("×");
+  expect(clone.querySelector(".edge-label--merged")).toBeNull();
+  for (const e of edges) {
+    const t = clone.querySelectorAll(`[data-edge-id="${e.id}"] .edge-label`);
+    expect(t, e.id).toHaveLength(1);
+    expect(t[0].textContent).toBe(e.label);
+    const at = layout.edges.find((l) => l.id === e.id)!.labelAt!;
+    expect(t[0].getAttribute("x")).toBe(String(at.x));
+    expect(t[0].getAttribute("y")).toBe(String(at.y));
+  }
+  cleanup();
 });

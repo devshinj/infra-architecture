@@ -314,3 +314,72 @@ test("motion host of a degraded segment keeps the degraded opacity", () => {
   expect(hosts.length).toBeGreaterThan(0);
   for (const h of hosts) expect(h).toHaveClass("edge--degraded");
 });
+
+// 노드 n(0,0 100×40) 오른쪽 변에서 같은 이름 셋, 다른 이름 하나가 나가고, 이어지지 않은 선에도 같은 이름이 있다.
+const labelled = () => {
+  const layout = lay([
+    { id: "h1", points: [{ x: 100, y: 5 }, { x: 200, y: 5 }], labelAt: { x: 150, y: 5 } },
+    { id: "h2", points: [{ x: 100, y: 15 }, { x: 200, y: 45 }], labelAt: { x: 150, y: 30 } },
+    { id: "h3", points: [{ x: 200, y: 85 }, { x: 100, y: 25 }], labelAt: { x: 150, y: 55 } },
+    { id: "s1", points: [{ x: 100, y: 35 }, { x: 200, y: 125 }], labelAt: { x: 150, y: 80 } },
+    { id: "far", points: [{ x: 10, y: 150 }, { x: 10, y: 220 }], labelAt: { x: 10, y: 185 } },
+  ]);
+  const edges = [
+    de("h1", "n", "a", "request", "HTTP"),
+    de("h2", "n", "b", "request", "HTTP"),
+    de("h3", "c", "n", "request", "HTTP"),
+    de("s1", "n", "d", "request", "SQL"),
+    de("far", "x", "y", "request", "HTTP"),
+  ];
+  return { layout, edges, rect: { x: 0, y: 0, width: 100, height: 40 } };
+};
+const labelTexts = () => [...document.querySelectorAll(".edge-label")].map((t) => t.textContent);
+
+test("selected node shows each label text once", () => {
+  const { layout, edges, rect } = labelled();
+  render(<EdgeLayer layout={layout} edges={edges} {...base} hoverLabels={false} selectedId="n" selectedRect={rect} />);
+  const texts = labelTexts();
+  expect(new Set(texts).size).toBe(texts.length);
+  expect(texts.sort()).toEqual(["HTTP ×3", "SQL"]);
+  const merged = document.querySelector("text.edge-label--merged")!;
+  expect(merged).toHaveTextContent("HTTP ×3");
+  expect(merged.getAttribute("x")).toBe("114");
+  expect(merged.getAttribute("y")).toBe("15");
+  // 하나뿐인 이름은 제 선 안에서 원래 자리에 둔다.
+  const sql = document.querySelector('[data-edge-id="s1"] .edge-label')!;
+  expect(sql).toHaveTextContent("SQL");
+  expect(sql).not.toHaveClass("edge-label--merged");
+  expect(sql.getAttribute("x")).toBe("150");
+  for (const id of ["h1", "h2", "h3"]) expect(document.querySelector(`[data-edge-id="${id}"] .edge-label`)).toBeNull();
+});
+
+test("hoverLabels off: labels of non-incident edges are hidden while selected", () => {
+  const layout = lay([
+    { id: "e1", points: [{ x: 10, y: 10 }, { x: 10, y: 80 }], labelAt: { x: 10, y: 45 } },
+    { id: "e2", points: [{ x: 100, y: 10 }, { x: 100, y: 80 }], labelAt: { x: 100, y: 45 } },
+  ]);
+  const edges = [de("e1", "a", "b", "request", "HTTPS"), de("e2", "c", "d", "request", "HTTPS")];
+  const { rerender } = render(<EdgeLayer layout={layout} edges={edges} {...base} hoverLabels={false} />);
+  expect(labelTexts()).toEqual(["HTTPS", "HTTPS"]);
+  rerender(<EdgeLayer layout={layout} edges={edges} {...base} hoverLabels={false} selectedId="a" selectedRect={{ x: 0, y: -30, width: 20, height: 40 }} />);
+  expect(labelTexts()).toEqual(["HTTPS"]);
+  expect(document.querySelector('[data-edge-id="e1"] .edge-label')).not.toBeNull();
+  expect(document.querySelector('[data-edge-id="e2"] .edge-label')).toBeNull();
+});
+
+test("edge selection shows its own label unchanged", () => {
+  const { layout, edges } = labelled();
+  render(<EdgeLayer layout={layout} edges={edges} {...base} hoverLabels={false} selectedId="h2" />);
+  expect(labelTexts()).toEqual(["HTTP"]);
+  const t = document.querySelector('[data-edge-id="h2"] .edge-label')!;
+  expect(t.getAttribute("x")).toBe("150");
+  expect(t.getAttribute("y")).toBe("30");
+  expect(document.querySelector(".edge-label--merged")).toBeNull();
+});
+
+test("hover keeps per-edge labels (no merging)", () => {
+  const { layout, edges } = labelled();
+  render(<EdgeLayer layout={layout} edges={edges} {...base} hoverLabels={false} hoverId="n" />);
+  expect(document.querySelector(".edge-label--merged")).toBeNull();
+  expect(labelTexts().filter((t) => t === "HTTP")).toHaveLength(4);
+});

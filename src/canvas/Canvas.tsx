@@ -309,6 +309,8 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
   const known = useMemo(() => new Set([...Object.keys(display.nodes), ...Object.keys(display.groups)]), [display]);
   // 선택이 있거나 대상이 사라졌으면 호버는 없는 것으로 친다(노드가 다시 만들어지지 않게 선택 중엔 늘 null).
   const hoverId = selected === null && emphasisOf(display.edges, hover.hoverId, known) !== null ? hover.hoverId : null;
+  // 고른 노드(또는 영역)의 상자: 연결 이름을 합칠 때 그 변 옆에 둔다.
+  const selectedRect: Rect | undefined = selected === null ? undefined : (layout.nodes[selected] ?? layout.groups[selected]);
   // 보드가 바뀌면(fitKey) 호버를 푼다(사라진 노드는 mouseleave 를 보내지 않는다).
   const resetHover = hover.reset;
   useEffect(() => {
@@ -666,6 +668,7 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
           layout={layout}
           edges={display.edges}
           selectedId={selected}
+          {...(selectedRect ? { selectedRect } : {})}
           hoverId={hoverId}
           onHover={(id) => {
             if (id !== null) {

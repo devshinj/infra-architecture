@@ -5,8 +5,9 @@ import { EDGE_KINDS } from "@/domain/catalog";
 
 import "./edges.css";
 import type { DisplayEdge } from "./display";
+import { mergedLabels } from "./edgeLabels";
 import { emphasisOf } from "./emphasis";
-import type { Layout } from "./layout";
+import type { Layout, Rect } from "./layout";
 import { startBundleMotion, type MotionKind } from "./motion";
 import { buildSegmentBundles, type Bundle } from "./segments";
 
@@ -14,6 +15,8 @@ export interface EdgeLayerProps {
   layout: Layout;
   edges: DisplayEdge[];
   selectedId: string | null;
+  /** 고른 노드(또는 접힌 영역)의 상자. 있으면 그 노드에 이어진 같은 이름을 하나로 합쳐 그린다. */
+  selectedRect?: Rect;
   /** 선택이 없을 때 마우스를 올린 노드/연결 id. 선택이 있으면 무시한다. */
   hoverId: string | null;
   /** 연결선(클릭 영역)에 마우스가 들어오면 그 id, 나가면 null. */
@@ -74,7 +77,7 @@ function prefersReducedMotion(): boolean {
   return typeof window !== "undefined" && !!window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
 }
 
-export function EdgeLayer({ layout, edges, selectedId, hoverId, onHover, hoverLabels, motion, appearing, nodeCount, onSelect }: EdgeLayerProps) {
+export function EdgeLayer({ layout, edges, selectedId, selectedRect, hoverId, onHover, hoverLabels, motion, appearing, nodeCount, onSelect }: EdgeLayerProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [hovered, setHovered] = useState<string | null>(null);
 
@@ -100,6 +103,17 @@ export function EdgeLayer({ layout, edges, selectedId, hoverId, onHover, hoverLa
   const emphMode: "select" | "hover" | null = sel ? "select" : hov ? "hover" : null;
   const emphSet = sel?.edges ?? hov?.edges ?? null;
   const emphLaid = useMemo(() => (emphSet ? laid.filter((l) => emphSet.has(l.id)) : []), [laid, emphSet]);
+
+  // 노드·접힌 영역을 고르면 이어진 연결의 같은 이름을 하나로 합친다(연결을 고르거나 호버일 때는 연결마다 그대로).
+  const merged = useMemo(() => {
+    if (!sel || selectedId === null || !selectedRect || edges.some((e) => e.id === selectedId || e.sourceEdgeIds.includes(selectedId))) return [];
+    const incidentLaid = emphLaid.map((l) => {
+      const e = byId.get(l.id)!;
+      return { id: l.id, points: l.points, from: e.from, to: e.to, ...(e.label ? { label: e.label } : {}), ...(l.labelAt ? { labelAt: l.labelAt } : {}) };
+    });
+    return mergedLabels(selectedId, selectedRect, incidentLaid).filter((p) => p.edgeIds.length > 1);
+  }, [sel, selectedId, selectedRect, edges, emphLaid, byId]);
+  const mergedIds = useMemo(() => new Set(merged.flatMap((p) => p.edgeIds)), [merged]);
 
   // Which bundles animate. Over 40 nodes only the ones touching the selection; with fewer, every bundle animates.
   const restrictTo = nodeCount > MANY_NODES ? incident : null;
@@ -225,7 +239,10 @@ export function EdgeLayer({ layout, edges, selectedId, hoverId, onHover, hoverLa
         const faded = isFaded([e.id]);
         // 겹선 화살표가 있는 연결(선택·호버 모두)의 바닥 화살표는 그 아래로 흐린다.
         const arrowUnder = emphLaid.some((x) => x.id === e.id);
-        const showLabel = !!e.label && !!l.labelAt && (!hoverLabels || hovered === e.id || incident.has(e.id));
+        // 고른 동안 이어지지 않은 선의 이름은 마우스를 올렸을 때만 보인다(흐린 선에 같은 이름이 남지 않게).
+        // 합친 이름에 들어간 선은 따로 그리지 않는다.
+        const shown = incident.has(e.id) || (sel ? hoverLabels && hovered === e.id : !hoverLabels || hovered === e.id);
+        const showLabel = !!e.label && !!l.labelAt && !mergedIds.has(e.id) && shown;
         return (
           <g key={e.id} className={`edge${dim ? " edge--dim" : ""}${faded ? " edge--faded" : ""}${isSelectedEdge(e) ? " edge--selected" : ""}`} data-edge-id={e.id} data-edge-kind={e.edgeKind}>
             {d && <path className={`edge-arrow edge-arrow--${e.edgeKind}${arrowUnder ? " edge--under" : ""}`} d={d} />}
@@ -253,6 +270,17 @@ export function EdgeLayer({ layout, edges, selectedId, hoverId, onHover, hoverLa
           </g>
         );
       })}
+
+      {/* 5. 고른 노드에 이어진 같은 이름을 하나로 합친 이름 */}
+      {merged.length > 0 && (
+        <g className="edge-labels-merged">
+          {merged.map((p) => (
+            <text key={p.edgeIds.join(" ")} className="edge-label edge-label--merged" x={p.x} y={p.y}>
+              {p.text}
+            </text>
+          ))}
+        </g>
+      )}
     </svg>
   );
 }
