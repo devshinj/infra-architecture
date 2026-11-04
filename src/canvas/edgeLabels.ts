@@ -9,7 +9,10 @@ export const LABEL_OFFSET = 14;
 /** 같은 점으로 보는 거리(px). */
 const SAME = 0.5;
 
-export interface PlacedLabel { text: string; x: number; y: number; edgeIds: string[] }
+/** 글자를 x 의 어느 쪽에 둘지(SVG text-anchor). 변 옆 이름은 노드 바깥으로 뻗게 start/end 를 쓴다. */
+export type LabelAnchor = "start" | "middle" | "end";
+
+export interface PlacedLabel { text: string; x: number; y: number; anchor: LabelAnchor; edgeIds: string[] }
 
 export interface IncidentEdge { id: string; label?: string; points: Pt[]; labelAt?: Pt; from: string; to: string }
 
@@ -84,7 +87,7 @@ function sideOf(p: Pt, r: Rect): Side {
   return SIDES.reduce((best, s) => (d[s] < d[best] ? s : best), SIDES[0]);
 }
 
-function besideNode(rect: Rect, starts: Pt[]): Pt {
+function besideNode(rect: Rect, starts: Pt[]): Pt & { anchor: LabelAnchor } {
   const count = new Map<Side, Pt[]>();
   for (const p of starts) {
     const s = sideOf(p, rect);
@@ -97,13 +100,13 @@ function besideNode(rect: Rect, starts: Pt[]): Pt {
   const my = round(on.reduce((a, p) => a + p.y, 0) / on.length);
   switch (side) {
     case "top":
-      return { x: mx, y: rect.y - LABEL_OFFSET };
+      return { x: mx, y: rect.y - LABEL_OFFSET, anchor: "middle" };
     case "right":
-      return { x: rect.x + rect.width + LABEL_OFFSET, y: my };
+      return { x: rect.x + rect.width + LABEL_OFFSET, y: my, anchor: "start" };
     case "bottom":
-      return { x: mx, y: rect.y + rect.height + LABEL_OFFSET };
+      return { x: mx, y: rect.y + rect.height + LABEL_OFFSET, anchor: "middle" };
     case "left":
-      return { x: rect.x - LABEL_OFFSET, y: my };
+      return { x: rect.x - LABEL_OFFSET, y: my, anchor: "end" };
   }
 }
 
@@ -118,7 +121,7 @@ export function mergedLabels(selectedId: string, selectedRect: Rect, incident: I
   for (const [text, es] of groups) {
     if (es.length === 1) {
       const at = es[0].labelAt;
-      if (at) out.push({ text, x: at.x, y: at.y, edgeIds: [es[0].id] });
+      if (at) out.push({ text, x: at.x, y: at.y, anchor: "middle", edgeIds: [es[0].id] });
       continue;
     }
     const lines = es.map((e) => fromSelected(selectedId, selectedRect, e));
@@ -128,8 +131,8 @@ export function mergedLabels(selectedId: string, selectedRect: Rect, incident: I
     if (starts.every((p) => same(p, starts[0])) && rs.every((r) => r.length > 0)) {
       trunk = Math.min(...rs.slice(1).map((r) => commonPrefix(rs[0], r)));
     }
-    const at = trunk >= MIN_TRUNK ? pointAt(rs[0], trunk / 2) : besideNode(selectedRect, starts);
-    out.push({ text: `${text} ×${es.length}`, x: round(at.x), y: round(at.y), edgeIds: es.map((e) => e.id) });
+    const at = trunk >= MIN_TRUNK ? { ...pointAt(rs[0], trunk / 2), anchor: "middle" as const } : besideNode(selectedRect, starts);
+    out.push({ text: `${text} ×${es.length}`, x: round(at.x), y: round(at.y), anchor: at.anchor, edgeIds: es.map((e) => e.id) });
   }
   return out;
 }

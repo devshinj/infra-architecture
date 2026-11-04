@@ -275,7 +275,8 @@ export function EdgeLayer({ layout, edges, selectedId, selectedRect, hoverId, on
       {merged.length > 0 && (
         <g className="edge-labels-merged">
           {merged.map((p) => (
-            <text key={p.edgeIds.join(" ")} className="edge-label edge-label--merged" x={p.x} y={p.y}>
+            // .edge-label 의 text-anchor(middle)를 이기도록 인라인으로 준다.
+            <text key={p.edgeIds.join(" ")} className="edge-label edge-label--merged" x={p.x} y={p.y} data-anchor={p.anchor} style={{ textAnchor: p.anchor }}>
               {p.text}
             </text>
           ))}

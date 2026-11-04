@@ -47,8 +47,8 @@ test("different labels stay on their own edges", () => {
   ];
   const out = mergedLabels("n", rect, incident);
   expect(out).toEqual([
-    { text: "HTTPS", x: 150, y: 10, edgeIds: ["a"] },
-    { text: "SQL", x: 150, y: 30, edgeIds: ["b"] },
+    { text: "HTTPS", x: 150, y: 10, anchor: "middle", edgeIds: ["a"] },
+    { text: "SQL", x: 150, y: 30, anchor: "middle", edgeIds: ["b"] },
   ]);
 });
 
@@ -75,7 +75,7 @@ test("incoming edges sharing a trunk into the node merge onto that trunk", () =>
     edge("b", "s2", "n", [{ x: 100, y: 0 }, { x: 100, y: 50 }, { x: 50, y: 50 }, { x: 50, y: 100 }], "TCP"),
   ];
   const out = mergedLabels("n", rect, incident);
-  expect(out).toEqual([{ text: "TCP ×2", x: 50, y: 75, edgeIds: ["a", "b"] }]);
+  expect(out).toEqual([{ text: "TCP ×2", x: 50, y: 75, anchor: "middle", edgeIds: ["a", "b"] }]);
 });
 
 test("pinned-node elbow routes are handled", () => {
@@ -102,4 +102,26 @@ test("a single label without labelAt is left out, edges without a label are igno
     edge("b", "n", "y", [{ x: 100, y: 30 }, { x: 200, y: 30 }], undefined, { x: 150, y: 30 }),
   ];
   expect(mergedLabels("n", rect, incident)).toEqual([]);
+});
+
+test("right-side merged label starts 14px right of the node, left-side ends 14px left of it", () => {
+  const rect: Rect = { x: 100, y: 0, width: 100, height: 40 };
+  const right = [10, 30].map((y, i) => edge(`r${i}`, "n", `t${i}`, [{ x: 200, y }, { x: 300, y: y * 2 }], "HTTP"));
+  const [r] = mergedLabels("n", rect, right);
+  expect(r).toMatchObject({ text: "HTTP ×2", anchor: "start", x: rect.x + rect.width + 14, y: 20 });
+  const left = [10, 30].map((y, i) => edge(`l${i}`, `s${i}`, "n", [{ x: 0, y: y * 2 }, { x: 100, y }], "HTTP"));
+  const [l] = mergedLabels("n", rect, left);
+  expect(l).toMatchObject({ text: "HTTP ×2", anchor: "end", x: rect.x - 14, y: 20 });
+});
+
+test("top and bottom side labels, trunk labels and single labels are centred", () => {
+  const rect: Rect = { x: 100, y: 100, width: 100, height: 40 };
+  const top = [120, 180].map((x, i) => edge(`t${i}`, "n", `a${i}`, [{ x, y: 100 }, { x, y: 0 }], "A"));
+  expect(mergedLabels("n", rect, top)[0]).toMatchObject({ anchor: "middle", x: 150, y: 86 });
+  const bottom = [120, 180].map((x, i) => edge(`b${i}`, "n", `a${i}`, [{ x, y: 140 }, { x, y: 240 }], "B"));
+  expect(mergedLabels("n", rect, bottom)[0]).toMatchObject({ anchor: "middle", x: 150, y: 154 });
+  const trunk = [0, 300].map((x, i) => edge(`k${i}`, "n", `a${i}`, [{ x: 150, y: 140 }, { x: 150, y: 180 }, { x, y: 180 }], "C"));
+  expect(mergedLabels("n", rect, trunk)[0]).toMatchObject({ anchor: "middle", x: 150, y: 160 });
+  const single = [edge("s", "n", "a", [{ x: 200, y: 120 }, { x: 300, y: 120 }], "D", { x: 250, y: 120 })];
+  expect(mergedLabels("n", rect, single)[0]).toMatchObject({ anchor: "middle", x: 250, y: 120 });
 });

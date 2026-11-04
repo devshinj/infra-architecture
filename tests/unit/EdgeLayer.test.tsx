@@ -345,6 +345,9 @@ test("selected node shows each label text once", () => {
   expect(merged).toHaveTextContent("HTTP ×3");
   expect(merged.getAttribute("x")).toBe("114");
   expect(merged.getAttribute("y")).toBe("15");
+  // 오른쪽 변 옆이므로 글자는 그 자리에서 바깥(오른쪽)으로 시작한다.
+  expect(merged.getAttribute("data-anchor")).toBe("start");
+  expect((merged as SVGTextElement).style.textAnchor).toBe("start");
   // 하나뿐인 이름은 제 선 안에서 원래 자리에 둔다.
   const sql = document.querySelector('[data-edge-id="s1"] .edge-label')!;
   expect(sql).toHaveTextContent("SQL");
