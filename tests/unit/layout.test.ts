@@ -3,6 +3,7 @@ import { expect, test } from "vitest";
 import { buildDisplayGraph, defaultDisplayOptions } from "@/canvas/display";
 import { elbowRoute } from "@/canvas/elbow";
 import { CONTENT_WIDTH, GROUP_PAD, SUB_PX, azChipWidth, layoutDiagram, type Layout, type Rect } from "@/canvas/layout";
+import { measureLayout } from "@/canvas/layoutMetrics";
 import { findOverlaps, PAIR_BADGE_OFFSET } from "@/canvas/overlap";
 import { textWidth, truncate } from "@/canvas/text";
 import { applyCommand, applyCommands } from "@/domain/apply";
@@ -152,6 +153,9 @@ test("many cross edges into crowded lane nodes never throw", async () => {
   for (const e of l.edges) expect(e.points.length).toBeGreaterThanOrEqual(2);
   // The gap above the lane group runs out, so some edges fall back to a flagged elbow.
   expect(l.edges.some((e) => e.degraded)).toBe(true);
+  // 16px 간격 때문에 꺾은선·노드 관통이 늘면 안 된다(455fd67 값: degraded 7, throughNode 10).
+  expect(l.edges.filter((e) => e.degraded).length).toBeLessThanOrEqual(7);
+  expect(measureLayout(l, Object.fromEntries(g.edges.map((e) => [e.id, [e.from, e.to] as [string, string]])), 16).throughNode).toBeLessThanOrEqual(10);
   expect(findOverlaps(l)).toEqual([]);
 });
 

@@ -91,17 +91,17 @@
   },
   "state-25": {
     "default": {
-      "crossings": 21,
+      "crossings": 19,
       "sharedPx": 676,
-      "parallelPx": 0,
+      "parallelPx": 544,
       "throughNode": 0,
       "bends": 71,
       "aspect": 1.9408749999999997
     },
     "expanded": {
-      "crossings": 21,
+      "crossings": 19,
       "sharedPx": 676,
-      "parallelPx": 0,
+      "parallelPx": 544,
       "throughNode": 0,
       "bends": 71,
       "aspect": 1.9408749999999997
