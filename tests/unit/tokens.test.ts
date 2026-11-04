@@ -347,3 +347,52 @@ test("primary button text on the accent fill reaches 4.5:1 in every state, and i
   }
   for (const bg of ["bg-panel-raised", "bg-node", "bg-canvas"]) expect(contrast(mixed("line-input"), token(bg)), bg).toBeGreaterThanOrEqual(3);
 });
+
+// edges.css 의 클래스만으로 된 규칙으로 opacity 를 셈한다: 맞는 규칙 가운데 클래스 수(구체성)가 높은 것, 같으면 뒤의 것이 이긴다.
+function resolvedOpacity(css: string, classes: string[]): string | null {
+  const top = css.replace(/\/\*[\s\S]*?\*\//g, "").replace(/@media[^{]*\{(?:[^{}]*\{[^}]*\})*[^{}]*\}/g, "");
+  let best: { spec: number; order: number; value: string } | null = null;
+  let order = 0;
+  for (const m of top.matchAll(/([^{}]+)\{([^}]*)\}/g)) {
+    order++;
+    const value = m[2].match(/(?:^|;)\s*opacity:\s*([^;]+)/)?.[1].trim();
+    if (!value) continue;
+    for (const raw of m[1].split(",")) {
+      const sel = raw.trim();
+      if (!/^(\.[\w-]+)+$/.test(sel)) continue;
+      const need = sel.split(".").filter(Boolean);
+      if (!need.every((c) => classes.includes(c))) continue;
+      if (!best || need.length > best.spec || (need.length === best.spec && order >= best.order)) best = { spec: need.length, order, value };
+    }
+  }
+  return best?.value ?? null;
+}
+
+test("edges.css: dim, under and faded win over degraded on segments, edges and motion hosts", () => {
+  const css = read("src/canvas/edges.css");
+  for (const host of ["edge-seg", "edge", "edge-motion__seg"]) {
+    expect(resolvedOpacity(css, [host, "edge--degraded"]), host).toBe("0.8");
+    expect(resolvedOpacity(css, [host, "edge--degraded", "edge--dim"]), host).toBe("0.12");
+    expect(resolvedOpacity(css, [host, "edge--dim", "edge--degraded"]), host).toBe("0.12");
+    expect(resolvedOpacity(css, [host, "edge--degraded", "edge--faded"]), host).toBe("0.45");
+    expect(resolvedOpacity(css, [host, "edge--degraded", "edge--under"]), host).toBe("0.12");
+  }
+});
+
+test("zone name font scales with zoom and has no far override", () => {
+  const css = read("src/canvas/canvas.css");
+  expect(rule(css, ".group__name")).toContain("font-size: clamp(11px, calc(10px / var(--zoom, 1)), 20px);");
+  expect(css).not.toMatch(/\[data-zoom="far"\]\s+\.group__name/);
+});
+
+test("zone name pill keeps its look in the layer above the edges: opaque tint, dims like its zone, no motion when reduced", () => {
+  const css = read("src/canvas/canvas.css");
+  const r = rule(css, ".group__name");
+  for (const d of ["font-weight: 600;", "line-height: 1.5;", "padding: 0 9px;", "border-radius: 999px;", "background: color-mix(in srgb, var(--tint) 22%, var(--bg-canvas));", "color: color-mix(in srgb, var(--tint) 55%, var(--text-primary));", "text-overflow: ellipsis;", "box-sizing: border-box;", "pointer-events: auto;", "transition: opacity 0.35s ease, transform 0.4s ease;"]) expect(r, d).toContain(d);
+  // 이름표 층 자체는 누르기를 받지 않는다(알약만 받는다).
+  expect(rule(css, ".zone-names")).toContain("pointer-events: none;");
+  // .group--dimmed 는 영역 상자와 알약 모두에 쓴다.
+  expect(rule(css, ".group--dimmed")).toContain("opacity: 0.35;");
+  const reduced = css.slice(css.indexOf("@media (prefers-reduced-motion: reduce)"));
+  expect(reduced).toMatch(/\.group__name \{ transition: none; \}/);
+});

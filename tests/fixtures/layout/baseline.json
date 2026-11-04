@@ -1,0 +1,182 @@
+{
+  "s1": {
+    "default": {
+      "crossings": 11,
+      "sharedPx": 438,
+      "parallelPx": 270,
+      "throughNode": 0,
+      "bends": 28,
+      "aspect": 0.7907865168539326,
+      "zoneHeadCrossings": 2
+    },
+    "expanded": {
+      "crossings": 11,
+      "sharedPx": 438,
+      "parallelPx": 270,
+      "throughNode": 0,
+      "bends": 28,
+      "aspect": 0.7907865168539326,
+      "zoneHeadCrossings": 2
+    }
+  },
+  "s2": {
+    "default": {
+      "crossings": 1,
+      "sharedPx": 118,
+      "parallelPx": 0,
+      "throughNode": 0,
+      "bends": 16,
+      "aspect": 0.4264315352697095,
+      "zoneHeadCrossings": 2
+    },
+    "expanded": {
+      "crossings": 1,
+      "sharedPx": 118,
+      "parallelPx": 0,
+      "throughNode": 0,
+      "bends": 16,
+      "aspect": 0.4264315352697095,
+      "zoneHeadCrossings": 2
+    }
+  },
+  "s3": {
+    "default": {
+      "crossings": 3,
+      "sharedPx": 448,
+      "parallelPx": 0,
+      "throughNode": 0,
+      "bends": 34,
+      "aspect": 1.0005479452054795,
+      "zoneHeadCrossings": 3
+    },
+    "expanded": {
+      "crossings": 3,
+      "sharedPx": 448,
+      "parallelPx": 0,
+      "throughNode": 0,
+      "bends": 34,
+      "aspect": 1.0005479452054795,
+      "zoneHeadCrossings": 3
+    }
+  },
+  "s4": {
+    "default": {
+      "crossings": 29,
+      "sharedPx": 760,
+      "parallelPx": 0,
+      "throughNode": 0,
+      "bends": 80,
+      "aspect": 1.4616862170087976,
+      "zoneHeadCrossings": 7
+    },
+    "expanded": {
+      "crossings": 29,
+      "sharedPx": 760,
+      "parallelPx": 0,
+      "throughNode": 0,
+      "bends": 80,
+      "aspect": 1.4616862170087976,
+      "zoneHeadCrossings": 7
+    }
+  },
+  "s5": {
+    "default": {
+      "crossings": 1,
+      "sharedPx": 197,
+      "parallelPx": 0,
+      "throughNode": 0,
+      "bends": 20,
+      "aspect": 0.5009363295880149,
+      "zoneHeadCrossings": 2
+    },
+    "expanded": {
+      "crossings": 1,
+      "sharedPx": 197,
+      "parallelPx": 0,
+      "throughNode": 0,
+      "bends": 20,
+      "aspect": 0.5009363295880149,
+      "zoneHeadCrossings": 2
+    }
+  },
+  "state-25": {
+    "default": {
+      "crossings": 19,
+      "sharedPx": 706,
+      "parallelPx": 544,
+      "throughNode": 0,
+      "bends": 71,
+      "aspect": 1.9036991869918698,
+      "zoneHeadCrossings": 4
+    },
+    "expanded": {
+      "crossings": 19,
+      "sharedPx": 706,
+      "parallelPx": 544,
+      "throughNode": 0,
+      "bends": 71,
+      "aspect": 1.9036991869918698,
+      "zoneHeadCrossings": 4
+    }
+  },
+  "state-50": {
+    "default": {
+      "crossings": 0,
+      "sharedPx": 60,
+      "parallelPx": 0,
+      "throughNode": 0,
+      "bends": 9,
+      "aspect": 2.2139908256880734,
+      "zoneHeadCrossings": 0
+    },
+    "expanded": {
+      "crossings": 117,
+      "sharedPx": 9782,
+      "parallelPx": 548,
+      "throughNode": 0,
+      "bends": 241,
+      "aspect": 3.5479682997118154,
+      "zoneHeadCrossings": 12
+    }
+  },
+  "state-100": {
+    "default": {
+      "crossings": 1,
+      "sharedPx": 70,
+      "parallelPx": 0,
+      "throughNode": 0,
+      "bends": 13,
+      "aspect": 2.5786697247706423,
+      "zoneHeadCrossings": 0
+    },
+    "expanded": {
+      "crossings": 207,
+      "sharedPx": 22865,
+      "parallelPx": 942,
+      "throughNode": 0,
+      "bends": 540,
+      "aspect": 7.803308157099698,
+      "zoneHeadCrossings": 25
+    }
+  },
+  "state-200": {
+    "default": {
+      "crossings": 1,
+      "sharedPx": 70,
+      "parallelPx": 0,
+      "throughNode": 0,
+      "bends": 13,
+      "aspect": 2.585550458715596,
+      "zoneHeadCrossings": 0
+    },
+    "expanded": {
+      "crossings": 833,
+      "sharedPx": 223984,
+      "parallelPx": 544,
+      "throughNode": 0,
+      "bends": 1213,
+      "aspect": 9.678696763202725,
+      "zoneHeadCrossings": 53
+    }
+  }
+}

@@ -26,3 +26,22 @@ export function emphasisOf(edges: DisplayEdge[], id: string | null, nodeIds?: Re
   }
   return { nodes, edges: ids };
 }
+
+/**
+ * 고르면 흐리지 않고 남겨 둘 영역 id 집합.
+ * 강조 노드(접힌 영역이 연결 끝이면 그 영역 id 도 노드 쪽에 들어 있다)와 고른 id 에 대해, 자기 자신과 모든 조상을 넣는다.
+ * 노드 id 가 섞여도 영역 판정에는 쓰이지 않으므로 해가 없다.
+ */
+export function litZones(parentOf: (id: string) => string | null, emph: Emphasis, selectedId: string | null): Set<string> {
+  const lit = new Set<string>();
+  const add = (start: string) => {
+    let p: string | null = start;
+    while (p !== null && !lit.has(p)) {
+      lit.add(p);
+      p = parentOf(p);
+    }
+  };
+  for (const id of emph.nodes) add(id);
+  if (selectedId !== null) add(selectedId);
+  return lit;
+}

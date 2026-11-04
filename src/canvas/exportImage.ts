@@ -145,6 +145,12 @@ export const LIGHT_TOKENS: Readonly<Record<string, string>> = {
   "--edge-async": "#94603F",
   "--edge-replication": "#3F7F55",
   "--edge-aux": "#7D8BA0",
+  // 강조 색: 흰 바탕에서는 기본색보다 진하고 채도 높게(같은 색 계열).
+  "--edge-request-lit": "#2F5A94",
+  "--edge-async-lit": "#7A3F1C",
+  "--edge-replication-lit": "#1F6B3E",
+  "--edge-aux-lit": "#44587A",
+  "--edge-glow": "#3F6BA8",
   "--motion-comet-tail": "#7D8BA0",
   "--motion-comet-mid": "#9A6E22",
   "--motion-capsule": "#94603F",
@@ -169,8 +175,11 @@ export const LIGHT_TOKENS: Readonly<Record<string, string>> = {
   "--zone-tint-onprem": "#667283",
 };
 
-/** 내보낸 그림에 남기지 않는 화면 장치: 말풍선·배지·접기 버튼·강조 링·움직임·클릭 영역·React Flow 도구. */
+/** 내보낸 그림에 남기지 않는 화면 장치: 말풍선·배지·접기 버튼·강조 링·강조 겹선·합친(또는 비킨) 연결 이름·움직임·클릭 영역·React Flow 도구. */
 const CHROME = [
+  "edge-emph",
+  "edge-label--merged",
+  "edge-label--moved",
   "name-tooltip",
   "node__badge",
   "node__pulse",
@@ -206,7 +215,9 @@ const NEUTRAL_SWAPS: [string, string | null][] = [
   ["node--updated", "node--normal"],
   ["node--pulse", null],
   ["group--selected", null],
+  ["group--dimmed", null],
   ["edge--dim", null],
+  ["edge--under", null],
   ["edge--faded", null],
   ["edge--selected", null],
   ["edge-line--appear", null],

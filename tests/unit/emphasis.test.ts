@@ -39,3 +39,26 @@ test("unknown hover id gives no emphasis when node ids are known", () => {
   expect(emphasisOf(edges, "a", new Set(["a", "b"]))).not.toBeNull();
   expect(emphasisOf(edges, "src1", new Set())).not.toBeNull();
 });
+
+import { litZones } from "@/canvas/emphasis";
+
+const parents: Record<string, string | null> = { a: "subnet", subnet: "vpc", vpc: null, b: null, other: "vpc2", vpc2: null };
+const parentOf = (id: string) => parents[id] ?? null;
+
+test("lit zones are ancestors of emphasized nodes", () => {
+  const lit = litZones(parentOf, { nodes: new Set(["a"]), edges: new Set() }, null);
+  expect([...lit].sort()).toEqual(["a", "subnet", "vpc"].sort());
+  expect(lit.has("vpc2")).toBe(false);
+});
+
+test("a selected zone and its ancestors stay lit", () => {
+  const lit = litZones(parentOf, { nodes: new Set(["b"]), edges: new Set() }, "subnet");
+  expect(lit.has("subnet")).toBe(true);
+  expect(lit.has("vpc")).toBe(true);
+  expect(lit.has("vpc2")).toBe(false);
+});
+
+test("collapsed zone that is an edge endpoint is lit", () => {
+  const lit = litZones(parentOf, { nodes: new Set(["vpc2"]), edges: new Set() }, null);
+  expect(lit.has("vpc2")).toBe(true);
+});

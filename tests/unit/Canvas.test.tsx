@@ -744,3 +744,60 @@ test("with several nodes selected, every moved node is saved in one call", async
   const saved = vi.mocked(props.onPinnedChange).mock.calls[0][0];
   expect(Object.keys(saved).sort()).toEqual([id, otherId].sort());
 });
+
+const groupEl = (c: HTMLElement, id: string) => c.querySelector(`.react-flow__node-zone[data-id="${id}"] .group`);
+
+test("selection dims zones without any linked node", async () => {
+  const props = baseProps();
+  props.options = { ...props.options, selectedId: "was-1" };
+  const { container } = render(<div style={{ width: 800, height: 600 }}><Canvas {...props} /></div>);
+  await waitFor(() => expect(container.querySelector(".group--dimmed")).not.toBeNull());
+  // 고른 노드가 든 영역과 그 조상은 흐리지 않는다.
+  for (const id of ["was-pair", "private-zone", "idc-main"]) expect(groupEl(container, id)!.classList.contains("group--dimmed"), id).toBe(false);
+  // 이어진 노드가 하나도 없는 영역은 흐린다.
+  expect(groupEl(container, "db-pair")!.classList.contains("group--dimmed")).toBe(true);
+});
+
+test("hover does not dim zones", async () => {
+  const { container } = render(<div style={{ width: 800, height: 600 }}><Canvas {...baseProps()} /></div>);
+  await waitFor(() => expect(nodeEl(container, "was-1")).not.toBeNull());
+  hoverEnter(nodeEl(container, "was-1")!);
+  await waitFor(() => expect(container.querySelector(".node--faded")).not.toBeNull());
+  expect(container.querySelector(".group--dimmed")).toBeNull();
+});
+
+const pillEl = (c: HTMLElement, id: string) => c.querySelector<HTMLElement>(`.react-flow__viewport-portal .zone-names .group__name[data-zone-id="${id}"]`);
+
+test("zone names are drawn in their own layer in the viewport portal, not inside GroupBox", async () => {
+  const props = baseProps();
+  const { container } = render(<div style={{ width: 800, height: 600 }}><Canvas {...props} /></div>);
+  await waitFor(() => expect(container.querySelector(".react-flow__viewport-portal .zone-names")).not.toBeNull());
+  const zones = container.querySelectorAll(".react-flow__node-zone");
+  expect(zones.length).toBeGreaterThan(0);
+  for (const z of zones) {
+    expect(z.querySelector(".group__name")).toBeNull();
+    const id = z.getAttribute("data-id")!;
+    expect(pillEl(container, id), id).not.toBeNull();
+    // 영역 이름은 노드 래퍼의 이름표와 접기 단추의 숨긴 이름으로 그대로 읽힌다.
+    expect(z.getAttribute("aria-label")).toBe(pillEl(container, id)!.textContent);
+    expect(z.querySelector(".group__toggle-name")).toHaveTextContent(pillEl(container, id)!.textContent!);
+  }
+  // 이름 알약을 눌러도 영역 머리를 누른 것과 같다: 고른 것을 풀 뿐 영역을 고르지 않는다.
+  const zoneId = zones[zones.length - 1].getAttribute("data-id")!;
+  fireEvent.click(pillEl(container, zoneId)!);
+  expect(props.onSelect).toHaveBeenCalledWith(null);
+  expect(props.onSelect).not.toHaveBeenCalledWith(zoneId);
+  // 머리를 눌렀을 때처럼 영역 래퍼가 포커스를 받고, 다음 Tab 이 돌아올 곳(tabindex 0)이 된다.
+  const wrapper = container.querySelector<HTMLElement>(`.react-flow__node-zone[data-id="${zoneId}"]`)!;
+  expect(document.activeElement).toBe(wrapper);
+  await waitFor(() => expect(wrapper).toHaveAttribute("tabindex", "0"));
+});
+
+test("with a node selected, a zone with no linked node has a dimmed name pill", async () => {
+  const props = baseProps();
+  props.options = { ...props.options, selectedId: "was-1" };
+  const { container } = render(<div style={{ width: 800, height: 600 }}><Canvas {...props} /></div>);
+  await waitFor(() => expect(pillEl(container, "db-pair")).not.toBeNull());
+  expect(pillEl(container, "db-pair")).toHaveClass("group--dimmed");
+  for (const id of ["was-pair", "private-zone", "idc-main"]) expect(pillEl(container, id)!.classList.contains("group--dimmed"), id).toBe(false);
+});

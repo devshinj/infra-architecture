@@ -62,6 +62,13 @@
   --edge-replication: #88AE93; /* 복제 */
   --edge-aux: #56657C; /* 관리·모니터링 */
 
+  /* 연결선 강조 색: 고른 대상에 닿은 선. 기본색과 같은 계열에서 어두운 캔버스(#1B2638) 위에 확실히 밝게 */
+  --edge-request-lit: #B9C8DE; /* 요청선 강조 (슬레이트 블루, 밝게) */
+  --edge-async-lit: #E6C3AC; /* 비동기·웹훅 강조 (테라코타, 밝게) */
+  --edge-replication-lit: #B5DCC1; /* 복제 강조 (세이지 그린, 밝게) */
+  --edge-aux-lit: #94A7C4; /* 관리·모니터링 강조 (회청색, 밝게) */
+  --edge-glow: #AFC3E0; /* 강조선 뒤 번짐 색 */
+
   /* 연결선 움직임 (빛 꼬리·패킷·광택) */
   --motion-comet-tail: #C9D3E2; /* 빛 꼬리 바깥 */
   --motion-comet-mid: #E9DDBF; /* 빛 꼬리 가운데 */
