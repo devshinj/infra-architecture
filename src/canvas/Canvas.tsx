@@ -10,7 +10,7 @@ import { mergeWarnings, warningsByNode } from "@/domain/warnings";
 import { canvasAriaLabels, zoneDescription } from "./ariaLabels";
 import "./canvas.css";
 import { EdgeLayerPortal } from "./EdgeLayer";
-import { emphasisOf } from "./emphasis";
+import { emphasisOf, litZones } from "./emphasis";
 import { ExportMenu } from "./ExportMenu";
 import { exportDiagramImage, exportFileName, type ExportBackground, type ExportFormat } from "./exportImage";
 import type { GroupBoxData } from "./GroupBox";
@@ -343,11 +343,14 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
     // 선택이 있으면 선택 기준으로만 흐리고, 호버는 선택이 없을 때만 쓴다.
     const sel = emphasisOf(display.edges, selected);
     const hov = emphasisOf(display.edges, hoverId, known);
+    // 고르면 이어진 노드가 없는 영역도 흐린다(호버는 영역을 흐리지 않는다: 선택보다 약하게).
+    const parentOf = (id: string): string | null => (display.nodes[id] ?? display.groups[id])?.parent ?? null;
+    const lit = sel ? litZones(parentOf, sel, selected) : null;
     const out: Node[] = [];
     for (const lg of Object.values(layout.groups)) {
       const g = display.groups[lg.id];
       if (!g) continue;
-      const data: GroupBoxData = { label: g.label, groupKind: g.groupKind, collapsed: g.collapsed, hiddenCount: g.hiddenCount, selected: g.id === selected, onToggle: () => toggleGroup(g.id) };
+      const data: GroupBoxData = { label: g.label, groupKind: g.groupKind, collapsed: g.collapsed, hiddenCount: g.hiddenCount, selected: g.id === selected, dimmed: lit !== null && !lit.has(g.id), onToggle: () => toggleGroup(g.id) };
       out.push({
         id: g.id,
         type: "zone",

@@ -10,6 +10,7 @@ export interface GroupBoxData extends Record<string, unknown> {
   collapsed: boolean;
   hiddenCount: number;
   selected?: boolean;
+  dimmed?: boolean;
   onToggle: () => void;
 }
 
@@ -17,7 +18,7 @@ export function GroupBox({ data }: Pick<NodeProps, "data"> & Partial<NodeProps>)
   const d = data as GroupBoxData;
   const def = GROUP_KINDS.find((g) => g.kind === d.groupKind)!;
   const style = { "--zone": `var(${def.zoneToken})`, "--tint": `var(${def.tintToken})` } as React.CSSProperties;
-  const cls = `group${def.dashed ? " group--dashed" : ""}${d.collapsed ? " group--collapsed" : ""}${d.selected ? " group--selected" : ""}`;
+  const cls = `group${def.dashed ? " group--dashed" : ""}${d.collapsed ? " group--collapsed" : ""}${d.selected ? " group--selected" : ""}${d.dimmed ? " group--dimmed" : ""}`;
   const toggleLabel = d.collapsed ? `펼치기 · 노드 ${d.hiddenCount}개` : "접기";
   // 단추 이름은 "{영역 이름} 접기/펼치기 …": 화면 글자 앞에 보조기기용 영역 이름을 붙인다(보이는 글자가 이름 안에 그대로 있다).
   // 따로 Tab 칸이 아니다: 키보드로는 영역에 포커스를 두고 Space(Canvas.tsx). 마우스·터치·보조기기 가상 커서로는 그대로 누른다.

@@ -744,3 +744,24 @@ test("with several nodes selected, every moved node is saved in one call", async
   const saved = vi.mocked(props.onPinnedChange).mock.calls[0][0];
   expect(Object.keys(saved).sort()).toEqual([id, otherId].sort());
 });
+
+const groupEl = (c: HTMLElement, id: string) => c.querySelector(`.react-flow__node-zone[data-id="${id}"] .group`);
+
+test("selection dims zones without any linked node", async () => {
+  const props = baseProps();
+  props.options = { ...props.options, selectedId: "was-1" };
+  const { container } = render(<div style={{ width: 800, height: 600 }}><Canvas {...props} /></div>);
+  await waitFor(() => expect(container.querySelector(".group--dimmed")).not.toBeNull());
+  // 고른 노드가 든 영역과 그 조상은 흐리지 않는다.
+  for (const id of ["was-pair", "private-zone", "idc-main"]) expect(groupEl(container, id)!.classList.contains("group--dimmed"), id).toBe(false);
+  // 이어진 노드가 하나도 없는 영역은 흐린다.
+  expect(groupEl(container, "db-pair")!.classList.contains("group--dimmed")).toBe(true);
+});
+
+test("hover does not dim zones", async () => {
+  const { container } = render(<div style={{ width: 800, height: 600 }}><Canvas {...baseProps()} /></div>);
+  await waitFor(() => expect(nodeEl(container, "was-1")).not.toBeNull());
+  hoverEnter(nodeEl(container, "was-1")!);
+  await waitFor(() => expect(container.querySelector(".node--faded")).not.toBeNull());
+  expect(container.querySelector(".group--dimmed")).toBeNull();
+});

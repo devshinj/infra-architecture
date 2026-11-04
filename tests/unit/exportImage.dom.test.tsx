@@ -15,7 +15,7 @@ vi.mock("html-to-image", () => lib);
 const VIEWPORT = `
 <div class="react-flow__viewport" style="transform: translate(-300px, 12px) scale(0.4);">
   <div class="react-flow__nodes">
-    <div class="react-flow__node react-flow__node-zone"><div class="group group--selected" data-group-kind="vpc">
+    <div class="react-flow__node react-flow__node-zone"><div class="group group--selected group--dimmed" data-group-kind="vpc">
       <div class="group__head"><span class="group__name">VPC</span><button class="group__toggle">접기</button></div>
     </div></div>
     <div class="react-flow__node react-flow__node-infra selected" tabindex="0"><div class="node node--selected node--pulse">
@@ -88,7 +88,7 @@ test("neutralizeClone freezes the neutral state and drops chrome, without touchi
     new Set(["e1", "e2"]),
   );
 
-  for (const c of ["node--selected", "node--dimmed", "node--faded", "node--appearing", "node--pulse", "group--selected", "edge--dim", "edge--faded", "edge--selected", "edge-line--appear", "selected"]) {
+  for (const c of ["node--selected", "node--dimmed", "node--faded", "node--appearing", "node--pulse", "group--selected", "group--dimmed", "edge--dim", "edge--faded", "edge--selected", "edge-line--appear", "selected"]) {
     expect(clone.getElementsByClassName(c), c).toHaveLength(0);
   }
   expect(clone.querySelectorAll(".node.node--normal")).toHaveLength(4);
