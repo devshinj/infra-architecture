@@ -25,6 +25,7 @@ import { prefersReducedMotion, unionRect, useCamera, type Insets, type Viewport 
 import { useDiagramView } from "./useDiagramView";
 import { moveMenuFocus, usePopover } from "./usePopover";
 import { useHoverEmphasis } from "./useHoverEmphasis";
+import { ZoneNameLayerPortal, type ZoneName } from "./ZoneNameLayer";
 
 export type CanvasOptions = DisplayOptions & { hoverLabels: boolean; showMissingBadges: boolean };
 export type DiffMarks = { added: Set<string>; removed: Set<string>; changed: Set<string> };
@@ -421,6 +422,18 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
     // eslint-disable-next-line react-hooks/exhaustive-deps -- zoneDesc 는 useId 에서 나와 바뀌지 않는다
   }, [layout, display, selected, appearing, updated, editMode, options, toggleGroup, diffMarks, missingByNode, warnByNode, onBadgeClick, onWarnBadgeClick, pulse, hoverId, known]);
 
+  // 영역 이름 알약(연결선 위 층): 영역 노드와 같은 자리·흐림을 쓴다.
+  const zoneNames = useMemo<ZoneName[]>(
+    () =>
+      computed
+        .filter((n) => n.type === "zone")
+        .map((n) => {
+          const d = n.data as GroupBoxData;
+          return { id: n.id, x: n.position.x, y: n.position.y, width: n.width ?? 0, label: d.label, groupKind: d.groupKind, collapsed: d.collapsed, hiddenCount: d.hiddenCount, ...(d.dimmed ? { dimmed: true } : {}) };
+        }),
+    [computed],
+  );
+
   const [nodes, setNodes] = useState<Node[]>(computed);
   useEffect(() => setNodes(computed), [computed]);
   useEffect(() => {
@@ -685,6 +698,17 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
           appearing={appearing}
           nodeCount={Object.keys(state.nodes).length}
           onSelect={onSelect}
+        />
+        {/* 영역 이름표는 연결선 층 위(stacking.ts): 영역 머리를 지나는 선이 이름 뒤로 지나간다. 누르면 영역 머리를 누른 것과 같다. */}
+        <ZoneNameLayerPortal
+          zones={zoneNames}
+          onPillClick={() => onSelect(null)}
+          onPillContextMenu={(id, e) => {
+            if (!onMention) return;
+            e.preventDefault();
+            const r = wrap.current?.getBoundingClientRect();
+            setMenu({ id, zone: true, x: e.clientX - (r?.left ?? 0), y: e.clientY - (r?.top ?? 0) });
+          }}
         />
       </ReactFlow>
       {menu && onMention && (

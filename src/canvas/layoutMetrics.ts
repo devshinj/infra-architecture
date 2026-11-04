@@ -72,6 +72,7 @@ const rectHit = (s: Seg, r: Rect, shrink = 2): boolean =>
 /**
  * groupLabels: 영역 id → 이름. 배치에는 영역 이름이 없어 알약 자리를 재려면 따로 받는다. 이름을 모르는 영역은
  * zoneHeadCrossings 에서 빠진다.
+ * zoneHeadCrossings 는 기하로만 잰 값이다: 화면에서는 이름 알약을 연결선 위 층(ZoneNameLayer)에 그려 이 선들이 알약 뒤로 지나간다.
  */
 export function measureLayout(
   layout: Layout,

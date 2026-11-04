@@ -24,11 +24,20 @@ const EMPTY_GROUP = { width: 160, height: 56 };
 export const COLLAPSED_MAX_WIDTH = 320;
 const GROUP_NAME_PX = 11;
 
+/** 영역 머리 접기 단추에 보이는 글(보조기기용 영역 이름은 빼고). GroupBox 가 그대로 쓴다. */
+export function groupToggleLabel(collapsed: boolean, hiddenCount: number): string {
+  return collapsed ? `펼치기 · 노드 ${hiddenCount}개` : "접기";
+}
+
+/** 접기 단추의 보이는 폭 어림값: 11px 글 + 좌우 안쪽 여백 12 + 테두리 2. */
+export function groupToggleWidth(collapsed: boolean, hiddenCount: number): number {
+  return textWidth(groupToggleLabel(collapsed, hiddenCount), GROUP_NAME_PX) + 12 + 2;
+}
+
 // 접힌 영역은 이름 알약과 "펼치기 · 노드 N개" 단추가 한 줄에 들어갈 만큼 넓힌다(보이는 글만 잰다).
 export function collapsedGroupWidth(label: string, hiddenCount: number): number {
   const head = 20 + 18 + textWidth(label, GROUP_NAME_PX);
-  const toggle = textWidth(`펼치기 · 노드 ${hiddenCount}개`, GROUP_NAME_PX) + 12 + 2;
-  return Math.min(COLLAPSED_MAX_WIDTH, Math.max(EMPTY_GROUP.width, head + 8 + toggle));
+  return Math.min(COLLAPSED_MAX_WIDTH, Math.max(EMPTY_GROUP.width, head + 8 + groupToggleWidth(true, hiddenCount)));
 }
 export const LABEL_PX = 14;
 export const SUB_PX = 11;

@@ -765,3 +765,33 @@ test("hover does not dim zones", async () => {
   await waitFor(() => expect(container.querySelector(".node--faded")).not.toBeNull());
   expect(container.querySelector(".group--dimmed")).toBeNull();
 });
+
+const pillEl = (c: HTMLElement, id: string) => c.querySelector<HTMLElement>(`.react-flow__viewport-portal .zone-names .group__name[data-zone-id="${id}"]`);
+
+test("zone names are drawn in their own layer in the viewport portal, not inside GroupBox", async () => {
+  const props = baseProps();
+  const { container } = render(<div style={{ width: 800, height: 600 }}><Canvas {...props} /></div>);
+  await waitFor(() => expect(container.querySelector(".react-flow__viewport-portal .zone-names")).not.toBeNull());
+  const zones = container.querySelectorAll(".react-flow__node-zone");
+  expect(zones.length).toBeGreaterThan(0);
+  for (const z of zones) {
+    expect(z.querySelector(".group__name")).toBeNull();
+    const id = z.getAttribute("data-id")!;
+    expect(pillEl(container, id), id).not.toBeNull();
+    // 영역 이름은 노드 래퍼의 이름표와 접기 단추의 숨긴 이름으로 그대로 읽힌다.
+    expect(z.getAttribute("aria-label")).toBe(pillEl(container, id)!.textContent);
+    expect(z.querySelector(".group__toggle-name")).toHaveTextContent(pillEl(container, id)!.textContent!);
+  }
+  // 이름 알약을 눌러도 영역 머리를 누른 것과 같다: 고른 것을 풀 뿐 영역을 고르지 않는다.
+  fireEvent.click(pillEl(container, zones[0].getAttribute("data-id")!)!);
+  expect(props.onSelect).toHaveBeenCalledWith(null);
+});
+
+test("with a node selected, a zone with no linked node has a dimmed name pill", async () => {
+  const props = baseProps();
+  props.options = { ...props.options, selectedId: "was-1" };
+  const { container } = render(<div style={{ width: 800, height: 600 }}><Canvas {...props} /></div>);
+  await waitFor(() => expect(pillEl(container, "db-pair")).not.toBeNull());
+  expect(pillEl(container, "db-pair")).toHaveClass("group--dimmed");
+  for (const id of ["was-pair", "private-zone", "idc-main"]) expect(pillEl(container, id)!.classList.contains("group--dimmed"), id).toBe(false);
+});

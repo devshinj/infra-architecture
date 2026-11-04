@@ -4,6 +4,7 @@ import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
 import type { DisplayEdge } from "@/canvas/display";
 import { EdgeLayer } from "@/canvas/EdgeLayer";
+import { ZoneNameLayer } from "@/canvas/ZoneNameLayer";
 import { buildStage, edgeLabels, exportDiagramImage, LIGHT_TOKENS, neutralizeClone, PNG_PIXEL_RATIO } from "@/canvas/exportImage";
 import type { Layout } from "@/canvas/layout";
 
@@ -19,7 +20,7 @@ const VIEWPORT = `
 <div class="react-flow__viewport" style="transform: translate(-300px, 12px) scale(0.4);">
   <div class="react-flow__nodes">
     <div class="react-flow__node react-flow__node-zone"><div class="group group--selected group--dimmed" data-group-kind="vpc">
-      <div class="group__head"><span class="group__name">VPC</span><button class="group__toggle">접기</button></div>
+      <div class="group__head"><button class="group__toggle"><span class="group__toggle-name">VPC</span> 접기</button></div>
     </div></div>
     <div class="react-flow__node react-flow__node-infra selected" tabindex="0"><div class="node node--selected node--pulse">
       <span class="node__text"><span class="node__label">웹 서버</span></span>
@@ -32,6 +33,7 @@ const VIEWPORT = `
     <div class="react-flow__node react-flow__node-infra"><div class="node node--faded"><span class="node__label">큐</span></div></div>
   </div>
   <div class="react-flow__viewport-portal">
+    <div class="zone-names"><span class="group__name group--dimmed" data-zone-id="g" title="VPC">VPC</span></div>
     <svg class="edge-layer">
       <g data-bundle="b1">
         <g class="edge-seg edge--dim" data-edge-ids="e1 e2"><path class="edge-line edge-line--request edge-line--appear" style="--len: 120;"></path>
@@ -112,7 +114,7 @@ test("neutralizeClone freezes the neutral state and drops chrome, without touchi
   expect(clone.querySelector('[data-edge-ids="aux1"]')).toBeNull();
   expect(clone.textContent).not.toContain("관리");
   expect(clone.querySelector('[data-edge-ids="e1 e2"]')).not.toBeNull();
-  // 노드 이름·영역 이름은 남는다.
+  // 노드 이름·영역 이름(연결선 위 이름표 층)은 남는다.
   expect(clone.textContent).toContain("웹 서버");
   expect(clone.textContent).toContain("VPC");
   expect(clone.textContent).not.toContain("접기");
@@ -307,4 +309,40 @@ test("export keeps every original label while a node is selected", () => {
     expect(t[0].getAttribute("y")).toBe(String(at.y));
   }
   cleanup();
+});
+
+test("the export clone keeps the zone-name layer with plain (undimmed) pills, on dark and light stages", () => {
+  const host = document.createElement("div");
+  host.className = "react-flow__viewport";
+  const portal = document.createElement("div");
+  portal.className = "react-flow__viewport-portal";
+  host.appendChild(portal);
+  document.body.appendChild(host);
+  render(
+    <>
+      <EdgeLayer layout={LAYOUT} edges={EDGES} selectedId="a" selectedRect={LAYOUT.nodes.a} hoverId={null} hoverLabels={false} motion={false} appearing={new Set()} nodeCount={3} />
+      <ZoneNameLayer
+        zones={[
+          { id: "g", x: 60, y: 40, width: 400, label: "운영 VPC", groupKind: "vpc", collapsed: false, hiddenCount: 0, dimmed: true },
+          { id: "h", x: 500, y: 40, width: 200, label: "데이터 영역", groupKind: "subnet_private", collapsed: true, hiddenCount: 2 },
+        ]}
+      />
+    </>,
+    { container: portal },
+  );
+  expect(host.querySelector(".group__name.group--dimmed")).not.toBeNull();
+  for (const bg of ["dark", "light"] as const) {
+    const clone = host.cloneNode(true) as HTMLElement;
+    neutralizeClone(clone, edgeLabels(LAYOUT, EDGES), new Set(EDGES.map((e) => e.id)));
+    const { stage } = buildStage(document, clone, { width: 800, height: 400, x: 0, y: 0, zoom: 1 }, bg);
+    const pills = [...stage.querySelectorAll<HTMLElement>(".react-flow__viewport-portal .zone-names .group__name")];
+    expect(pills.map((p) => p.textContent), bg).toEqual(["운영 VPC", "데이터 영역"]);
+    expect(stage.getElementsByClassName("group--dimmed"), bg).toHaveLength(0);
+    // 자리와 영역 색은 인라인이라 복제본에도 그대로다. 흰 바탕이면 무대가 덮어쓴 토큰을 물려받는다.
+    expect(pills[0].style.left, bg).toBe("70px");
+    expect(pills[0].style.getPropertyValue("--tint"), bg).toBe("var(--zone-tint-vpc)");
+    if (bg === "light") expect(stage.style.getPropertyValue("--zone-tint-vpc")).toBe(LIGHT_TOKENS["--zone-tint-vpc"]);
+  }
+  // 화면의 원본은 그대로 흐려 있다.
+  expect(host.querySelector(".group__name.group--dimmed")).not.toBeNull();
 });

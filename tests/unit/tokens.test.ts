@@ -384,3 +384,15 @@ test("zone name font scales with zoom and has no far override", () => {
   expect(rule(css, ".group__name")).toContain("font-size: clamp(11px, calc(10px / var(--zoom, 1)), 20px);");
   expect(css).not.toMatch(/\[data-zoom="far"\]\s+\.group__name/);
 });
+
+test("zone name pill keeps its look in the layer above the edges: opaque tint, dims like its zone, no motion when reduced", () => {
+  const css = read("src/canvas/canvas.css");
+  const r = rule(css, ".group__name");
+  for (const d of ["font-weight: 600;", "line-height: 1.5;", "padding: 0 9px;", "border-radius: 999px;", "background: color-mix(in srgb, var(--tint) 22%, var(--bg-canvas));", "color: color-mix(in srgb, var(--tint) 55%, var(--text-primary));", "text-overflow: ellipsis;", "box-sizing: border-box;", "pointer-events: auto;", "transition: opacity 0.35s ease;"]) expect(r, d).toContain(d);
+  // 이름표 층 자체는 누르기를 받지 않는다(알약만 받는다).
+  expect(rule(css, ".zone-names")).toContain("pointer-events: none;");
+  // .group--dimmed 는 영역 상자와 알약 모두에 쓴다.
+  expect(rule(css, ".group--dimmed")).toContain("opacity: 0.35;");
+  const reduced = css.slice(css.indexOf("@media (prefers-reduced-motion: reduce)"));
+  expect(reduced).toMatch(/\.group__name \{ transition: none; \}/);
+});

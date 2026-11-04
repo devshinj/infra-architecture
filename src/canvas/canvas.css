@@ -137,12 +137,22 @@ button.node__badge--pair-end::before { left: -1px; transform: none; }
 }
 .group[data-inner] { background: color-mix(in srgb, var(--tint) 5%, transparent); }
 .group--dashed { border-style: dashed; }
-/* 고른 대상과 이어지지 않은 영역(선택이 있을 때만). */
+/* 고른 대상과 이어지지 않은 영역(선택이 있을 때만). 영역 상자와 그 이름 알약(ZoneNameLayer)에 함께 붙는다. */
 .group { transition: opacity 0.35s ease; }
 .group--dimmed { opacity: 0.35; }
-.group__head { height: 30px; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 10px; }
+/* 이름 알약은 이 머리 칸이 아니라 연결선 위 층(ZoneNameLayer)에 그린다. 접기 단추는 머리 오른쪽 끝 그대로다. */
+.group__head { height: 30px; display: flex; align-items: center; justify-content: flex-end; gap: 8px; padding: 0 10px; }
+/* 영역 이름표 층: 연결선 층과 같은 viewport-portal 안, 연결선 그림 위(stacking.ts ZONE_NAME_IN_PORTAL_Z). 층은 누르기를 받지 않고 알약만 받는다.
+   .canvas__flow 로 묶지 않는다: 이미지 내보내기 복제본(.export-stage)에서도 같게 그린다. */
+.zone-names { pointer-events: none; }
+/* 영역 이름 알약. 자리(left·top=머리 가운데)와 최대 폭(접기 단추를 비킨다)은 ZoneNameLayer 가 준다.
+   바탕은 --bg-canvas 와 섞은 불투명 색이라 뒤로 지나는 선이 글자 위로 비치지 않는다. */
 .group__name {
-  min-width: 0;
+  position: absolute;
+  transform: translateY(-50%);
+  box-sizing: border-box;
+  pointer-events: auto;
+  transition: opacity 0.35s ease;
   font-size: clamp(11px, calc(10px / var(--zoom, 1)), 20px);
   font-weight: 600;
   line-height: 1.5;
@@ -176,6 +186,7 @@ button.node__badge--pair-end::before { left: -1px; transform: none; }
   .node--appearing { animation: none; }
   .node { transition: none; }
   .group { transition: none; }
+  .group__name { transition: none; }
   /* 움직임 없이 강조 시간 동안 링만 보인다. */
   .node__pulse { animation: none; opacity: 1; }
 }
