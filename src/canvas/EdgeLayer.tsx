@@ -115,7 +115,9 @@ export function EdgeLayer({ layout, edges, selectedId, selectedRect, hoverId, on
     return mergedLabels(selectedId, selectedRect, incidentLaid)
       .map((p) => {
         const at = layout.edges.find((l) => l.id === p.edgeIds[0])?.labelAt;
-        return { ...p, moved: p.edgeIds.length === 1 && (!at || at.x !== p.x || at.y !== p.y) };
+        // mergedLabels 는 좌표를 0.01 로 반올림하므로 그보다 작은 차이는 제자리로 본다.
+        const off = (a: number, b: number) => Math.abs(a - b) > 0.01;
+        return { ...p, moved: p.edgeIds.length === 1 && (!at || off(at.x, p.x) || off(at.y, p.y)) };
       })
       .filter((p) => p.edgeIds.length > 1 || p.moved);
   }, [sel, selectedId, selectedRect, edges, emphLaid, byId, layout.edges]);

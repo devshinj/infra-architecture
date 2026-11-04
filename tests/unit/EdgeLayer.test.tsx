@@ -397,3 +397,13 @@ test("a single label moved off the node is drawn as a placed label, not in its e
   expect(t).toHaveTextContent("SQL");
   expect(Number(t.getAttribute("y"))).toBeGreaterThan(145);
 });
+
+test("a single label at a labelAt with more than two decimals stays in its edge", () => {
+  const layout = lay([{ id: "s", points: [{ x: 300, y: 20.12345 }, { x: 400, y: 20.12345 }], labelAt: { x: 350.12345, y: 20.12345 } }]);
+  const edges = [de("s", "n", "x", "request", "SQL")];
+  render(<EdgeLayer layout={layout} edges={edges} {...base} hoverLabels={false} selectedId="n" selectedRect={{ x: 0, y: 0, width: 100, height: 40 }} />);
+  expect(document.querySelector(".edge-label--moved")).toBeNull();
+  const t = document.querySelector('[data-edge-id="s"] .edge-label')!;
+  expect(t).toHaveTextContent("SQL");
+  expect(t.getAttribute("x")).toBe("350.12345");
+});

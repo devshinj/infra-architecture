@@ -132,14 +132,16 @@ test("top and bottom side labels, trunk labels and single labels are centred", (
 });
 
 type Box = { x1: number; y1: number; x2: number; y2: number };
-const overlap = (a: Box, b: Box) => a.x1 < b.x2 && b.x1 < a.x2 && a.y1 < b.y2 && b.y1 < a.y2;
+/** 두 상자 사이 틈(겹치면 음수). 가로·세로 가운데 더 벌어진 쪽. */
+const gap = (a: Box, b: Box) => Math.max(b.x1 - a.x2, a.x1 - b.x2, b.y1 - a.y2, a.y1 - b.y2);
 const ring = (r: Rect): Box => ({ x1: r.x - 6, y1: r.y - 6, x2: r.x + r.width + 6, y2: r.y + r.height + 6 });
-/** 이름 상자끼리, 그리고 선택 고리까지 넓힌 노드 상자와 겹치지 않는다. */
+/** 이름 상자끼리, 그리고 선택 고리까지 넓힌 노드 상자와 ROW_GAP 이상 떨어진다(출력 좌표 0.01 반올림 몫만 봐준다). */
 function expectClear(out: PlacedLabel[], rect: Rect) {
   const boxes = out.map(labelBox);
+  const min = ROW_GAP - 0.01;
   for (let i = 0; i < boxes.length; i++) {
-    expect(overlap(boxes[i], ring(rect)), `${out[i].text} vs node`).toBe(false);
-    for (let j = i + 1; j < boxes.length; j++) expect(overlap(boxes[i], boxes[j]), `${out[i].text} vs ${out[j].text}`).toBe(false);
+    expect(gap(boxes[i], ring(rect)), `${out[i].text} vs node`).toBeGreaterThanOrEqual(min);
+    for (let j = i + 1; j < boxes.length; j++) expect(gap(boxes[i], boxes[j]), `${out[i].text} vs ${out[j].text}`).toBeGreaterThanOrEqual(min);
   }
 }
 
@@ -206,6 +208,8 @@ test("a trunk label next to a side label moves along its trunk instead of overla
   expect(side).toMatchObject({ x: 150, y: 157 });
   // 공유 구간 위에 남는다.
   expect(trunk.x).toBe(150);
+  // 가운데(150,170)는 변 옆 이름과 가까워서 구간을 따라 비켰다.
+  expect(trunk.y).not.toBe(170);
   expect(trunk.y).toBeGreaterThanOrEqual(140);
   expect(trunk.y).toBeLessThanOrEqual(200);
 });
@@ -217,4 +221,18 @@ test("a single label too close to the node slides along its own line", () => {
   expect(l.x).toBe(150);
   expect(l.y).toBeGreaterThan(145);
   expectClear([l], rect);
+});
+
+test("a fractional node rect keeps the first bottom row (rounding does not push it a row out)", () => {
+  for (const height of [40, 40.004, 40.3333]) {
+    const rect: Rect = { x: 100, y: 100, width: 100, height };
+    const bottom = rect.y + rect.height;
+    const incident = [
+      edge("a", "n", "x", [{ x: 130, y: bottom }, { x: 30, y: 300 }], "HTTP"),
+      edge("b", "n", "y", [{ x: 170, y: bottom }, { x: 270, y: 300 }], "HTTP"),
+    ];
+    const [l] = mergedLabels("n", rect, incident);
+    expect(l.y, String(height)).toBe(Math.round((bottom + 17) * 100) / 100);
+    expectClear([l], rect);
+  }
 });

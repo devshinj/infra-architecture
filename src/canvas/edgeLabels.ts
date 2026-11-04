@@ -244,7 +244,8 @@ export function mergedLabels(selectedId: string, selectedRect: Rect, incident: I
   const queue = [...plans].sort((a, b) => a.rank - b.rank || (a.text < b.text ? -1 : a.text > b.text ? 1 : 0) || a.group - b.group);
   for (const plan of queue) {
     if (placed.has(plan.group)) continue;
-    const make = (c: Pt): PlacedLabel => ({ text: plan.text, x: round(c.x), y: round(c.y), anchor: plan.anchor, edgeIds: plan.edgeIds });
+    // 겹침은 반올림하기 전 자리로 잰다. 반올림이 노드 쪽으로 0.005 당기면 딱 ROW_GAP 인 첫 줄이 한 줄 밀려나기 때문이다.
+    const make = (c: Pt): PlacedLabel => ({ text: plan.text, x: c.x, y: c.y, anchor: plan.anchor, edgeIds: plan.edgeIds });
     let chosen: PlacedLabel | null = null;
     for (const c of plan.candidates) {
       const p = make(c);
@@ -261,5 +262,6 @@ export function mergedLabels(selectedId: string, selectedRect: Rect, incident: I
     placed.set(plan.group, chosen);
     boxes.push(labelBox(chosen));
   }
-  return [...placed.entries()].sort((a, b) => a[0] - b[0]).map(([, p]) => p);
+  // 내보내는 좌표만 0.01 로 반올림한다.
+  return [...placed.entries()].sort((a, b) => a[0] - b[0]).map(([, p]) => ({ ...p, x: round(p.x), y: round(p.y) }));
 }
