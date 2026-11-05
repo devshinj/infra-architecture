@@ -14,6 +14,7 @@ import {
 } from "drizzle-orm/pg-core";
 
 import type { EdgeExplanation, NodeExplanation } from "@/domain/explain";
+import type { Flow } from "@/domain/flows";
 import type { DiagramState } from "@/domain/types";
 import type { MessageMeta } from "@/server/chat/events";
 
@@ -70,6 +71,8 @@ export const diagrams = pgTable(
       .$type<Record<string, { x: number; y: number }>>()
       .notNull()
       .default(sql`'{}'::jsonb`),
+    // 흐름 자동 제안을 한 번만 하기 위한 표식. 제안한 시각이 들어간다.
+    flowsSuggestedAt: timestamp("flows_suggested_at", { withTimezone: true }),
     createdAt: createdAt(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
@@ -179,4 +182,23 @@ export const explanations = pgTable(
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [unique().on(t.diagramId, t.targetKind, t.targetId)],
+);
+
+export type FlowSource = "ai" | "user";
+
+// 구성도의 흐름. 버전과 따로 저장해 되돌려도 남는다. key 는 흐름 id, data 는 흐름 도메인 타입이다.
+// 끊김(problems)은 저장하지 않고 불러올 때마다 최신 상태로 계산한다.
+export const flows = pgTable(
+  "flows",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    diagramId: uuid("diagram_id").notNull().references(() => diagrams.id, { onDelete: "cascade" }),
+    key: text("key").notNull(),
+    data: jsonb("data").$type<Flow>().notNull(),
+    source: text("source").$type<FlowSource>().notNull(),
+    reviewed: boolean("reviewed").notNull().default(false),
+    createdAt: createdAt(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [unique().on(t.diagramId, t.key)],
 );
