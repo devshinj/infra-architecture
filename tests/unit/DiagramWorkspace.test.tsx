@@ -1094,7 +1094,7 @@ test("흐름 다시 맞추기 sends the repair request to the diagram chat", asy
   );
   render(ui(flowLatest() as never));
   fireEvent.click(screen.getByRole("tab", { name: "흐름" }));
-  fireEvent.click(await screen.findByRole("button", { name: "흐름 다시 맞추기" }));
+  fireEvent.click(await screen.findByRole("button", { name: "로그인 흐름 다시 맞추기" }));
   expect(hookState.send).toHaveBeenCalledWith('"로그인" 흐름을 지금 구성에 맞게 다시 맞춰 줘');
   expect(screen.getByRole("tab", { name: "대화" })).toHaveAttribute("aria-selected", "true");
 });

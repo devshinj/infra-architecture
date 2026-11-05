@@ -145,7 +145,7 @@ export function FlowPanel({ flows, state, activeKey, onActivate, onFocusStep, on
           />
         </div>
         {broken && (
-          <button type="button" className={styles.repair} disabled={disabled} onClick={() => onRepair(f.name)}>
+          <button type="button" className={styles.repair} aria-label={`${f.name} 흐름 다시 맞추기`} disabled={disabled} onClick={() => onRepair(f.name)}>
             흐름 다시 맞추기
           </button>
         )}
@@ -156,9 +156,18 @@ export function FlowPanel({ flows, state, activeKey, onActivate, onFocusStep, on
               {f.steps.map((s, i) => {
                 const note = crossingNote(state, s);
                 const missing = f.problems.some((p) => p.step === i);
+                // 연결이 사라진 단계도 키보드로 닿아 "끊김"을 읽을 수 있게 disabled 대신 aria-disabled 로 둔다.
+                const gone = !state.edges[s.edge];
                 return (
                   <li key={i} className={styles.step}>
-                    <button type="button" className={styles.stepBtn} disabled={!state.edges[s.edge]} onClick={() => onFocusStep(s.edge)}>
+                    <button
+                      type="button"
+                      className={styles.stepBtn}
+                      aria-disabled={gone || undefined}
+                      onClick={() => {
+                        if (!gone) onFocusStep(s.edge);
+                      }}
+                    >
                       <span className={styles.mark} aria-hidden="true">{stepMark(i)}</span>
                       <span className={styles.srOnly}>{i + 1}단계 </span>
                       <span className={styles.stepText}>
