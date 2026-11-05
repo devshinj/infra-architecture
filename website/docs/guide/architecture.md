@@ -11,11 +11,11 @@ InfraSketch 는 Next.js 15 (App Router) 하나로 화면과 서버를 함께 띄
 
 | 폴더 | 역할 |
 | --- | --- |
-| `src/app` | 라우트. `(app)` 은 로그인 후 화면(구성도 작업 화면, 용어 사전 `(app)/glossary`), `(auth)` 는 로그인·가입·비밀번호 재설정(공통 입력칸과 제출 훅은 `(auth)/_components`), `api` 는 대화(`diagrams/[id]/chat`)·노드 질문(`diagrams/[id]/ask`)·질문 세션 조회(`diagrams/[id]/sessions/[sessionId]`)·설명(`diagrams/[id]/explain`)·인증·AI 상태 API. 폼 저장·경고 무시·용어 사전 편집 같은 나머지 쓰기는 `(app)/actions.ts` 의 서버 액션이 맡습니다 |
-| `src/ui` | 작업 화면 컴포넌트. 전체 틀(`Shell.tsx`), 사이드바, 오른쪽 패널(대화·설명·이력)과 너비 조절 손잡이(`PanelResizer.tsx`), 대화 입력·체크리스트·질문 세션 선택(`chat/`, `SessionPicker.tsx`), 설명 패널과 “이 노드에 대해 물어보기”(`explain/`, `AskNode.tsx`), 용어 사전 화면(`glossary/`), 로고(`brand/`), 캔버스 위에 뜨는 정보 카드(`canvas/InfoCard.tsx`)와 범례(`canvas/Legend.tsx`, 연결선 종류 견본·보조 연결 숨김 표시), 노드가 날아가 앉는 효과(`FlyLayer.tsx`), 용어 배지 규칙(`glossary/aiBadge.ts`: AI가 추가했고 아직 확인하지 않은 설명에만 “AI 설명” 배지). 폭 640px 이하(휴대폰)에서는 위 막대와 서랍으로 연 사이드바, 아래 탭 막대(`MobileTabBar.tsx`: 구성도·대화·설명·이력)로 한 번에 한 화면만 보이고, 폭 900px 이하는 사이드바를 접은 채 시작합니다(`useMediaQuery.ts`, `Shell.tsx`) |
+| `src/app` | 라우트. `(app)` 은 로그인 후 화면(구성도 작업 화면, 용어 사전 `(app)/glossary`), `(auth)` 는 로그인·가입·비밀번호 재설정(공통 입력칸과 제출 훅은 `(auth)/_components`), `api` 는 대화(`diagrams/[id]/chat`)·노드 질문(`diagrams/[id]/ask`)·흐름 목록(`diagrams/[id]/flows`)·흐름 제안(`diagrams/[id]/flows/suggest`)·질문 세션 조회(`diagrams/[id]/sessions/[sessionId]`)·설명(`diagrams/[id]/explain`)·인증·AI 상태 API. 폼 저장·경고 무시·용어 사전 편집 같은 나머지 쓰기는 `(app)/actions.ts` 의 서버 액션이 맡습니다 |
+| `src/ui` | 작업 화면 컴포넌트. 전체 틀(`Shell.tsx`), 사이드바, 오른쪽 패널(대화·설명·이력·흐름)과 너비 조절 손잡이(`PanelResizer.tsx`), 대화 입력·체크리스트·질문 세션 선택(`chat/`, `SessionPicker.tsx`), 설명 패널과 “이 노드에 대해 물어보기”(`explain/`, `AskNode.tsx`), 흐름 탭(`flows/FlowPanel.tsx`, 목록·상태를 맡는 `flows/useFlows.ts`), 용어 사전 화면(`glossary/`), 로고(`brand/`), 캔버스 위에 뜨는 정보 카드(`canvas/InfoCard.tsx`)와 범례(`canvas/Legend.tsx`, 연결선 종류 견본·보조 연결 숨김 표시), 노드가 날아가 앉는 효과(`FlyLayer.tsx`), 용어 배지 규칙(`glossary/aiBadge.ts`: AI가 추가했고 아직 확인하지 않은 설명에만 “AI 설명” 배지). 폭 640px 이하(휴대폰)에서는 위 막대와 서랍으로 연 사이드바, 아래 탭 막대(`MobileTabBar.tsx`: 구성도·대화·설명·이력·흐름)로 한 번에 한 화면만 보이고, 폭 900px 이하는 사이드바를 접은 채 시작합니다(`useMediaQuery.ts`, `Shell.tsx`) |
 | `src/canvas` | React Flow(`@xyflow/react`) 캔버스. 노드·영역·연결선 그리기, ELK.js 자동 배치(`layout.ts`), 확대·이동 카메라(`useCamera.ts`), 선택·호버 강조 집합 계산(`emphasis.ts`)과 호버 지연(`useHoverEmphasis.ts`), 잘린 이름을 보여 주는 말풍선(`NameTooltip.tsx`), 키보드 조작(캔버스는 Tab 정지점 하나이고 안에서는 화살표·Home·End 로 노드와 영역을 오감(`roving.ts`), Enter·Space 로 선택, Esc 로 해제, 영역에서 Space 로 접기·펴기, 편집 모드에서 고른 노드는 화살표로 옮기고 키를 뗄 때 저장)과 한국어 화면 읽기 안내(`ariaLabels.ts`), 안쪽 영역을 바깥 영역 위에 쌓는 순서(`stacking.ts`), 맞춤 보기(도구 막대·정보 카드를 피하고 글자를 읽을 크기 아래로는 줄이지 않으며 그때는 위쪽부터 보임, “전체 보기”만 늘 전부 보임), 애니메이션, 경고 배지, 구성도 전체를 PNG·SVG(어두운·흰 바탕)로 저장하는 이미지 저장(`exportImage.ts`, `ExportMenu.tsx`, html-to-image) |
-| `src/domain` | 구성도 규칙. 변경 명령 스키마(`commands.ts`), 명령 적용(`apply.ts`), 노드 종류 목록(`catalog.ts`), 빠진 정보 계산(`missing.ts`), 경고 규칙(`warnings.ts`), 구성 패턴(`patterns.ts`), 설명 모양·길이 상한·서명(`explain.ts`), 용어 사전 시드와 화면용 타입(`glossary-seed.ts`, `glossary-types.ts`) |
-| `src/server` | 서버 로직. 대화 파이프라인·노드 질문·질문 세션·경고 점검(`chat/`), AI 연동(`llm/`), 설명 생성(`explain.ts`), 용어 사전(`glossary.ts`), 체크리스트 폼 저장(`fields.ts`), 경고 무시(`ignore.ts`), 프로젝트·버전 저장(프로젝트와 첫 구성도를 함께 만들고, 이름 중복을 막고, 홈에서 이어 갈 최근 구성도를 고름), 인증(가입·재설정·로그인이 함께 쓰는 입력 규칙과 문구는 `auth/rules.ts`) |
+| `src/domain` | 구성도 규칙. 변경 명령 스키마(`commands.ts`), 명령 적용(`apply.ts`), 노드 종류 목록(`catalog.ts`), 빠진 정보 계산(`missing.ts`), 경고 규칙(`warnings.ts`), 흐름 타입·끊김 계산(`flows.ts`), 망 경계 판정(`boundary.ts`), 구성 패턴(`patterns.ts`), 설명 모양·길이 상한·서명(`explain.ts`), 용어 사전 시드와 화면용 타입(`glossary-seed.ts`, `glossary-types.ts`) |
+| `src/server` | 서버 로직. 대화 파이프라인·노드 질문·질문 세션·경고 점검(`chat/`), AI 연동(`llm/`), 설명 생성(`explain.ts`), 용어 사전(`glossary.ts`), 체크리스트 폼 저장(`fields.ts`), 경고 무시(`ignore.ts`), 흐름 저장소(`flows.ts`)와 흐름 제안(`flowSuggest.ts`), 프로젝트·버전 저장(프로젝트와 첫 구성도를 함께 만들고, 이름 중복을 막고, 홈에서 이어 갈 최근 구성도를 고름), 인증(가입·재설정·로그인이 함께 쓰는 입력 규칙과 문구는 `auth/rules.ts`) |
 | `src/db` | Drizzle 스키마와 마이그레이션 |
 | `src/styles` | 색·간격 토큰(`tokens.css`). 사이드바·캔버스·오른쪽 패널은 바탕 명도를 3단으로 달리해 영역을 구분합니다. 화면마다 주 동작 하나만 금색으로 채우고(`--accent-fill`, `--on-accent`), 빨간 글자는 대비를 맞춘 `--state-missing-text`, 입력칸 테두리는 `--line-input` 을 씁니다 |
 
@@ -41,15 +41,24 @@ runChatTurn ── 구성도별 잠금 (이미 진행 중이면 409)
        문맥: 직전 AI 답변 + 아직 열린(‘모름’ 아닌) 빠진 정보 목록
        재정렬이면 Qwen 을 부르지 않고 안내 한 줄과 relayout 이벤트만 보낸 뒤 버전 없이 끝
   4. 그 밖의 의도는 의도에 맞는 프롬프트로 Qwen 을 스트리밍 호출한다
+       (구조 변경 프롬프트에는 저장된 흐름 목록이 `흐름:` 블록으로 붙는다)
        ├ 구조 변경 경로: JSON Lines 를 줄 단위로 파싱
        │    → id 칸 정규화(normalizeAiCommand) → parseCommand(스키마 검증) → applyCommand(상태 적용)
        │    → 성공하면 cmd 이벤트, 실패하면 skip 이벤트
+       │    (흐름 명령은 상태에 적용하지 않고 모아 둔다)
        └ 답변 경로: <think> 를 지운 글을 answer 이벤트로 흘림
   5. 적용된 명령이 있으면 먼저 비게 된 영역을 정리한다(pruneEmptyGroups)
      그 뒤 경고를 점검하고(checking) 새 버전을 만든다
-  6. 빠진 정보 수를 다시 계산하고 응답 메시지를 저장한 뒤
+  6. 모아 둔 흐름 명령을 차례가 끝난 상태로 검사해 흐름 저장소에 저장한다
+  7. 빠진 정보 수를 다시 계산하고 응답 메시지를 저장한 뒤
      새 경고가 있으면 warnings 이벤트, 마지막으로 done 이벤트
 ```
+
+### 흐름 명령과 `흐름:` 블록
+
+- **프롬프트의 `흐름:` 블록**(`server/chat/prompt.ts` 의 `summarizeFlows`): 저장된 흐름이 있으면 “현재 구성” 뒤에 `흐름 <id> [user|system] "<이름>": 연결 id > 연결 id …` 한 줄씩 넣습니다. 이름은 사용자가 쓴 글이라 JSON 문자열로 감싸 줄바꿈이 새 줄을 만들지 못하게 합니다. 생성 프롬프트는 요청에 흐름 이야기가 없으면 흐름 명령을 쓰지 말고, 단계는 요청이 가는 방향으로만 쓰고 응답은 단계 대신 `result` 한 줄로 쓰며, 기존 흐름을 고치거나 지울 때는 이 목록의 id 를 쓰라고 지시합니다. 흐름 목록을 못 읽어도 차례는 흐름 없이 이어 갑니다.
+- **모았다가 차례 끝에 저장**(`pipeline.ts`): `add_flow`·`update_flow`·`remove_flow` 는 구성도 상태에 적용하지 않고 모읍니다(이어 그리는 요청 사이에도 모읍니다). 구성 변경이 있으면 정리·경고 점검·버전 저장을 먼저 마치고, 그 **버전이 만든 최종 상태**로 `applyFlowOps` 가 검사해 저장하므로 같은 차례에 만든 연결도 단계로 쓸 수 있습니다. 거절된 흐름은 `skip` 하나로 알리고, 저장 자체가 실패해도 차례는 끝까지 마쳐 버전·응답 메시지·`done` 을 남깁니다(건너뜀 “흐름을 저장하지 못했어요”).
+- **흐름만 바꾼 차례는 버전을 만들지 않습니다.** 정리·경고 점검·버전은 구성·가정을 바꾼 명령이 있을 때만 돌고, 흐름 명령은 `isStructural` 에서 빠집니다. 저장된 수는 `done.flows`(0보다 클 때)와 응답 메시지 메타의 `flows` 에 남고, 요약 칩의 “바꾼 곳”에는 세지 않습니다.
 
 ### 의도 분류 보호와 영역 정리
 
@@ -66,7 +75,7 @@ runChatTurn ── 구성도별 잠금 (이미 진행 중이면 409)
 
 적용된 변경이 있는 차례만 `server/chat/warnings.ts` 의 `checkWarnings` 로 위험한 구성을 점검합니다. 질문·이력 차례는 점검하지 않습니다.
 
-1. **코드 규칙** (`domain/warnings.ts` 의 `evaluateRules`): 공개 구역의 DB·캐시(`db_public`), 이중화 묶음 밖의 서버·DB·로드밸런서·DB 중계·캐시(`spof`), 외부에서 방화벽 없이 서버·DB 로 바로 오는 연결(`no_firewall`, 인그레스·배스천은 예외), 원본 DB 없는 캐시(`cache_without_db`) 네 가지입니다. `spof` 는 단일 장애 지점 종류(`SPOF_KINDS`: 웹 서버·WAS·앱 서버·RDB·NoSQL·L4/L7 로드밸런서·DB 중계·캐시) 노드가 `redundancy_group` 안에 있지 않으면, 이중화 가정 값과 상관없이 켜집니다. 사용자가 이중화 가정을 "이중화 없음"으로 **확정**(의도)했을 때만 꺼집니다.
+1. **코드 규칙** (`domain/warnings.ts` 의 `evaluateRules`): 공개 구역의 DB·캐시(`db_public`), 이중화 묶음 밖의 서버·DB·로드밸런서·DB 중계·캐시(`spof`), 외부에서 방화벽 없이 서버·DB 로 바로 오는 연결(`no_firewall`, 인그레스·배스천은 예외), 원본 DB 없는 캐시(`cache_without_db`), 서로 다른 망 사이를 방화벽·망연계·VPN 없이 바로 잇는 연결(`network_direct`) 다섯 가지입니다. `spof` 는 단일 장애 지점 종류(`SPOF_KINDS`: 웹 서버·WAS·앱 서버·RDB·NoSQL·L4/L7 로드밸런서·DB 중계·캐시) 노드가 `redundancy_group` 안에 있지 않으면, 이중화 가정 값과 상관없이 켜집니다. 사용자가 이중화 가정을 "이중화 없음"으로 **확정**(의도)했을 때만 꺼집니다.
 2. **Clef 판정** (`db_exposed`): 코드 규칙에 걸리지 않은 저장소 노드(DB·캐시·검색·DB 중계·파일 저장소) 중 **최대 5개**를 Clef `noul` 질문으로 "외부에서 직접 접근될 수 있는가"를 묻습니다. Clef 응답의 실제 `noul` 칸(예: `{ type: "noul", noul: 0.97 }`)을 먼저 읽고, 없을 때만 예전 추정 모양을 봅니다. 확률 0.8 이상이면 경고(`warn`), 0.5 이상이면 확인(`check`)입니다. 이 단계는 대기열을 포함해 **3초 상한**이고 재시도하지 않습니다(다음 차례의 의도 분류가 밀리지 않게). 판정이 실패하거나 시간을 넘기거나 5개 밖에 있는 노드는 **이전 판정을 그대로 이어 갑니다**.
 3. **Qwen 문구**: 이번에 **새로 생긴 경고만** Qwen 한 번 호출로 쉬운 문구(80자 이내)를 받습니다. 상한은 **8초**이고, 받지 못한 경고는 규칙에 정해진 문구를 씁니다. 이미 있던 경고는 저장된 문구를 다시 씁니다.
 
@@ -74,7 +83,7 @@ runChatTurn ── 구성도별 잠금 (이미 진행 중이면 409)
 
 ### 빠진 정보 수
 
-`domain/missing.ts` 의 `computeMissing` 이 노드 종류별 필수 항목(스펙·IP·hostname 등)과 흐름 연결(`request`·`async`)의 프로토콜/포트 중 빈 칸을 셉니다. 사용자가 체크리스트에서 "모름"으로 표시한 항목은 목록에는 남지만 수에서는 빠집니다. `done.missing` 은 늘 이 수를 담고, 응답 메시지 메타의 `missing` 은 적용된 변경이 있고 0보다 클 때만 남깁니다.
+`domain/missing.ts` 의 `computeMissing` 이 노드 종류별 필수 항목(스펙·IP·hostname 등)과 흐름 연결(`request`·`async`)의 프로토콜/포트, 그리고 망 경계를 넘는 연결의 전달물·방향 중 빈 칸을 셉니다. 사용자가 체크리스트에서 "모름"으로 표시한 항목은 목록에는 남지만 수에서는 빠집니다. `done.missing` 은 늘 이 수를 담고, 응답 메시지 메타의 `missing` 은 적용된 변경이 있고 0보다 클 때만 남깁니다.
 
 ### 중단과 시간 초과
 
@@ -151,6 +160,11 @@ AI 는 구성도를 직접 그리지 않고 **작은 변경 명령**을 연달�
 | `add_edge` / `update_edge` / `remove_edge` | 연결 추가·수정·삭제 |
 | `remove_group` | 영역 삭제. 안의 하위 영역·노드와 그에 닿은 연결까지 함께 지웁니다(없는 영역이면 거부) |
 | `set_assumption` | 구조를 정한 가정(환경, 규모, 이중화 등) 기록 |
+| `add_flow` / `update_flow` / `remove_flow` | 흐름 추가·수정·삭제. 구성 상태가 아니라 **흐름 저장소**에 적용하고, “바꾼 곳”에 세지 않습니다 |
+
+`add_edge`·`update_edge` 에는 선택 칸 `payload`(전달물: `api` | `file`)와 `direction`(방향: `one_way` | `two_way`)가 있습니다. 망 경계를 넘는 연결을 설명하는 칸입니다.
+
+흐름 명령의 제한은 스키마가 정합니다: 이름 1~60자(앞뒤 공백 제거), `summary`·`result` 200자, 단계 1~20개(단계는 `edge`·`from`·`short`·`text`, 설명 `text` 120자), `origin` 은 `user` | `system`. 저장소는 이 검사를 믿고, 화면의 짧은 설명(`shortLabel`)은 12자를 넘으면 11자 뒤에 “…”를 붙입니다.
 
 명령이 스키마에 맞지 않거나 없는 노드를 가리키면 버리고 `skip` 이벤트로 알립니다. 차례 전체가 멈추지는 않습니다.
 
@@ -165,6 +179,14 @@ AI 는 구성도를 직접 그리지 않고 **작은 변경 명령**을 연달�
   - `decide` + `scoreValue`: 설명 품질 검사. "쉽고 간결함 / 보통 / 어렵거나 장황함"을 점수 0~2 로 읽습니다.
 
   `decide` 는 `capMs`(대기열·재시도를 포함한 전체 상한)와 `maxRetries` 를 받습니다. 경고와 설명 검사는 둘 다 `capMs` 3초, 재시도 0회로 부릅니다. `noulProbability` 는 `noul` 칸을 먼저 읽고 그 밖에 예전 추정 모양(`probability`, `probabilities.yes`, `choice`+`confidence`)을 받아 주며, `scoreValue` 도 여러 응답 모양을 받아 주고, 그 밖이면 `null` 을 돌려 판정을 건너뜁니다.
+
+### 흐름 제안 (`server/flowSuggest.ts`)
+
+`POST /api/diagrams/[id]/flows/suggest` (`{ auto? }`) 가 `suggestFlows` 를 불러, 구성도를 보고 요청 하나가 연결을 차례로 지나는 길 3~5개를 Qwen 으로 제안받아 “AI 제안”(미검수)으로 저장합니다. 구성도 버전은 만들지 않습니다. 사용자가 시작하는 흐름(`user`)과 배치·복제·백업 같은 시스템 흐름(`system`)을 섞도록 요청합니다.
+
+- **자동 한 번 + 버튼**: 처음 그린 차례가 끝났는데 흐름이 없으면 화면(`useFlows`)이 자동(`auto: true`)으로 한 번 요청합니다. 모델을 부르기 전에 `diagrams.flows_suggested_at` 을 적어 두 번 돌지 않게 하고, 자동 제안이 하나도 못 만들면 적은 시각을 지워 다음에 다시 시도합니다. 버튼(“흐름 제안받기”)은 흐름이 있어도 덧붙이며, 이미 있는 흐름을 모델에게 알려 새 id 를 고르게 합니다. 흐름이 20개면 모델을 부르지 않고 상한 안내를 돌려줍니다. 연결이 없으면 만들 수 없어 실패로 돌려줍니다.
+- **모델 호출 중에는 잠금을 쥐지 않습니다.** 처음 그린 직후 사용자가 보낼 다음 말을 막지 않기 위해서입니다. Qwen 요청은 하나당 30초 상한이고, 실패하거나 쓸 흐름이 없으면 한 번 더 요청합니다.
+- **저장만 잠금 안에서** 그때의 최신 구성도로 다시 검사합니다(그 사이 지워진 연결을 가리키면 거절). 대화 차례가 잠금을 쥐고 있으면 1초씩 최대 5번 기다리고, 그래도 못 잡으면 “지금은 구성도를 그리는 중이에요” 로 끝납니다. 모델 출력에서는 `add_flow` 만 최대 5개 고르고, 형식 오류·겹치는 id·끊긴 흐름은 버립니다.
 
 ### 설명 생성 (`server/explain.ts`)
 
@@ -193,11 +215,12 @@ Qwen 요청 하나는 30초 상한이고, 실패하면 "설명을 만들지 못�
 | --- | --- |
 | `users`, `accounts`, `password_reset_tokens` | 회원과 인증 |
 | `projects` | 사용자별 프로젝트. 같은 사용자 안에서 이름이 겹치지 않습니다(대소문자 무시, 유니크 인덱스 `projects_owner_name_uidx`) |
-| `diagrams` | 프로젝트 안의 구성도. 같은 프로젝트 안에서 이름이 겹치지 않습니다(대소문자 무시, `diagrams_project_name_uidx`) |
+| `diagrams` | 프로젝트 안의 구성도. 같은 프로젝트 안에서 이름이 겹치지 않습니다(대소문자 무시, `diagrams_project_name_uidx`). `flows_suggested_at` 은 흐름 자동 제안을 한 번만 하려는 표식입니다 |
 | `chat_sessions` | 대화 세션. 종류(`kind`: `node` 노드 질문, `diagram` 구성도 대화), 구성도(`diagram_id`)·노드(`node_id`, 노드 질문만)·만들 때의 노드 이름(`node_label`, 노드 질문만)·제목·갱신 시각(DB 시계). 종류와 노드 칸이 맞는지 CHECK 로 지킵니다(마이그레이션 0005). 구성도가 지워지면 함께 지워집니다 |
 | `messages` | 대화 기록 (메타에 의도·적용 수·버전·빠진 정보 수·새 경고 등). `session_id` 가 비어 있으면(NULL) 구성도 대화이고, 값이 있으면 그 질문 세션의 메시지입니다. 세션이 지워지면 함께 지워집니다 |
 | `diagram_versions` | 구성도 상태 스냅샷. AI 변경 한 차례마다 버전 하나가 생기고, 이력 탭에서 비교하고 되돌립니다. 체크리스트 폼 저장과 경고 무시도 `form` 버전 하나를 만듭니다 |
 | `glossary_terms` | 사용자별 용어 사전. 정규화한 `key` 와 별칭(`aliases`), 정의·필요한 이유·비교, 검수 여부(`reviewed`), 출처(`seed`/`ai`). 처음 쓸 때 시드 50개를 미검수로 복사합니다. 화면의 “AI 설명” 배지와 필터는 출처가 `ai` 인 미검수 항목에만 붙고, 시드는 미검수여도 배지가 없습니다 |
+| `flows` | 구성도의 흐름(마이그레이션 0006). `diagram_id`(구성도가 지워지면 함께 지움)·`key`(흐름 id, 구성도마다 유일)·`data`(jsonb: 이름·시작 주체·요약·결과·단계)·출처 `source`(`ai`/`user`)·검수 여부 `reviewed`·생성/갱신 시각 |
 | `explanations` | 노드·연결 설명 캐시. 구성도·대상별로 하나이고, 내용 서명(`signature`)이 바뀌면 다시 만듭니다 |
 
 버전 상태(`DiagramState`, `domain/types.ts`)는 JSON 으로 저장되며 다음을 담습니다.
@@ -206,7 +229,9 @@ Qwen 요청 하나는 30초 상한이고, 실패하면 "설명을 만들지 못�
 - `warnings`: 마지막 점검의 경고 목록(규칙·대상·수준·문구·안내). 코드 규칙 경고는 화면이 지금 상태로 다시 계산하고, 저장된 문구와 Clef 판정(`db_exposed`)만 여기서 가져옵니다.
 - `ignoredWarnings`: 사용자가 "의도된 구성"으로 무시한 경고 ID 목록. 설명 탭의 주의할 점에서 다시 경고하도록 되돌릴 수 있습니다.
 
-마이그레이션은 `src/db/migrations` 에 있으며, 용어 사전·설명 테이블은 `0002`, 질문 세션 테이블과 `messages.session_id` 는 `0003` 에서 추가됐습니다. `0004` 는 이미 겹친 프로젝트·구성도 이름 중 나중 것에 ` 2`, ` 3` … 을 붙여 정리한 뒤 이름 유니크 인덱스를 만듭니다.
+**흐름은 버전 상태에 넣지 않고 `flows` 테이블에 따로 저장합니다.** 그래서 이력에서 구성도를 되돌려도 흐름은 남습니다. 단계가 가리키는 연결이 사라지거나 방향이 어긋나는 **끊김은 저장하지 않고 불러올 때마다 최신 상태로 계산**합니다(`domain/flows.ts` 의 `checkFlow`: 없는 연결·시작 노드 불일치·앞 단계와 이어지지 않음·단방향 연결을 거슬러 감. 갈래는 허용). 끊긴 흐름은 대화로 다시 맞추거나 단계를 하나 지워 고칠 수 있고, 마지막 단계는 지울 수 없습니다.
+
+마이그레이션은 `src/db/migrations` 에 있으며, 용어 사전·설명 테이블은 `0002`, 질문 세션 테이블과 `messages.session_id` 는 `0003` 에서 추가됐습니다. `0004` 는 이미 겹친 프로젝트·구성도 이름 중 나중 것에 ` 2`, ` 3` … 을 붙여 정리한 뒤 이름 유니크 인덱스를 만들고, `0006_flows` 는 `flows` 테이블과 `diagrams.flows_suggested_at` 을 추가합니다.
 
 `listMessages` 는 `sessionId` 가 null 이면 구성도 대화만, 아니면 그 세션의 것만 돌려줍니다. 그래서 `pipeline.ts` 의 대화 기록과 Clef 에 넘기는 직전 AI 답변(`lastAssistant`)에는 구성도 대화 메시지만 쓰이고, 질문 세션의 글은 섞이지 않습니다.
 
@@ -218,6 +243,16 @@ Qwen 요청 하나는 30초 상한이고, 실패하면 "설명을 만들지 못�
 - **영역 이름표 층**(`ZoneNameLayer.tsx`): 영역 이름표는 연결선 포털에서 연결선 위, 노드 아래에 그립니다. 글자 크기는 `clamp(11px, 10px/zoom, 20px)` 로 확대 비율에 따라 보정하고, 접힌 영역의 너비는 `collapsedGroupWidth`(`layout.ts`)가 정합니다.
 - **16px 간격**(`layout.ts`): ELK 의 `edgeEdge`·`edgeEdgeBetweenLayers`·`portPort` 와 우회 통로 간격 `CHANNEL_STEP` 을 16px 로 둡니다. 16px 로 하면 교차가 늘거나 선이 저하(degraded)되거나 노드를 관통하면 기존 통로 경로(lane-route)로 되돌립니다.
 - **배치 측정 회귀**(`layoutMetrics.ts`, `tests/unit/layoutRegression.test.ts`, `tests/fixtures/layout/baseline.json`): 교차 수(crossings), 나란한 길이(parallelPx), 공유 길이(sharedPx), 노드 관통(throughNode), 꺾임(bends), 가로세로 비(aspect), 영역 머리 교차(zoneHeadCrossings)를 고정 상태(25·50·100·200 노드)로 재서 baseline 이하인지 지킵니다.
+
+## 흐름과 망 경계 그리기
+
+- **망 경계 판정**(`domain/boundary.ts`): 노드의 가장 가까운 `network_zone` 조상 영역이 망입니다(`networkZoneOf`). 구성도에 망이 하나라도 있고 연결의 두 끝 망이 서로 다르면(한쪽이 망 밖이어도) 경계를 넘는 연결(`crossesBoundary`)입니다. 방화벽·망연계 솔루션(`network_link`)·VPN 은 경계를 정당하게 넘겨 주는 노드(`BOUNDARY_NODE_KINDS`)라서, 경계를 넘으면서 두 끝 어느 쪽도 이런 노드가 아니면 직접 넘김(`isDirectCrossing`)이고 `network_direct` 경고를 냅니다.
+- **경계 표시**(`EdgeLayer.tsx`, `edgeLabels.ts`): 경계를 넘는 연결에는 선 위에 점(`boundaryDotAt`)과 태그(`tagSpots`)를 그립니다. 태그에는 전달물(API·파일)과 방향 화살표가 들어가고, 아직 안 정한 칸은 **빠진 정보**(전달물·방향)로 셉니다.
+- **흐름 강조**: 흐름을 켜면 노드 선택을 풀고 그 흐름의 연결만 밝히며, 단계마다 “n. 짧은 설명” 이름표(`stepLabels`, `shortLabel`)를 붙입니다. 경계를 넘는 단계의 설명에는 “A망에서 B망으로 넘어가요(방화벽 거침)” 문장이 덧붙습니다(`crossingNote`). 노드나 연결을 고르거나 Esc 를 누르면 흐름 보기를 풉니다. 입력칸·열린 메뉴 안의 Esc 는 흐름 보기를 풀지 않습니다.
+
+## 흐름 탭
+
+오른쪽 패널의 “흐름” 탭(`ui/flows/FlowPanel.tsx`)에서 흐름 목록, 이름 바꾸기·지우기, “맞아요”(AI 제안 표시 지우기), 끊긴 단계 안내와 “다시 맞추기”(구성도 대화로 `"<이름>" 흐름을 지금 구성에 맞게 다시 맞춰 줘` 를 보냄)를 다룹니다. 상태와 불러오기는 `useFlows.ts` 가 맡고, 대화 차례가 끝나면 다시 불러옵니다. 노드·연결 정보 카드(`NodeInfo.tsx`)에는 “이 노드를 지나는 흐름”(연결은 “이 연결이 들어간 흐름”) 이름 칩이 있어, 누르면 그 흐름을 켜고 흐름 탭으로 갑니다. 끊긴 단계만 걸친 흐름은 칩에 넣지 않습니다.
 
 ## 더 보기
 
