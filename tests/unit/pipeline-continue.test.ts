@@ -212,3 +212,33 @@ test("flow commands gathered across a continuation are all saved at the end of t
   expect(store.versions).toHaveLength(1);
   expect(events.at(-1)).toMatchObject({ t: "done", applied: 7, changed: 5, flows: 2, version: 1 });
 });
+
+test("listFlows failure is treated as no flows: the turn still saves a version and ends with done", async () => {
+  const { listFlows } = await import("@/server/flows");
+  vi.mocked(listFlows).mockRejectedValueOnce(new Error("db down"));
+  const err = vi.spyOn(console, "error").mockImplementation(() => {});
+  const q = fakeQwen([{ text: `${node("a")}\n`, finish: "stop" }]);
+  const events = await turn(q);
+  expect(q.calls).toHaveLength(1);
+  expect(store.versions).toEqual([{ status: "complete", nodes: 1, edges: 0 }]);
+  expect(events.at(-1)).toMatchObject({ t: "done", status: "complete", applied: 1, version: 1 });
+  expect(store.created.at(-1)?.role).toBe("assistant");
+  expect(err).toHaveBeenCalled();
+  err.mockRestore();
+});
+
+test("applyFlowOps failure reports one skip and still saves the assistant message and done", async () => {
+  const { applyFlowOps } = await import("@/server/flows");
+  vi.mocked(applyFlowOps).mockRejectedValueOnce(new Error("db down"));
+  const err = vi.spyOn(console, "error").mockImplementation(() => {});
+  const flow = j({ op: "add_flow", id: "f-1", name: "f", origin: "user", steps: [{ edge: "e-a-b", from: "a", short: "요청", text: "보낸다" }] });
+  const q = fakeQwen([{ text: `${node("a")}\n${node("b")}\n${edge("a", "b")}\n${flow}\n`, finish: "stop" }]);
+  const events = await turn(q);
+  expect(store.versions).toEqual([{ status: "complete", nodes: 2, edges: 1 }]);
+  expect(events.filter((e) => e.t === "skip")).toHaveLength(1);
+  expect(events.at(-1)).toMatchObject({ t: "done", status: "complete", version: 1, skipped: 1 });
+  expect(events.at(-1)).not.toHaveProperty("flows");
+  expect(store.created.at(-1)?.role).toBe("assistant");
+  expect(err).toHaveBeenCalled();
+  err.mockRestore();
+});

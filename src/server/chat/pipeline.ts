@@ -243,7 +243,11 @@ async function lockedTurn(args: TurnArgs, sessionId: string | null, followUp: bo
     emit({ t: "relayout" });
   } else {
     const answerMode = intent === "question" || intent === "other";
-    const flows = await listFlows(args.userId, diagramId);
+    // 흐름 목록을 못 읽어도 차례는 이어 간다(흐름 없이 프롬프트를 만든다).
+    const flows = await listFlows(args.userId, diagramId).catch((err) => {
+      console.error("chat list flows failed", err);
+      return [];
+    });
     const messages = buildMessages({ intent, text: clean, state, mentions, history, missing: openMissing, flows });
     emit({ t: "status", phase: "thinking" });
 
@@ -362,9 +366,15 @@ async function lockedTurn(args: TurnArgs, sessionId: string | null, followUp: bo
   }
   // 흐름은 차례가 끝난 상태로 검사해 저장한다(같은 차례에 만든 연결도 가리킬 수 있다). 거절은 건너뜀으로 알린다.
   if (pendingFlowOps.length > 0) {
-    const r = await applyFlowOps(diagramId, state, pendingFlowOps, "ai");
-    flowsSaved = r.saved;
-    for (const rej of r.rejected) skip(`적용할 수 없는 흐름(${rej.id}) ${rej.reason}`, skipKey("flow", "", rej.reason));
+    // 저장이 실패해도 차례는 끝까지 마친다(버전·응답 메시지·done). 흐름 저장 실패는 건너뜀 하나로 알린다.
+    try {
+      const r = await applyFlowOps(diagramId, state, pendingFlowOps, "ai");
+      flowsSaved = r.saved;
+      for (const rej of r.rejected) skip(`적용할 수 없는 흐름(${rej.id}) ${rej.reason}`, skipKey("flow", "", rej.reason));
+    } catch (err) {
+      console.error("chat apply flows failed", err);
+      skip("흐름을 저장하지 못했어요", skipKey("flow", "", "db"));
+    }
   }
 
   const skipped = tally.total();
