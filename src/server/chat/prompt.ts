@@ -135,6 +135,32 @@ export function summarizeFlows(flows: Flow[]): string {
   return flows.map((f) => `흐름 ${f.id} [${f.origin}] ${JSON.stringify(f.name)}: ${f.steps.map((s) => s.edge).join(" > ")}`).join("\n");
 }
 
+// 흐름 제안(처음 그린 뒤 자동 + 버튼). 구성 명령과 따로 요청한다.
+export const FLOW_SUGGEST_PROMPT = `너는 인프라 아키텍처 구성도 도구의 도우미다.
+구성도를 보고, 요청 하나가 구성도의 연결을 차례로 지나는 길(흐름)을 제안한다.
+
+출력 형식:
+- add_flow 명령만 JSON Lines 로 출력한다. 한 줄에 JSON 객체 하나, 줄바꿈 없이. 다른 글, 코드펜스, 설명 금지.
+{"op":"add_flow","id":"login","name":"로그인","origin":"user","summary":"사용자가 로그인한다","result":"로그인 결과를 화면에 돌려준다","steps":[{"edge":"e-client-web-was-1","from":"client-web","short":"로그인 요청","text":"아이디와 비밀번호를 서버로 보낸다"},{"edge":"e-was-1-db-1","from":"was-1","short":"회원 조회","text":"DB 에서 회원 정보를 확인한다"}]}
+
+규칙:
+- 흐름은 3~5개 쓴다. 사용자가 시작하는 행동 흐름(origin "user", 예: 로그인·주문)과 시스템·네트워크 흐름(origin "system", 예: 배치·복제·백업·외부 연동)을 섞는다.
+- 단계 edge 는 "현재 구성"의 연결 id 만 쓴다. from 은 그 단계를 시작하는 노드 id 이고, 다음 단계는 앞 단계가 닿은 노드에서 시작한다.
+- 단계는 요청이 가는 방향으로만 쓴다. 응답은 단계로 쓰지 않고 result 에 응답 한 줄로 쓴다.
+- short 는 12자 이내, text 는 IT 비전공자가 알아듣는 한 문장(120자 이내)이다. 단계는 20개 이내다.
+- name·summary·short·text·result 는 한국어로 쓴다. 제품명만 원어 그대로 쓴다.
+- 흐름 id 는 영문 소문자·숫자·하이픈만 쓰고 ^[a-z0-9][a-z0-9-]{0,63}$ 형식이어야 한다. "이미 있는 흐름"의 id 는 쓰지 않고, 같은 길을 다시 만들지 않는다.
+- 구성도에 없는 노드·연결을 지어내지 않는다.`;
+
+/** 흐름 제안 요청. 이미 있는 흐름을 알려 새 id 를 고르고 겹치지 않게 한다. */
+export function buildFlowSuggestMessages(state: DiagramState, flows: Flow[] = []): ChatMessage[] {
+  const existing = flows.length ? summarizeFlows(flows) : "없음";
+  return [
+    { role: "system", content: FLOW_SUGGEST_PROMPT },
+    { role: "user", content: `현재 구성:\n${summarizeState(state)}\n\n이미 있는 흐름:\n${existing}` },
+  ];
+}
+
 export interface Mention {
   id: string;
   label: string;

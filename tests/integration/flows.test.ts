@@ -2,12 +2,16 @@ import { eq } from "drizzle-orm";
 import { afterEach, describe, expect, test, vi } from "vitest";
 
 import { GET } from "@/app/api/diagrams/[id]/flows/route";
+import { POST as SUGGEST } from "@/app/api/diagrams/[id]/flows/suggest/route";
 import { db } from "@/db/client";
-import { flows } from "@/db/schema";
+import { diagrams, flows } from "@/db/schema";
 import type { FlowOp, FlowStepInput } from "@/domain/flows";
 import { emptyState, type DiagramState } from "@/domain/types";
+import { setChatDepsForTest } from "@/server/chat/deps";
 import { withDiagramLock } from "@/server/chat/lock";
+import { FLOW_SUGGEST_BUSY_MESSAGE, suggestFlows } from "@/server/flowSuggest";
 import { applyFlowOps, BusyError, confirmFlow, deleteFlow, FLOW_BUSY_MESSAGE, listFlows, renameFlow } from "@/server/flows";
+import type { QwenClient } from "@/server/llm/qwen";
 import { deleteDiagram, duplicateDiagram, NotFoundError } from "@/server/projects";
 import { createVersion, restoreVersion } from "@/server/versions";
 
@@ -226,5 +230,70 @@ describe("GET /api/diagrams/:id/flows", () => {
     const body = (await res.json()) as { flows: { id: string; problems: unknown[] }[] };
     expect(body.flows.map((f) => f.id)).toEqual(["login"]);
     expect(body.flows[0].problems).toEqual([]);
+  });
+});
+
+/** 흐름 제안 3줄(sample 의 연결 e1·e2 위)을 돌려주는 가짜 Qwen. */
+const suggestLines = [
+  { op: "add_flow", id: "s-login", name: "로그인", origin: "user", result: "로그인 결과", steps: [step("e1", "web"), step("e2", "was")] },
+  { op: "add_flow", id: "s-page", name: "화면 보기", origin: "user", steps: [step("e1", "web")] },
+  { op: "add_flow", id: "s-batch", name: "정산 배치", origin: "system", steps: [step("e2", "was")] },
+].map((l) => JSON.stringify(l)).join("\n");
+const suggestQwen: QwenClient = {
+  async streamCompletion(_m, { onDelta }) {
+    onDelta(suggestLines);
+    return { text: suggestLines, finishReason: "stop" };
+  },
+};
+
+describe("flow suggest", () => {
+  test("suggest saves 3 flows as ai/unreviewed and stamps flowsSuggestedAt", async () => {
+    const { userId, diagramId } = await setup();
+    const r = await suggestFlows(userId, diagramId, { auto: true }, { qwen: suggestQwen });
+    expect(r).toEqual({ ok: true, saved: 3 });
+    const list = await listFlows(userId, diagramId);
+    expect(list.map((f) => f.id)).toEqual(["s-login", "s-page", "s-batch"]);
+    for (const f of list) expect(f).toMatchObject({ source: "ai", reviewed: false, problems: [] });
+    const [row] = await db.select({ at: diagrams.flowsSuggestedAt }).from(diagrams).where(eq(diagrams.id, diagramId));
+    expect(row.at).toBeInstanceOf(Date);
+    // 자동은 한 번만.
+    expect(await suggestFlows(userId, diagramId, { auto: true }, { qwen: suggestQwen })).toEqual({ ok: true, saved: 0 });
+  });
+
+  describe("POST /api/diagrams/:id/flows/suggest", () => {
+    const post = (id: string, body: unknown = {}) =>
+      SUGGEST(
+        new Request(`http://localhost/api/diagrams/${id}/flows/suggest`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) }),
+        { params: Promise.resolve({ id }) },
+      );
+    afterEach(() => setChatDepsForTest(null));
+
+    test("401/404/400, 409 while locked, saved for owner", async () => {
+      setChatDepsForTest({ qwen: suggestQwen, clef: { decide: vi.fn(), classifyIntent: vi.fn() } as never });
+      const { userId, diagramId } = await setup();
+      authMock.mockResolvedValue(null);
+      expect((await post(diagramId)).status).toBe(401);
+
+      const other = await makeOwnedDiagram();
+      authMock.mockResolvedValue({ user: { id: other.userId } });
+      expect((await post(diagramId)).status).toBe(404);
+
+      authMock.mockResolvedValue({ user: { id: userId } });
+      expect((await post(diagramId, { auto: "yes" })).status).toBe(400);
+
+      let release!: () => void;
+      const gate = new Promise<void>((r) => (release = r));
+      const held = withDiagramLock(diagramId, () => gate);
+      await new Promise((r) => setTimeout(r, 200));
+      const busy = await post(diagramId);
+      expect(busy.status).toBe(409);
+      expect(await busy.json()).toEqual({ error: FLOW_SUGGEST_BUSY_MESSAGE });
+      release();
+      await held;
+
+      const ok = await post(diagramId);
+      expect(ok.status).toBe(200);
+      expect(await ok.json()).toEqual({ saved: 3 });
+    });
   });
 });

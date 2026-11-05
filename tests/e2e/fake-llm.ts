@@ -4,7 +4,7 @@ import http from "node:http";
 import "./fake-env";
 
 import spike from "../../docs/superpowers/spike/spike-results.json";
-import { ASK_PROMPT, EXPLAIN_EDGE_PROMPT, EXPLAIN_NODE_PROMPT, WARNING_PROMPT } from "../../src/server/chat/prompt";
+import { ASK_PROMPT, EXPLAIN_EDGE_PROMPT, EXPLAIN_NODE_PROMPT, FLOW_SUGGEST_PROMPT, WARNING_PROMPT } from "../../src/server/chat/prompt";
 import { convertSpikeScenario, type SpikeState } from "../../src/server/samples";
 import { FAKE_PORT } from "./fake-config";
 
@@ -35,19 +35,35 @@ export const S1_NODE_COUNT = Object.keys(s1.state.nodes).length;
 
 /** 흐름 E2E: s1 의 실제 연결 id 로 첫 연결부터 이어지는 길(최대 4단계)을 흐름 하나로 만든다. */
 export const S1_FLOW_ID = "order";
-function s1FlowLines(): string[] {
-  const edges = Object.values(convertSpikeScenario(s1.state).edges);
+const s1Edges = () => Object.values(convertSpikeScenario(s1.state).edges);
+
+/** start 연결부터 이어지는 길(최대 4단계). */
+function s1Steps(start: number): { edge: string; from: string; short: string; text: string }[] {
+  const edges = s1Edges();
   const steps: { edge: string; from: string; short: string; text: string }[] = [];
-  let e: (typeof edges)[number] | undefined = edges[0];
+  let e: (typeof edges)[number] | undefined = edges[start];
   while (e && steps.length < 4) {
     const cur: (typeof edges)[number] = e;
     steps.push({ edge: cur.id, from: cur.from, short: `${steps.length + 1}번 요청`, text: `${cur.from} 에서 ${cur.to} 로 요청을 보낸다` });
     e = edges.find((x) => x.from === cur.to && !steps.some((s) => s.edge === x.id));
   }
+  return steps;
+}
+
+function s1FlowLines(): string[] {
   return [
     JSON.stringify({ op: "say", text: "주문 흐름을 그렸어요." }),
-    JSON.stringify({ op: "add_flow", id: S1_FLOW_ID, name: "주문하기", origin: "user", result: "주문 결과를 돌려받는다", steps }),
+    JSON.stringify({ op: "add_flow", id: S1_FLOW_ID, name: "주문하기", origin: "user", result: "주문 결과를 돌려받는다", steps: s1Steps(0) }),
   ];
+}
+
+/** 흐름 제안: s1 의 앞 연결 셋에서 시작하는 흐름 3개(사용자 2 · 시스템 1). */
+export const S1_SUGGEST_FLOW_IDS = ["suggest-1", "suggest-2", "suggest-3"];
+function s1SuggestLines(): string[] {
+  const names = ["상품 보기", "주문하기", "정산 배치"];
+  return S1_SUGGEST_FLOW_IDS.map((id, i) =>
+    JSON.stringify({ op: "add_flow", id, name: names[i], origin: i === 2 ? "system" : "user", result: "결과를 돌려받는다", steps: s1Steps(i) }),
+  );
 }
 
 type Msg = { role: string; content: string };
@@ -203,7 +219,9 @@ export function startFakeLlm(): Promise<http.Server> {
       const sys = body.messages.find((m) => m.role === "system")?.content;
       const askQuestion = sys === ASK_PROMPT ? ([...body.messages].reverse().find((m) => m.role === "user")?.content.split("질문: ").pop() ?? "") : null;
       const explainKind = sys === EXPLAIN_NODE_PROMPT ? "node" : sys === EXPLAIN_EDGE_PROMPT ? "edge" : null;
-      const { lines, delay, finish, tail }: { lines: string[]; delay: number; finish?: "stop" | "length"; tail?: string } = askQuestion !== null
+      const { lines, delay, finish, tail }: { lines: string[]; delay: number; finish?: "stop" | "length"; tail?: string } = sys === FLOW_SUGGEST_PROMPT
+        ? { lines: s1SuggestLines(), delay: FAST_MS }
+        : askQuestion !== null
         ? { lines: [`가짜 답이에요. ${askQuestion}`], delay: FAST_MS }
         : explainKind
         ? { lines: [explainJson(body.messages, explainKind)], delay: FAST_MS }
