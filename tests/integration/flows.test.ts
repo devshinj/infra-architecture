@@ -260,6 +260,49 @@ describe("flow suggest", () => {
     expect(await suggestFlows(userId, diagramId, { auto: true }, { qwen: suggestQwen })).toEqual({ ok: true, saved: 0 });
   });
 
+  test("concurrent auto calls stamp once (one model call)", async () => {
+    const { userId, diagramId } = await setup();
+    let calls = 0;
+    const qwen: QwenClient = {
+      async streamCompletion(m, o) {
+        calls++;
+        return suggestQwen.streamCompletion(m, o);
+      },
+    };
+    const results = await Promise.all([1, 2, 3].map(() => suggestFlows(userId, diagramId, { auto: true }, { qwen })));
+    expect(calls).toBe(1);
+    expect(results.filter((r) => r.ok && r.saved === 3)).toHaveLength(1);
+    expect(await listFlows(userId, diagramId)).toHaveLength(3);
+  });
+
+  test("a chat turn can take the lock while the model is running", async () => {
+    const { userId, diagramId } = await setup();
+    let lockedDuringCall: boolean | null = null;
+    const qwen: QwenClient = {
+      async streamCompletion(m, o) {
+        lockedDuringCall = (await withDiagramLock(diagramId, async () => true)).ok;
+        return suggestQwen.streamCompletion(m, o);
+      },
+    };
+    expect(await suggestFlows(userId, diagramId, { auto: false }, { qwen })).toEqual({ ok: true, saved: 3 });
+    expect(lockedDuringCall).toBe(true);
+  });
+
+  test("edges removed between model call and save → those flows rejected", async () => {
+    const { userId, diagramId, state } = await setup();
+    const qwen: QwenClient = {
+      async streamCompletion(m, o) {
+        // 모델이 도는 사이 대화 차례가 e2 를 지웠다.
+        const next = structuredClone(state);
+        delete next.edges.e2;
+        await createVersion(diagramId, next, { source: "ai" });
+        return suggestQwen.streamCompletion(m, o);
+      },
+    };
+    expect(await suggestFlows(userId, diagramId, { auto: false }, { qwen })).toEqual({ ok: true, saved: 1 });
+    expect((await listFlows(userId, diagramId)).map((f) => f.id)).toEqual(["s-page"]);
+  });
+
   describe("POST /api/diagrams/:id/flows/suggest", () => {
     const post = (id: string, body: unknown = {}) =>
       SUGGEST(
@@ -294,6 +337,6 @@ describe("flow suggest", () => {
       const ok = await post(diagramId);
       expect(ok.status).toBe(200);
       expect(await ok.json()).toEqual({ saved: 3 });
-    });
+    }, 20_000); // 잠금이 계속 차 있으면 저장 전 1초씩 4번 기다린다.
   });
 });

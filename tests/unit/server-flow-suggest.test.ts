@@ -5,6 +5,7 @@ import { emptyState, type DiagramState } from "@/domain/types";
 import { buildFlowSuggestMessages, FLOW_SUGGEST_PROMPT } from "@/server/chat/prompt";
 import { FLOW_SUGGEST_BUSY_MESSAGE, FLOW_SUGGEST_FAIL_MESSAGE, suggestFlows, type FlowSuggestRepo } from "@/server/flowSuggest";
 import type { ChatMessage, QwenClient } from "@/server/llm/qwen";
+import { FLOW_BUSY_MESSAGE } from "@/server/flows";
 import { NotFoundError } from "@/server/projects";
 
 function sample(): DiagramState {
@@ -30,21 +31,25 @@ const flowLine = (id: string, steps: [string, string][] = [["e1", "web"], ["e2",
 const existing = (id: string): Flow => ({ id, name: "있던 흐름", origin: "user", steps: [{ edge: "e1", from: "web", short: "요청", text: "요청" }] });
 
 /** 메모리 저장소. 잠금은 busy 면 실패한다. */
-function fakeRepo(opts: { suggestedAt?: Date | null; flows?: Flow[]; busy?: boolean; state?: DiagramState } = {}) {
-  const store = { suggestedAt: opts.suggestedAt ?? null, flows: [...(opts.flows ?? [])], ops: [] as FlowOp[] };
+/** busy: 잠금이 이 횟수만큼 차 있다(Infinity 면 계속). */
+function fakeRepo(opts: { suggestedAt?: Date | null; flows?: Flow[]; busy?: number; state?: DiagramState } = {}) {
+  const store = { suggestedAt: opts.suggestedAt ?? null, flows: [...(opts.flows ?? [])], ops: [] as FlowOp[], lockTries: 0, busyLeft: opts.busy ?? 0 };
   const repo: FlowSuggestRepo = {
     async getOwnedDiagram(userId) {
       if (userId !== "u") throw new NotFoundError();
     },
     async withLock(_d, fn) {
-      if (opts.busy) return { ok: false };
+      store.lockTries++;
+      if (store.busyLeft > 0) {
+        store.busyLeft--;
+        return { ok: false };
+      }
       return { ok: true, value: await fn() };
     },
-    async getSuggestedAt() {
-      return store.suggestedAt;
-    },
-    async markSuggested(_d, at) {
+    async claimSuggest(_d, at, onlyFirst) {
+      if (onlyFirst && store.suggestedAt) return false;
       store.suggestedAt = at;
+      return true;
     },
     async getLatestState() {
       return { state: opts.state ?? sample() };
@@ -84,7 +89,8 @@ function fakeQwen(reply: string | ((i: number) => string)) {
 }
 
 const NOW = new Date("2026-11-05T00:00:00Z");
-const deps = (repo: FlowSuggestRepo, qwen: QwenClient | null) => ({ repo, qwen, now: () => NOW });
+const sleep = vi.fn(async () => {});
+const deps = (repo: FlowSuggestRepo, qwen: QwenClient | null) => ({ repo, qwen, now: () => NOW, sleep });
 
 describe("suggestFlows", () => {
   test("auto skips when flowsSuggestedAt set", async () => {
@@ -161,11 +167,35 @@ describe("suggestFlows", () => {
     expect(calls).toHaveLength(2);
   });
 
-  test("busy lock → busy message, model not called", async () => {
-    const { repo } = fakeRepo({ busy: true });
+  test("lock busy at save time is retried 5 times, then busy message", async () => {
+    sleep.mockClear();
+    const { repo, store } = fakeRepo({ busy: Infinity });
     const { qwen, calls } = fakeQwen(flowLine("a"));
     expect(await suggestFlows("u", "d", { auto: false }, deps(repo, qwen))).toEqual({ ok: false, message: FLOW_SUGGEST_BUSY_MESSAGE });
-    expect(calls).toHaveLength(0);
+    expect(FLOW_SUGGEST_BUSY_MESSAGE).toBe(FLOW_BUSY_MESSAGE);
+    expect(calls).toHaveLength(1);
+    expect(store.lockTries).toBe(5);
+    expect(sleep).toHaveBeenCalledTimes(4);
+    expect(repo.applyFlowOps).not.toHaveBeenCalled();
+  });
+
+  test("lock frees up after a short wait → saved", async () => {
+    const { repo, store } = fakeRepo({ busy: 2 });
+    const { qwen } = fakeQwen(flowLine("a"));
+    expect(await suggestFlows("u", "d", { auto: false }, deps(repo, qwen))).toEqual({ ok: true, saved: 1 });
+    expect(store.lockTries).toBe(3);
+  });
+
+  test("concurrent auto calls stamp once and call the model once", async () => {
+    const { repo } = fakeRepo();
+    const { qwen, calls } = fakeQwen(flowLine("a"));
+    const [a, b] = await Promise.all([
+      suggestFlows("u", "d", { auto: true }, deps(repo, qwen)),
+      suggestFlows("u", "d", { auto: true }, deps(repo, qwen)),
+    ]);
+    expect([a, b]).toContainEqual({ ok: true, saved: 0 });
+    expect([a, b]).toContainEqual({ ok: true, saved: 1 });
+    expect(calls).toHaveLength(1);
   });
 
   test("diagram with no connections fails without calling the model or stamping", async () => {
