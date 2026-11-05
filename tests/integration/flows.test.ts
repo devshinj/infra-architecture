@@ -260,6 +260,20 @@ describe("flow suggest", () => {
     expect(await suggestFlows(userId, diagramId, { auto: true }, { qwen: suggestQwen })).toEqual({ ok: true, saved: 0 });
   });
 
+  test("an auto run that gets nothing usable clears its stamp, so the next auto run tries again", async () => {
+    const { userId, diagramId } = await setup();
+    const junk: QwenClient = {
+      async streamCompletion(_m, { onDelta }) {
+        onDelta("깨진 글");
+        return { text: "깨진 글", finishReason: "stop" };
+      },
+    };
+    expect(await suggestFlows(userId, diagramId, { auto: true }, { qwen: junk })).toMatchObject({ ok: false });
+    const [row] = await db.select({ at: diagrams.flowsSuggestedAt }).from(diagrams).where(eq(diagrams.id, diagramId));
+    expect(row.at).toBeNull();
+    expect(await suggestFlows(userId, diagramId, { auto: true }, { qwen: suggestQwen })).toEqual({ ok: true, saved: 3 });
+  });
+
   test("concurrent auto calls stamp once (one model call)", async () => {
     const { userId, diagramId } = await setup();
     let calls = 0;

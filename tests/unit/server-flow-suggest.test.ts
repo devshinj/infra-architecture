@@ -3,7 +3,7 @@ import { describe, expect, test, vi } from "vitest";
 import type { Flow, FlowOp } from "@/domain/flows";
 import { emptyState, type DiagramState } from "@/domain/types";
 import { buildFlowSuggestMessages, FLOW_SUGGEST_PROMPT } from "@/server/chat/prompt";
-import { FLOW_SUGGEST_BUSY_MESSAGE, FLOW_SUGGEST_FAIL_MESSAGE, suggestFlows, type FlowSuggestRepo } from "@/server/flowSuggest";
+import { FLOW_SUGGEST_BUSY_MESSAGE, FLOW_SUGGEST_FAIL_MESSAGE, FLOW_SUGGEST_LIMIT_MESSAGE, suggestFlows, type FlowSuggestRepo } from "@/server/flowSuggest";
 import type { ChatMessage, QwenClient } from "@/server/llm/qwen";
 import { FLOW_BUSY_MESSAGE } from "@/server/flows";
 import { NotFoundError } from "@/server/projects";
@@ -51,6 +51,9 @@ function fakeRepo(opts: { suggestedAt?: Date | null; flows?: Flow[]; busy?: numb
       store.suggestedAt = at;
       return true;
     },
+    releaseSuggest: vi.fn(async (_d: string, at: Date) => {
+      if (store.suggestedAt?.getTime() === at.getTime()) store.suggestedAt = null;
+    }),
     async getLatestState() {
       return { state: opts.state ?? sample() };
     },
@@ -151,13 +154,64 @@ describe("suggestFlows", () => {
     expect(store.ops.map((o) => o.id)).toEqual(["a", "b", "c", "d", "e"]);
   });
 
-  test("zero valid → failure message after one retry, still stamped", async () => {
+  test("zero valid → failure message after one retry; a button run keeps its stamp", async () => {
     const { repo, store } = fakeRepo();
     const { qwen, calls } = fakeQwen(JSON.stringify({ op: "say", text: "못 해요" }));
-    expect(await suggestFlows("u", "d", { auto: true }, deps(repo, qwen))).toEqual({ ok: false, message: FLOW_SUGGEST_FAIL_MESSAGE });
+    expect(await suggestFlows("u", "d", { auto: false }, deps(repo, qwen))).toEqual({ ok: false, message: FLOW_SUGGEST_FAIL_MESSAGE });
     expect(calls).toHaveLength(2);
     expect(store.suggestedAt).toEqual(NOW);
     expect(repo.applyFlowOps).not.toHaveBeenCalled();
+  });
+
+  test("auto run that gets nothing usable clears its stamp so the next turn retries", async () => {
+    const { repo, store } = fakeRepo();
+    const { qwen } = fakeQwen(JSON.stringify({ op: "say", text: "못 해요" }));
+    expect(await suggestFlows("u", "d", { auto: true }, deps(repo, qwen))).toEqual({ ok: false, message: FLOW_SUGGEST_FAIL_MESSAGE });
+    expect(store.suggestedAt).toBeNull();
+    expect(repo.releaseSuggest).toHaveBeenCalledWith("d", NOW);
+  });
+
+  test("auto run that stays busy clears its stamp; a button run that stays busy keeps it", async () => {
+    const auto = fakeRepo({ busy: Infinity });
+    expect(await suggestFlows("u", "d", { auto: true }, deps(auto.repo, fakeQwen(flowLine("a")).qwen))).toEqual({ ok: false, message: FLOW_SUGGEST_BUSY_MESSAGE });
+    expect(auto.store.suggestedAt).toBeNull();
+    const button = fakeRepo({ busy: Infinity });
+    expect(await suggestFlows("u", "d", { auto: false }, deps(button.repo, fakeQwen(flowLine("a")).qwen))).toEqual({ ok: false, message: FLOW_SUGGEST_BUSY_MESSAGE });
+    expect(button.store.suggestedAt).toEqual(NOW);
+    expect(button.repo.releaseSuggest).not.toHaveBeenCalled();
+  });
+
+  test("auto clear only drops its own stamp (a newer stamp stays)", async () => {
+    const { repo, store } = fakeRepo();
+    const later = new Date("2026-11-05T00:00:05Z");
+    const { qwen } = fakeQwen(() => {
+      store.suggestedAt = later; // 모델이 도는 사이 버튼 제안이 새로 적었다.
+      return "깨진 글";
+    });
+    expect(await suggestFlows("u", "d", { auto: true }, deps(repo, qwen))).toMatchObject({ ok: false });
+    expect(store.suggestedAt).toEqual(later);
+  });
+
+  test("auto save sees flows made during the model call → saves nothing, no error", async () => {
+    const { repo, store } = fakeRepo();
+    const { qwen } = fakeQwen(() => {
+      store.flows.push(existing("chat")); // 모델이 도는 사이 대화 차례가 흐름을 만들었다.
+      return flowLine("a");
+    });
+    expect(await suggestFlows("u", "d", { auto: true }, deps(repo, qwen))).toEqual({ ok: true, saved: 0 });
+    expect(repo.applyFlowOps).not.toHaveBeenCalled();
+    expect(store.flows.map((f) => f.id)).toEqual(["chat"]);
+    expect(store.suggestedAt).toEqual(NOW);
+  });
+
+  test("button run at the flow limit fails without stamping or calling the model", async () => {
+    const full = Array.from({ length: 20 }, (_, i) => existing(`f${i}`));
+    const { repo, store } = fakeRepo({ flows: full });
+    const { qwen, calls } = fakeQwen(flowLine("a"));
+    expect(await suggestFlows("u", "d", { auto: false }, deps(repo, qwen))).toEqual({ ok: false, message: FLOW_SUGGEST_LIMIT_MESSAGE });
+    expect(FLOW_SUGGEST_LIMIT_MESSAGE).toBe("흐름은 구성도마다 20개까지예요. 필요 없는 흐름을 지운 뒤 다시 해 주세요.");
+    expect(calls).toHaveLength(0);
+    expect(store.suggestedAt).toBeNull();
   });
 
   test("retry succeeds on the second answer", async () => {
