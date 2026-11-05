@@ -1,6 +1,6 @@
 ---
 title: "types.ts"
-sidebar_position: 44
+sidebar_position: 42
 ---
 # types.ts
 
@@ -27,13 +27,15 @@ sidebar_position: 44
 
 ## Relationships
 
-- [(app)/actions.ts](app-actions.ts.md) (4 shared connections)
-- [domain/warnings.ts](domain-warnings.ts.md) (4 shared connections)
+- [getOwnedDiagram](getOwnedDiagram.md) (3 shared connections)
+- [types.ts](types.ts.md) (3 shared connections)
 - [InfoCard.tsx](InfoCard.tsx.md) (3 shared connections)
-- [clef.ts](clef.ts.md) (2 shared connections)
+- [pipeline.ts](pipeline.ts.md) (2 shared connections)
 - [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (2 shared connections)
 - [설계 문서와 계획](설계_문서와_계획.md) (1 shared connections)
-- [SessionPicker.tsx](SessionPicker.tsx.md) (1 shared connections)
+- [flowSuggest.ts](flowSuggest.ts.md) (1 shared connections)
+- [(app)/actions.ts](app-actions.ts.md) (1 shared connections)
+- [ref_react](ref_react.md) (1 shared connections)
 - [ChatPanel.tsx](ChatPanel.tsx.md) (1 shared connections)
 
 ## Source Files

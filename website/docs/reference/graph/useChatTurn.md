@@ -22,16 +22,15 @@ sidebar_position: 67
 
 ## Relationships
 
-- [useChatTurn.ts](useChatTurn.ts.md) (4 shared connections)
+- [types.ts](types.ts.md) (5 shared connections)
 - [lines.ts](lines.ts.md) (3 shared connections)
 - [(app)/actions.ts](app-actions.ts.md) (1 shared connections)
 - [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (1 shared connections)
-- [Review Focus](Review_Focus.md) (1 shared connections)
+- [samples.ts](samples.ts.md) (1 shared connections)
 - [ChatPanel.tsx](ChatPanel.tsx.md) (1 shared connections)
 - [2단계 계획: AI 대화](2단계_계획-_AI_대화.md) (1 shared connections)
-- [samples.ts](samples.ts.md) (1 shared connections)
 - [useSessions.ts](useSessions.ts.md) (1 shared connections)
-- [SessionPickerProps](SessionPickerProps.md) (1 shared connections)
+- [SessionPicker.tsx](SessionPicker.tsx.md) (1 shared connections)
 
 ## Source Files
 

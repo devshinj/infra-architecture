@@ -1,18 +1,17 @@
 ---
 title: "[sessionId]/route.ts"
-sidebar_position: 9
+sidebar_position: 13
 ---
 # [sessionId]/route.ts
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 29 nodes · cohesion 0.12
+> 28 nodes · cohesion 0.12
 
 ## Key Concepts
 
 - **[sessionId]/route.ts** (34 connections) — `src/app/api/diagrams/[id]/sessions/[sessionId]/route.ts`
 - **sessions.ts** (32 connections) — `src/server/chat/sessions.ts`
-- **createSession()** (8 connections) — `src/server/chat/sessions.ts`
 - **guard()** (7 connections) — `src/app/api/diagrams/[id]/sessions/[sessionId]/route.ts`
 - **PATCH()** (7 connections) — `src/app/api/diagrams/[id]/sessions/[sessionId]/route.ts`
 - **DELETE()** (6 connections) — `src/app/api/diagrams/[id]/sessions/[sessionId]/route.ts`
@@ -35,19 +34,22 @@ sidebar_position: 9
 - **SessionIdSchema** (1 connections) — `src/app/api/diagrams/[id]/sessions/[sessionId]/route.ts`
 - **columns** (1 connections) — `src/server/chat/sessions.ts`
 - **NewSession** (1 connections) — `src/server/chat/sessions.ts`
-- *... and 4 more nodes in this community*
+- **SESSION_LIST_LIMIT** (1 connections) — `src/server/chat/sessions.ts`
+- *... and 3 more nodes in this community*
 
 ## Relationships
 
-- [auth](auth.md) (12 shared connections)
-- [(app)/actions.ts](app-actions.ts.md) (8 shared connections)
+- [auth](auth.md) (13 shared connections)
+- [ask.ts](ask.ts.md) (9 shared connections)
 - [schema.ts](schema.ts.md) (7 shared connections)
-- [ask.ts](ask.ts.md) (6 shared connections)
 - [ask/route.ts](ask-route.ts.md) (5 shared connections)
-- [getSession](getSession.md) (5 shared connections)
-- [pipeline.ts](pipeline.ts.md) (3 shared connections)
-- [auth.ts](auth.ts.md) (2 shared connections)
+- [getSession](getSession.md) (4 shared connections)
+- [getOwnedDiagram](getOwnedDiagram.md) (2 shared connections)
+- [projects.ts](projects.ts.md) (2 shared connections)
+- [pipeline.ts](pipeline.ts.md) (2 shared connections)
+- [ref_react](ref_react.md) (1 shared connections)
 - [ref_zod](ref_zod.md) (1 shared connections)
+- [types.ts](types.ts.md) (1 shared connections)
 
 ## Source Files
 
@@ -57,8 +59,8 @@ sidebar_position: 9
 
 ## Audit Trail
 
-- EXTRACTED: 97 (98%)
-- INFERRED: 2 (2%)
+- EXTRACTED: 93 (99%)
+- INFERRED: 1 (1%)
 - AMBIGUOUS: 0 (0%)
 
 ---

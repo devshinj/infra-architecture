@@ -1,6 +1,6 @@
 ---
 title: "useCamera.ts"
-sidebar_position: 22
+sidebar_position: 27
 ---
 # useCamera.ts
 
@@ -38,9 +38,9 @@ sidebar_position: 22
 
 - [Canvas.tsx](Canvas.tsx.md) (5 shared connections)
 - [Flow](Flow.md) (4 shared connections)
-- [Layout](Layout.md) (3 shared connections)
+- [Rect](Rect.md) (3 shared connections)
 - [FlyLayer.tsx](FlyLayer.tsx.md) (2 shared connections)
-- [SessionPicker.tsx](SessionPicker.tsx.md) (1 shared connections)
+- [ref_react](ref_react.md) (1 shared connections)
 - [layout.ts](layout.ts.md) (1 shared connections)
 
 ## Source Files

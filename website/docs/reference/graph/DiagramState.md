@@ -1,6 +1,6 @@
 ---
 title: "DiagramState"
-sidebar_position: 29
+sidebar_position: 34
 sidebar_label: "핵심 노드: DiagramState"
 ---
 # DiagramState
@@ -11,10 +11,10 @@ sidebar_label: "핵심 노드: DiagramState"
 
 ## Key Concepts
 
-- **RightPanel.tsx** (23 connections) — `src/ui/RightPanel.tsx`
-- **RightPanelProps** (10 connections) — `src/ui/RightPanel.tsx`
+- **RightPanel.tsx** (26 connections) — `src/ui/RightPanel.tsx`
+- **RightPanelProps** (11 connections) — `src/ui/RightPanel.tsx`
+- **RightPanel()** (10 connections) — `src/ui/RightPanel.tsx`
 - **ChatPanelProps** (9 connections) — `src/ui/chat/ChatPanel.tsx`
-- **RightPanel()** (9 connections) — `src/ui/RightPanel.tsx`
 - **HistoryPanel.tsx** (8 connections) — `src/ui/HistoryPanel.tsx`
 - **HistoryPanel()** (6 connections) — `src/ui/HistoryPanel.tsx`
 - **HistoryPanelProps** (6 connections) — `src/ui/HistoryPanel.tsx`
@@ -38,13 +38,14 @@ sidebar_label: "핵심 노드: DiagramState"
 
 - [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (7 shared connections)
 - [ChatPanel.tsx](ChatPanel.tsx.md) (6 shared connections)
-- [NodeInfo.tsx](NodeInfo.tsx.md) (6 shared connections)
-- [domain/warnings.ts](domain-warnings.ts.md) (3 shared connections)
-- [SessionPicker.tsx](SessionPicker.tsx.md) (2 shared connections)
-- [useExplanations.ts](useExplanations.ts.md) (2 shared connections)
+- [FlowPanel.tsx](FlowPanel.tsx.md) (5 shared connections)
+- [NodeInfo.tsx](NodeInfo.tsx.md) (4 shared connections)
+- [flowSuggest.ts](flowSuggest.ts.md) (4 shared connections)
+- [Explanation.tsx](Explanation.tsx.md) (3 shared connections)
+- [ref_react](ref_react.md) (2 shared connections)
 - [useSessions.ts](useSessions.ts.md) (1 shared connections)
-- [SessionPickerProps](SessionPickerProps.md) (1 shared connections)
-- [Explanation.tsx](Explanation.tsx.md) (1 shared connections)
+- [SessionPicker.tsx](SessionPicker.tsx.md) (1 shared connections)
+- [types.ts](types.ts.md) (1 shared connections)
 - [auth](auth.md) (1 shared connections)
 - [(app)/actions.ts](app-actions.ts.md) (1 shared connections)
 
@@ -56,7 +57,7 @@ sidebar_label: "핵심 노드: DiagramState"
 
 ## Audit Trail
 
-- EXTRACTED: 63 (100%)
+- EXTRACTED: 68 (100%)
 - INFERRED: 0 (0%)
 - AMBIGUOUS: 0 (0%)
 

@@ -1,6 +1,6 @@
 ---
 title: "InfraSketch 설계 문서"
-sidebar_position: 79
+sidebar_position: 89
 sidebar_label: "핵심 노드: InfraSketch 설계 문서"
 ---
 # InfraSketch 설계 문서

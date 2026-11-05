@@ -1,6 +1,6 @@
 ---
 title: "getSession"
-sidebar_position: 71
+sidebar_position: 77
 ---
 # getSession
 
@@ -20,13 +20,15 @@ sidebar_position: 71
 
 ## Relationships
 
-- [ask/route.ts](ask-route.ts.md) (7 shared connections)
-- [ask.ts](ask.ts.md) (7 shared connections)
+- [ask.ts](ask.ts.md) (10 shared connections)
 - [pipeline.ts](pipeline.ts.md) (7 shared connections)
-- [(app)/actions.ts](app-actions.ts.md) (5 shared connections)
-- [\[sessionId\]/route.ts]([sessionId]-route.ts.md) (5 shared connections)
+- [ask/route.ts](ask-route.ts.md) (6 shared connections)
+- [\[sessionId\]/route.ts]([sessionId]-route.ts.md) (4 shared connections)
 - [auth](auth.md) (2 shared connections)
+- [getOwnedDiagram](getOwnedDiagram.md) (2 shared connections)
 - [deps.ts](deps.ts.md) (1 shared connections)
+- [projects.ts](projects.ts.md) (1 shared connections)
+- [ValidationError](ValidationError.md) (1 shared connections)
 - [설계 문서와 계획](설계_문서와_계획.md) (1 shared connections)
 
 ## Source Files

@@ -1,6 +1,6 @@
 ---
 title: "Review Focus"
-sidebar_position: 91
+sidebar_position: 100
 ---
 # Review Focus
 
@@ -10,32 +10,37 @@ sidebar_position: 91
 
 ## Key Concepts
 
-- **Review Focus** (6 connections) — `docs/superpowers/plans/2026-11-01-infrasketch-phase3c2-ask-node.md`
-- **InfraSketch 3C-2단계 — 노드에 대해 물어보기 Implementation Plan** (5 connections) — `docs/superpowers/plans/2026-11-01-infrasketch-phase3c2-ask-node.md`
-- **Task 4: 질문 시작하기(설명 패널·우클릭 메뉴)** (4 connections) — `docs/superpowers/plans/2026-11-01-infrasketch-phase3c2-ask-node.md`
-- **Task 1: 세션 저장** (2 connections) — `docs/superpowers/plans/2026-11-01-infrasketch-phase3c2-ask-node.md`
-- **2026-11-01-infrasketch-phase3c2-ask-node.md** (1 connections) — `docs/superpowers/plans/2026-11-01-infrasketch-phase3c2-ask-node.md`
-- **Global Constraints** (1 connections) — `docs/superpowers/plans/2026-11-01-infrasketch-phase3c2-ask-node.md`
-- **Task 5: E2E — 노드 질문 흐름** (1 connections) — `docs/superpowers/plans/2026-11-01-infrasketch-phase3c2-ask-node.md`
-- **실행 순서** (1 connections) — `docs/superpowers/plans/2026-11-01-infrasketch-phase3c2-ask-node.md`
+- **Review Focus** (10 connections) — `docs/superpowers/plans/2026-11-05-flows-and-network-boundaries.md`
+- **Task 7: 캔버스 흐름 강조·단계 글자·경계 표시** (5 connections) — `docs/superpowers/plans/2026-11-05-flows-and-network-boundaries.md`
+- **흐름 보기와 망 경계 표시 Implementation Plan** (5 connections) — `docs/superpowers/plans/2026-11-05-flows-and-network-boundaries.md`
+- **Task 6: AI 흐름 제안(처음 그린 뒤 자동 + 버튼)** (4 connections) — `docs/superpowers/plans/2026-11-05-flows-and-network-boundaries.md`
+- **FlowCommand** (3 connections) — `src/domain/commands.ts`
+- **2026-11-05-flows-and-network-boundaries.md** (1 connections) — `docs/superpowers/plans/2026-11-05-flows-and-network-boundaries.md`
+- **Global Constraints** (1 connections) — `docs/superpowers/plans/2026-11-05-flows-and-network-boundaries.md`
+- **Task 9: E2E·화면 확인·문서** (1 connections) — `docs/superpowers/plans/2026-11-05-flows-and-network-boundaries.md`
 
 ## Relationships
 
-- [ask.ts](ask.ts.md) (2 shared connections)
-- [ChatPanel.tsx](ChatPanel.tsx.md) (1 shared connections)
-- [auth](auth.md) (1 shared connections)
-- [NodeInfo.tsx](NodeInfo.tsx.md) (1 shared connections)
-- [(app)/actions.ts](app-actions.ts.md) (1 shared connections)
-- [NodeMenu](NodeMenu.md) (1 shared connections)
+- [server/flows.ts](server-flows.ts.md) (4 shared connections)
+- [useFlows](useFlows.md) (2 shared connections)
+- [prompt.ts](prompt.ts.md) (2 shared connections)
+- [EdgeLayer.tsx](EdgeLayer.tsx.md) (2 shared connections)
+- [missing.ts](missing.ts.md) (1 shared connections)
+- [pipeline.ts](pipeline.ts.md) (1 shared connections)
+- [ask.ts](ask.ts.md) (1 shared connections)
+- [flowSuggest.ts](flowSuggest.ts.md) (1 shared connections)
+- [samples.ts](samples.ts.md) (1 shared connections)
+- [commands.ts](commands.ts.md) (1 shared connections)
 
 ## Source Files
 
-- `docs/superpowers/plans/2026-11-01-infrasketch-phase3c2-ask-node.md`
+- `docs/superpowers/plans/2026-11-05-flows-and-network-boundaries.md`
+- `src/domain/commands.ts`
 
 ## Audit Trail
 
-- EXTRACTED: 9 (64%)
-- INFERRED: 5 (36%)
+- EXTRACTED: 13 (57%)
+- INFERRED: 10 (43%)
 - AMBIGUOUS: 0 (0%)
 
 ---

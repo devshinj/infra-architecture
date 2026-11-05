@@ -1,12 +1,12 @@
 ---
 title: "ChatPanel.tsx"
-sidebar_position: 5
+sidebar_position: 6
 ---
 # ChatPanel.tsx
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 35 nodes · cohesion 0.09
+> 36 nodes · cohesion 0.09
 
 ## Key Concepts
 
@@ -15,6 +15,7 @@ sidebar_position: 5
 - **MentionInput** (10 connections) — `src/ui/chat/MentionInput.tsx`
 - **MentionInput.tsx** (9 connections) — `src/ui/chat/MentionInput.tsx`
 - **MentionInputHandle** (8 connections) — `src/ui/chat/MentionInput.tsx`
+- **useShell()** (8 connections) — `src/ui/Shell.tsx`
 - **Task 3: 세션 고르기와 질문 세션 화면** (6 connections) — `docs/superpowers/plans/2026-11-01-infrasketch-phase3c2-ask-node.md`
 - **src_ui_chat_chat_module** (5 connections)
 - **CardView()** (5 connections) — `src/ui/chat/ChatPanel.tsx`
@@ -34,35 +35,35 @@ sidebar_position: 5
 - **Mention** (2 connections) — `src/ui/chat/MentionInput.tsx`
 - **.focus()** (2 connections) — `src/ui/chat/MentionInput.tsx`
 - **.submit()** (2 connections) — `src/ui/chat/MentionInput.tsx`
-- **.onContentChange()** (2 connections) — `src/ui/chat/MentionInput.tsx`
-- *... and 10 more nodes in this community*
+- *... and 11 more nodes in this community*
 
 ## Relationships
 
-- [SessionPicker.tsx](SessionPicker.tsx.md) (7 shared connections)
+- [SessionPicker.tsx](SessionPicker.tsx.md) (6 shared connections)
+- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (6 shared connections)
 - [DiagramState](DiagramState.md) (6 shared connections)
-- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (5 shared connections)
-- [Review Focus](Review_Focus.md) (2 shared connections)
+- [types.ts](types.ts.md) (4 shared connections)
+- [auth](auth.md) (3 shared connections)
 - [useSessions.ts](useSessions.ts.md) (2 shared connections)
-- [useChatTurn.ts](useChatTurn.ts.md) (2 shared connections)
-- [ask/route.ts](ask-route.ts.md) (2 shared connections)
 - [FlyLayer.tsx](FlyLayer.tsx.md) (2 shared connections)
+- [ref_react](ref_react.md) (2 shared connections)
 - [Sidebar.tsx](Sidebar.tsx.md) (2 shared connections)
+- [Review Focus](Review_Focus.md) (1 shared connections)
 - [useChatTurn](useChatTurn.md) (1 shared connections)
 - [설계 문서와 계획](설계_문서와_계획.md) (1 shared connections)
-- [pipeline.ts](pipeline.ts.md) (1 shared connections)
 
 ## Source Files
 
 - `docs/superpowers/plans/2026-11-01-infrasketch-phase3c2-ask-node.md`
 - `docs/superpowers/specs/2026-10-29-infra-architecture-visualizer-design.md`
+- `src/ui/Shell.tsx`
 - `src/ui/chat/ChatPanel.tsx`
 - `src/ui/chat/MentionInput.tsx`
 
 ## Audit Trail
 
-- EXTRACTED: 85 (92%)
-- INFERRED: 7 (8%)
+- EXTRACTED: 91 (93%)
+- INFERRED: 7 (7%)
 - AMBIGUOUS: 0 (0%)
 
 ---

@@ -1,16 +1,17 @@
 ---
 title: "Legend.tsx"
-sidebar_position: 47
+sidebar_position: 52
 ---
 # Legend.tsx
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 14 nodes · cohesion 0.21
+> 15 nodes · cohesion 0.19
 
 ## Key Concepts
 
 - **Legend.tsx** (16 connections) — `src/ui/canvas/Legend.tsx`
+- **EDGE_KINDS** (9 connections) — `src/domain/catalog.ts`
 - **Legend()** (7 connections) — `src/ui/canvas/Legend.tsx`
 - **legendPlacement()** (4 connections) — `src/ui/canvas/Legend.tsx`
 - **src_canvas_edges** (2 connections)
@@ -28,19 +29,25 @@ sidebar_position: 47
 ## Relationships
 
 - [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (3 shared connections)
+- [EdgeLayer.tsx](EdgeLayer.tsx.md) (2 shared connections)
+- [ZoneNameLayer.tsx](ZoneNameLayer.tsx.md) (2 shared connections)
 - [(app)/actions.ts](app-actions.ts.md) (2 shared connections)
-- [연결선 그리기](연결선_그리기.md) (1 shared connections)
 - [motion.ts](motion.ts.md) (1 shared connections)
-- [SessionPicker.tsx](SessionPicker.tsx.md) (1 shared connections)
-- [domain/warnings.ts](domain-warnings.ts.md) (1 shared connections)
+- [segments.ts](segments.ts.md) (1 shared connections)
+- [commands.ts](commands.ts.md) (1 shared connections)
+- [prompt.ts](prompt.ts.md) (1 shared connections)
+- [samples.ts](samples.ts.md) (1 shared connections)
+- [NodeInfo.tsx](NodeInfo.tsx.md) (1 shared connections)
+- [ref_react](ref_react.md) (1 shared connections)
 
 ## Source Files
 
+- `src/domain/catalog.ts`
 - `src/ui/canvas/Legend.tsx`
 
 ## Audit Trail
 
-- EXTRACTED: 28 (100%)
+- EXTRACTED: 36 (100%)
 - INFERRED: 0 (0%)
 - AMBIGUOUS: 0 (0%)
 

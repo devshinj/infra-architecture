@@ -1,32 +1,33 @@
 ---
 title: "edgeLabels.ts"
-sidebar_position: 6
+sidebar_position: 7
 ---
 # edgeLabels.ts
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 33 nodes · cohesion 0.09
+> 34 nodes · cohesion 0.09
 
 ## Key Concepts
 
-- **edgeLabels.ts** (37 connections) — `src/canvas/edgeLabels.ts`
+- **edgeLabels.ts** (46 connections) — `src/canvas/edgeLabels.ts`
 - **mergedLabels()** (16 connections) — `src/canvas/edgeLabels.ts`
+- **alongCandidates()** (8 connections) — `src/canvas/edgeLabels.ts`
+- **arcOf()** (3 connections) — `src/canvas/edgeLabels.ts`
 - **besideNode()** (3 connections) — `src/canvas/edgeLabels.ts`
-- **labelBox()** (3 connections) — `src/canvas/edgeLabels.ts`
-- **arcOf()** (2 connections) — `src/canvas/edgeLabels.ts`
+- **pointAt()** (3 connections) — `src/canvas/edgeLabels.ts`
+- **runs()** (3 connections) — `src/canvas/edgeLabels.ts`
+- **slides()** (3 connections) — `src/canvas/edgeLabels.ts`
+- **totalLength()** (3 connections) — `src/canvas/edgeLabels.ts`
+- **Box** (2 connections) — `src/canvas/edgeLabels.ts`
 - **commonPrefix()** (2 connections) — `src/canvas/edgeLabels.ts`
 - **fromSelected()** (2 connections) — `src/canvas/edgeLabels.ts`
-- **pointAt()** (2 connections) — `src/canvas/edgeLabels.ts`
 - **rows()** (2 connections) — `src/canvas/edgeLabels.ts`
-- **runs()** (2 connections) — `src/canvas/edgeLabels.ts`
 - **same()** (2 connections) — `src/canvas/edgeLabels.ts`
 - **sideOf()** (2 connections) — `src/canvas/edgeLabels.ts`
-- **slides()** (2 connections) — `src/canvas/edgeLabels.ts`
-- **tooClose()** (2 connections) — `src/canvas/edgeLabels.ts`
-- **totalLength()** (2 connections) — `src/canvas/edgeLabels.ts`
+- **stepNumberOnly()** (2 connections) — `src/canvas/edgeLabels.ts`
+- **AlongItem** (1 connections) — `src/canvas/edgeLabels.ts`
 - **Beside** (1 connections) — `src/canvas/edgeLabels.ts`
-- **Box** (1 connections) — `src/canvas/edgeLabels.ts`
 - **IncidentEdge** (1 connections) — `src/canvas/edgeLabels.ts`
 - **LABEL_LINE** (1 connections) — `src/canvas/edgeLabels.ts`
 - **LABEL_OFFSET** (1 connections) — `src/canvas/edgeLabels.ts`
@@ -34,16 +35,14 @@ sidebar_position: 6
 - **MIN_TRUNK** (1 connections) — `src/canvas/edgeLabels.ts`
 - **NODE_RING** (1 connections) — `src/canvas/edgeLabels.ts`
 - **PlacedLabel** (1 connections) — `src/canvas/edgeLabels.ts`
-- **Plan** (1 connections) — `src/canvas/edgeLabels.ts`
-- *... and 8 more nodes in this community*
+- *... and 9 more nodes in this community*
 
 ## Relationships
 
-- [text.ts](text.ts.md) (3 shared connections)
-- [연결선 그리기](연결선_그리기.md) (3 shared connections)
-- [Layout](Layout.md) (1 shared connections)
+- [EdgeLayer.tsx](EdgeLayer.tsx.md) (17 shared connections)
+- [Rect](Rect.md) (2 shared connections)
+- [text.ts](text.ts.md) (2 shared connections)
 - [layout.ts](layout.ts.md) (1 shared connections)
-- [layoutMetrics.ts](layoutMetrics.ts.md) (1 shared connections)
 
 ## Source Files
 
@@ -51,8 +50,8 @@ sidebar_position: 6
 
 ## Audit Trail
 
-- EXTRACTED: 53 (98%)
-- INFERRED: 1 (2%)
+- EXTRACTED: 69 (97%)
+- INFERRED: 2 (3%)
 - AMBIGUOUS: 0 (0%)
 
 ---

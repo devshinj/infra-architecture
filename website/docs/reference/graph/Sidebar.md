@@ -1,6 +1,6 @@
 ---
 title: "Sidebar()"
-sidebar_position: 83
+sidebar_position: 92
 sidebar_label: "핵심 노드: Sidebar()"
 ---
 # Sidebar()
@@ -14,7 +14,9 @@ sidebar_label: "핵심 노드: Sidebar()"
 ## Connections by Relation
 
 ### calls
+- DialogView() `EXTRACTED`
 - deleteDiagramAction() `EXTRACTED`
+- RowMenu() `EXTRACTED`
 - useShell() `EXTRACTED`
 - duplicateDiagramAction() `EXTRACTED`
 - createProjectAction() `EXTRACTED`
@@ -22,9 +24,7 @@ sidebar_label: "핵심 노드: Sidebar()"
 - renameDiagramAction() `EXTRACTED`
 - renameProjectAction() `EXTRACTED`
 - deleteProjectAction() `EXTRACTED`
-- DialogView() `EXTRACTED`
 - AppLayout() `EXTRACTED`
-- RowMenu() `EXTRACTED`
 - LogoMark() `EXTRACTED`
 - IconBook() `EXTRACTED`
 - IconMenu() `EXTRACTED`

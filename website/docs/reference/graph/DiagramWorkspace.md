@@ -1,13 +1,13 @@
 ---
 title: "DiagramWorkspace()"
-sidebar_position: 76
+sidebar_position: 85
 sidebar_label: "핵심 노드: DiagramWorkspace()"
 ---
 # DiagramWorkspace()
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> God node · 39 connections · `src/ui/DiagramWorkspace.tsx`
+> God node · 43 connections · `src/ui/DiagramWorkspace.tsx`
 
 **Community:** [(app)/actions.ts](app-actions.ts.md)
 
@@ -17,24 +17,24 @@ sidebar_label: "핵심 노드: DiagramWorkspace()"
 - Canvas() `EXTRACTED`
 - useChatTurn() `EXTRACTED`
 - applyCommand() `EXTRACTED`
+- [useFlows](useFlows.md) `EXTRACTED`
 - run() `EXTRACTED`
 - useExplanations() `EXTRACTED`
+- checkFlow() `EXTRACTED`
 - InfoCard() `EXTRACTED`
 - useSessions() `EXTRACTED`
-- restoreVersionAction() `EXTRACTED`
 - RightPanel() `EXTRACTED`
+- restoreVersionAction() `EXTRACTED`
 - DiagramPage() `EXTRACTED`
 - useShell() `EXTRACTED`
+- isFlowCommand() `EXTRACTED`
 - setWarningIgnoredAction() `EXTRACTED`
 - getVersionAction() `EXTRACTED`
 - diffStates() `EXTRACTED`
 - Legend() `EXTRACTED`
 - useFly() `EXTRACTED`
 - listVersionsAction() `EXTRACTED`
-- confirmAssumptionAction() `EXTRACTED`
-- confirmAssumption() `EXTRACTED`
-- saveFieldsAction() `EXTRACTED`
-- *…and 15 more `calls` connection(s) not listed (lowest-degree first to go)*
+- *…and 19 more `calls` connection(s) not listed (lowest-degree first to go)*
 
 ### contains
 - [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) `EXTRACTED`

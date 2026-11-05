@@ -1,84 +1,69 @@
 ---
 title: "(app)/actions.ts"
-sidebar_position: 2
+sidebar_position: 8
 ---
 # (app)/actions.ts
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 107 nodes · cohesion 0.06
+> 33 nodes · cohesion 0.16
 
 ## Key Concepts
 
-- **(app)/actions.ts** (81 connections) — `src/app/(app)/actions.ts`
-- **projects.ts** (63 connections) — `src/server/projects.ts`
-- **DiagramWorkspace()** (39 connections) — `src/ui/DiagramWorkspace.tsx`
-- **getOwnedDiagram()** (36 connections) — `src/server/projects.ts`
-- **ValidationError** (29 connections) — `src/server/projects.ts`
-- **glossary.ts** (27 connections) — `src/server/glossary.ts`
-- **versions.ts** (27 connections) — `src/server/versions.ts`
-- **NotFoundError** (20 connections) — `src/server/projects.ts`
-- **fields.ts** (19 connections) — `src/server/fields.ts`
-- **createVersion()** (17 connections) — `src/server/versions.ts`
-- **getLatestState()** (16 connections) — `src/server/versions.ts`
-- **emptyState()** (15 connections) — `src/domain/types.ts`
-- **ignore.ts** (15 connections) — `src/server/ignore.ts`
+- **(app)/actions.ts** (92 connections) — `src/app/(app)/actions.ts`
+- **DiagramWorkspace()** (43 connections) — `src/ui/DiagramWorkspace.tsx`
+- **runResult()** (17 connections) — `src/app/(app)/actions.ts`
 - **run()** (14 connections) — `src/app/(app)/actions.ts`
-- **withDiagramLock()** (14 connections) — `src/server/chat/lock.ts`
-- **runResult()** (13 connections) — `src/app/(app)/actions.ts`
-- **server/assumptions.ts** (12 connections) — `src/server/assumptions.ts`
-- **saveFieldsFor()** (12 connections) — `src/server/fields.ts`
-- **glossary/page.tsx** (11 connections) — `src/app/(app)/glossary/page.tsx`
-- **ensureSeeded()** (10 connections) — `src/server/glossary.ts`
-- **createDiagram()** (10 connections) — `src/server/projects.ts`
 - **restoreVersionAction()** (9 connections) — `src/app/(app)/actions.ts`
-- **confirmAssumptionFor()** (9 connections) — `src/server/assumptions.ts`
-- **setWarningIgnoredFor()** (9 connections) — `src/server/ignore.ts`
 - **deleteDiagramAction()** (8 connections) — `src/app/(app)/actions.ts`
-- *... and 82 more nodes in this community*
+- **refreshAll()** (8 connections) — `src/app/(app)/actions.ts`
+- **refreshDiagram()** (8 connections) — `src/app/(app)/actions.ts`
+- **duplicateDiagramAction()** (7 connections) — `src/app/(app)/actions.ts`
+- **getVersionAction()** (7 connections) — `src/app/(app)/actions.ts`
+- **setWarningIgnoredAction()** (7 connections) — `src/app/(app)/actions.ts`
+- **clearPinnedAction()** (6 connections) — `src/app/(app)/actions.ts`
+- **confirmAssumptionAction()** (6 connections) — `src/app/(app)/actions.ts`
+- **createDiagramAction()** (6 connections) — `src/app/(app)/actions.ts`
+- **createProjectAction()** (6 connections) — `src/app/(app)/actions.ts`
+- **deleteProjectAction()** (6 connections) — `src/app/(app)/actions.ts`
+- **importSampleAction()** (6 connections) — `src/app/(app)/actions.ts`
+- **listVersionsAction()** (6 connections) — `src/app/(app)/actions.ts`
+- **renameDiagramAction()** (6 connections) — `src/app/(app)/actions.ts`
+- **renameProjectAction()** (6 connections) — `src/app/(app)/actions.ts`
+- **saveFieldsAction()** (6 connections) — `src/app/(app)/actions.ts`
+- **savePinnedAction()** (6 connections) — `src/app/(app)/actions.ts`
+- **savePinnedPositions()** (6 connections) — `src/server/projects.ts`
+- **getVersion()** (5 connections) — `src/server/versions.ts`
+- **listMessagesAction()** (4 connections) — `src/app/(app)/actions.ts`
+- *... and 8 more nodes in this community*
 
 ## Relationships
 
-- [auth](auth.md) (24 shared connections)
-- [schema.ts](schema.ts.md) (22 shared connections)
-- [ask.ts](ask.ts.md) (18 shared connections)
+- [getOwnedDiagram](getOwnedDiagram.md) (24 shared connections)
+- [projects.ts](projects.ts.md) (18 shared connections)
 - [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (17 shared connections)
-- [Sidebar.tsx](Sidebar.tsx.md) (17 shared connections)
-- [pipeline.ts](pipeline.ts.md) (15 shared connections)
-- [domain/warnings.ts](domain-warnings.ts.md) (12 shared connections)
-- [samples.ts](samples.ts.md) (11 shared connections)
-- [ask/route.ts](ask-route.ts.md) (11 shared connections)
-- [useExplanations.ts](useExplanations.ts.md) (10 shared connections)
-- [Explanation.tsx](Explanation.tsx.md) (10 shared connections)
-- [설명 생성과 품질 검사](설명_생성과_품질_검사.md) (10 shared connections)
+- [Sidebar.tsx](Sidebar.tsx.md) (16 shared connections)
+- [useFlows](useFlows.md) (15 shared connections)
+- [GlossaryPage.tsx](GlossaryPage.tsx.md) (15 shared connections)
+- [auth](auth.md) (8 shared connections)
+- [schema.ts](schema.ts.md) (7 shared connections)
+- [ValidationError](ValidationError.md) (5 shared connections)
+- [samples.ts](samples.ts.md) (5 shared connections)
+- [useExplanations.ts](useExplanations.ts.md) (4 shared connections)
+- [server/flows.ts](server-flows.ts.md) (2 shared connections)
 
 ## Source Files
 
-- `docs/superpowers/plans/2026-10-30-infrasketch-phase3b-warnings.md`
 - `src/app/(app)/actions.ts`
-- `src/app/(app)/glossary/page.tsx`
 - `src/auth.ts`
-- `src/db/schema.ts`
-- `src/domain/assumptions.ts`
-- `src/domain/glossary-seed.ts`
-- `src/domain/glossary-types.ts`
-- `src/domain/types.ts`
-- `src/server/assumptions.ts`
-- `src/server/chat/busy.ts`
-- `src/server/chat/lock.ts`
-- `src/server/fields.ts`
-- `src/server/glossary.ts`
-- `src/server/ignore.ts`
 - `src/server/projects.ts`
-- `src/server/samples.ts`
 - `src/server/versions.ts`
 - `src/ui/DiagramWorkspace.tsx`
-- `src/ui/glossary/GlossaryPage.tsx`
 
 ## Audit Trail
 
-- EXTRACTED: 558 (98%)
-- INFERRED: 14 (2%)
+- EXTRACTED: 238 (98%)
+- INFERRED: 4 (2%)
 - AMBIGUOUS: 0 (0%)
 
 ---

@@ -1,6 +1,6 @@
 ---
 title: "stacking.ts"
-sidebar_position: 73
+sidebar_position: 80
 ---
 # stacking.ts
 
@@ -21,7 +21,7 @@ sidebar_position: 73
 
 - [Canvas.tsx](Canvas.tsx.md) (3 shared connections)
 - [ZoneNameLayer.tsx](ZoneNameLayer.tsx.md) (2 shared connections)
-- [Layout](Layout.md) (1 shared connections)
+- [display.ts](display.ts.md) (1 shared connections)
 - [layout.ts](layout.ts.md) (1 shared connections)
 - [Flow](Flow.md) (1 shared connections)
 
