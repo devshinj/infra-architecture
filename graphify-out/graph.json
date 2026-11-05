@@ -2011,7 +2011,7 @@
       "file_type": "code",
       "norm_label": "clefhttperror",
       "source_file": "src/server/llm/clef.ts",
-      "source_location": "L137"
+      "source_location": "L138"
     },
     {
       "id": "src_server_llm_clef_runopts",
@@ -8341,7 +8341,7 @@
       "file_type": "code",
       "norm_label": ".constructor()",
       "source_file": "src/server/llm/clef.ts",
-      "source_location": "L138"
+      "source_location": "L139"
     },
     {
       "id": "src_domain_apply_applycommand",
@@ -10741,7 +10741,7 @@
       "file_type": "code",
       "norm_label": "aborterror()",
       "source_file": "src/server/llm/clef.ts",
-      "source_location": "L133"
+      "source_location": "L134"
     },
     {
       "id": "src_server_llm_clef_createclefclient",
@@ -10753,7 +10753,7 @@
       "file_type": "code",
       "norm_label": "createclefclient()",
       "source_file": "src/server/llm/clef.ts",
-      "source_location": "L143"
+      "source_location": "L144"
     },
     {
       "id": "src_server_llm_clef_createclefclient_acquire",
@@ -10765,7 +10765,7 @@
       "file_type": "code",
       "norm_label": "acquire()",
       "source_file": "src/server/llm/clef.ts",
-      "source_location": "L174"
+      "source_location": "L175"
     },
     {
       "id": "src_server_llm_clef_createclefclient_classifyintent",
@@ -10777,7 +10777,7 @@
       "file_type": "code",
       "norm_label": "classifyintent()",
       "source_file": "src/server/llm/clef.ts",
-      "source_location": "L280"
+      "source_location": "L281"
     },
     {
       "id": "src_server_llm_clef_createclefclient_decide",
@@ -10789,7 +10789,7 @@
       "file_type": "code",
       "norm_label": "decide()",
       "source_file": "src/server/llm/clef.ts",
-      "source_location": "L265"
+      "source_location": "L266"
     },
     {
       "id": "src_server_llm_clef_createclefclient_post",
@@ -10801,7 +10801,7 @@
       "file_type": "code",
       "norm_label": "post()",
       "source_file": "src/server/llm/clef.ts",
-      "source_location": "L200"
+      "source_location": "L201"
     },
     {
       "id": "src_server_llm_clef_createclefclient_release",
@@ -10813,7 +10813,7 @@
       "file_type": "code",
       "norm_label": "release()",
       "source_file": "src/server/llm/clef.ts",
-      "source_location": "L194"
+      "source_location": "L195"
     },
     {
       "id": "src_server_llm_clef_createclefclient_run",
@@ -10825,7 +10825,7 @@
       "file_type": "code",
       "norm_label": "run()",
       "source_file": "src/server/llm/clef.ts",
-      "source_location": "L219"
+      "source_location": "L220"
     },
     {
       "id": "src_ui_chat_usechatturn_isabort",
@@ -18923,6 +18923,18 @@
       "type": "external"
     },
     {
+      "id": "src_ui_flows_flows_module",
+      "label": "src_ui_flows_flows_module",
+      "_origin": "semantic",
+      "community": 3,
+      "community_name": "FlowPanel.tsx",
+      "external": true,
+      "file_type": "concept",
+      "norm_label": "src_ui_flows_flows_module",
+      "source_file": "",
+      "type": "external"
+    },
+    {
       "id": "src_ui_panel_module",
       "label": "src_ui_panel_module",
       "_origin": "semantic",
@@ -19183,17 +19195,6 @@
       "external": true,
       "file_type": "concept",
       "norm_label": "ref_elkjs",
-      "source_file": "",
-      "type": "external"
-    },
-    {
-      "id": "src_ui_flows_flows_module",
-      "label": "src_ui_flows_flows_module",
-      "community": 3,
-      "community_name": "FlowPanel.tsx",
-      "external": true,
-      "file_type": "concept",
-      "norm_label": "src_ui_flows_flows_module",
       "source_file": "",
       "type": "external"
     }
@@ -27488,7 +27489,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/server/llm/clef.ts",
-      "source_location": "L158",
+      "source_location": "L159",
       "weight": 1.0
     },
     {
@@ -27500,7 +27501,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/server/llm/clef.ts",
-      "source_location": "L175",
+      "source_location": "L176",
       "weight": 1.0
     },
     {
@@ -27512,7 +27513,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/server/llm/clef.ts",
-      "source_location": "L297",
+      "source_location": "L298",
       "weight": 1.0
     },
     {
@@ -27524,7 +27525,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/server/llm/clef.ts",
-      "source_location": "L271",
+      "source_location": "L272",
       "weight": 1.0
     },
     {
@@ -27536,7 +27537,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/server/llm/clef.ts",
-      "source_location": "L214",
+      "source_location": "L215",
       "weight": 1.0
     },
     {
@@ -27548,7 +27549,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/server/llm/clef.ts",
-      "source_location": "L231",
+      "source_location": "L232",
       "weight": 1.0
     },
     {
@@ -27560,7 +27561,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/server/llm/clef.ts",
-      "source_location": "L234",
+      "source_location": "L235",
       "weight": 1.0
     },
     {
@@ -27572,7 +27573,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/server/llm/clef.ts",
-      "source_location": "L239",
+      "source_location": "L240",
       "weight": 1.0
     },
     {
@@ -27584,7 +27585,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/server/llm/clef.ts",
-      "source_location": "L261",
+      "source_location": "L262",
       "weight": 1.0
     },
     {
@@ -59736,7 +59737,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/server/llm/clef.ts",
-      "source_location": "L133",
+      "source_location": "L134",
       "weight": 1.0
     },
     {
@@ -59747,7 +59748,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/server/llm/clef.ts",
-      "source_location": "L137",
+      "source_location": "L138",
       "weight": 1.0
     },
     {
@@ -59758,7 +59759,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/server/llm/clef.ts",
-      "source_location": "L143",
+      "source_location": "L144",
       "weight": 1.0
     },
     {
@@ -59846,7 +59847,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/server/llm/clef.ts",
-      "source_location": "L174",
+      "source_location": "L175",
       "weight": 1.0
     },
     {
@@ -59857,7 +59858,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/server/llm/clef.ts",
-      "source_location": "L194",
+      "source_location": "L195",
       "weight": 1.0
     },
     {
@@ -59868,7 +59869,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/server/llm/clef.ts",
-      "source_location": "L200",
+      "source_location": "L201",
       "weight": 1.0
     },
     {
@@ -59879,7 +59880,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/server/llm/clef.ts",
-      "source_location": "L219",
+      "source_location": "L220",
       "weight": 1.0
     },
     {
@@ -64068,7 +64069,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/server/llm/clef.ts",
-      "source_location": "L138",
+      "source_location": "L139",
       "weight": 1.0
     },
     {
@@ -65329,7 +65330,7 @@
       "confidence_score": 0.85,
       "context": "collection",
       "source_file": "src/server/llm/clef.ts",
-      "source_location": "L315",
+      "source_location": "L316",
       "weight": 1.0
     },
     {
@@ -65341,7 +65342,7 @@
       "confidence_score": 0.85,
       "context": "collection",
       "source_file": "src/server/llm/clef.ts",
-      "source_location": "L315",
+      "source_location": "L316",
       "weight": 1.0
     },
     {
@@ -67888,5 +67889,5 @@
       "source_file": "docs/superpowers/plans/2026-10-29-infrasketch-phase1-foundation-canvas.md"
     }
   ],
-  "built_at_commit": "33b1d1292780ce8c34b4d53c9d3ef631f43cf89a"
+  "built_at_commit": "81187ef43998982ca1173263d6ca25015c00103e"
 }
