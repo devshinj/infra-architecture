@@ -88,6 +88,7 @@ test("흐름 tab present and switches", async () => {
     onDelete: vi.fn(async () => undefined),
     onConfirm: vi.fn(),
     onRepair: vi.fn(),
+    onRemoveStep: vi.fn(async () => undefined),
     disabled: false,
   };
   const { rerender } = render(<RightPanel {...props(null)} flows={flows} onTabChange={onTabChange} />);

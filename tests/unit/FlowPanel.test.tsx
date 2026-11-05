@@ -49,6 +49,7 @@ const props = (o: Partial<FlowPanelProps> = {}): FlowPanelProps => ({
   onDelete: vi.fn(async () => undefined),
   onConfirm: vi.fn(),
   onRepair: vi.fn(),
+  onRemoveStep: vi.fn(async () => undefined),
   disabled: false,
   ...o,
 });
@@ -135,7 +136,7 @@ test("a broken step stays focusable, announces 끊김, and does nothing when pre
   });
   render(<FlowPanel {...props({ flows: [f], activeKey: "login", onFocusStep })} />);
   const items = within(screen.getByRole("list", { name: "로그인 단계" })).getAllByRole("listitem");
-  const broken = within(items[1]!).getByRole("button");
+  const broken = within(items[1]!).getAllByRole("button")[0]!;
   expect(broken).not.toBeDisabled();
   expect(broken).toHaveAttribute("aria-disabled", "true");
   expect(broken).toHaveAccessibleName(/끊김/);
@@ -147,6 +148,34 @@ test("a broken step stays focusable, announces 끊김, and does nothing when pre
   expect(ok).not.toHaveAttribute("aria-disabled");
   fireEvent.click(ok);
   expect(onFocusStep).toHaveBeenCalledWith("e1");
+});
+
+test("a broken step offers 이 단계 지우기 behind a confirm dialog; healthy steps do not", async () => {
+  const onRemoveStep = vi.fn(async () => undefined);
+  const f = flow({
+    id: "login",
+    name: "로그인",
+    steps: [
+      { edge: "e1", from: "browser", short: "접속", text: "브라우저가 방화벽으로 접속해요" },
+      { edge: "gone", from: "fw", short: "전달", text: "방화벽이 웹으로 넘겨요" },
+    ],
+    problems: [{ kind: "missing_edge", step: 1 }],
+  });
+  const { rerender } = render(<FlowPanel {...props({ flows: [f], activeKey: "login", onRemoveStep })} />);
+  const items = within(screen.getByRole("list", { name: "로그인 단계" })).getAllByRole("listitem");
+  expect(within(items[0]!).queryByRole("button", { name: /단계 지우기/ })).not.toBeInTheDocument();
+  const del = within(items[1]!).getByRole("button", { name: "2단계 지우기" });
+  expect(del).toHaveTextContent("이 단계 지우기");
+  fireEvent.click(del);
+  const dialog = screen.getByRole("alertdialog", { name: "단계 지우기" });
+  expect(dialog).toHaveTextContent('"로그인"의 2단계를 지울까요?');
+  expect(onRemoveStep).not.toHaveBeenCalled();
+  fireEvent.click(within(dialog).getByRole("button", { name: "삭제" }));
+  await vi.waitFor(() => expect(onRemoveStep).toHaveBeenCalledWith("login", 1));
+  await vi.waitFor(() => expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument());
+  // 바꾸는 동작을 막는 동안에는 누를 수 없다.
+  rerender(<FlowPanel {...props({ flows: [f], activeKey: "login", onRemoveStep, disabled: true })} />);
+  expect(screen.getByRole("button", { name: "2단계 지우기" })).toBeDisabled();
 });
 
 test("empty state text", () => {

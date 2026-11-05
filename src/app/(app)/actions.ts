@@ -24,7 +24,7 @@ import {
 } from "@/server/projects";
 import { confirmAssumptionFor } from "@/server/assumptions";
 import { saveFieldsFor, type SaveFieldsInput } from "@/server/fields";
-import { BusyError, confirmFlow, deleteFlow, renameFlow } from "@/server/flows";
+import { BusyError, confirmFlow, deleteFlow, removeFlowStep, renameFlow } from "@/server/flows";
 import { ensureSeeded, listTerms, updateTerm, type TermPatch } from "@/server/glossary";
 import { setWarningIgnoredFor } from "@/server/ignore";
 import { importSample, SAMPLES } from "@/server/samples";
@@ -241,6 +241,14 @@ export async function deleteFlowAction(diagramId: string, key: string): Promise<
 export async function confirmFlowAction(diagramId: string, key: string): Promise<ActionResult> {
   return runResult(async (uid) => {
     await confirmFlow(uid, diagramId, key);
+    return {};
+  });
+}
+
+/** 끊긴 흐름의 단계 하나(0부터 센 번호)를 지운다. */
+export async function removeFlowStepAction(diagramId: string, key: string, stepIndex: number): Promise<ActionResult> {
+  return runResult(async (uid) => {
+    await removeFlowStep(uid, diagramId, key, stepIndex);
     return {};
   });
 }

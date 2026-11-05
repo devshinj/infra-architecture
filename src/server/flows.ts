@@ -187,6 +187,25 @@ export async function confirmFlow(userId: string, diagramId: string, key: string
   });
 }
 
+export const LAST_STEP_MESSAGE = "마지막 단계는 지울 수 없어요. 흐름을 통째로 지워 주세요.";
+const BAD_STEP_MESSAGE = "지울 단계를 찾을 수 없어요.";
+
+/**
+ * 끊긴 흐름을 고치려고 단계 하나(0부터 센 stepIndex)를 지운다. 출처·검수 상태는 그대로다.
+ * 지운 뒤에도 다른 문제가 남을 수 있지만 흐름은 남긴다(검사로 거절하지 않는다). 마지막 한 단계는 지우지 않는다.
+ */
+export async function removeFlowStep(userId: string, diagramId: string, key: string, stepIndex: number): Promise<void> {
+  await withOwnedFlow(userId, diagramId, key, async (flow) => {
+    if (!Number.isInteger(stepIndex) || stepIndex < 0 || stepIndex >= flow.steps.length) throw new ValidationError(BAD_STEP_MESSAGE);
+    if (flow.steps.length <= 1) throw new ValidationError(LAST_STEP_MESSAGE);
+    const steps = flow.steps.filter((_, i) => i !== stepIndex);
+    await db
+      .update(flows)
+      .set({ data: { ...flow, steps }, updatedAt: sql`now()` })
+      .where(byKey(diagramId, key));
+  });
+}
+
 /** 구성도를 복제할 때 흐름도 그대로 옮긴다(출처·검수 상태·만든 순서 포함). 소유권은 호출자가 확인한다. */
 export async function copyFlows(fromDiagramId: string, toDiagramId: string): Promise<void> {
   const rows = await db

@@ -785,6 +785,7 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
       toDiagramChat();
       sendMain(`"${flowName}" 흐름을 지금 구성에 맞게 다시 맞춰 줘`);
     },
+    onRemoveStep: flowsHook.removeStep,
     disabled: flowsLocked,
   };
 

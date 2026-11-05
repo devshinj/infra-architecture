@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { confirmFlowAction, deleteFlowAction, renameFlowAction } from "@/app/(app)/actions";
+import { confirmFlowAction, deleteFlowAction, removeFlowStepAction, renameFlowAction } from "@/app/(app)/actions";
 import type { StoredFlow } from "@/server/flows";
 
 import { GENERIC_ERROR } from "../dialogs";
@@ -33,6 +33,8 @@ export interface UseFlows {
   rename(key: string, name: string): Promise<string | void>;
   remove(key: string): Promise<string | void>;
   confirm(key: string): Promise<void>;
+  /** 끊긴 단계 하나(0부터 센 번호)를 지운다. 실패하면 대화상자에 보일 오류 글을 돌려준다. */
+  removeStep(key: string, index: number): Promise<string | void>;
   refresh(): Promise<StoredFlow[] | null>;
   /**
    * 대화 차례가 끝났다(done). 다시 불러오고, 구성을 바꾼 차례인데 흐름이 하나도 없으면 자동 제안을 한 번 보낸다.
@@ -155,5 +157,7 @@ export function useFlows({ diagramId, live, busy, versionKey, fetchImpl }: UseFl
     if (err) setError(err);
   };
 
-  return { flows, activeKey, setActive: setActiveKey, suggest, suggesting, error, rename, remove, confirm, refresh, afterTurn };
+  const removeStep = (key: string, index: number) => mutate(() => removeFlowStepAction(diagramId, key, index));
+
+  return { flows, activeKey, setActive: setActiveKey, suggest, suggesting, error, rename, remove, confirm, removeStep, refresh, afterTurn };
 }

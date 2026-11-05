@@ -33,6 +33,8 @@ export interface FlowPanelProps {
   onConfirm(key: string): void;
   /** 끊긴 흐름을 대화로 다시 맞춘다(흐름 이름을 넘긴다). */
   onRepair(name: string): void;
+  /** 끊긴 단계 하나(0부터 센 번호)를 지운다. 실패하면 대화상자에 보일 오류 글을 돌려준다. */
+  onRemoveStep(key: string, index: number): Promise<string | void>;
   /** 이력 보기·비교 중이거나 대화 차례 중: 바꾸는 동작(제안·이름·삭제·맞아요·다시 맞추기)을 막는다. 보기는 된다. */
   disabled: boolean;
 }
@@ -55,7 +57,7 @@ const menuRootId = (key: string) => `flow-${key}`;
  * 행을 고르면 그 흐름을 캔버스에 켜고 아래에 단계(①… 설명 + 경계 넘김)와 결과를 보인다.
  * 행의 ⋯ 메뉴로 이름 바꾸기·삭제·맞아요(AI 제안 표시를 지운다). 대화상자는 SessionPicker 와 같은 길을 쓴다.
  */
-export function FlowPanel({ flows, state, activeKey, onActivate, onFocusStep, onSuggest, suggesting, error, onRename, onDelete, onConfirm, onRepair, disabled }: FlowPanelProps) {
+export function FlowPanel({ flows, state, activeKey, onActivate, onFocusStep, onSuggest, suggesting, error, onRename, onDelete, onConfirm, onRepair, onRemoveStep, disabled }: FlowPanelProps) {
   // 행 메뉴는 하나만 열린다. 바깥을 누르면 닫는다(Esc·방향키는 RowMenu 가 맡는다).
   const [menu, setMenu] = useState<string | null>(null);
   useEffect(() => {
@@ -102,6 +104,16 @@ export function FlowPanel({ flows, state, activeKey, onActivate, onFocusStep, on
         run: () => onDelete(f.id),
       });
     }
+  };
+
+  const askRemoveStep = (f: StoredFlow, index: number) => {
+    setReturnTo(f.id);
+    setDialog({
+      kind: "delete",
+      title: "단계 지우기",
+      message: `"${f.name}"의 ${index + 1}단계를 지울까요?`,
+      run: () => onRemoveStep(f.id, index),
+    });
   };
 
   const row = (f: StoredFlow) => {
@@ -176,6 +188,17 @@ export function FlowPanel({ flows, state, activeKey, onActivate, onFocusStep, on
                         {note && <span className={styles.note}>{note}</span>}
                       </span>
                     </button>
+                    {missing && (
+                      <button
+                        type="button"
+                        className={styles.removeStep}
+                        aria-label={`${i + 1}단계 지우기`}
+                        disabled={disabled}
+                        onClick={() => askRemoveStep(f, i)}
+                      >
+                        이 단계 지우기
+                      </button>
+                    )}
                   </li>
                 );
               })}

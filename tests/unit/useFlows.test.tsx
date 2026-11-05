@@ -5,9 +5,10 @@ vi.mock("@/app/(app)/actions", () => ({
   renameFlowAction: vi.fn(async () => ({ ok: true })),
   deleteFlowAction: vi.fn(async () => ({ ok: true })),
   confirmFlowAction: vi.fn(async () => ({ ok: true })),
+  removeFlowStepAction: vi.fn(async () => ({ ok: true })),
 }));
 
-import { confirmFlowAction, deleteFlowAction } from "@/app/(app)/actions";
+import { confirmFlowAction, deleteFlowAction, removeFlowStepAction } from "@/app/(app)/actions";
 import type { StoredFlow } from "@/server/flows";
 import { useFlows } from "@/ui/flows/useFlows";
 
@@ -107,4 +108,37 @@ test("mutations are blocked while busy or not live; delete drops the active flow
   });
   expect(deleteFlowAction).toHaveBeenCalledWith("d1", "login");
   expect(result.current.activeKey).toBeNull();
+});
+
+test("removeStep calls the action and refreshes; blocked while busy or not live; returns the server message", async () => {
+  const { fetchImpl, calls } = fake(() => [stored("login")]);
+  const action = vi.mocked(removeFlowStepAction);
+  action.mockClear();
+  const { result, rerender } = renderHook((p: { busy: boolean; live: boolean }) => useFlows({ diagramId: "d1", live: p.live, busy: p.busy, versionKey: 1, fetchImpl }), {
+    initialProps: { busy: true, live: true },
+  });
+  await waitFor(() => expect(gets(calls)).toBe(1));
+  let err: string | void = undefined;
+  await act(async () => {
+    err = await result.current.removeStep("login", 1);
+  });
+  expect(err).toBeTruthy();
+  rerender({ busy: false, live: false });
+  await act(async () => {
+    err = await result.current.removeStep("login", 1);
+  });
+  expect(err).toBeTruthy();
+  expect(action).not.toHaveBeenCalled();
+  rerender({ busy: false, live: true });
+  await act(async () => {
+    err = await result.current.removeStep("login", 1);
+  });
+  expect(err).toBeUndefined();
+  expect(action).toHaveBeenCalledWith("d1", "login", 1);
+  expect(gets(calls)).toBe(2);
+  action.mockResolvedValueOnce({ ok: false, error: "마지막 단계는 지울 수 없어요. 흐름을 통째로 지워 주세요." });
+  await act(async () => {
+    err = await result.current.removeStep("login", 0);
+  });
+  expect(err).toBe("마지막 단계는 지울 수 없어요. 흐름을 통째로 지워 주세요.");
 });

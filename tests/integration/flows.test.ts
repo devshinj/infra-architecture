@@ -10,9 +10,9 @@ import { emptyState, type DiagramState } from "@/domain/types";
 import { setChatDepsForTest } from "@/server/chat/deps";
 import { withDiagramLock } from "@/server/chat/lock";
 import { FLOW_SUGGEST_BUSY_MESSAGE, suggestFlows } from "@/server/flowSuggest";
-import { applyFlowOps, BusyError, confirmFlow, deleteFlow, FLOW_BUSY_MESSAGE, listFlows, renameFlow } from "@/server/flows";
+import { applyFlowOps, BusyError, confirmFlow, deleteFlow, FLOW_BUSY_MESSAGE, listFlows, removeFlowStep, renameFlow } from "@/server/flows";
 import type { QwenClient } from "@/server/llm/qwen";
-import { deleteDiagram, duplicateDiagram, NotFoundError } from "@/server/projects";
+import { deleteDiagram, duplicateDiagram, NotFoundError, ValidationError } from "@/server/projects";
 import { createVersion, restoreVersion } from "@/server/versions";
 
 import { makeOwnedDiagram } from "./helpers";
@@ -173,6 +173,61 @@ describe("flows repo", () => {
     release();
     await held;
     await renameFlow(userId, diagramId, "login", "x");
+  });
+
+  describe("removeFlowStep", () => {
+    test("removes the broken step, keeps the flow and its source/reviewed even if problems remain", async () => {
+      const { userId, diagramId, state } = await setup();
+      // 세 단계 흐름: e1, e2, e1(db 에서 시작해 시작 노드가 틀린 문제가 남는다).
+      await applyFlowOps(diagramId, state, [addLogin()], "ai");
+      await db
+        .update(flows)
+        .set({ data: { id: "login", name: "로그인", origin: "user", steps: [step("e1", "web"), step("e2", "was"), step("e1", "db")] } })
+        .where(eq(flows.diagramId, diagramId));
+      // 구성도에서 e2 를 지워 2단계가 끊기게 한다.
+      const next = structuredClone(state);
+      delete next.edges.e2;
+      await createVersion(diagramId, next, { source: "ai" });
+      expect((await listFlows(userId, diagramId))[0].problems.some((p) => p.step === 1)).toBe(true);
+      await removeFlowStep(userId, diagramId, "login", 1);
+      const [f] = await listFlows(userId, diagramId);
+      expect(f.steps.map((s) => s.edge)).toEqual(["e1", "e1"]);
+      expect(f.problems.length).toBeGreaterThan(0); // 남은 문제가 있어도 흐름은 지우지 않는다.
+      expect(f).toMatchObject({ source: "ai", reviewed: false, name: "로그인" });
+    });
+
+    test("refuses the last remaining step and out-of-range indexes", async () => {
+      const { userId, diagramId, state } = await setup();
+      await applyFlowOps(diagramId, state, [{ ...addLogin(), steps: [step("e1", "web")] } as FlowOp], "ai");
+      await expect(removeFlowStep(userId, diagramId, "login", 0)).rejects.toThrow("마지막 단계는 지울 수 없어요. 흐름을 통째로 지워 주세요.");
+      await expect(removeFlowStep(userId, diagramId, "login", 0)).rejects.toBeInstanceOf(ValidationError);
+      for (const i of [-1, 1, 5, 0.5, Number.NaN]) await expect(removeFlowStep(userId, diagramId, "login", i)).rejects.toBeInstanceOf(ValidationError);
+      expect((await listFlows(userId, diagramId))[0].steps).toHaveLength(1);
+    });
+
+    test("requires the owner and an existing key", async () => {
+      const { userId, diagramId, state } = await setup();
+      const other = await makeOwnedDiagram();
+      await applyFlowOps(diagramId, state, [addLogin()], "ai");
+      await expect(removeFlowStep(other.userId, diagramId, "login", 0)).rejects.toBeInstanceOf(NotFoundError);
+      await expect(removeFlowStep(userId, diagramId, "ghost", 0)).rejects.toBeInstanceOf(NotFoundError);
+      await expect(removeFlowStep(userId, diagramId, "Bad Key", 0)).rejects.toBeInstanceOf(NotFoundError);
+      expect((await listFlows(userId, diagramId))[0].steps).toHaveLength(2);
+    });
+
+    test("is BusyError while a chat turn holds the lock", async () => {
+      const { userId, diagramId, state } = await setup();
+      await applyFlowOps(diagramId, state, [addLogin()], "ai");
+      let release!: () => void;
+      const gate = new Promise<void>((r) => (release = r));
+      const held = withDiagramLock(diagramId, () => gate);
+      await new Promise((r) => setTimeout(r, 200));
+      await expect(removeFlowStep(userId, diagramId, "login", 0)).rejects.toBeInstanceOf(BusyError);
+      release();
+      await held;
+      await removeFlowStep(userId, diagramId, "login", 0);
+      expect((await listFlows(userId, diagramId))[0].steps.map((s) => s.edge)).toEqual(["e2"]);
+    });
   });
 
   test("diagram delete cascades flows", async () => {

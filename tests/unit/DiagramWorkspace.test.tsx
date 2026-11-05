@@ -12,7 +12,7 @@ vi.mock("@/app/(app)/actions", () => ({
   setWarningIgnoredAction: vi.fn(async () => ({ ok: true, number: 2 })),
   listTermsAction: vi.fn(async () => []),
   confirmAssumptionAction: vi.fn(async () => ({ ok: true })),
-  renameFlowAction: vi.fn(async () => ({ ok: true })), deleteFlowAction: vi.fn(async () => ({ ok: true })), confirmFlowAction: vi.fn(async () => ({ ok: true })),
+  renameFlowAction: vi.fn(async () => ({ ok: true })), deleteFlowAction: vi.fn(async () => ({ ok: true })), confirmFlowAction: vi.fn(async () => ({ ok: true })), removeFlowStepAction: vi.fn(async () => ({ ok: true })),
 }));
 vi.mock("@/canvas/Canvas", () => ({
   Canvas: ({ flow, options, state, pinned, fitRequest, onAutoArrange, fitKey, cameraInsets, focusRequest, onMention, onAskNode, onBadgeClick, onWarnBadgeClick, onSelect, onImportSample, onPlaced }: { flow?: unknown; options: { selectedId: string | null }; onAskNode?: (id: string) => void;  onPlaced?: (l: (id: string) => { x: number; y: number } | null) => void; onImportSample?: (id: string) => void; state: { nodes: object }; pinned: unknown; fitRequest?: unknown; onAutoArrange(): void; fitKey?: string; cameraInsets?: unknown; focusRequest?: unknown; onMention?: (id: string) => void; onBadgeClick?: (id: string) => void; onWarnBadgeClick?: (id: string) => void; onSelect: (id: string | null) => void }) => {
@@ -53,7 +53,7 @@ vi.mock("@/ui/chat/useChatTurn", () => ({
 
 import { readFileSync } from "node:fs";
 
-import { clearPinnedAction, confirmAssumptionAction, getVersionAction, importSampleAction, listVersionsAction, saveFieldsAction, setWarningIgnoredAction } from "@/app/(app)/actions";
+import { clearPinnedAction, confirmAssumptionAction, getVersionAction, importSampleAction, listVersionsAction, removeFlowStepAction, saveFieldsAction, setWarningIgnoredAction } from "@/app/(app)/actions";
 import { emptyState } from "@/domain/types";
 import { DiagramWorkspace } from "@/ui/DiagramWorkspace";
 import { ShellProvider } from "@/ui/Shell";
@@ -1050,7 +1050,7 @@ const stubFlows = () =>
   vi.stubGlobal("fetch", vi.fn(async (url: string) => (String(url).endsWith("/flows") ? Response.json({ flows: [loginFlow] }) : Response.json({ qwen: "ok", clef: "ok" }))));
 const openFlow = async () => {
   fireEvent.click(screen.getByRole("tab", { name: "흐름" }));
-  fireEvent.click(await screen.findByRole("button", { name: /^로그인(?! 메뉴)/ }));
+  fireEvent.click(await screen.findByRole("button", { name: /^로그인(?! 메뉴| 흐름 다시 맞추기)/ }));
 };
 
 test("activating a flow clears node selection and passes flow to Canvas", async () => {
@@ -1102,6 +1102,23 @@ test("selecting a node clears active flow", async () => {
   fireEvent.click(screen.getByRole("button", { name: "선택b" }));
   expect(hookState.flow.at(-1)).toBeNull();
   expect(hookState.selected.at(-1)).toBe("b");
+});
+
+test("이 단계 지우기 on a broken step confirms, then removes that step through the action", async () => {
+  hookState.busy = false;
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async (url: string) =>
+      String(url).endsWith("/flows") ? Response.json({ flows: [{ ...loginFlow, problems: [{ kind: "missing_edge", step: 0 }] }] }) : Response.json({ qwen: "ok", clef: "ok" }),
+    ),
+  );
+  vi.mocked(removeFlowStepAction).mockClear();
+  render(ui(flowLatest() as never));
+  await openFlow();
+  fireEvent.click(await screen.findByRole("button", { name: "1단계 지우기" }));
+  const dialog = screen.getByRole("alertdialog", { name: "단계 지우기" });
+  fireEvent.click(within(dialog).getByRole("button", { name: "삭제" }));
+  await vi.waitFor(() => expect(removeFlowStepAction).toHaveBeenCalledWith("d", "login", 0));
 });
 
 test("흐름 다시 맞추기 sends the repair request to the diagram chat", async () => {
