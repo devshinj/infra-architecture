@@ -134,13 +134,14 @@ test("망 경계 sample: crossing dot visible, tag on select, network_direct war
   await expect(page.locator(".edge-boundary-dot")).toHaveCount(3);
   await expect(page.locator(".edge-boundary-tag")).toHaveCount(0);
 
-  // 망연계를 고르면 닿은 두 연결에 "망 넘음 · API ↔" 표시가 붙는다.
+  // 망연계를 고르면 닿은 두 연결에 "망 넘음 · API" + 양방향 화살표(선으로 그림) 표시가 붙는다.
   await nodeByTitle(page, "망연계").click();
   const tags = page.locator(".edge-boundary-tag");
   await expect(tags).toHaveCount(2);
   for (let i = 0; i < 2; i++) {
     await expect(tags.nth(i)).toContainText("망 넘음");
-    await expect(tags.nth(i)).toContainText("API ↔");
+    await expect(tags.nth(i).locator(".edge-boundary-tag__detail")).toHaveText("API");
+    await expect(tags.nth(i).locator(".edge-boundary-tag__dir")).toHaveAttribute("data-direction", "two_way");
   }
   await page.keyboard.press("Escape");
 
@@ -151,9 +152,11 @@ test("망 경계 sample: crossing dot visible, tag on select, network_direct war
   await expect(page.getByRole("tab", { name: "설명" })).toHaveAttribute("aria-selected", "true");
   const cautions = page.locator("section").filter({ has: page.getByRole("heading", { name: "주의할 점" }) });
   await expect(cautions.getByText(NET_GUIDE)).toBeVisible();
-  // 인터넷 서버에 닿은 경계 연결 둘: 망연계에서 오는 것(API ↔)과 바로 넘어오는 것(파일 →).
+  // 인터넷 서버에 닿은 경계 연결 둘: 망연계에서 오는 것(API·양방향)과 바로 넘어오는 것(파일·한 방향).
   await expect(tags).toHaveCount(2);
-  await expect(tags.filter({ hasText: "파일 →" })).toHaveCount(1);
+  const fileTag = tags.filter({ hasText: "파일" });
+  await expect(fileTag).toHaveCount(1);
+  await expect(fileTag.locator(".edge-boundary-tag__dir")).toHaveAttribute("data-direction", "one_way");
   await page.keyboard.press("Escape");
 
   // 망연계를 거치는 제안 흐름을 켜면 경계를 넘는 단계 둘에 표시가 붙고 단계 글자가 셋이다.
