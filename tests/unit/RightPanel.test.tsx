@@ -73,3 +73,35 @@ test("controlled mode: selection change notifies the parent outside render, no c
   expect(err).not.toHaveBeenCalled();
   err.mockRestore();
 });
+
+test("흐름 tab present and switches", async () => {
+  const onTabChange = vi.fn();
+  const flows = {
+    flows: [{ id: "db", name: "DB 조회", origin: "system" as const, steps: [{ edge: "e-was-1-db-proxy", from: "was-1", short: "조회", text: "조회해요" }], source: "user" as const, reviewed: true, problems: [] }],
+    state: fx("s2"),
+    activeKey: null,
+    onActivate: vi.fn(),
+    onFocusStep: vi.fn(),
+    onSuggest: vi.fn(),
+    suggesting: false,
+    onRename: vi.fn(async () => undefined),
+    onDelete: vi.fn(async () => undefined),
+    onConfirm: vi.fn(),
+    onRepair: vi.fn(),
+    disabled: false,
+  };
+  const { rerender } = render(<RightPanel {...props(null)} flows={flows} onTabChange={onTabChange} />);
+  expect(screen.getAllByRole("tab").map((t) => t.textContent)).toEqual(["대화", "설명", "이력", "흐름"]);
+  await userEvent.click(screen.getByRole("tab", { name: "흐름" }));
+  expect(screen.getByRole("tab", { name: "흐름" })).toHaveAttribute("aria-selected", "true");
+  expect(onTabChange).toHaveBeenLastCalledWith("흐름");
+  expect(screen.getByRole("button", { name: "흐름 제안받기" })).toBeInTheDocument();
+  // 설명 탭의 흐름 칩: 흐름 탭으로 가서 그 흐름을 켠다. 선택이 풀려도 흐름 탭에 남는다.
+  rerender(<RightPanel {...props("was-1")} flows={flows} onTabChange={onTabChange} />);
+  expect(screen.getByRole("tab", { name: "설명" })).toHaveAttribute("aria-selected", "true");
+  await userEvent.click(screen.getByRole("button", { name: "DB 조회" }));
+  expect(flows.onActivate).toHaveBeenCalledWith("db");
+  expect(screen.getByRole("tab", { name: "흐름" })).toHaveAttribute("aria-selected", "true");
+  rerender(<RightPanel {...props(null)} flows={flows} onTabChange={onTabChange} />);
+  expect(screen.getByRole("tab", { name: "흐름" })).toHaveAttribute("aria-selected", "true");
+});

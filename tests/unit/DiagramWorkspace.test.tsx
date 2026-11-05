@@ -2,7 +2,7 @@ import "@testing-library/jest-dom/vitest";
 import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
-const hookState = vi.hoisted(() => ({ send: vi.fn(), busy: false, onCommand: null as null | ((c: unknown) => void), badgeFns: [] as unknown[], warnFns: [] as unknown[], lines: [] as unknown[], insets: [] as unknown[], focus: [] as unknown[], turn: null as null | { onDone(): void; onInterrupted(): void; onRelayout?(): void; onSessionLines?(key: string, fn: (ls: { id: string; kind: string; text: string }[]) => { id: string; kind: string; text: string }[]): void }, pushLine: vi.fn(), pinned: [] as unknown[], fitRequest: [] as unknown[], placed: null as null | ((locate: (id: string) => { x: number; y: number } | null) => void) }));
+const hookState = vi.hoisted(() => ({ send: vi.fn(), busy: false, onCommand: null as null | ((c: unknown) => void), badgeFns: [] as unknown[], warnFns: [] as unknown[], lines: [] as unknown[], insets: [] as unknown[], focus: [] as unknown[], turn: null as null | { onDone(): void; onInterrupted(): void; onRelayout?(): void; onSessionLines?(key: string, fn: (ls: { id: string; kind: string; text: string }[]) => { id: string; kind: string; text: string }[]): void }, pushLine: vi.fn(), pinned: [] as unknown[], fitRequest: [] as unknown[], placed: null as null | ((locate: (id: string) => { x: number; y: number } | null) => void), flow: [] as unknown[], selected: [] as unknown[] }));
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
 vi.mock("@/app/(app)/actions", () => ({
@@ -12,9 +12,12 @@ vi.mock("@/app/(app)/actions", () => ({
   setWarningIgnoredAction: vi.fn(async () => ({ ok: true, number: 2 })),
   listTermsAction: vi.fn(async () => []),
   confirmAssumptionAction: vi.fn(async () => ({ ok: true })),
+  renameFlowAction: vi.fn(async () => ({ ok: true })), deleteFlowAction: vi.fn(async () => ({ ok: true })), confirmFlowAction: vi.fn(async () => ({ ok: true })),
 }));
 vi.mock("@/canvas/Canvas", () => ({
-  Canvas: ({ state, pinned, fitRequest, onAutoArrange, fitKey, cameraInsets, focusRequest, onMention, onAskNode, onBadgeClick, onWarnBadgeClick, onSelect, onImportSample, onPlaced }: {onAskNode?: (id: string) => void;  onPlaced?: (l: (id: string) => { x: number; y: number } | null) => void; onImportSample?: (id: string) => void; state: { nodes: object }; pinned: unknown; fitRequest?: unknown; onAutoArrange(): void; fitKey?: string; cameraInsets?: unknown; focusRequest?: unknown; onMention?: (id: string) => void; onBadgeClick?: (id: string) => void; onWarnBadgeClick?: (id: string) => void; onSelect: (id: string | null) => void }) => {
+  Canvas: ({ flow, options, state, pinned, fitRequest, onAutoArrange, fitKey, cameraInsets, focusRequest, onMention, onAskNode, onBadgeClick, onWarnBadgeClick, onSelect, onImportSample, onPlaced }: { flow?: unknown; options: { selectedId: string | null }; onAskNode?: (id: string) => void;  onPlaced?: (l: (id: string) => { x: number; y: number } | null) => void; onImportSample?: (id: string) => void; state: { nodes: object }; pinned: unknown; fitRequest?: unknown; onAutoArrange(): void; fitKey?: string; cameraInsets?: unknown; focusRequest?: unknown; onMention?: (id: string) => void; onBadgeClick?: (id: string) => void; onWarnBadgeClick?: (id: string) => void; onSelect: (id: string | null) => void }) => {
+    hookState.flow.push(flow ?? null);
+    hookState.selected.push(options.selectedId);
     hookState.insets.push(cameraInsets);
     hookState.placed = onPlaced ?? null;
     hookState.pinned.push(pinned);
@@ -731,12 +734,12 @@ const bottomTabs = () => screen.getByRole("tablist", { name: "작업 화면" });
 const bottomTab = (name: string | RegExp) => within(bottomTabs()).getByRole("tab", { name });
 const mview = () => (document.querySelector("[data-workspace]") as HTMLElement).getAttribute("data-mview");
 
-test("narrow: one bottom tablist with 4 tabs replaces the panel tabs; 구성도 first, choice is persisted", () => {
+test("narrow: one bottom tablist with 5 tabs replaces the panel tabs; 구성도 first, choice is persisted", () => {
   hookState.busy = false;
   window.sessionStorage.clear();
   stubNarrow();
   render(narrowUi(two()));
-  expect(within(bottomTabs()).getAllByRole("tab").map((t) => t.textContent)).toEqual(["구성도", "대화", "설명", "이력"]);
+  expect(within(bottomTabs()).getAllByRole("tab").map((t) => t.textContent)).toEqual(["구성도", "대화", "설명", "이력", "흐름"]);
   expect(screen.getAllByRole("tablist")).toHaveLength(1); // 패널 안 탭 줄은 그리지 않는다
   expect(screen.queryByRole("separator", { name: "대화 패널 너비" })).toBeNull();
   expect(bottomTab("구성도")).toHaveAttribute("aria-selected", "true");
@@ -1029,4 +1032,69 @@ test("from a node session, mentions go to the last diagram chat used, or 기본 
   expect(trigger()).toHaveTextContent("a · 왜 두 대예요?");
   fireEvent.click(screen.getByRole("button", { name: "멘션a" }));
   expect(trigger()).toHaveTextContent("기본 대화");
+});
+
+const flowLatest = () => ({
+  number: 1,
+  state: {
+    ...emptyState(),
+    nodes: Object.fromEntries([web("a"), web("b")]),
+    edges: { e1: { id: "e1", from: "a", to: "b", edgeKind: "request" } },
+  },
+});
+const loginFlow = {
+  id: "login", name: "로그인", origin: "user", source: "user", reviewed: true, problems: [],
+  steps: [{ edge: "e1", from: "a", short: "로그인 요청", text: "a 가 b 에 로그인을 요청해요" }],
+};
+const stubFlows = () =>
+  vi.stubGlobal("fetch", vi.fn(async (url: string) => (String(url).endsWith("/flows") ? Response.json({ flows: [loginFlow] }) : Response.json({ qwen: "ok", clef: "ok" }))));
+const openFlow = async () => {
+  fireEvent.click(screen.getByRole("tab", { name: "흐름" }));
+  fireEvent.click(await screen.findByRole("button", { name: /^로그인(?! 메뉴)/ }));
+};
+
+test("activating a flow clears node selection and passes flow to Canvas", async () => {
+  hookState.busy = false;
+  stubFlows();
+  render(ui(flowLatest() as never));
+  fireEvent.click(screen.getByRole("button", { name: "선택a" }));
+  expect(hookState.selected.at(-1)).toBe("a");
+  expect(hookState.flow.at(-1)).toBeNull();
+  await openFlow();
+  expect(hookState.selected.at(-1)).toBeNull();
+  expect(hookState.flow.at(-1)).toEqual({ steps: [{ edge: "e1", n: 1, short: "로그인 요청" }] });
+  expect(screen.getByRole("tab", { name: "흐름" })).toHaveAttribute("aria-selected", "true");
+  // 단계를 누르면 그 연결로 카메라를 옮긴다.
+  fireEvent.click(within(screen.getByRole("list", { name: "로그인 단계" })).getByRole("button"));
+  expect(hookState.focus.at(-1)).toMatchObject({ id: "e1" });
+  // Esc 는 흐름 보기를 푼다.
+  fireEvent.keyDown(document, { key: "Escape" });
+  expect(hookState.flow.at(-1)).toBeNull();
+});
+
+test("selecting a node clears active flow", async () => {
+  hookState.busy = false;
+  stubFlows();
+  render(ui(flowLatest() as never));
+  await openFlow();
+  expect(hookState.flow.at(-1)).not.toBeNull();
+  fireEvent.click(screen.getByRole("button", { name: "선택b" }));
+  expect(hookState.flow.at(-1)).toBeNull();
+  expect(hookState.selected.at(-1)).toBe("b");
+});
+
+test("흐름 다시 맞추기 sends the repair request to the diagram chat", async () => {
+  hookState.busy = false;
+  hookState.send.mockReset();
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async (url: string) =>
+      String(url).endsWith("/flows") ? Response.json({ flows: [{ ...loginFlow, problems: [{ kind: "missing_edge", step: 0 }] }] }) : Response.json({ qwen: "ok", clef: "ok" }),
+    ),
+  );
+  render(ui(flowLatest() as never));
+  fireEvent.click(screen.getByRole("tab", { name: "흐름" }));
+  fireEvent.click(await screen.findByRole("button", { name: "흐름 다시 맞추기" }));
+  expect(hookState.send).toHaveBeenCalledWith('"로그인" 흐름을 지금 구성에 맞게 다시 맞춰 줘');
+  expect(screen.getByRole("tab", { name: "대화" })).toHaveAttribute("aria-selected", "true");
 });

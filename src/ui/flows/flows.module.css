@@ -1,0 +1,62 @@
+/* 흐름 탭. 토큰만 쓴다. 금색 강조는 보고 있는 흐름의 줄 표시 하나뿐(주 동작 금색 버튼은 대화 보내기에 남긴다). */
+.panel { display: flex; flex-direction: column; gap: 14px; padding: 16px; }
+.top { display: flex; flex-direction: column; gap: 8px; }
+.suggest {
+  align-self: flex-start; min-height: 28px; font: inherit; font-size: 13px; color: var(--text-primary); background: var(--bg-panel-raised);
+  border: 1px solid var(--line-node); border-radius: var(--radius-node); padding: 4px 12px; cursor: pointer;
+}
+.suggest:hover:not(:disabled) { border-color: var(--text-secondary); }
+.suggest:disabled { opacity: 0.5; cursor: default; }
+.suggest:focus-visible { outline: 1.5px solid var(--text-secondary); outline-offset: 2px; }
+.error { margin: 0; font-size: 12px; color: var(--text-primary); border: 1px solid var(--state-missing); border-radius: var(--radius-node); padding: 5px 8px; }
+.empty { margin: 0; font-size: 13px; line-height: 1.6; color: var(--text-secondary); }
+
+.group { display: flex; flex-direction: column; gap: 4px; }
+.heading { margin: 0; padding: 0 2px; font-size: 11px; font-weight: 500; color: var(--text-secondary); }
+.list { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 2px; }
+.item { display: flex; flex-direction: column; gap: 6px; border-left: 2px solid transparent; border-radius: 6px; }
+.item[data-active] { border-left-color: var(--accent); background: var(--bg-panel-raised); padding-bottom: 8px; }
+/* 행 메뉴(.menu)는 이 줄에 맞춰 뜬다. */
+.row { position: relative; display: flex; align-items: center; gap: 2px; }
+.rowBtn {
+  flex: 1; min-width: 0; min-height: 32px; display: flex; align-items: center; gap: 6px; font: inherit; font-size: 13px;
+  text-align: left; color: var(--text-primary); background: transparent; border: 0; border-radius: 6px; padding: 6px 8px; cursor: pointer;
+}
+.rowBtn:hover { background: var(--bg-panel-raised); }
+.rowBtn[aria-expanded="true"] { font-weight: 600; }
+.rowBtn:focus-visible, .menuBtn:focus-visible, .stepBtn:focus-visible, .repair:focus-visible { outline: 1.5px solid var(--text-secondary); outline-offset: 1px; }
+.name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.menuBtn { min-width: 28px; min-height: 28px; }
+.badge, .broken { flex: none; font-size: 11px; font-weight: 400; border-radius: 4px; padding: 0 5px; white-space: nowrap; }
+.badge { color: var(--text-secondary); border: 1px solid var(--line-node); }
+.broken { margin-left: 6px; color: var(--state-missing-text); border: 1px solid var(--state-missing); }
+.rowBtn .broken { margin-left: 0; }
+.repair {
+  align-self: flex-start; margin-left: 8px; min-height: 26px; font: inherit; font-size: 12px; color: var(--text-primary); background: var(--bg-panel-raised);
+  border: 1px solid var(--line-node); border-radius: var(--radius-node); padding: 3px 10px; cursor: pointer;
+}
+.repair:hover:not(:disabled) { border-color: var(--text-secondary); }
+.repair:disabled { opacity: 0.5; cursor: default; }
+
+.detail { display: flex; flex-direction: column; gap: 6px; padding: 0 8px; }
+.summary, .result { margin: 0; font-size: 12px; line-height: 1.5; color: var(--text-secondary); }
+.steps { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 2px; }
+.stepBtn {
+  width: 100%; min-height: 28px; display: flex; align-items: flex-start; gap: 6px; font: inherit; font-size: 13px; line-height: 1.5;
+  text-align: left; color: var(--text-primary); background: transparent; border: 0; border-radius: 4px; padding: 3px 4px; cursor: pointer;
+}
+.stepBtn:hover:not(:disabled) { background: var(--bg-node); }
+.stepBtn:disabled { cursor: default; }
+.mark { flex: none; color: var(--text-secondary); }
+.stepText { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: 0; row-gap: 2px; }
+.note { flex-basis: 100%; font-size: 12px; color: var(--text-secondary); }
+.srOnly { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+
+@media (max-width: 640px) {
+  .rowBtn, .stepBtn { min-height: 44px; align-items: center; font-size: 14px; }
+  .menuBtn, .suggest, .repair { min-height: 44px; }
+  .menuBtn { min-width: 44px; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .item, .rowBtn, .stepBtn { transition: background-color 0.15s, border-color 0.15s; }
+}

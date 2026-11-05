@@ -20,6 +20,7 @@ import { applyCommand } from "@/domain/apply";
 import { assumptionChangeMessage, confirmAssumption } from "@/domain/assumptions";
 import { isFlowCommand } from "@/domain/commands";
 import { diffStates } from "@/domain/diff";
+import { checkFlow } from "@/domain/flows";
 import type { DiagramState } from "@/domain/types";
 
 import styles from "./app.module.css";
@@ -34,6 +35,8 @@ import { Legend, legendPlacement } from "./canvas/Legend";
 import { FlyLayer, useFly } from "./FlyLayer";
 import type { ExplanationProps } from "./explain/Explanation";
 import { type TargetKind, useExplanations } from "./explain/useExplanations";
+import type { FlowPanelProps } from "./flows/FlowPanel";
+import { useFlows } from "./flows/useFlows";
 import { MOBILE_VIEWS, MobileTabBar, type MobileView, mobileTabId } from "./MobileTabBar";
 import { PANEL_DEFAULT, PANEL_MAX, PANEL_MIN, PANEL_MIN_COMPACT, PanelResizer } from "./PanelResizer";
 import { PANEL_GAP, useShell } from "./Shell";
@@ -292,6 +295,8 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
     if (timer.current) clearTimeout(timer.current);
     timer.current = setTimeout(refreshFromServer, 1500);
   };
+  // 흐름: 차례가 끝나면 다시 불러오고, 처음 그린 차례 뒤 흐름이 없으면 자동 제안한다(아래 useFlows 가 채운다).
+  const afterTurnRef = useRef<(e: { changed: number } | undefined) => Promise<void>>(async () => {});
   // 대화 세션: 구성도 대화(main)와 노드 질문 세션. 새로고침하면 구성도 대화로 연다.
   const sessions = useSessions({ diagramId, initial: initialSessions, paging: initialPaging });
   const chat = useChatTurn({
@@ -309,7 +314,10 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
       if (cmd.op === "add_node" && live && !current.state.nodes[cmd.id]) fly.queue(cmd.id);
     },
     // 차례가 끝나도 빛점은 비우지 않는다: 출발점은 queue 때 잡아 두어, done 뒤 배치에서도 마지막 노드로 날 수 있다.
-    onDone: refreshFromServer,
+    onDone: (e) => {
+      refreshFromServer();
+      void afterTurnRef.current(e);
+    },
     onOpenHistory: () => {
       showTab("이력");
       loadVersions();
@@ -354,6 +362,47 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
     };
   }
   const mentionRef = useRef<MentionInputHandle>(null);
+
+  // 흐름 보기: 흐름을 켜면 노드 선택을 풀고 캔버스에 그 흐름 단계를 밝힌다. 노드를 고르거나 Esc 를 누르면 푼다.
+  const flowsHook = useFlows({ diagramId, live, busy: chat.busy, versionKey: current.number });
+  afterTurnRef.current = flowsHook.afterTurn;
+  const { activeKey: activeFlowKey, setActive: setActiveFlow } = flowsHook;
+  const activateFlow = useCallback(
+    (key: string | null) => {
+      setActiveFlow(key);
+      if (key !== null) setOptions((o) => (o.selectedId === null ? o : { ...o, selectedId: null }));
+    },
+    [setActiveFlow],
+  );
+  /** 캔버스·패널의 선택. 노드·연결을 고르면 흐름 보기를 푼다. */
+  const onSelect = (id: string | null) => {
+    if (id !== null) setActiveFlow(null);
+    setOptions((o) => ({ ...o, selectedId: id }));
+  };
+  useEffect(() => {
+    if (activeFlowKey === null) return;
+    const onKey = (e: KeyboardEvent) => {
+      // 대화상자·메뉴가 먼저 받은 Esc 는 건너뛴다.
+      if (e.key === "Escape" && !e.defaultPrevented) setActiveFlow(null);
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [activeFlowKey, setActiveFlow]);
+  // 이전 버전을 보는 중에는 끊김을 그 버전 그림으로 다시 잰다(서버는 최신 구성도로 잰다). 비교는 현재 상태 그대로다.
+  const viewState = mode.kind === "view" ? mode.state : null;
+  const shownFlows = useMemo(
+    () => (viewState ? flowsHook.flows.map((f) => ({ ...f, problems: checkFlow(viewState, f) })) : flowsHook.flows),
+    [viewState, flowsHook.flows],
+  );
+  const activeFlow = activeFlowKey === null ? null : (shownFlows.find((f) => f.id === activeFlowKey) ?? null);
+  // 캔버스 단계 표시: 번호는 단계 순서(1..k), 지금 그림에 없는 연결의 단계는 빼되 번호는 그대로 둔다.
+  const canvasFlow = useMemo(
+    () =>
+      activeFlow
+        ? { steps: activeFlow.steps.flatMap((st, i) => (shown.edges[st.edge] ? [{ edge: st.edge, n: i + 1, short: st.short }] : [])) }
+        : null,
+    [activeFlow, shown.edges],
+  );
 
   // 설명 탭의 점: 구성도를 보는 중에 고른 항목의 설명을 아직 안 봤을 때만. 한 번 본 항목은 다시 골라도 찍지 않는다.
   const [seenExplain, setSeenExplain] = useState<ReadonlySet<string>>(() => new Set());
@@ -562,10 +611,14 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
   useEffect(() => {
     selectedRef.current = options.selectedId;
   });
-  const selectNode = useCallback((id: string) => {
-    if (selectedRef.current === id) setTab("설명");
-    setOptions((o) => ({ ...o, selectedId: id }));
-  }, []);
+  const selectNode = useCallback(
+    (id: string) => {
+      if (selectedRef.current === id) setTab("설명");
+      setActiveFlow(null);
+      setOptions((o) => ({ ...o, selectedId: id }));
+    },
+    [setActiveFlow],
+  );
   // 노드의 경고 배지: 그 노드의 주의할 점(설명 탭)을 보려는 것이라 좁은 화면이면 설명 탭으로 간다.
   // 넓은 화면은 이전처럼 선택만 하고(설명 탭으로 가는 것은 RightPanel 이 한다), 선택이 풀리면 앞 탭으로 돌아간다.
   const narrowRef = useRef(narrow);
@@ -695,6 +748,33 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
 
   const chatLines = sessions.active === "main" ? chat.lines : sessions.linesOf(sessions.active);
 
+  const flowsLocked = !live || chat.busy;
+  const flowPanel: FlowPanelProps = {
+    flows: shownFlows,
+    state: shown,
+    activeKey: activeFlowKey,
+    onActivate: activateFlow,
+    // 단계: 그 연결로 카메라를 옮긴다. 좁은 화면은 캔버스가 가려져 있어 구성도 탭으로 간다.
+    onFocusStep: (edgeId) => {
+      locate(edgeId);
+      if (narrow) setPanelShown(false);
+    },
+    onSuggest: () => void flowsHook.suggest(),
+    suggesting: flowsHook.suggesting,
+    error: flowsHook.error,
+    onRename: flowsHook.rename,
+    onDelete: flowsHook.remove,
+    onConfirm: (key) => void flowsHook.confirm(key),
+    // 끊긴 흐름: 구성도 대화로 고쳐 달라고 보낸다.
+    onRepair: (flowName) => {
+      if (flowsLocked) return;
+      showTab("대화");
+      toDiagramChat();
+      sendMain(`"${flowName}" 흐름을 지금 구성에 맞게 다시 맞춰 줘`);
+    },
+    disabled: flowsLocked,
+  };
+
   const banner =
     mode.kind === "view"
       ? `v${mode.number} 보는 중`
@@ -743,7 +823,8 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
             streaming={live && mainTurn}
             cameraInsets={cameraInsets}
             onOptionsChange={changeOptions}
-            onSelect={(id) => setOptions((o) => ({ ...o, selectedId: id }))}
+            onSelect={onSelect}
+            flow={canvasFlow}
             askDisabled={askLocked}
             {...(askReason ? { askReason } : {})}
             onPinnedChange={live ? onPinnedChange : () => {}}
@@ -794,7 +875,7 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
         <RightPanel
           state={shown}
           selectedId={options.selectedId}
-          onSelect={(id) => setOptions((o) => ({ ...o, selectedId: id }))}
+          onSelect={onSelect}
           onMention={onMention}
           mentionDisabled={!live}
           tab={tab}
@@ -802,6 +883,7 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
           warningState={mode.kind === "compare" ? current.state : shown}
           onHistoryOpen={loadVersions}
           live={live}
+          flows={flowPanel}
           {...(narrow ? { externalTabs: { tabIdOf: mobileTabId, request: tabRequest } } : {})}
           {...(explain ? { explain } : {})}
           {...(selKind === "node"

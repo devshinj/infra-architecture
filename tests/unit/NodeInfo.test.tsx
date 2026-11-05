@@ -201,3 +201,21 @@ test("edge info shows 전달물 API and 방향 양방향", () => {
   expect(screen.getByText("방향")).toBeInTheDocument();
   expect(screen.getByText("양방향")).toBeInTheDocument();
 });
+
+test("lists flows through node and click activates", async () => {
+  const s = fx("s2");
+  const through = { id: "db", name: "DB 조회", origin: "system" as const, steps: [{ edge: "e-was-1-db-proxy", from: "was-1", short: "조회", text: "조회해요" }] };
+  // 지금 구성에 없는 연결만 가진 흐름은 지나는 흐름으로 치지 않는다.
+  const broken = { id: "gone", name: "끊긴 흐름", origin: "user" as const, steps: [{ edge: "nope", from: "was-1", short: "x", text: "x" }] };
+  const onOpen = vi.fn();
+  const { rerender } = render(<NodeInfo state={s} selectedId="was-1" onSelect={vi.fn()} flows={{ list: [through, broken], onOpen }} />);
+  const section = screen.getByRole("region", { name: "이 노드를 지나는 흐름" });
+  expect(within(section).queryByRole("button", { name: "끊긴 흐름" })).not.toBeInTheDocument();
+  await userEvent.click(within(section).getByRole("button", { name: "DB 조회" }));
+  expect(onOpen).toHaveBeenCalledWith("db");
+  rerender(<NodeInfo state={s} selectedId="e-was-1-db-proxy" onSelect={vi.fn()} flows={{ list: [through, broken], onOpen }} />);
+  expect(within(screen.getByRole("region", { name: "이 연결이 들어간 흐름" })).getByRole("button", { name: "DB 조회" })).toBeInTheDocument();
+  // 지나는 흐름이 없으면 절이 없다.
+  rerender(<NodeInfo state={s} selectedId="was-1" onSelect={vi.fn()} flows={{ list: [broken], onOpen }} />);
+  expect(screen.queryByRole("region", { name: "이 노드를 지나는 흐름" })).not.toBeInTheDocument();
+});
