@@ -1,5 +1,5 @@
 import type { EdgeKind } from "@/domain/catalog";
-import type { DiagramState, DNode, Group } from "@/domain/types";
+import type { DiagramState, DNode, EdgeDirection, EdgePayload, Group } from "@/domain/types";
 
 export interface DisplayOptions {
   hideAux: boolean;
@@ -15,6 +15,8 @@ export interface DisplayEdge {
   to: string;
   edgeKind: EdgeKind;
   label?: string;
+  payload?: EdgePayload;
+  direction?: EdgeDirection;
   sourceEdgeIds: string[];
 }
 
@@ -84,7 +86,7 @@ export function buildDisplayGraph(state: DiagramState, opts: DisplayOptions): Di
   const resolve = (id: string): string => collapsedAncestor(id) ?? id;
 
   // (1) re-target, (2) aux hiding
-  interface Work { id: string; from: string; to: string; edgeKind: EdgeKind; label?: string; ids: string[] }
+  interface Work { id: string; from: string; to: string; edgeKind: EdgeKind; label?: string; payload?: EdgePayload; direction?: EdgeDirection; ids: string[] }
   let work: Work[] = [];
   for (const e of Object.values(state.edges)) {
     const from = resolve(e.from);
@@ -94,7 +96,7 @@ export function buildDisplayGraph(state: DiagramState, opts: DisplayOptions): Di
       const touched = sel !== null && (e.from === sel || e.to === sel || from === sel || to === sel);
       if (!touched) continue;
     }
-    work.push({ id: e.id, from, to, edgeKind: e.edgeKind, label: e.label, ids: [e.id] });
+    work.push({ id: e.id, from, to, edgeKind: e.edgeKind, label: e.label, payload: e.payload, direction: e.direction, ids: [e.id] });
   }
 
   // (3) bus simplification (aux edges are left alone)
@@ -136,6 +138,8 @@ export function buildDisplayGraph(state: DiagramState, opts: DisplayOptions): Di
           existing.id = w.id;
           existing.edgeKind = w.edgeKind;
           existing.label = w.label;
+          existing.payload = w.payload;
+          existing.direction = w.direction;
         }
       } else {
         const copy = { ...w, ids: [...w.ids] };
@@ -152,6 +156,8 @@ export function buildDisplayGraph(state: DiagramState, opts: DisplayOptions): Di
     .map((w) => {
       const d: DisplayEdge = { id: w.id, from: w.from, to: w.to, edgeKind: w.edgeKind, sourceEdgeIds: w.ids };
       if (w.label !== undefined) d.label = w.label;
+      if (w.payload !== undefined) d.payload = w.payload;
+      if (w.direction !== undefined) d.direction = w.direction;
       return d;
     });
 

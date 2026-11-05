@@ -122,6 +122,9 @@ function Cautions({ active, ignored, onIgnoreWarning, ignoreDisabled, ignoreErro
   );
 }
 
+const PAYLOAD_NAME = { api: "API", file: "파일" } as const;
+const DIRECTION_NAME = { one_way: "단방향", two_way: "양방향" } as const;
+
 export function NodeInfo({ state, selectedId, onSelect, onMention, mentionDisabled, warningState, explain, ask, ...caution }: NodeInfoProps) {
   if (selectedId === null) return <p className={styles.empty}>캔버스에서 노드를 선택하면 설명이 여기에 표시돼요.</p>;
 
@@ -138,6 +141,8 @@ export function NodeInfo({ state, selectedId, onSelect, onMention, mentionDisabl
           <div className={styles.field}><dt>출발</dt><dd>{nameOf(state, edge.from)}</dd></div>
           <div className={styles.field}><dt>도착</dt><dd>{nameOf(state, edge.to)}</dd></div>
           <div className={styles.field}><dt>라벨</dt><dd className={isEmpty(edge.label) ? styles.missing : undefined}>{isEmpty(edge.label) ? (edge.unknown?.includes("label") ? UNKNOWN : MISSING) : edge.label}</dd></div>
+          {edge.payload && <div className={styles.field}><dt>전달물</dt><dd>{PAYLOAD_NAME[edge.payload]}</dd></div>}
+          {edge.direction && <div className={styles.field}><dt>방향</dt><dd>{DIRECTION_NAME[edge.direction]}</dd></div>}
         </dl>
         {explain && <Explanation target="edge" {...explain} />}
         <Cautions {...pick((w) => w.edgeId === edge.id)} {...caution} />

@@ -166,3 +166,28 @@ describe("normalizeAiCommand", () => {
     expect(normalizeAiCommand({ op: "add_node", id: "x", kind: "was", label: "A", parent: null })).toMatchObject({ parent: null });
   });
 });
+
+describe("normalizeAiCommand payload/direction", () => {
+  const norm = (extra: Record<string, unknown>) =>
+    normalizeAiCommand({ op: "add_edge", from: "a", to: "b", edge_kind: "request", ...extra }) as Record<string, unknown>;
+  test('payload "API"/"File" → "api"/"file", direction 단방향/양방향/oneway → enum', () => {
+    expect(norm({ payload: "API" }).payload).toBe("api");
+    expect(norm({ payload: "File" }).payload).toBe("file");
+    expect(norm({ payload: "파일" }).payload).toBe("file");
+    expect(norm({ direction: "단방향" }).direction).toBe("one_way");
+    expect(norm({ direction: "oneway" }).direction).toBe("one_way");
+    expect(norm({ direction: "one-way" }).direction).toBe("one_way");
+    expect(norm({ direction: "양방향" }).direction).toBe("two_way");
+    expect(norm({ direction: "Bidirectional" }).direction).toBe("two_way");
+  });
+  test("unknown or null values are dropped so the rest still parses", () => {
+    const out = norm({ payload: "ftp", direction: null });
+    expect("payload" in out).toBe(false);
+    expect("direction" in out).toBe(false);
+    expect(parseCommand(out).ok).toBe(true);
+  });
+  test("update_edge is normalized too", () => {
+    const out = normalizeAiCommand({ op: "update_edge", id: "e1", payload: "API", direction: "양방향" }) as Record<string, unknown>;
+    expect(out).toMatchObject({ payload: "api", direction: "two_way" });
+  });
+});

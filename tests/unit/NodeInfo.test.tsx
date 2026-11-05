@@ -191,3 +191,13 @@ test("explanation precedes 주의할 점 when warnings exist", () => {
   expect(heads).toContain("주의할 점");
   expect(heads.indexOf("왜 이렇게 짰나요")).toBeLessThan(heads.indexOf("주의할 점"));
 });
+
+test("edge info shows 전달물 API and 방향 양방향", () => {
+  const s = fx("s2");
+  s.edges["e-was-1-db-proxy"] = { ...s.edges["e-was-1-db-proxy"], payload: "api", direction: "two_way" };
+  render(<NodeInfo state={s} selectedId="e-was-1-db-proxy" onSelect={vi.fn()} />);
+  expect(screen.getByText("전달물")).toBeInTheDocument();
+  expect(screen.getByText("API")).toBeInTheDocument();
+  expect(screen.getByText("방향")).toBeInTheDocument();
+  expect(screen.getByText("양방향")).toBeInTheDocument();
+});

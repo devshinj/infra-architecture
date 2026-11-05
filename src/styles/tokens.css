@@ -98,6 +98,7 @@
   --zone-tint-external: #A9765E; /* 외부 서비스(구리) */
   --zone-tint-redundancy: #7F95B5; /* 이중화 묶음 */
   --zone-tint-onprem: #7A8696; /* IDC·온프레미스 */
+  --zone-tint-network: #8B72B8; /* 망(업무망·인터넷망 등, 보라) */
 
   /* 반경 */
   --radius-node: 6px;

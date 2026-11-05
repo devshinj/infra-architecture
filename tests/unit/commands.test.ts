@@ -28,3 +28,14 @@ describe("catalog", () => {
     expect(categoryOf("db_proxy")).toBe("data");
   });
 });
+
+describe("edge payload/direction", () => {
+  test("add_edge accepts payload and direction", () => {
+    const r = parseCommand({ op: "add_edge", from: "a", to: "b", edge_kind: "request", payload: "api", direction: "two_way" });
+    expect(r.ok && r.cmd.op === "add_edge" && r.cmd.payload === "api" && r.cmd.direction === "two_way").toBe(true);
+  });
+  test('update_edge rejects payload "ftp"', () => {
+    expect(parseCommand({ op: "update_edge", id: "e1", payload: "ftp" }).ok).toBe(false);
+    expect(parseCommand({ op: "update_edge", id: "e1", direction: "both" }).ok).toBe(false);
+  });
+});

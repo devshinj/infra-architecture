@@ -118,3 +118,17 @@ test("aux never merges with a request edge; non-aux representative is order-inde
   expect(a.edges.map((e) => e.id)).toEqual(["b-req"]);
   expect(b.edges.map((e) => e.id)).toEqual(["b-req"]);
 });
+
+test("display edge carries payload/direction", () => {
+  const s = applyCommands(emptyState(), [
+    { op: "add_node", id: "a", kind: "was", label: "A", parent: null },
+    { op: "add_node", id: "b", kind: "db_rdb", label: "B", parent: null },
+    { op: "add_edge", id: "e1", from: "a", to: "b", edge_kind: "request", payload: "file", direction: "one_way" },
+    { op: "add_edge", id: "e2", from: "a", to: "b", edge_kind: "request", payload: "api" },
+  ] as Command[]).state;
+  const plain = buildDisplayGraph(s, { ...defaultDisplayOptions(s), mergeDuplicates: false });
+  expect(plain.edges.find((e) => e.id === "e1")).toMatchObject({ payload: "file", direction: "one_way" });
+  const merged = buildDisplayGraph(s, { ...defaultDisplayOptions(s), mergeDuplicates: true });
+  expect(merged.edges).toHaveLength(1);
+  expect(merged.edges[0]).toMatchObject({ id: "e1", payload: "file", direction: "one_way" });
+});

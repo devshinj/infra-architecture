@@ -173,6 +173,7 @@ export const LIGHT_TOKENS: Readonly<Record<string, string>> = {
   "--zone-tint-external": "#965F45",
   "--zone-tint-redundancy": "#62799E",
   "--zone-tint-onprem": "#667283",
+  "--zone-tint-network": "#7459A4",
 };
 
 /** 내보낸 그림에 남기지 않는 화면 장치: 말풍선·배지·접기 버튼·강조 링·강조 겹선·합친(또는 비킨) 연결 이름·움직임·클릭 영역·React Flow 도구. */

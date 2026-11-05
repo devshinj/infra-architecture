@@ -322,3 +322,19 @@ describe("prompt wording from the real-model check", () => {
     expect(sys).toBe(ASK_PROMPT);
   });
 });
+
+describe("summarizeState payload/direction", () => {
+  test("summarizeState prints payload and direction", () => {
+    const s = sample();
+    s.edges["e-was-1-db-1"] = { ...s.edges["e-was-1-db-1"]!, payload: "api", direction: "two_way" };
+    expect(summarizeState(s)).toContain(' payload=api direction=two_way');
+    delete s.edges["e-was-1-db-1"]!.payload;
+    delete s.edges["e-was-1-db-1"]!.direction;
+    expect(summarizeState(s)).not.toContain("payload=");
+  });
+  test("prompt documents payload/direction and network kinds", () => {
+    expect(SYSTEM_PROMPT).toContain('"payload":"api","direction":"two_way"');
+    expect(SYSTEM_PROMPT).toContain("network_zone");
+    expect(SYSTEM_PROMPT).toContain("network_link");
+  });
+});
