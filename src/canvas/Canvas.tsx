@@ -16,7 +16,7 @@ import { ExportMenu } from "./ExportMenu";
 import { exportDiagramImage, exportFileName, type ExportBackground, type ExportFormat } from "./exportImage";
 import type { GroupBoxData } from "./GroupBox";
 import type { NodeCardData, NodeVisualState } from "./NodeCard";
-import { outermostCollapsedAncestor, type DisplayGraph, type DisplayOptions } from "./display";
+import { displayEdgeFor, outermostCollapsedAncestor, type DisplayGraph, type DisplayOptions } from "./display";
 import type { Layout, Rect } from "./layout";
 import { NodeMenu } from "./NodeMenu";
 import { nodeTypes } from "./nodeTypes";
@@ -189,7 +189,10 @@ function SamplePicker({ samples, onImport, disabled }: { samples: { id: string; 
 
 export function Canvas(props: CanvasProps) {
   const { state, pinned, editMode, options, onOptionsChange, onAutoArrange, autoArrangeDisabled = false, motion } = props;
-  const view = useDiagramView(state, pinned, options);
+  // 흐름을 보는 동안 그 단계 연결은 보조 연결 숨김에서 빼고 그린다(번호가 빠지지 않게). 내용으로 묶어 새 객체에 흔들리지 않게 한다.
+  const keepKey = props.flow ? [...new Set(props.flow.steps.map((s) => s.edge))].sort().join(" ") : "";
+  const viewOptions = useMemo(() => (keepKey ? { ...options, keepEdges: new Set(keepKey.split(" ")) } : options), [options, keepKey]);
+  const view = useDiagramView(state, pinned, viewOptions);
   const empty = Object.keys(state.nodes).length === 0 && Object.keys(state.groups).length === 0;
   // 전체 보기: 구성도 전체를 담는 맞춤 요청(fitAllRequest). 자동 정렬 등 부모의 fitRequest 는 읽을 수 있는 줌 규칙을 따른다.
   const [fitTick, setFitTick] = useState(0);
@@ -350,15 +353,34 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
   const zoneDesc = { open: `${descId}-zone`, collapsed: `${descId}-zone-collapsed` };
 
   // 선택이 있으면 선택 기준으로만 흐리고, 호버는 선택이 없을 때만 쓴다. 흐름을 보는 중이면 흐름 단계가 선택 자리를 쓴다.
-  const sel = useMemo(() => (flow ? flowEmphasis(display.edges, flow.steps.map((s) => s.edge)) : emphasisOf(display.edges, selected)), [display, selected, flow]);
+  // 흐름 단계는 내용(연결·번호·설명)으로 묶는다: 부모가 매번 새 객체를 넘겨도 강조·배치를 다시 하지 않는다.
+  const flowKey = flow ? JSON.stringify(flow.steps.map((s) => [s.edge, s.n, s.short])) : null;
+  const flowStepsIn = useMemo(
+    () => (flowKey === null ? null : (JSON.parse(flowKey) as [string, number, string][]).map(([edge, n, short]) => ({ edge, n, short }))),
+    [flowKey],
+  );
+  const sel = useMemo(() => {
+    if (!flowStepsIn) return emphasisOf(display.edges, selected);
+    // 두 끝이 같은 접힌 영역 안이라 선이 없어진 단계는 그 영역을 밝힌다.
+    const loops: string[] = [];
+    for (const s of flowStepsIn) {
+      const e = state.edges[s.edge];
+      if (!e || displayEdgeFor(display.edges, s.edge)) continue;
+      const a = drawnId(state, options.collapsed, e.from);
+      if (a !== null && a === drawnId(state, options.collapsed, e.to) && display.groups[a]) loops.push(a);
+    }
+    return flowEmphasis(display.edges, flowStepsIn.map((s) => s.edge), loops);
+  }, [display, selected, flowStepsIn, state, options.collapsed]);
   // 흐름 단계를 표시 연결 id 로 맞춘다(묶이거나 접힌 영역으로 이어진 연결도 원래 연결 id 로 찾는다). 없는 연결은 뺀다.
   const flowSteps = useMemo(() => {
-    if (!flow) return undefined;
-    return flow.steps.flatMap((s) => {
-      const hit = display.edges.find((e) => e.id === s.edge || e.sourceEdgeIds.includes(s.edge));
+    if (!flowStepsIn) return undefined;
+    return flowStepsIn.flatMap((s) => {
+      const hit = displayEdgeFor(display.edges, s.edge);
       return hit ? [{ displayEdgeId: hit.id, n: s.n, short: s.short }] : [];
     });
-  }, [flow, display]);
+  }, [flowStepsIn, display]);
+  // 접힌 영역 상자: 연결 글자가 노드처럼 피한다.
+  const collapsedRects = useMemo(() => Object.values(display.groups).flatMap((g) => (g.collapsed && layout.groups[g.id] ? [layout.groups[g.id]] : [])), [display, layout]);
   // 망 경계를 넘는 표시 연결: 묶인 원래 연결 가운데 하나라도 넘으면 넘는 것으로 본다.
   const crossing = useMemo(() => {
     const out = new Set<string>();
@@ -730,6 +752,7 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
           onSelect={onSelect}
           {...(flowSteps ? { flowSteps } : {})}
           crossing={crossing}
+          collapsedRects={collapsedRects}
         />
         {/* 영역 이름표는 연결선 층 위(stacking.ts): 영역 머리를 지나는 선이 이름 뒤로 지나간다. 누르면 영역 머리를 누른 것과 같다. */}
         <ZoneNameLayerPortal

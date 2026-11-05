@@ -1,4 +1,4 @@
-import type { DisplayEdge } from "./display";
+import { displayEdgeFor, type DisplayEdge } from "./display";
 
 export interface Emphasis {
   nodes: Set<string>;
@@ -12,7 +12,7 @@ export interface Emphasis {
  */
 export function emphasisOf(edges: DisplayEdge[], id: string | null, nodeIds?: ReadonlySet<string>): Emphasis | null {
   if (id === null) return null;
-  const hit = edges.find((e) => e.id === id || e.sourceEdgeIds.includes(id));
+  const hit = displayEdgeFor(edges, id);
   if (hit) return { nodes: new Set([hit.from, hit.to]), edges: new Set([hit.id]) };
   // 사라진 대상(다시 배치되며 없어진 노드 등)이면 강조하지 않는다.
   if (nodeIds && !nodeIds.has(id)) return null;
@@ -30,12 +30,13 @@ export function emphasisOf(edges: DisplayEdge[], id: string | null, nodeIds?: Re
 /**
  * 흐름을 볼 때의 강조 집합: 단계가 지나는 연결(원래 연결 id 는 묶인 표시 연결로 맞춘다)과 그 두 끝 노드.
  * 표시 연결에 없는 단계(끊긴 단계·숨긴 연결)는 건너뛴다. 하나도 맞지 않으면 빈 강조(모두 흐림)다.
+ * extraNodes 는 연결 없이 밝힐 그려진 노드(두 끝이 같은 접힌 영역 안이라 선이 없어진 단계의 그 영역 등)다.
  */
-export function flowEmphasis(edges: DisplayEdge[], stepEdgeIds: string[]): Emphasis {
-  const nodes = new Set<string>();
+export function flowEmphasis(edges: DisplayEdge[], stepEdgeIds: string[], extraNodes: Iterable<string> = []): Emphasis {
+  const nodes = new Set<string>(extraNodes);
   const ids = new Set<string>();
   for (const id of stepEdgeIds) {
-    const hit = edges.find((e) => e.id === id || e.sourceEdgeIds.includes(id));
+    const hit = displayEdgeFor(edges, id);
     if (!hit) continue;
     ids.add(hit.id);
     nodes.add(hit.from);

@@ -5,6 +5,7 @@ import { afterEach, beforeAll, expect, test, vi } from "vitest";
 import * as layoutMod from "@/canvas/layout";
 import { Canvas, type CanvasOptions, type CanvasProps } from "@/canvas/Canvas";
 import { defaultDisplayOptions } from "@/canvas/display";
+import { applyCommands } from "@/domain/apply";
 import { type DiagramState, emptyState } from "@/domain/types";
 
 import { fx } from "../fixtures/spike";
@@ -815,4 +816,26 @@ test("flow prop dims zones without step nodes and nodes outside the flow", async
   for (const id of ["db-pair", "was-pair"]) expect(groupEl(container, id)!.classList.contains("group--dimmed"), id).toBe(true);
   // 단계 글자가 그려진다.
   expect([...container.querySelectorAll(".edge-step-label")].map((t) => t.textContent)).toEqual(["1. 접속", "2. 웹으로 넘김"]);
+});
+
+test("an aux flow step stays drawn and numbered while aux edges are hidden", async () => {
+  const { state } = applyCommands(fx("s2"), [{ op: "add_edge", from: "was-1", to: "db-proxy", edge_kind: "aux" }]);
+  const aux = Object.values(state.edges).find((e) => e.edgeKind === "aux")!;
+  const props = baseProps(state);
+  expect(props.options.hideAux).toBe(true);
+  const flow = { steps: [{ edge: "e-client-web-fw-external", n: 1, short: "접속" }, { edge: aux.id, n: 2, short: "상태 확인" }] };
+  const { container } = render(<div style={{ width: 800, height: 600 }}><Canvas {...props} flow={flow} /></div>);
+  await waitFor(() => expect(container.querySelectorAll(".edge-step-label")).toHaveLength(2));
+  expect([...container.querySelectorAll(".edge-step-label")].map((t) => t.textContent)).toEqual(["1. 접속", "2. 상태 확인"]);
+  for (const id of ["was-1", "db-proxy"]) expect(nodeEl(container, id)!.querySelector(".node--dimmed"), id).toBeNull();
+  expect(nodeEl(container, "db-primary")!.querySelector(".node--dimmed")).not.toBeNull();
+});
+
+test("a step inside one collapsed zone lights that collapsed box", async () => {
+  const props = baseProps();
+  props.options = { ...props.options, collapsed: new Set(["idc-main"]) };
+  const flow = { steps: [{ edge: "e-fw-external-web-pair", n: 1, short: "웹으로 넘김" }] };
+  const { container } = render(<div style={{ width: 800, height: 600 }}><Canvas {...props} flow={flow} /></div>);
+  await waitFor(() => expect(nodeEl(container, "client-web")!.querySelector(".node--dimmed")).not.toBeNull());
+  expect(groupEl(container, "idc-main")!.classList.contains("group--dimmed")).toBe(false);
 });

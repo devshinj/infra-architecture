@@ -32,16 +32,18 @@ export function useDiagramView(state: DiagramState, pinned: Pinned, opts: Displa
   // Callers often pass fresh option/pinned objects every render; key on content so layout is not redone endlessly.
   const collapsedKey = JSON.stringify([...opts.collapsed].sort());
   const pinnedKey = JSON.stringify(pinned);
-  const { hideAux, busSimplify, mergeDuplicates, selectedId } = opts;
+  const { hideAux, busSimplify, mergeDuplicates, selectedId, keepEdges, ...rest } = opts;
+  const keepKey = keepEdges ? [...keepEdges].sort().join(" ") : "";
   // Positions never depend on the selection: layout is built from a selection-free display graph.
+  // 흐름 단계 때문에 남긴 보조 연결(keepEdges)도 선택처럼 배치에는 넣지 않는다.
   /* eslint-disable react-hooks/exhaustive-deps */
   const layoutDisplay = useMemo(
-    () => buildDisplayGraph(state, { ...opts, selectedId: null }),
+    () => buildDisplayGraph(state, { ...rest, hideAux, busSimplify, mergeDuplicates, selectedId: null }),
     [state, hideAux, busSimplify, mergeDuplicates, collapsedKey],
   );
   const display = useMemo(
     () => buildDisplayGraph(state, opts),
-    [state, hideAux, busSimplify, mergeDuplicates, selectedId, collapsedKey],
+    [state, hideAux, busSimplify, mergeDuplicates, selectedId, collapsedKey, keepKey],
   );
   /* eslint-enable react-hooks/exhaustive-deps */
   const [base, setBase] = useState<{ layout: Layout; display: DisplayGraph; pinnedKey: string } | null>(null);

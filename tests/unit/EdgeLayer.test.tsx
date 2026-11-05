@@ -488,3 +488,13 @@ test('tag shows "망 넘음" and "API ↔"', () => {
   expect(tag("e3").querySelector(".edge-boundary-tag__pill-text")).toHaveTextContent("망 넘음");
   expect(tag("e3").querySelector(".edge-boundary-tag__detail")).toBeNull();
 });
+
+test("selecting a crossing edge itself shows its boundary tag", () => {
+  render(<EdgeLayer layout={flowLayout} edges={flowEdges} {...base} crossing={new Set(["e1", "e3"])} selectedId="e1" />);
+  expect([...document.querySelectorAll(".edge-boundary-tag")].map((t) => t.getAttribute("data-tag-edge"))).toEqual(["e1"]);
+});
+
+test("an empty short description leaves just the number", () => {
+  render(<EdgeLayer layout={flowLayout} edges={flowEdges} {...base} flowSteps={[{ displayEdgeId: "e1", n: 3, short: "" }]} />);
+  expect(document.querySelector(".edge-step-label")!.textContent).toBe("3");
+});

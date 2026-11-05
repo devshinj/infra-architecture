@@ -7,6 +7,8 @@ export interface DisplayOptions {
   mergeDuplicates: boolean;
   collapsed: Set<string>;
   selectedId: string | null;
+  /** 보조 연결 숨김 중에도 남길 원래 연결 id(흐름을 보는 동안 그 단계 연결). */
+  keepEdges?: ReadonlySet<string>;
 }
 
 export interface DisplayEdge {
@@ -29,6 +31,11 @@ export interface DisplayGraph {
   groups: Record<string, DisplayGroup>;
   nodes: Record<string, DNode>;
   edges: DisplayEdge[];
+}
+
+/** 연결 id(표시 연결 id 또는 묶인 원래 연결 id)가 그려지는 표시 연결. 없으면 undefined. */
+export function displayEdgeFor(edges: DisplayEdge[], id: string): DisplayEdge | undefined {
+  return edges.find((e) => e.id === id || e.sourceEdgeIds.includes(id));
 }
 
 const NODE_THRESHOLD = 40;
@@ -94,7 +101,7 @@ export function buildDisplayGraph(state: DiagramState, opts: DisplayOptions): Di
     if (opts.hideAux && e.edgeKind === "aux") {
       const sel = opts.selectedId;
       const touched = sel !== null && (e.from === sel || e.to === sel || from === sel || to === sel);
-      if (!touched) continue;
+      if (!touched && !opts.keepEdges?.has(e.id)) continue;
     }
     work.push({ id: e.id, from, to, edgeKind: e.edgeKind, label: e.label, payload: e.payload, direction: e.direction, ids: [e.id] });
   }

@@ -132,3 +132,11 @@ test("display edge carries payload/direction", () => {
   expect(merged.edges).toHaveLength(1);
   expect(merged.edges[0]).toMatchObject({ id: "e1", payload: "file", direction: "one_way" });
 });
+
+test("keepEdges keeps a hidden aux edge (flow step) while hideAux is on", () => {
+  const { state } = applyCommands(fx("s2"), [{ op: "add_edge", from: "was-1", to: "db-proxy", edge_kind: "aux" }]);
+  const aux = Object.values(state.edges).find((e) => e.edgeKind === "aux")!;
+  const opts = defaultDisplayOptions(state);
+  expect(buildDisplayGraph(state, opts).edges.some((e) => e.id === aux.id)).toBe(false);
+  expect(buildDisplayGraph(state, { ...opts, keepEdges: new Set([aux.id]) }).edges.some((e) => e.id === aux.id)).toBe(true);
+});

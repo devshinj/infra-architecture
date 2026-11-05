@@ -7,7 +7,7 @@ import { shortLabel } from "@/domain/flows";
 import "./edges.css";
 import type { DisplayEdge } from "./display";
 import { boundaryDotAt, labelBox, mergedLabels, stepLabels, tagSpots, type Box } from "./edgeLabels";
-import { emphasisOf, flowEmphasis } from "./emphasis";
+import { emphasisOf, type Emphasis } from "./emphasis";
 import type { Layout, Rect } from "./layout";
 import { textWidth } from "./text";
 import { startBundleMotion, type MotionKind } from "./motion";
@@ -37,6 +37,8 @@ export interface EdgeLayerProps {
   flowSteps?: { displayEdgeId: string; n: number; short: string }[];
   /** 망 경계를 넘는 표시 연결 id. 평소엔 작은 점, 고른 대상에 닿았거나 흐름 단계면 "망 넘음" 표시를 단다. */
   crossing?: ReadonlySet<string>;
+  /** 접힌 영역 상자. 단계 글자·"망 넘음" 표시가 노드 상자처럼 피한다. */
+  collapsedRects?: Rect[];
 }
 
 const MANY_NODES = 40;
@@ -99,7 +101,7 @@ function prefersReducedMotion(): boolean {
   return typeof window !== "undefined" && !!window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
 }
 
-export function EdgeLayer({ layout, edges, selectedId, selectedRect, hoverId, onHover, hoverLabels, motion, appearing, nodeCount, onSelect, flowSteps, crossing }: EdgeLayerProps) {
+export function EdgeLayer({ layout, edges, selectedId, selectedRect, hoverId, onHover, hoverLabels, motion, appearing, nodeCount, onSelect, flowSteps, crossing, collapsedRects }: EdgeLayerProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [hovered, setHovered] = useState<string | null>(null);
 
@@ -125,7 +127,8 @@ export function EdgeLayer({ layout, edges, selectedId, selectedRect, hoverId, on
 
   // 선택 기준 강조(흐림 22%)와 호버 기준 강조(흐림 45%). 호버는 선택이 없을 때만.
   // 흐름을 보는 동안은 흐름 단계가 선택 강조 자리를 쓰고(같은 겹선·빛), 호버는 쓰지 않는다.
-  const sel = useMemo(() => (steps ? flowEmphasis(edges, steps.map((s) => s.displayEdgeId)) : emphasisOf(edges, selectedId)), [edges, selectedId, steps]);
+  // 단계는 이미 표시 연결 id 로 맞춰 와 있으므로 연결 집합만 쓴다(노드 흐림은 Canvas 가 한다).
+  const sel = useMemo<Emphasis | null>(() => (steps ? { nodes: new Set(), edges: stepIds } : emphasisOf(edges, selectedId)), [edges, selectedId, steps, stepIds]);
   const hov = useMemo(() => (selectedId === null && !steps ? emphasisOf(edges, hoverId) : null), [edges, selectedId, hoverId, steps]);
   const incident = useMemo(() => sel?.edges ?? new Set<string>(), [sel]);
   const isSelectedEdge = (e: DisplayEdge) => selectedId !== null && (e.id === selectedId || e.sourceEdgeIds.includes(selectedId));
@@ -143,7 +146,7 @@ export function EdgeLayer({ layout, edges, selectedId, selectedRect, hoverId, on
   // 노드·접힌 영역을 고르면 이어진 연결의 같은 이름을 하나로 합치고, 이름끼리·노드와 겹치지 않게 둔다
   // (연결을 고르거나 호버일 때는 연결마다 그대로). 따로 그리는 것은 합친 이름과 제자리에서 비킨 하나뿐인 이름이다.
   const merged = useMemo(() => {
-    if (!sel || selectedId === null || !selectedRect || edges.some((e) => e.id === selectedId || e.sourceEdgeIds.includes(selectedId))) return [];
+    if (steps || !sel || selectedId === null || !selectedRect || edges.some((e) => e.id === selectedId || e.sourceEdgeIds.includes(selectedId))) return [];
     const incidentLaid = emphLaid.map((l) => {
       const e = byId.get(l.id)!;
       return { id: l.id, points: l.points, from: e.from, to: e.to, ...(e.label ? { label: e.label } : {}), ...(l.labelAt ? { labelAt: l.labelAt } : {}) };
@@ -156,7 +159,7 @@ export function EdgeLayer({ layout, edges, selectedId, selectedRect, hoverId, on
         return { ...p, moved: p.edgeIds.length === 1 && (!at || off(at.x, p.x) || off(at.y, p.y)) };
       })
       .filter((p) => p.edgeIds.length > 1 || p.moved);
-  }, [sel, selectedId, selectedRect, edges, emphLaid, byId, layout.edges]);
+  }, [steps, sel, selectedId, selectedRect, edges, emphLaid, byId, layout.edges]);
   const mergedIds = useMemo(() => new Set(merged.flatMap((p) => p.edgeIds)), [merged]);
 
   // 망 경계 점: 경계를 넘는 연결의 가운데(이름 자리, 없으면 선 가운데). 이름이 있으면 이름 글자 옆으로 비킨다.
@@ -171,7 +174,7 @@ export function EdgeLayer({ layout, edges, selectedId, selectedRect, hoverId, on
     return out;
   }, [crossing, laid, byId]);
   const dotBoxes = useMemo<Box[]>(() => [...dots.values()].map((p) => ({ x1: p.x - DOT_R, y1: p.y - DOT_R, x2: p.x + DOT_R, y2: p.y + DOT_R })), [dots]);
-  const nodeRects = useMemo(() => Object.values(layout.nodes), [layout.nodes]);
+  const nodeRects = useMemo(() => [...Object.values(layout.nodes), ...(collapsedRects ?? [])], [layout.nodes, collapsedRects]);
 
   // 흐름 단계 글자 "n. 짧은 설명": 서로·노드·경계 점과 겹치지 않게 제 선을 따라 비키고, 자리가 없으면 번호만.
   const stepPlaced = useMemo(() => {
@@ -179,7 +182,8 @@ export function EdgeLayer({ layout, edges, selectedId, selectedRect, hoverId, on
     const items = steps.flatMap((s) => {
       const l = laid.find((x) => x.id === s.displayEdgeId);
       if (!l) return [];
-      return [{ text: `${s.n}. ${shortLabel(s.short)}`, points: l.points, ...(l.labelAt ? { labelAt: l.labelAt } : {}), id: s.displayEdgeId }];
+      const short = shortLabel(s.short.trim());
+      return [{ text: short ? `${s.n}. ${short}` : `${s.n}`, points: l.points, ...(l.labelAt ? { labelAt: l.labelAt } : {}), id: s.displayEdgeId }];
     });
     return stepLabels(items, nodeRects, dotBoxes);
   }, [steps, laid, nodeRects, dotBoxes]);
