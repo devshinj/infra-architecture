@@ -16,7 +16,7 @@ const GROUP_KIND_LIST = GROUP_KINDS.map((k) => k.kind).join(", ");
 const EDGE_KIND_LIST = EDGE_KINDS.map((k) => k.kind).join(", ");
 
 const MISSING_FORMAT_NOTE =
-  "값을 반영하는 명령은 한 줄에 JSON 하나로, 줄바꿈 없이 쓴다. 사용자가 말한 대상마다 따로 update_node 를 낸다.";
+  "값을 반영하는 명령은 한 줄에 JSON 하나로, 줄바꿈 없이 쓴다. 사용자가 말한 대상마다 따로 update_node 를 낸다. 연결의 전달물·방향은 update_edge 의 payload·direction 으로 낸다.";
 
 export const SYSTEM_PROMPT = `너는 인프라 아키텍처 구성도를 그리는 도구의 엔진이다.
 사용자 요청을 받아 구성도 변경 명령을 JSON Lines 로만 출력한다. 한 줄에 JSON 객체 하나. 다른 글, 코드펜스, 설명 금지.

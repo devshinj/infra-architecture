@@ -92,3 +92,37 @@ test("isEmpty treats undefined, null and whitespace-only strings as empty", () =
   expect([undefined, null, "", "  	"].every(isEmpty)).toBe(true);
   expect(["a", 0, " x "].some(isEmpty)).toBe(false);
 });
+
+const crossState = (edge: Partial<import("@/domain/types").Edge> = {}): DiagramState => ({
+  ...emptyState(),
+  groups: {
+    biz: { id: "biz", groupKind: "network_zone", label: "업무망", parent: null },
+    net: { id: "net", groupKind: "network_zone", label: "인터넷망", parent: null },
+  },
+  nodes: {
+    a: { id: "a", kind: "was", label: "A", parent: "biz", attrs: {} },
+    b: { id: "b", kind: "external_api", label: "B", parent: "net", attrs: {} },
+  },
+  edges: { e: { id: "e", from: "a", to: "b", edgeKind: "request", label: "HTTPS", ...edge } },
+});
+const edgeItems = (s: DiagramState) => computeMissing(s).items.filter((i) => i.targetKind === "edge");
+
+test("crossing edge without payload/direction adds two items labelled 전달물/방향", () => {
+  const r = computeMissing(crossState());
+  expect(edgeItems(crossState()).map((i) => [i.key, i.label])).toEqual([["payload", "전달물"], ["direction", "방향"]]);
+  expect(r.count).toBe(r.items.filter((i) => !i.unknown && i.targetKind === "edge").length + r.items.filter((i) => i.targetKind === "node" && !i.unknown).length);
+  expect(requiredKeysFor(crossState(), "edge", "e")).toEqual(["label", "payload", "direction"]);
+});
+
+test("filled values clear them", () => {
+  expect(edgeItems(crossState({ payload: "api", direction: "one_way" }))).toEqual([]);
+  expect(edgeItems(crossState({ payload: "file" })).map((i) => i.key)).toEqual(["direction"]);
+});
+
+test("non-crossing edge unchanged", () => {
+  const s = crossState();
+  s.nodes.b.parent = "biz";
+  expect(edgeItems(s)).toEqual([]);
+  s.edges.e.label = "";
+  expect(edgeItems(s).map((i) => i.key)).toEqual(["label"]);
+});

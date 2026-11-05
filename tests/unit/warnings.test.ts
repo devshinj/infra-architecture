@@ -129,3 +129,24 @@ test("warningsByNode counts active only", () => {
   s.ignoredWarnings = ["spof:d"];
   expect(warningsByNode(mergeWarnings(s).active)).toEqual({ w: 1 });
 });
+
+// 업무망(WAS)·인터넷망(API)·망 밖(망연계)
+const zoned = (edges: [string, string, string, "request" | "async" | "aux"][]) =>
+  build(
+    [node("was", "was", "WAS", "biz"), node("api", "external_api", "API", "net"), node("link", "network_link", "망연계")],
+    [["biz", "network_zone", null], ["net", "network_zone", null]],
+    edges,
+  );
+
+test("network_direct warns on WAS(업무망) → API(인터넷망) direct edge", () => {
+  const s = zoned([["e", "was", "api", "request"]]);
+  const w = evaluateRules(s).find((x) => x.rule === "network_direct");
+  expect(w).toMatchObject({ id: "network_direct:e", nodeId: "api", edgeId: "e", level: "warn", text: "WAS에서 API(으)로 망을 바로 넘어가요." });
+  expect(w?.guide).toBe("서로 다른 망 사이 통신은 방화벽·망연계 솔루션·VPN 을 거치게 그리세요.");
+  expect(RULES.find((r) => r.rule === "network_direct")?.patternId).toBeTruthy();
+});
+
+test("no warning through network_link", () => {
+  const s = zoned([["a", "was", "link", "request"], ["b", "link", "api", "request"]]);
+  expect(ids(s).some((i) => i.startsWith("network_direct"))).toBe(false);
+});

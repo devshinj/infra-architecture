@@ -214,3 +214,30 @@ test("read-only view keeps current drafts untouched and does not show them", asy
   rerender(<MissingChecklist {...props} state={mkState()} />);
   expect(within(block("디비")).getByRole("textbox", { name: "RAM" })).toHaveValue("16");
 });
+
+test("payload and direction render as selects with 쉬운 말 options (API/파일, 단방향/양방향)", async () => {
+  const state: DiagramState = {
+    ...emptyState(),
+    groups: {
+      biz: { id: "biz", groupKind: "network_zone", label: "업무망", parent: null },
+      net: { id: "net", groupKind: "network_zone", label: "인터넷망", parent: null },
+    },
+    nodes: {
+      a: { id: "a", kind: "firewall", label: "방화벽", parent: "biz", attrs: { ...full, rules: "r" } },
+      b: { id: "b", kind: "firewall", label: "방화벽2", parent: "net", attrs: { ...full, rules: "r" } },
+    },
+    edges: { e: { id: "e", from: "a", to: "b", edgeKind: "request", label: "HTTPS" } },
+  };
+  const { onSave } = setup({ state });
+  await expand("방화벽 → 방화벽2");
+  const b = block("방화벽 → 방화벽2");
+  const payload = within(b).getByRole("combobox", { name: "전달물" });
+  const direction = within(b).getByRole("combobox", { name: "방향" });
+  expect(within(payload).getAllByRole("option").map((o) => o.textContent)).toEqual(["선택", "API", "파일"]);
+  expect(within(direction).getAllByRole("option").map((o) => o.textContent)).toEqual(["선택", "단방향", "양방향"]);
+  expect(within(b).queryByRole("textbox", { name: "전달물" })).not.toBeInTheDocument();
+  await userEvent.selectOptions(payload, "파일");
+  await userEvent.selectOptions(direction, "양방향");
+  await userEvent.click(within(b).getByRole("button", { name: "저장" }));
+  expect(onSave).toHaveBeenCalledWith({ targetKind: "edge", targetId: "e", values: { payload: "file", direction: "two_way" }, unknown: [] });
+});

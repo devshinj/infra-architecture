@@ -45,6 +45,12 @@ export type ChecklistExpanded = Record<string, boolean>;
 type Draft = ChecklistDraft;
 type Block = { targetKind: "node" | "edge"; targetId: string; title: string; category: Category | null; items: MissingItem[] };
 
+// 고르는 칸: 화면에는 쉬운 말, 저장 값은 enum.
+const CHOICES: Record<string, { value: string; text: string }[]> = {
+  payload: [{ value: "api", text: "API" }, { value: "file", text: "파일" }],
+  direction: [{ value: "one_way", text: "단방향" }, { value: "two_way", text: "양방향" }],
+};
+
 const EMPTY: Draft = { values: {}, unknown: {} };
 
 const without = <T,>(rec: Record<string, T>, id: string): Record<string, T> => {
@@ -217,17 +223,37 @@ export function MissingChecklist({ state, busy, readOnly = false, focusId, focus
                       <label htmlFor={id} className={styles.missingLabel}>
                         {it.label}
                       </label>
-                      <input
-                        id={id}
-                        type="text"
-                        className={styles.missingInput}
-                        value={d.values[it.key] ?? ""}
-                        disabled={unk || readOnly}
-                        onChange={(e) => {
-                          const v = e.target.value;
-                          patch(b.targetId, (x) => ({ ...x, values: { ...x.values, [it.key]: v } }));
-                        }}
-                      />
+                      {CHOICES[it.key] ? (
+                        <select
+                          id={id}
+                          className={styles.missingInput}
+                          value={d.values[it.key] ?? ""}
+                          disabled={unk || readOnly}
+                          onChange={(e) => {
+                            const v = e.target.value;
+                            patch(b.targetId, (x) => ({ ...x, values: { ...x.values, [it.key]: v } }));
+                          }}
+                        >
+                          <option value="">선택</option>
+                          {CHOICES[it.key]!.map((c) => (
+                            <option key={c.value} value={c.value}>
+                              {c.text}
+                            </option>
+                          ))}
+                        </select>
+                      ) : (
+                        <input
+                          id={id}
+                          type="text"
+                          className={styles.missingInput}
+                          value={d.values[it.key] ?? ""}
+                          disabled={unk || readOnly}
+                          onChange={(e) => {
+                            const v = e.target.value;
+                            patch(b.targetId, (x) => ({ ...x, values: { ...x.values, [it.key]: v } }));
+                          }}
+                        />
+                      )}
                       <label className={styles.missingUnknown}>
                         <input
                           type="checkbox"
