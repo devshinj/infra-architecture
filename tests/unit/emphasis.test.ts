@@ -62,3 +62,19 @@ test("collapsed zone that is an edge endpoint is lit", () => {
   const lit = litZones(parentOf, { nodes: new Set(["vpc2"]), edges: new Set() }, null);
   expect(lit.has("vpc2")).toBe(true);
 });
+
+import { flowEmphasis } from "@/canvas/emphasis";
+
+test("flowEmphasis maps merged source ids to the display edge", () => {
+  const em = flowEmphasis(edges, ["src1", "e1", "src2", "gone"]);
+  expect([...em.edges].sort()).toEqual(["bus", "e1"]);
+});
+
+test("nodes are step endpoints", () => {
+  const em = flowEmphasis(edges, ["e1", "e2"]);
+  expect([...em.nodes].sort()).toEqual(["a", "b", "c"]);
+  expect(em.nodes.has("d")).toBe(false);
+  // 단계가 하나도 맞지 않으면 빈 강조(모두 흐림)다.
+  const none = flowEmphasis(edges, ["gone"]);
+  expect(none.nodes.size + none.edges.size).toBe(0);
+});

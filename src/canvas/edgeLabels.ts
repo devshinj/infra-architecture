@@ -265,3 +265,92 @@ export function mergedLabels(selectedId: string, selectedRect: Rect, incident: I
   // 내보내는 좌표만 0.01 로 반올림한다.
   return [...placed.entries()].sort((a, b) => a[0] - b[0]).map(([, p]) => ({ ...p, x: round(p.x), y: round(p.y) }));
 }
+
+/** 선을 따라 놓는 글자 하나(흐름 단계 글자·망 경계 표시). width 가 있으면 글자 대신 그 폭의 가운데 맞춤 상자로 잰다. */
+interface AlongItem { text: string; points: Pt[]; labelAt?: Pt; id?: string; width?: number; height?: number }
+
+const ringOf = (r: Rect): Box => ({ x1: r.x - NODE_RING, y1: r.y - NODE_RING, x2: r.x + r.width + NODE_RING, y2: r.y + r.height + NODE_RING });
+
+function boxOf(item: AlongItem, text: string, c: Pt): Box {
+  if (item.width === undefined) return labelBox({ text, x: c.x, y: c.y, anchor: "middle" });
+  const h = item.height ?? LABEL_LINE;
+  return { x1: c.x - item.width / 2, y1: c.y - h / 2, x2: c.x + item.width / 2, y2: c.y + h / 2 };
+}
+
+/** 자리 후보: labelAt(없으면 선 가운데)에서 시작해 제 선을 따라 가까운 순서로. */
+function alongCandidates(points: Pt[], labelAt?: Pt): Pt[] {
+  const rs = runs(points);
+  if (rs.length === 0) return labelAt ? [labelAt] : points.slice(0, 1);
+  const total = totalLength(rs);
+  const center = labelAt ? arcOf(rs, labelAt) : total / 2;
+  const along = slides(center, 0, total).map((s) => pointAt(rs, s));
+  return labelAt ? [labelAt, ...along.slice(1)] : along;
+}
+
+/**
+ * 차례대로 하나씩, 막힌 상자(노드 고리·점·앞서 놓은 글자)와 ROW_GAP 보다 가까이 두지 않는 첫 후보에 둔다.
+ * 긴 글자가 들어갈 곳이 없으면 shorter 가 준 짧은 글자로 다시 찾고, 그래도 없으면 첫 후보에 짧은 글자를 둔다.
+ */
+function placeAlong(items: AlongItem[], blocked: Box[], shorter: (text: string) => string | null): PlacedLabel[] {
+  const taken = [...blocked];
+  const out: PlacedLabel[] = [];
+  for (const item of items) {
+    if (item.points.length < 2 && !item.labelAt) continue;
+    const cands = alongCandidates(item.points, item.labelAt);
+    if (cands.length === 0) continue;
+    const short = shorter(item.text);
+    const texts = short !== null && short !== item.text ? [item.text, short] : [item.text];
+    let chosen: { text: string; at: Pt } | null = null;
+    for (const text of texts) {
+      const at = cands.find((c) => {
+        const b = boxOf(item, text, c);
+        return !taken.some((o) => tooClose(b, o));
+      });
+      if (at) {
+        chosen = { text, at };
+        break;
+      }
+    }
+    chosen ??= { text: texts[texts.length - 1], at: cands[0] };
+    taken.push(boxOf(item, chosen.text, chosen.at));
+    out.push({ text: chosen.text, x: round(chosen.at.x), y: round(chosen.at.y), anchor: "middle", edgeIds: item.id ? [item.id] : [] });
+  }
+  return out;
+}
+
+/** "3. 결과 저장" → "3". 번호 꼴이 아니면 null. */
+const stepNumberOnly = (text: string): string | null => /^(\d+)\. /.exec(text)?.[1] ?? null;
+
+/**
+ * 흐름 단계 글자("n. 짧은 설명") 배치. 입력 차례 그대로 하나씩, 제 선을 따라 비켜 서로와, avoid 노드 상자(+선택 고리)와,
+ * obstacles(망 경계 점 등)와 ROW_GAP 이상 떨어뜨린다. 들어갈 곳이 없으면 번호만 남긴다. 결과는 입력과 같은 차례다.
+ */
+export function stepLabels(steps: { text: string; points: Pt[]; labelAt?: Pt; id?: string }[], avoid: Rect[], obstacles: Box[] = []): PlacedLabel[] {
+  return placeAlong(steps, [...avoid.map(ringOf), ...obstacles], stepNumberOnly);
+}
+
+/**
+ * 망 경계 표시(알약+전달물·방향) 자리. 폭·높이는 그리는 쪽이 준다. 노드 상자·obstacles·이미 놓은 글자(placed)를 피해 제 선을 따라 둔다.
+ * 들어갈 곳이 없으면 첫 후보(연결 가운데)에 둔다. 결과는 입력과 같은 차례이고 text 는 그대로 돌려준다.
+ */
+export function tagSpots(
+  tags: { text: string; width: number; height: number; points: Pt[]; labelAt?: Pt; id?: string }[],
+  avoid: Rect[],
+  placed: PlacedLabel[],
+  obstacles: Box[] = [],
+): PlacedLabel[] {
+  return placeAlong(tags, [...avoid.map(ringOf), ...obstacles, ...placed.map(labelBox)], () => null);
+}
+
+/**
+ * 망 경계 점 자리: 연결 가운데(labelAt, 없으면 선 가운데). 그 자리에 연결 이름이 있으면 이름 상자와 ROW_GAP 떨어질 때까지 제 선을 따라 비킨다
+ * (점이 이름 글자를 가리지 않게. 이름은 내보낸 그림에 늘 들어간다). 비킬 곳이 없으면 가운데에 둔다.
+ */
+export function boundaryDotAt(points: Pt[], radius: number, labelAt?: Pt, label?: string): Pt | null {
+  const cands = alongCandidates(points, labelAt);
+  if (cands.length === 0) return null;
+  const blocked = label && labelAt ? [labelBox({ text: label, x: labelAt.x, y: labelAt.y, anchor: "middle" })] : [];
+  const item: AlongItem = { text: "", points, width: 2 * radius, height: 2 * radius };
+  const at = cands.find((c) => !blocked.some((o) => tooClose(boxOf(item, "", c), o))) ?? cands[0];
+  return { x: round(at.x), y: round(at.y) };
+}

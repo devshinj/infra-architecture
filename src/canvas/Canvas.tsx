@@ -2,6 +2,7 @@ import { applyNodeChanges, Background, ReactFlow, ReactFlowProvider, useReactFlo
 import "@xyflow/react/dist/style.css";
 import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
 
+import { crossesBoundary } from "@/domain/boundary";
 import { categoryOf } from "@/domain/catalog";
 import { computeMissing } from "@/domain/missing";
 import type { DiagramState } from "@/domain/types";
@@ -10,7 +11,7 @@ import { mergeWarnings, warningsByNode } from "@/domain/warnings";
 import { canvasAriaLabels, zoneDescription } from "./ariaLabels";
 import "./canvas.css";
 import { EdgeLayerPortal } from "./EdgeLayer";
-import { emphasisOf, litZones } from "./emphasis";
+import { emphasisOf, flowEmphasis, litZones } from "./emphasis";
 import { ExportMenu } from "./ExportMenu";
 import { exportDiagramImage, exportFileName, type ExportBackground, type ExportFormat } from "./exportImage";
 import type { GroupBoxData } from "./GroupBox";
@@ -83,6 +84,11 @@ export interface CanvasProps {
   /** 이미지로 내보낼 때 파일 이름(`<프로젝트>-<구성도>.png`)에 쓴다. */
   projectName?: string;
   diagramName?: string;
+  /**
+   * 흐름을 보는 중이면 그 단계들(edge 는 원래 연결 id, n 은 단계 번호, short 는 캔버스용 짧은 설명).
+   * 이때 options.selectedId 는 null 이다(부모가 보장한다). 단계가 지나는 연결·노드만 밝게 두고 나머지를 흐린다.
+   */
+  flow?: { steps: { edge: string; n: number; short: string }[] } | null;
 }
 
 export const FAR_ZOOM = 0.6;
@@ -298,7 +304,7 @@ interface FlowProps extends CanvasProps {
   updated: Set<string>;
 }
 
-function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onPinnedChange, motion, layout, settled, layoutFailed, fitRequest, fitAllRequest, display, appearing, updated, diffMarks, fitKey, streaming = false, cameraInsets = NO_INSETS, focusRequest, onMention, onAskNode, askDisabled, askReason, onBadgeClick, onWarnBadgeClick, onPlaced }: FlowProps) {
+function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onPinnedChange, motion, layout, settled, layoutFailed, fitRequest, fitAllRequest, display, appearing, updated, diffMarks, fitKey, streaming = false, cameraInsets = NO_INSETS, focusRequest, onMention, onAskNode, askDisabled, askReason, onBadgeClick, onWarnBadgeClick, onPlaced, flow = null }: FlowProps) {
   const far = useStore((s) => s.transform[2] < FAR_ZOOM);
   const selected = drawnId(state, options.collapsed, options.selectedId);
   const missingByNode = useMemo(() => computeMissing(state).byNode, [state]);
@@ -309,7 +315,8 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
   const edgeHover = useRef<string | null>(null);
   const known = useMemo(() => new Set([...Object.keys(display.nodes), ...Object.keys(display.groups)]), [display]);
   // 선택이 있거나 대상이 사라졌으면 호버는 없는 것으로 친다(노드가 다시 만들어지지 않게 선택 중엔 늘 null).
-  const hoverId = selected === null && emphasisOf(display.edges, hover.hoverId, known) !== null ? hover.hoverId : null;
+  // 흐름을 보는 동안에도 호버는 쓰지 않는다(흐름 강조가 선택 자리를 쓴다).
+  const hoverId = selected === null && !flow && emphasisOf(display.edges, hover.hoverId, known) !== null ? hover.hoverId : null;
   // 고른 노드(또는 영역)의 상자: 연결 이름을 합칠 때 그 변 옆에 둔다.
   const selectedRect: Rect | undefined = selected === null ? undefined : (layout.nodes[selected] ?? layout.groups[selected]);
   // 보드가 바뀌면(fitKey) 호버를 푼다(사라진 노드는 mouseleave 를 보내지 않는다).
@@ -342,8 +349,27 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
   const descId = useId();
   const zoneDesc = { open: `${descId}-zone`, collapsed: `${descId}-zone-collapsed` };
 
-  // 선택이 있으면 선택 기준으로만 흐리고, 호버는 선택이 없을 때만 쓴다.
-  const sel = useMemo(() => emphasisOf(display.edges, selected), [display, selected]);
+  // 선택이 있으면 선택 기준으로만 흐리고, 호버는 선택이 없을 때만 쓴다. 흐름을 보는 중이면 흐름 단계가 선택 자리를 쓴다.
+  const sel = useMemo(() => (flow ? flowEmphasis(display.edges, flow.steps.map((s) => s.edge)) : emphasisOf(display.edges, selected)), [display, selected, flow]);
+  // 흐름 단계를 표시 연결 id 로 맞춘다(묶이거나 접힌 영역으로 이어진 연결도 원래 연결 id 로 찾는다). 없는 연결은 뺀다.
+  const flowSteps = useMemo(() => {
+    if (!flow) return undefined;
+    return flow.steps.flatMap((s) => {
+      const hit = display.edges.find((e) => e.id === s.edge || e.sourceEdgeIds.includes(s.edge));
+      return hit ? [{ displayEdgeId: hit.id, n: s.n, short: s.short }] : [];
+    });
+  }, [flow, display]);
+  // 망 경계를 넘는 표시 연결: 묶인 원래 연결 가운데 하나라도 넘으면 넘는 것으로 본다.
+  const crossing = useMemo(() => {
+    const out = new Set<string>();
+    for (const e of display.edges) {
+      if (e.sourceEdgeIds.some((id) => {
+        const orig = state.edges[id];
+        return !!orig && crossesBoundary(state, orig);
+      })) out.add(e.id);
+    }
+    return out;
+  }, [display, state]);
   // 고르면 이어진 노드가 없는 영역도 흐린다(호버는 영역을 흐리지 않는다: 선택보다 약하게). 영역 상자와 이름 알약이 함께 쓴다.
   const lit = useMemo(() => {
     const parentOf = (id: string): string | null => (display.nodes[id] ?? display.groups[id])?.parent ?? null;
@@ -702,6 +728,8 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
           appearing={appearing}
           nodeCount={Object.keys(state.nodes).length}
           onSelect={onSelect}
+          {...(flowSteps ? { flowSteps } : {})}
+          crossing={crossing}
         />
         {/* 영역 이름표는 연결선 층 위(stacking.ts): 영역 머리를 지나는 선이 이름 뒤로 지나간다. 누르면 영역 머리를 누른 것과 같다. */}
         <ZoneNameLayerPortal

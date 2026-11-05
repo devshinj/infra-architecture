@@ -801,3 +801,18 @@ test("with a node selected, a zone with no linked node has a dimmed name pill", 
   expect(pillEl(container, "db-pair")).toHaveClass("group--dimmed");
   for (const id of ["was-pair", "private-zone", "idc-main"]) expect(pillEl(container, id)!.classList.contains("group--dimmed"), id).toBe(false);
 });
+
+test("flow prop dims zones without step nodes and nodes outside the flow", async () => {
+  const props = baseProps();
+  const flow = { steps: [{ edge: "e-client-web-fw-external", n: 1, short: "접속" }, { edge: "e-fw-external-web-pair", n: 2, short: "웹으로 넘김" }] };
+  const { container } = render(<div style={{ width: 800, height: 600 }}><Canvas {...props} flow={flow} /></div>);
+  await waitFor(() => expect(container.querySelector(".group--dimmed")).not.toBeNull());
+  // 흐름이 지나는 노드는 흐리지 않고, 그 밖의 노드는 흐린다.
+  for (const id of ["client-web", "fw-external", "web-1"]) expect(nodeEl(container, id)!.querySelector(".node--dimmed"), id).toBeNull();
+  for (const id of ["was-1", "db-primary"]) expect(nodeEl(container, id)!.querySelector(".node--dimmed"), id).not.toBeNull();
+  // 단계 노드가 든 영역과 조상은 밝고, 단계 노드가 없는 영역은 흐리다.
+  for (const id of ["dmz-zone", "web-pair", "idc-main"]) expect(groupEl(container, id)!.classList.contains("group--dimmed"), id).toBe(false);
+  for (const id of ["db-pair", "was-pair"]) expect(groupEl(container, id)!.classList.contains("group--dimmed"), id).toBe(true);
+  // 단계 글자가 그려진다.
+  expect([...container.querySelectorAll(".edge-step-label")].map((t) => t.textContent)).toEqual(["1. 접속", "2. 웹으로 넘김"]);
+});

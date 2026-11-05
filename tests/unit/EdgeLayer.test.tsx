@@ -407,3 +407,84 @@ test("a single label at a labelAt with more than two decimals stays in its edge"
   expect(t).toHaveTextContent("SQL");
   expect(t.getAttribute("x")).toBe("350.12345");
 });
+
+// 흐름 단계·망 경계: 세 개의 긴 세로 연결(a→b, b→c, d→e).
+const flowLayout = lay([
+  { id: "e1", points: [{ x: 40, y: 10 }, { x: 40, y: 210 }], labelAt: { x: 40, y: 110 } },
+  { id: "e2", points: [{ x: 160, y: 10 }, { x: 160, y: 210 }], labelAt: { x: 160, y: 110 } },
+  { id: "e3", points: [{ x: 280, y: 10 }, { x: 280, y: 210 }], labelAt: { x: 280, y: 110 } },
+]);
+const flowEdges = [de("e1", "a", "b", "request", "HTTPS"), de("e2", "b", "c"), de("e3", "d", "e", "request", "SQL")];
+
+test("flowSteps render edge-step-label per display edge with smallest n", () => {
+  render(
+    <EdgeLayer
+      layout={flowLayout}
+      edges={flowEdges}
+      {...base}
+      flowSteps={[
+        { displayEdgeId: "e1", n: 3, short: "응답 받음" },
+        { displayEdgeId: "e1", n: 1, short: "요청 보냄" },
+        { displayEdgeId: "e2", n: 2, short: "저장" },
+        { displayEdgeId: "gone", n: 4, short: "없음" },
+      ]}
+    />,
+  );
+  const labels = [...document.querySelectorAll(".edge-step-label")];
+  expect(labels.map((l) => l.textContent)).toEqual(["1. 요청 보냄", "2. 저장"]);
+  expect(labels.map((l) => l.getAttribute("data-step-edge"))).toEqual(["e1", "e2"]);
+});
+
+test("step edges overlaid, others dimmed", () => {
+  render(<EdgeLayer layout={flowLayout} edges={flowEdges} {...base} flowSteps={[{ displayEdgeId: "e1", n: 1, short: "요청" }, { displayEdgeId: "e2", n: 2, short: "저장" }]} />);
+  const emph = document.querySelector(".edge-emph");
+  expect(emph).toHaveAttribute("data-mode", "select");
+  expect([...emph!.querySelectorAll("[data-emph-edge]")].map((g) => g.getAttribute("data-emph-edge"))).toEqual(["e1", "e2"]);
+  expect(emph!.querySelectorAll(".edge-emph__glow")).toHaveLength(2);
+  expect(document.querySelector('[data-edge-id="e1"]')).not.toHaveClass("edge--dim");
+  expect(document.querySelector('[data-edge-id="e2"]')).not.toHaveClass("edge--dim");
+  expect(document.querySelector('[data-edge-id="e3"]')).toHaveClass("edge--dim");
+});
+
+test("normal labels hidden on step edges", () => {
+  render(<EdgeLayer layout={flowLayout} edges={flowEdges} {...base} hoverLabels={false} flowSteps={[{ displayEdgeId: "e1", n: 1, short: "요청" }]} />);
+  expect(document.querySelector('[data-edge-id="e1"] .edge-label')).toBeNull();
+  expect(document.querySelector(".edge-step-label")).toHaveTextContent("1. 요청");
+  // 흐름 밖 연결 이름은 고른 때처럼 흐린 선에 남지 않는다.
+  expect(document.querySelector('[data-edge-id="e3"] .edge-label')).toBeNull();
+});
+
+test("crossing dot rendered without selection; tag only when selected or in flow", () => {
+  const crossing = new Set(["e1"]);
+  const { rerender } = render(<EdgeLayer layout={flowLayout} edges={flowEdges} {...base} crossing={crossing} />);
+  const dots = document.querySelectorAll(".edge-boundary-dot");
+  expect(dots).toHaveLength(1);
+  expect(dots[0].closest("[data-edge-id]")).toHaveAttribute("data-edge-id", "e1");
+  expect(dots[0]).toHaveAttribute("r", "3");
+  expect(document.querySelector(".edge-boundary-tag")).toBeNull();
+  // 연결과 닿지 않은 노드를 고르면 표시는 없다.
+  rerender(<EdgeLayer layout={flowLayout} edges={flowEdges} {...base} crossing={crossing} selectedId="d" />);
+  expect(document.querySelector(".edge-boundary-tag")).toBeNull();
+  // 연결의 끝 노드를 고르면 보인다.
+  rerender(<EdgeLayer layout={flowLayout} edges={flowEdges} {...base} crossing={crossing} selectedId="a" />);
+  expect(document.querySelectorAll(".edge-boundary-tag")).toHaveLength(1);
+  expect(document.querySelectorAll(".edge-boundary-dot")).toHaveLength(1);
+  // 흐름 단계 연결이어도 보인다.
+  rerender(<EdgeLayer layout={flowLayout} edges={flowEdges} {...base} crossing={crossing} flowSteps={[{ displayEdgeId: "e1", n: 1, short: "요청" }]} />);
+  expect(document.querySelectorAll(".edge-boundary-tag")).toHaveLength(1);
+  // 흐름에 들지 않은 경계 연결은 점만.
+  rerender(<EdgeLayer layout={flowLayout} edges={flowEdges} {...base} crossing={crossing} flowSteps={[{ displayEdgeId: "e2", n: 1, short: "요청" }]} />);
+  expect(document.querySelector(".edge-boundary-tag")).toBeNull();
+});
+
+test('tag shows "망 넘음" and "API ↔"', () => {
+  const edges = [{ ...de("e1", "a", "b"), payload: "api" as const, direction: "two_way" as const }, { ...de("e2", "b", "c"), payload: "file" as const, direction: "one_way" as const }, de("e3", "d", "e")];
+  render(<EdgeLayer layout={flowLayout} edges={edges} {...base} crossing={new Set(["e1", "e2", "e3"])} flowSteps={[1, 2, 3].map((n) => ({ displayEdgeId: `e${n}`, n, short: "단계" }))} />);
+  const tag = (id: string) => document.querySelector(`.edge-boundary-tag[data-tag-edge="${id}"]`)!;
+  expect(tag("e1").querySelector(".edge-boundary-tag__pill-text")).toHaveTextContent("망 넘음");
+  expect(tag("e1").querySelector(".edge-boundary-tag__detail")).toHaveTextContent("API ↔");
+  expect(tag("e2").querySelector(".edge-boundary-tag__detail")).toHaveTextContent("파일 →");
+  // 전달물·방향이 없으면 알약만.
+  expect(tag("e3").querySelector(".edge-boundary-tag__pill-text")).toHaveTextContent("망 넘음");
+  expect(tag("e3").querySelector(".edge-boundary-tag__detail")).toBeNull();
+});

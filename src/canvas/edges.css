@@ -66,3 +66,23 @@
 }
 
 .edge--selected .edge-label { fill: var(--text-primary); }
+
+/* 흐름 단계 글자 "n. 짧은 설명": 연결 이름과 같은 크기, 더 또렷한 색. 화면 장치라 내보내기에서 걷는다. */
+.edge-step-label {
+  font-size: 11px;
+  fill: var(--text-primary);
+  text-anchor: middle;
+  dominant-baseline: central;
+  stroke: var(--bg-canvas);
+  stroke-width: 3px;
+  paint-order: stroke;
+  pointer-events: none;
+}
+
+/* 망 경계: 평소엔 작은 금색 점(내보낸 그림에도 남는다), 자세히 볼 때는 "망 넘음" 알약 + 전달물·방향. */
+.edge-boundary-dot { fill: var(--boundary-mark); stroke: var(--bg-canvas); stroke-width: 1; pointer-events: none; }
+.edge-boundary-tag { pointer-events: none; }
+.edge-boundary-tag__pill { fill: color-mix(in srgb, var(--boundary-mark) 22%, var(--bg-canvas)); stroke: var(--boundary-mark); stroke-width: 1; }
+.edge-boundary-tag__pill-text, .edge-boundary-tag__detail { font-size: 11px; dominant-baseline: central; }
+.edge-boundary-tag__pill-text { fill: var(--text-primary); text-anchor: middle; }
+.edge-boundary-tag__detail { fill: var(--boundary-mark); text-anchor: start; stroke: var(--bg-canvas); stroke-width: 3px; paint-order: stroke; }
