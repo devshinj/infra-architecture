@@ -33,6 +33,23 @@ function s1Lines(): string[] {
 
 export const S1_NODE_COUNT = Object.keys(s1.state.nodes).length;
 
+/** 흐름 E2E: s1 의 실제 연결 id 로 첫 연결부터 이어지는 길(최대 4단계)을 흐름 하나로 만든다. */
+export const S1_FLOW_ID = "order";
+function s1FlowLines(): string[] {
+  const edges = Object.values(convertSpikeScenario(s1.state).edges);
+  const steps: { edge: string; from: string; short: string; text: string }[] = [];
+  let e: (typeof edges)[number] | undefined = edges[0];
+  while (e && steps.length < 4) {
+    const cur: (typeof edges)[number] = e;
+    steps.push({ edge: cur.id, from: cur.from, short: `${steps.length + 1}번 요청`, text: `${cur.from} 에서 ${cur.to} 로 요청을 보낸다` });
+    e = edges.find((x) => x.from === cur.to && !steps.some((s) => s.edge === x.id));
+  }
+  return [
+    JSON.stringify({ op: "say", text: "주문 흐름을 그렸어요." }),
+    JSON.stringify({ op: "add_flow", id: S1_FLOW_ID, name: "주문하기", origin: "user", result: "주문 결과를 돌려받는다", steps }),
+  ];
+}
+
 type Msg = { role: string; content: string };
 
 /**
@@ -102,6 +119,8 @@ async function linesFor(messages: Msg[]): Promise<{ lines: string[]; delay: numb
       ],
     };
   }
+  // 흐름: s1(쇼핑몰) 구성 위에 흐름 하나. 다른 키워드 분기 뒤, 쇼핑몰 앞에 둬 다른 분기를 가리지 않는다.
+  if (request.includes("흐름")) return { lines: s1FlowLines(), delay };
   if (request.includes("쇼핑몰")) return { lines: s1Lines(), delay };
   return { lines: [JSON.stringify({ op: "say", text: "네, 알겠습니다." })], delay };
 }

@@ -25,6 +25,10 @@ vi.mock("@/server/chat/messages", () => ({
     return { id: `m${store.created.length}`, createdAt: new Date() };
   }),
 }));
+vi.mock("@/server/flows", () => ({
+  listFlows: vi.fn(async () => []),
+  applyFlowOps: vi.fn(async (_d: string, _s: unknown, ops: unknown[]) => ({ saved: ops.length, rejected: [] })),
+}));
 vi.mock("@/server/chat/warnings", () => ({
   checkWarnings: vi.fn(async () => ({ warnings: [], fresh: [] })),
 }));
@@ -187,4 +191,24 @@ test("a cut-off call that applied nothing is not continued again", async () => {
   expect(events.filter((e) => e.t === "cmd")).toHaveLength(1);
   expect(store.versions).toHaveLength(1);
   expect(events.at(-1)).toMatchObject({ t: "done", status: "complete", applied: 1 });
+});
+
+test("flow commands gathered across a continuation are all saved at the end of the turn", async () => {
+  const { applyFlowOps } = await import("@/server/flows");
+  const mocked = vi.mocked(applyFlowOps);
+  mocked.mockClear();
+  const flow = (id: string, edgeId: string, from: string) =>
+    j({ op: "add_flow", id, name: id, origin: "user", steps: [{ edge: edgeId, from, short: "요청", text: "보낸다" }] });
+  const q = fakeQwen([
+    { text: `${node("a")}\n${node("b")}\n${edge("a", "b")}\n${flow("f-1", "e-a-b", "a")}\n{"op":"add_node","id":"c`, finish: "length" },
+    { text: `${node("c")}\n${edge("b", "c")}\n${flow("f-2", "e-b-c", "b")}\n`, finish: "stop" },
+  ]);
+  const events = await turn(q);
+  expect(mocked).toHaveBeenCalledTimes(1);
+  const [, state, ops, source] = mocked.mock.calls[0]!;
+  expect(ops.map((o) => o.id)).toEqual(["f-1", "f-2"]);
+  expect(source).toBe("ai");
+  expect(Object.keys((state as { edges: object }).edges)).toEqual(["e-a-b", "e-b-c"]);
+  expect(store.versions).toHaveLength(1);
+  expect(events.at(-1)).toMatchObject({ t: "done", applied: 7, changed: 5, flows: 2, version: 1 });
 });

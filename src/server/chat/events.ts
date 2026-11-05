@@ -25,10 +25,12 @@ export const NODE_GONE_MESSAGE = "이 노드는 지금 구성도에 없어서 �
 
 export interface MessageMeta {
   intent?: string;
-  /** 적용한 명령 수(가정 포함). */
+  /** 적용한 명령 수(가정·흐름 명령 포함). */
   applied?: number;
   /** 그중 구성을 바꾼 명령 수(isStructural). 없으면(옛 메시지) applied 로 본다. */
   changed?: number;
+  /** 흐름 저장소에 저장된 흐름 명령 수. 있을 때만. */
+  flows?: number;
   skipped?: number;
   version?: number | null;
   status?: "complete" | "aborted" | "error";
@@ -73,6 +75,8 @@ export type ChatEvent =
       applied: number;
       /** 구성을 바꾼 명령 수(가정 제외). 요약의 "바꾼 곳". */
       changed: number;
+      /** 흐름 저장소에 저장된 흐름 명령 수(있을 때만). 요약의 "흐름 N개 바꿨어요". */
+      flows?: number;
       skipped: number;
       missing: number;
       nodes: number;

@@ -197,7 +197,7 @@ describe("missing block", () => {
 
   test("system prompt has the fill-only rule", () => {
     expect(SYSTEM_PROMPT).toContain(
-      "- 사용자가 채워야 할 정보의 값을 알려 주면 update_node(attrs) 또는 update_edge(label) 로 그 값만 반영한다. 노드·연결을 새로 만들지 않는다.",
+      "- 사용자가 채워야 할 정보의 값을 알려 주면 update_node(attrs) 또는 update_edge(label·payload·direction) 로 그 값만 반영한다. 노드·연결을 새로 만들지 않는다.",
     );
   });
 });
@@ -336,5 +336,40 @@ describe("summarizeState payload/direction", () => {
     expect(SYSTEM_PROMPT).toContain('"payload":"api","direction":"two_way"');
     expect(SYSTEM_PROMPT).toContain("network_zone");
     expect(SYSTEM_PROMPT).toContain("network_link");
+  });
+});
+
+describe("flow commands in the prompt", () => {
+  test("SYSTEM_PROMPT documents add_flow/update_flow/remove_flow", () => {
+    const lines = SYSTEM_PROMPT.split("\n");
+    for (const op of ["add_flow", "update_flow", "remove_flow"]) {
+      const line = lines.find((l) => l.startsWith(`{"op":"${op}"`));
+      expect(line).toBeDefined();
+      if (op !== "remove_flow") expect(parseCommand(JSON.parse(line!)).ok).toBe(true);
+    }
+    expect(SYSTEM_PROMPT).toContain(
+      "흐름을 바꾸라는 요청이면 구성 명령과 함께 흐름 명령을 쓴다. 단계 edge 는 현재 구성(또는 이번에 만든) 연결 id 만 쓴다.",
+    );
+    expect(SYSTEM_PROMPT).toContain("요청에 흐름 이야기가 없으면 흐름 명령을 쓰지 않는다");
+  });
+  test("buildMessages includes 흐름 block with existing flow ids", () => {
+    const flows = [
+      {
+        id: "order",
+        name: "주문",
+        origin: "user" as const,
+        steps: [
+          { edge: "e-was-1-db-1", from: "was-1", short: "저장", text: "주문을 저장한다" },
+          { edge: "e-x", from: "db-1", short: "응답", text: "결과" },
+        ],
+      },
+      { id: "batch", name: "정산\n배치", origin: "system" as const, steps: [{ edge: "e-was-1-db-1", from: "was-1", short: "읽기", text: "읽는다" }] },
+    ];
+    const user = buildMessages({ intent: null, text: "흐름 고쳐줘", state: sample(), mentions: [], history: [], flows }).at(-1)!.content;
+    // 사용자 글(흐름 이름)은 JSON 으로 감싸 줄바꿈이 새 줄을 만들지 못하게 한다.
+    expect(user).toContain('흐름:\n흐름 order [user] "주문": e-was-1-db-1 > e-x\n흐름 batch [system] "정산\\n배치": e-was-1-db-1\n\n참조 노드:');
+    expect(user.indexOf("현재 구성:")).toBeLessThan(user.indexOf("흐름:\n"));
+    const none = buildMessages({ intent: null, text: "x", state: sample(), mentions: [], history: [] }).at(-1)!.content;
+    expect(none).not.toContain("흐름:\n");
   });
 });

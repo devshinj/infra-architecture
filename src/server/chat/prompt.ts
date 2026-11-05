@@ -1,5 +1,6 @@
 import { EDGE_KINDS, GROUP_KINDS, NODE_KINDS } from "@/domain/catalog";
 import { LIMITS, type NodeExplanation } from "@/domain/explain";
+import type { Flow } from "@/domain/flows";
 import type { MissingItem } from "@/domain/missing";
 import { patternPromptBlock } from "@/domain/patterns";
 import type { DiagramState } from "@/domain/types";
@@ -34,6 +35,9 @@ export const SYSTEM_PROMPT = `너는 인프라 아키텍처 구성도를 그리�
 {"op":"remove_node","id":"기존 노드 id"}
 {"op":"remove_edge","id":"기존 연결 id"}
 {"op":"remove_group","id":"기존 영역 id"}
+{"op":"add_flow","id":"login","name":"로그인","origin":"user","summary":"사용자가 로그인한다","result":"로그인 결과를 화면에 돌려준다","steps":[{"edge":"e-client-web-was-1","from":"client-web","short":"로그인 요청","text":"아이디와 비밀번호를 WAS 로 보낸다"},{"edge":"e-was-1-db-1","from":"was-1","short":"회원 조회","text":"DB 에서 회원 정보를 확인한다"}]}
+{"op":"update_flow","id":"login","name":"회원 로그인","result":"확인 결과를 돌려준다"}
+{"op":"remove_flow","id":"기존 흐름 id"}
 
 KIND 허용값: ${KIND_LIST}
 GROUP_KIND 허용값: ${GROUP_KIND_LIST}
@@ -64,7 +68,10 @@ EDGE_KIND 허용값: ${EDGE_KIND_LIST}
 - CDN, WAF, DNS 처럼 VPC 밖 전역 서비스는 VPC 밖(리전 그룹 또는 최상위)에 둔다.
 - 사용자(client_*)에서 시작하는 진입 연결을 반드시 그린다.
 - warn 과 report_missing 명령은 내지 않는다. 위험 진단은 다른 단계가 맡는다.
-- 사용자가 채워야 할 정보의 값을 알려 주면 update_node(attrs) 또는 update_edge(label) 로 그 값만 반영한다. 노드·연결을 새로 만들지 않는다.
+- 사용자가 채워야 할 정보의 값을 알려 주면 update_node(attrs) 또는 update_edge(label·payload·direction) 로 그 값만 반영한다. 노드·연결을 새로 만들지 않는다.
+- 흐름은 요청 하나가 구성도의 연결을 차례로 지나는 길이다. 흐름을 바꾸라는 요청이면 구성 명령과 함께 흐름 명령을 쓴다. 단계 edge 는 현재 구성(또는 이번에 만든) 연결 id 만 쓴다.
+- 요청에 흐름 이야기가 없으면 흐름 명령을 쓰지 않는다.
+- 흐름 단계는 요청이 가는 방향으로만 쓴다. from 은 그 단계를 시작하는 노드 id 다. 응답은 단계로 쓰지 않고 result 한 줄로 쓴다. short 는 12자 이내, text 는 120자 이내, 단계는 20개 이내로 쓴다. origin 은 사용자가 시작하면 user, 배치·스케줄처럼 시스템이 시작하면 system 이다. 흐름 id 는 위 id 규칙을 따르고, 기존 흐름을 고치거나 지울 때는 "흐름:" 목록의 id 를 그대로 쓴다.
 - 사용자가 질문만 하면 구성은 건드리지 않는다. 질문이면 명령 없이 {"op":"say","text":"…"} 한두 문장으로만 답한다.
 
 ${patternPromptBlock()}`;
@@ -123,6 +130,11 @@ export function summarizeState(state: DiagramState): string {
   return lines.join("\n");
 }
 
+/** 흐름 한 개를 한 줄로: 지나는 연결 id 를 차례로. 이름(사용자 글)은 JSON 으로 감싸 줄바꿈이 새 줄을 만들지 못하게 한다. */
+export function summarizeFlows(flows: Flow[]): string {
+  return flows.map((f) => `흐름 ${f.id} [${f.origin}] ${JSON.stringify(f.name)}: ${f.steps.map((s) => s.edge).join(" > ")}`).join("\n");
+}
+
 export interface Mention {
   id: string;
   label: string;
@@ -147,7 +159,7 @@ export function parseMentions(text: string, state: DiagramState): { clean: strin
 export const CONTINUE_NOTE = `이어 쓰기: 이 요청에 대한 앞 응답이 출력 길이 한도에 닿아 중간에 끊겼다. 위 "현재 구성"은 이 요청을 지금까지 반영한 결과다.
 - 끊긴 곳부터 이어서 남은 명령만 낸다. 처음부터 다시 하지 않는다.
 - 현재 구성에 이미 있는 그룹·노드·연결 id 는 다시 만들지 않고, 지우거나 옮기지도 않는다(이미 반영된 것이다).
-- 남은 그룹·노드를 마저 낸 뒤 연결을 낸다. 이미 낸 say·set_assumption 은 반복하지 않는다.`;
+- 남은 그룹·노드를 마저 낸 뒤 연결을 낸다. 이미 낸 say·set_assumption·흐름 명령은 반복하지 않는다.`;
 
 export function buildMessages(input: {
   intent: Intent | null;
@@ -158,6 +170,8 @@ export function buildMessages(input: {
   missing?: MissingItem[];
   /** 앞 응답이 출력 한도로 끊겨 이어 쓰게 하는 요청이면 true. state 는 지금까지 반영한 상태다. */
   continuation?: boolean;
+  /** 저장된 흐름. 있으면 "현재 구성" 뒤에 흐름 목록을 넣는다. */
+  flows?: Flow[];
 }): ChatMessage[] {
   const system = input.intent === "question" || input.intent === "other" ? ANSWER_PROMPT : SYSTEM_PROMPT;
   const labelOf = (id: string, fallback: string) => input.state.nodes[id]?.label ?? input.state.groups[id]?.label ?? fallback;
@@ -165,7 +179,8 @@ export function buildMessages(input: {
   const open = input.intent === "missing_info_answer" ? (input.missing ?? []).filter((m) => !m.unknown).slice(0, MISSING_LINES_MAX) : [];
   const missingBlock = open.length ? `채워야 할 정보:\n${open.map((m) => `${m.targetId} ${m.key}(${m.label})`).join("\n")}\n\n${MISSING_FORMAT_NOTE}\n\n` : "";
   const cont = input.continuation ? `\n\n${CONTINUE_NOTE}` : "";
-  const user = `현재 구성:\n${summarizeState(input.state)}\n\n참조 노드:\n${refs}\n\n${missingBlock}요청: ${input.text}${cont}`;
+  const flowBlock = input.flows?.length ? `흐름:\n${summarizeFlows(input.flows)}\n\n` : "";
+  const user = `현재 구성:\n${summarizeState(input.state)}\n\n${flowBlock}참조 노드:\n${refs}\n\n${missingBlock}요청: ${input.text}${cont}`;
   return [
     { role: "system", content: system },
     ...input.history.slice(-HISTORY_LIMIT).map((h) => ({ role: h.role, content: h.content })),

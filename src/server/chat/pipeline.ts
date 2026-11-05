@@ -1,6 +1,7 @@
 import { computeMissing } from "@/domain/missing";
 import { applyCommand, pruneEmptyGroups } from "@/domain/apply";
-import { COMMAND_OPS, isStructural, parseCommand } from "@/domain/commands";
+import { COMMAND_OPS, isFlowCommand, isStructural, parseCommand, toFlowOp } from "@/domain/commands";
+import type { FlowOp } from "@/domain/flows";
 import { emptyState, type DiagramState, type Warning } from "@/domain/types";
 import type { ClefClient, Intent } from "@/server/llm/clef";
 import { createJsonlParser } from "@/server/llm/jsonl";
@@ -8,6 +9,7 @@ import { createThinkStripper } from "@/server/llm/think";
 import type { QwenClient } from "@/server/llm/qwen";
 import { getOwnedDiagram, NotFoundError, ValidationError } from "@/server/projects";
 import { createVersion, getLatestState } from "@/server/versions";
+import { applyFlowOps, listFlows } from "@/server/flows";
 
 import { SESSION_GONE_MESSAGE, sessionPayload, type ChatEvent, type MessageMeta } from "./events";
 import { BUSY_MESSAGE } from "./busy";
@@ -218,9 +220,17 @@ async function lockedTurn(args: TurnArgs, sessionId: string | null, followUp: bo
   const says: string[] = [];
   let answer = "";
   let applied = 0;
-  let changed = 0; // 구성을 바꾼 명령만(가정 제외)
+  let changed = 0; // 구성을 바꾼 명령만(가정·흐름 제외)
+  let assumed = 0; // 적용한 가정 명령
+  // 흐름 명령은 구성도 상태에 적용하지 않고 모았다가 차례 끝 상태로 흐름 저장소에 적용한다(이어 쓰기 사이에도 모은다).
+  const pendingFlowOps: FlowOp[] = [];
+  let flowsSaved = 0;
   const tally = createSkipTally();
   let status: "complete" | "aborted" | "error" = "complete";
+  const skip = (reason: string, key: string) => {
+    tally.add(key);
+    emit({ t: "skip", reason: (SKIP_PREFIX + reason).slice(0, SKIP_MAX) });
+  };
 
   if (intent === "history") {
     says.push(HISTORY_REPLY);
@@ -233,13 +243,10 @@ async function lockedTurn(args: TurnArgs, sessionId: string | null, followUp: bo
     emit({ t: "relayout" });
   } else {
     const answerMode = intent === "question" || intent === "other";
-    const messages = buildMessages({ intent, text: clean, state, mentions, history, missing: openMissing });
+    const flows = await listFlows(args.userId, diagramId);
+    const messages = buildMessages({ intent, text: clean, state, mentions, history, missing: openMissing, flows });
     emit({ t: "status", phase: "thinking" });
 
-    const skip = (reason: string, key: string) => {
-      tally.add(key);
-      emit({ t: "skip", reason: (SKIP_PREFIX + reason).slice(0, SKIP_MAX) });
-    };
     const onLine = (raw: unknown) => {
       if (signal.aborted) return;
       if (raw && typeof raw === "object" && (raw as { op?: unknown }).op === "say") {
@@ -254,12 +261,20 @@ async function lockedTurn(args: TurnArgs, sessionId: string | null, followUp: bo
       if (!KNOWN_OPS.has(op)) return skip(`지원하지 않는 명령(${op})`, skipKey("unknown_op", op));
       const parsed = parseCommand(normalizeAiCommand(raw));
       if (!parsed.ok) return skip(`형식이 맞지 않는 명령(${op})`, skipKey("invalid", op, parsed.error));
+      if (isFlowCommand(parsed.cmd)) {
+        pendingFlowOps.push(toFlowOp(parsed.cmd));
+        if (applied === 0) emit({ t: "status", phase: "drawing" });
+        applied++;
+        emit({ t: "cmd", cmd: parsed.cmd });
+        return;
+      }
       const r = applyCommand(state, parsed.cmd);
       if (!r.ok) return skip(`적용할 수 없는 명령(${op}) ${r.error}`, skipKey("apply", op, r.error));
       state = r.state;
       if (applied === 0) emit({ t: "status", phase: "drawing" });
       applied++;
       if (isStructural(parsed.cmd)) changed++;
+      else assumed++;
       emit({ t: "cmd", cmd: parsed.cmd });
     };
     const onBad = () => {
@@ -310,7 +325,7 @@ async function lockedTurn(args: TurnArgs, sessionId: string | null, followUp: bo
           const n = part + 1;
           console.info("[chat] output cut by length, continuing", { diagramId, part: n });
           emit({ t: "status", phase: "drawing", part: { n, of: MAX_CONTINUATIONS + 1 } });
-          msgs = buildMessages({ intent, text: clean, state, mentions, history, missing: openMissing, continuation: true });
+          msgs = buildMessages({ intent, text: clean, state, mentions, history, missing: openMissing, continuation: true, flows });
         }
       }
     } catch (err) {
@@ -319,13 +334,10 @@ async function lockedTurn(args: TurnArgs, sessionId: string | null, followUp: bo
     answer = shown.trim();
   }
 
-  const skipped = tally.total();
-  // 왜 건너뛰었는지 서버 로그에 한 줄로 남긴다(사용자 글·키는 넣지 않는다).
-  if (skipped > 0) console.info("[chat] skipped", { diagramId, counts: tally.counts() });
-
   let version: number | null = null;
   let fresh: Warning[] = [];
-  if (applied > 0) {
+  // 구성도를 바꾼 명령(구성·가정)이 있을 때만 정리·점검·버전을 한다. 흐름만 바꾼 차례는 버전을 만들지 않는다.
+  if (changed + assumed > 0) {
     // 이번 차례에 비게 된 영역을 지운다. 클라이언트도 같은 명령으로 맞추도록 안쪽부터 보낸다.
     const pruned = pruneEmptyGroups(turnStartState, state);
     for (const id of prunedOrder(state, pruned)) emit({ t: "cmd", cmd: { op: "remove_group", id } });
@@ -348,6 +360,16 @@ async function lockedTurn(args: TurnArgs, sessionId: string | null, followUp: bo
     });
     version = v.number;
   }
+  // 흐름은 차례가 끝난 상태로 검사해 저장한다(같은 차례에 만든 연결도 가리킬 수 있다). 거절은 건너뜀으로 알린다.
+  if (pendingFlowOps.length > 0) {
+    const r = await applyFlowOps(diagramId, state, pendingFlowOps, "ai");
+    flowsSaved = r.saved;
+    for (const rej of r.rejected) skip(`적용할 수 없는 흐름(${rej.id}) ${rej.reason}`, skipKey("flow", "", rej.reason));
+  }
+
+  const skipped = tally.total();
+  // 왜 건너뛰었는지 서버 로그에 한 줄로 남긴다(사용자 글·키는 넣지 않는다).
+  if (skipped > 0) console.info("[chat] skipped", { diagramId, counts: tally.counts() });
   const missing = computeMissing(state).count;
   const content = [...says, ...(answer ? [answer] : [])].join("\n");
   const meta: MessageMeta = {
@@ -358,7 +380,8 @@ async function lockedTurn(args: TurnArgs, sessionId: string | null, followUp: bo
     version,
     status,
     says,
-    ...(applied > 0 && missing > 0 ? { missing } : {}),
+    ...(flowsSaved > 0 ? { flows: flowsSaved } : {}),
+    ...(changed + assumed > 0 && missing > 0 ? { missing } : {}),
     ...(fresh.length > 0 ? { warnings: fresh } : {}),
     ...counts(),
   };
@@ -370,6 +393,7 @@ async function lockedTurn(args: TurnArgs, sessionId: string | null, followUp: bo
     status: status === "complete" ? "complete" : "aborted",
     applied,
     changed,
+    ...(flowsSaved > 0 ? { flows: flowsSaved } : {}),
     skipped,
     missing,
     ...counts(),

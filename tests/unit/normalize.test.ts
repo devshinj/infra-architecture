@@ -191,3 +191,27 @@ describe("normalizeAiCommand payload/direction", () => {
     expect(out).toMatchObject({ payload: "api", direction: "two_way" });
   });
 });
+
+describe("normalizeAiCommand flow commands", () => {
+  test("flow step edge/from ids are normalized like other ids", () => {
+    const out = normalizeAiCommand({
+      op: "add_flow",
+      id: "Login_Flow",
+      name: "로그인",
+      origin: "user",
+      summary: null,
+      result: null,
+      steps: [{ edge: "E-Client-WAS", from: "Client_Web", short: "요청", text: "보낸다" }, "x"],
+    });
+    expect(out).toEqual({
+      op: "add_flow",
+      id: "login-flow",
+      name: "로그인",
+      origin: "user",
+      steps: [{ edge: "e-client-was", from: "client-web", short: "요청", text: "보낸다" }, "x"],
+    });
+    const up = normalizeAiCommand({ op: "update_flow", id: "f", name: null, steps: [{ edge: "E_1", from: "A_1", short: "s", text: "t" }] });
+    expect(up).toEqual({ op: "update_flow", id: "f", steps: [{ edge: "e-1", from: "a-1", short: "s", text: "t" }] });
+    expect(parseCommand(up).ok).toBe(true);
+  });
+});

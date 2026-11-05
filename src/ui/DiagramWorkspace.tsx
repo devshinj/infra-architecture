@@ -18,6 +18,7 @@ import { Canvas, type CanvasOptions, type DiffMarks } from "@/canvas/Canvas";
 import { defaultDisplayOptions } from "@/canvas/display";
 import { applyCommand } from "@/domain/apply";
 import { assumptionChangeMessage, confirmAssumption } from "@/domain/assumptions";
+import { isFlowCommand } from "@/domain/commands";
 import { diffStates } from "@/domain/diff";
 import type { DiagramState } from "@/domain/types";
 
@@ -299,6 +300,8 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
     onSession: sessions.upsert,
     onSessionLines: sessions.setLines,
     onCommand: (cmd) => {
+      // 흐름 명령은 구성도를 바꾸지 않는다(서버가 흐름 저장소에 저장한다).
+      if (isFlowCommand(cmd)) return;
       const next = applyCommand(current.state, cmd).state;
       setCurrent((c) => ({ number: c.number, state: applyCommand(c.state, cmd).state }));
       // 선택한 노드·연결·영역을 대화가 지우면(빈 영역 정리 포함) 선택을 푼다: 흐림이 남지 않게.

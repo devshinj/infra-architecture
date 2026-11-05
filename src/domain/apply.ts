@@ -100,6 +100,11 @@ export function applyCommand(state: DiagramState, cmd: Command): ApplyResult {
       const next = { key: cmd.key, value: cmd.value, confirmed: false };
       return { ok: true, state: { ...state, assumptions: { ...state.assumptions, [cmd.key]: next } } };
     }
+    // 흐름 명령은 흐름 저장소에 적용한다(서버가 차례 끝에). 구성도는 그대로 둬 클라이언트 재생도 안전하다.
+    case "add_flow":
+    case "update_flow":
+    case "remove_flow":
+      return { ok: true, state };
   }
 }
 
