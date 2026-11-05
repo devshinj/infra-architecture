@@ -2,12 +2,14 @@ import { ViewportPortal } from "@xyflow/react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { EDGE_KINDS } from "@/domain/catalog";
+import { shortLabel } from "@/domain/flows";
 
 import "./edges.css";
 import type { DisplayEdge } from "./display";
-import { mergedLabels } from "./edgeLabels";
-import { emphasisOf } from "./emphasis";
+import { boundaryDotAt, labelBox, mergedLabels, stepLabels, tagSpots, type Box } from "./edgeLabels";
+import { emphasisOf, type Emphasis } from "./emphasis";
 import type { Layout, Rect } from "./layout";
+import { textWidth } from "./text";
 import { startBundleMotion, type MotionKind } from "./motion";
 import { buildSegmentBundles, type Bundle } from "./segments";
 
@@ -28,9 +30,43 @@ export interface EdgeLayerProps {
   nodeCount: number;
   /** Click on an edge's hit path selects it (by edge id); clicking the selected edge again passes null. */
   onSelect?(id: string | null): void;
+  /**
+   * 흐름을 보는 중이면 그 단계들(표시 연결 id 로 맞춘 것). 있으면 선택 대신 이것으로 강조하고 호버는 쓰지 않는다.
+   * 같은 표시 연결에 여러 단계가 걸리면 가장 작은 번호 하나만 쓴다.
+   */
+  flowSteps?: { displayEdgeId: string; n: number; short: string }[];
+  /** 망 경계를 넘는 표시 연결 id. 평소엔 작은 점, 고른 대상에 닿았거나 흐름 단계면 "망 넘음" 표시를 단다. */
+  crossing?: ReadonlySet<string>;
+  /** 접힌 영역 상자. 단계 글자·"망 넘음" 표시가 노드 상자처럼 피한다. */
+  collapsedRects?: Rect[];
 }
 
 const MANY_NODES = 40;
+/** 망 경계 점 반지름. */
+const DOT_R = 3;
+/** 망 경계 표시: 글자 크기, 알약 안쪽 좌우 여백, 높이, 알약과 전달물 글자 사이, 글자 둘레 테두리 몫. */
+const TAG = { font: 11, padX: 6, height: 16, gap: 4, halo: 3 };
+const TAG_PILL = "망 넘음";
+const PAYLOAD_TEXT: Record<NonNullable<DisplayEdge["payload"]>, string> = { api: "API", file: "파일" };
+/**
+ * 방향 화살표: 글자(→ ↔)는 화면 글꼴에서 ">" 처럼 보여 선으로 그린다. 폭, 머리 길이·높이(반), 선 굵기.
+ * 경로는 x 0 에서 시작해 오른쪽으로(한쪽이면 오른쪽 끝에만 머리).
+ */
+const DIR = { w: 13, head: 4, half: 3.5 };
+const DIR_D: Record<NonNullable<DisplayEdge["direction"]>, string> = {
+  one_way: `M0,0 H${DIR.w} M${DIR.w - DIR.head},${-DIR.half} L${DIR.w},0 L${DIR.w - DIR.head},${DIR.half}`,
+  two_way: `M0,0 H${DIR.w} M${DIR.w - DIR.head},${-DIR.half} L${DIR.w},0 L${DIR.w - DIR.head},${DIR.half} M${DIR.head},${-DIR.half} L0,0 L${DIR.head},${DIR.half}`,
+};
+
+/** 알약 옆 전달물 글자("API"·"파일")와 방향. 둘 다 없으면 null. */
+function tagDetail(e: DisplayEdge): { text: string | null; direction: DisplayEdge["direction"] | null; width: number } | null {
+  const text = e.payload ? PAYLOAD_TEXT[e.payload] : null;
+  const direction = e.direction ?? null;
+  if (text === null && direction === null) return null;
+  const textW = text ? textWidth(text, TAG.font) : 0;
+  const width = textW + (direction ? (text ? TAG.gap : 0) + DIR.w : 0);
+  return { text, direction, width };
+}
 const ARROW = { size: 5, spread: 0.5 };
 /** 강조 겹선의 화살표 크기. */
 const EMPH_ARROW = 6.5;
@@ -77,7 +113,7 @@ function prefersReducedMotion(): boolean {
   return typeof window !== "undefined" && !!window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
 }
 
-export function EdgeLayer({ layout, edges, selectedId, selectedRect, hoverId, onHover, hoverLabels, motion, appearing, nodeCount, onSelect }: EdgeLayerProps) {
+export function EdgeLayer({ layout, edges, selectedId, selectedRect, hoverId, onHover, hoverLabels, motion, appearing, nodeCount, onSelect, flowSteps, crossing, collapsedRects }: EdgeLayerProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [hovered, setHovered] = useState<string | null>(null);
 
@@ -88,9 +124,24 @@ export function EdgeLayer({ layout, edges, selectedId, selectedRect, hoverId, on
     [laid, byId],
   );
 
+  // 흐름 단계: 표시 연결마다 가장 작은 번호 하나(설명도 그 단계 것). 번호 차례로 둔다. 배치에 없는 연결은 뺀다.
+  const steps = useMemo(() => {
+    if (!flowSteps) return null;
+    const best = new Map<string, { displayEdgeId: string; n: number; short: string }>();
+    for (const s of flowSteps) {
+      if (!byId.has(s.displayEdgeId)) continue;
+      const cur = best.get(s.displayEdgeId);
+      if (!cur || s.n < cur.n) best.set(s.displayEdgeId, s);
+    }
+    return [...best.values()].sort((a, b) => a.n - b.n);
+  }, [flowSteps, byId]);
+  const stepIds = useMemo(() => new Set(steps?.map((s) => s.displayEdgeId) ?? []), [steps]);
+
   // 선택 기준 강조(흐림 22%)와 호버 기준 강조(흐림 45%). 호버는 선택이 없을 때만.
-  const sel = useMemo(() => emphasisOf(edges, selectedId), [edges, selectedId]);
-  const hov = useMemo(() => (selectedId === null ? emphasisOf(edges, hoverId) : null), [edges, selectedId, hoverId]);
+  // 흐름을 보는 동안은 흐름 단계가 선택 강조 자리를 쓰고(같은 겹선·빛), 호버는 쓰지 않는다.
+  // 단계는 이미 표시 연결 id 로 맞춰 와 있으므로 연결 집합만 쓴다(노드 흐림은 Canvas 가 한다).
+  const sel = useMemo<Emphasis | null>(() => (steps ? { nodes: new Set(), edges: stepIds } : emphasisOf(edges, selectedId)), [edges, selectedId, steps, stepIds]);
+  const hov = useMemo(() => (selectedId === null && !steps ? emphasisOf(edges, hoverId) : null), [edges, selectedId, hoverId, steps]);
   const incident = useMemo(() => sel?.edges ?? new Set<string>(), [sel]);
   const isSelectedEdge = (e: DisplayEdge) => selectedId !== null && (e.id === selectedId || e.sourceEdgeIds.includes(selectedId));
   const isDim = (ids: string[]) => sel !== null && !ids.some((i) => sel.edges.has(i));
@@ -107,7 +158,7 @@ export function EdgeLayer({ layout, edges, selectedId, selectedRect, hoverId, on
   // 노드·접힌 영역을 고르면 이어진 연결의 같은 이름을 하나로 합치고, 이름끼리·노드와 겹치지 않게 둔다
   // (연결을 고르거나 호버일 때는 연결마다 그대로). 따로 그리는 것은 합친 이름과 제자리에서 비킨 하나뿐인 이름이다.
   const merged = useMemo(() => {
-    if (!sel || selectedId === null || !selectedRect || edges.some((e) => e.id === selectedId || e.sourceEdgeIds.includes(selectedId))) return [];
+    if (steps || !sel || selectedId === null || !selectedRect || edges.some((e) => e.id === selectedId || e.sourceEdgeIds.includes(selectedId))) return [];
     const incidentLaid = emphLaid.map((l) => {
       const e = byId.get(l.id)!;
       return { id: l.id, points: l.points, from: e.from, to: e.to, ...(e.label ? { label: e.label } : {}), ...(l.labelAt ? { labelAt: l.labelAt } : {}) };
@@ -120,8 +171,58 @@ export function EdgeLayer({ layout, edges, selectedId, selectedRect, hoverId, on
         return { ...p, moved: p.edgeIds.length === 1 && (!at || off(at.x, p.x) || off(at.y, p.y)) };
       })
       .filter((p) => p.edgeIds.length > 1 || p.moved);
-  }, [sel, selectedId, selectedRect, edges, emphLaid, byId, layout.edges]);
+  }, [steps, sel, selectedId, selectedRect, edges, emphLaid, byId, layout.edges]);
   const mergedIds = useMemo(() => new Set(merged.flatMap((p) => p.edgeIds)), [merged]);
+
+  // 망 경계 점: 경계를 넘는 연결의 가운데(이름 자리, 없으면 선 가운데). 이름이 있으면 이름 글자 옆으로 비킨다.
+  const dots = useMemo(() => {
+    const out = new Map<string, Pt>();
+    if (!crossing || crossing.size === 0) return out;
+    for (const l of laid) {
+      if (!crossing.has(l.id)) continue;
+      const at = boundaryDotAt(l.points, DOT_R, l.labelAt, byId.get(l.id)!.label);
+      if (at) out.set(l.id, at);
+    }
+    return out;
+  }, [crossing, laid, byId]);
+  const dotBoxes = useMemo<Box[]>(() => [...dots.values()].map((p) => ({ x1: p.x - DOT_R, y1: p.y - DOT_R, x2: p.x + DOT_R, y2: p.y + DOT_R })), [dots]);
+  const nodeRects = useMemo(() => [...Object.values(layout.nodes), ...(collapsedRects ?? [])], [layout.nodes, collapsedRects]);
+
+  // 흐름 단계 글자 "n. 짧은 설명": 서로·노드·경계 점과 겹치지 않게 제 선을 따라 비키고, 자리가 없으면 번호만.
+  const stepPlaced = useMemo(() => {
+    if (!steps) return [];
+    const items = steps.flatMap((s) => {
+      const l = laid.find((x) => x.id === s.displayEdgeId);
+      if (!l) return [];
+      const short = shortLabel(s.short.trim());
+      return [{ text: short ? `${s.n}. ${short}` : `${s.n}`, points: l.points, ...(l.labelAt ? { labelAt: l.labelAt } : {}), id: s.displayEdgeId }];
+    });
+    return stepLabels(items, nodeRects, dotBoxes);
+  }, [steps, laid, nodeRects, dotBoxes]);
+
+  // "망 넘음" 표시: 흐름을 보는 중이면 단계 연결, 아니면 고른 대상에 닿은 연결 가운데 경계를 넘는 것.
+  const tags = useMemo(() => {
+    const on = steps ? [...stepIds] : selectedId !== null && sel ? [...sel.edges] : [];
+    const items = on.flatMap((id) => {
+      const l = laid.find((x) => x.id === id);
+      if (!l || !dots.has(id)) return [];
+      const detail = tagDetail(byId.get(id)!);
+      const pill = textWidth(TAG_PILL, TAG.font) + 2 * TAG.padX;
+      const width = pill + (detail ? TAG.gap + detail.width + TAG.halo : 0);
+      return [{ text: TAG_PILL, width, height: TAG.height, points: l.points, labelAt: dots.get(id)!, id, pill, detail }];
+    });
+    // 고른 동안 보이는 연결 이름(제자리 이름·합친 이름)도 가리지 않는다.
+    const shownNames: Box[] = [];
+    if (!steps && sel) {
+      for (const l of laid) {
+        const e = byId.get(l.id)!;
+        if (sel.edges.has(l.id) && e.label && l.labelAt && !mergedIds.has(l.id)) shownNames.push(labelBox({ text: e.label, x: l.labelAt.x, y: l.labelAt.y, anchor: "middle" }));
+      }
+      for (const p of merged) shownNames.push(labelBox(p));
+    }
+    const spots = tagSpots(items, nodeRects, stepPlaced, [...dotBoxes, ...shownNames]);
+    return items.map((it, i) => ({ id: it.id, pill: it.pill, width: it.width, detail: it.detail, x: spots[i].x, y: spots[i].y }));
+  }, [steps, stepIds, selectedId, sel, laid, dots, byId, nodeRects, stepPlaced, dotBoxes, merged, mergedIds]);
 
   // Which bundles animate. Over 40 nodes only the ones touching the selection; with fewer, every bundle animates.
   const restrictTo = nodeCount > MANY_NODES ? incident : null;
@@ -250,7 +351,9 @@ export function EdgeLayer({ layout, edges, selectedId, selectedRect, hoverId, on
         // 고른 동안 이어지지 않은 선의 이름은 마우스를 올렸을 때만 보인다(흐린 선에 같은 이름이 남지 않게).
         // 합친 이름에 들어간 선은 따로 그리지 않는다.
         const shown = incident.has(e.id) || (sel ? hoverLabels && hovered === e.id : !hoverLabels || hovered === e.id);
-        const showLabel = !!e.label && !!l.labelAt && !mergedIds.has(e.id) && shown;
+        // 흐름을 보는 동안 단계 연결은 제 이름 대신 단계 글자를 단다.
+        const showLabel = !!e.label && !!l.labelAt && !mergedIds.has(e.id) && !stepIds.has(e.id) && shown;
+        const dot = dots.get(e.id);
         return (
           <g key={e.id} className={`edge${dim ? " edge--dim" : ""}${faded ? " edge--faded" : ""}${isSelectedEdge(e) ? " edge--selected" : ""}`} data-edge-id={e.id} data-edge-kind={e.edgeKind}>
             {d && <path className={`edge-arrow edge-arrow--${e.edgeKind}${arrowUnder ? " edge--under" : ""}`} d={d} />}
@@ -275,6 +378,8 @@ export function EdgeLayer({ layout, edges, selectedId, selectedRect, hoverId, on
                 {e.label}
               </text>
             )}
+            {/* 망 경계 점: 평소 모습이라 내보낸 그림에도 남는다. 이름 글자보다 위에 그린다. */}
+            {dot && <circle className="edge-boundary-dot" cx={dot.x} cy={dot.y} r={DOT_R} />}
           </g>
         );
       })}
@@ -287,6 +392,46 @@ export function EdgeLayer({ layout, edges, selectedId, selectedRect, hoverId, on
             <text key={p.edgeIds.join(" ")} className={`edge-label ${p.moved ? "edge-label--moved" : "edge-label--merged"}`} x={p.x} y={p.y} data-anchor={p.anchor} style={{ textAnchor: p.anchor }}>
               {p.text}
             </text>
+          ))}
+        </g>
+      )}
+
+      {/* 6. 흐름 단계 글자 "n. 짧은 설명"(화면 장치: 내보내기에서 걷는다) */}
+      {stepPlaced.length > 0 && (
+        <g className="edge-steps">
+          {stepPlaced.map((p) => (
+            <text key={p.edgeIds[0]} className="edge-step-label" x={p.x} y={p.y} data-step-edge={p.edgeIds[0]}>
+              {p.text}
+            </text>
+          ))}
+        </g>
+      )}
+
+      {/* 7. "망 넘음" 표시: 알약 + 전달물·방향(화면 장치: 내보내기에서 걷는다) */}
+      {tags.length > 0 && (
+        <g className="edge-boundary-tags">
+          {tags.map((t) => (
+            <g key={t.id} className="edge-boundary-tag" data-tag-edge={t.id} transform={`translate(${t.x - t.width / 2} ${t.y})`}>
+              <rect className="edge-boundary-tag__pill" x={0} y={-TAG.height / 2} width={t.pill} height={TAG.height} rx={TAG.height / 2} />
+              <text className="edge-boundary-tag__pill-text" x={t.pill / 2} y={0}>
+                {TAG_PILL}
+              </text>
+              {t.detail?.text && (
+                <text className="edge-boundary-tag__detail" x={t.pill + TAG.gap} y={0}>
+                  {t.detail.text}
+                </text>
+              )}
+              {t.detail?.direction && (
+                <g
+                  className="edge-boundary-tag__dir"
+                  data-direction={t.detail.direction}
+                  transform={`translate(${t.pill + TAG.gap + t.detail.width - DIR.w} 0)`}
+                >
+                  <path className="edge-boundary-tag__dir-halo" d={DIR_D[t.detail.direction]} />
+                  <path className="edge-boundary-tag__dir-line" d={DIR_D[t.detail.direction]} />
+                </g>
+              )}
+            </g>
           ))}
         </g>
       )}

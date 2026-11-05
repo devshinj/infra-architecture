@@ -1,3 +1,4 @@
+import { crossesBoundary } from "./boundary";
 import { NODE_KINDS } from "./catalog";
 import type { DNode, DiagramState, Edge } from "./types";
 
@@ -22,6 +23,8 @@ export const FIELD_LABELS: Record<string, string> = {
   service: "서비스",
   integration: "연동 방식",
   label: "프로토콜/포트",
+  payload: "전달물",
+  direction: "방향",
 };
 
 export interface MissingItem {
@@ -41,9 +44,10 @@ function requiredKeysForNode(node: DNode): string[] {
   return NODE_KINDS.find((k) => k.kind === node.kind)?.requiredAttrs.slice() ?? [];
 }
 
-// 흐름을 그리는 연결(request·async)만 프로토콜/포트를 요구한다.
-function requiredKeysForEdge(edge: Edge): string[] {
-  return edge.edgeKind === "request" || edge.edgeKind === "async" ? ["label"] : [];
+// 흐름을 그리는 연결(request·async)만 프로토콜/포트를 요구한다. 망 경계를 넘으면 전달물·방향도 요구한다.
+export function requiredKeysForEdge(state: DiagramState, edge: Edge): string[] {
+  const keys = edge.edgeKind === "request" || edge.edgeKind === "async" ? ["label"] : [];
+  return crossesBoundary(state, edge) ? [...keys, "payload", "direction"] : keys;
 }
 
 /** 대상 노드·연결의 필수 키. 대상이 없으면 null. */
@@ -53,7 +57,7 @@ export function requiredKeysFor(state: DiagramState, targetKind: "node" | "edge"
     return node ? requiredKeysForNode(node) : null;
   }
   const edge = state.edges[targetId];
-  return edge ? requiredKeysForEdge(edge) : null;
+  return edge ? requiredKeysForEdge(state, edge) : null;
 }
 
 export function computeMissing(state: DiagramState): {
@@ -77,8 +81,9 @@ export function computeMissing(state: DiagramState): {
     }
   }
   for (const edge of Object.values(state.edges)) {
-    for (const key of requiredKeysForEdge(edge)) {
-      if (!isEmpty(edge.label)) continue;
+    for (const key of requiredKeysForEdge(state, edge)) {
+      const value = key === "label" ? edge.label : key === "payload" ? edge.payload : key === "direction" ? edge.direction : undefined;
+      if (!isEmpty(value)) continue;
       const unknown = edge.unknown?.includes(key) ?? false;
       items.push({ targetKind: "edge", targetId: edge.id, key, label: labelOf(key), unknown });
       if (!unknown) count += 1;

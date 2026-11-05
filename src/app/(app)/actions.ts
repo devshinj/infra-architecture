@@ -24,6 +24,7 @@ import {
 } from "@/server/projects";
 import { confirmAssumptionFor } from "@/server/assumptions";
 import { saveFieldsFor, type SaveFieldsInput } from "@/server/fields";
+import { BusyError, confirmFlow, deleteFlow, removeFlowStep, renameFlow } from "@/server/flows";
 import { ensureSeeded, listTerms, updateTerm, type TermPatch } from "@/server/glossary";
 import { setWarningIgnoredFor } from "@/server/ignore";
 import { importSample, SAMPLES } from "@/server/samples";
@@ -59,7 +60,7 @@ async function runResult<T extends object>(fn: (uid: string) => Promise<T>): Pro
     try {
       return { ok: true as const, ...(await fn(uid)) };
     } catch (e) {
-      if (e instanceof ValidationError) return { ok: false as const, error: e.message };
+      if (e instanceof ValidationError || e instanceof BusyError) return { ok: false as const, error: e.message };
       throw e;
     }
   });
@@ -219,6 +220,36 @@ export async function setWarningIgnoredAction(
     const r = await setWarningIgnoredFor(uid, diagramId, warningId, ignored);
     refreshDiagram();
     return r;
+  });
+}
+
+// 흐름은 흐름 라우트로 따로 불러오므로 페이지를 다시 그리지 않는다. 대화 차례가 돌고 있으면 BusyError 안내를 데이터로 돌려준다.
+export async function renameFlowAction(diagramId: string, key: string, name: string): Promise<ActionResult> {
+  return runResult(async (uid) => {
+    await renameFlow(uid, diagramId, key, name);
+    return {};
+  });
+}
+
+export async function deleteFlowAction(diagramId: string, key: string): Promise<ActionResult> {
+  return runResult(async (uid) => {
+    await deleteFlow(uid, diagramId, key);
+    return {};
+  });
+}
+
+export async function confirmFlowAction(diagramId: string, key: string): Promise<ActionResult> {
+  return runResult(async (uid) => {
+    await confirmFlow(uid, diagramId, key);
+    return {};
+  });
+}
+
+/** 끊긴 흐름의 단계 하나(0부터 센 번호)를 지운다. */
+export async function removeFlowStepAction(diagramId: string, key: string, stepIndex: number): Promise<ActionResult> {
+  return runResult(async (uid) => {
+    await removeFlowStep(uid, diagramId, key, stepIndex);
+    return {};
   });
 }
 

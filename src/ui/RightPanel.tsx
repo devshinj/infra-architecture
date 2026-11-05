@@ -7,11 +7,12 @@ import type { DiagramState } from "@/domain/types";
 import type { ExplanationProps } from "./explain/Explanation";
 import styles from "./app.module.css";
 import { ChatPanel, type ChatPanelProps } from "./chat/ChatPanel";
+import { FlowPanel, type FlowPanelProps } from "./flows/FlowPanel";
 import { HistoryPanel, type HistoryPanelProps } from "./HistoryPanel";
 import { NodeInfo, type NodeInfoProps } from "./NodeInfo";
 
-export type Tab = "대화" | "설명" | "이력";
-export const TABS: Tab[] = ["대화", "설명", "이력"];
+export type Tab = "대화" | "설명" | "이력" | "흐름";
+export const TABS: Tab[] = ["대화", "설명", "이력", "흐름"];
 export const RIGHT_PANEL_BODY_ID = "right-panel-body";
 
 export interface RightPanelProps {
@@ -43,9 +44,11 @@ export interface RightPanelProps {
    * 없으면 패널 안 탭 줄을 그린다.
    */
   externalTabs?: { tabIdOf(tab: Tab): string; request: { tab: Tab; token: number } | null };
+  /** 흐름 탭. 설명 탭의 "지나는 흐름" 칩도 이것으로 흐름을 켠다. 없으면 흐름 탭은 빈 안내만 보인다. */
+  flows?: FlowPanelProps;
 }
 
-export function RightPanel({ state, selectedId, onSelect, onMention, mentionDisabled, history, chat, onHistoryOpen, tab: controlledTab, onTabChange, cautions, warningState, explain, ask, live = true, externalTabs }: RightPanelProps) {
+export function RightPanel({ state, selectedId, onSelect, onMention, mentionDisabled, history, chat, onHistoryOpen, tab: controlledTab, onTabChange, cautions, warningState, explain, ask, live = true, externalTabs, flows }: RightPanelProps) {
   const [innerTab, setInnerTab] = useState<Tab>("대화");
   const tab = controlledTab ?? innerTab;
   const setTab = (t: Tab) => {
@@ -76,6 +79,11 @@ export function RightPanel({ state, selectedId, onSelect, onMention, mentionDisa
     setTab(t);
     if (t === "이력") onHistoryOpen?.();
   };
+  // 설명 탭의 흐름 칩: 흐름 탭을 직접 고른 것처럼 연다(흐름을 켜면 선택이 풀려도 흐름 탭에 남는다).
+  const openFlow = (key: string) => {
+    choose("흐름");
+    flows?.onActivate(key);
+  };
 
   // 바깥 탭 막대에서 고른 탭: 패널 안 탭을 누른 것과 같다. 그리기 전에 바꿔 옛 탭이 한 번 비치지 않게.
   const request = externalTabs?.request ?? null;
@@ -104,8 +112,9 @@ export function RightPanel({ state, selectedId, onSelect, onMention, mentionDisa
             emptyDiagram={live && Object.keys(state.nodes).length === 0}
           />
         )}
-        {tab === "설명" && <NodeInfo state={state} selectedId={selectedId} onSelect={onSelect} {...(onMention ? { onMention } : {})} {...(mentionDisabled ? { mentionDisabled } : {})} {...cautions} {...(warningState ? { warningState } : {})} {...(explain ? { explain } : {})} {...(ask ? { ask } : {})} />}
+        {tab === "설명" && <NodeInfo state={state} selectedId={selectedId} onSelect={onSelect} {...(onMention ? { onMention } : {})} {...(mentionDisabled ? { mentionDisabled } : {})} {...cautions} {...(warningState ? { warningState } : {})} {...(explain ? { explain } : {})} {...(ask ? { ask } : {})} {...(flows ? { flows: { list: flows.flows, onOpen: openFlow } } : {})} />}
         {tab === "이력" && <HistoryPanel {...history} />}
+        {tab === "흐름" && flows && <FlowPanel {...flows} />}
       </div>
     </aside>
   );

@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 
-import { LABEL_LINE, LABEL_OFFSET, MIN_TRUNK, NODE_RING, ROW_GAP, ROW_PITCH, labelBox, mergedLabels, type PlacedLabel } from "@/canvas/edgeLabels";
+import { LABEL_LINE, LABEL_OFFSET, MIN_TRUNK, NODE_RING, ROW_GAP, ROW_PITCH, boundaryDotAt, labelBox, mergedLabels, stepLabels, type PlacedLabel } from "@/canvas/edgeLabels";
 import type { Rect } from "@/canvas/layout";
 
 type Pt = { x: number; y: number };
@@ -235,4 +235,52 @@ test("a fractional node rect keeps the first bottom row (rounding does not push 
     expect(l.y, String(height)).toBe(Math.round((bottom + 17) * 100) / 100);
     expectClear([l], rect);
   }
+});
+
+/** 여러 노드 상자 모두와, 그리고 서로 ROW_GAP 이상 떨어진다. */
+function expectClearOfAll(out: PlacedLabel[], rects: Rect[]) {
+  const boxes = out.map(labelBox);
+  const min = ROW_GAP - 0.01;
+  for (let i = 0; i < boxes.length; i++) {
+    for (const r of rects) expect(gap(boxes[i], ring(r)), `${out[i].text} vs node`).toBeGreaterThanOrEqual(min);
+    for (let j = i + 1; j < boxes.length; j++) expect(gap(boxes[i], boxes[j]), `${out[i].text} vs ${out[j].text}`).toBeGreaterThanOrEqual(min);
+  }
+}
+
+test('stepLabels places "1. 가입 정보 보냄" without overlapping node rects or each other', () => {
+  const a: Rect = { x: 0, y: 0, width: 100, height: 40 };
+  const b: Rect = { x: 0, y: 120, width: 100, height: 40 };
+  // 나란한 두 세로 연결: 가운데 자리가 겹치므로 둘째는 제 선을 따라 비킨다.
+  const out = stepLabels(
+    [
+      { text: "1. 가입 정보 보냄", points: [{ x: 40, y: 40 }, { x: 40, y: 120 }], labelAt: { x: 40, y: 80 } },
+      { text: "2. 확인", points: [{ x: 60, y: 40 }, { x: 60, y: 120 }], labelAt: { x: 60, y: 80 } },
+    ],
+    [a, b],
+  );
+  expect(out.map((p) => p.text)).toEqual(["1. 가입 정보 보냄", "2. 확인"]);
+  expect(out[0]).toMatchObject({ x: 40, y: 80, anchor: "middle" });
+  expect(out[1].x).toBe(60);
+  expect(out[1].y).not.toBe(80);
+  expectClearOfAll(out, [a, b]);
+});
+
+test('falls back to "3" when crowded', () => {
+  const a: Rect = { x: 0, y: 0, width: 100, height: 40 };
+  const b: Rect = { x: 140, y: 0, width: 100, height: 40 };
+  // 두 노드 사이가 40px 뿐인 가로 연결: 설명은 들어가지 않고 번호만 들어간다.
+  const out = stepLabels([{ text: "3. 결과 저장", points: [{ x: 100, y: 20 }, { x: 140, y: 20 }], labelAt: { x: 120, y: 20 } }], [a, b]);
+  expect(out).toHaveLength(1);
+  expect(out[0].text).toBe("3");
+  expectClearOfAll(out, [a, b]);
+});
+
+test("boundary dot sits at the middle, or beside the edge name when there is one", () => {
+  const pts = [{ x: 0, y: 50 }, { x: 200, y: 50 }];
+  expect(boundaryDotAt(pts, 3)).toEqual({ x: 100, y: 50 });
+  const at = boundaryDotAt(pts, 3, { x: 100, y: 50 }, "HTTPS")!;
+  expect(at.y).toBe(50);
+  const name = labelBox({ text: "HTTPS", x: 100, y: 50, anchor: "middle" });
+  const dot = { x1: at.x - 3, y1: at.y - 3, x2: at.x + 3, y2: at.y + 3 };
+  expect(gap(dot, name)).toBeGreaterThanOrEqual(ROW_GAP - 0.01);
 });

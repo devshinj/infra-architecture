@@ -96,7 +96,7 @@ test("text-secondary reaches 4.5:1 on every surface and stays dimmer than text-p
 // ---- 캔버스 구역·노드 색 구분 (P3D Task 4) ----
 const TINTS: Record<string, string> = {
   region: "#5B7BA0", vpc: "#4F7FB8", public: "#3F93A8", private: "#6874B8", dmz: "#B08B4F",
-  k8s: "#4E9A8E", external: "#A9765E", redundancy: "#7F95B5", onprem: "#7A8696",
+  k8s: "#4E9A8E", external: "#A9765E", redundancy: "#7F95B5", onprem: "#7A8696", network: "#8B72B8",
 };
 
 // sRGB 공간에서 a 를 pct% 만큼 b 에 섞는다(color-mix in srgb 와 같다).

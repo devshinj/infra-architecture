@@ -179,14 +179,14 @@ describe("missing block", () => {
 
   test("missing block only for missing_info_answer", () => {
     const u = user("missing_info_answer");
-    expect(u).toContain("채워야 할 정보:\nwas-1 cpu(CPU)\ne-was-1-db-1 label(프로토콜/포트)\n\n값을 반영하는 명령은 한 줄에 JSON 하나로, 줄바꿈 없이 쓴다. 사용자가 말한 대상마다 따로 update_node 를 낸다.\n\n요청: 4코어");
+    expect(u).toContain("채워야 할 정보:\nwas-1 cpu(CPU)\ne-was-1-db-1 label(프로토콜/포트)\n\n값을 반영하는 명령은 한 줄에 JSON 하나로, 줄바꿈 없이 쓴다. 사용자가 말한 대상마다 따로 update_node 를 낸다. 연결의 전달물·방향은 update_edge 의 payload·direction 으로 낸다.\n\n요청: 4코어");
     for (const i of ["structure_change", "question", "other", "history", null] as const) {
       expect(user(i)).not.toContain("채워야 할 정보");
     }
   });
 
   test("missing block carries the one-line instruction and the system prompt forbids multi-line objects", () => {
-    expect(user("missing_info_answer")).toContain("값을 반영하는 명령은 한 줄에 JSON 하나로, 줄바꿈 없이 쓴다. 사용자가 말한 대상마다 따로 update_node 를 낸다.");
+    expect(user("missing_info_answer")).toContain("값을 반영하는 명령은 한 줄에 JSON 하나로, 줄바꿈 없이 쓴다. 사용자가 말한 대상마다 따로 update_node 를 낸다. 연결의 전달물·방향은 update_edge 의 payload·direction 으로 낸다.");
     expect(user("structure_change")).not.toContain("줄바꿈 없이 쓴다");
     expect(SYSTEM_PROMPT).toContain("- JSON 객체 하나를 여러 줄로 나눠 쓰지 않는다.");
   });
@@ -197,7 +197,7 @@ describe("missing block", () => {
 
   test("system prompt has the fill-only rule", () => {
     expect(SYSTEM_PROMPT).toContain(
-      "- 사용자가 채워야 할 정보의 값을 알려 주면 update_node(attrs) 또는 update_edge(label) 로 그 값만 반영한다. 노드·연결을 새로 만들지 않는다.",
+      "- 사용자가 채워야 할 정보의 값을 알려 주면 update_node(attrs) 또는 update_edge(label·payload·direction) 로 그 값만 반영한다. 노드·연결을 새로 만들지 않는다.",
     );
   });
 });
@@ -320,5 +320,56 @@ describe("prompt wording from the real-model check", () => {
     expect(ASK_PROMPT).toContain("- 구성에 없는 제품·기술 이름을 새로 꺼내지 않는다. 모르면 이 구성 정보만으로는 알 수 없다고 말한다.");
     const sys = buildAskMessages({ state: sample(), nodeId: "was-1", history: [], text: "?" })[0]!.content;
     expect(sys).toBe(ASK_PROMPT);
+  });
+});
+
+describe("summarizeState payload/direction", () => {
+  test("summarizeState prints payload and direction", () => {
+    const s = sample();
+    s.edges["e-was-1-db-1"] = { ...s.edges["e-was-1-db-1"]!, payload: "api", direction: "two_way" };
+    expect(summarizeState(s)).toContain(' payload=api direction=two_way');
+    delete s.edges["e-was-1-db-1"]!.payload;
+    delete s.edges["e-was-1-db-1"]!.direction;
+    expect(summarizeState(s)).not.toContain("payload=");
+  });
+  test("prompt documents payload/direction and network kinds", () => {
+    expect(SYSTEM_PROMPT).toContain('"payload":"api","direction":"two_way"');
+    expect(SYSTEM_PROMPT).toContain("network_zone");
+    expect(SYSTEM_PROMPT).toContain("network_link");
+  });
+});
+
+describe("flow commands in the prompt", () => {
+  test("SYSTEM_PROMPT documents add_flow/update_flow/remove_flow", () => {
+    const lines = SYSTEM_PROMPT.split("\n");
+    for (const op of ["add_flow", "update_flow", "remove_flow"]) {
+      const line = lines.find((l) => l.startsWith(`{"op":"${op}"`));
+      expect(line).toBeDefined();
+      if (op !== "remove_flow") expect(parseCommand(JSON.parse(line!)).ok).toBe(true);
+    }
+    expect(SYSTEM_PROMPT).toContain(
+      "흐름을 바꾸라는 요청이면 구성 명령과 함께 흐름 명령을 쓴다. 단계 edge 는 현재 구성(또는 이번에 만든) 연결 id 만 쓴다.",
+    );
+    expect(SYSTEM_PROMPT).toContain("요청에 흐름 이야기가 없으면 흐름 명령을 쓰지 않는다");
+  });
+  test("buildMessages includes 흐름 block with existing flow ids", () => {
+    const flows = [
+      {
+        id: "order",
+        name: "주문",
+        origin: "user" as const,
+        steps: [
+          { edge: "e-was-1-db-1", from: "was-1", short: "저장", text: "주문을 저장한다" },
+          { edge: "e-x", from: "db-1", short: "응답", text: "결과" },
+        ],
+      },
+      { id: "batch", name: "정산\n배치", origin: "system" as const, steps: [{ edge: "e-was-1-db-1", from: "was-1", short: "읽기", text: "읽는다" }] },
+    ];
+    const user = buildMessages({ intent: null, text: "흐름 고쳐줘", state: sample(), mentions: [], history: [], flows }).at(-1)!.content;
+    // 사용자 글(흐름 이름)은 JSON 으로 감싸 줄바꿈이 새 줄을 만들지 못하게 한다.
+    expect(user).toContain('흐름:\n흐름 order [user] "주문": e-was-1-db-1 > e-x\n흐름 batch [system] "정산\\n배치": e-was-1-db-1\n\n참조 노드:');
+    expect(user.indexOf("현재 구성:")).toBeLessThan(user.indexOf("흐름:\n"));
+    const none = buildMessages({ intent: null, text: "x", state: sample(), mentions: [], history: [] }).at(-1)!.content;
+    expect(none).not.toContain("흐름:\n");
   });
 });

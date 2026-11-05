@@ -103,3 +103,36 @@ test("other user's diagram is not found", async () => {
     saveFieldsFor(other.userId, ids.diagramId, { targetKind: "node", targetId: "was-1", values: {}, unknown: [] }),
   ).rejects.toBeInstanceOf(NotFoundError);
 });
+
+// 망을 넘는 연결: 전달물·방향을 채울 수 있다.
+async function setupCrossing() {
+  const ids = await makeOwnedDiagram();
+  const s: DiagramState = {
+    ...emptyState(),
+    groups: {
+      biz: { id: "biz", groupKind: "network_zone", label: "업무망", parent: null },
+      net: { id: "net", groupKind: "network_zone", label: "인터넷망", parent: null },
+    },
+    nodes: {
+      "was-1": { id: "was-1", kind: "was", label: "WAS", parent: "biz", attrs: {} },
+      "api-1": { id: "api-1", kind: "external_api", label: "API", parent: "net", attrs: {} },
+    },
+    edges: { e1: { id: "e1", from: "was-1", to: "api-1", edgeKind: "request" } },
+  };
+  await createVersion(ids.diagramId, s, { source: "import" });
+  return ids;
+}
+
+test("saves payload/direction on edge", async () => {
+  const ids = await setupCrossing();
+  await save(ids, { targetKind: "edge", targetId: "e1", values: { payload: "file", direction: "two_way" } });
+  const e = (await getLatestState(ids.diagramId))!.state.edges.e1;
+  expect(e.payload).toBe("file");
+  expect(e.direction).toBe("two_way");
+});
+
+test('rejects payload "x"', async () => {
+  const ids = await setupCrossing();
+  await expect(save(ids, { targetKind: "edge", targetId: "e1", values: { payload: "x" } })).rejects.toBeInstanceOf(ValidationError);
+  await expect(save(ids, { targetKind: "edge", targetId: "e1", values: { direction: "x" } })).rejects.toBeInstanceOf(ValidationError);
+});

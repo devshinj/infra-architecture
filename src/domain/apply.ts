@@ -49,7 +49,7 @@ export function applyCommand(state: DiagramState, cmd: Command): ApplyResult {
       } else if (idTaken(state, id)) {
         return fail(state, `id ${id} already exists`);
       }
-      const edge = { id, from: cmd.from, to: cmd.to, edgeKind: cmd.edge_kind, ...(cmd.label !== undefined ? { label: cmd.label } : {}) };
+      const edge = { id, from: cmd.from, to: cmd.to, edgeKind: cmd.edge_kind, ...(cmd.label !== undefined ? { label: cmd.label } : {}), ...(cmd.payload !== undefined ? { payload: cmd.payload } : {}), ...(cmd.direction !== undefined ? { direction: cmd.direction } : {}) };
       return { ok: true, state: { ...state, edges: { ...state.edges, [id]: edge } } };
     }
     case "update_node": {
@@ -72,6 +72,8 @@ export function applyCommand(state: DiagramState, cmd: Command): ApplyResult {
         ...edge,
         ...(cmd.label !== undefined ? { label: cmd.label } : {}),
         ...(cmd.edge_kind !== undefined ? { edgeKind: cmd.edge_kind } : {}),
+        ...(cmd.payload !== undefined ? { payload: cmd.payload } : {}),
+        ...(cmd.direction !== undefined ? { direction: cmd.direction } : {}),
       };
       return { ok: true, state: { ...state, edges: { ...state.edges, [cmd.id]: next } } };
     }
@@ -98,6 +100,11 @@ export function applyCommand(state: DiagramState, cmd: Command): ApplyResult {
       const next = { key: cmd.key, value: cmd.value, confirmed: false };
       return { ok: true, state: { ...state, assumptions: { ...state.assumptions, [cmd.key]: next } } };
     }
+    // 흐름 명령은 흐름 저장소에 적용한다(서버가 차례 끝에). 구성도는 그대로 둬 클라이언트 재생도 안전하다.
+    case "add_flow":
+    case "update_flow":
+    case "remove_flow":
+      return { ok: true, state };
   }
 }
 

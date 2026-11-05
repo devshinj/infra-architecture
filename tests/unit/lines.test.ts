@@ -197,3 +197,20 @@ test("old messages without changed render exactly as before", () => {
   // 새 차례(changed 있음)만 새 규칙.
   expect(summaryText({ version: null, status: "complete", applied: 0, changed: 0, skipped: 0 }, false, "structure_change")).toBe("요청을 반영하지 못했어요. 다시 말해 주세요.");
 });
+
+test("summary mentions 흐름 1개 바꿨어요", () => {
+  // 구성과 흐름을 함께 바꾼 차례
+  expect(summaryText({ version: 2, status: "complete", applied: 3, changed: 2, flows: 1, skipped: 0, nodes: 3, edges: 2 }, false, "structure_change")).toBe(
+    "노드 3 · 연결 2 · 2곳 바꿨어요 · 흐름 1개 바꿨어요",
+  );
+  // 흐름만 바꾼 차례: 버전이 없어도 반영 못 함·변경 없음으로 보이지 않는다.
+  expect(summaryText({ version: null, status: "complete", applied: 1, changed: 0, flows: 1, skipped: 0, nodes: 3, edges: 2 }, false, "structure_change")).toBe(
+    "노드 3 · 연결 2 · 흐름 1개 바꿨어요",
+  );
+  expect(summaryText({ version: null, status: "complete", applied: 2, changed: 0, flows: 2, skipped: 1 }, false)).toBe("흐름 2개 바꿨어요");
+  // 다시 불러와도 같다(meta.flows).
+  const lines = messagesToLines([
+    { id: "a1", role: "assistant", content: "", meta: { intent: "structure_change", applied: 1, changed: 0, flows: 1, skipped: 0, version: null, status: "complete", says: [], nodes: 3, edges: 2 } },
+  ]);
+  expect(lines.map((l) => [l.kind, l.text])).toEqual([["summary", "노드 3 · 연결 2 · 흐름 1개 바꿨어요"]]);
+});

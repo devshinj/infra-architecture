@@ -5,9 +5,9 @@ import { useRef } from "react";
 import styles from "./app.module.css";
 import type { Tab } from "./RightPanel";
 
-/** 좁은 화면 작업 화면의 네 보기: 캔버스 하나와 오른쪽 패널의 세 탭. */
+/** 좁은 화면 작업 화면의 다섯 보기: 캔버스 하나와 오른쪽 패널의 네 탭. */
 export type MobileView = "구성도" | Tab;
-export const MOBILE_VIEWS: MobileView[] = ["구성도", "대화", "설명", "이력"];
+export const MOBILE_VIEWS: MobileView[] = ["구성도", "대화", "설명", "이력", "흐름"];
 export const mobileTabId = (v: MobileView) => `mtab-${v}`;
 
 export interface MobileTabBarProps {
@@ -84,4 +84,6 @@ const ICONS: Record<MobileView, React.ReactNode> = {
   대화: <Svg><path d="M3 4.5A1.5 1.5 0 0 1 4.5 3h9A1.5 1.5 0 0 1 15 4.5v6a1.5 1.5 0 0 1-1.5 1.5H8l-3.5 3v-3h0A1.5 1.5 0 0 1 3 10.5z" /></Svg>,
   설명: <Svg><circle cx="9" cy="9" r="6.25" /><path d="M9 8.25v4M9 5.75v.01" /></Svg>,
   이력: <Svg><circle cx="9" cy="9" r="6.25" /><path d="M9 5.5V9l2.5 1.5" /></Svg>,
+  // 흐름: 점 셋을 잇는 꺾인 길과 끝 화살표.
+  흐름: <Svg><circle cx="3.5" cy="13.5" r="1.5" /><circle cx="9" cy="6" r="1.5" /><path d="M4.5 12.3 8 7.2M10.2 7l3.3 5M11.5 12h2v-2" /></Svg>,
 };

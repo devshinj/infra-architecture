@@ -371,3 +371,38 @@ test("export drops a moved single label and puts the original back at labelAt", 
   expect(t[0].getAttribute("y")).toBe("145");
   cleanup();
 });
+
+test("export keeps boundary dot, removes step labels/tag/overlay", () => {
+  const host = document.createElement("div");
+  host.className = "react-flow__viewport";
+  document.body.appendChild(host);
+  const edges: DisplayEdge[] = EDGES.map((e) => ({ ...e, payload: "api", direction: "two_way" }));
+  render(
+    <EdgeLayer
+      layout={LAYOUT}
+      edges={edges}
+      selectedId={null}
+      hoverId={null}
+      hoverLabels={false}
+      motion={false}
+      appearing={new Set()}
+      nodeCount={3}
+      crossing={new Set(["e1"])}
+      flowSteps={[{ displayEdgeId: "e1", n: 1, short: "요청 보냄" }]}
+    />,
+    { container: host },
+  );
+  expect(host.querySelector(".edge-step-label")).not.toBeNull();
+  expect(host.querySelector(".edge-boundary-tag")).not.toBeNull();
+  expect(host.querySelector(".edge-emph")).not.toBeNull();
+  const clone = host.cloneNode(true) as HTMLElement;
+  neutralizeClone(clone, edgeLabels(LAYOUT, edges), new Set(edges.map((e) => e.id)));
+  expect(clone.querySelectorAll(".edge-boundary-dot")).toHaveLength(1);
+  expect(clone.querySelector('[data-edge-id="e1"] .edge-boundary-dot')).not.toBeNull();
+  expect(clone.querySelector(".edge-step-label")).toBeNull();
+  expect(clone.querySelector(".edge-boundary-tag")).toBeNull();
+  expect(clone.querySelector(".edge-emph")).toBeNull();
+  expect(clone.getElementsByClassName("edge--dim")).toHaveLength(0);
+  // 평소 이름은 그대로 채워진다.
+  expect(clone.querySelector('[data-edge-id="e1"] .edge-label')).toHaveTextContent("HTTPS");
+});

@@ -1,7 +1,10 @@
 import { describe, expect, test } from "vitest";
 
 import { EDGE_KINDS, GROUP_KINDS, NODE_KINDS, categoryOf } from "@/domain/catalog";
-import { COMMAND_OPS, parseCommand } from "@/domain/commands";
+import { applyCommand } from "@/domain/apply";
+import { COMMAND_OPS, FLOW_OPS, isFlowCommand, isStructural, parseCommand, type Command, type FlowCommand } from "@/domain/commands";
+import type { FlowOp } from "@/domain/flows";
+import { emptyState } from "@/domain/types";
 
 describe("parseCommand", () => {
   test("parses add_node with snake_case wire fields", () => {
@@ -26,5 +29,73 @@ describe("catalog", () => {
     expect(GROUP_KINDS.find((g) => g.kind === "redundancy_group")!.innerDirection).toBe("RIGHT");
     expect(EDGE_KINDS.find((e) => e.kind === "aux")!.defaultHidden).toBe(true);
     expect(categoryOf("db_proxy")).toBe("data");
+  });
+});
+
+describe("edge payload/direction", () => {
+  test("add_edge accepts payload and direction", () => {
+    const r = parseCommand({ op: "add_edge", from: "a", to: "b", edge_kind: "request", payload: "api", direction: "two_way" });
+    expect(r.ok && r.cmd.op === "add_edge" && r.cmd.payload === "api" && r.cmd.direction === "two_way").toBe(true);
+  });
+  test('update_edge rejects payload "ftp"', () => {
+    expect(parseCommand({ op: "update_edge", id: "e1", payload: "ftp" }).ok).toBe(false);
+    expect(parseCommand({ op: "update_edge", id: "e1", direction: "both" }).ok).toBe(false);
+  });
+});
+
+describe("flow commands", () => {
+  const step = (i: number) => ({ edge: `e-${i}`, from: `n-${i}`, short: "인증 요청", text: "로그인 정보를 보낸다" });
+  test("add_flow parses", () => {
+    const r = parseCommand({ op: "add_flow", id: "login", name: "  로그인  ", origin: "user", summary: "로그인", result: "토큰을 받는다", steps: [step(1)] });
+    expect(r).toEqual({
+      ok: true,
+      cmd: { op: "add_flow", id: "login", name: "로그인", origin: "user", summary: "로그인", result: "토큰을 받는다", steps: [step(1)] },
+    });
+    expect(isFlowCommand((r as { ok: true; cmd: Command }).cmd)).toBe(true);
+    expect(parseCommand({ op: "update_flow", id: "login", name: "새 이름" }).ok).toBe(true);
+    expect(parseCommand({ op: "remove_flow", id: "login" }).ok).toBe(true);
+    for (const op of ["add_flow", "update_flow", "remove_flow"] as const) {
+      expect(COMMAND_OPS).toContain(op);
+      expect(FLOW_OPS.has(op)).toBe(true);
+    }
+  });
+  test("steps over 20 rejected", () => {
+    const base = { op: "add_flow", id: "f", name: "흐름", origin: "system" };
+    expect(parseCommand({ ...base, steps: Array.from({ length: 20 }, (_, i) => step(i)) }).ok).toBe(true);
+    expect(parseCommand({ ...base, steps: Array.from({ length: 21 }, (_, i) => step(i)) }).ok).toBe(false);
+    expect(parseCommand({ ...base, steps: [] }).ok).toBe(false);
+    expect(parseCommand({ op: "update_flow", id: "f", steps: Array.from({ length: 21 }, (_, i) => step(i)) }).ok).toBe(false);
+  });
+  test("flow fields are checked (id, name, origin, lengths)", () => {
+    const ok = { op: "add_flow", id: "f", name: "흐름", origin: "user", steps: [step(1)] };
+    expect(parseCommand({ ...ok, id: "Bad Id" }).ok).toBe(false);
+    expect(parseCommand({ ...ok, name: "   " }).ok).toBe(false);
+    expect(parseCommand({ ...ok, name: "가".repeat(60) }).ok).toBe(true);
+    expect(parseCommand({ ...ok, name: "가".repeat(61) }).ok).toBe(false);
+    expect(parseCommand({ ...ok, origin: "admin" }).ok).toBe(false);
+    expect(parseCommand({ ...ok, summary: "가".repeat(201) }).ok).toBe(false);
+    expect(parseCommand({ ...ok, result: "가".repeat(201) }).ok).toBe(false);
+    expect(parseCommand({ ...ok, steps: [{ ...step(1), text: "가".repeat(121) }] }).ok).toBe(false);
+    expect(parseCommand({ ...ok, steps: [{ ...step(1), short: "가".repeat(40) }] }).ok).toBe(true);
+    expect(parseCommand({ ...ok, steps: [{ ...step(1), edge: "E 1" }] }).ok).toBe(false);
+    expect(parseCommand({ ...ok, steps: [{ ...step(1), from: "N_1" }] }).ok).toBe(false);
+  });
+  test("isStructural(add_flow) === false", () => {
+    const r = parseCommand({ op: "add_flow", id: "f", name: "흐름", origin: "user", steps: [step(1)] });
+    expect(r.ok && isStructural(r.cmd)).toBe(false);
+    expect(isStructural({ op: "remove_flow", id: "f" })).toBe(false);
+    expect(isStructural({ op: "update_flow", id: "f" })).toBe(false);
+    expect(isStructural({ op: "remove_edge", id: "e" })).toBe(true);
+    expect(isFlowCommand({ op: "remove_edge", id: "e" })).toBe(false);
+  });
+  test("applyCommand leaves the diagram as is for flow commands", () => {
+    const state = emptyState();
+    expect(applyCommand(state, { op: "remove_flow", id: "f" })).toEqual({ ok: true, state });
+    expect(applyCommand(state, { op: "remove_flow", id: "f" }).state).toBe(state);
+  });
+  test("FlowCommand is a FlowOp", () => {
+    const cmd: FlowCommand = { op: "update_flow", id: "f", steps: [step(1)] };
+    const op: FlowOp = cmd;
+    expect(op.op).toBe("update_flow");
   });
 });
