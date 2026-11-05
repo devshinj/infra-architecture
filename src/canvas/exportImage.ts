@@ -136,6 +136,7 @@ export const LIGHT_TOKENS: Readonly<Record<string, string>> = {
   "--text-primary": "#1B2638",
   "--text-secondary": "#4F5F77",
   "--accent": "#9A6E22",
+  "--boundary-mark": "#9A6E22",
   "--cat-client": "#56657A",
   "--cat-network": "#2F6AA3",
   "--cat-compute": "#4F5C70",
@@ -173,13 +174,19 @@ export const LIGHT_TOKENS: Readonly<Record<string, string>> = {
   "--zone-tint-external": "#965F45",
   "--zone-tint-redundancy": "#62799E",
   "--zone-tint-onprem": "#667283",
+  "--zone-tint-network": "#7459A4",
 };
 
-/** 내보낸 그림에 남기지 않는 화면 장치: 말풍선·배지·접기 버튼·강조 링·강조 겹선·합친(또는 비킨) 연결 이름·움직임·클릭 영역·React Flow 도구. */
+/**
+ * 내보낸 그림에 남기지 않는 화면 장치: 말풍선·배지·접기 버튼·강조 링·강조 겹선·합친(또는 비킨) 연결 이름·흐름 단계 글자·
+ * "망 넘음" 표시·움직임·클릭 영역·React Flow 도구. 평소 망 경계 점(edge-boundary-dot)은 남긴다.
+ */
 const CHROME = [
   "edge-emph",
   "edge-label--merged",
   "edge-label--moved",
+  "edge-step-label",
+  "edge-boundary-tag",
   "name-tooltip",
   "node__badge",
   "node__pulse",

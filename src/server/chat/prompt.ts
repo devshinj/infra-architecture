@@ -1,5 +1,6 @@
 import { EDGE_KINDS, GROUP_KINDS, NODE_KINDS } from "@/domain/catalog";
 import { LIMITS, type NodeExplanation } from "@/domain/explain";
+import type { Flow } from "@/domain/flows";
 import type { MissingItem } from "@/domain/missing";
 import { patternPromptBlock } from "@/domain/patterns";
 import type { DiagramState } from "@/domain/types";
@@ -16,7 +17,7 @@ const GROUP_KIND_LIST = GROUP_KINDS.map((k) => k.kind).join(", ");
 const EDGE_KIND_LIST = EDGE_KINDS.map((k) => k.kind).join(", ");
 
 const MISSING_FORMAT_NOTE =
-  "값을 반영하는 명령은 한 줄에 JSON 하나로, 줄바꿈 없이 쓴다. 사용자가 말한 대상마다 따로 update_node 를 낸다.";
+  "값을 반영하는 명령은 한 줄에 JSON 하나로, 줄바꿈 없이 쓴다. 사용자가 말한 대상마다 따로 update_node 를 낸다. 연결의 전달물·방향은 update_edge 의 payload·direction 으로 낸다.";
 
 export const SYSTEM_PROMPT = `너는 인프라 아키텍처 구성도를 그리는 도구의 엔진이다.
 사용자 요청을 받아 구성도 변경 명령을 JSON Lines 로만 출력한다. 한 줄에 JSON 객체 하나. 다른 글, 코드펜스, 설명 금지.
@@ -26,13 +27,17 @@ export const SYSTEM_PROMPT = `너는 인프라 아키텍처 구성도를 그리�
 {"op":"set_assumption","key":"environment|scale|redundancy|deploy|replication|external","value":"짧은 문장"}
 {"op":"add_group","id":"영문-소문자-id","group_kind":"<GROUP_KIND>","label":"표시이름","parent":"상위 그룹 id 또는 null"}
 {"op":"add_node","id":"영문-소문자-id","kind":"<KIND>","label":"표시이름(예: WAS#1)","sub":"SW 또는 대수(예: Tomcat 10)","parent":"그룹 id 또는 null","attrs":{"sw":"...","hostname":null,"cpu":null,"ram":null,"ip":null}}
-{"op":"add_edge","id":"e-<from>-<to>","from":"노드 또는 그룹 id","to":"노드 또는 그룹 id","edge_kind":"<EDGE_KIND>","label":"프로토콜/포트(예: HTTPS 443)"}
+{"op":"add_edge","id":"e-<from>-<to>","from":"노드 또는 그룹 id","to":"노드 또는 그룹 id","edge_kind":"<EDGE_KIND>","label":"프로토콜/포트(예: HTTPS 443)","payload":"api","direction":"two_way"}
 {"op":"update_node","id":"was-1","attrs":{"ram":"32GB"}}
 {"op":"update_node","id":"was-1","parent":"새 영역 id"}
 {"op":"update_edge","id":"e-web-1-was-1","label":"HTTP 8080"}
+{"op":"update_edge","id":"e-web-1-was-1","payload":"file","direction":"one_way"}
 {"op":"remove_node","id":"기존 노드 id"}
 {"op":"remove_edge","id":"기존 연결 id"}
 {"op":"remove_group","id":"기존 영역 id"}
+{"op":"add_flow","id":"login","name":"로그인","origin":"user","summary":"사용자가 로그인한다","result":"로그인 결과를 화면에 돌려준다","steps":[{"edge":"e-client-web-was-1","from":"client-web","short":"로그인 요청","text":"아이디와 비밀번호를 WAS 로 보낸다"},{"edge":"e-was-1-db-1","from":"was-1","short":"회원 조회","text":"DB 에서 회원 정보를 확인한다"}]}
+{"op":"update_flow","id":"login","name":"회원 로그인","result":"확인 결과를 돌려준다"}
+{"op":"remove_flow","id":"기존 흐름 id"}
 
 KIND 허용값: ${KIND_LIST}
 GROUP_KIND 허용값: ${GROUP_KIND_LIST}
@@ -50,6 +55,8 @@ EDGE_KIND 허용값: ${EDGE_KIND_LIST}
 - 환경(environment)이나 배포 방식(deploy) 가정이 바뀌면 이 순서로 바꾼다: ① 새 가정에 맞는 영역을 add_group 으로 만든다 ② 새 구성에서도 쓰는 노드(WAS·DB 등)는 지우지 말고 update_node 의 parent 로 새 영역에 옮긴다 ③ 그 뒤에 남은 맞지 않는 노드는 remove_node, 영역은 remove_group 으로 지운다. remove_group 은 안의 노드까지 지우므로 옮길 노드를 먼저 옮긴다.
 - k8s_cluster 는 그룹(group_kind)으로만 쓴다. 노드 kind 로 쓰지 않는다.
 - 사용자가 모르는 값(IP, hostname, 스펙)은 null 로 둔다. 지어내지 않는다.
+- 업무망·인터넷망처럼 분리된 망은 network_zone 영역으로 그리고 망 이름을 label 에 쓴다.
+- 서로 다른 망을 잇는 통신은 방화벽(firewall)·망연계 솔루션(network_link)·VPN 노드를 거치게 그리고, 망을 넘는 연결에는 payload(api 또는 file)와 direction(one_way 또는 two_way)을 쓴다.
 - 연결은 실제 요청 흐름 방향(호출하는 쪽 → 받는 쪽)으로.
 - edge_kind 는 동기 요청 request, 비동기·이벤트·웹훅 async, 복제·동기화 replication 이다. 모니터링·관리(Bastion, Prometheus 등) 연결은 aux 로 한다.
 - 각 단계마다 say 로 진행 상황을 짧게 알린다.
@@ -61,7 +68,10 @@ EDGE_KIND 허용값: ${EDGE_KIND_LIST}
 - CDN, WAF, DNS 처럼 VPC 밖 전역 서비스는 VPC 밖(리전 그룹 또는 최상위)에 둔다.
 - 사용자(client_*)에서 시작하는 진입 연결을 반드시 그린다.
 - warn 과 report_missing 명령은 내지 않는다. 위험 진단은 다른 단계가 맡는다.
-- 사용자가 채워야 할 정보의 값을 알려 주면 update_node(attrs) 또는 update_edge(label) 로 그 값만 반영한다. 노드·연결을 새로 만들지 않는다.
+- 사용자가 채워야 할 정보의 값을 알려 주면 update_node(attrs) 또는 update_edge(label·payload·direction) 로 그 값만 반영한다. 노드·연결을 새로 만들지 않는다.
+- 흐름은 요청 하나가 구성도의 연결을 차례로 지나는 길이다. 흐름을 바꾸라는 요청이면 구성 명령과 함께 흐름 명령을 쓴다. 단계 edge 는 현재 구성(또는 이번에 만든) 연결 id 만 쓴다.
+- 요청에 흐름 이야기가 없으면 흐름 명령을 쓰지 않는다.
+- 흐름 단계는 요청이 가는 방향으로만 쓴다. from 은 그 단계를 시작하는 노드 id 다. 응답은 단계로 쓰지 않고 result 한 줄로 쓴다. short 는 12자 이내, text 는 120자 이내, 단계는 20개 이내로 쓴다. origin 은 사용자가 시작하면 user, 배치·스케줄처럼 시스템이 시작하면 system 이다. 흐름 id 는 위 id 규칙을 따르고, 기존 흐름을 고치거나 지울 때는 "흐름:" 목록의 id 를 그대로 쓴다.
 - 사용자가 질문만 하면 구성은 건드리지 않는다. 질문이면 명령 없이 {"op":"say","text":"…"} 한두 문장으로만 답한다.
 
 ${patternPromptBlock()}`;
@@ -111,13 +121,44 @@ export function summarizeState(state: DiagramState): string {
     );
   }
   for (const e of Object.values(state.edges)) {
-    lines.push(`연결 ${e.id}: ${e.from} -> ${e.to} [${e.edgeKind}] ${JSON.stringify(e.label ?? "")}`);
+    lines.push(`연결 ${e.id}: ${e.from} -> ${e.to} [${e.edgeKind}] ${JSON.stringify(e.label ?? "")}${e.payload ? ` payload=${e.payload}` : ""}${e.direction ? ` direction=${e.direction}` : ""}`);
   }
   // 사용자가 쓴 글(연결 이름·가정 값)은 노드 이름처럼 JSON 으로 감싸 줄바꿈이 새 줄을 만들지 못하게 한다.
   for (const a of Object.values(state.assumptions)) {
     lines.push(`가정 ${JSON.stringify(a.key)}=${JSON.stringify(a.value)} (${a.confirmed ? "확정" : "미확정"})`);
   }
   return lines.join("\n");
+}
+
+/** 흐름 한 개를 한 줄로: 지나는 연결 id 를 차례로. 이름(사용자 글)은 JSON 으로 감싸 줄바꿈이 새 줄을 만들지 못하게 한다. */
+export function summarizeFlows(flows: Flow[]): string {
+  return flows.map((f) => `흐름 ${f.id} [${f.origin}] ${JSON.stringify(f.name)}: ${f.steps.map((s) => s.edge).join(" > ")}`).join("\n");
+}
+
+// 흐름 제안(처음 그린 뒤 자동 + 버튼). 구성 명령과 따로 요청한다.
+export const FLOW_SUGGEST_PROMPT = `너는 인프라 아키텍처 구성도 도구의 도우미다.
+구성도를 보고, 요청 하나가 구성도의 연결을 차례로 지나는 길(흐름)을 제안한다.
+
+출력 형식:
+- add_flow 명령만 JSON Lines 로 출력한다. 한 줄에 JSON 객체 하나, 줄바꿈 없이. 다른 글, 코드펜스, 설명 금지.
+{"op":"add_flow","id":"login","name":"로그인","origin":"user","summary":"사용자가 로그인한다","result":"로그인 결과를 화면에 돌려준다","steps":[{"edge":"e-client-web-was-1","from":"client-web","short":"로그인 요청","text":"아이디와 비밀번호를 서버로 보낸다"},{"edge":"e-was-1-db-1","from":"was-1","short":"회원 조회","text":"DB 에서 회원 정보를 확인한다"}]}
+
+규칙:
+- 흐름은 3~5개 쓴다. 사용자가 시작하는 행동 흐름(origin "user", 예: 로그인·주문)과 시스템·네트워크 흐름(origin "system", 예: 배치·복제·백업·외부 연동)을 섞는다.
+- 단계 edge 는 "현재 구성"의 연결 id 만 쓴다. from 은 그 단계를 시작하는 노드 id 이고, 다음 단계는 앞 단계가 닿은 노드에서 시작한다.
+- 단계는 요청이 가는 방향으로만 쓴다. 응답은 단계로 쓰지 않고 result 에 응답 한 줄로 쓴다.
+- short 는 12자 이내, text 는 IT 비전공자가 알아듣는 한 문장(120자 이내)이다. 단계는 20개 이내다.
+- name·summary·short·text·result 는 한국어로 쓴다. 제품명만 원어 그대로 쓴다.
+- 흐름 id 는 영문 소문자·숫자·하이픈만 쓰고 ^[a-z0-9][a-z0-9-]{0,63}$ 형식이어야 한다. "이미 있는 흐름"의 id 는 쓰지 않고, 같은 길을 다시 만들지 않는다.
+- 구성도에 없는 노드·연결을 지어내지 않는다.`;
+
+/** 흐름 제안 요청. 이미 있는 흐름을 알려 새 id 를 고르고 겹치지 않게 한다. */
+export function buildFlowSuggestMessages(state: DiagramState, flows: Flow[] = []): ChatMessage[] {
+  const existing = flows.length ? summarizeFlows(flows) : "없음";
+  return [
+    { role: "system", content: FLOW_SUGGEST_PROMPT },
+    { role: "user", content: `현재 구성:\n${summarizeState(state)}\n\n이미 있는 흐름:\n${existing}` },
+  ];
 }
 
 export interface Mention {
@@ -144,7 +185,7 @@ export function parseMentions(text: string, state: DiagramState): { clean: strin
 export const CONTINUE_NOTE = `이어 쓰기: 이 요청에 대한 앞 응답이 출력 길이 한도에 닿아 중간에 끊겼다. 위 "현재 구성"은 이 요청을 지금까지 반영한 결과다.
 - 끊긴 곳부터 이어서 남은 명령만 낸다. 처음부터 다시 하지 않는다.
 - 현재 구성에 이미 있는 그룹·노드·연결 id 는 다시 만들지 않고, 지우거나 옮기지도 않는다(이미 반영된 것이다).
-- 남은 그룹·노드를 마저 낸 뒤 연결을 낸다. 이미 낸 say·set_assumption 은 반복하지 않는다.`;
+- 남은 그룹·노드를 마저 낸 뒤 연결을 낸다. 이미 낸 say·set_assumption·흐름 명령은 반복하지 않는다.`;
 
 export function buildMessages(input: {
   intent: Intent | null;
@@ -155,6 +196,8 @@ export function buildMessages(input: {
   missing?: MissingItem[];
   /** 앞 응답이 출력 한도로 끊겨 이어 쓰게 하는 요청이면 true. state 는 지금까지 반영한 상태다. */
   continuation?: boolean;
+  /** 저장된 흐름. 있으면 "현재 구성" 뒤에 흐름 목록을 넣는다. */
+  flows?: Flow[];
 }): ChatMessage[] {
   const system = input.intent === "question" || input.intent === "other" ? ANSWER_PROMPT : SYSTEM_PROMPT;
   const labelOf = (id: string, fallback: string) => input.state.nodes[id]?.label ?? input.state.groups[id]?.label ?? fallback;
@@ -162,7 +205,8 @@ export function buildMessages(input: {
   const open = input.intent === "missing_info_answer" ? (input.missing ?? []).filter((m) => !m.unknown).slice(0, MISSING_LINES_MAX) : [];
   const missingBlock = open.length ? `채워야 할 정보:\n${open.map((m) => `${m.targetId} ${m.key}(${m.label})`).join("\n")}\n\n${MISSING_FORMAT_NOTE}\n\n` : "";
   const cont = input.continuation ? `\n\n${CONTINUE_NOTE}` : "";
-  const user = `현재 구성:\n${summarizeState(input.state)}\n\n참조 노드:\n${refs}\n\n${missingBlock}요청: ${input.text}${cont}`;
+  const flowBlock = input.flows?.length ? `흐름:\n${summarizeFlows(input.flows)}\n\n` : "";
+  const user = `현재 구성:\n${summarizeState(input.state)}\n\n${flowBlock}참조 노드:\n${refs}\n\n${missingBlock}요청: ${input.text}${cont}`;
   return [
     { role: "system", content: system },
     ...input.history.slice(-HISTORY_LIMIT).map((h) => ({ role: h.role, content: h.content })),

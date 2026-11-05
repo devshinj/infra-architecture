@@ -1,7 +1,8 @@
 import { isDeepStrictEqual } from "node:util";
 
 import { requiredKeysFor } from "@/domain/missing";
-import { emptyState, type DiagramState } from "@/domain/types";
+import { EDGE_DIRECTIONS, EDGE_PAYLOADS } from "@/domain/types";
+import { emptyState, type DiagramState, type EdgeDirection, type EdgePayload } from "@/domain/types";
 import { BUSY_MESSAGE } from "@/server/chat/busy";
 import { withDiagramLock } from "@/server/chat/lock";
 import { getOwnedDiagram, ValidationError } from "@/server/projects";
@@ -9,6 +10,7 @@ import { createVersion, getLatestState } from "@/server/versions";
 
 const VALUE_MAX = 80;
 const BAD_KEY = "입력할 수 없는 항목이에요";
+const BAD_VALUE = "고를 수 없는 값이에요";
 const NO_TARGET = "대상을 찾을 수 없어요";
 
 export interface SaveFieldsInput {
@@ -57,8 +59,17 @@ export async function saveFieldsFor(
     const target = targetKind === "node" ? state.nodes[targetId] : state.edges[targetId];
     if (targetKind === "node") {
       for (const [k, v] of Object.entries(filled)) state.nodes[targetId].attrs[k] = v;
-    } else if (filled.label !== undefined) {
-      state.edges[targetId].label = filled.label;
+    } else {
+      const edge = state.edges[targetId];
+      if (filled.label !== undefined) edge.label = filled.label;
+      if (filled.payload !== undefined) {
+        if (!(EDGE_PAYLOADS as readonly string[]).includes(filled.payload)) throw new ValidationError(BAD_VALUE);
+        edge.payload = filled.payload as EdgePayload;
+      }
+      if (filled.direction !== undefined) {
+        if (!(EDGE_DIRECTIONS as readonly string[]).includes(filled.direction)) throw new ValidationError(BAD_VALUE);
+        edge.direction = filled.direction as EdgeDirection;
+      }
     }
     if (unknown.length) target.unknown = unknown;
     else delete target.unknown;

@@ -14,6 +14,7 @@ import { runChatTurn, type ChatDeps } from "@/server/chat/pipeline";
 import { ANSWER_PROMPT, SYSTEM_PROMPT } from "@/server/chat/prompt";
 import type { ClefClient, Intent } from "@/server/llm/clef";
 import type { ChatMessage, QwenClient } from "@/server/llm/qwen";
+import { listFlows } from "@/server/flows";
 import { NotFoundError } from "@/server/projects";
 import { createVersion, getLatestState } from "@/server/versions";
 
@@ -875,5 +876,86 @@ describe("runChatTurn", () => {
       expect(latest!.state.warnings!.find((x) => x.id === "db_public:db-1")!.text).toBe(TEMPLATE);
       expect(of(events, "status").some((e) => e.phase === "checking")).toBe(false);
     });
+  });
+});
+
+describe("flow commands in a chat turn", () => {
+  const j = (o: unknown) => JSON.stringify(o);
+  const nodeLine = (id: string) => j({ op: "add_node", id, kind: "was", label: id, parent: null });
+  const flowLine = (id: string, edge: string, from: string) =>
+    j({ op: "add_flow", id, name: "주문", origin: "user", steps: [{ edge, from, short: "주문 요청", text: "주문을 보낸다" }] });
+  const clef = () => fakeClef({ intent: "structure_change", confidence: 0.9 });
+
+  /** 노드 a·b 와 연결 e-a-b 가 있는 구성도(버전 1). */
+  async function base() {
+    const ids = await makeOwnedDiagram();
+    const s = applyCommands(emptyState(), [
+      { op: "add_node", id: "a", kind: "was", label: "a", parent: null },
+      { op: "add_node", id: "b", kind: "was", label: "b", parent: null },
+      { op: "add_edge", id: "e-a-b", from: "a", to: "b", edge_kind: "request" },
+    ]).state;
+    await createVersion(ids.diagramId, s, { source: "import" });
+    return ids;
+  }
+
+  test("turn with add_edge + add_flow referencing that new edge saves one version and one flow", async () => {
+    const ids = await base();
+    const lines = [nodeLine("c"), j({ op: "add_edge", id: "e-b-c", from: "b", to: "c", edge_kind: "request" }), flowLine("order", "e-b-c", "b")];
+    const { events } = await turn(ids, "c 를 붙이고 흐름도 그려줘", { qwen: fakeQwen(lines.join("\n")), clef: clef() });
+    expect(of(events, "skip")).toEqual([]);
+    expect(of(events, "cmd").map((e) => e.cmd.op)).toEqual(["add_node", "add_edge", "add_flow"]);
+    expect(events.at(-1)).toMatchObject({ t: "done", version: 2, applied: 3, changed: 2, flows: 1, skipped: 0 });
+    expect(await versions(ids.diagramId)).toHaveLength(2);
+    const flows = await listFlows(ids.userId, ids.diagramId);
+    expect(flows).toHaveLength(1);
+    expect(flows[0]).toMatchObject({ id: "order", source: "ai", reviewed: false, problems: [], steps: [{ edge: "e-b-c", from: "b" }] });
+    expect((await listMessages(ids.diagramId))[1]!.meta).toMatchObject({ applied: 3, changed: 2, flows: 1, version: 2 });
+  });
+
+  test("flow-only turn creates no version but saves the flow and done.flows === 1", async () => {
+    const ids = await base();
+    const { events } = await turn(ids, "주문 흐름 그려줘", { qwen: fakeQwen(flowLine("order", "e-a-b", "a")), clef: clef() });
+    expect(events.at(-1)).toMatchObject({ t: "done", version: null, status: "complete", applied: 1, changed: 0, flows: 1, skipped: 0 });
+    // 구성은 그대로라 정리·점검도 하지 않는다.
+    expect(of(events, "status").some((e) => e.phase === "checking")).toBe(false);
+    expect(await versions(ids.diagramId)).toHaveLength(1);
+    expect((await listFlows(ids.userId, ids.diagramId)).map((f) => f.id)).toEqual(["order"]);
+    const meta = (await listMessages(ids.diagramId))[1]!.meta;
+    expect(meta).toMatchObject({ version: null, applied: 1, changed: 0, flows: 1 });
+    expect(meta.missing).toBeUndefined();
+  });
+
+  test("invalid flow is reported as skip and not saved", async () => {
+    const ids = await base();
+    const lines = [flowLine("bad", "e-nope", "a"), flowLine("good", "e-a-b", "a")];
+    const { events } = await turn(ids, "흐름 두 개", { qwen: fakeQwen(lines.join("\n")), clef: clef() });
+    const skips = of(events, "skip");
+    expect(skips).toHaveLength(1);
+    expect(skips[0]!.reason).toContain("bad");
+    expect(skips[0]!.reason).toContain("missing_edge");
+    // 건너뜀은 done 앞에 온다.
+    expect(events.indexOf(skips[0]!)).toBeLessThan(events.length - 1);
+    expect(events.at(-1)).toMatchObject({ t: "done", version: null, applied: 2, changed: 0, flows: 1, skipped: 1 });
+    expect((await listFlows(ids.userId, ids.diagramId)).map((f) => f.id)).toEqual(["good"]);
+  });
+
+  test("changed counts only structural", async () => {
+    const ids = await base();
+    const lines = [
+      j({ op: "set_assumption", key: "scale", value: "100명" }),
+      j({ op: "update_edge", id: "e-a-b", label: "HTTP 8080" }),
+      flowLine("order", "e-a-b", "a"),
+      j({ op: "remove_flow", id: "nope" }),
+    ];
+    const { events } = await turn(ids, "흐름과 라벨", { qwen: fakeQwen(lines.join("\n")), clef: clef() });
+    expect(events.at(-1)).toMatchObject({ t: "done", version: 2, applied: 4, changed: 1, flows: 1, skipped: 1 });
+  });
+
+  test("saved flows are listed in the next prompt", async () => {
+    const ids = await base();
+    await turn(ids, "주문 흐름", { qwen: fakeQwen(flowLine("order", "e-a-b", "a")), clef: clef() });
+    const qwen = fakeQwen(j({ op: "say", text: "네" }));
+    await turn(ids, "흐름 이름 바꿔줘", { qwen, clef: clef() });
+    expect(qwen.calls[0]!.at(-1)!.content).toContain('흐름:\n흐름 order [user] "주문": e-a-b\n\n참조 노드:');
   });
 });

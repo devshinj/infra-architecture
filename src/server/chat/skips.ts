@@ -3,7 +3,7 @@
  * 키에는 사용자 글을 넣지 않는다. 표본 줄은 모델 출력이며 점검 스크립트만 남긴다.
  */
 
-export type SkipKind = "empty_say" | "unknown_op" | "invalid" | "apply" | "bad_json";
+export type SkipKind = "empty_say" | "unknown_op" | "invalid" | "apply" | "bad_json" | "flow";
 
 const KEY_MAX = 100;
 const SAMPLE_MAX = 120;

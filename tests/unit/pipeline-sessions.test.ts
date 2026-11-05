@@ -25,6 +25,7 @@ vi.mock("@/server/chat/messages", () => ({
     return { id: `m${store.created.length}`, createdAt: new Date() };
   }),
 }));
+vi.mock("@/server/flows", () => ({ listFlows: vi.fn(async () => []), applyFlowOps: vi.fn(async () => ({ saved: 0, rejected: [] })) }));
 vi.mock("@/server/chat/sessions", () => ({
   getSession: vi.fn(async (_d: string, id: string) => (store.sessions[id] ? { id, ...store.sessions[id] } : null)),
   createSession: vi.fn(async () => ({ id: "fresh", kind: "diagram", nodeId: null, nodeLabel: null, title: "t", updatedAt: new Date(0) })),

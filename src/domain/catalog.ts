@@ -31,6 +31,7 @@ export const NODE_KINDS = [
   nk("api_gateway", "API 게이트웨이", "network"),
   nk("nat", "NAT", "network"),
   nk("vpn", "VPN", "network"),
+  nk("network_link", "망연계 솔루션", "network", ["sw"]),
   nk("web_server", "웹 서버", "compute", SERVER),
   nk("was", "WAS", "compute", SERVER),
   nk("app_server", "앱 서버", "compute", SERVER),
@@ -75,6 +76,7 @@ export const GROUP_KINDS = [
   { kind: "idc", labelKo: "IDC", zoneToken: "--zone-region", tintToken: "--zone-tint-onprem", innerDirection: "DOWN", dashed: true },
   { kind: "onprem_zone", labelKo: "온프레미스 구역", zoneToken: "--zone-region", tintToken: "--zone-tint-onprem", innerDirection: "DOWN", dashed: true },
   { kind: "k8s_cluster", labelKo: "쿠버네티스 클러스터", zoneToken: "--zone-vpc", tintToken: "--zone-tint-k8s", innerDirection: "RIGHT", dashed: false },
+  { kind: "network_zone", labelKo: "망", zoneToken: "--zone-region", tintToken: "--zone-tint-network", innerDirection: "DOWN", dashed: true },
   { kind: "external_service", labelKo: "외부 서비스", zoneToken: "--zone-external", tintToken: "--zone-tint-external", innerDirection: "DOWN", dashed: true },
   { kind: "redundancy_group", labelKo: "이중화 묶음", zoneToken: "--zone-redundancy", tintToken: "--zone-tint-redundancy", innerDirection: "RIGHT", dashed: true },
 ] as const;

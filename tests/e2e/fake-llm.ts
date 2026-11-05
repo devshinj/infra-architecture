@@ -4,7 +4,7 @@ import http from "node:http";
 import "./fake-env";
 
 import spike from "../../docs/superpowers/spike/spike-results.json";
-import { ASK_PROMPT, EXPLAIN_EDGE_PROMPT, EXPLAIN_NODE_PROMPT, WARNING_PROMPT } from "../../src/server/chat/prompt";
+import { ASK_PROMPT, EXPLAIN_EDGE_PROMPT, EXPLAIN_NODE_PROMPT, FLOW_SUGGEST_PROMPT, WARNING_PROMPT } from "../../src/server/chat/prompt";
 import { convertSpikeScenario, type SpikeState } from "../../src/server/samples";
 import { FAKE_PORT } from "./fake-config";
 
@@ -33,7 +33,107 @@ function s1Lines(): string[] {
 
 export const S1_NODE_COUNT = Object.keys(s1.state.nodes).length;
 
+/** 흐름 E2E: s1 의 실제 연결 id 로 첫 연결부터 이어지는 길(최대 4단계)을 흐름 하나로 만든다. */
+export const S1_FLOW_ID = "order";
+const s1Edges = () => Object.values(convertSpikeScenario(s1.state).edges);
+
+/** start 연결부터 이어지는 길(최대 4단계). */
+function s1Steps(start: number): { edge: string; from: string; short: string; text: string }[] {
+  const edges = s1Edges();
+  const steps: { edge: string; from: string; short: string; text: string }[] = [];
+  let e: (typeof edges)[number] | undefined = edges[start];
+  while (e && steps.length < 4) {
+    const cur: (typeof edges)[number] = e;
+    steps.push({ edge: cur.id, from: cur.from, short: `${steps.length + 1}번 요청`, text: `${cur.from} 에서 ${cur.to} 로 요청을 보낸다` });
+    e = edges.find((x) => x.from === cur.to && !steps.some((s) => s.edge === x.id));
+  }
+  return steps;
+}
+
+/** 주문하기 흐름(s1Steps(0))이 시작하는 노드의 이름. 노드 정보의 "지나는 흐름" E2E 가 이 노드를 고른다. */
+export const S1_FLOW_START_LABEL = (() => {
+  const st = convertSpikeScenario(s1.state);
+  return st.nodes[s1Steps(0)[0]!.from]!.label;
+})();
+
+function s1FlowLines(): string[] {
+  return [
+    JSON.stringify({ op: "say", text: "주문 흐름을 그렸어요." }),
+    JSON.stringify({ op: "add_flow", id: S1_FLOW_ID, name: "주문하기", origin: "user", result: "주문 결과를 돌려받는다", steps: s1Steps(0) }),
+  ];
+}
+
+/** 흐름 제안: s1 의 앞 연결 셋에서 시작하는 흐름 3개(사용자 2 · 시스템 1). */
+export const S1_SUGGEST_FLOW_IDS = ["suggest-1", "suggest-2", "suggest-3"];
+function s1SuggestLines(): string[] {
+  const names = ["상품 보기", "주문하기", "정산 배치"];
+  return S1_SUGGEST_FLOW_IDS.map((id, i) =>
+    JSON.stringify({ op: "add_flow", id, name: names[i], origin: i === 2 ? "system" : "user", result: "결과를 돌려받는다", steps: s1Steps(i) }),
+  );
+}
+
+/**
+ * 망 경계 E2E("망분리"): 업무망·인터넷망 두 망, 망 밖의 망연계 솔루션, 그것을 거치는 연결 둘(API 양방향)과
+ * 경계 노드 없이 망을 바로 넘는 연결 하나(파일 단방향 → network_direct 경고).
+ */
+export const NET = {
+  officePc: "office-pc",
+  officeWas: "office-was",
+  link: "netlink",
+  inetWeb: "inet-web",
+  edgePcWas: "e-pc-was",
+  edgeWasLink: "e-was-link",
+  edgeLinkWeb: "e-link-web",
+  edgeDirect: "e-pc-web",
+} as const;
+export const NET_NODE_COUNT = 4;
+function netLines(): string[] {
+  return [
+    { op: "say", text: "망분리 구성을 그리겠습니다." },
+    { op: "add_group", id: "zone-office", group_kind: "network_zone", label: "업무망", parent: null },
+    { op: "add_group", id: "zone-internet", group_kind: "network_zone", label: "인터넷망", parent: null },
+    { op: "add_node", id: NET.officePc, kind: "client_web", label: "업무 PC", parent: "zone-office" },
+    { op: "add_node", id: NET.officeWas, kind: "was", label: "업무 서버", parent: "zone-office" },
+    { op: "add_node", id: NET.link, kind: "network_link", label: "망연계", parent: null },
+    { op: "add_node", id: NET.inetWeb, kind: "web_server", label: "인터넷 서버", parent: "zone-internet" },
+    { op: "add_edge", id: NET.edgePcWas, from: NET.officePc, to: NET.officeWas, edge_kind: "request", label: "HTTPS 443" },
+    { op: "add_edge", id: NET.edgeWasLink, from: NET.officeWas, to: NET.link, edge_kind: "request", label: "자료 전송", payload: "api", direction: "two_way" },
+    { op: "add_edge", id: NET.edgeLinkWeb, from: NET.link, to: NET.inetWeb, edge_kind: "request", label: "자료 전달", payload: "api", direction: "two_way" },
+    { op: "add_edge", id: NET.edgeDirect, from: NET.officePc, to: NET.inetWeb, edge_kind: "request", label: "직접 접속", payload: "file", direction: "one_way" },
+  ].map((l) => JSON.stringify(l));
+}
+
+/** 망분리 구성의 흐름 제안: 망연계를 거치는 사용자 흐름 하나, 바로 넘는 시스템 흐름 하나. */
+function netSuggestLines(): string[] {
+  const step = (edge: string, from: string, short: string, text: string) => ({ edge, from, short, text });
+  return [
+    {
+      op: "add_flow",
+      id: "net-send",
+      name: "자료 보내기",
+      origin: "user",
+      result: "인터넷 서버가 받은 결과를 돌려준다",
+      steps: [
+        step(NET.edgePcWas, NET.officePc, "자료 올리기", "업무 PC 에서 업무 서버로 자료를 올린다"),
+        step(NET.edgeWasLink, NET.officeWas, "망연계로 전송", "업무 서버가 망연계 솔루션으로 자료를 보낸다"),
+        step(NET.edgeLinkWeb, NET.link, "인터넷망 전달", "망연계 솔루션이 검사한 자료를 인터넷 서버로 넘긴다"),
+      ],
+    },
+    {
+      op: "add_flow",
+      id: "net-direct",
+      name: "직접 내려받기",
+      origin: "system",
+      result: "파일이 인터넷 서버에 남는다",
+      steps: [step(NET.edgeDirect, NET.officePc, "바로 접속", "업무 PC 가 인터넷 서버로 바로 파일을 보낸다")],
+    },
+  ].map((l) => JSON.stringify(l));
+}
+
 type Msg = { role: string; content: string };
+
+/** 흐름 제안 요청의 사용자 글(현재 구성 요약). */
+const suggestText = (messages: Msg[]) => [...messages].reverse().find((m) => m.role === "user")?.content ?? "";
 
 /**
  * 출력 한도 E2E("끊김"): 첫 요청은 노드 둘과 끊긴 줄로 finish_reason "length", 이어 쓰기 요청(현재 구성에 cut-2 가 있음)은
@@ -102,6 +202,10 @@ async function linesFor(messages: Msg[]): Promise<{ lines: string[]; delay: numb
       ],
     };
   }
+  // 흐름: s1(쇼핑몰) 구성 위에 흐름 하나. 다른 키워드 분기 뒤, 쇼핑몰 앞에 둬 다른 분기를 가리지 않는다.
+  // 망분리: 망 경계 예시. "흐름" 보다 먼저 맞춘다(망분리 요청 글에 흐름이 없게 쓰지만 순서로도 막는다).
+  if (request.includes("망분리")) return { lines: netLines(), delay };
+  if (request.includes("흐름")) return { lines: s1FlowLines(), delay };
   if (request.includes("쇼핑몰")) return { lines: s1Lines(), delay };
   return { lines: [JSON.stringify({ op: "say", text: "네, 알겠습니다." })], delay };
 }
@@ -184,7 +288,9 @@ export function startFakeLlm(): Promise<http.Server> {
       const sys = body.messages.find((m) => m.role === "system")?.content;
       const askQuestion = sys === ASK_PROMPT ? ([...body.messages].reverse().find((m) => m.role === "user")?.content.split("질문: ").pop() ?? "") : null;
       const explainKind = sys === EXPLAIN_NODE_PROMPT ? "node" : sys === EXPLAIN_EDGE_PROMPT ? "edge" : null;
-      const { lines, delay, finish, tail }: { lines: string[]; delay: number; finish?: "stop" | "length"; tail?: string } = askQuestion !== null
+      const { lines, delay, finish, tail }: { lines: string[]; delay: number; finish?: "stop" | "length"; tail?: string } = sys === FLOW_SUGGEST_PROMPT
+        ? { lines: suggestText(body.messages).includes(`노드 ${NET.link} `) ? netSuggestLines() : s1SuggestLines(), delay: FAST_MS }
+        : askQuestion !== null
         ? { lines: [`가짜 답이에요. ${askQuestion}`], delay: FAST_MS }
         : explainKind
         ? { lines: [explainJson(body.messages, explainKind)], delay: FAST_MS }

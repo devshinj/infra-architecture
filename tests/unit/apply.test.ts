@@ -167,3 +167,14 @@ describe("pruneEmptyGroups", () => {
     expect(Object.keys(out.edges)).toEqual(["e-client-spare"]);
   });
 });
+
+describe("edge payload/direction", () => {
+  test("add_edge stores payload/direction", () => {
+    const s = applyCommand(base(), { op: "add_edge", id: "e-pd", from: "was-1", to: "db", edge_kind: "request", payload: "file", direction: "one_way" });
+    expect(s.ok && s.state.edges["e-pd"]).toMatchObject({ payload: "file", direction: "one_way" });
+  });
+  test("update_edge merges payload/direction and keeps label", () => {
+    const s = applyCommand(base(), { op: "update_edge", id: "e-was-1-db", payload: "api", direction: "two_way" });
+    expect(s.ok && s.state.edges["e-was-1-db"]).toMatchObject({ label: "JDBC", payload: "api", direction: "two_way" });
+  });
+});

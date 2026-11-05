@@ -1,3 +1,4 @@
+import { isDirectCrossing } from "./boundary";
 import { categoryOf } from "./catalog";
 import type { DNode, DiagramState, Edge, Warning, WarningLevel } from "./types";
 
@@ -68,6 +69,13 @@ export const RULES: Rule[] = [
     guide: "DB 는 내부 구역에 두고, 외부와의 연결은 WAS 나 API 게이트웨이를 거치게 하세요.",
     instructions: "이 저장소가 인터넷(외부 사용자·외부 서비스)에서 방화벽 없이 직접 접근 가능한 위치에 있거나 그렇게 연결돼 있는가?",
   },
+  {
+    rule: "network_direct",
+    level: "warn",
+    patternId: "external",
+    template: (s, { node, edge }) => `${edge ? (s.nodes[edge.from]?.label ?? edge.from) : ""}에서 ${node.label}(으)로 망을 바로 넘어가요.`,
+    guide: "서로 다른 망 사이 통신은 방화벽·망연계 솔루션·VPN 을 거치게 그리세요.",
+  },
 ];
 
 const ruleOf = (name: string) => RULES.find((r) => r.rule === name)!;
@@ -84,7 +92,7 @@ function make(state: DiagramState, rule: Rule, node: DNode, edge?: Edge): Warnin
   };
 }
 
-/** 코드 규칙 4개를 평가한다. db_exposed 는 Clef 전용이라 여기서 만들지 않는다. */
+/** 코드 규칙 5개를 평가한다. db_exposed 는 Clef 전용이라 여기서 만들지 않는다. */
 export function evaluateRules(state: DiagramState): Warning[] {
   const nodes = Object.values(state.nodes);
   const edges = Object.values(state.edges);
@@ -116,6 +124,12 @@ export function evaluateRules(state: DiagramState): Warning[] {
     // 인그레스·배스천은 정당한 진입점이다.
     if (to.kind === "k8s_ingress" || to.kind === "bastion") continue;
     if ((fc === "client" || fc === "external") && (tc === "compute" || tc === "data")) out.push(make(state, noFw, to, e));
+  }
+
+  const netDirect = ruleOf("network_direct");
+  for (const e of edges) {
+    if (!isDirectCrossing(state, e)) continue;
+    out.push(make(state, netDirect, state.nodes[e.to], e));
   }
 
   const cacheRule = ruleOf("cache_without_db");

@@ -1,5 +1,6 @@
 import { CategoryIcon } from "@/canvas/icons";
 import { categoryOf, EDGE_KINDS, GROUP_KINDS, NODE_KINDS } from "@/domain/catalog";
+import { flowsThrough, type Flow } from "@/domain/flows";
 import { FIELD_LABELS, isEmpty } from "@/domain/missing";
 import type { DiagramState, DNode, Warning } from "@/domain/types";
 import { mergeWarnings } from "@/domain/warnings";
@@ -28,6 +29,8 @@ export interface NodeInfoProps {
   explain?: ExplanationProps;
   /** 노드에 대해 물어보기 입력(노드 전용: 연결선·구역에는 두지 않는다). 없으면 숨긴다. */
   ask?: Omit<AskNodeProps, "nodeId" | "nodeLabel">;
+  /** 구성도의 흐름과, 흐름 이름 칩을 눌렀을 때(그 흐름을 켜고 흐름 탭으로). 없으면 지나는 흐름 절을 그리지 않는다. */
+  flows?: { list: Flow[]; onOpen(key: string): void };
 }
 
 type CautionProps = Pick<NodeInfoProps, "onIgnoreWarning" | "ignoreDisabled" | "ignoreError">;
@@ -122,7 +125,30 @@ function Cautions({ active, ignored, onIgnoreWarning, ignoreDisabled, ignoreErro
   );
 }
 
-export function NodeInfo({ state, selectedId, onSelect, onMention, mentionDisabled, warningState, explain, ask, ...caution }: NodeInfoProps) {
+/** 이 노드·연결을 지나는 흐름 이름 칩. 끊긴 단계만 걸친 흐름은 치지 않는다. 하나도 없으면 절이 없다. */
+function FlowChips({ state, id, title, flows }: { state: DiagramState; id: string; title: string; flows?: NodeInfoProps["flows"] }) {
+  if (!flows) return null;
+  const through = flowsThrough(state, flows.list, id);
+  if (through.length === 0) return null;
+  const headId = `flows-through-${id}`;
+  return (
+    <section className={styles.section} aria-labelledby={headId}>
+      <h3 id={headId} className={styles.heading}>{title}</h3>
+      <div className={styles.chips}>
+        {through.map((f) => (
+          <button key={f.id} type="button" className={styles.chip} onClick={() => flows.onOpen(f.id)}>
+            {f.name}
+          </button>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+const PAYLOAD_NAME = { api: "API", file: "파일" } as const;
+const DIRECTION_NAME = { one_way: "단방향", two_way: "양방향" } as const;
+
+export function NodeInfo({ state, selectedId, onSelect, onMention, mentionDisabled, warningState, explain, ask, flows, ...caution }: NodeInfoProps) {
   if (selectedId === null) return <p className={styles.empty}>캔버스에서 노드를 선택하면 설명이 여기에 표시돼요.</p>;
 
   const warnings = mergeWarnings(warningState ?? state);
@@ -138,9 +164,12 @@ export function NodeInfo({ state, selectedId, onSelect, onMention, mentionDisabl
           <div className={styles.field}><dt>출발</dt><dd>{nameOf(state, edge.from)}</dd></div>
           <div className={styles.field}><dt>도착</dt><dd>{nameOf(state, edge.to)}</dd></div>
           <div className={styles.field}><dt>라벨</dt><dd className={isEmpty(edge.label) ? styles.missing : undefined}>{isEmpty(edge.label) ? (edge.unknown?.includes("label") ? UNKNOWN : MISSING) : edge.label}</dd></div>
+          {edge.payload && <div className={styles.field}><dt>전달물</dt><dd>{PAYLOAD_NAME[edge.payload]}</dd></div>}
+          {edge.direction && <div className={styles.field}><dt>방향</dt><dd>{DIRECTION_NAME[edge.direction]}</dd></div>}
         </dl>
         {explain && <Explanation target="edge" {...explain} />}
         <Cautions {...pick((w) => w.edgeId === edge.id)} {...caution} />
+        <FlowChips state={state} id={edge.id} title="이 연결이 들어간 흐름" flows={flows} />
       </div>
     );
   }
@@ -216,6 +245,7 @@ export function NodeInfo({ state, selectedId, onSelect, onMention, mentionDisabl
           </div>
         </section>
       )}
+      <FlowChips state={state} id={node.id} title="이 노드를 지나는 흐름" flows={flows} />
       {ask && <AskNode nodeId={node.id} nodeLabel={node.label} {...ask} />}
     </div>
   );

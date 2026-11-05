@@ -5,6 +5,7 @@ import { db } from "@/db/client";
 import { diagramVersions, diagrams, projects } from "@/db/schema";
 import { emptyState } from "@/domain/types";
 import type { DiagramState } from "@/domain/types";
+import { copyFlows } from "@/server/flows";
 import { createVersion, getLatestState } from "@/server/versions";
 
 export class NotFoundError extends Error {
@@ -282,6 +283,7 @@ export async function duplicateDiagram(userId: string, diagramId: string): Promi
   const state: DiagramState = latest?.state ?? emptyState();
   const row = await insertCopy(src.projectId, src.name);
   await createVersion(row.id, state, { source: "import" });
+  await copyFlows(diagramId, row.id);
   return row;
 }
 

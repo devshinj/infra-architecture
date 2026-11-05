@@ -17,6 +17,8 @@ export interface TurnResult {
   applied: number;
   /** 구성을 바꾼 명령 수(가정 제외). 없으면(옛 메시지) applied 로 본다. */
   changed?: number;
+  /** 저장한 흐름 명령 수(있을 때만). */
+  flows?: number;
   skipped: number;
   nodes?: number;
   edges?: number;
@@ -31,17 +33,21 @@ const changedOf = (r: Pick<TurnResult, "applied" | "changed">) => r.changed ?? r
  * 언제나(가정만 바꿨어도), 그 밖에는 버전 없이 건너뛴 명령이 있을 때. AI 가 글을 냈으면 알리지 않는다.
  * 그 밖에 바뀐 것이 없으면 "변경 사항이 없어요.", 답만 한 차례면 없음.
  * 재정렬(layout) 차례는 "다시 정렬했어요" 안내와 어긋나므로 칩을 두지 않는다.
+ * 흐름을 저장했으면 `흐름 N개 바꿨어요`를 덧붙인다. 흐름만 바꾼 차례(버전 없음)도 반영한 것으로 본다.
  */
 export function summaryText(r: TurnResult, hadAnswer: boolean, intent?: string | null): string | null {
   // 옛 메시지(changed 없음)는 예전 규칙 그대로 보인다.
   if (r.changed === undefined) return legacySummaryText(r, hadAnswer, intent);
   const changed = r.changed;
-  if (changed === 0 && r.status === "complete") {
+  const flows = r.flows ?? 0;
+  if (changed === 0 && flows === 0 && r.status === "complete") {
     if (!hadAnswer && intent !== "layout" && (intent === "structure_change" || (r.version === null && r.skipped > 0))) return NOT_APPLIED_MESSAGE;
     if (r.version === null) return hadAnswer || intent === "layout" ? null : "변경 사항이 없어요.";
   }
-  const counts = changed > 0 ? `${changed}곳 바꿨어요` : "바꾼 곳이 없어요";
-  const base = r.nodes === undefined || r.edges === undefined ? counts : `노드 ${r.nodes} · 연결 ${r.edges} · ${counts}`;
+  const flowText = flows > 0 ? `흐름 ${flows}개 바꿨어요` : null;
+  const counts = changed > 0 ? `${changed}곳 바꿨어요` : flowText ? null : "바꾼 곳이 없어요";
+  const parts = [...(r.nodes === undefined || r.edges === undefined ? [] : [`노드 ${r.nodes}`, `연결 ${r.edges}`]), counts, flowText].filter((p) => p !== null);
+  const base = parts.join(" · ");
   return r.status === "aborted" ? `중단됨 · ${base}` : base;
 }
 
@@ -85,6 +91,7 @@ export function messagesToLines(rows: Row[]): ChatLine[] {
       status: meta.status === undefined || meta.status === "complete" ? "complete" : "aborted",
       applied: meta.applied ?? 0,
       ...(meta.changed !== undefined ? { changed: meta.changed } : {}),
+      ...(meta.flows !== undefined ? { flows: meta.flows } : {}),
       skipped: meta.skipped ?? 0,
       ...(meta.nodes !== undefined ? { nodes: meta.nodes } : {}),
       ...(meta.edges !== undefined ? { edges: meta.edges } : {}),
