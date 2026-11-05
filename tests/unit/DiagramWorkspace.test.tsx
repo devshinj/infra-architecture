@@ -1072,6 +1072,27 @@ test("activating a flow clears node selection and passes flow to Canvas", async 
   expect(hookState.flow.at(-1)).toBeNull();
 });
 
+test("Esc typed in a text field or inside an open menu/dialog does not clear the flow", async () => {
+  hookState.busy = false;
+  stubFlows();
+  render(ui(flowLatest() as never));
+  await openFlow();
+  expect(hookState.flow.at(-1)).not.toBeNull();
+  // 열린 메뉴 안에서 누른 Esc 는 메뉴 몫이다.
+  fireEvent.click(screen.getByRole("button", { name: "로그인 메뉴" }));
+  fireEvent.keyDown(screen.getByRole("menuitem", { name: "이름 바꾸기" }), { key: "Escape" });
+  expect(hookState.flow.at(-1)).not.toBeNull();
+  // 흐름을 띄운 채 대화 탭으로 가서 입력칸에서 누른 Esc(쓰던 글을 지우는 등 입력칸 몫).
+  fireEvent.click(screen.getByRole("tab", { name: "대화" }));
+  expect(hookState.flow.at(-1)).not.toBeNull();
+  const box = screen.getByRole("textbox");
+  fireEvent.keyDown(box, { key: "Escape" });
+  expect(hookState.flow.at(-1)).not.toBeNull();
+  // 다른 곳에서 누르면 푼다.
+  fireEvent.keyDown(document.body, { key: "Escape" });
+  expect(hookState.flow.at(-1)).toBeNull();
+});
+
 test("selecting a node clears active flow", async () => {
   hookState.busy = false;
   stubFlows();

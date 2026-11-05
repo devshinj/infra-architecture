@@ -95,6 +95,19 @@ const optionsFor = (state: DiagramState): CanvasOptions => ({ ...defaultDisplayO
 
 const NO_SESSIONS: SessionSummary[] = [];
 
+/**
+ * 흐름 보기를 풀지 않을 Esc: 입력칸(글 지우기 등 입력칸 몫), 열린 메뉴·대화상자·목록 안(그것을 닫는 몫),
+ * 떠 있는 이름 말풍선(NameTooltip 은 Esc 를 막지 않고 말풍선만 닫는다).
+ */
+function escapeBelongsElsewhere(e: KeyboardEvent): boolean {
+  const t = e.target;
+  if (t instanceof HTMLElement) {
+    if (t.isContentEditable || t.closest('input, textarea, select, [contenteditable]:not([contenteditable="false"])')) return true;
+    if (t.closest('[role="dialog"], [role="alertdialog"], [role="menu"], [role="listbox"], [aria-modal="true"]')) return true;
+  }
+  return document.querySelector('[role="tooltip"]') !== null;
+}
+
 export function DiagramWorkspace({ diagramId, name, projectName, latest, initialPinned, samples, initialChat = [], initialSessions = NO_SESSIONS, initialPaging }: DiagramWorkspaceProps) {
   const router = useRouter();
   const [current, setCurrent] = useState(latest);
@@ -382,8 +395,8 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
   useEffect(() => {
     if (activeFlowKey === null) return;
     const onKey = (e: KeyboardEvent) => {
-      // 대화상자·메뉴가 먼저 받은 Esc 는 건너뛴다.
-      if (e.key === "Escape" && !e.defaultPrevented) setActiveFlow(null);
+      // 대화상자·메뉴가 먼저 받은 Esc, 입력칸·열린 메뉴/대화상자 안의 Esc, 떠 있는 이름 말풍선을 닫는 Esc 는 건너뛴다.
+      if (e.key === "Escape" && !e.defaultPrevented && !escapeBelongsElsewhere(e)) setActiveFlow(null);
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
