@@ -110,7 +110,7 @@ test("selecting shows numbered steps with crossing note and result", () => {
   const items = within(steps).getAllByRole("listitem");
   expect(items[0]).toHaveTextContent("①");
   expect(items[0]).toHaveTextContent("브라우저가 방화벽으로 접속해요");
-  expect(items[0]).toHaveTextContent("여기서 망 밖 → 업무망으로 넘어가요(방화벽 거침)");
+  expect(items[0]).toHaveTextContent("망 밖에서 업무망으로 넘어가요(방화벽 거침)");
   expect(items[1]).toHaveTextContent("②");
   expect(items[1]).not.toHaveTextContent("넘어가요");
   expect(screen.getByText("웹 화면이 떠요")).toBeInTheDocument();

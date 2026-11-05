@@ -87,5 +87,6 @@ export function crossingNote(state: DiagramState, step: FlowStep): string | null
   const fromLabel = zoneLabel(step.from) ?? "망 밖";
   const toLabel = zoneLabel(end) ?? "망 밖";
   const boundary = [step.from, end].map((id) => state.nodes[id]).find((nd) => nd && BOUNDARY_NODE_KINDS.has(nd.kind));
-  return `여기서 ${fromLabel} → ${toLabel}으로 넘어가요${boundary ? `(${boundary.label} 거침)` : ""}`;
+  // 화살표 글자(→)는 화면 글꼴에서 ">" 처럼 보여 말로 쓴다.
+  return `${fromLabel}에서 ${toLabel}으로 넘어가요${boundary ? `(${boundary.label} 거침)` : ""}`;
 }

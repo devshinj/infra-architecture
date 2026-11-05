@@ -162,5 +162,5 @@ test("망 경계 sample: crossing dot visible, tag on select, network_direct war
   await flowRow(page, "자료 보내기").click();
   await expect(page.locator(".edge-step-label")).toHaveCount(3);
   await expect(tags).toHaveCount(2);
-  await expect(page.getByRole("list", { name: "자료 보내기 단계" })).toContainText("여기서 업무망 → 망 밖으로 넘어가요(망연계 거침)");
+  await expect(page.getByRole("list", { name: "자료 보내기 단계" })).toContainText("업무망에서 망 밖으로 넘어가요(망연계 거침)");
 });

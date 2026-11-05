@@ -86,3 +86,7 @@
 .edge-boundary-tag__pill-text, .edge-boundary-tag__detail { font-size: 11px; dominant-baseline: central; }
 .edge-boundary-tag__pill-text { fill: var(--text-primary); text-anchor: middle; }
 .edge-boundary-tag__detail { fill: var(--boundary-mark); text-anchor: start; stroke: var(--bg-canvas); stroke-width: 3px; paint-order: stroke; }
+/* 방향 화살표: 글자 대신 선으로(뒤에 바탕색 굵은 선을 깔아 연결선 위에서도 읽히게). */
+.edge-boundary-tag__dir path { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.edge-boundary-tag__dir-halo { stroke: var(--bg-canvas); stroke-width: 4px; }
+.edge-boundary-tag__dir-line { stroke: var(--boundary-mark); stroke-width: 1.5px; }

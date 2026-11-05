@@ -98,8 +98,8 @@ test("shortLabel truncates at 12 code points", () => {
 
 test("crossingNote names zones and the boundary node", () => {
   const s = build();
-  expect(crossingNote(s, step("e4", "was"))).toBe("여기서 업무망 → 망 밖으로 넘어가요(망연계 거침)");
-  expect(crossingNote(s, step("e5", "link"))).toBe("여기서 망 밖 → 인터넷망으로 넘어가요(망연계 거침)");
-  expect(crossingNote(s, step("e1", "browser"))).toBe("여기서 망 밖 → 업무망으로 넘어가요(방화벽 거침)");
+  expect(crossingNote(s, step("e4", "was"))).toBe("업무망에서 망 밖으로 넘어가요(망연계 거침)");
+  expect(crossingNote(s, step("e5", "link"))).toBe("망 밖에서 인터넷망으로 넘어가요(망연계 거침)");
+  expect(crossingNote(s, step("e1", "browser"))).toBe("망 밖에서 업무망으로 넘어가요(방화벽 거침)");
   expect(crossingNote(s, step("e2", "fw"))).toBeNull();
 });

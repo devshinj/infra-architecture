@@ -48,12 +48,24 @@ const DOT_R = 3;
 const TAG = { font: 11, padX: 6, height: 16, gap: 4, halo: 3 };
 const TAG_PILL = "망 넘음";
 const PAYLOAD_TEXT: Record<NonNullable<DisplayEdge["payload"]>, string> = { api: "API", file: "파일" };
-const DIRECTION_TEXT: Record<NonNullable<DisplayEdge["direction"]>, string> = { one_way: "→", two_way: "↔" };
+/**
+ * 방향 화살표: 글자(→ ↔)는 화면 글꼴에서 ">" 처럼 보여 선으로 그린다. 폭, 머리 길이·높이(반), 선 굵기.
+ * 경로는 x 0 에서 시작해 오른쪽으로(한쪽이면 오른쪽 끝에만 머리).
+ */
+const DIR = { w: 13, head: 4, half: 3.5 };
+const DIR_D: Record<NonNullable<DisplayEdge["direction"]>, string> = {
+  one_way: `M0,0 H${DIR.w} M${DIR.w - DIR.head},${-DIR.half} L${DIR.w},0 L${DIR.w - DIR.head},${DIR.half}`,
+  two_way: `M0,0 H${DIR.w} M${DIR.w - DIR.head},${-DIR.half} L${DIR.w},0 L${DIR.w - DIR.head},${DIR.half} M${DIR.head},${-DIR.half} L0,0 L${DIR.head},${DIR.half}`,
+};
 
-/** "API ↔", "파일 →", "API", "↔"; 둘 다 없으면 null. */
-function tagDetail(e: DisplayEdge): string | null {
-  const parts = [e.payload ? PAYLOAD_TEXT[e.payload] : null, e.direction ? DIRECTION_TEXT[e.direction] : null].filter((s): s is string => s !== null);
-  return parts.length > 0 ? parts.join(" ") : null;
+/** 알약 옆 전달물 글자("API"·"파일")와 방향. 둘 다 없으면 null. */
+function tagDetail(e: DisplayEdge): { text: string | null; direction: DisplayEdge["direction"] | null; width: number } | null {
+  const text = e.payload ? PAYLOAD_TEXT[e.payload] : null;
+  const direction = e.direction ?? null;
+  if (text === null && direction === null) return null;
+  const textW = text ? textWidth(text, TAG.font) : 0;
+  const width = textW + (direction ? (text ? TAG.gap : 0) + DIR.w : 0);
+  return { text, direction, width };
 }
 const ARROW = { size: 5, spread: 0.5 };
 /** 강조 겹선의 화살표 크기. */
@@ -196,7 +208,7 @@ export function EdgeLayer({ layout, edges, selectedId, selectedRect, hoverId, on
       if (!l || !dots.has(id)) return [];
       const detail = tagDetail(byId.get(id)!);
       const pill = textWidth(TAG_PILL, TAG.font) + 2 * TAG.padX;
-      const width = pill + (detail ? TAG.gap + textWidth(detail, TAG.font) + TAG.halo : 0);
+      const width = pill + (detail ? TAG.gap + detail.width + TAG.halo : 0);
       return [{ text: TAG_PILL, width, height: TAG.height, points: l.points, labelAt: dots.get(id)!, id, pill, detail }];
     });
     // 고른 동안 보이는 연결 이름(제자리 이름·합친 이름)도 가리지 않는다.
@@ -404,10 +416,20 @@ export function EdgeLayer({ layout, edges, selectedId, selectedRect, hoverId, on
               <text className="edge-boundary-tag__pill-text" x={t.pill / 2} y={0}>
                 {TAG_PILL}
               </text>
-              {t.detail && (
+              {t.detail?.text && (
                 <text className="edge-boundary-tag__detail" x={t.pill + TAG.gap} y={0}>
-                  {t.detail}
+                  {t.detail.text}
                 </text>
+              )}
+              {t.detail?.direction && (
+                <g
+                  className="edge-boundary-tag__dir"
+                  data-direction={t.detail.direction}
+                  transform={`translate(${t.pill + TAG.gap + t.detail.width - DIR.w} 0)`}
+                >
+                  <path className="edge-boundary-tag__dir-halo" d={DIR_D[t.detail.direction]} />
+                  <path className="edge-boundary-tag__dir-line" d={DIR_D[t.detail.direction]} />
+                </g>
               )}
             </g>
           ))}

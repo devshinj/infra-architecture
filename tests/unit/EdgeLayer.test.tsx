@@ -477,16 +477,29 @@ test("crossing dot rendered without selection; tag only when selected or in flow
   expect(document.querySelector(".edge-boundary-tag")).toBeNull();
 });
 
-test('tag shows "망 넘음" and "API ↔"', () => {
-  const edges = [{ ...de("e1", "a", "b"), payload: "api" as const, direction: "two_way" as const }, { ...de("e2", "b", "c"), payload: "file" as const, direction: "one_way" as const }, de("e3", "d", "e")];
-  render(<EdgeLayer layout={flowLayout} edges={edges} {...base} crossing={new Set(["e1", "e2", "e3"])} flowSteps={[1, 2, 3].map((n) => ({ displayEdgeId: `e${n}`, n, short: "단계" }))} />);
+test('tag shows "망 넘음", the payload as text and the direction as a drawn arrow', () => {
+  const edges = [
+    { ...de("e1", "a", "b"), payload: "api" as const, direction: "two_way" as const },
+    { ...de("e2", "b", "c"), payload: "file" as const, direction: "one_way" as const },
+    de("e3", "d", "e"),
+  ];
+  const { rerender } = render(<EdgeLayer layout={flowLayout} edges={edges} {...base} crossing={new Set(["e1", "e2", "e3"])} flowSteps={[1, 2, 3].map((n) => ({ displayEdgeId: `e${n}`, n, short: "단계" }))} />);
   const tag = (id: string) => document.querySelector(`.edge-boundary-tag[data-tag-edge="${id}"]`)!;
   expect(tag("e1").querySelector(".edge-boundary-tag__pill-text")).toHaveTextContent("망 넘음");
-  expect(tag("e1").querySelector(".edge-boundary-tag__detail")).toHaveTextContent("API ↔");
-  expect(tag("e2").querySelector(".edge-boundary-tag__detail")).toHaveTextContent("파일 →");
+  // 화살표 글자(→ ↔)는 글꼴에 따라 ">" 처럼 보여 글자로 쓰지 않고 선으로 그린다.
+  expect(tag("e1").querySelector(".edge-boundary-tag__detail")!.textContent).toBe("API");
+  expect(tag("e1").querySelector(".edge-boundary-tag__dir")).toHaveAttribute("data-direction", "two_way");
+  expect(tag("e2").querySelector(".edge-boundary-tag__detail")!.textContent).toBe("파일");
+  expect(tag("e2").querySelector(".edge-boundary-tag__dir")).toHaveAttribute("data-direction", "one_way");
+  expect(document.querySelector(".edge-boundary-tags")!.textContent).not.toMatch(/[→↔]/);
   // 전달물·방향이 없으면 알약만.
   expect(tag("e3").querySelector(".edge-boundary-tag__pill-text")).toHaveTextContent("망 넘음");
   expect(tag("e3").querySelector(".edge-boundary-tag__detail")).toBeNull();
+  expect(tag("e3").querySelector(".edge-boundary-tag__dir")).toBeNull();
+  // 방향만 있으면 화살표만.
+  rerender(<EdgeLayer layout={flowLayout} edges={[{ ...de("e1", "a", "b"), direction: "one_way" as const }]} {...base} crossing={new Set(["e1"])} flowSteps={[{ displayEdgeId: "e1", n: 1, short: "단계" }]} />);
+  expect(tag("e1").querySelector(".edge-boundary-tag__detail")).toBeNull();
+  expect(tag("e1").querySelector(".edge-boundary-tag__dir")).toHaveAttribute("data-direction", "one_way");
 });
 
 test("selecting a crossing edge itself shows its boundary tag", () => {
