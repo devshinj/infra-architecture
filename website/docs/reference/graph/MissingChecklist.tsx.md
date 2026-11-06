@@ -1,65 +1,71 @@
 ---
 title: "MissingChecklist.tsx"
-sidebar_position: 26
+sidebar_position: 4
 ---
 # MissingChecklist.tsx
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 23 nodes · cohesion 0.13
+> 55 nodes · cohesion 0.05
 
 ## Key Concepts
 
 - **MissingChecklist.tsx** (28 connections) — `src/ui/chat/MissingChecklist.tsx`
+- **InfoCard.tsx** (21 connections) — `src/ui/canvas/InfoCard.tsx`
 - **MissingChecklist()** (14 connections) — `src/ui/chat/MissingChecklist.tsx`
+- **domain/assumptions.ts** (12 connections) — `src/domain/assumptions.ts`
+- **InfoCard()** (12 connections) — `src/ui/canvas/InfoCard.tsx`
+- **AssumptionChips.tsx** (12 connections) — `src/ui/chat/AssumptionChips.tsx`
+- **InfoCardProps** (8 connections) — `src/ui/canvas/InfoCard.tsx`
+- **AssumptionChips()** (8 connections) — `src/ui/chat/AssumptionChips.tsx`
 - **MissingChecklistProps** (8 connections) — `src/ui/chat/MissingChecklist.tsx`
-- **icons.tsx** (7 connections) — `src/canvas/icons.tsx`
-- **CategoryIcon()** (7 connections) — `src/canvas/icons.tsx`
-- **Category** (5 connections) — `src/domain/catalog.ts`
-- **MissingItem** (3 connections) — `src/domain/missing.ts`
-- **blocksOf()** (2 connections) — `src/ui/chat/MissingChecklist.tsx`
-- **ChecklistDrafts** (2 connections) — `src/ui/chat/MissingChecklist.tsx`
-- **ChecklistExpanded** (2 connections) — `src/ui/chat/MissingChecklist.tsx`
-- **Chevron()** (2 connections) — `src/ui/chat/MissingChecklist.tsx`
-- **EdgeIcon()** (2 connections) — `src/ui/chat/MissingChecklist.tsx`
-- **.onFocusHandled()** (2 connections) — `src/ui/chat/MissingChecklist.tsx`
-- **.onLocate()** (2 connections) — `src/ui/chat/MissingChecklist.tsx`
-- **.onSave()** (2 connections) — `src/ui/chat/MissingChecklist.tsx`
-- **without()** (2 connections) — `src/ui/chat/MissingChecklist.tsx`
-- **PATHS** (1 connections) — `src/canvas/icons.tsx`
-- **Block** (1 connections) — `src/ui/chat/MissingChecklist.tsx`
-- **ChecklistDraft** (1 connections) — `src/ui/chat/MissingChecklist.tsx`
-- **CHOICES** (1 connections) — `src/ui/chat/MissingChecklist.tsx`
-- **Draft** (1 connections) — `src/ui/chat/MissingChecklist.tsx`
-- **EMPTY** (1 connections) — `src/ui/chat/MissingChecklist.tsx`
-- **SaveFieldsDraft** (1 connections) — `src/ui/chat/MissingChecklist.tsx`
+- **Review Focus** (7 connections) — `docs/superpowers/plans/2026-10-31-infrasketch-phase3e-readability.md`
+- **InfraSketch 3E단계 — 연결선·글자·주의 바로 가기 Implementation Plan** (4 connections) — `docs/superpowers/plans/2026-10-31-infrasketch-phase3e-readability.md`
+- **AssumptionChipsProps** (4 connections) — `src/ui/chat/AssumptionChips.tsx`
+- **가정 목록 (구조 결정)** (3 connections) — `docs/superpowers/specs/2026-10-29-infra-architecture-visualizer-design.md`
+- **assumptionChangeMessage()** (3 connections) — `src/domain/assumptions.ts`
+- **Assumption** (3 connections) — `src/domain/types.ts`
+- **.onSelectWarning()** (3 connections) — `src/ui/canvas/InfoCard.tsx`
+- **Task 5: 주의 항목 바로 가기** (2 connections) — `docs/superpowers/plans/2026-10-31-infrasketch-phase3e-readability.md`
+- **ASSUMPTION_CHOICES** (2 connections) — `src/domain/assumptions.ts`
+- **ASSUMPTION_LABELS** (2 connections) — `src/domain/assumptions.ts`
+- **CardMeasure** (2 connections) — `src/ui/canvas/InfoCard.tsx`
+- **Chevron()** (2 connections) — `src/ui/canvas/InfoCard.tsx`
+- **Count()** (2 connections) — `src/ui/canvas/InfoCard.tsx`
+- **.onChooseAssumption()** (2 connections) — `src/ui/canvas/InfoCard.tsx`
+- **.onMeasure()** (2 connections) — `src/ui/canvas/InfoCard.tsx`
+- **.onOpenChange()** (2 connections) — `src/ui/canvas/InfoCard.tsx`
+- *... and 30 more nodes in this community*
 
 ## Relationships
 
-- [InfoCard.tsx](InfoCard.tsx.md) (5 shared connections)
-- [NodeCard.tsx](NodeCard.tsx.md) (4 shared connections)
-- [missing.ts](missing.ts.md) (4 shared connections)
-- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (4 shared connections)
-- [ZoneNameLayer.tsx](ZoneNameLayer.tsx.md) (3 shared connections)
-- [NodeInfo.tsx](NodeInfo.tsx.md) (3 shared connections)
-- [NODE_KINDS](NODE_KINDS.md) (2 shared connections)
-- [flowSuggest.ts](flowSuggest.ts.md) (2 shared connections)
-- [연결선 개발용 화면](연결선_개발용_화면.md) (1 shared connections)
-- [prompt.ts](prompt.ts.md) (1 shared connections)
-- [ChatPanel.tsx](ChatPanel.tsx.md) (1 shared connections)
-- [ref_react](ref_react.md) (1 shared connections)
+- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (12 shared connections)
+- [missing.ts](missing.ts.md) (9 shared connections)
+- [flowSuggest.ts](flowSuggest.ts.md) (5 shared connections)
+- [types.ts](types.ts.md) (5 shared connections)
+- [catalog.ts](catalog.ts.md) (5 shared connections)
+- [projects.ts](projects.ts.md) (3 shared connections)
+- [InfraSketch 설계 문서](InfraSketch_설계_문서.md) (3 shared connections)
+- [ref_react](ref_react.md) (3 shared connections)
+- [Flow](Flow.md) (2 shared connections)
+- [MentionInput](MentionInput.md) (2 shared connections)
+- [EdgeLayer.tsx](EdgeLayer.tsx.md) (1 shared connections)
+- [pipeline.ts](pipeline.ts.md) (1 shared connections)
 
 ## Source Files
 
-- `src/canvas/icons.tsx`
-- `src/domain/catalog.ts`
-- `src/domain/missing.ts`
+- `docs/superpowers/plans/2026-10-31-infrasketch-phase3e-readability.md`
+- `docs/superpowers/specs/2026-10-29-infra-architecture-visualizer-design.md`
+- `src/domain/assumptions.ts`
+- `src/domain/types.ts`
+- `src/ui/canvas/InfoCard.tsx`
+- `src/ui/chat/AssumptionChips.tsx`
 - `src/ui/chat/MissingChecklist.tsx`
 
 ## Audit Trail
 
-- EXTRACTED: 64 (98%)
-- INFERRED: 1 (2%)
+- EXTRACTED: 130 (98%)
+- INFERRED: 2 (2%)
 - AMBIGUOUS: 0 (0%)
 
 ---

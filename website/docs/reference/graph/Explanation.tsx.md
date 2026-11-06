@@ -1,6 +1,6 @@
 ---
 title: "Explanation.tsx"
-sidebar_position: 23
+sidebar_position: 25
 ---
 # Explanation.tsx
 
@@ -38,16 +38,14 @@ sidebar_position: 23
 ## Relationships
 
 - [useExplanations.ts](useExplanations.ts.md) (10 shared connections)
-- [NodeInfo.tsx](NodeInfo.tsx.md) (5 shared connections)
+- [NodeInfo.tsx](NodeInfo.tsx.md) (9 shared connections)
 - [FlowPanel.tsx](FlowPanel.tsx.md) (5 shared connections)
 - [GlossaryPage.tsx](GlossaryPage.tsx.md) (5 shared connections)
-- [DiagramState](DiagramState.md) (3 shared connections)
-- [schema.ts](schema.ts.md) (2 shared connections)
+- [projects.ts](projects.ts.md) (2 shared connections)
 - [설명 생성과 품질 검사](설명_생성과_품질_검사.md) (2 shared connections)
 - [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (2 shared connections)
 - [ref_react](ref_react.md) (2 shared connections)
 - [prompt.ts](prompt.ts.md) (1 shared connections)
-- [flowSuggest.ts](flowSuggest.ts.md) (1 shared connections)
 
 ## Source Files
 

@@ -1,6 +1,6 @@
 ---
 title: "auth"
-sidebar_position: 95
+sidebar_position: 81
 ---
 # auth
 
@@ -40,7 +40,7 @@ sidebar_position: 95
 - [explain/route.ts](explain-route.ts.md) `EXTRACTED`
 - sessions/route.ts `EXTRACTED`
 - [suggest/route.ts](suggest-route.ts.md) `EXTRACTED`
-- [flows/route.ts](flows-route.ts.md) `EXTRACTED`
+- flows/route.ts `EXTRACTED`
 - glossary/page.tsx `EXTRACTED`
 - (app)/layout.tsx `EXTRACTED`
 - (app)/page.tsx `EXTRACTED`

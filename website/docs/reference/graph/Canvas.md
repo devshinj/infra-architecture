@@ -1,6 +1,6 @@
 ---
 title: "Canvas"
-sidebar_position: 64
+sidebar_position: 59
 ---
 # Canvas
 
@@ -25,14 +25,14 @@ sidebar_position: 64
 ## Relationships
 
 - [Canvas.tsx](Canvas.tsx.md) (9 shared connections)
-- [Flow](Flow.md) (5 shared connections)
+- [Flow](Flow.md) (4 shared connections)
 - [ExportMenu.tsx](ExportMenu.tsx.md) (3 shared connections)
 - [exportImage.ts](exportImage.ts.md) (2 shared connections)
+- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (2 shared connections)
 - [display.ts](display.ts.md) (1 shared connections)
-- [(app)/actions.ts](app-actions.ts.md) (1 shared connections)
-- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (1 shared connections)
-- [Rect](Rect.md) (1 shared connections)
-- [2단계 계획: AI 대화](2단계_계획-_AI_대화.md) (1 shared connections)
+- [emphasis.ts](emphasis.ts.md) (1 shared connections)
+- [Layout](Layout.md) (1 shared connections)
+- [InfraSketch 설계 문서](InfraSketch_설계_문서.md) (1 shared connections)
 
 ## Source Files
 

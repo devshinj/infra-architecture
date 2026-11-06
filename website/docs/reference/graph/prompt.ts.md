@@ -1,74 +1,66 @@
 ---
 title: "prompt.ts"
-sidebar_position: 3
+sidebar_position: 17
 ---
 # prompt.ts
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 67 nodes · cohesion 0.05
+> 30 nodes · cohesion 0.09
 
 ## Key Concepts
 
 - **prompt.ts** (51 connections) — `src/server/chat/prompt.ts`
-- **domain/warnings.ts** (26 connections) — `src/domain/warnings.ts`
-- **chat/warnings.ts** (25 connections) — `src/server/chat/warnings.ts`
-- **createJsonlParser()** (15 connections) — `src/server/llm/jsonl.ts`
-- **DNode** (11 connections) — `src/domain/types.ts`
-- **evaluateRules()** (11 connections) — `src/domain/warnings.ts`
-- **jsonl.ts** (11 connections) — `src/server/llm/jsonl.ts`
-- **Task 2: 서버 점검 — Clef 판정과 Qwen 문구** (10 connections) — `docs/superpowers/plans/2026-10-30-infrasketch-phase3b-warnings.md`
-- **checkWarnings()** (9 connections) — `src/server/chat/warnings.ts`
-- **파일 구조** (8 connections) — `docs/superpowers/plans/2026-10-30-infrasketch-phase3b-warnings.md`
-- **Edge** (7 connections) — `src/domain/types.ts`
-- **judgeExposed()** (7 connections) — `src/server/chat/warnings.ts`
+- **buildMessages()** (7 connections) — `src/server/chat/prompt.ts`
+- **buildAskMessages()** (6 connections) — `src/server/chat/prompt.ts`
 - **explainContext()** (6 connections) — `src/server/chat/prompt.ts`
 - **buildFlowSuggestMessages()** (5 connections) — `src/server/chat/prompt.ts`
-- **writeTexts()** (5 connections) — `src/server/chat/warnings.ts`
-- **noulProbability()** (5 connections) — `src/server/llm/clef.ts`
-- **Task 3: 대화 차례에 점검 단계 넣기** (4 connections) — `docs/superpowers/plans/2026-10-30-infrasketch-phase3b-warnings.md`
-- **Task 1: 망 영역·망연계 노드·연결 전달물/방향** (4 connections) — `docs/superpowers/plans/2026-11-05-flows-and-network-boundaries.md`
-- **NodeKind** (4 connections) — `src/domain/catalog.ts`
 - **patterns.ts** (4 connections) — `src/domain/patterns.ts`
-- **WarningLevel** (4 connections) — `src/domain/types.ts`
 - **buildExplainMessages()** (4 connections) — `src/server/chat/prompt.ts`
-- **buildWarningMessages()** (4 connections) — `src/server/chat/prompt.ts`
 - **summarizeState()** (4 connections) — `src/server/chat/prompt.ts`
-- **Task 4: "의도된 구성" 저장** (3 connections) — `docs/superpowers/plans/2026-10-30-infrasketch-phase3b-warnings.md`
-- *... and 42 more nodes in this community*
+- **patternPromptBlock()** (3 connections) — `src/domain/patterns.ts`
+- **describeEndpoint()** (3 connections) — `src/server/chat/prompt.ts`
+- **explanationBlock()** (3 connections) — `src/server/chat/prompt.ts`
+- **summarizeFlows()** (3 connections) — `src/server/chat/prompt.ts`
+- **ancestorsOf()** (2 connections) — `src/server/chat/prompt.ts`
+- **kindKo()** (2 connections) — `src/server/chat/prompt.ts`
+- **oneLine()** (2 connections) — `src/server/chat/prompt.ts`
+- **Pattern** (1 connections) — `src/domain/patterns.ts`
+- **PATTERNS** (1 connections) — `src/domain/patterns.ts`
+- **ANSWER_PROMPT** (1 connections) — `src/server/chat/prompt.ts`
+- **ASK_PROMPT** (1 connections) — `src/server/chat/prompt.ts`
+- **CONTINUE_NOTE** (1 connections) — `src/server/chat/prompt.ts`
+- **EDGE_KIND_LIST** (1 connections) — `src/server/chat/prompt.ts`
+- **EXPLAIN_EDGE_PROMPT** (1 connections) — `src/server/chat/prompt.ts`
+- **EXPLAIN_NODE_PROMPT** (1 connections) — `src/server/chat/prompt.ts`
+- **FLOW_SUGGEST_PROMPT** (1 connections) — `src/server/chat/prompt.ts`
+- **GROUP_KIND_LIST** (1 connections) — `src/server/chat/prompt.ts`
+- *... and 5 more nodes in this community*
 
 ## Relationships
 
-- [pipeline.ts](pipeline.ts.md) (13 shared connections)
-- [types.ts](types.ts.md) (10 shared connections)
-- [ask.ts](ask.ts.md) (10 shared connections)
-- [flowSuggest.ts](flowSuggest.ts.md) (10 shared connections)
-- [server/flows.ts](server-flows.ts.md) (6 shared connections)
-- [설명 생성과 품질 검사](설명_생성과_품질_검사.md) (5 shared connections)
-- [useExplanations.ts](useExplanations.ts.md) (4 shared connections)
-- [ZoneNameLayer.tsx](ZoneNameLayer.tsx.md) (4 shared connections)
-- [NodeInfo.tsx](NodeInfo.tsx.md) (4 shared connections)
-- [3C-1 계획 작업 목록](3C-1_계획_작업_목록.md) (3 shared connections)
-- [display.ts](display.ts.md) (3 shared connections)
-- [missing.ts](missing.ts.md) (3 shared connections)
+- [domain/warnings.ts](domain-warnings.ts.md) (5 shared connections)
+- [missing.ts](missing.ts.md) (5 shared connections)
+- [pipeline.ts](pipeline.ts.md) (5 shared connections)
+- [flowSuggest.ts](flowSuggest.ts.md) (4 shared connections)
+- [ask.ts](ask.ts.md) (3 shared connections)
+- [설명 생성과 품질 검사](설명_생성과_품질_검사.md) (3 shared connections)
+- [catalog.ts](catalog.ts.md) (2 shared connections)
+- [useExplanations.ts](useExplanations.ts.md) (2 shared connections)
+- [types.ts](types.ts.md) (2 shared connections)
+- [Review Focus](Review_Focus.md) (2 shared connections)
+- [motion.ts](motion.ts.md) (1 shared connections)
+- [InfraSketch 설계 문서](InfraSketch_설계_문서.md) (1 shared connections)
 
 ## Source Files
 
-- `docs/superpowers/plans/2026-10-30-infrasketch-phase3b-warnings.md`
-- `docs/superpowers/plans/2026-11-05-flows-and-network-boundaries.md`
-- `src/domain/catalog.ts`
 - `src/domain/patterns.ts`
-- `src/domain/types.ts`
-- `src/domain/warnings.ts`
 - `src/server/chat/prompt.ts`
-- `src/server/chat/warnings.ts`
-- `src/server/llm/clef.ts`
-- `src/server/llm/jsonl.ts`
 
 ## Audit Trail
 
-- EXTRACTED: 188 (89%)
-- INFERRED: 23 (11%)
+- EXTRACTED: 74 (94%)
+- INFERRED: 5 (6%)
 - AMBIGUOUS: 0 (0%)
 
 ---

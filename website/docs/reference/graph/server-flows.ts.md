@@ -1,34 +1,26 @@
 ---
 title: "server/flows.ts"
-sidebar_position: 28
+sidebar_position: 48
 ---
 # server/flows.ts
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 23 nodes · cohesion 0.19
+> 15 nodes · cohesion 0.19
 
 ## Key Concepts
 
 - **server/flows.ts** (47 connections) — `src/server/flows.ts`
-- **domain/flows.ts** (28 connections) — `src/domain/flows.ts`
-- **boundary.ts** (13 connections) — `src/domain/boundary.ts`
-- **checkFlow()** (12 connections) — `src/domain/flows.ts`
-- **crossesBoundary()** (10 connections) — `src/domain/boundary.ts`
-- **crossingNote()** (8 connections) — `src/domain/flows.ts`
+- **Flow** (9 connections) — `src/domain/flows.ts`
+- **StoredFlow** (9 connections) — `src/server/flows.ts`
 - **applyFlowOps()** (8 connections) — `src/server/flows.ts`
-- **Task 8: "흐름" 탭·지나는 흐름·연동** (7 connections) — `docs/superpowers/plans/2026-11-05-flows-and-network-boundaries.md`
-- **FlowOp** (6 connections) — `src/domain/flows.ts`
 - **shortLabel()** (6 connections) — `src/domain/flows.ts`
-- **networkZoneOf()** (5 connections) — `src/domain/boundary.ts`
-- **flowsThrough()** (5 connections) — `src/domain/flows.ts`
-- **Task 3: 흐름 도메인(모양·검사·끊김)** (4 connections) — `docs/superpowers/plans/2026-11-05-flows-and-network-boundaries.md`
-- **isDirectCrossing()** (4 connections) — `src/domain/boundary.ts`
-- **stepEnd()** (4 connections) — `src/domain/flows.ts`
+- **flows** (3 connections) — `src/db/schema.ts`
+- **FlowSource** (3 connections) — `src/db/schema.ts`
 - **FLOW_LIMITS** (3 connections) — `src/domain/flows.ts`
 - **FlowProblem** (3 connections) — `src/domain/flows.ts`
+- **copyFlows()** (3 connections) — `src/server/flows.ts`
 - **toSteps()** (3 connections) — `src/server/flows.ts`
-- **BOUNDARY_NODE_KINDS** (2 connections) — `src/domain/boundary.ts`
 - **FlowStep** (2 connections) — `src/domain/flows.ts`
 - **FlowStepInput** (2 connections) — `src/domain/flows.ts`
 - **problemReason()** (2 connections) — `src/server/flows.ts`
@@ -36,30 +28,29 @@ sidebar_position: 28
 
 ## Relationships
 
-- [flowSuggest.ts](flowSuggest.ts.md) (13 shared connections)
-- [useFlows](useFlows.md) (13 shared connections)
-- [FlowPanel.tsx](FlowPanel.tsx.md) (6 shared connections)
-- [prompt.ts](prompt.ts.md) (6 shared connections)
-- [schema.ts](schema.ts.md) (6 shared connections)
-- [getOwnedDiagram](getOwnedDiagram.md) (6 shared connections)
-- [pipeline.ts](pipeline.ts.md) (5 shared connections)
-- [Review Focus](Review_Focus.md) (4 shared connections)
-- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (3 shared connections)
-- [types.ts](types.ts.md) (3 shared connections)
-- [missing.ts](missing.ts.md) (3 shared connections)
-- [EdgeLayer.tsx](EdgeLayer.tsx.md) (3 shared connections)
+- [projects.ts](projects.ts.md) (19 shared connections)
+- [useFlows](useFlows.md) (12 shared connections)
+- [domain/flows.ts](domain-flows.ts.md) (9 shared connections)
+- [flowSuggest.ts](flowSuggest.ts.md) (7 shared connections)
+- [pipeline.ts](pipeline.ts.md) (3 shared connections)
+- [FlowPanel.tsx](FlowPanel.tsx.md) (3 shared connections)
+- [NodeInfo.tsx](NodeInfo.tsx.md) (2 shared connections)
+- [EdgeLayer.tsx](EdgeLayer.tsx.md) (2 shared connections)
+- [(app)/actions.ts](app-actions.ts.md) (2 shared connections)
+- [prompt.ts](prompt.ts.md) (1 shared connections)
+- [labelBox](labelBox.md) (1 shared connections)
+- [commands.ts](commands.ts.md) (1 shared connections)
 
 ## Source Files
 
-- `docs/superpowers/plans/2026-11-05-flows-and-network-boundaries.md`
-- `src/domain/boundary.ts`
+- `src/db/schema.ts`
 - `src/domain/flows.ts`
 - `src/server/flows.ts`
 
 ## Audit Trail
 
-- EXTRACTED: 126 (91%)
-- INFERRED: 12 (9%)
+- EXTRACTED: 83 (99%)
+- INFERRED: 1 (1%)
 - AMBIGUOUS: 0 (0%)
 
 ---

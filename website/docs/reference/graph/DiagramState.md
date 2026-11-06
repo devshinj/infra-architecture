@@ -1,65 +1,58 @@
 ---
 title: "DiagramState"
-sidebar_position: 34
+sidebar_position: 70
 sidebar_label: "핵심 노드: DiagramState"
 ---
 # DiagramState
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 22 nodes · cohesion 0.14
+> God node · 48 connections · `src/domain/types.ts`
 
-## Key Concepts
+**Community:** [flowSuggest.ts](flowSuggest.ts.md)
 
-- **RightPanel.tsx** (26 connections) — `src/ui/RightPanel.tsx`
-- **RightPanelProps** (11 connections) — `src/ui/RightPanel.tsx`
-- **RightPanel()** (10 connections) — `src/ui/RightPanel.tsx`
-- **ChatPanelProps** (9 connections) — `src/ui/chat/ChatPanel.tsx`
-- **HistoryPanel.tsx** (8 connections) — `src/ui/HistoryPanel.tsx`
-- **HistoryPanel()** (6 connections) — `src/ui/HistoryPanel.tsx`
-- **HistoryPanelProps** (6 connections) — `src/ui/HistoryPanel.tsx`
-- **.onSend()** (2 connections) — `src/ui/chat/ChatPanel.tsx`
-- **.onCompare()** (2 connections) — `src/ui/HistoryPanel.tsx`
-- **.onRestore()** (2 connections) — `src/ui/HistoryPanel.tsx`
-- **.onView()** (2 connections) — `src/ui/HistoryPanel.tsx`
-- **VersionRow** (2 connections) — `src/ui/HistoryPanel.tsx`
-- **RIGHT_PANEL_BODY_ID** (2 connections) — `src/ui/RightPanel.tsx`
-- **.onHistoryOpen()** (2 connections) — `src/ui/RightPanel.tsx`
-- **.onTabChange()** (2 connections) — `src/ui/RightPanel.tsx`
-- **tabIdOf()** (2 connections) — `src/ui/RightPanel.tsx`
-- **.onOpenWarnings()** (1 connections) — `src/ui/chat/ChatPanel.tsx`
-- **.onStop()** (1 connections) — `src/ui/chat/ChatPanel.tsx`
-- **SOURCE_LABEL** (1 connections) — `src/ui/HistoryPanel.tsx`
-- **.onMention()** (1 connections) — `src/ui/RightPanel.tsx`
-- **.onSelect()** (1 connections) — `src/ui/RightPanel.tsx`
-- **TABS** (1 connections) — `src/ui/RightPanel.tsx`
+## Connections by Relation
 
-## Relationships
+### contains
+- [types.ts](types.ts.md) `EXTRACTED`
 
-- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (7 shared connections)
-- [ChatPanel.tsx](ChatPanel.tsx.md) (6 shared connections)
-- [FlowPanel.tsx](FlowPanel.tsx.md) (5 shared connections)
-- [NodeInfo.tsx](NodeInfo.tsx.md) (4 shared connections)
-- [flowSuggest.ts](flowSuggest.ts.md) (4 shared connections)
-- [Explanation.tsx](Explanation.tsx.md) (3 shared connections)
-- [ref_react](ref_react.md) (2 shared connections)
-- [useSessions.ts](useSessions.ts.md) (1 shared connections)
-- [SessionPicker.tsx](SessionPicker.tsx.md) (1 shared connections)
-- [types.ts](types.ts.md) (1 shared connections)
-- [auth](auth.md) (1 shared connections)
-- [(app)/actions.ts](app-actions.ts.md) (1 shared connections)
+### imports
+- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) `EXTRACTED`
+- [Canvas.tsx](Canvas.tsx.md) `EXTRACTED`
+- [(app)/actions.ts](app-actions.ts.md) `EXTRACTED`
+- [pipeline.ts](pipeline.ts.md) `EXTRACTED`
+- server/explain.ts `EXTRACTED`
+- [projects.ts](projects.ts.md) `EXTRACTED`
+- [ask.ts](ask.ts.md) `EXTRACTED`
+- [flowSuggest.ts](flowSuggest.ts.md) `EXTRACTED`
+- [prompt.ts](prompt.ts.md) `EXTRACTED`
+- [server/flows.ts](server-flows.ts.md) `EXTRACTED`
+- [NodeInfo.tsx](NodeInfo.tsx.md) `EXTRACTED`
+- schema.ts `EXTRACTED`
+- [samples.ts](samples.ts.md) `EXTRACTED`
+- [layoutMetrics.ts](layoutMetrics.ts.md) `EXTRACTED`
+- versions.ts `EXTRACTED`
+- [display.ts](display.ts.md) `EXTRACTED`
+- [domain/flows.ts](domain-flows.ts.md) `EXTRACTED`
+- [MissingChecklist.tsx](MissingChecklist.tsx.md) `EXTRACTED`
+- domain/explain.ts `EXTRACTED`
+- [useExplanations.ts](useExplanations.ts.md) `EXTRACTED`
+- *…and 14 more `imports` connection(s) not listed (lowest-degree first to go)*
 
-## Source Files
-
-- `src/ui/HistoryPanel.tsx`
-- `src/ui/RightPanel.tsx`
-- `src/ui/chat/ChatPanel.tsx`
-
-## Audit Trail
-
-- EXTRACTED: 68 (100%)
-- INFERRED: 0 (0%)
-- AMBIGUOUS: 0 (0%)
+### references
+- CanvasProps `EXTRACTED`
+- FlowPanelProps `EXTRACTED`
+- RightPanelProps `EXTRACTED`
+- NodeInfoProps `EXTRACTED`
+- InfoCardProps `EXTRACTED`
+- MissingChecklistProps `EXTRACTED`
+- DiagramWorkspaceProps `EXTRACTED`
+- .applyFlowOps() `EXTRACTED`
+- 흐름 보기와 망 경계 표시 Implementation Plan `INFERRED`
+- .getLatestState() `EXTRACTED`
+- .getLatestState() `EXTRACTED`
+- Rule `EXTRACTED`
+- UseExplanationsInput `EXTRACTED`
 
 ---
 

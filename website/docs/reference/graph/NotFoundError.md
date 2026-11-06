@@ -1,6 +1,6 @@
 ---
 title: "NotFoundError"
-sidebar_position: 93
+sidebar_position: 79
 sidebar_label: "핵심 노드: NotFoundError"
 ---
 # NotFoundError
@@ -14,7 +14,7 @@ sidebar_label: "핵심 노드: NotFoundError"
 ## Connections by Relation
 
 ### calls
-- [getOwnedDiagram()](getOwnedDiagram_2.md) `EXTRACTED`
+- [getOwnedDiagram()](getOwnedDiagram.md) `EXTRACTED`
 - runAskTurn() `EXTRACTED`
 - runChatTurn() `EXTRACTED`
 - withOwnedFlow() `EXTRACTED`
@@ -38,7 +38,7 @@ sidebar_label: "핵심 노드: NotFoundError"
 - [explain/route.ts](explain-route.ts.md) `EXTRACTED`
 - sessions/route.ts `EXTRACTED`
 - [suggest/route.ts](suggest-route.ts.md) `EXTRACTED`
-- [flows/route.ts](flows-route.ts.md) `EXTRACTED`
+- flows/route.ts `EXTRACTED`
 
 ### method
 - .constructor() `EXTRACTED`

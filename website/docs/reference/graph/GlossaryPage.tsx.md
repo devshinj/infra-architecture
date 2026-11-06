@@ -1,12 +1,12 @@
 ---
 title: "GlossaryPage.tsx"
-sidebar_position: 41
+sidebar_position: 35
 ---
 # GlossaryPage.tsx
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 19 nodes · cohesion 0.21
+> 20 nodes · cohesion 0.20
 
 ## Key Concepts
 
@@ -20,6 +20,7 @@ sidebar_position: 41
 - **listTerms()** (7 connections) — `src/server/glossary.ts`
 - **GlossaryPage()** (7 connections) — `src/ui/glossary/GlossaryPage.tsx`
 - **Glossary()** (6 connections) — `src/app/(app)/glossary/page.tsx`
+- **updateTerm()** (6 connections) — `src/server/glossary.ts`
 - **listGlossaryAction()** (5 connections) — `src/app/(app)/actions.ts`
 - **glossary-types.ts** (5 connections) — `src/domain/glossary-types.ts`
 - **GlossaryItem** (3 connections) — `src/domain/glossary-types.ts`
@@ -32,8 +33,8 @@ sidebar_position: 41
 
 ## Relationships
 
-- [(app)/actions.ts](app-actions.ts.md) (15 shared connections)
-- [ValidationError](ValidationError.md) (6 shared connections)
+- [(app)/actions.ts](app-actions.ts.md) (16 shared connections)
+- [projects.ts](projects.ts.md) (7 shared connections)
 - [Explanation.tsx](Explanation.tsx.md) (5 shared connections)
 - [useExplanations.ts](useExplanations.ts.md) (3 shared connections)
 - [auth](auth.md) (3 shared connections)
@@ -51,7 +52,7 @@ sidebar_position: 41
 
 ## Audit Trail
 
-- EXTRACTED: 69 (96%)
+- EXTRACTED: 73 (96%)
 - INFERRED: 3 (4%)
 - AMBIGUOUS: 0 (0%)
 

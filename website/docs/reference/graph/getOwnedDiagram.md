@@ -1,66 +1,59 @@
 ---
-title: "getOwnedDiagram"
-sidebar_position: 43
+title: "getOwnedDiagram()"
+sidebar_position: 72
+sidebar_label: "핵심 노드: getOwnedDiagram()"
 ---
-# getOwnedDiagram
+# getOwnedDiagram()
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 18 nodes · cohesion 0.29
+> God node · 40 connections · `src/server/projects.ts`
 
-## Key Concepts
+**Community:** [(app)/actions.ts](app-actions.ts.md)
 
-- **getOwnedDiagram()** (40 connections) — `src/server/projects.ts`
-- **fields.ts** (23 connections) — `src/server/fields.ts`
-- **getLatestState()** (19 connections) — `src/server/versions.ts`
-- **emptyState()** (17 connections) — `src/domain/types.ts`
-- **createVersion()** (17 connections) — `src/server/versions.ts`
-- **ignore.ts** (15 connections) — `src/server/ignore.ts`
-- **saveFieldsFor()** (13 connections) — `src/server/fields.ts`
-- **server/assumptions.ts** (12 connections) — `src/server/assumptions.ts`
-- **confirmAssumptionFor()** (9 connections) — `src/server/assumptions.ts`
-- **listFlows()** (9 connections) — `src/server/flows.ts`
-- **setWarningIgnoredFor()** (9 connections) — `src/server/ignore.ts`
-- **duplicateDiagram()** (9 connections) — `src/server/projects.ts`
-- **confirmAssumption()** (6 connections) — `src/domain/assumptions.ts`
-- **getDiagram()** (6 connections) — `src/server/projects.ts`
-- **importSample()** (6 connections) — `src/server/samples.ts`
-- **copyFlows()** (3 connections) — `src/server/flows.ts`
-- **SaveFieldsInput** (2 connections) — `src/server/fields.ts`
-- **ref_node_util** (1 connections)
+## Connections by Relation
 
-## Relationships
+### calls
+- [NotFoundError](NotFoundError.md) `EXTRACTED`
+- runAskTurn() `EXTRACTED`
+- saveFieldsFor() `EXTRACTED`
+- runChatTurn() `EXTRACTED`
+- withOwnedFlow() `EXTRACTED`
+- restoreVersionAction() `EXTRACTED`
+- confirmAssumptionFor() `EXTRACTED`
+- listFlows() `EXTRACTED`
+- setWarningIgnoredFor() `EXTRACTED`
+- duplicateDiagram() `EXTRACTED`
+- POST() `EXTRACTED`
+- GET() `EXTRACTED`
+- deleteDiagramAction() `EXTRACTED`
+- POST() `EXTRACTED`
+- guard() `EXTRACTED`
+- duplicateDiagramAction() `EXTRACTED`
+- getVersionAction() `EXTRACTED`
+- renameDiagram() `EXTRACTED`
+- listVersionsAction() `EXTRACTED`
+- getDiagram() `EXTRACTED`
+- *…and 5 more `calls` connection(s) not listed (lowest-degree first to go)*
 
-- [(app)/actions.ts](app-actions.ts.md) (24 shared connections)
-- [projects.ts](projects.ts.md) (16 shared connections)
-- [ask.ts](ask.ts.md) (11 shared connections)
-- [types.ts](types.ts.md) (9 shared connections)
-- [pipeline.ts](pipeline.ts.md) (9 shared connections)
-- [ask/route.ts](ask-route.ts.md) (7 shared connections)
-- [samples.ts](samples.ts.md) (6 shared connections)
-- [server/flows.ts](server-flows.ts.md) (6 shared connections)
-- [ValidationError](ValidationError.md) (6 shared connections)
-- [schema.ts](schema.ts.md) (6 shared connections)
-- [missing.ts](missing.ts.md) (4 shared connections)
-- [flowSuggest.ts](flowSuggest.ts.md) (4 shared connections)
+### contains
+- [projects.ts](projects.ts.md) `EXTRACTED`
 
-## Source Files
-
-- `src/domain/assumptions.ts`
-- `src/domain/types.ts`
-- `src/server/assumptions.ts`
-- `src/server/fields.ts`
-- `src/server/flows.ts`
-- `src/server/ignore.ts`
-- `src/server/projects.ts`
-- `src/server/samples.ts`
-- `src/server/versions.ts`
-
-## Audit Trail
-
-- EXTRACTED: 169 (98%)
-- INFERRED: 3 (2%)
-- AMBIGUOUS: 0 (0%)
+### imports
+- [(app)/actions.ts](app-actions.ts.md) `EXTRACTED`
+- [pipeline.ts](pipeline.ts.md) `EXTRACTED`
+- server/explain.ts `EXTRACTED`
+- [ask.ts](ask.ts.md) `EXTRACTED`
+- [flowSuggest.ts](flowSuggest.ts.md) `EXTRACTED`
+- [server/flows.ts](server-flows.ts.md) `EXTRACTED`
+- [\[sessionId\]/route.ts]([sessionId]-route.ts.md) `EXTRACTED`
+- [samples.ts](samples.ts.md) `EXTRACTED`
+- [ask/route.ts](ask-route.ts.md) `EXTRACTED`
+- chat/route.ts `EXTRACTED`
+- fields.ts `EXTRACTED`
+- sessions/route.ts `EXTRACTED`
+- ignore.ts `EXTRACTED`
+- server/assumptions.ts `EXTRACTED`
 
 ---
 

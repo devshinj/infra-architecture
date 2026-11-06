@@ -1,6 +1,6 @@
 ---
 title: "suggest/route.ts"
-sidebar_position: 68
+sidebar_position: 64
 ---
 # suggest/route.ts
 
@@ -23,11 +23,9 @@ sidebar_position: 68
 ## Relationships
 
 - [flowSuggest.ts](flowSuggest.ts.md) (5 shared connections)
-- [auth](auth.md) (3 shared connections)
-- [projects.ts](projects.ts.md) (2 shared connections)
-- [ValidationError](ValidationError.md) (1 shared connections)
+- [auth](auth.md) (4 shared connections)
+- [projects.ts](projects.ts.md) (3 shared connections)
 - [ref_react](ref_react.md) (1 shared connections)
-- [ref_zod](ref_zod.md) (1 shared connections)
 - [server/flows.ts](server-flows.ts.md) (1 shared connections)
 
 ## Source Files

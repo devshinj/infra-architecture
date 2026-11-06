@@ -1,6 +1,6 @@
 ---
 title: "explain/route.ts"
-sidebar_position: 63
+sidebar_position: 58
 ---
 # explain/route.ts
 
@@ -25,11 +25,9 @@ sidebar_position: 63
 ## Relationships
 
 - [설명 생성과 품질 검사](설명_생성과_품질_검사.md) (7 shared connections)
-- [auth](auth.md) (4 shared connections)
-- [projects.ts](projects.ts.md) (2 shared connections)
-- [ValidationError](ValidationError.md) (1 shared connections)
+- [auth](auth.md) (5 shared connections)
+- [projects.ts](projects.ts.md) (3 shared connections)
 - [ref_react](ref_react.md) (1 shared connections)
-- [ref_zod](ref_zod.md) (1 shared connections)
 
 ## Source Files
 

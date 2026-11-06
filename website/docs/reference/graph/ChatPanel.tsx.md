@@ -1,28 +1,21 @@
 ---
 title: "ChatPanel.tsx"
-sidebar_position: 6
+sidebar_position: 23
 ---
 # ChatPanel.tsx
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 36 nodes · cohesion 0.09
+> 24 nodes · cohesion 0.12
 
 ## Key Concepts
 
 - **ChatPanel.tsx** (40 connections) — `src/ui/chat/ChatPanel.tsx`
 - **ChatPanel()** (14 connections) — `src/ui/chat/ChatPanel.tsx`
-- **MentionInput** (10 connections) — `src/ui/chat/MentionInput.tsx`
-- **MentionInput.tsx** (9 connections) — `src/ui/chat/MentionInput.tsx`
-- **MentionInputHandle** (8 connections) — `src/ui/chat/MentionInput.tsx`
-- **useShell()** (8 connections) — `src/ui/Shell.tsx`
-- **Task 3: 세션 고르기와 질문 세션 화면** (6 connections) — `docs/superpowers/plans/2026-11-01-infrasketch-phase3c2-ask-node.md`
-- **src_ui_chat_chat_module** (5 connections)
+- **ChatPanelProps** (9 connections) — `src/ui/chat/ChatPanel.tsx`
 - **CardView()** (5 connections) — `src/ui/chat/ChatPanel.tsx`
-- **노드 참조 (@WAS#1 칩)** (3 connections) — `docs/superpowers/specs/2026-10-29-infra-architecture-visualizer-design.md`
 - **hhmm()** (3 connections) — `src/ui/chat/ChatPanel.tsx`
-- **.setText()** (3 connections) — `src/ui/chat/MentionInput.tsx`
-- **MentionInputProps** (3 connections) — `src/ui/chat/MentionInput.tsx`
+- **.onSend()** (2 connections) — `src/ui/chat/ChatPanel.tsx`
 - **Check()** (2 connections) — `src/ui/chat/ChatPanel.tsx`
 - **Dots()** (2 connections) — `src/ui/chat/ChatPanel.tsx`
 - **ELSEWHERE_BUSY** (2 connections) — `src/ui/chat/ChatPanel.tsx`
@@ -32,38 +25,38 @@ sidebar_position: 6
 - **stepName()** (2 connections) — `src/ui/chat/ChatPanel.tsx`
 - **stepRows()** (2 connections) — `src/ui/chat/ChatPanel.tsx`
 - **toBlocks()** (2 connections) — `src/ui/chat/ChatPanel.tsx`
-- **Mention** (2 connections) — `src/ui/chat/MentionInput.tsx`
-- **.focus()** (2 connections) — `src/ui/chat/MentionInput.tsx`
-- **.submit()** (2 connections) — `src/ui/chat/MentionInput.tsx`
-- *... and 11 more nodes in this community*
+- **Block** (1 connections) — `src/ui/chat/ChatPanel.tsx`
+- **BUILD_STEPS** (1 connections) — `src/ui/chat/ChatPanel.tsx`
+- **.onOpenWarnings()** (1 connections) — `src/ui/chat/ChatPanel.tsx`
+- **.onStop()** (1 connections) — `src/ui/chat/ChatPanel.tsx`
+- **CHIP_KINDS** (1 connections) — `src/ui/chat/ChatPanel.tsx`
+- **EXAMPLES** (1 connections) — `src/ui/chat/ChatPanel.tsx`
+- **GUIDE_ITEMS** (1 connections) — `src/ui/chat/ChatPanel.tsx`
+- **HIDDEN_IN_ASK** (1 connections) — `src/ui/chat/ChatPanel.tsx`
+- **StepState** (1 connections) — `src/ui/chat/ChatPanel.tsx`
 
 ## Relationships
 
-- [SessionPicker.tsx](SessionPicker.tsx.md) (6 shared connections)
-- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (6 shared connections)
-- [DiagramState](DiagramState.md) (6 shared connections)
-- [types.ts](types.ts.md) (4 shared connections)
+- [MentionInput](MentionInput.md) (8 shared connections)
+- [SessionPicker.tsx](SessionPicker.tsx.md) (5 shared connections)
+- [NodeInfo.tsx](NodeInfo.tsx.md) (5 shared connections)
 - [auth](auth.md) (3 shared connections)
+- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (3 shared connections)
 - [useSessions.ts](useSessions.ts.md) (2 shared connections)
+- [types.ts](types.ts.md) (2 shared connections)
+- [ask/route.ts](ask-route.ts.md) (2 shared connections)
 - [FlyLayer.tsx](FlyLayer.tsx.md) (2 shared connections)
-- [ref_react](ref_react.md) (2 shared connections)
-- [Sidebar.tsx](Sidebar.tsx.md) (2 shared connections)
+- [ref_react](ref_react.md) (1 shared connections)
 - [Review Focus](Review_Focus.md) (1 shared connections)
-- [useChatTurn](useChatTurn.md) (1 shared connections)
-- [설계 문서와 계획](설계_문서와_계획.md) (1 shared connections)
 
 ## Source Files
 
-- `docs/superpowers/plans/2026-11-01-infrasketch-phase3c2-ask-node.md`
-- `docs/superpowers/specs/2026-10-29-infra-architecture-visualizer-design.md`
-- `src/ui/Shell.tsx`
 - `src/ui/chat/ChatPanel.tsx`
-- `src/ui/chat/MentionInput.tsx`
 
 ## Audit Trail
 
-- EXTRACTED: 91 (93%)
-- INFERRED: 7 (7%)
+- EXTRACTED: 65 (97%)
+- INFERRED: 2 (3%)
 - AMBIGUOUS: 0 (0%)
 
 ---

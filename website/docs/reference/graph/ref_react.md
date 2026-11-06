@@ -1,12 +1,12 @@
 ---
 title: "ref_react"
-sidebar_position: 2
+sidebar_position: 3
 ---
 # ref_react
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 77 nodes · cohesion 0.07
+> 76 nodes · cohesion 0.07
 
 ## Key Concepts
 
@@ -35,22 +35,22 @@ sidebar_position: 2
 - **ResetRequestPage()** (7 connections) — `src/app/(auth)/reset/page.tsx`
 - **SignupPage()** (7 connections) — `src/app/(auth)/signup/page.tsx`
 - **requestResetAction()** (7 connections) — `src/server/auth/actions.ts`
-- *... and 52 more nodes in this community*
+- *... and 51 more nodes in this community*
 
 ## Relationships
 
-- [schema.ts](schema.ts.md) (24 shared connections)
+- [projects.ts](projects.ts.md) (24 shared connections)
 - [auth](auth.md) (12 shared connections)
-- [Sidebar.tsx](Sidebar.tsx.md) (5 shared connections)
+- [Sidebar.tsx](Sidebar.tsx.md) (6 shared connections)
+- [catalog.ts](catalog.ts.md) (4 shared connections)
 - [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (4 shared connections)
+- [\[sessionId\]/route.ts]([sessionId]-route.ts.md) (3 shared connections)
+- [MissingChecklist.tsx](MissingChecklist.tsx.md) (3 shared connections)
+- [NodeInfo.tsx](NodeInfo.tsx.md) (3 shared connections)
 - [ask/route.ts](ask-route.ts.md) (2 shared connections)
 - [GlossaryPage.tsx](GlossaryPage.tsx.md) (2 shared connections)
-- [연결선 개발용 화면](연결선_개발용_화면.md) (2 shared connections)
 - [Canvas.tsx](Canvas.tsx.md) (2 shared connections)
 - [ExportMenu.tsx](ExportMenu.tsx.md) (2 shared connections)
-- [NodeCard.tsx](NodeCard.tsx.md) (2 shared connections)
-- [types.ts](types.ts.md) (2 shared connections)
-- [ChatPanel.tsx](ChatPanel.tsx.md) (2 shared connections)
 
 ## Source Files
 
@@ -68,7 +68,6 @@ sidebar_position: 2
 - `src/middleware-paths.ts`
 - `src/middleware.ts`
 - `src/server/auth/actions.ts`
-- `src/server/auth/mailer.ts`
 - `src/server/auth/reset.ts`
 - `src/server/auth/rules.ts`
 - `src/server/auth/signup.ts`
@@ -77,7 +76,7 @@ sidebar_position: 2
 
 ## Audit Trail
 
-- EXTRACTED: 281 (97%)
+- EXTRACTED: 278 (97%)
 - INFERRED: 8 (3%)
 - AMBIGUOUS: 0 (0%)
 

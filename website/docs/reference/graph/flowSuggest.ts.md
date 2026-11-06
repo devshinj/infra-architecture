@@ -1,6 +1,6 @@
 ---
 title: "flowSuggest.ts"
-sidebar_position: 36
+sidebar_position: 31
 ---
 # flowSuggest.ts
 
@@ -11,15 +11,15 @@ sidebar_position: 36
 ## Key Concepts
 
 - **flowSuggest.ts** (53 connections) — `src/server/flowSuggest.ts`
-- **DiagramState** (47 connections) — `src/domain/types.ts`
+- **DiagramState** (48 connections) — `src/domain/types.ts`
 - **suggestFlows()** (14 connections) — `src/server/flowSuggest.ts`
-- **NodeInfoProps** (10 connections) — `src/ui/NodeInfo.tsx`
-- **Flow** (9 connections) — `src/domain/flows.ts`
 - **FlowSuggestRepo** (8 connections) — `src/server/flowSuggest.ts`
+- **pickFlows()** (7 connections) — `src/server/flowSuggest.ts`
+- **parseCommand()** (6 connections) — `src/domain/commands.ts`
+- **toFlowOp()** (5 connections) — `src/domain/commands.ts`
 - **.applyFlowOps()** (5 connections) — `src/server/flowSuggest.ts`
 - **.getLatestState()** (4 connections) — `src/server/flowSuggest.ts`
-- **diagrams** (3 connections) — `src/db/schema.ts`
-- **flows** (3 connections) — `src/db/schema.ts`
+- **complete()** (3 connections) — `src/server/flowSuggest.ts`
 - **.getOwnedDiagram()** (3 connections) — `src/server/flowSuggest.ts`
 - **.listFlows()** (3 connections) — `src/server/flowSuggest.ts`
 - **resolveDeps()** (3 connections) — `src/server/flowSuggest.ts`
@@ -35,31 +35,29 @@ sidebar_position: 36
 
 ## Relationships
 
-- [server/flows.ts](server-flows.ts.md) (13 shared connections)
-- [schema.ts](schema.ts.md) (10 shared connections)
-- [prompt.ts](prompt.ts.md) (10 shared connections)
-- [NodeInfo.tsx](NodeInfo.tsx.md) (7 shared connections)
-- [suggest/route.ts](suggest-route.ts.md) (5 shared connections)
-- [deps.ts](deps.ts.md) (5 shared connections)
+- [projects.ts](projects.ts.md) (15 shared connections)
+- [domain/warnings.ts](domain-warnings.ts.md) (11 shared connections)
+- [server/flows.ts](server-flows.ts.md) (7 shared connections)
+- [pipeline.ts](pipeline.ts.md) (6 shared connections)
 - [commands.ts](commands.ts.md) (5 shared connections)
-- [DiagramState](DiagramState.md) (4 shared connections)
-- [getOwnedDiagram](getOwnedDiagram.md) (4 shared connections)
-- [3C-1 계획 작업 목록](3C-1_계획_작업_목록.md) (4 shared connections)
-- [projects.ts](projects.ts.md) (3 shared connections)
+- [MissingChecklist.tsx](MissingChecklist.tsx.md) (5 shared connections)
+- [domain/flows.ts](domain-flows.ts.md) (5 shared connections)
+- [suggest/route.ts](suggest-route.ts.md) (5 shared connections)
+- [NodeInfo.tsx](NodeInfo.tsx.md) (4 shared connections)
+- [prompt.ts](prompt.ts.md) (4 shared connections)
 - [useExplanations.ts](useExplanations.ts.md) (3 shared connections)
+- [types.ts](types.ts.md) (3 shared connections)
 
 ## Source Files
 
-- `src/db/schema.ts`
-- `src/domain/flows.ts`
+- `src/domain/commands.ts`
 - `src/domain/types.ts`
 - `src/server/flowSuggest.ts`
-- `src/ui/NodeInfo.tsx`
 
 ## Audit Trail
 
-- EXTRACTED: 136 (96%)
-- INFERRED: 5 (4%)
+- EXTRACTED: 129 (95%)
+- INFERRED: 7 (5%)
 - AMBIGUOUS: 0 (0%)
 
 ---

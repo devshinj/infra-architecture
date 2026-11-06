@@ -1,6 +1,6 @@
 ---
 title: "layoutMetrics.ts"
-sidebar_position: 40
+sidebar_position: 37
 ---
 # layoutMetrics.ts
 
@@ -32,13 +32,15 @@ sidebar_position: 40
 
 ## Relationships
 
-- [display.ts](display.ts.md) (8 shared connections)
+- [Layout](Layout.md) (4 shared connections)
 - [layout.ts](layout.ts.md) (3 shared connections)
 - [text.ts](text.ts.md) (3 shared connections)
-- [Rect](Rect.md) (2 shared connections)
+- [display.ts](display.ts.md) (2 shared connections)
+- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (2 shared connections)
+- [types.ts](types.ts.md) (2 shared connections)
 - [segments.ts](segments.ts.md) (2 shared connections)
+- [exportImage.ts](exportImage.ts.md) (1 shared connections)
 - [flowSuggest.ts](flowSuggest.ts.md) (1 shared connections)
-- [types.ts](types.ts.md) (1 shared connections)
 
 ## Source Files
 
