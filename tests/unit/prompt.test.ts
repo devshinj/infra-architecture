@@ -15,6 +15,7 @@ import {
   HISTORY_LIMIT,
   parseMentions,
   summarizeState,
+  ATTR_LIST,
   SYSTEM_PROMPT,
   WARNING_PROMPT,
 } from "@/server/chat/prompt";
@@ -383,5 +384,15 @@ describe("flow commands in the prompt", () => {
     expect(user.indexOf("현재 구성:")).toBeLessThan(user.indexOf("흐름:\n"));
     const none = buildMessages({ intent: null, text: "x", state: sample(), mentions: [], history: [] }).at(-1)!.content;
     expect(none).not.toContain("흐름:\n");
+  });
+});
+
+describe("attrs 칸 목록", () => {
+  test("종류별 칸을 카탈로그에서 만들어 프롬프트에 넣는다", () => {
+    expect(ATTR_LIST).toContain("web_server, was, app_server, batch_server, bastion: hostname(호스트명), cpu(CPU), ram(RAM), disk(디스크), os(OS), ip(IP), sw(SW)");
+    expect(ATTR_LIST).toContain("firewall");
+    expect(SYSTEM_PROMPT).toContain(ATTR_LIST);
+    expect(SYSTEM_PROMPT).toContain("os 는 운영체제(예: Rocky Linux 9), sw 는 설치한 소프트웨어(예: Tomcat 10)다.");
+    expect(SYSTEM_PROMPT).toContain("하나도 빠뜨리지 말고 노드마다 update_node 를 낸다.");
   });
 });

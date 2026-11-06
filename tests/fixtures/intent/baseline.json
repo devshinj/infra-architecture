@@ -187,7 +187,7 @@
       "intentOk": true,
       "qwenOk": false,
       "qwenNote": "망을 안 넘는 연결에 전달물·방향을 지어냄: e-link-auth",
-      "qwenPasses": 1,
+      "qwenPasses": 2,
       "qwenRuns": 3
     },
     {
@@ -207,7 +207,7 @@
       "routed": "structure_change",
       "intentOk": true,
       "qwenOk": false,
-      "qwenNote": "나오면 안 되는 명령: update_flow",
+      "qwenNote": "나오면 안 되는 명령: remove_edge, update_flow",
       "qwenPasses": 1,
       "qwenRuns": 3
     },
@@ -278,6 +278,57 @@
       "routed": "null",
       "intentOk": false,
       "qwenOk": true,
+      "qwenPasses": 3,
+      "qwenRuns": 3
+    },
+    {
+      "id": "b-all-os",
+      "intent": "structure_change",
+      "confidence": 0.7330958060753943,
+      "routed": "structure_change",
+      "intentOk": true,
+      "qwenOk": false,
+      "qwenNote": "대상이 다름(빠짐: web-1, web-2, web-3, was-1, was-2, was-3, was-4, batch-1, batch-2, bastion / 더함: -)",
+      "qwenPasses": 2,
+      "qwenRuns": 3
+    },
+    {
+      "id": "b-was-ram",
+      "intent": "structure_change",
+      "confidence": 0.7763943746788555,
+      "routed": "structure_change",
+      "intentOk": true,
+      "qwenOk": true,
+      "qwenPasses": 3,
+      "qwenRuns": 3
+    },
+    {
+      "id": "b-biz-cpu",
+      "intent": "structure_change",
+      "confidence": 0.9130485971485772,
+      "routed": "structure_change",
+      "intentOk": true,
+      "qwenOk": true,
+      "qwenPasses": 3,
+      "qwenRuns": 3
+    },
+    {
+      "id": "b-web-sw",
+      "intent": "structure_change",
+      "confidence": 0.9086014639308025,
+      "routed": "structure_change",
+      "intentOk": true,
+      "qwenOk": true,
+      "qwenPasses": 3,
+      "qwenRuns": 3
+    },
+    {
+      "id": "b-db-ha",
+      "intent": "structure_change",
+      "confidence": 0.9156439673911321,
+      "routed": "structure_change",
+      "intentOk": true,
+      "qwenOk": null,
       "qwenPasses": 3,
       "qwenRuns": 3
     },
