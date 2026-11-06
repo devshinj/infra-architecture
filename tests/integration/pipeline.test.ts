@@ -6,15 +6,17 @@ import { diagramVersions } from "@/db/schema";
 import { applyCommands } from "@/domain/apply";
 import { assumptionChangeMessage } from "@/domain/assumptions";
 import { computeMissing } from "@/domain/missing";
-import type { DiagramState } from "@/domain/types";
+import type { DiagramState, Group } from "@/domain/types";
 import { emptyState } from "@/domain/types";
+import { evaluateRules } from "@/domain/warnings";
 import type { ChatEvent } from "@/server/chat/events";
 import { listMessages } from "@/server/chat/messages";
 import { runChatTurn, type ChatDeps } from "@/server/chat/pipeline";
 import { ANSWER_PROMPT, SYSTEM_PROMPT } from "@/server/chat/prompt";
 import type { ClefClient, Intent } from "@/server/llm/clef";
 import type { ChatMessage, QwenClient } from "@/server/llm/qwen";
-import { listFlows } from "@/server/flows";
+import { applyFlowOps, confirmFlow, listFlows } from "@/server/flows";
+import * as networkServer from "@/server/network";
 import { NotFoundError } from "@/server/projects";
 import { createVersion, getLatestState } from "@/server/versions";
 
@@ -974,5 +976,180 @@ describe("flow commands in a chat turn", () => {
     const qwen = fakeQwen(j({ op: "say", text: "네" }));
     await turn(ids, "흐름 이름 바꿔줘", { qwen, clef: clef() });
     expect(qwen.calls[0]!.at(-1)!.content).toContain('흐름:\n흐름 order [user] "주문": e-a-b\n\n참조 노드:');
+  });
+});
+
+describe("network knowledge in a chat turn", () => {
+  const j = (o: unknown) => JSON.stringify(o);
+  const clef = () => fakeClef({ intent: "structure_change", confidence: 0.9 });
+  const zoneLines = [
+    j({ op: "add_group", id: "gov", group_kind: "network_zone", label: "행정망", parent: null }),
+    j({ op: "add_group", id: "cloud", group_kind: "network_zone", label: "GCloud 인터넷망", parent: null }),
+  ];
+
+  /** 행정망 PC → 방화벽 → GCloud WAS (연결 둘) 구성도. 망 종류는 주어진 값으로 붙인다. */
+  async function govBase(netTypes: { gov?: Group["netType"]; cloud?: Group["netType"] } = {}) {
+    const ids = await makeOwnedDiagram();
+    const s = emptyState();
+    s.groups.gov = { id: "gov", groupKind: "network_zone", label: "행정망", parent: null, ...(netTypes.gov ? { netType: netTypes.gov } : {}) };
+    s.groups.cloud = { id: "cloud", groupKind: "network_zone", label: "GCloud 인터넷망", parent: null, ...(netTypes.cloud ? { netType: netTypes.cloud } : {}) };
+    s.nodes.pc = { id: "pc", kind: "admin_user", label: "업무 PC", parent: "gov", attrs: {} };
+    s.nodes.fw = { id: "fw", kind: "firewall", label: "방화벽", parent: "gov", attrs: {} };
+    s.nodes.was = { id: "was", kind: "was", label: "WAS", parent: "cloud", attrs: {} };
+    s.edges["e-pc-fw"] = { id: "e-pc-fw", from: "pc", to: "fw", edgeKind: "request", label: "HTTPS 443" };
+    s.edges["e-fw-was"] = { id: "e-fw-was", from: "fw", to: "was", edgeKind: "request", label: "HTTPS 443", payload: "api", direction: "one_way" };
+    await createVersion(ids.diagramId, s, { source: "import" });
+    return { ids, state: s };
+  }
+  const AI_TYPES = {
+    gov: { key: "admin-net", source: "ai" as const, confirmed: false },
+    cloud: { key: "gcloud-internet", source: "ai" as const, confirmed: false },
+  };
+
+  test("행정망 사례: AI 가 set_zone_type 두 개 + 방화벽 → network_link(guess) → WAS 를 그리면 버전 상태에 netType(ai), guess.replaced, set_link_guess cmd 이벤트", async () => {
+    const ids = await makeOwnedDiagram();
+    const lines = [
+      ...zoneLines,
+      j({ op: "set_zone_type", id: "gov", type: "admin-net" }),
+      j({ op: "set_zone_type", id: "cloud", type: "gcloud-internet" }),
+      j({ op: "add_node", id: "pc", kind: "admin_user", label: "업무 PC", parent: "gov" }),
+      j({ op: "add_node", id: "fw", kind: "firewall", label: "방화벽", parent: "gov" }),
+      j({ op: "add_node", id: "link-1", kind: "network_link", label: "망연계", parent: "gov", guess: true }),
+      j({ op: "add_node", id: "was", kind: "was", label: "WAS", parent: "cloud" }),
+      j({ op: "add_edge", id: "e-pc-fw", from: "pc", to: "fw", edge_kind: "request", label: "HTTPS 443" }),
+      j({ op: "add_edge", id: "e-fw-link", from: "fw", to: "link-1", edge_kind: "request", label: "HTTPS 443", payload: "api", direction: "one_way" }),
+      j({ op: "add_edge", id: "e-link-was", from: "link-1", to: "was", edge_kind: "request", label: "HTTPS 443" }),
+    ];
+    const qwen = fakeQwen(lines.join("\n"));
+    const { events } = await turn(ids, "행정망 PC 에서 GCloud WAS 로 가게 그려줘", { qwen, clef: clef() });
+
+    expect(of(events, "skip")).toEqual([]);
+    // 프롬프트에 망 지식 블록이 들어간다.
+    expect(qwen.calls[0]!.at(-1)!.content).toContain("망 종류:\nadmin-net ");
+    const st = (await getLatestState(ids.diagramId))!.state;
+    expect(st.groups.gov!.netType).toEqual({ key: "admin-net", source: "ai", confirmed: false });
+    expect(st.groups.cloud!.netType).toEqual({ key: "gcloud-internet", source: "ai", confirmed: false });
+    const guess = { replaced: [], bridge: { from: "fw", to: "was", edgeKind: "request", label: "HTTPS 443", payload: "api", direction: "one_way" } };
+    expect(st.nodes["link-1"]!.guess).toEqual(guess);
+    const cmds = of(events, "cmd").map((e) => e.cmd);
+    expect(cmds.at(-1)).toEqual({ op: "set_link_guess", id: "link-1", guess });
+    // 서버가 만든 명령이라 applied·changed 로 세지 않는다. 망연계를 거치므로 연결 방식 예상 경고도 없다.
+    expect(events.at(-1)).toMatchObject({ t: "done", version: 1, applied: lines.length, changed: lines.length, skipped: 0 });
+    expect(st.warnings?.some((w) => w.rule === "link_expected")).toBe(false);
+  });
+
+  test("기존 연결을 망연계로 바꾼 차례는 그 연결을 지나던 흐름 단계를 둘로 나눈다", async () => {
+    const { ids, state } = await govBase(AI_TYPES);
+    const steps = [
+      { edge: "e-pc-fw", from: "pc", short: "접속", text: "PC 가 방화벽으로 요청한다" },
+      { edge: "e-fw-was", from: "fw", short: "업무 요청", text: "방화벽을 지나 WAS 로 간다" },
+    ];
+    await applyFlowOps(ids.diagramId, state, [{ op: "add_flow", id: "work", name: "업무", origin: "user", steps }], "ai");
+    await confirmFlow(ids.userId, ids.diagramId, "work");
+
+    const lines = [
+      j({ op: "add_node", id: "link-1", kind: "network_link", label: "망연계", parent: "gov", guess: true }),
+      j({ op: "add_edge", id: "e-fw-link", from: "fw", to: "link-1", edge_kind: "request", label: "HTTPS 443" }),
+      j({ op: "add_edge", id: "e-link-was", from: "link-1", to: "was", edge_kind: "request", label: "HTTPS 443" }),
+      j({ op: "remove_edge", id: "e-fw-was" }),
+    ];
+    const { events } = await turn(ids, "망연계 필요하면 넣어 줘", { qwen: fakeQwen(lines.join("\n")), clef: clef() });
+    expect(of(events, "skip")).toEqual([]);
+    const st = (await getLatestState(ids.diagramId))!.state;
+    expect(st.nodes["link-1"]!.guess).toEqual({
+      replaced: [{ id: "e-fw-was", from: "fw", to: "was", edgeKind: "request", label: "HTTPS 443", payload: "api", direction: "one_way" }],
+    });
+    const flows = await listFlows(ids.userId, ids.diagramId);
+    expect(flows[0]).toMatchObject({
+      source: "ai",
+      reviewed: true,
+      problems: [],
+      steps: [
+        steps[0],
+        { edge: "e-fw-link", from: "fw", short: "업무 요청", text: "방화벽을 지나 WAS 로 간다" },
+        { edge: "e-link-was", from: "link-1", short: "업무 요청", text: "방화벽을 지나 WAS 로 간다" },
+      ],
+    });
+  });
+
+  test("모르는 망 종류 key 의 set_zone_type 은 건너뜀, 상태 그대로", async () => {
+    const { ids, state } = await govBase();
+    const { events } = await turn(ids, "망 종류 붙여 줘", { qwen: fakeQwen(j({ op: "set_zone_type", id: "gov", type: "no-such-net" })), clef: clef() });
+    expect(of(events, "skip").map((e) => e.reason)).toEqual(["건너뜀: 알 수 없는 망 종류(no-such-net)"]);
+    expect(of(events, "cmd")).toEqual([]);
+    expect(events.at(-1)).toMatchObject({ t: "done", version: null, applied: 0, skipped: 1 });
+    expect((await getLatestState(ids.diagramId))!.state).toEqual(state);
+  });
+
+  test("AI 가 set_link_guess 를 쓰면 건너뜀", async () => {
+    const { ids, state } = await govBase();
+    const line = j({ op: "set_link_guess", id: "fw", guess: { replaced: [] } });
+    const { events } = await turn(ids, "x", { qwen: fakeQwen(line), clef: clef() });
+    expect(of(events, "skip").map((e) => e.reason)).toEqual(["건너뜀: 지원하지 않는 명령(set_link_guess)"]);
+    expect((await getLatestState(ids.diagramId))!.state).toEqual(state);
+  });
+
+  test("사용자 확정 종류에 대한 set_zone_type 은 건너뜀", async () => {
+    const { ids, state } = await govBase({ gov: { key: "admin-net", source: "user", confirmed: true } });
+    const { events } = await turn(ids, "x", { qwen: fakeQwen(j({ op: "set_zone_type", id: "gov", type: "internet" })), clef: clef() });
+    expect(of(events, "skip")).toHaveLength(1);
+    expect(of(events, "skip")[0]!.reason).toContain("적용할 수 없는 명령(set_zone_type)");
+    expect((await getLatestState(ids.diagramId))!.state.groups.gov!.netType).toEqual(state.groups.gov!.netType);
+    expect(await versions(ids.diagramId)).toHaveLength(1);
+  });
+
+  test("망 지식 읽기 실패면 판정·프롬프트 블록 없이 지금처럼 끝난다", async () => {
+    const { ids } = await govBase(AI_TYPES);
+    const read = vi.spyOn(networkServer, "getNetworkKnowledge").mockRejectedValueOnce(new Error("db down"));
+    const err = vi.spyOn(console, "error").mockImplementation(() => {});
+    try {
+      const lines = [j({ op: "set_zone_type", id: "gov", type: "admin-net" }), j({ op: "update_node", id: "was", attrs: { ram: "16GB" } })];
+      const qwen = fakeQwen(lines.join("\n"));
+      const { events } = await turn(ids, "WAS 램 16GB", { qwen, clef: clef() });
+      expect(read).toHaveBeenCalledWith(ids.userId);
+      expect(err).toHaveBeenCalledWith("chat network knowledge failed", expect.any(Error));
+      const user = qwen.calls[0]!.at(-1)!.content;
+      expect(user).not.toContain("망 종류:");
+      expect(user).not.toContain("망 짝 규칙:");
+      expect(of(events, "skip").map((e) => e.reason)).toEqual(["건너뜀: 알 수 없는 망 종류(admin-net)"]);
+      expect(events.at(-1)).toMatchObject({ t: "done", version: 2, status: "complete", changed: 1 });
+      const st = (await getLatestState(ids.diagramId))!.state;
+      expect(st.nodes.was!.attrs.ram).toBe("16GB");
+      expect(st.warnings?.some((w) => w.rule.startsWith("link_"))).toBe(false);
+    } finally {
+      read.mockRestore();
+      err.mockRestore();
+    }
+  });
+
+  test("link_expected 경고 문구는 Qwen 다듬기를 거치지 않는다", async () => {
+    const { ids, state } = await govBase(AI_TYPES);
+    const id = "link_expected:cloud--gov";
+    // 지난 버전에 다른 문구가 저장돼 있어도 이어 쓰지 않는다.
+    const stale = { id, rule: "link_expected" as const, nodeId: "was", level: "check" as const, text: "예전 문구", guide: "g" };
+    await createVersion(ids.diagramId, { ...state, warnings: [stale] }, { source: "import" });
+    const first = j({ op: "update_node", id: "was", attrs: { ram: "16GB" } });
+    const rewrite = [j({ id, text: "다듬은 문구" }), j({ id: "spof:was", text: "다듬은 SPOF" })].join("\n");
+    const calls: ChatMessage[][] = [];
+    let n = 0;
+    const a = fakeQwen(first);
+    const b = fakeQwen(rewrite);
+    const qwen: QwenClient = {
+      streamCompletion(messages, o) {
+        calls.push(messages);
+        return (n++ === 0 ? a : b).streamCompletion(messages, o);
+      },
+    };
+    const clefWithDecide = Object.assign(clef(), { decide: vi.fn(async () => null as never) });
+    await turn(ids, "WAS 램 16GB", { qwen, clef: clefWithDecide });
+
+    const st = (await getLatestState(ids.diagramId))!.state;
+    const knowledge = await networkServer.getNetworkKnowledge(ids.userId);
+    const expected = evaluateRules(st, knowledge).find((w) => w.id === id)!;
+    expect(expected.text).toContain("기관 규정과 방화벽 담당자에게 확인해 보세요.");
+    expect(st.warnings!.find((w) => w.id === id)!.text).toBe(expected.text);
+    // 문구 요청에도 link 경고는 들어가지 않는다.
+    expect(calls.length).toBeGreaterThan(0);
+    for (const c of calls.slice(1)) expect(JSON.stringify(c)).not.toContain(id);
   });
 });

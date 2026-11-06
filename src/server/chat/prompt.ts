@@ -2,6 +2,7 @@ import { EDGE_KINDS, GROUP_KINDS, NODE_KINDS } from "@/domain/catalog";
 import { LIMITS, type NodeExplanation } from "@/domain/explain";
 import type { Flow } from "@/domain/flows";
 import { FIELD_LABELS, type MissingItem } from "@/domain/missing";
+import { GRADE_LABELS, METHOD_LABELS, pairKey, requiredMethod, type NetworkKnowledge } from "@/domain/network";
 import { patternPromptBlock } from "@/domain/patterns";
 import type { DiagramState } from "@/domain/types";
 import type { Intent } from "@/server/llm/clef";
@@ -49,6 +50,8 @@ export const SYSTEM_PROMPT = `너는 인프라 아키텍처 구성도를 그리�
 {"op":"remove_node","id":"기존 노드 id"}
 {"op":"remove_edge","id":"기존 연결 id"}
 {"op":"remove_group","id":"기존 영역 id"}
+{"op":"set_zone_type","id":"망 영역 id","type":"망 종류 key 또는 null"}
+{"op":"add_node","id":"link-1","kind":"network_link","label":"망연계 솔루션","parent":null,"guess":true}
 {"op":"add_flow","id":"login","name":"로그인","origin":"user","summary":"사용자가 로그인한다","result":"로그인 결과를 화면에 돌려준다","steps":[{"edge":"e-client-web-was-1","from":"client-web","short":"로그인 요청","text":"아이디와 비밀번호를 WAS 로 보낸다"},{"edge":"e-was-1-db-1","from":"was-1","short":"회원 조회","text":"DB 에서 회원 정보를 확인한다"}]}
 {"op":"update_flow","id":"login","name":"회원 로그인","result":"확인 결과를 돌려준다"}
 {"op":"remove_flow","id":"기존 흐름 id"}
@@ -74,6 +77,11 @@ ${ATTR_LIST}
 - 사용자가 모르는 값(IP, hostname, 스펙)은 null 로 둔다. 지어내지 않는다.
 - 업무망·인터넷망처럼 분리된 망은 network_zone 영역으로 그리고 망 이름을 label 에 쓴다.
 - 서로 다른 망을 잇는 통신은 방화벽(firewall)·망연계 솔루션(network_link)·VPN 노드를 거치게 그리고, 망을 넘는 연결에는 payload(api 또는 file)와 direction(one_way 또는 two_way)을 쓴다. 같은 망 안의 연결에는 사용자가 말하지 않은 payload·direction 을 쓰지 않는다.
+- network_zone 영역에는 set_zone_type 으로 망 종류를 붙인다. type 은 "망 종류:" 목록의 key 만 쓰고, 맞는 것이 없거나 근거가 없으면 쓰지 않는다. 요약에 type=…(확정) 이 붙은 망은 바꾸지 않는다. 종류가 없는 기존 망도 이번 요청에 근거가 있으면 붙인다.
+- "망 짝 규칙"이 망연계 필요인 두 망을 잇게 되면 사이에 network_link 노드를 넣고 그 add_node 에 "guess":true 를 쓴다. 사용자가 망연계를 넣어 달라고 했으면 guess 를 쓰지 않는다.
+- "망 짝 규칙"이 보통 잇지 않음인 두 망을 이으라고 하면 요청대로 그리고, 보통 잇지 않는 구간이라고 say 로 한 줄 알린다.
+- 사용자가 "방화벽으로 바로"처럼 망연계 없이 이으라고 하면 그대로 따르고, set_assumption 의 key 를 no_link:<망 id>--<망 id>(두 망 id 를 사전순으로), value 를 "망연계 없이 통신" 으로 쓴다. 가정에 no_link:<a>--<b> 가 있는 두 망 사이에는 망연계를 넣지 않는다.
+- 종류가 붙은 망이 있으면 인터넷·클라우드 쪽 서버(클라우드 WAS 등)도 알맞은 network_zone 안에 그린다. 외부 사용자와 외부 SaaS 는 망 밖에 그대로 둔다.
 - 연결은 실제 요청 흐름 방향(호출하는 쪽 → 받는 쪽)으로.
 - edge_kind 는 동기 요청 request, 비동기·이벤트·웹훅 async, 복제·동기화 replication 이다. 모니터링·관리(Bastion, Prometheus 등) 연결은 aux 로 한다.
 - 각 단계마다 say 로 진행 상황을 짧게 알린다.
@@ -133,11 +141,12 @@ export function buildWarningMessages(items: { id: string; rule: string; facts: s
 export function summarizeState(state: DiagramState): string {
   const lines: string[] = [];
   for (const g of Object.values(state.groups)) {
-    lines.push(`그룹 ${g.id} [${g.groupKind}] ${JSON.stringify(g.label)} parent=${g.parent ?? "-"}`);
+    const t = g.netType ? ` type=${g.netType.key}(${g.netType.source === "user" || g.netType.confirmed ? "확정" : "추정"})` : "";
+    lines.push(`그룹 ${g.id} [${g.groupKind}] ${JSON.stringify(g.label)} parent=${g.parent ?? "-"}${t}`);
   }
   for (const n of Object.values(state.nodes)) {
     lines.push(
-      `노드 ${n.id} [${n.kind}] ${JSON.stringify(n.label)} sub=${JSON.stringify(n.sub ?? "")} parent=${n.parent ?? "-"} attrs=${JSON.stringify(n.attrs ?? {})}`,
+      `노드 ${n.id} [${n.kind}] ${JSON.stringify(n.label)} sub=${JSON.stringify(n.sub ?? "")} parent=${n.parent ?? "-"} attrs=${JSON.stringify(n.attrs ?? {})}${n.guess ? " guess" : ""}`,
     );
   }
   for (const e of Object.values(state.edges)) {
@@ -148,6 +157,32 @@ export function summarizeState(state: DiagramState): string {
     lines.push(`가정 ${JSON.stringify(a.key)}=${JSON.stringify(a.value)} (${a.confirmed ? "확정" : "미확정"})`);
   }
   return lines.join("\n");
+}
+
+const byStr = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
+
+/**
+ * 망 지식 블록: 망 종류 목록(key·이름·다른 이름·등급, 설명은 뺀다) + 이 구성도에서 종류가 붙은 망 짝의 필요한 방식.
+ * 이름·다른 이름·근거(사용자 글)는 JSON 으로 감싸 줄바꿈이 새 줄을 만들지 못하게 한다.
+ */
+export function networkBlock(state: DiagramState, k: NetworkKnowledge): string {
+  const types = Object.values(k.types)
+    .sort((a, b) => byStr(a.key, b.key))
+    .map((t) => `${t.key} ${JSON.stringify(t.name)} 다른 이름=${JSON.stringify(t.aliases)} 등급=${GRADE_LABELS[t.grade]}`);
+  const zones = Object.values(state.groups)
+    .filter((g) => g.groupKind === "network_zone" && g.netType)
+    .sort((a, b) => byStr(a.id, b.id));
+  const pairs: string[] = [];
+  for (let i = 0; i < zones.length; i++) {
+    for (let j = i + 1; j < zones.length; j++) {
+      const req = requiredMethod(k, zones[i]!.netType!.key, zones[j]!.netType!.key);
+      if (!req) continue;
+      const [a, b] = pairKey(zones[i]!.id, zones[j]!.id);
+      const basis = req.source === "user" && req.note ? ` 기관 규칙 근거=${JSON.stringify(req.note)}` : "";
+      pairs.push(`${a} -- ${b}: ${METHOD_LABELS[req.method]}${basis}`);
+    }
+  }
+  return `망 종류:\n${types.join("\n")}\n\n망 짝 규칙:\n${pairs.length ? pairs.join("\n") : "없음"}`;
 }
 
 /** 흐름 한 개를 한 줄로: 지나는 연결 id 를 차례로. 이름(사용자 글)은 JSON 으로 감싸 줄바꿈이 새 줄을 만들지 못하게 한다. */
@@ -218,6 +253,8 @@ export function buildMessages(input: {
   continuation?: boolean;
   /** 저장된 흐름. 있으면 "현재 구성" 뒤에 흐름 목록을 넣는다. */
   flows?: Flow[];
+  /** 망 지식. 있으면 "현재 구성" 바로 뒤에 망 종류·망 짝 규칙을 넣는다. */
+  network?: NetworkKnowledge;
 }): ChatMessage[] {
   const system = input.intent === "question" || input.intent === "other" ? ANSWER_PROMPT : SYSTEM_PROMPT;
   const labelOf = (id: string, fallback: string) => input.state.nodes[id]?.label ?? input.state.groups[id]?.label ?? fallback;
@@ -226,7 +263,8 @@ export function buildMessages(input: {
   const missingBlock = open.length ? `채워야 할 정보:\n${open.map((m) => `${m.targetId} ${m.key}(${m.label})`).join("\n")}\n\n${MISSING_FORMAT_NOTE}\n\n` : "";
   const cont = input.continuation ? `\n\n${CONTINUE_NOTE}` : "";
   const flowBlock = input.flows?.length ? `흐름:\n${summarizeFlows(input.flows)}\n\n` : "";
-  const user = `현재 구성:\n${summarizeState(input.state)}\n\n${flowBlock}참조 노드:\n${refs}\n\n${missingBlock}요청: ${input.text}${cont}`;
+  const netBlock = input.network ? `${networkBlock(input.state, input.network)}\n\n` : "";
+  const user = `현재 구성:\n${summarizeState(input.state)}\n\n${netBlock}${flowBlock}참조 노드:\n${refs}\n\n${missingBlock}요청: ${input.text}${cont}`;
   return [
     { role: "system", content: system },
     ...input.history.slice(-HISTORY_LIMIT).map((h) => ({ role: h.role, content: h.content })),

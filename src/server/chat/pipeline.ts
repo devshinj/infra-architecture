@@ -1,7 +1,9 @@
 import { computeMissing } from "@/domain/missing";
 import { applyCommand, pruneEmptyGroups } from "@/domain/apply";
-import { COMMAND_OPS, isFlowCommand, isStructural, parseCommand, toFlowOp } from "@/domain/commands";
-import { asksStepText, keepStepText, type FlowOp } from "@/domain/flows";
+import { COMMAND_OPS, isFlowCommand, isStructural, parseCommand, SERVER_ONLY_OPS, toFlowOp, type Command } from "@/domain/commands";
+import { asksStepText, FLOW_LIMITS, keepStepText, type FlowOp } from "@/domain/flows";
+import { recordReplaced, splitFlowSteps, splitsFor, type StepSplit } from "@/domain/linkGuess";
+import type { NetworkKnowledge } from "@/domain/network";
 import { emptyState, type DiagramState, type Warning } from "@/domain/types";
 import type { ClefClient, Intent } from "@/server/llm/clef";
 import { createJsonlParser } from "@/server/llm/jsonl";
@@ -9,7 +11,8 @@ import { createThinkStripper } from "@/server/llm/think";
 import type { QwenClient } from "@/server/llm/qwen";
 import { getOwnedDiagram, NotFoundError, ValidationError } from "@/server/projects";
 import { createVersion, getLatestState } from "@/server/versions";
-import { applyFlowOps, listFlows } from "@/server/flows";
+import { applyFlowOps, listFlows, rewriteFlows } from "@/server/flows";
+import { getNetworkKnowledge } from "@/server/network";
 
 import { SESSION_GONE_MESSAGE, sessionPayload, type ChatEvent, type MessageMeta } from "./events";
 import { BUSY_MESSAGE } from "./busy";
@@ -204,8 +207,15 @@ async function lockedTurn(args: TurnArgs, sessionId: string | null, followUp: bo
     return;
   }
 
+  // 망 지식(계정 공통). 못 읽으면 망 블록·종류 붙이기·연결 방식 판정 없이 지금처럼 돈다.
+  const knowledge: NetworkKnowledge | null = await getNetworkKnowledge(args.userId).catch((err) => {
+    console.error("chat network knowledge failed", err);
+    return null;
+  });
+
   // 차례 시작 상태의 열린(모름 아닌) 빠진 정보. 값만 알려 주는 답을 분류·반영하는 데 쓴다.
-  const openMissing = computeMissing(state).items.filter((m) => !m.unknown);
+  // 망 종류(영역 항목)는 AI 가 프롬프트의 망 지식으로 추정하므로 넘기지 않는다.
+  const openMissing = computeMissing(state).items.filter((m) => !m.unknown && m.targetKind !== "group");
   const openItems = clefOpenItems(state, openMissing, { text: clean, lastAssistant, mentionIds: mentions.map((m) => m.id) });
   const intent: Intent | null = await resolveIntent(args.text, () =>
     deps.clef.classifyIntent(clean, { lastAssistant, openItems }, signal),
@@ -243,7 +253,8 @@ async function lockedTurn(args: TurnArgs, sessionId: string | null, followUp: bo
       console.error("chat list flows failed", err);
       return [];
     });
-    const messages = buildMessages({ intent, text: clean, state, mentions, history, missing: openMissing, flows });
+    const network = knowledge ? { network: knowledge } : {};
+    const messages = buildMessages({ intent, text: clean, state, mentions, history, missing: openMissing, flows, ...network });
     const keepText = !asksStepText(clean);
     emit({ t: "status", phase: "thinking" });
 
@@ -258,9 +269,14 @@ async function lockedTurn(args: TurnArgs, sessionId: string | null, followUp: bo
         return;
       }
       const op = opName(raw);
-      if (!KNOWN_OPS.has(op)) return skip(`지원하지 않는 명령(${op})`, skipKey("unknown_op", op));
+      // 서버만 만드는 명령(set_link_guess)은 AI 가 써도 모르는 명령처럼 건너뛴다.
+      if (!KNOWN_OPS.has(op) || SERVER_ONLY_OPS.has(op as Command["op"])) return skip(`지원하지 않는 명령(${op})`, skipKey("unknown_op", op));
       const parsed = parseCommand(normalizeAiCommand(raw));
       if (!parsed.ok) return skip(`형식이 맞지 않는 명령(${op})`, skipKey("invalid", op, parsed.error));
+      // 망 종류는 망 지식에 있는 key 만 붙인다(null 은 지우기). 지식을 못 읽었으면 모두 건너뛴다.
+      if (parsed.cmd.op === "set_zone_type" && (!knowledge || (parsed.cmd.type !== null && !Object.hasOwn(knowledge.types, parsed.cmd.type)))) {
+        return skip(`알 수 없는 망 종류(${parsed.cmd.type})`, skipKey("invalid", op, "unknown net type"));
+      }
       if (isFlowCommand(parsed.cmd)) {
         // 단계 글을 고쳐 달라는 요청이 아니면, 남는 단계의 글은 원래 흐름 것을 쓴다.
         const cmd = keepText ? keepStepText(parsed.cmd, flows) : parsed.cmd;
@@ -327,7 +343,7 @@ async function lockedTurn(args: TurnArgs, sessionId: string | null, followUp: bo
           const n = part + 1;
           console.info("[chat] output cut by length, continuing", { diagramId, part: n });
           emit({ t: "status", phase: "drawing", part: { n, of: MAX_CONTINUATIONS + 1 } });
-          msgs = buildMessages({ intent, text: clean, state, mentions, history, missing: openMissing, continuation: true, flows });
+          msgs = buildMessages({ intent, text: clean, state, mentions, history, missing: openMissing, continuation: true, flows, ...network });
         }
       }
     } catch (err) {
@@ -338,16 +354,28 @@ async function lockedTurn(args: TurnArgs, sessionId: string | null, followUp: bo
 
   let version: number | null = null;
   let fresh: Warning[] = [];
+  // 이번 차례에 망연계(guess)가 끼어든 연결. 흐름 단계를 나누는 데 쓴다.
+  let splits: StepSplit[] = [];
   // 구성도를 바꾼 명령(구성·가정)이 있을 때만 정리·점검·버전을 한다. 흐름만 바꾼 차례는 버전을 만들지 않는다.
   if (changed + assumed > 0) {
     // 이번 차례에 비게 된 영역을 지운다. 클라이언트도 같은 명령으로 맞추도록 안쪽부터 보낸다.
     const pruned = pruneEmptyGroups(turnStartState, state);
     for (const id of prunedOrder(state, pruned)) emit({ t: "cmd", cmd: { op: "remove_group", id } });
     state = pruned;
+    // AI 가 추정으로 넣은 망연계마다 대신한 연결을 기록한다(되돌리기용). 클라이언트도 같은 명령으로 맞춘다.
+    const recorded = recordReplaced(turnStartState, state);
+    for (const { nodeId, guess } of recorded) {
+      const cmd: Command = { op: "set_link_guess", id: nodeId, guess };
+      const r = applyCommand(state, cmd);
+      if (!r.ok) continue;
+      state = r.state;
+      emit({ t: "cmd", cmd });
+    }
+    splits = splitsFor(turnStartState, state, recorded);
     // 변경이 있었던 차례만 점검한다. 중단·오류면 이미 중단된 신호로 불러 코드 규칙만 받는다.
     if (status === "complete") emit({ t: "status", phase: "checking" });
     const checkSignal = status === "complete" ? signal : AbortSignal.abort();
-    const checked = await checkWarnings(state, prevWarnings, { clef: deps.clef, qwen: deps.qwen }, checkSignal);
+    const checked = await checkWarnings(state, prevWarnings, { clef: deps.clef, qwen: deps.qwen }, checkSignal, knowledge ? { knowledge } : {});
     // 점검 중 중단·시간 초과면 버전·메타·done 모두 중단됨으로 따른다.
     if (status === "complete" && signal.aborted) {
       status = "aborted";
@@ -361,6 +389,17 @@ async function lockedTurn(args: TurnArgs, sessionId: string | null, followUp: bo
       messageId: userMsg.id,
     });
     version = v.number;
+  }
+  // 망연계가 끼어든 연결을 지나던 흐름 단계를 둘로 나눈다. AI 흐름 명령보다 먼저 한다. 실패해도 차례는 마친다.
+  if (splits.length > 0) {
+    try {
+      await rewriteFlows(diagramId, (f) => {
+        const next = splitFlowSteps(f, splits);
+        return next && next.steps.length <= FLOW_LIMITS.steps ? next : null;
+      });
+    } catch (err) {
+      console.error("chat split flow steps failed", err);
+    }
   }
   // 흐름은 차례가 끝난 상태로 검사해 저장한다(같은 차례에 만든 연결도 가리킬 수 있다). 거절은 건너뜀으로 알린다.
   if (pendingFlowOps.length > 0) {

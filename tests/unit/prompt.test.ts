@@ -5,6 +5,7 @@ import { EDGE_KINDS, GROUP_KINDS, NODE_KINDS } from "@/domain/catalog";
 import { patternPromptBlock } from "@/domain/patterns";
 import { emptyState, type DiagramState } from "@/domain/types";
 import type { NodeExplanation } from "@/domain/explain";
+import type { NetworkKnowledge } from "@/domain/network";
 import {
   ANSWER_PROMPT,
   ASK_PROMPT,
@@ -12,6 +13,7 @@ import {
   buildWarningMessages,
   buildMessages,
   explainContext,
+  networkBlock,
   HISTORY_LIMIT,
   parseMentions,
   summarizeState,
@@ -394,5 +396,83 @@ describe("attrs 칸 목록", () => {
     expect(SYSTEM_PROMPT).toContain(ATTR_LIST);
     expect(SYSTEM_PROMPT).toContain("os 는 운영체제(예: Rocky Linux 9), sw 는 설치한 소프트웨어(예: Tomcat 10)다.");
     expect(SYSTEM_PROMPT).toContain("하나도 빠뜨리지 말고 노드마다 update_node 를 낸다.");
+  });
+});
+
+describe("망 지식 프롬프트", () => {
+  const knowledge: NetworkKnowledge = {
+    types: {
+      internet: { key: "internet", name: "인터넷망", aliases: ["외부망"], description: "설명은 넣지 않는다", grade: "external" },
+      "admin-net": { key: "admin-net", name: "행정망", aliases: ["정부 업무망", "행정 내부망"], description: "행정 기관 업무망 설명", grade: "internal" },
+      dmz: { key: "dmz", name: "DMZ", aliases: [], description: "경계 설명", grade: "boundary" },
+      "control-net": { key: "control-net", name: "제어망", aliases: [], description: "폐쇄 설명", grade: "closed" },
+    },
+    rules: [],
+  };
+  function zones(): DiagramState {
+    const s = emptyState();
+    s.groups["gov"] = { id: "gov", groupKind: "network_zone", label: "행정망", parent: null, netType: { key: "admin-net", source: "ai", confirmed: false } };
+    s.groups["cloud"] = { id: "cloud", groupKind: "network_zone", label: "GCloud 인터넷망", parent: null, netType: { key: "internet", source: "user", confirmed: true } };
+    s.groups["etc"] = { id: "etc", groupKind: "network_zone", label: "기타망", parent: null };
+    s.groups["vpc"] = { id: "vpc", groupKind: "vpc", label: "VPC", parent: null };
+    return s;
+  }
+
+  test("networkBlock 은 이 구성도의 망 짝 규칙만, 설명은 빼고", () => {
+    const block = networkBlock(zones(), knowledge);
+    expect(block).toBe(
+      [
+        "망 종류:",
+        'admin-net "행정망" 다른 이름=["정부 업무망","행정 내부망"] 등급=내부',
+        'control-net "제어망" 다른 이름=[] 등급=폐쇄',
+        'dmz "DMZ" 다른 이름=[] 등급=경계',
+        'internet "인터넷망" 다른 이름=["외부망"] 등급=외부',
+        "",
+        "망 짝 규칙:",
+        "cloud -- gov: 망연계 필요",
+      ].join("\n"),
+    );
+    expect(block).not.toContain("설명");
+    // 종류 붙은 망이 둘 미만이면 짝이 없다.
+    const one = zones();
+    delete one.groups["cloud"];
+    expect(networkBlock(one, knowledge)).toContain("망 짝 규칙:\n없음");
+  });
+
+  test("networkBlock 은 사용자 규칙이면 근거를 함께 적는다", () => {
+    const k = { ...knowledge, rules: [{ a: "admin-net", b: "internet", method: "none" as const, note: "○○ 지침 3조" }] };
+    expect(networkBlock(zones(), k)).toContain('cloud -- gov: 보통 잇지 않음(예외 확인) 기관 규칙 근거="○○ 지침 3조"');
+  });
+
+  test("summarizeState 에 type=…(추정|확정) 과 guess", () => {
+    const s = zones();
+    s.nodes["link-1"] = { id: "link-1", kind: "network_link", label: "망연계", parent: null, attrs: {}, guess: { replaced: [] } };
+    const lines = summarizeState(s).split("\n");
+    expect(lines).toContain('그룹 gov [network_zone] "행정망" parent=- type=admin-net(추정)');
+    expect(lines).toContain('그룹 cloud [network_zone] "GCloud 인터넷망" parent=- type=internet(확정)');
+    expect(lines).toContain('그룹 etc [network_zone] "기타망" parent=-');
+    expect(lines).toContain('노드 link-1 [network_link] "망연계" sub="" parent=- attrs={} guess');
+  });
+
+  test("buildMessages 는 network 가 있을 때만 망 블록을 현재 구성 뒤에 넣는다", () => {
+    const withNet = buildMessages({ intent: null, text: "x", state: zones(), mentions: [], history: [], network: knowledge }).at(-1)!.content;
+    expect(withNet).toContain("\n\n망 종류:\nadmin-net");
+    expect(withNet.indexOf("현재 구성:")).toBeLessThan(withNet.indexOf("망 종류:"));
+    expect(withNet.indexOf("망 짝 규칙:")).toBeLessThan(withNet.indexOf("참조 노드:"));
+    const without = buildMessages({ intent: null, text: "x", state: zones(), mentions: [], history: [] }).at(-1)!.content;
+    expect(without).not.toContain("망 종류:");
+    expect(without).not.toContain("망 짝 규칙:");
+  });
+
+  test("SYSTEM_PROMPT 는 set_zone_type·guess 예와 망 규칙을 담는다", () => {
+    const lines = SYSTEM_PROMPT.split("\n");
+    const zoneLine = lines.find((l) => l.startsWith('{"op":"set_zone_type"'));
+    expect(zoneLine).toBe('{"op":"set_zone_type","id":"망 영역 id","type":"망 종류 key 또는 null"}');
+    const guessLine = lines.find((l) => l.startsWith('{"op":"add_node"') && l.includes('"guess":true'))!;
+    expect(parseCommand(JSON.parse(guessLine)).ok).toBe(true);
+    for (const phrase of ['"망 종류:" 목록', "(확정)", "망연계 필요", '"guess":true', "보통 잇지 않음", "no_link:", "망연계 없이 통신", "외부 SaaS"]) {
+      expect(SYSTEM_PROMPT).toContain(phrase);
+    }
+    expect(SYSTEM_PROMPT).not.toContain('"op":"set_link_guess"');
   });
 });
