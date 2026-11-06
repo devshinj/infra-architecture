@@ -1,6 +1,6 @@
 ---
 title: "apply.ts"
-sidebar_position: 54
+sidebar_position: 61
 ---
 # apply.ts
 
@@ -26,16 +26,17 @@ sidebar_position: 54
 
 ## Relationships
 
-- [pipeline.ts](pipeline.ts.md) (6 shared connections)
-- [types.ts](types.ts.md) (4 shared connections)
+- [pipeline.ts](pipeline.ts.md) (5 shared connections)
 - [samples.ts](samples.ts.md) (3 shared connections)
+- [InfraSketch 설계 문서](InfraSketch_설계_문서.md) (2 shared connections)
+- [types.ts](types.ts.md) (2 shared connections)
 - [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (2 shared connections)
 - [(app)/actions.ts](app-actions.ts.md) (2 shared connections)
-- [2단계 계획: AI 대화](2단계_계획-_AI_대화.md) (1 shared connections)
-- [InfraSketch 설계 문서](InfraSketch_설계_문서.md) (1 shared connections)
+- [Review Focus](Review_Focus.md) (2 shared connections)
+- [flowSuggest.ts](flowSuggest.ts.md) (1 shared connections)
 - [commands.ts](commands.ts.md) (1 shared connections)
 - [InfraSketch 3B단계: 경고·구성 패턴 구현 계획](InfraSketch_3B단계-_경고·구성_패턴_구현_계획.md) (1 shared connections)
-- [Review Focus](Review_Focus.md) (1 shared connections)
+- [isFlowCommand](isFlowCommand.md) (1 shared connections)
 
 ## Source Files
 

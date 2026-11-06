@@ -1,72 +1,67 @@
 ---
 title: "types.ts"
-sidebar_position: 7
+sidebar_position: 23
 ---
 # types.ts
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 36 nodes · cohesion 0.09
+> 24 nodes · cohesion 0.14
 
 ## Key Concepts
 
-- **useChatTurn.ts** (29 connections) — `src/ui/chat/useChatTurn.ts`
-- **lines.ts** (20 connections) — `src/ui/chat/lines.ts`
-- **useChatTurn()** (18 connections) — `src/ui/chat/useChatTurn.ts`
-- **messagesToLines()** (11 connections) — `src/ui/chat/lines.ts`
-- **ChatLine** (9 connections) — `src/ui/chat/useChatTurn.ts`
-- **UseChatTurnArgs** (8 connections) — `src/ui/chat/useChatTurn.ts`
-- **Task 5: 화면 — 경고 배지, 설명 패널 "주의할 점", 대화 줄** (7 connections) — `docs/superpowers/plans/2026-10-30-infrasketch-phase3b-warnings.md`
-- **Command** (6 connections) — `src/domain/commands.ts`
-- **keepsCard()** (5 connections) — `src/ui/chat/lines.ts`
-- **summaryText()** (5 connections) — `src/ui/chat/lines.ts`
-- **warningsByNode()** (4 connections) — `src/domain/warnings.ts`
-- **warningsChip()** (4 connections) — `src/ui/chat/lines.ts`
-- **NEW_SESSION** (4 connections) — `src/ui/chat/useSessions.ts`
-- **MessageRole** (3 connections) — `src/db/schema.ts`
-- **.onCommand()** (3 connections) — `src/ui/chat/useChatTurn.ts`
-- **.onSession()** (3 connections) — `src/ui/chat/useChatTurn.ts`
-- **.onSessionLines()** (3 connections) — `src/ui/chat/useChatTurn.ts`
-- **Task 7: 대화창 — 말풍선과 진행 카드** (2 connections) — `docs/superpowers/plans/2026-10-30-infrasketch-phase3d-ux.md`
-- **changedOf()** (2 connections) — `src/ui/chat/lines.ts`
-- **legacySummaryText()** (2 connections) — `src/ui/chat/lines.ts`
-- **timeOf()** (2 connections) — `src/ui/chat/lines.ts`
-- **isAbort()** (2 connections) — `src/ui/chat/useChatTurn.ts`
-- **nextId()** (2 connections) — `src/ui/chat/useChatTurn.ts`
-- **ProgressCard** (2 connections) — `src/ui/chat/useChatTurn.ts`
-- **.onDone()** (2 connections) — `src/ui/chat/useChatTurn.ts`
-- *... and 11 more nodes in this community*
+- **types.ts** (57 connections) — `src/domain/types.ts`
+- **catalog.ts** (34 connections) — `src/domain/catalog.ts`
+- **missing.ts** (26 connections) — `src/domain/missing.ts`
+- **computeMissing()** (17 connections) — `src/domain/missing.ts`
+- **boundary.ts** (13 connections) — `src/domain/boundary.ts`
+- **DNode** (11 connections) — `src/domain/types.ts`
+- **NODE_KINDS** (10 connections) — `src/domain/catalog.ts`
+- **Edge** (7 connections) — `src/domain/types.ts`
+- **requiredKeysFor()** (5 connections) — `src/domain/missing.ts`
+- **NodeKind** (4 connections) — `src/domain/catalog.ts`
+- **requiredKeysForEdge()** (4 connections) — `src/domain/missing.ts`
+- **FIELD_LABELS** (3 connections) — `src/domain/missing.ts`
+- **labelOf()** (3 connections) — `src/domain/missing.ts`
+- **requiredKeysForNode()** (3 connections) — `src/domain/missing.ts`
+- **Target** (3 connections) — `src/domain/warnings.ts`
+- **BOUNDARY_NODE_KINDS** (2 connections) — `src/domain/boundary.ts`
+- **EDGE_DIRECTIONS** (2 connections) — `src/domain/types.ts`
+- **EDGE_PAYLOADS** (2 connections) — `src/domain/types.ts`
+- **DATA** (1 connections) — `src/domain/catalog.ts`
+- **GUARD** (1 connections) — `src/domain/catalog.ts`
+- **nk()** (1 connections) — `src/domain/catalog.ts`
+- **NodeKindDef** (1 connections) — `src/domain/catalog.ts`
+- **SERVER** (1 connections) — `src/domain/catalog.ts`
+- **Attrs** (1 connections) — `src/domain/types.ts`
 
 ## Relationships
 
-- [useSessions.ts](useSessions.ts.md) (11 shared connections)
-- [ask.ts](ask.ts.md) (10 shared connections)
-- [ChatPanel.tsx](ChatPanel.tsx.md) (4 shared connections)
-- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (4 shared connections)
-- [domain/warnings.ts](domain-warnings.ts.md) (3 shared connections)
-- [auth](auth.md) (3 shared connections)
-- [Flow](Flow.md) (2 shared connections)
-- [(app)/actions.ts](app-actions.ts.md) (2 shared connections)
-- [Review Focus](Review_Focus.md) (2 shared connections)
-- [schema.ts](schema.ts.md) (2 shared connections)
-- [commands.ts](commands.ts.md) (2 shared connections)
-- [types.ts](types.ts.md) (2 shared connections)
+- [domain/warnings.ts](domain-warnings.ts.md) (12 shared connections)
+- [pipeline.ts](pipeline.ts.md) (10 shared connections)
+- [projects.ts](projects.ts.md) (10 shared connections)
+- [display.ts](display.ts.md) (9 shared connections)
+- [server/flows.ts](server-flows.ts.md) (8 shared connections)
+- [MissingChecklist.tsx](MissingChecklist.tsx.md) (8 shared connections)
+- [NodeInfo.tsx](NodeInfo.tsx.md) (8 shared connections)
+- [Canvas.tsx](Canvas.tsx.md) (6 shared connections)
+- [prompt.ts](prompt.ts.md) (6 shared connections)
+- [ZoneNameLayer.tsx](ZoneNameLayer.tsx.md) (5 shared connections)
+- [useExplanations.ts](useExplanations.ts.md) (5 shared connections)
+- [flowSuggest.ts](flowSuggest.ts.md) (4 shared connections)
 
 ## Source Files
 
-- `docs/superpowers/plans/2026-10-30-infrasketch-phase3b-warnings.md`
-- `docs/superpowers/plans/2026-10-30-infrasketch-phase3d-ux.md`
-- `src/db/schema.ts`
-- `src/domain/commands.ts`
+- `src/domain/boundary.ts`
+- `src/domain/catalog.ts`
+- `src/domain/missing.ts`
+- `src/domain/types.ts`
 - `src/domain/warnings.ts`
-- `src/ui/chat/lines.ts`
-- `src/ui/chat/useChatTurn.ts`
-- `src/ui/chat/useSessions.ts`
 
 ## Audit Trail
 
-- EXTRACTED: 104 (92%)
-- INFERRED: 9 (8%)
+- EXTRACTED: 171 (99%)
+- INFERRED: 2 (1%)
 - AMBIGUOUS: 0 (0%)
 
 ---

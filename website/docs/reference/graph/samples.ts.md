@@ -1,6 +1,6 @@
 ---
 title: "samples.ts"
-sidebar_position: 45
+sidebar_position: 42
 ---
 # samples.ts
 
@@ -31,17 +31,15 @@ sidebar_position: 45
 
 ## Relationships
 
-- [getOwnedDiagram](getOwnedDiagram.md) (6 shared connections)
+- [projects.ts](projects.ts.md) (5 shared connections)
+- [types.ts](types.ts.md) (4 shared connections)
+- [(app)/actions.ts](app-actions.ts.md) (4 shared connections)
 - [apply.ts](apply.ts.md) (3 shared connections)
-- [types.ts](types.ts.md) (3 shared connections)
-- [(app)/actions.ts](app-actions.ts.md) (2 shared connections)
 - [auth](auth.md) (2 shared connections)
-- [motion.ts](motion.ts.md) (1 shared connections)
-- [NODE_KINDS](NODE_KINDS.md) (1 shared connections)
-- [catalog.ts](catalog.ts.md) (1 shared connections)
+- [Legend.tsx](Legend.tsx.md) (1 shared connections)
+- [flowSuggest.ts](flowSuggest.ts.md) (1 shared connections)
 - [commands.ts](commands.ts.md) (1 shared connections)
 - [schema.ts](schema.ts.md) (1 shared connections)
-- [projects.ts](projects.ts.md) (1 shared connections)
 
 ## Source Files
 

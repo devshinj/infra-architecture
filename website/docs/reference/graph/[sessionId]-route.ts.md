@@ -1,19 +1,17 @@
 ---
 title: "[sessionId]/route.ts"
-sidebar_position: 20
+sidebar_position: 14
 ---
 # [sessionId]/route.ts
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 29 nodes · cohesion 0.13
+> 29 nodes · cohesion 0.12
 
 ## Key Concepts
 
 - **[sessionId]/route.ts** (34 connections) — `src/app/api/diagrams/[id]/sessions/[sessionId]/route.ts`
 - **sessions.ts** (32 connections) — `src/server/chat/sessions.ts`
-- **withDiagramLock()** (19 connections) — `src/server/chat/lock.ts`
-- **lock.ts** (9 connections) — `src/server/chat/lock.ts`
 - **createSession()** (8 connections) — `src/server/chat/sessions.ts`
 - **guard()** (7 connections) — `src/app/api/diagrams/[id]/sessions/[sessionId]/route.ts`
 - **PATCH()** (7 connections) — `src/app/api/diagrams/[id]/sessions/[sessionId]/route.ts`
@@ -25,6 +23,8 @@ sidebar_position: 20
 - **foldTitle()** (4 connections) — `src/server/chat/sessions.ts`
 - **renameSession()** (4 connections) — `src/server/chat/sessions.ts`
 - **deleteSession()** (3 connections) — `src/server/chat/sessions.ts`
+- **ChatSessionKind** (2 connections) — `src/db/schema.ts`
+- **chatSessions** (2 connections) — `src/db/schema.ts`
 - **listSessions()** (2 connections) — `src/server/chat/sessions.ts`
 - **SessionRow** (2 connections) — `src/server/chat/sessions.ts`
 - **TITLE_MAX** (2 connections) — `src/server/chat/sessions.ts`
@@ -39,29 +39,25 @@ sidebar_position: 20
 
 ## Relationships
 
-- [ask/route.ts](ask-route.ts.md) (14 shared connections)
-- [auth](auth.md) (12 shared connections)
-- [ask.ts](ask.ts.md) (10 shared connections)
-- [getOwnedDiagram](getOwnedDiagram.md) (6 shared connections)
-- [pipeline.ts](pipeline.ts.md) (6 shared connections)
-- [ref_react](ref_react.md) (6 shared connections)
-- [useFlows](useFlows.md) (4 shared connections)
-- [schema.ts](schema.ts.md) (3 shared connections)
-- [types.ts](types.ts.md) (2 shared connections)
-- [flowSuggest.ts](flowSuggest.ts.md) (2 shared connections)
-- [projects.ts](projects.ts.md) (1 shared connections)
-- [domain/warnings.ts](domain-warnings.ts.md) (1 shared connections)
+- [auth](auth.md) (11 shared connections)
+- [pipeline.ts](pipeline.ts.md) (10 shared connections)
+- [projects.ts](projects.ts.md) (8 shared connections)
+- [schema.ts](schema.ts.md) (7 shared connections)
+- [runAskTurn](runAskTurn.md) (6 shared connections)
+- [ask/route.ts](ask-route.ts.md) (5 shared connections)
+- [ref_react](ref_react.md) (1 shared connections)
+- [auth.ts](auth.ts.md) (1 shared connections)
 
 ## Source Files
 
 - `src/app/api/diagrams/[id]/sessions/[sessionId]/route.ts`
-- `src/server/chat/lock.ts`
+- `src/db/schema.ts`
 - `src/server/chat/sessions.ts`
 
 ## Audit Trail
 
-- EXTRACTED: 114 (94%)
-- INFERRED: 7 (6%)
+- EXTRACTED: 97 (98%)
+- INFERRED: 2 (2%)
 - AMBIGUOUS: 0 (0%)
 
 ---

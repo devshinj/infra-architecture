@@ -1,6 +1,6 @@
 ---
 title: "normalize.ts"
-sidebar_position: 55
+sidebar_position: 62
 ---
 # normalize.ts
 

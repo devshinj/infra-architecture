@@ -1,6 +1,6 @@
 ---
 title: "domain/assumptions.ts"
-sidebar_position: 51
+sidebar_position: 55
 ---
 # domain/assumptions.ts
 
@@ -27,15 +27,16 @@ sidebar_position: 51
 
 ## Relationships
 
-- [types.ts](types.ts.md) (4 shared connections)
-- [getOwnedDiagram](getOwnedDiagram.md) (3 shared connections)
-- [MissingChecklist.tsx](MissingChecklist.tsx.md) (3 shared connections)
+- [projects.ts](projects.ts.md) (3 shared connections)
+- [types.ts](types.ts.md) (3 shared connections)
+- [InfoCard.tsx](InfoCard.tsx.md) (3 shared connections)
 - [pipeline.ts](pipeline.ts.md) (2 shared connections)
 - [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (2 shared connections)
 - [InfraSketch 설계 문서](InfraSketch_설계_문서.md) (1 shared connections)
+- [flowSuggest.ts](flowSuggest.ts.md) (1 shared connections)
 - [(app)/actions.ts](app-actions.ts.md) (1 shared connections)
 - [ref_react](ref_react.md) (1 shared connections)
-- [ChatPanel.tsx](ChatPanel.tsx.md) (1 shared connections)
+- [MentionInput](MentionInput.md) (1 shared connections)
 
 ## Source Files
 

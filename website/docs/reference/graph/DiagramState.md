@@ -1,6 +1,6 @@
 ---
 title: "DiagramState"
-sidebar_position: 75
+sidebar_position: 83
 sidebar_label: "핵심 노드: DiagramState"
 ---
 # DiagramState
@@ -9,7 +9,7 @@ sidebar_label: "핵심 노드: DiagramState"
 
 > God node · 48 connections · `src/domain/types.ts`
 
-**Community:** [types.ts](types.ts.md)
+**Community:** [flowSuggest.ts](flowSuggest.ts.md)
 
 ## Connections by Relation
 
@@ -23,17 +23,17 @@ sidebar_label: "핵심 노드: DiagramState"
 - [(app)/actions.ts](app-actions.ts.md) `EXTRACTED`
 - server/explain.ts `EXTRACTED`
 - [projects.ts](projects.ts.md) `EXTRACTED`
-- [ask.ts](ask.ts.md) `EXTRACTED`
-- [flowSuggest.ts](flowSuggest.ts.md) `EXTRACTED`
+- ask.ts `EXTRACTED`
 - [prompt.ts](prompt.ts.md) `EXTRACTED`
-- server/flows.ts `EXTRACTED`
+- [flowSuggest.ts](flowSuggest.ts.md) `EXTRACTED`
+- [server/flows.ts](server-flows.ts.md) `EXTRACTED`
 - [NodeInfo.tsx](NodeInfo.tsx.md) `EXTRACTED`
 - [schema.ts](schema.ts.md) `EXTRACTED`
 - [samples.ts](samples.ts.md) `EXTRACTED`
 - [layoutMetrics.ts](layoutMetrics.ts.md) `EXTRACTED`
-- [domain/flows.ts](domain-flows.ts.md) `EXTRACTED`
+- domain/flows.ts `EXTRACTED`
 - versions.ts `EXTRACTED`
-- display.ts `EXTRACTED`
+- [display.ts](display.ts.md) `EXTRACTED`
 - [MissingChecklist.tsx](MissingChecklist.tsx.md) `EXTRACTED`
 - domain/explain.ts `EXTRACTED`
 - [useExplanations.ts](useExplanations.ts.md) `EXTRACTED`

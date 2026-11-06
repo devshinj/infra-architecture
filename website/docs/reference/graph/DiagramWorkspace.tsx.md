@@ -1,19 +1,19 @@
 ---
 title: "DiagramWorkspace.tsx"
-sidebar_position: 22
+sidebar_position: 18
 ---
 # DiagramWorkspace.tsx
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 27 nodes · cohesion 0.12
+> 27 nodes · cohesion 0.11
 
 ## Key Concepts
 
 - **DiagramWorkspace.tsx** (99 connections) — `src/ui/DiagramWorkspace.tsx`
 - **MobileTabBar.tsx** (12 connections) — `src/ui/MobileTabBar.tsx`
-- **src_ui_app_module** (9 connections)
 - **PanelResizer.tsx** (9 connections) — `src/ui/PanelResizer.tsx`
+- **Task 8: "흐름" 탭·지나는 흐름·연동** (7 connections) — `docs/superpowers/plans/2026-11-05-flows-and-network-boundaries.md`
 - **MobileTabBar()** (6 connections) — `src/ui/MobileTabBar.tsx`
 - **mobileTabId()** (4 connections) — `src/ui/MobileTabBar.tsx`
 - **Tab** (4 connections) — `src/ui/RightPanel.tsx`
@@ -40,20 +40,21 @@ sidebar_position: 22
 ## Relationships
 
 - [(app)/actions.ts](app-actions.ts.md) (17 shared connections)
-- [types.ts](types.ts.md) (9 shared connections)
-- [RightPanel.tsx](RightPanel.tsx.md) (8 shared connections)
-- [MissingChecklist.tsx](MissingChecklist.tsx.md) (7 shared connections)
+- [RightPanel.tsx](RightPanel.tsx.md) (7 shared connections)
 - [auth](auth.md) (6 shared connections)
-- [useSessions.ts](useSessions.ts.md) (6 shared connections)
-- [ChatPanel.tsx](ChatPanel.tsx.md) (5 shared connections)
+- [display.ts](display.ts.md) (5 shared connections)
+- [useSessions.ts](useSessions.ts.md) (5 shared connections)
+- [server/flows.ts](server-flows.ts.md) (4 shared connections)
+- [Canvas.tsx](Canvas.tsx.md) (4 shared connections)
+- [MissingChecklist.tsx](MissingChecklist.tsx.md) (4 shared connections)
+- [types.ts](types.ts.md) (4 shared connections)
 - [ref_react](ref_react.md) (4 shared connections)
-- [Canvas.tsx](Canvas.tsx.md) (3 shared connections)
-- [domain/flows.ts](domain-flows.ts.md) (3 shared connections)
-- [catalog.ts](catalog.ts.md) (3 shared connections)
-- [FlyLayer.tsx](FlyLayer.tsx.md) (3 shared connections)
+- [FlowPanel.tsx](FlowPanel.tsx.md) (3 shared connections)
+- [ChatPanel.tsx](ChatPanel.tsx.md) (3 shared connections)
 
 ## Source Files
 
+- `docs/superpowers/plans/2026-11-05-flows-and-network-boundaries.md`
 - `src/ui/DiagramWorkspace.tsx`
 - `src/ui/MobileTabBar.tsx`
 - `src/ui/PanelResizer.tsx`
@@ -61,8 +62,8 @@ sidebar_position: 22
 
 ## Audit Trail
 
-- EXTRACTED: 136 (99%)
-- INFERRED: 1 (1%)
+- EXTRACTED: 131 (96%)
+- INFERRED: 6 (4%)
 - AMBIGUOUS: 0 (0%)
 
 ---

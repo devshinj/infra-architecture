@@ -1,6 +1,6 @@
 ---
 title: "Layout"
-sidebar_position: 59
+sidebar_position: 75
 ---
 # Layout
 
@@ -22,8 +22,8 @@ sidebar_position: 59
 ## Relationships
 
 - [layout.ts](layout.ts.md) (2 shared connections)
-- [Layout](Layout.md) (1 shared connections)
-- [Rect](Rect.md) (1 shared connections)
+- [display.ts](display.ts.md) (1 shared connections)
+- [useCamera.ts](useCamera.ts.md) (1 shared connections)
 - [InfraSketch 설계 문서](InfraSketch_설계_문서.md) (1 shared connections)
 
 ## Source Files

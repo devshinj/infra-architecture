@@ -1,0 +1,64 @@
+---
+title: "ZoneNameLayer.tsx"
+sidebar_position: 30
+---
+# ZoneNameLayer.tsx
+
+> 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
+
+> 22 nodes · cohesion 0.14
+
+## Key Concepts
+
+- **ZoneNameLayer.tsx** (15 connections) — `src/canvas/ZoneNameLayer.tsx`
+- **GroupBox.tsx** (10 connections) — `src/canvas/GroupBox.tsx`
+- **stacking.ts** (9 connections) — `src/canvas/stacking.ts`
+- **GroupKind** (7 connections) — `src/domain/catalog.ts`
+- **groupToggleWidth()** (6 connections) — `src/canvas/layout.ts`
+- **nodeTypes.ts** (6 connections) — `src/canvas/nodeTypes.ts`
+- **GROUP_KINDS** (6 connections) — `src/domain/catalog.ts`
+- **groupToggleLabel()** (4 connections) — `src/canvas/layout.ts`
+- **ZoneNameLayer()** (4 connections) — `src/canvas/ZoneNameLayer.tsx`
+- **ZoneNameLayerPortal()** (4 connections) — `src/canvas/ZoneNameLayer.tsx`
+- **GroupBox()** (3 connections) — `src/canvas/GroupBox.tsx`
+- **GroupBoxData** (3 connections) — `src/canvas/GroupBox.tsx`
+- **zoneZ()** (3 connections) — `src/canvas/stacking.ts`
+- **ZoneName** (3 connections) — `src/canvas/ZoneNameLayer.tsx`
+- **zoneNameMaxWidth()** (3 connections) — `src/canvas/ZoneNameLayer.tsx`
+- **nodeTypes** (2 connections) — `src/canvas/nodeTypes.ts`
+- **NODE_Z** (2 connections) — `src/canvas/stacking.ts`
+- **ZONE_NAME_IN_PORTAL_Z** (2 connections) — `src/canvas/stacking.ts`
+- **zoneNameTransform()** (2 connections) — `src/canvas/ZoneNameLayer.tsx`
+- **EDGE_Z** (1 connections) — `src/canvas/stacking.ts`
+- **ZONE_Z_MAX** (1 connections) — `src/canvas/stacking.ts`
+- **ZoneNameLayerProps** (1 connections) — `src/canvas/ZoneNameLayer.tsx`
+
+## Relationships
+
+- [Canvas.tsx](Canvas.tsx.md) (12 shared connections)
+- [layout.ts](layout.ts.md) (7 shared connections)
+- [types.ts](types.ts.md) (5 shared connections)
+- [EdgePanels.tsx](EdgePanels.tsx.md) (4 shared connections)
+- [display.ts](display.ts.md) (2 shared connections)
+- [commands.ts](commands.ts.md) (1 shared connections)
+- [prompt.ts](prompt.ts.md) (1 shared connections)
+- [NodeInfo.tsx](NodeInfo.tsx.md) (1 shared connections)
+
+## Source Files
+
+- `src/canvas/GroupBox.tsx`
+- `src/canvas/ZoneNameLayer.tsx`
+- `src/canvas/layout.ts`
+- `src/canvas/nodeTypes.ts`
+- `src/canvas/stacking.ts`
+- `src/domain/catalog.ts`
+
+## Audit Trail
+
+- EXTRACTED: 63 (97%)
+- INFERRED: 2 (3%)
+- AMBIGUOUS: 0 (0%)
+
+---
+
+*Part of the graphify knowledge wiki. See [index](index.md) to navigate.*

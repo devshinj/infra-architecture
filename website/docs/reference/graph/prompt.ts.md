@@ -1,16 +1,16 @@
 ---
 title: "prompt.ts"
-sidebar_position: 19
+sidebar_position: 12
 ---
 # prompt.ts
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 29 nodes · cohesion 0.09
+> 30 nodes · cohesion 0.09
 
 ## Key Concepts
 
-- **prompt.ts** (51 connections) — `src/server/chat/prompt.ts`
+- **prompt.ts** (53 connections) — `src/server/chat/prompt.ts`
 - **buildMessages()** (7 connections) — `src/server/chat/prompt.ts`
 - **explainContext()** (6 connections) — `src/server/chat/prompt.ts`
 - **buildFlowSuggestMessages()** (5 connections) — `src/server/chat/prompt.ts`
@@ -28,29 +28,29 @@ sidebar_position: 19
 - **PATTERNS** (1 connections) — `src/domain/patterns.ts`
 - **ANSWER_PROMPT** (1 connections) — `src/server/chat/prompt.ts`
 - **ASK_PROMPT** (1 connections) — `src/server/chat/prompt.ts`
+- **ATTR_LIST** (1 connections) — `src/server/chat/prompt.ts`
 - **CONTINUE_NOTE** (1 connections) — `src/server/chat/prompt.ts`
 - **EDGE_KIND_LIST** (1 connections) — `src/server/chat/prompt.ts`
 - **EXPLAIN_EDGE_PROMPT** (1 connections) — `src/server/chat/prompt.ts`
 - **EXPLAIN_NODE_PROMPT** (1 connections) — `src/server/chat/prompt.ts`
 - **FLOW_SUGGEST_PROMPT** (1 connections) — `src/server/chat/prompt.ts`
 - **GROUP_KIND_LIST** (1 connections) — `src/server/chat/prompt.ts`
-- **HISTORY_LIMIT** (1 connections) — `src/server/chat/prompt.ts`
-- *... and 4 more nodes in this community*
+- *... and 5 more nodes in this community*
 
 ## Relationships
 
-- [pipeline.ts](pipeline.ts.md) (6 shared connections)
-- [ask.ts](ask.ts.md) (5 shared connections)
+- [pipeline.ts](pipeline.ts.md) (10 shared connections)
+- [types.ts](types.ts.md) (6 shared connections)
+- [flowSuggest.ts](flowSuggest.ts.md) (5 shared connections)
 - [domain/warnings.ts](domain-warnings.ts.md) (3 shared connections)
-- [MissingChecklist.tsx](MissingChecklist.tsx.md) (3 shared connections)
-- [types.ts](types.ts.md) (3 shared connections)
 - [설명 생성과 품질 검사](설명_생성과_품질_검사.md) (3 shared connections)
-- [flowSuggest.ts](flowSuggest.ts.md) (3 shared connections)
-- [catalog.ts](catalog.ts.md) (2 shared connections)
 - [useExplanations.ts](useExplanations.ts.md) (2 shared connections)
 - [deps.ts](deps.ts.md) (2 shared connections)
-- [motion.ts](motion.ts.md) (1 shared connections)
-- [NODE_KINDS](NODE_KINDS.md) (1 shared connections)
+- [Legend.tsx](Legend.tsx.md) (1 shared connections)
+- [ZoneNameLayer.tsx](ZoneNameLayer.tsx.md) (1 shared connections)
+- [Explanation.tsx](Explanation.tsx.md) (1 shared connections)
+- [MissingChecklist.tsx](MissingChecklist.tsx.md) (1 shared connections)
+- [server/flows.ts](server-flows.ts.md) (1 shared connections)
 
 ## Source Files
 
@@ -59,7 +59,7 @@ sidebar_position: 19
 
 ## Audit Trail
 
-- EXTRACTED: 72 (95%)
+- EXTRACTED: 74 (95%)
 - INFERRED: 4 (5%)
 - AMBIGUOUS: 0 (0%)
 

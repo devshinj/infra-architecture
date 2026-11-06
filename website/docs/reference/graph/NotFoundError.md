@@ -1,6 +1,6 @@
 ---
 title: "NotFoundError"
-sidebar_position: 84
+sidebar_position: 92
 sidebar_label: "핵심 노드: NotFoundError"
 ---
 # NotFoundError
@@ -9,12 +9,12 @@ sidebar_label: "핵심 노드: NotFoundError"
 
 > God node · 24 connections · `src/server/projects.ts`
 
-**Community:** [ask/route.ts](ask-route.ts.md)
+**Community:** [projects.ts](projects.ts.md)
 
 ## Connections by Relation
 
 ### calls
-- [getOwnedDiagram()](getOwnedDiagram_2.md) `EXTRACTED`
+- [getOwnedDiagram()](getOwnedDiagram.md) `EXTRACTED`
 - runAskTurn() `EXTRACTED`
 - runChatTurn() `EXTRACTED`
 - withOwnedFlow() `EXTRACTED`
@@ -28,16 +28,16 @@ sidebar_label: "핵심 노드: NotFoundError"
 ### imports
 - [pipeline.ts](pipeline.ts.md) `EXTRACTED`
 - [(app)/actions.ts](app-actions.ts.md) `EXTRACTED`
-- [ask.ts](ask.ts.md) `EXTRACTED`
-- server/flows.ts `EXTRACTED`
+- ask.ts `EXTRACTED`
+- [server/flows.ts](server-flows.ts.md) `EXTRACTED`
 - [\[sessionId\]/route.ts]([sessionId]-route.ts.md) `EXTRACTED`
 - [ask/route.ts](ask-route.ts.md) `EXTRACTED`
 - chat/route.ts `EXTRACTED`
-- glossary.ts `EXTRACTED`
+- [glossary.ts](glossary.ts.md) `EXTRACTED`
 - \[diagramId\]/page.tsx `EXTRACTED`
 - [explain/route.ts](explain-route.ts.md) `EXTRACTED`
 - sessions/route.ts `EXTRACTED`
-- suggest/route.ts `EXTRACTED`
+- [suggest/route.ts](suggest-route.ts.md) `EXTRACTED`
 - flows/route.ts `EXTRACTED`
 
 ### method

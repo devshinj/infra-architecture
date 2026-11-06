@@ -1,6 +1,6 @@
 ---
 title: "auth"
-sidebar_position: 86
+sidebar_position: 94
 ---
 # auth
 
@@ -29,7 +29,7 @@ sidebar_position: 86
 - GET() `EXTRACTED`
 
 ### contains
-- auth.ts `EXTRACTED`
+- [auth.ts](auth.ts.md) `EXTRACTED`
 
 ### imports
 - [(app)/actions.ts](app-actions.ts.md) `EXTRACTED`
@@ -39,7 +39,7 @@ sidebar_position: 86
 - \[diagramId\]/page.tsx `EXTRACTED`
 - [explain/route.ts](explain-route.ts.md) `EXTRACTED`
 - sessions/route.ts `EXTRACTED`
-- suggest/route.ts `EXTRACTED`
+- [suggest/route.ts](suggest-route.ts.md) `EXTRACTED`
 - flows/route.ts `EXTRACTED`
 - glossary/page.tsx `EXTRACTED`
 - (app)/layout.tsx `EXTRACTED`

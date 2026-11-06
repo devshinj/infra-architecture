@@ -6,15 +6,12 @@ sidebar_position: 44
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 18 nodes · cohesion 0.17
+> 12 nodes · cohesion 0.26
 
 ## Key Concepts
 
-- **FlowPanel.tsx** (27 connections) — `src/ui/flows/FlowPanel.tsx`
 - **FlowPanel()** (16 connections) — `src/ui/flows/FlowPanel.tsx`
 - **FlowPanelProps** (14 connections) — `src/ui/flows/FlowPanel.tsx`
-- **ref_react_dom** (2 connections)
-- **FlowOrigin** (2 connections) — `src/domain/flows.ts`
 - **.onActivate()** (2 connections) — `src/ui/flows/FlowPanel.tsx`
 - **.onConfirm()** (2 connections) — `src/ui/flows/FlowPanel.tsx`
 - **.onDelete()** (2 connections) — `src/ui/flows/FlowPanel.tsx`
@@ -24,30 +21,25 @@ sidebar_position: 44
 - **.onRepair()** (2 connections) — `src/ui/flows/FlowPanel.tsx`
 - **menuRootId()** (2 connections) — `src/ui/flows/FlowPanel.tsx`
 - **stepMark()** (2 connections) — `src/ui/flows/FlowPanel.tsx`
-- **Action** (1 connections) — `src/ui/flows/FlowPanel.tsx`
 - **.onSuggest()** (1 connections) — `src/ui/flows/FlowPanel.tsx`
-- **GROUPS** (1 connections) — `src/ui/flows/FlowPanel.tsx`
-- **src_ui_flows_flows_module** (1 connections)
 
 ## Relationships
 
-- [SessionPicker.tsx](SessionPicker.tsx.md) (8 shared connections)
-- [Explanation.tsx](Explanation.tsx.md) (5 shared connections)
-- [RightPanel.tsx](RightPanel.tsx.md) (5 shared connections)
-- [domain/flows.ts](domain-flows.ts.md) (4 shared connections)
-- [types.ts](types.ts.md) (3 shared connections)
-- [useFlows](useFlows.md) (3 shared connections)
-- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (2 shared connections)
-- [ref_react](ref_react.md) (1 shared connections)
+- [FlowPanel.tsx](FlowPanel.tsx.md) (6 shared connections)
+- [RightPanel.tsx](RightPanel.tsx.md) (4 shared connections)
+- [Sidebar.tsx](Sidebar.tsx.md) (1 shared connections)
+- [server/flows.ts](server-flows.ts.md) (1 shared connections)
+- [useFlows](useFlows.md) (1 shared connections)
+- [flowSuggest.ts](flowSuggest.ts.md) (1 shared connections)
+- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (1 shared connections)
 
 ## Source Files
 
-- `src/domain/flows.ts`
 - `src/ui/flows/FlowPanel.tsx`
 
 ## Audit Trail
 
-- EXTRACTED: 57 (100%)
+- EXTRACTED: 32 (100%)
 - INFERRED: 0 (0%)
 - AMBIGUOUS: 0 (0%)
 
