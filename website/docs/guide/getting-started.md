@@ -70,6 +70,14 @@ AI 값을 모두 비워 두어도 앱은 시작됩니다. 이 경우 AI 대화 �
 npm run smoke:llm
 ```
 
+Clef·Qwen 프롬프트를 고친 뒤에는 의도 분류와 그 뒤 Qwen 명령을 점검합니다. 점검 구성도(`tests/fixtures/intent/diagram.json`)에 `cases.json` 의 문장들을 대화 한 차례와 같은 순서로 돌리고, 기준 파일(`baseline.json`)보다 나빠진 문장이 있으면 0 이 아닌 코드로 끝납니다.
+
+```bash
+npm run eval:intent                  # Clef 판정 + 그 뒤 Qwen 명령
+npm run eval:intent -- --clef-only   # 의도 분류만(빠름)
+npm run eval:intent -- --update      # 지금 결과를 기준으로 저장
+```
+
 ## 테스트
 
 | 명령 | 설명 | 사전 준비 |
