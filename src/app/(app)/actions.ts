@@ -392,11 +392,6 @@ const reqMethod = (v: unknown): LinkMethod => {
   return v as LinkMethod;
 };
 
-/** 망 지식 화면용 종류(숨긴 것 포함)와 기관 규칙. 비어 있으면 기본 제공 종류를 먼저 채운다. */
-export async function listNetworkAction(): Promise<NetworkKnowledgeData> {
-  return run(async (uid) => ({ types: await listNetworkTypes(uid), rules: await listNetworkRules(uid) }));
-}
-
 /** 지우기 확인에 보일 수. 지울 때만 세므로(구성도를 모두 훑는다) 목록에는 싣지 않는다. */
 export async function countNetworkTypeUsageAction(id: string): Promise<ActionResult<{ count: number }>> {
   return runResult(async (uid) => {

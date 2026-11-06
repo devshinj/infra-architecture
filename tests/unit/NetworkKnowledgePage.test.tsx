@@ -116,3 +116,19 @@ test("기관 규칙 추가: 두 종류·방식·근거", async () => {
   expect(fns.upsertNetworkRuleAction).toHaveBeenCalledWith({ a: "internal-net", b: "dmz", method: "network_link", note: "보안 지침 3조" });
   expect(await screen.findByText(/보안 지침 3조/)).toBeInTheDocument();
 });
+
+test("쓰지 않는 종류를 가리키는 기관 규칙을 고쳐도 그 종류가 보이고 그대로 저장된다", async () => {
+  const user = userEvent.setup();
+  fns.upsertNetworkRuleAction.mockResolvedValue({ ok: true, rules: [] });
+  render(
+    <NetworkKnowledgePage
+      initialTypes={types}
+      initialRules={[{ id: "r1", a: "dmz", b: "internet", method: "firewall", note: "" }]}
+    />,
+  );
+  await user.click(screen.getByRole("button", { name: /규칙 고치기/ }));
+  const form = screen.getByRole("form", { name: "기관 규칙 고치기" });
+  expect(within(form).getByLabelText("다른 종류")).toHaveDisplayValue("인터넷 (쓰지 않음)");
+  await user.click(within(form).getByRole("button", { name: "저장" }));
+  expect(fns.upsertNetworkRuleAction).toHaveBeenCalledWith({ a: "dmz", b: "internet", method: "firewall", note: "" });
+});

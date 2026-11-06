@@ -258,7 +258,7 @@ export function NetworkKnowledgePage({ initialTypes, initialRules }: { initialTy
           <RuleForm
             key={ruleDraft.id ?? "new"}
             draft={ruleDraft}
-            options={usable}
+            options={types}
             pending={pending}
             onCancel={() => setRuleDraft(null)}
             onSave={(d) =>
@@ -317,11 +317,13 @@ function RuleForm({ draft, options, pending, onSave, onCancel }: {
 }) {
   const [d, setD] = useState(draft);
   const set = <K extends keyof RuleDraft>(k: K, v: RuleDraft[K]) => setD((x) => ({ ...x, [k]: v }));
+  // 쓰지 않는 종류는 고를 수 없지만, 이 규칙이 이미 가리키는 종류는 보여야 한다(안 그러면 다른 값이 보인다).
+  const shown = options.filter((t) => !t.hidden || t.key === d.a || t.key === d.b);
   const typeSelect = (label: string, k: "a" | "b") => (
     <label>
       {label}
       <select value={d[k]} onChange={(e) => set(k, e.target.value)}>
-        {options.map((t) => <option key={t.key} value={t.key}>{t.name}</option>)}
+        {shown.map((t) => <option key={t.key} value={t.key}>{t.hidden ? `${t.name} (쓰지 않음)` : t.name}</option>)}
       </select>
     </label>
   );
