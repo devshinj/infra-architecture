@@ -1,0 +1,37 @@
+{
+  "note": "want: 기대 의도(판정 없음은 \"null\"). qwen: Qwen 출력 기대 — none(명령 없음), structure(구성 명령 1개 이상), flow(흐름 명령 1개 이상, ops 로 종류 지정), edge(지정 연결의 전달물·방향), node_attr(지정 노드 속성 갱신), record(기대 없이 기록만), skip(Qwen 을 부르지 않는 의도).",
+  "cases": [
+    { "id": "flow-create-signup", "text": "회원가입 흐름 만들어 줘", "want": "structure_change", "qwen": { "expect": "flow", "ops": ["add_flow", "update_flow"] } },
+    { "id": "flow-draw-login", "text": "로그인할 때 어떤 서버를 거치는지 흐름으로 그려 줘", "want": "structure_change", "qwen": { "expect": "flow", "ops": ["add_flow"] } },
+    { "id": "flow-add-pwreset", "text": "비밀번호 찾기 흐름도 추가해 줘", "want": "structure_change", "qwen": { "expect": "flow", "ops": ["add_flow"] } },
+    { "id": "flow-edit-sms", "text": "가입할 때 외부 인증도 거치게 회원가입 흐름 고쳐 줘", "want": "structure_change", "qwen": { "expect": "flow", "ops": ["update_flow"] } },
+    { "id": "flow-resync", "text": "\"회원가입\" 흐름을 지금 구성에 맞게 다시 맞춰 줘", "want": "structure_change", "qwen": { "expect": "flow", "ops": ["update_flow"] } },
+    { "id": "flow-remove-pay", "text": "결제 흐름 지워 줘", "want": "structure_change", "qwen": { "expect": "flow", "ops": ["remove_flow"] } },
+    { "id": "flow-show-was", "text": "@WAS 가 관여하는 흐름 보여 줘", "want": "structure_change", "qwen": { "expect": "record" } },
+    { "id": "flow-add-batch", "text": "배치 서버가 밤마다 파일 보내는 흐름 넣어 줘", "want": "structure_change", "qwen": { "expect": "flow", "ops": ["add_flow"] } },
+    { "id": "flow-add-cross", "text": "업무망에서 인터넷망으로 API 보내는 흐름 만들어 줘", "want": "structure_change", "qwen": { "expect": "flow", "ops": ["add_flow"] } },
+    { "id": "flow-rename", "text": "주문하기 흐름 이름을 주문 결제로 바꿔 줘", "want": "structure_change", "qwen": { "expect": "flow", "ops": ["update_flow"] } },
+    { "id": "flow-draw-browse", "text": "상품 조회할 때 어떤 노드들이 움직이는지 그려 줄래", "want": "structure_change", "qwen": { "expect": "flow", "ops": ["add_flow"] } },
+    { "id": "flow-add-cache", "text": "주문하기 흐름에 캐시 조회 단계도 넣어 줘", "want": "structure_change", "qwen": { "expect": "flow", "ops": ["update_flow"] } },
+
+    { "id": "q-flow-why-db", "text": "회원가입 흐름에서 DB는 왜 마지막이야?", "want": "question", "qwen": { "expect": "none" } },
+    { "id": "q-flow-what", "text": "흐름이 뭐야?", "want": "question", "qwen": { "expect": "none" } },
+    { "id": "q-link-why", "text": "망연계 솔루션은 왜 거쳐야 해?", "want": "question", "qwen": { "expect": "none" } },
+    { "id": "q-flow-fw", "text": "결제 흐름은 왜 방화벽을 먼저 지나?", "want": "question", "qwen": { "expect": "none" } },
+    { "id": "q-flow-broken", "text": "흐름이 끊겼다는데 무슨 뜻이야?", "want": "question", "qwen": { "expect": "none" } },
+    { "id": "q-zone-diff", "text": "업무망이랑 인터넷망 차이가 뭐야", "want": "question", "qwen": { "expect": "none" } },
+    { "id": "q-oneway-safe", "text": "단방향 파일 전송이 왜 더 안전해?", "want": "question", "qwen": { "expect": "none" } },
+
+    { "id": "s-zone-split", "text": "업무망이랑 인터넷망 사이 직접 연결은 망연계를 거치게 바꿔 줘", "want": "structure_change", "qwen": { "expect": "structure" } },
+    { "id": "s-add-was", "text": "WAS 한 대 더 추가해 줘", "want": "structure_change", "qwen": { "expect": "structure" } },
+    { "id": "s-edge-info", "text": "WAS와 회원 DB 사이 연결을 파일 단방향으로 바꿔 줘", "want": "structure_change", "qwen": { "expect": "edge", "edge": "e-was-db", "payload": "file", "direction": "one_way" } },
+    { "id": "s-add-link", "text": "망연계 노드 하나 더 추가해서 WAS랑 외부 인증 사이에 넣어 줘", "want": "structure_change", "qwen": { "expect": "structure" } },
+
+    { "id": "m-edge-file-oneway", "text": "WAS랑 외부 인증 사이 연결은 파일 단방향이야", "want": "missing_info_answer", "lastAssistant": "구성도를 그렸어요. WAS → 외부 인증 연결의 전달물과 방향을 알려 주세요.", "qwen": { "expect": "edge", "edge": "e-was-auth", "payload": "file", "direction": "one_way" } },
+    { "id": "m-edge-api-two", "text": "API, 양방향", "want": "missing_info_answer", "lastAssistant": "WAS → 외부 인증 연결의 전달물과 방향을 알려 주세요.", "qwen": { "expect": "edge", "edge": "e-was-auth", "payload": "api", "direction": "two_way" } },
+    { "id": "m-edge-file-short", "text": "파일로 한쪽만 보내", "want": "missing_info_answer", "lastAssistant": "WAS → 외부 인증 연결의 전달물과 방향을 알려 주세요.", "qwen": { "expect": "edge", "edge": "e-was-auth", "payload": "file", "direction": "one_way" } },
+    { "id": "m-node-spec", "text": "WAS는 4코어 16기가", "want": "missing_info_answer", "lastAssistant": "WAS의 CPU·RAM을 알려 주세요.", "qwen": { "expect": "node_attr", "node": "was" } },
+
+    { "id": "l-relayout", "text": "보기 좋게 다시 배치해 줘", "want": "layout", "qwen": { "expect": "skip" } }
+  ]
+}
