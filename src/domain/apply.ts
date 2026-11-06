@@ -12,6 +12,14 @@ const idTaken = (s: DiagramState, id: string) => has(s.groups, id) || has(s.node
 const parentOk = (s: DiagramState, parent: string | null) => parent === null || has(s.groups, parent);
 const endpointOk = (s: DiagramState, id: string) => has(s.nodes, id) || has(s.groups, id);
 
+/** add_edge 가 id 를 안 받았을 때 쓰는 규칙: e-<from>-<to>, 있으면 -2, -3… */
+export function freeEdgeId(s: DiagramState, from: string, to: string): string {
+  const stem = `e-${from}-${to}`;
+  let id = stem;
+  for (let n = 2; idTaken(s, id); n++) id = `${stem}-${n}`;
+  return id;
+}
+
 export function applyCommand(state: DiagramState, cmd: Command): ApplyResult {
   switch (cmd.op) {
     case "add_group": {
@@ -44,9 +52,7 @@ export function applyCommand(state: DiagramState, cmd: Command): ApplyResult {
       if (!endpointOk(state, cmd.to)) return fail(state, `endpoint ${cmd.to} not found`);
       let id = cmd.id;
       if (id === undefined) {
-        const stem = `e-${cmd.from}-${cmd.to}`;
-        id = stem;
-        for (let n = 2; idTaken(state, id); n++) id = `${stem}-${n}`;
+        id = freeEdgeId(state, cmd.from, cmd.to);
       } else if (idTaken(state, id)) {
         return fail(state, `id ${id} already exists`);
       }
