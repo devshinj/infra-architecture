@@ -9,6 +9,16 @@ export type QwenExpect =
   | { expect: "record" }
   | { expect: "skip" };
 
+/** 문장별 추가 검사. 기대(expect)와 함께 모두 맞아야 통과다. */
+export interface QwenGuards {
+  /** 나오면 안 되는 명령 */
+  forbid?: string[];
+  /** 기존 흐름을 고칠 때 남아 있는 단계(같은 연결)의 짧은 설명을 바꾸면 안 된다 */
+  keepStepText?: boolean;
+  /** 문장이 전달물·방향을 직접 말해서, 같은 망 안 연결에 적어도 지어낸 것이 아니다 */
+  allowPayload?: boolean;
+}
+
 /** Qwen 이 낸 명령 중 판정에 쓰는 것만(스키마를 통과한 명령). */
 export interface SeenCommand {
   op: string;
@@ -16,6 +26,31 @@ export interface SeenCommand {
   payload?: string;
   direction?: string;
   attrs?: Record<string, unknown>;
+  steps?: { edge: string; short: string }[];
+}
+
+/**
+ * 추가 검사. 문제가 없으면 null.
+ * guessed: 망을 넘지 않는데 전달물·방향을 적은 연결 id(스크립트가 적용 뒤 구성으로 구한다).
+ * flows: 차례 시작 때의 흐름(id → 단계).
+ */
+export function checkGuards(
+  g: QwenGuards,
+  cmds: SeenCommand[],
+  ctx: { guessed: string[]; flows: Record<string, { edge: string; short: string }[]> },
+): string | null {
+  const bad = (g.forbid ?? []).filter((op) => cmds.some((c) => c.op === op));
+  if (bad.length) return `나오면 안 되는 명령: ${bad.join(", ")}`;
+  if (ctx.guessed.length) return `망을 안 넘는 연결에 전달물·방향을 지어냄: ${ctx.guessed.join(", ")}`;
+  if (g.keepStepText) {
+    for (const c of cmds) {
+      if (c.op !== "update_flow" || !c.id || !c.steps) continue;
+      const before = new Map((ctx.flows[c.id] ?? []).map((s) => [s.edge, s.short]));
+      const changed = c.steps.filter((s) => before.has(s.edge) && before.get(s.edge) !== s.short);
+      if (changed.length) return `${c.id} 단계 글을 바꿈: ${changed.map((s) => `${before.get(s.edge)}→${s.short}`).join(", ")}`;
+    }
+  }
+  return null;
 }
 
 const FLOW = new Set(["add_flow", "update_flow", "remove_flow"]);
@@ -70,6 +105,9 @@ export interface CaseResult {
   intentOk: boolean;
   qwenOk: boolean | null;
   qwenNote?: string;
+  /** --repeat 로 여러 번 돌렸을 때 통과 횟수/전체. qwenOk 는 모두 통과했는지다. */
+  qwenPasses?: number;
+  qwenRuns?: number;
 }
 
 export interface Change {

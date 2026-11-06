@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { compareBaseline, judgeQwen, summarizeOps, type CaseResult } from "../../scripts/eval-intent-lib";
+import { checkGuards, compareBaseline, judgeQwen, summarizeOps, type CaseResult } from "../../scripts/eval-intent-lib";
 
 describe("judgeQwen", () => {
   it("질문에는 명령이 없어야 한다", () => {
@@ -58,5 +58,29 @@ describe("compareBaseline", () => {
     const { worse, better } = compareBaseline([r("a", true, null)], [r("a", true, false), r("new", false, false)]);
     expect(worse).toEqual([]);
     expect(better).toEqual([]);
+  });
+});
+
+describe("checkGuards", () => {
+  const none = { guessed: [], flows: {} };
+  it("나오면 안 되는 명령을 잡는다", () => {
+    expect(checkGuards({ forbid: ["remove_edge", "update_flow"] }, [{ op: "add_node" }, { op: "remove_edge" }], none)).toBe(
+      "나오면 안 되는 명령: remove_edge",
+    );
+    expect(checkGuards({ forbid: ["remove_edge"] }, [{ op: "add_node" }], none)).toBeNull();
+  });
+
+  it("지어낸 전달물·방향을 잡는다", () => {
+    expect(checkGuards({}, [], { guessed: ["e-a-b"], flows: {} })).toBe("망을 안 넘는 연결에 전달물·방향을 지어냄: e-a-b");
+  });
+
+  it("남은 단계의 짧은 설명이 바뀌면 잡고, 새 단계는 묻지 않는다", () => {
+    const flows = { signup: [{ edge: "e1", short: "가입 요청" }, { edge: "e2", short: "회원 저장" }] };
+    const cmd = (steps: { edge: string; short: string }[]) => [{ op: "update_flow", id: "signup", steps }];
+    expect(checkGuards({ keepStepText: true }, cmd([{ edge: "e1", short: "로그인 요청" }, { edge: "e2", short: "회원 저장" }]), { guessed: [], flows })).toBe(
+      "signup 단계 글을 바꿈: 가입 요청→로그인 요청",
+    );
+    expect(checkGuards({ keepStepText: true }, cmd([{ edge: "e1", short: "가입 요청" }, { edge: "e9", short: "인증" }]), { guessed: [], flows })).toBeNull();
+    expect(checkGuards({}, cmd([{ edge: "e1", short: "로그인 요청" }]), { guessed: [], flows })).toBeNull();
   });
 });

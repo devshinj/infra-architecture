@@ -5,13 +5,23 @@
  *
  *   --clef-only   Qwen 을 부르지 않고 의도 분류만 본다(빠름)
  *   --only a,b    이 id 의 문장만
+ *   --repeat N    Qwen 을 문장마다 N 번 돌려 통과 횟수를 본다(기본 1). 모두 통과해야 맞음
  *   --update      이번 결과를 기준 파일(tests/fixtures/intent/baseline.json)로 저장
  *
  * 기준 파일이 있으면 그보다 나빠진 문장을 따로 보여 주고, 하나라도 있으면 실패(1)로 끝낸다.
  */
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
-import { compareBaseline, judgeQwen, summarizeOps, type CaseResult, type QwenExpect, type SeenCommand } from "./eval-intent-lib";
+import {
+  checkGuards,
+  compareBaseline,
+  judgeQwen,
+  summarizeOps,
+  type CaseResult,
+  type QwenExpect,
+  type QwenGuards,
+  type SeenCommand,
+} from "./eval-intent-lib";
 import { formatTable } from "./smoke-table";
 
 process.env.DATABASE_URL ||= "unused";
@@ -28,7 +38,7 @@ interface Case {
   text: string;
   want: string;
   lastAssistant?: string;
-  qwen: QwenExpect;
+  qwen: QwenExpect & QwenGuards;
 }
 
 const args = process.argv.slice(2);
@@ -36,6 +46,7 @@ const clefOnly = args.includes("--clef-only");
 const update = args.includes("--update");
 const onlyArg = args[args.indexOf("--only") + 1];
 const only = args.includes("--only") && onlyArg ? new Set(onlyArg.split(",")) : null;
+const repeat = args.includes("--repeat") ? Math.max(1, Number(args[args.indexOf("--repeat") + 1]) || 1) : 1;
 
 async function main(): Promise<number> {
   const { llmConfig } = await import("../src/server/llm/config");
@@ -45,10 +56,12 @@ async function main(): Promise<number> {
   const { clefOpenItems, resolveIntent } = await import("../src/server/chat/intent");
   const { buildMessages, parseMentions } = await import("../src/server/chat/prompt");
   const { normalizeAiCommand } = await import("../src/server/chat/normalize");
-  const { parseCommand } = await import("../src/domain/commands");
+  const { isFlowCommand, parseCommand } = await import("../src/domain/commands");
+  const { asksStepText, keepStepText } = await import("../src/domain/flows");
   const { applyCommand } = await import("../src/domain/apply");
   const { emptyState } = await import("../src/domain/types");
   const { computeMissing } = await import("../src/domain/missing");
+  const { crossesBoundary } = await import("../src/domain/boundary");
   type State = ReturnType<typeof emptyState>;
 
   const cfg = llmConfig();
@@ -73,6 +86,9 @@ async function main(): Promise<number> {
     state = r.state;
   }
   const flows = fixture.flows;
+  const flowSteps: Record<string, { edge: string; short: string }[]> = Object.fromEntries(
+    flows.map((f: { id: string; steps: { edge: string; short: string }[] }) => [f.id, f.steps]),
+  );
   const cases: Case[] = JSON.parse(readFileSync(join(DIR, "cases.json"), "utf8")).cases.filter((c: Case) => !only || only.has(c.id));
 
   // 파이프라인과 같은 열린 빠진 정보. Clef 문맥은 문장마다 clefOpenItems 로 고른다.
@@ -96,6 +112,8 @@ async function main(): Promise<number> {
     let qwenOk: boolean | null = null;
     let qwenNote: string | undefined;
     let opsText = "-";
+    let qwenPasses: number | undefined;
+    let qwenRuns: number | undefined;
     if (qwen && c.qwen.expect !== "skip") {
       const answerMode = routed === "question" || routed === "other";
       if (routed === "layout" || routed === "history") {
@@ -109,45 +127,64 @@ async function main(): Promise<number> {
         qwenOk = qwenNote === undefined;
         opsText = "답만 함";
       } else {
-        const seen: SeenCommand[] = [];
-        let st = state;
-        const parser = createJsonlParser(
-          (v) => {
-            if ((v as { op?: unknown } | null)?.op === "say") return;
-            const p = parseCommand(normalizeAiCommand(v));
-            if (!p.ok) return;
-            const cmd = p.cmd as SeenCommand;
-            seen.push({ op: cmd.op, id: cmd.id, payload: cmd.payload, direction: cmd.direction, attrs: cmd.attrs });
-            const r = applyCommand(st, p.cmd);
-            if (r.ok) st = r.state;
-          },
-          () => {},
-        );
         const history = [{ role: "assistant" as const, content: prev }];
         const messages = buildMessages({ intent: routedIntent, text: clean, state, mentions, history, missing: openMissing, flows });
-        try {
-          await qwen.streamCompletion(messages, { signal: AbortSignal.timeout(QWEN_TIMEOUT_MS), onDelta: (d) => parser.push(d) });
-          parser.end();
-          qwenNote = judgeQwen(c.qwen, seen) ?? undefined;
-          qwenOk = qwenNote === undefined;
-          opsText = summarizeOps(seen);
-        } catch (e) {
-          qwenOk = false;
-          qwenNote = `호출 실패: ${(e as Error).name}`;
-          opsText = "-";
-        }
+        // 한 번 돌린 결과: 문제 이유(없으면 null)와 낸 명령 요약.
+        const once = async (): Promise<{ note: string | null; ops: string }> => {
+          const seen: SeenCommand[] = [];
+          const touched = new Set<string>(); // 전달물·방향을 적은 연결 id
+          let st = state;
+          const parser = createJsonlParser(
+            (v) => {
+              if ((v as { op?: unknown } | null)?.op === "say") return;
+              const p = parseCommand(normalizeAiCommand(v));
+              if (!p.ok) return;
+              // 파이프라인과 같이, 단계 글을 고쳐 달라는 요청이 아니면 남는 단계의 글은 원래 흐름 것을 쓴다.
+              const kept = isFlowCommand(p.cmd) && !asksStepText(clean) ? keepStepText(p.cmd, flows) : p.cmd;
+              const cmd = kept as SeenCommand & { from?: string; to?: string };
+              seen.push({ op: cmd.op, id: cmd.id, payload: cmd.payload, direction: cmd.direction, attrs: cmd.attrs, steps: cmd.steps });
+              const r = applyCommand(st, p.cmd);
+              if (!r.ok) return;
+              st = r.state;
+              if ((cmd.op === "add_edge" || cmd.op === "update_edge") && (cmd.payload || cmd.direction)) {
+                const id = cmd.id ?? Object.values(st.edges).find((e) => e.from === cmd.from && e.to === cmd.to)?.id;
+                if (id) touched.add(id);
+              }
+            },
+            () => {},
+          );
+          try {
+            await qwen.streamCompletion(messages, { signal: AbortSignal.timeout(QWEN_TIMEOUT_MS), onDelta: (d) => parser.push(d) });
+            parser.end();
+          } catch (e) {
+            return { note: `호출 실패: ${(e as Error).name}`, ops: "-" };
+          }
+          // 사용자가 값을 정해 준 문장(expect edge)은 묻지 않는다.
+          const guessed =
+            c.qwen.expect === "edge" || c.qwen.allowPayload ? [] : [...touched].filter((id) => st.edges[id] && !crossesBoundary(st, st.edges[id]!));
+          const note = judgeQwen(c.qwen, seen) ?? checkGuards(c.qwen, seen, { guessed, flows: flowSteps });
+          return { note, ops: summarizeOps(seen) };
+        };
+        const runs: { note: string | null; ops: string }[] = [];
+        for (let i = 0; i < repeat; i++) runs.push(await once());
+        const fails = runs.filter((r) => r.note !== null);
+        qwenPasses = runs.length - fails.length;
+        qwenRuns = runs.length;
+        qwenOk = fails.length === 0;
+        qwenNote = fails[0]?.note ?? undefined;
+        opsText = runs.at(-1)!.ops;
       }
       if (c.qwen.expect === "record") qwenOk = null; // 기대 없이 기록만
     }
 
-    results.push({ id: c.id, intent: got?.intent ?? null, confidence: got?.confidence ?? null, routed, intentOk, qwenOk, qwenNote });
+    results.push({ id: c.id, intent: got?.intent ?? null, confidence: got?.confidence ?? null, routed, intentOk, qwenOk, qwenNote, qwenPasses, qwenRuns });
     const mark = (ok: boolean | null) => (ok === null ? " " : ok ? "O" : "X");
     rows.push([
       c.id,
       mark(intentOk),
       `${got?.intent ?? "-"} ${got ? got.confidence.toFixed(2) : ""}`.trim(),
       c.want,
-      mark(qwenOk),
+      `${mark(qwenOk)}${qwenRuns && qwenRuns > 1 ? ` ${qwenPasses}/${qwenRuns}` : ""}`,
       qwenNote ?? opsText,
     ]);
     process.stdout.write(".");
@@ -157,6 +194,10 @@ async function main(): Promise<number> {
 
   const n = (xs: (boolean | null)[]) => `${xs.filter((x) => x === true).length}/${xs.filter((x) => x !== null).length}`;
   console.log(`\n의도 ${n(results.map((r) => r.intentOk))}${qwen ? ` · Qwen ${n(results.map((r) => r.qwenOk))}` : ""}`);
+  if (qwen && repeat > 1) {
+    const sum = (k: "qwenPasses" | "qwenRuns") => results.reduce((t, r) => t + (r.qwenOk === null ? 0 : (r[k] ?? 0)), 0);
+    console.log(`Qwen 실행 ${sum("qwenPasses")}/${sum("qwenRuns")} 통과 (문장마다 ${repeat}번)`);
+  }
 
   let code = 0;
   if (existsSync(BASELINE)) {
