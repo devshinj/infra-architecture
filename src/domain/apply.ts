@@ -1,5 +1,5 @@
 import type { Command } from "./commands";
-import type { DiagramState } from "./types";
+import type { DiagramState, DNode, Group } from "./types";
 
 export type ApplyResult =
   | { ok: true; state: DiagramState }
@@ -35,6 +35,7 @@ export function applyCommand(state: DiagramState, cmd: Command): ApplyResult {
         ...(cmd.sub !== undefined ? { sub: cmd.sub } : {}),
         parent: cmd.parent,
         attrs: { ...(cmd.attrs ?? {}) },
+        ...(cmd.guess === true && cmd.kind === "network_link" ? { guess: { replaced: [] } } : {}),
       };
       return { ok: true, state: { ...state, nodes: { ...state.nodes, [cmd.id]: node } } };
     }
@@ -99,6 +100,24 @@ export function applyCommand(state: DiagramState, cmd: Command): ApplyResult {
       if (cur?.confirmed) return fail(state, `assumption ${cmd.key} is confirmed`);
       const next = { key: cmd.key, value: cmd.value, confirmed: false };
       return { ok: true, state: { ...state, assumptions: { ...state.assumptions, [cmd.key]: next } } };
+    }
+    case "set_zone_type": {
+      const group = has(state.groups, cmd.id) ? state.groups[cmd.id] : undefined;
+      if (!group) return fail(state, `group ${cmd.id} not found`);
+      if (group.groupKind !== "network_zone") return fail(state, `group ${cmd.id} is not a network zone`);
+      if (group.netType?.source === "user") return fail(state, `zone type ${cmd.id} is confirmed`);
+      const next: Group = { ...group };
+      if (cmd.type === null) delete next.netType;
+      else next.netType = { key: cmd.type, source: "ai", confirmed: false };
+      return { ok: true, state: { ...state, groups: { ...state.groups, [cmd.id]: next } } };
+    }
+    case "set_link_guess": {
+      const node = has(state.nodes, cmd.id) ? state.nodes[cmd.id] : undefined;
+      if (!node) return fail(state, `node ${cmd.id} not found`);
+      const next: DNode = { ...node };
+      if (cmd.guess === null) delete next.guess;
+      else next.guess = cmd.guess;
+      return { ok: true, state: { ...state, nodes: { ...state.nodes, [cmd.id]: next } } };
     }
     // 흐름 명령은 흐름 저장소에 적용한다(서버가 차례 끝에). 구성도는 그대로 둬 클라이언트 재생도 안전하다.
     case "add_flow":

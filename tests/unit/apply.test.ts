@@ -178,3 +178,56 @@ describe("edge payload/direction", () => {
     expect(s.ok && s.state.edges["e-was-1-db"]).toMatchObject({ label: "JDBC", payload: "api", direction: "two_way" });
   });
 });
+
+describe("망 종류·망연계 추정 표시", () => {
+  const withZone = () =>
+    applyCommands(emptyState(), [
+      { op: "add_group", id: "dmz", group_kind: "network_zone", label: "DMZ", parent: null },
+      { op: "add_group", id: "vpc", group_kind: "vpc", label: "VPC", parent: null },
+      { op: "add_node", id: "lnk", kind: "network_link", label: "망연계", parent: "dmz" },
+      { op: "add_node", id: "web", kind: "was", label: "WAS", parent: "dmz" },
+    ] as Command[]).state;
+
+  test("apply set_zone_type: network_zone 에만, AI 출처·미확인으로 저장", () => {
+    const r = applyCommand(withZone(), { op: "set_zone_type", id: "dmz", type: "dmz" });
+    expect(r.ok && r.state.groups.dmz.netType).toEqual({ key: "dmz", source: "ai", confirmed: false });
+    const bad = applyCommand(withZone(), { op: "set_zone_type", id: "vpc", type: "dmz" });
+    expect(bad.ok).toBe(false);
+    expect(applyCommand(withZone(), { op: "set_zone_type", id: "nope", type: "dmz" }).ok).toBe(false);
+  });
+
+  test("apply set_zone_type: 사용자 확정 종류는 바꾸지 못한다", () => {
+    const s = withZone();
+    s.groups.dmz = { ...s.groups.dmz, netType: { key: "internal", source: "user", confirmed: true } };
+    const r = applyCommand(s, { op: "set_zone_type", id: "dmz", type: "dmz" });
+    expect(r).toMatchObject({ ok: false, error: "zone type dmz is confirmed" });
+    expect(r.state).toBe(s);
+  });
+
+  test("apply set_zone_type: null 이면 칸을 지운다", () => {
+    const a = applyCommand(withZone(), { op: "set_zone_type", id: "dmz", type: "dmz" });
+    if (!a.ok) throw new Error("x");
+    const r = applyCommand(a.state, { op: "set_zone_type", id: "dmz", type: null });
+    expect(r.ok && "netType" in r.state.groups.dmz).toBe(false);
+  });
+
+  test("apply add_node guess: network_link 만 guess 를 남긴다", () => {
+    const s = withZone();
+    const link = applyCommand(s, { op: "add_node", id: "l2", kind: "network_link", label: "연계", parent: "dmz", guess: true });
+    expect(link.ok && link.state.nodes.l2.guess).toEqual({ replaced: [] });
+    const other = applyCommand(s, { op: "add_node", id: "w2", kind: "was", label: "WAS", parent: "dmz", guess: true });
+    expect(other.ok && "guess" in other.state.nodes.w2).toBe(false);
+    const plain = applyCommand(s, { op: "add_node", id: "l3", kind: "network_link", label: "연계", parent: "dmz" });
+    expect(plain.ok && "guess" in plain.state.nodes.l3).toBe(false);
+  });
+
+  test("apply set_link_guess: 저장·지우기, 없는 노드는 실패", () => {
+    const guess = { replaced: [{ from: "web", to: "lnk", edgeKind: "request" as const, id: "e1" }] };
+    const a = applyCommand(withZone(), { op: "set_link_guess", id: "lnk", guess });
+    expect(a.ok && a.state.nodes.lnk.guess).toEqual(guess);
+    if (!a.ok) throw new Error("x");
+    const b = applyCommand(a.state, { op: "set_link_guess", id: "lnk", guess: null });
+    expect(b.ok && "guess" in b.state.nodes.lnk).toBe(false);
+    expect(applyCommand(withZone(), { op: "set_link_guess", id: "nope", guess }).ok).toBe(false);
+  });
+});
