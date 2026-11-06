@@ -1,5 +1,5 @@
 {
-  "note": "want: 기대 의도(판정 없음은 \"null\"). qwen: Qwen 출력 기대 — none(명령 없음), structure(구성 명령 1개 이상), flow(흐름 명령 1개 이상, ops 로 종류 지정), edge(지정 연결의 전달물·방향), node_attr(지정 노드 속성 갱신), record(기대 없이 기록만), skip(Qwen 을 부르지 않는 의도). 추가 검사: forbid(나오면 안 되는 명령), keepStepText(기존 흐름의 남은 단계 짧은 설명 유지), allowPayload(문장이 전달물·방향을 직접 말함). 기대가 edge 가 아니면 망을 안 넘는 연결에 전달물·방향을 적은 것도 실패다.",
+  "note": "want: 기대 의도(판정 없음은 \"null\"). qwen: Qwen 출력 기대 — none(명령 없음), structure(구성 명령 1개 이상), flow(흐름 명령 1개 이상, ops 로 종류 지정), edge(지정 연결의 전달물·방향), node_attr(지정 노드 속성 갱신), nodes_attr(여러 노드에 같은 속성 — 빠지거나 더하면 실패), record(기대 없이 기록만), skip(Qwen 을 부르지 않는 의도). 추가 검사: forbid(나오면 안 되는 명령), keepStepText(기존 흐름의 남은 단계 짧은 설명 유지), allowPayload(문장이 전달물·방향을 직접 말함). 기대가 edge 가 아니면 망을 안 넘는 연결에 전달물·방향을 적은 것도 실패다.",
   "cases": [
     { "id": "flow-create-signup", "text": "회원가입 흐름 만들어 줘", "want": "structure_change", "qwen": { "expect": "flow", "ops": ["add_flow", "update_flow"] } },
     { "id": "flow-draw-login", "text": "로그인할 때 어떤 서버를 거치는지 흐름으로 그려 줘", "want": "structure_change", "qwen": { "expect": "flow", "ops": ["add_flow"] } },
@@ -33,6 +33,12 @@
     { "id": "m-edge-api-two", "text": "API, 양방향", "want": "missing_info_answer", "lastAssistant": "WAS → 외부 인증 연결의 전달물과 방향을 알려 주세요.", "qwen": { "expect": "edge", "edge": "e-was-auth", "payload": "api", "direction": "two_way" } },
     { "id": "m-edge-file-short", "text": "파일로 한쪽만 보내", "want": "missing_info_answer", "lastAssistant": "WAS → 외부 인증 연결의 전달물과 방향을 알려 주세요.", "qwen": { "expect": "edge", "edge": "e-was-auth", "payload": "file", "direction": "one_way" } },
     { "id": "m-node-spec", "text": "WAS는 4코어 16기가", "want": "missing_info_answer", "lastAssistant": "WAS의 CPU·RAM을 알려 주세요.", "qwen": { "expect": "node_attr", "node": "was" } },
+
+    { "id": "b-all-os", "diagram": "large", "text": "모든 서버 OS는 Rocky Linux 9야", "want": "structure_change", "qwen": { "expect": "nodes_attr", "key": "os", "nodes": ["web-1", "web-2", "web-3", "was-1", "was-2", "was-3", "was-4", "batch-1", "batch-2", "bastion"] } },
+    { "id": "b-was-ram", "diagram": "large", "text": "WAS들 램은 전부 32GB로 해 줘", "want": "structure_change", "qwen": { "expect": "nodes_attr", "key": "ram", "nodes": ["was-1", "was-2", "was-3", "was-4"] } },
+    { "id": "b-biz-cpu", "diagram": "large", "text": "업무망에 있는 WAS와 배치 서버는 전부 8코어야", "want": "structure_change", "qwen": { "expect": "nodes_attr", "key": "cpu", "nodes": ["was-1", "was-2", "was-3", "was-4", "batch-1", "batch-2"] } },
+    { "id": "b-web-sw", "diagram": "large", "text": "웹 서버 전부 Nginx 1.24로 바꿔 줘", "want": "structure_change", "qwen": { "expect": "nodes_attr", "key": "sw", "nodes": ["web-1", "web-2", "web-3"] } },
+    { "id": "b-db-ha", "diagram": "large", "text": "모든 DB 이중화해 줘", "want": "structure_change", "qwen": { "expect": "record" } },
 
     { "id": "l-relayout", "text": "보기 좋게 다시 배치해 줘", "want": "layout", "qwen": { "expect": "skip" } }
   ]

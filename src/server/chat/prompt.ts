@@ -1,7 +1,7 @@
 import { EDGE_KINDS, GROUP_KINDS, NODE_KINDS } from "@/domain/catalog";
 import { LIMITS, type NodeExplanation } from "@/domain/explain";
 import type { Flow } from "@/domain/flows";
-import type { MissingItem } from "@/domain/missing";
+import { FIELD_LABELS, type MissingItem } from "@/domain/missing";
 import { patternPromptBlock } from "@/domain/patterns";
 import type { DiagramState } from "@/domain/types";
 import type { Intent } from "@/server/llm/clef";
@@ -15,6 +15,19 @@ const MISSING_LINES_MAX = 40;
 const KIND_LIST = NODE_KINDS.map((k) => k.kind).filter((k) => k !== "k8s_cluster").join(", ");
 const GROUP_KIND_LIST = GROUP_KINDS.map((k) => k.kind).join(", ");
 const EDGE_KIND_LIST = EDGE_KINDS.map((k) => k.kind).join(", ");
+
+/** 노드 종류별 attrs 칸. 칸이 같은 종류끼리 한 줄로 묶는다(예: "web_server, was: hostname(호스트명), …"). */
+export const ATTR_LIST = (() => {
+  const byKeys = new Map<string, string[]>();
+  for (const k of NODE_KINDS) {
+    if (k.requiredAttrs.length === 0) continue;
+    const keys = k.requiredAttrs.join(",");
+    byKeys.set(keys, [...(byKeys.get(keys) ?? []), k.kind]);
+  }
+  return [...byKeys]
+    .map(([keys, kinds]) => `${kinds.join(", ")}: ${keys.split(",").map((key) => `${key}(${FIELD_LABELS[key] ?? key})`).join(", ")}`)
+    .join("\n");
+})();
 
 const MISSING_FORMAT_NOTE =
   "값을 반영하는 명령은 한 줄에 JSON 하나로, 줄바꿈 없이 쓴다. 사용자가 말한 대상마다 따로 update_node 를 낸다. 연결의 전달물·방향은 update_edge 의 payload·direction 으로 낸다.";
@@ -44,6 +57,9 @@ KIND 허용값: ${KIND_LIST}
 GROUP_KIND 허용값: ${GROUP_KIND_LIST}
 EDGE_KIND 허용값: ${EDGE_KIND_LIST}
 
+노드 attrs 칸(종류별). 이 칸 이름만 쓴다. os 는 운영체제(예: Rocky Linux 9), sw 는 설치한 소프트웨어(예: Tomcat 10)다.
+${ATTR_LIST}
+
 규칙:
 - id 는 영문 소문자·숫자·하이픈만 쓰고 ^[a-z0-9][a-z0-9-]{0,63}$ 형식이어야 한다. 노드·그룹·연결 id 는 서로 겹치면 안 된다.
 - 요청이 애매하면 가정하고 set_assumption 으로 그 가정을 먼저 밝힌다.
@@ -71,6 +87,7 @@ EDGE_KIND 허용값: ${EDGE_KIND_LIST}
 - 사용자(client_*)에서 시작하는 진입 연결을 반드시 그린다.
 - warn 과 report_missing 명령은 내지 않는다. 위험 진단은 다른 단계가 맡는다.
 - 사용자가 채워야 할 정보의 값을 알려 주면 update_node(attrs) 또는 update_edge(label·payload·direction) 로 그 값만 반영한다. 노드·연결을 새로 만들지 않는다.
+- "모든 서버", "WAS 전부"처럼 여러 대상을 말하면 현재 구성에서 그 조건에 맞는 노드를 하나도 빠뜨리지 말고 노드마다 update_node 를 낸다. 그 값의 칸이 없는 종류에는 쓰지 않는다.
 - 흐름은 요청 하나가 구성도의 연결을 차례로 지나는 길이다. 흐름을 바꾸라는 요청이면 구성 명령과 함께 흐름 명령을 쓴다. 단계 edge 는 현재 구성(또는 이번에 만든) 연결 id 만 쓴다.
 - 요청에 흐름 이야기가 없으면 흐름 명령을 쓰지 않는다. 구성을 바꿔 흐름이 끊겨도 도구가 사용자에게 알리므로 흐름을 고치지 않는다.
 - 흐름을 고칠 때는 그대로 남는 단계의 short·text 를 "흐름:" 목록에 있는 글 그대로 쓴다.
