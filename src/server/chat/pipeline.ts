@@ -1,7 +1,7 @@
 import { computeMissing } from "@/domain/missing";
 import { applyCommand, pruneEmptyGroups } from "@/domain/apply";
 import { COMMAND_OPS, isFlowCommand, isStructural, parseCommand, toFlowOp } from "@/domain/commands";
-import type { FlowOp } from "@/domain/flows";
+import { asksStepText, keepStepText, type FlowOp } from "@/domain/flows";
 import { emptyState, type DiagramState, type Warning } from "@/domain/types";
 import type { ClefClient, Intent } from "@/server/llm/clef";
 import { createJsonlParser } from "@/server/llm/jsonl";
@@ -244,6 +244,7 @@ async function lockedTurn(args: TurnArgs, sessionId: string | null, followUp: bo
       return [];
     });
     const messages = buildMessages({ intent, text: clean, state, mentions, history, missing: openMissing, flows });
+    const keepText = !asksStepText(clean);
     emit({ t: "status", phase: "thinking" });
 
     const onLine = (raw: unknown) => {
@@ -261,10 +262,12 @@ async function lockedTurn(args: TurnArgs, sessionId: string | null, followUp: bo
       const parsed = parseCommand(normalizeAiCommand(raw));
       if (!parsed.ok) return skip(`형식이 맞지 않는 명령(${op})`, skipKey("invalid", op, parsed.error));
       if (isFlowCommand(parsed.cmd)) {
-        pendingFlowOps.push(toFlowOp(parsed.cmd));
+        // 단계 글을 고쳐 달라는 요청이 아니면, 남는 단계의 글은 원래 흐름 것을 쓴다.
+        const cmd = keepText ? keepStepText(parsed.cmd, flows) : parsed.cmd;
+        pendingFlowOps.push(toFlowOp(cmd));
         if (applied === 0) emit({ t: "status", phase: "drawing" });
         applied++;
-        emit({ t: "cmd", cmd: parsed.cmd });
+        emit({ t: "cmd", cmd });
         return;
       }
       const r = applyCommand(state, parsed.cmd);

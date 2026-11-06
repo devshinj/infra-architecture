@@ -953,6 +953,21 @@ describe("flow commands in a chat turn", () => {
     expect(events.at(-1)).toMatchObject({ t: "done", version: 2, applied: 4, changed: 1, flows: 1, skipped: 1 });
   });
 
+  test("update_flow keeps the saved text of steps that stay, unless the user asks to rewrite step text", async () => {
+    const ids = await base();
+    await turn(ids, "주문 흐름", { qwen: fakeQwen(flowLine("order", "e-a-b", "a")), clef: clef() });
+    const rewrite = (short: string) =>
+      j({ op: "update_flow", id: "order", steps: [{ edge: "e-a-b", from: "a", short, text: "AI 가 새로 쓴 글" }] });
+
+    const { events } = await turn(ids, "주문 흐름 다시 맞춰 줘", { qwen: fakeQwen(rewrite("로그인 요청")), clef: clef() });
+    const sent = of(events, "cmd")[0]!.cmd as { steps: { short: string }[] };
+    expect(sent.steps[0]!.short).toBe("주문 요청"); // 화면에 보내는 명령도 지킨 글
+    expect((await listFlows(ids.userId, ids.diagramId))[0]!.steps[0]).toMatchObject({ short: "주문 요청", text: "주문을 보낸다" });
+
+    await turn(ids, "주문 흐름 단계 설명을 쉽게 바꿔 줘", { qwen: fakeQwen(rewrite("주문 보내기")), clef: clef() });
+    expect((await listFlows(ids.userId, ids.diagramId))[0]!.steps[0]).toMatchObject({ short: "주문 보내기", text: "AI 가 새로 쓴 글" });
+  });
+
   test("saved flows are listed in the next prompt", async () => {
     const ids = await base();
     await turn(ids, "주문 흐름", { qwen: fakeQwen(flowLine("order", "e-a-b", "a")), clef: clef() });

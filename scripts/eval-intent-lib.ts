@@ -15,6 +15,8 @@ export interface QwenGuards {
   forbid?: string[];
   /** 기존 흐름을 고칠 때 남아 있는 단계(같은 연결)의 짧은 설명을 바꾸면 안 된다 */
   keepStepText?: boolean;
+  /** 문장이 전달물·방향을 직접 말해서, 같은 망 안 연결에 적어도 지어낸 것이 아니다 */
+  allowPayload?: boolean;
 }
 
 /** Qwen 이 낸 명령 중 판정에 쓰는 것만(스키마를 통과한 명령). */

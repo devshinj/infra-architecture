@@ -7,7 +7,9 @@
       "confidence": 0.9149600839664599,
       "routed": "structure_change",
       "intentOk": true,
-      "qwenOk": true
+      "qwenOk": true,
+      "qwenPasses": 3,
+      "qwenRuns": 3
     },
     {
       "id": "flow-draw-login",
@@ -15,7 +17,9 @@
       "confidence": 0.8307398506105738,
       "routed": "structure_change",
       "intentOk": true,
-      "qwenOk": true
+      "qwenOk": true,
+      "qwenPasses": 3,
+      "qwenRuns": 3
     },
     {
       "id": "flow-add-pwreset",
@@ -23,7 +27,9 @@
       "confidence": 0.944862668256642,
       "routed": "structure_change",
       "intentOk": true,
-      "qwenOk": true
+      "qwenOk": true,
+      "qwenPasses": 3,
+      "qwenRuns": 3
     },
     {
       "id": "flow-edit-sms",
@@ -31,7 +37,9 @@
       "confidence": 0.9368814698151053,
       "routed": "structure_change",
       "intentOk": true,
-      "qwenOk": true
+      "qwenOk": true,
+      "qwenPasses": 3,
+      "qwenRuns": 3
     },
     {
       "id": "flow-resync",
@@ -39,7 +47,9 @@
       "confidence": 0.961194548041845,
       "routed": "structure_change",
       "intentOk": true,
-      "qwenOk": true
+      "qwenOk": true,
+      "qwenPasses": 3,
+      "qwenRuns": 3
     },
     {
       "id": "flow-remove-pay",
@@ -47,7 +57,9 @@
       "confidence": 0.9814383734103285,
       "routed": "structure_change",
       "intentOk": true,
-      "qwenOk": true
+      "qwenOk": true,
+      "qwenPasses": 3,
+      "qwenRuns": 3
     },
     {
       "id": "flow-show-was",
@@ -55,7 +67,9 @@
       "confidence": 0.7403061615200457,
       "routed": "structure_change",
       "intentOk": true,
-      "qwenOk": null
+      "qwenOk": null,
+      "qwenPasses": 3,
+      "qwenRuns": 3
     },
     {
       "id": "flow-add-batch",
@@ -63,7 +77,9 @@
       "confidence": 0.9496192513296668,
       "routed": "structure_change",
       "intentOk": true,
-      "qwenOk": true
+      "qwenOk": true,
+      "qwenPasses": 3,
+      "qwenRuns": 3
     },
     {
       "id": "flow-add-cross",
@@ -71,7 +87,9 @@
       "confidence": 0.8971875748485623,
       "routed": "structure_change",
       "intentOk": true,
-      "qwenOk": true
+      "qwenOk": true,
+      "qwenPasses": 3,
+      "qwenRuns": 3
     },
     {
       "id": "flow-rename",
@@ -79,7 +97,9 @@
       "confidence": 0.9586802540086724,
       "routed": "structure_change",
       "intentOk": true,
-      "qwenOk": true
+      "qwenOk": true,
+      "qwenPasses": 3,
+      "qwenRuns": 3
     },
     {
       "id": "flow-draw-browse",
@@ -87,7 +107,9 @@
       "confidence": 0.7498736724162048,
       "routed": "structure_change",
       "intentOk": true,
-      "qwenOk": true
+      "qwenOk": true,
+      "qwenPasses": 3,
+      "qwenRuns": 3
     },
     {
       "id": "flow-add-cache",
@@ -95,7 +117,9 @@
       "confidence": 0.9666229015652308,
       "routed": "structure_change",
       "intentOk": true,
-      "qwenOk": true
+      "qwenOk": true,
+      "qwenPasses": 3,
+      "qwenRuns": 3
     },
     {
       "id": "q-flow-why-db",
@@ -111,7 +135,9 @@
       "confidence": 0.5354215390018013,
       "routed": "null",
       "intentOk": false,
-      "qwenOk": true
+      "qwenOk": true,
+      "qwenPasses": 3,
+      "qwenRuns": 3
     },
     {
       "id": "q-link-why",
@@ -159,7 +185,10 @@
       "confidence": 0.8969211566641299,
       "routed": "structure_change",
       "intentOk": true,
-      "qwenOk": true
+      "qwenOk": false,
+      "qwenNote": "망을 안 넘는 연결에 전달물·방향을 지어냄: e-link-auth",
+      "qwenPasses": 1,
+      "qwenRuns": 3
     },
     {
       "id": "s-add-was",
@@ -167,7 +196,30 @@
       "confidence": 0.9753429328712391,
       "routed": "structure_change",
       "intentOk": true,
-      "qwenOk": true
+      "qwenOk": true,
+      "qwenPasses": 3,
+      "qwenRuns": 3
+    },
+    {
+      "id": "s-add-web",
+      "intent": "structure_change",
+      "confidence": 0.967887794000258,
+      "routed": "structure_change",
+      "intentOk": true,
+      "qwenOk": false,
+      "qwenNote": "나오면 안 되는 명령: update_flow",
+      "qwenPasses": 1,
+      "qwenRuns": 3
+    },
+    {
+      "id": "s-db-ha",
+      "intent": "structure_change",
+      "confidence": 0.818473467802033,
+      "routed": "structure_change",
+      "intentOk": true,
+      "qwenOk": true,
+      "qwenPasses": 3,
+      "qwenRuns": 3
     },
     {
       "id": "s-edge-info",
@@ -175,7 +227,9 @@
       "confidence": 0.8010824780257696,
       "routed": "structure_change",
       "intentOk": true,
-      "qwenOk": true
+      "qwenOk": true,
+      "qwenPasses": 3,
+      "qwenRuns": 3
     },
     {
       "id": "s-add-link",
@@ -183,7 +237,9 @@
       "confidence": 0.9825120937579257,
       "routed": "structure_change",
       "intentOk": true,
-      "qwenOk": true
+      "qwenOk": true,
+      "qwenPasses": 3,
+      "qwenRuns": 3
     },
     {
       "id": "m-edge-file-oneway",
@@ -191,7 +247,9 @@
       "confidence": 0.6486344329596022,
       "routed": "missing_info_answer",
       "intentOk": true,
-      "qwenOk": true
+      "qwenOk": true,
+      "qwenPasses": 3,
+      "qwenRuns": 3
     },
     {
       "id": "m-edge-api-two",
@@ -199,7 +257,9 @@
       "confidence": 0.72715769144177,
       "routed": "missing_info_answer",
       "intentOk": true,
-      "qwenOk": true
+      "qwenOk": true,
+      "qwenPasses": 3,
+      "qwenRuns": 3
     },
     {
       "id": "m-edge-file-short",
@@ -207,7 +267,9 @@
       "confidence": 0.7265911016575881,
       "routed": "missing_info_answer",
       "intentOk": true,
-      "qwenOk": true
+      "qwenOk": true,
+      "qwenPasses": 3,
+      "qwenRuns": 3
     },
     {
       "id": "m-node-spec",
@@ -215,7 +277,9 @@
       "confidence": 0.5641532431290086,
       "routed": "null",
       "intentOk": false,
-      "qwenOk": true
+      "qwenOk": true,
+      "qwenPasses": 3,
+      "qwenRuns": 3
     },
     {
       "id": "l-relayout",

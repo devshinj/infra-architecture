@@ -1,7 +1,7 @@
 import { expect, test } from "vitest";
 
 import type { NodeKind } from "@/domain/catalog";
-import { checkFlow, crossingNote, flowsThrough, shortLabel, stepEnd, type Flow, type FlowStep } from "@/domain/flows";
+import { asksStepText, checkFlow, crossingNote, flowsThrough, keepStepText, shortLabel, stepEnd, type Flow, type FlowStep } from "@/domain/flows";
 import { emptyState, type DiagramState } from "@/domain/types";
 
 const n = (id: string, kind: NodeKind, label: string, parent: string | null) => ({ id, kind, label, parent, attrs: {} });
@@ -102,4 +102,42 @@ test("crossingNote names zones and the boundary node", () => {
   expect(crossingNote(s, step("e5", "link"))).toBe("망 밖에서 인터넷망으로 넘어가요(망연계 거침)");
   expect(crossingNote(s, step("e1", "browser"))).toBe("망 밖에서 업무망으로 넘어가요(방화벽 거침)");
   expect(crossingNote(s, step("e2", "fw"))).toBeNull();
+});
+
+const before: Flow[] = [
+  { id: "order", name: "주문하기", origin: "user", steps: [
+    { edge: "e1", from: "user", short: "주문 요청", text: "주문 정보를 보낸다" },
+    { edge: "e2", from: "was", short: "주문 저장", text: "WAS가 주문을 저장한다" },
+  ] },
+];
+
+test("keepStepText: 원래 있던 단계(같은 연결·시작 노드)는 원래 글을 쓰고, 새 단계는 그대로 둔다", () => {
+  const op = keepStepText({ op: "update_flow", id: "order", steps: [
+    { edge: "e1", from: "user", short: "로그인 요청", text: "다른 글" },
+    { edge: "e9", from: "was", short: "캐시 조회", text: "캐시를 먼저 본다" },
+    { edge: "e2", from: "was", short: "DB 조회", text: "다른 글" },
+  ] }, before);
+  expect(op).toEqual({ op: "update_flow", id: "order", steps: [
+    { edge: "e1", from: "user", short: "주문 요청", text: "주문 정보를 보낸다" },
+    { edge: "e9", from: "was", short: "캐시 조회", text: "캐시를 먼저 본다" },
+    { edge: "e2", from: "was", short: "주문 저장", text: "WAS가 주문을 저장한다" },
+  ] });
+});
+
+test("keepStepText: 시작 노드가 다르거나, 단계가 없거나, 다른 명령이면 건드리지 않는다", () => {
+  const flipped = { op: "update_flow" as const, id: "order", steps: [{ edge: "e1", from: "fw", short: "새 글", text: "새 글" }] };
+  expect(keepStepText(flipped, before)).toEqual(flipped);
+  const rename = { op: "update_flow" as const, id: "order", name: "주문 결제" };
+  expect(keepStepText(rename, before)).toBe(rename);
+  const add = { op: "add_flow" as const, id: "new", name: "새 흐름", origin: "user" as const, steps: [{ edge: "e1", from: "user", short: "x", text: "x" }] };
+  expect(keepStepText(add, before)).toBe(add);
+  const unknown = { op: "update_flow" as const, id: "nope", steps: [{ edge: "e1", from: "user", short: "x", text: "x" }] };
+  expect(keepStepText(unknown, before)).toBe(unknown);
+});
+
+test("asksStepText: 단계 글을 고쳐 달라는 요청만", () => {
+  expect(asksStepText("회원가입 흐름 단계 설명을 더 쉽게 바꿔 줘")).toBe(true);
+  expect(asksStepText("2단계 문구 고쳐 줘")).toBe(true);
+  expect(asksStepText("주문하기 흐름에 캐시 조회 단계도 넣어 줘")).toBe(false);
+  expect(asksStepText("가입할 때 외부 인증도 거치게 회원가입 흐름 고쳐 줘")).toBe(false);
 });

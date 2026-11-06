@@ -56,7 +56,8 @@ async function main(): Promise<number> {
   const { clefOpenItems, resolveIntent } = await import("../src/server/chat/intent");
   const { buildMessages, parseMentions } = await import("../src/server/chat/prompt");
   const { normalizeAiCommand } = await import("../src/server/chat/normalize");
-  const { parseCommand } = await import("../src/domain/commands");
+  const { isFlowCommand, parseCommand } = await import("../src/domain/commands");
+  const { asksStepText, keepStepText } = await import("../src/domain/flows");
   const { applyCommand } = await import("../src/domain/apply");
   const { emptyState } = await import("../src/domain/types");
   const { computeMissing } = await import("../src/domain/missing");
@@ -138,7 +139,9 @@ async function main(): Promise<number> {
               if ((v as { op?: unknown } | null)?.op === "say") return;
               const p = parseCommand(normalizeAiCommand(v));
               if (!p.ok) return;
-              const cmd = p.cmd as SeenCommand & { from?: string; to?: string };
+              // 파이프라인과 같이, 단계 글을 고쳐 달라는 요청이 아니면 남는 단계의 글은 원래 흐름 것을 쓴다.
+              const kept = isFlowCommand(p.cmd) && !asksStepText(clean) ? keepStepText(p.cmd, flows) : p.cmd;
+              const cmd = kept as SeenCommand & { from?: string; to?: string };
               seen.push({ op: cmd.op, id: cmd.id, payload: cmd.payload, direction: cmd.direction, attrs: cmd.attrs, steps: cmd.steps });
               const r = applyCommand(st, p.cmd);
               if (!r.ok) return;
@@ -158,7 +161,7 @@ async function main(): Promise<number> {
           }
           // 사용자가 값을 정해 준 문장(expect edge)은 묻지 않는다.
           const guessed =
-            c.qwen.expect === "edge" ? [] : [...touched].filter((id) => st.edges[id] && !crossesBoundary(st, st.edges[id]!));
+            c.qwen.expect === "edge" || c.qwen.allowPayload ? [] : [...touched].filter((id) => st.edges[id] && !crossesBoundary(st, st.edges[id]!));
           const note = judgeQwen(c.qwen, seen) ?? checkGuards(c.qwen, seen, { guessed, flows: flowSteps });
           return { note, ops: summarizeOps(seen) };
         };
