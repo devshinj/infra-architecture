@@ -42,7 +42,7 @@ async function main(): Promise<number> {
   const { createClefClient } = await import("../src/server/llm/clef");
   const { createQwenClient } = await import("../src/server/llm/qwen");
   const { createJsonlParser } = await import("../src/server/llm/jsonl");
-  const { resolveIntent } = await import("../src/server/chat/intent");
+  const { clefOpenItems, resolveIntent } = await import("../src/server/chat/intent");
   const { buildMessages, parseMentions } = await import("../src/server/chat/prompt");
   const { normalizeAiCommand } = await import("../src/server/chat/normalize");
   const { parseCommand } = await import("../src/domain/commands");
@@ -75,14 +75,8 @@ async function main(): Promise<number> {
   const flows = fixture.flows;
   const cases: Case[] = JSON.parse(readFileSync(join(DIR, "cases.json"), "utf8")).cases.filter((c: Case) => !only || only.has(c.id));
 
-  // 파이프라인과 같은 방식으로 열린 빠진 정보를 만든다.
+  // 파이프라인과 같은 열린 빠진 정보. Clef 문맥은 문장마다 clefOpenItems 로 고른다.
   const openMissing = computeMissing(state).items.filter((m) => !m.unknown);
-  const nameOf = (id: string) => state.nodes[id]?.label ?? state.groups[id]?.label ?? id;
-  const openItems = openMissing.map((m) => {
-    if (m.targetKind === "node") return `${nameOf(m.targetId)} ${m.label}`;
-    const e = state.edges[m.targetId];
-    return e ? `${nameOf(e.from)} → ${nameOf(e.to)} ${m.label}` : `${m.targetId} ${m.label}`;
-  });
 
   const results: CaseResult[] = [];
   const rows: string[][] = [];
@@ -91,6 +85,7 @@ async function main(): Promise<number> {
     const { clean, mentions } = parseMentions(c.text, state);
     let raw: { intent: string; confidence: number } | null = null;
     const routedIntent = await resolveIntent(c.text, async () => {
+      const openItems = clefOpenItems(state, openMissing, { text: clean, lastAssistant: prev, mentionIds: mentions.map((m) => m.id) });
       raw = await clef.classifyIntent(clean, { lastAssistant: prev, openItems });
       return raw as Awaited<ReturnType<typeof clef.classifyIntent>>;
     });
