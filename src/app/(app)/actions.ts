@@ -27,6 +27,8 @@ import { saveFieldsFor, type SaveFieldsInput } from "@/server/fields";
 import { BusyError, confirmFlow, deleteFlow, removeFlowStep, renameFlow } from "@/server/flows";
 import { ensureSeeded, listTerms, updateTerm, type TermPatch } from "@/server/glossary";
 import { setWarningIgnoredFor } from "@/server/ignore";
+import { confirmLinkGuessFor, rejectLinkGuessFor } from "@/server/linkGuess";
+import { setZoneTypeFor } from "@/server/zoneType";
 import { importSample, SAMPLES } from "@/server/samples";
 import { listMessages } from "@/server/chat/messages";
 import { toGlossaryItem, type GlossaryItem } from "@/domain/glossary-types";
@@ -218,6 +220,40 @@ export async function setWarningIgnoredAction(
 ): Promise<ActionResult<{ number: number | null }>> {
   return runResult(async (uid) => {
     const r = await setWarningIgnoredFor(uid, diagramId, warningId, ignored);
+    refreshDiagram();
+    return r;
+  });
+}
+
+export async function setZoneTypeAction(
+  diagramId: string,
+  groupId: string,
+  key: string | null,
+): Promise<ActionResult<{ number: number | null }>> {
+  return runResult(async (uid) => {
+    const r = await setZoneTypeFor(uid, diagramId, groupId, key);
+    refreshDiagram();
+    return r;
+  });
+}
+
+export async function confirmLinkGuessAction(
+  diagramId: string,
+  nodeId: string,
+): Promise<ActionResult<{ number: number | null }>> {
+  return runResult(async (uid) => {
+    const r = await confirmLinkGuessFor(uid, diagramId, nodeId);
+    refreshDiagram();
+    return r;
+  });
+}
+
+export async function rejectLinkGuessAction(
+  diagramId: string,
+  nodeId: string,
+): Promise<ActionResult<{ number: number | null; partial: boolean }>> {
+  return runResult(async (uid) => {
+    const r = await rejectLinkGuessFor(uid, diagramId, nodeId);
     refreshDiagram();
     return r;
   });
