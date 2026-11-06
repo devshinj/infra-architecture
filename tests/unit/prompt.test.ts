@@ -337,6 +337,18 @@ describe("summarizeState payload/direction", () => {
     expect(SYSTEM_PROMPT).toContain("network_zone");
     expect(SYSTEM_PROMPT).toContain("network_link");
   });
+  test("일반 연결 예시에는 전달물·방향이 없고, 망을 넘는 예시에만 있다", () => {
+    const edgeLines = SYSTEM_PROMPT.split("\n").filter((l) => l.startsWith('{"op":"add_edge"'));
+    expect(edgeLines).toHaveLength(2);
+    expect(edgeLines[0]).not.toContain('"payload"');
+    expect(edgeLines[1]).toContain('"payload":"api","direction":"two_way"');
+    expect(SYSTEM_PROMPT).toContain("같은 망 안의 연결에는 사용자가 말하지 않은 payload·direction 을 쓰지 않는다.");
+  });
+  test("있는 것을 지웠다 다시 만들지 않고, 흐름 단계 글을 지키라고 적는다", () => {
+    expect(SYSTEM_PROMPT).toContain("이미 있는 노드·연결은 지웠다가 같은 것을 다시 만들지 않는다.");
+    expect(SYSTEM_PROMPT).toContain("구성을 바꿔 흐름이 끊겨도 도구가 사용자에게 알리므로 흐름을 고치지 않는다.");
+    expect(SYSTEM_PROMPT).toContain('그대로 남는 단계의 short·text 를 "흐름:" 목록에 있는 글 그대로 쓴다.');
+  });
 });
 
 describe("flow commands in the prompt", () => {
