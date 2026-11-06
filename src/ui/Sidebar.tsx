@@ -65,6 +65,7 @@ export function Sidebar({ projects, userName }: { projects: SidebarProject[]; us
   const shell = useShell();
   const [account, setAccount] = useState(false);
   const glossaryCurrent = pathname === "/glossary";
+  const networkCurrent = pathname === "/network";
   const { narrow } = shell;
 
   // 좁은 화면: 사이드바는 위 막대의 ☰ 로 여는 서랍이다. 다른 화면으로 가거나 넓은 화면이 되면 닫는다.
@@ -357,6 +358,17 @@ export function Sidebar({ projects, userName }: { projects: SidebarProject[]; us
       {rail ? <IconBook /> : "용어 사전"}
     </Link>
   );
+  const networkLink = (rail: boolean) => (
+    <Link
+      href="/network"
+      className={rail ? `${styles.railBtn} ${networkCurrent ? styles.railBtnActive : ""}` : `${styles.sideLink} ${networkCurrent ? styles.sideLinkActive : ""}`}
+      aria-current={networkCurrent ? "page" : undefined}
+      onClick={() => setDrawer(false)}
+      {...(rail ? { "aria-label": "망 지식", title: "망 지식" } : {})}
+    >
+      {rail ? <IconNetwork /> : "망 지식"}
+    </Link>
+  );
   const accountRow = (
     <>
       <span title={userName}>{userName}</span>
@@ -393,6 +405,8 @@ export function Sidebar({ projects, userName }: { projects: SidebarProject[]; us
               </>
             ) : glossaryCurrent ? (
               <span className={styles.topbarDiagram}>용어 사전</span>
+            ) : networkCurrent ? (
+              <span className={styles.topbarDiagram}>망 지식</span>
             ) : (
               <span className={styles.topbarBrand}>
                 <LogoMark size={18} />
@@ -421,6 +435,7 @@ export function Sidebar({ projects, userName }: { projects: SidebarProject[]; us
           <RailButton label="프로젝트 영역 펼치기" expanded={false} buttonRef={toggleRef} onClick={() => setShellCollapsed(false)}><IconExpand /></RailButton>
           <RailButton label="새 프로젝트" buttonRef={newProjectBtn} onClick={newProject}><IconPlus /></RailButton>
           {glossaryLink(true)}
+          {networkLink(true)}
           <div className={styles.railFoot} ref={accountWrap}>
             <RailButton
               label="계정"
@@ -534,6 +549,7 @@ export function Sidebar({ projects, userName }: { projects: SidebarProject[]; us
         {notice && <p className={`${styles.error} ${styles.sideNotice}`} role="alert">{notice}</p>}
         <div className={styles.sideFoot}>
           {glossaryLink(false)}
+          {networkLink(false)}
           <button ref={newProjectBtn} type="button" className={styles.btn} onClick={newProject}>새 프로젝트</button>
           <div className={styles.user}>{accountRow}</div>
         </div>
@@ -576,6 +592,7 @@ const IconCollapse = () => <Svg><rect x="2.5" y="3" width="13" height="12" rx="2
 const IconExpand = () => <Svg><rect x="2.5" y="3" width="13" height="12" rx="2" /><path d="M6.5 3v12M9.5 7l2 2-2 2" /></Svg>;
 const IconPlus = () => <Svg><path d="M9 4v10M4 9h10" /></Svg>;
 const IconBook = () => <Svg><path d="M3.5 3.5h4a1.5 1.5 0 0 1 1.5 1.5v9a1.2 1.2 0 0 0-1.2-1.2H3.5zM14.5 3.5h-4A1.5 1.5 0 0 0 9 5v9a1.2 1.2 0 0 1 1.2-1.2h4.3z" /></Svg>;
+const IconNetwork = () => <Svg><circle cx="9" cy="4.5" r="1.75" /><circle cx="4.5" cy="13.5" r="1.75" /><circle cx="13.5" cy="13.5" r="1.75" /><path d="M8.2 6.1L5.3 11.9M9.8 6.1l2.9 5.8M6.25 13.5h5.5" /></Svg>;
 const IconMenu = () => <Svg><path d="M3 5h12M3 9h12M3 13h12" /></Svg>;
 const IconClose = () => <Svg><path d="M4.5 4.5l9 9M13.5 4.5l-9 9" /></Svg>;
 const IconUser = () => <Svg><circle cx="9" cy="6.5" r="2.75" /><path d="M3.75 15a5.25 5.25 0 0 1 10.5 0" /></Svg>;

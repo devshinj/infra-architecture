@@ -35,6 +35,21 @@ test("용어 사전 link is current only on /glossary", () => {
   expect(screen.getByRole("link", { name: "용어 사전" })).not.toHaveAttribute("aria-current");
 });
 
+test("망 지식 link is current only on /network, in expanded and rail forms", () => {
+  path = "/network";
+  render(<Sidebar projects={[]} userName="a" />);
+  const link = screen.getByRole("link", { name: "망 지식" });
+  expect(link).toHaveAttribute("href", "/network");
+  expect(link).toHaveAttribute("aria-current", "page");
+  expect(screen.getByRole("link", { name: "용어 사전" })).not.toHaveAttribute("aria-current");
+  cleanup();
+  window.localStorage.setItem("infrasketch.sidebarCollapsed", "1");
+  render(<ShellProvider><Sidebar projects={[]} userName="a" /></ShellProvider>);
+  const rail = screen.getByRole("link", { name: "망 지식" });
+  expect(rail).toHaveAttribute("title", "망 지식");
+  window.localStorage.removeItem("infrasketch.sidebarCollapsed");
+});
+
 // ---- 접는 사이드바 (P3D Task 6) ----
 const COLLAPSE_KEY = "infrasketch.sidebarCollapsed";
 const shell = () => (
