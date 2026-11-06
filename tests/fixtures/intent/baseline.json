@@ -1,0 +1,229 @@
+{
+  "savedAt": "2026-11-06",
+  "results": [
+    {
+      "id": "flow-create-signup",
+      "intent": "structure_change",
+      "confidence": 0.8870304598612708,
+      "routed": "structure_change",
+      "intentOk": true,
+      "qwenOk": true
+    },
+    {
+      "id": "flow-draw-login",
+      "intent": "structure_change",
+      "confidence": 0.9435112453715508,
+      "routed": "structure_change",
+      "intentOk": true,
+      "qwenOk": true
+    },
+    {
+      "id": "flow-add-pwreset",
+      "intent": "structure_change",
+      "confidence": 0.9583556645181286,
+      "routed": "structure_change",
+      "intentOk": true,
+      "qwenOk": true
+    },
+    {
+      "id": "flow-edit-sms",
+      "intent": "structure_change",
+      "confidence": 0.9402621779345868,
+      "routed": "structure_change",
+      "intentOk": true,
+      "qwenOk": true
+    },
+    {
+      "id": "flow-resync",
+      "intent": "structure_change",
+      "confidence": 0.9270644537614918,
+      "routed": "structure_change",
+      "intentOk": true,
+      "qwenOk": true
+    },
+    {
+      "id": "flow-remove-pay",
+      "intent": "structure_change",
+      "confidence": 0.9794760718407687,
+      "routed": "structure_change",
+      "intentOk": true,
+      "qwenOk": true
+    },
+    {
+      "id": "flow-show-was",
+      "intent": "structure_change",
+      "confidence": 0.8973052813886419,
+      "routed": "structure_change",
+      "intentOk": true,
+      "qwenOk": null
+    },
+    {
+      "id": "flow-add-batch",
+      "intent": "structure_change",
+      "confidence": 0.9637079061246816,
+      "routed": "structure_change",
+      "intentOk": true,
+      "qwenOk": true
+    },
+    {
+      "id": "flow-add-cross",
+      "intent": "structure_change",
+      "confidence": 0.9311698755097124,
+      "routed": "structure_change",
+      "intentOk": true,
+      "qwenOk": true
+    },
+    {
+      "id": "flow-rename",
+      "intent": "structure_change",
+      "confidence": 0.958533005618784,
+      "routed": "structure_change",
+      "intentOk": true,
+      "qwenOk": true
+    },
+    {
+      "id": "flow-draw-browse",
+      "intent": "structure_change",
+      "confidence": 0.9275473835983611,
+      "routed": "structure_change",
+      "intentOk": true,
+      "qwenOk": true
+    },
+    {
+      "id": "flow-add-cache",
+      "intent": "structure_change",
+      "confidence": 0.9793724760043754,
+      "routed": "structure_change",
+      "intentOk": true,
+      "qwenOk": true
+    },
+    {
+      "id": "q-flow-why-db",
+      "intent": "question",
+      "confidence": 0.9206163534933676,
+      "routed": "question",
+      "intentOk": true,
+      "qwenOk": true
+    },
+    {
+      "id": "q-flow-what",
+      "intent": "question",
+      "confidence": 0.3575731617492866,
+      "routed": "null",
+      "intentOk": false,
+      "qwenOk": true
+    },
+    {
+      "id": "q-link-why",
+      "intent": "question",
+      "confidence": 0.94335065543596,
+      "routed": "question",
+      "intentOk": true,
+      "qwenOk": true
+    },
+    {
+      "id": "q-flow-fw",
+      "intent": "question",
+      "confidence": 0.9133828220127711,
+      "routed": "question",
+      "intentOk": true,
+      "qwenOk": true
+    },
+    {
+      "id": "q-flow-broken",
+      "intent": "question",
+      "confidence": 0.8503231776709844,
+      "routed": "question",
+      "intentOk": true,
+      "qwenOk": true
+    },
+    {
+      "id": "q-zone-diff",
+      "intent": "question",
+      "confidence": 0.9512405443219863,
+      "routed": "question",
+      "intentOk": true,
+      "qwenOk": true
+    },
+    {
+      "id": "q-oneway-safe",
+      "intent": "question",
+      "confidence": 0.45075687140678855,
+      "routed": "null",
+      "intentOk": false,
+      "qwenOk": true
+    },
+    {
+      "id": "s-zone-split",
+      "intent": "structure_change",
+      "confidence": 0.9261311625813313,
+      "routed": "structure_change",
+      "intentOk": true,
+      "qwenOk": true
+    },
+    {
+      "id": "s-add-was",
+      "intent": "structure_change",
+      "confidence": 0.974169640345387,
+      "routed": "structure_change",
+      "intentOk": true,
+      "qwenOk": true
+    },
+    {
+      "id": "s-edge-info",
+      "intent": "structure_change",
+      "confidence": 0.7442534898367354,
+      "routed": "structure_change",
+      "intentOk": true,
+      "qwenOk": true
+    },
+    {
+      "id": "s-add-link",
+      "intent": "structure_change",
+      "confidence": 0.9853226199421841,
+      "routed": "structure_change",
+      "intentOk": true,
+      "qwenOk": true
+    },
+    {
+      "id": "m-edge-file-oneway",
+      "intent": "missing_info_answer",
+      "confidence": 0.8610038705048562,
+      "routed": "missing_info_answer",
+      "intentOk": true,
+      "qwenOk": true
+    },
+    {
+      "id": "m-edge-api-two",
+      "intent": "missing_info_answer",
+      "confidence": 0.7481298692432994,
+      "routed": "missing_info_answer",
+      "intentOk": true,
+      "qwenOk": true
+    },
+    {
+      "id": "m-edge-file-short",
+      "intent": "missing_info_answer",
+      "confidence": 0.7091374934263797,
+      "routed": "missing_info_answer",
+      "intentOk": true,
+      "qwenOk": true
+    },
+    {
+      "id": "m-node-spec",
+      "intent": "missing_info_answer",
+      "confidence": 0.28537256969289215,
+      "routed": "null",
+      "intentOk": false,
+      "qwenOk": true
+    },
+    {
+      "id": "l-relayout",
+      "intent": "layout",
+      "confidence": 0.9820459587133236,
+      "routed": "layout",
+      "intentOk": true,
+      "qwenOk": null
+    }
+  ]
+}

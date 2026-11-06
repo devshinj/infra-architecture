@@ -85,6 +85,16 @@ npm run smoke:llm
 
 `.env` 의 실제 키로 상태 확인, 샘플 시나리오 2개의 구조 생성(첫 명령까지 시간·전체 시간·적용/건너뜀·노드/연결 수), Clef 의도 분류 8문장 정답률을 표로 출력합니다. DB 를 쓰지 않으며 `npm test`·CI 에는 포함되지 않습니다. 키는 출력하지 않고, 연결 실패나 설정 누락이 있으면 0 이 아닌 코드로 끝납니다.
 
+### 의도 분류·명령 점검
+
+```bash
+npm run eval:intent              # Clef 판정 + 그 뒤 Qwen 명령
+npm run eval:intent -- --clef-only   # 의도 분류만(빠름)
+npm run eval:intent -- --update      # 지금 결과를 기준으로 저장
+```
+
+점검 구성도(`tests/fixtures/intent/diagram.json`, 업무망·인터넷망·흐름 3개)에 `cases.json` 의 문장들을 대화 한 차례와 같은 순서(빠진 정보·참조 노드 → Clef 분류 → 의도에 맞는 지시문 → Qwen 명령)로 돌려, 의도가 기대와 같은지와 Qwen 이 기대한 명령(흐름·구성·연결 값·노드 속성, 질문엔 명령 없음)을 냈는지 표로 보여 줍니다. `baseline.json` 보다 나빠진 문장이 있으면 따로 보여 주고 0 이 아닌 코드로 끝납니다. Clef·Qwen 프롬프트를 고친 뒤에 돌리세요. `npm test`·CI 에는 포함되지 않습니다.
+
 ## 테스트
 
 | 명령 | 설명 | 사전 준비 |

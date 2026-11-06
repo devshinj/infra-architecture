@@ -12,7 +12,8 @@
     "test:e2e": "playwright test",
     "smoke:llm": "tsx --env-file=.env scripts/smoke-llm.ts",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "node --env-file=.env node_modules/drizzle-kit/bin.cjs migrate"
+    "db:migrate": "node --env-file=.env node_modules/drizzle-kit/bin.cjs migrate",
+    "eval:intent": "tsx --env-file=.env scripts/eval-intent.ts"
   },
   "dependencies": {
     "@xyflow/react": "^12.12.0",
