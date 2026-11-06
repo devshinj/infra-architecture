@@ -4,7 +4,7 @@
     {
       "id": "flow-create-signup",
       "intent": "structure_change",
-      "confidence": 0.8870304598612708,
+      "confidence": 0.9149600839664599,
       "routed": "structure_change",
       "intentOk": true,
       "qwenOk": true
@@ -12,7 +12,7 @@
     {
       "id": "flow-draw-login",
       "intent": "structure_change",
-      "confidence": 0.9435112453715508,
+      "confidence": 0.8307398506105738,
       "routed": "structure_change",
       "intentOk": true,
       "qwenOk": true
@@ -20,7 +20,7 @@
     {
       "id": "flow-add-pwreset",
       "intent": "structure_change",
-      "confidence": 0.9583556645181286,
+      "confidence": 0.944862668256642,
       "routed": "structure_change",
       "intentOk": true,
       "qwenOk": true
@@ -28,7 +28,7 @@
     {
       "id": "flow-edit-sms",
       "intent": "structure_change",
-      "confidence": 0.9402621779345868,
+      "confidence": 0.9368814698151053,
       "routed": "structure_change",
       "intentOk": true,
       "qwenOk": true
@@ -36,7 +36,7 @@
     {
       "id": "flow-resync",
       "intent": "structure_change",
-      "confidence": 0.9270644537614918,
+      "confidence": 0.961194548041845,
       "routed": "structure_change",
       "intentOk": true,
       "qwenOk": true
@@ -44,7 +44,7 @@
     {
       "id": "flow-remove-pay",
       "intent": "structure_change",
-      "confidence": 0.9794760718407687,
+      "confidence": 0.9814383734103285,
       "routed": "structure_change",
       "intentOk": true,
       "qwenOk": true
@@ -52,7 +52,7 @@
     {
       "id": "flow-show-was",
       "intent": "structure_change",
-      "confidence": 0.8973052813886419,
+      "confidence": 0.7403061615200457,
       "routed": "structure_change",
       "intentOk": true,
       "qwenOk": null
@@ -60,7 +60,7 @@
     {
       "id": "flow-add-batch",
       "intent": "structure_change",
-      "confidence": 0.9637079061246816,
+      "confidence": 0.9496192513296668,
       "routed": "structure_change",
       "intentOk": true,
       "qwenOk": true
@@ -68,7 +68,7 @@
     {
       "id": "flow-add-cross",
       "intent": "structure_change",
-      "confidence": 0.9311698755097124,
+      "confidence": 0.8971875748485623,
       "routed": "structure_change",
       "intentOk": true,
       "qwenOk": true
@@ -76,7 +76,7 @@
     {
       "id": "flow-rename",
       "intent": "structure_change",
-      "confidence": 0.958533005618784,
+      "confidence": 0.9586802540086724,
       "routed": "structure_change",
       "intentOk": true,
       "qwenOk": true
@@ -84,7 +84,7 @@
     {
       "id": "flow-draw-browse",
       "intent": "structure_change",
-      "confidence": 0.9275473835983611,
+      "confidence": 0.7498736724162048,
       "routed": "structure_change",
       "intentOk": true,
       "qwenOk": true
@@ -92,7 +92,7 @@
     {
       "id": "flow-add-cache",
       "intent": "structure_change",
-      "confidence": 0.9793724760043754,
+      "confidence": 0.9666229015652308,
       "routed": "structure_change",
       "intentOk": true,
       "qwenOk": true
@@ -100,7 +100,7 @@
     {
       "id": "q-flow-why-db",
       "intent": "question",
-      "confidence": 0.9206163534933676,
+      "confidence": 0.9117354016417462,
       "routed": "question",
       "intentOk": true,
       "qwenOk": true
@@ -108,7 +108,7 @@
     {
       "id": "q-flow-what",
       "intent": "question",
-      "confidence": 0.3575731617492866,
+      "confidence": 0.5354215390018013,
       "routed": "null",
       "intentOk": false,
       "qwenOk": true
@@ -116,7 +116,7 @@
     {
       "id": "q-link-why",
       "intent": "question",
-      "confidence": 0.94335065543596,
+      "confidence": 0.9368480162837105,
       "routed": "question",
       "intentOk": true,
       "qwenOk": true
@@ -124,7 +124,7 @@
     {
       "id": "q-flow-fw",
       "intent": "question",
-      "confidence": 0.9133828220127711,
+      "confidence": 0.9300036468486658,
       "routed": "question",
       "intentOk": true,
       "qwenOk": true
@@ -132,7 +132,7 @@
     {
       "id": "q-flow-broken",
       "intent": "question",
-      "confidence": 0.8503231776709844,
+      "confidence": 0.9045994864309952,
       "routed": "question",
       "intentOk": true,
       "qwenOk": true
@@ -140,7 +140,7 @@
     {
       "id": "q-zone-diff",
       "intent": "question",
-      "confidence": 0.9512405443219863,
+      "confidence": 0.9631172218563082,
       "routed": "question",
       "intentOk": true,
       "qwenOk": true
@@ -148,15 +148,15 @@
     {
       "id": "q-oneway-safe",
       "intent": "question",
-      "confidence": 0.45075687140678855,
-      "routed": "null",
-      "intentOk": false,
+      "confidence": 0.8073299846068235,
+      "routed": "question",
+      "intentOk": true,
       "qwenOk": true
     },
     {
       "id": "s-zone-split",
       "intent": "structure_change",
-      "confidence": 0.9261311625813313,
+      "confidence": 0.8969211566641299,
       "routed": "structure_change",
       "intentOk": true,
       "qwenOk": true
@@ -164,7 +164,7 @@
     {
       "id": "s-add-was",
       "intent": "structure_change",
-      "confidence": 0.974169640345387,
+      "confidence": 0.9753429328712391,
       "routed": "structure_change",
       "intentOk": true,
       "qwenOk": true
@@ -172,7 +172,7 @@
     {
       "id": "s-edge-info",
       "intent": "structure_change",
-      "confidence": 0.7442534898367354,
+      "confidence": 0.8010824780257696,
       "routed": "structure_change",
       "intentOk": true,
       "qwenOk": true
@@ -180,7 +180,7 @@
     {
       "id": "s-add-link",
       "intent": "structure_change",
-      "confidence": 0.9853226199421841,
+      "confidence": 0.9825120937579257,
       "routed": "structure_change",
       "intentOk": true,
       "qwenOk": true
@@ -188,7 +188,7 @@
     {
       "id": "m-edge-file-oneway",
       "intent": "missing_info_answer",
-      "confidence": 0.8610038705048562,
+      "confidence": 0.6486344329596022,
       "routed": "missing_info_answer",
       "intentOk": true,
       "qwenOk": true
@@ -196,7 +196,7 @@
     {
       "id": "m-edge-api-two",
       "intent": "missing_info_answer",
-      "confidence": 0.7481298692432994,
+      "confidence": 0.72715769144177,
       "routed": "missing_info_answer",
       "intentOk": true,
       "qwenOk": true
@@ -204,7 +204,7 @@
     {
       "id": "m-edge-file-short",
       "intent": "missing_info_answer",
-      "confidence": 0.7091374934263797,
+      "confidence": 0.7265911016575881,
       "routed": "missing_info_answer",
       "intentOk": true,
       "qwenOk": true
@@ -212,7 +212,7 @@
     {
       "id": "m-node-spec",
       "intent": "missing_info_answer",
-      "confidence": 0.28537256969289215,
+      "confidence": 0.5641532431290086,
       "routed": "null",
       "intentOk": false,
       "qwenOk": true
@@ -220,7 +220,7 @@
     {
       "id": "l-relayout",
       "intent": "layout",
-      "confidence": 0.9820459587133236,
+      "confidence": 0.9816901517963423,
       "routed": "layout",
       "intentOk": true,
       "qwenOk": null
