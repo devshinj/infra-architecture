@@ -90,3 +90,26 @@ export function crossingNote(state: DiagramState, step: FlowStep): string | null
   // 화살표 글자(→)는 화면 글꼴에서 ">" 처럼 보여 말로 쓴다.
   return `${fromLabel}에서 ${toLabel}으로 넘어가요${boundary ? `(${boundary.label} 거침)` : ""}`;
 }
+
+/** 사용자가 흐름 단계의 글(짧은 설명·설명)을 고쳐 달라고 한 요청인지. 그때만 AI 가 쓴 단계 글을 그대로 받는다. */
+export function asksStepText(text: string): boolean {
+  return /설명|문구|단계\s*글/.test(text);
+}
+
+/**
+ * 흐름을 고치는 명령의 단계 중 원래 흐름에도 있던 단계(같은 연결·같은 시작 노드)는 원래 짧은 설명·설명 글을 쓴다.
+ * AI 는 흐름 목록에서 연결 id 만 보므로, 단계 전체를 다시 쓸 때 남는 단계의 글을 새로 지어내기 때문이다.
+ */
+export function keepStepText<T extends FlowOp>(op: T, before: Flow[]): T {
+  if (op.op !== "update_flow" || !op.steps) return op;
+  const flow = before.find((f) => f.id === op.id);
+  if (!flow) return op;
+  const old = new Map(flow.steps.map((s) => [`${s.edge}\u0000${s.from}`, s]));
+  return {
+    ...op,
+    steps: op.steps.map((s) => {
+      const o = old.get(`${s.edge}\u0000${s.from}`);
+      return o ? { ...s, short: o.short, text: o.text } : s;
+    }),
+  };
+}

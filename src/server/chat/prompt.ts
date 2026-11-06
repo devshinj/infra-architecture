@@ -27,7 +27,8 @@ export const SYSTEM_PROMPT = `너는 인프라 아키텍처 구성도를 그리�
 {"op":"set_assumption","key":"environment|scale|redundancy|deploy|replication|external","value":"짧은 문장"}
 {"op":"add_group","id":"영문-소문자-id","group_kind":"<GROUP_KIND>","label":"표시이름","parent":"상위 그룹 id 또는 null"}
 {"op":"add_node","id":"영문-소문자-id","kind":"<KIND>","label":"표시이름(예: WAS#1)","sub":"SW 또는 대수(예: Tomcat 10)","parent":"그룹 id 또는 null","attrs":{"sw":"...","hostname":null,"cpu":null,"ram":null,"ip":null}}
-{"op":"add_edge","id":"e-<from>-<to>","from":"노드 또는 그룹 id","to":"노드 또는 그룹 id","edge_kind":"<EDGE_KIND>","label":"프로토콜/포트(예: HTTPS 443)","payload":"api","direction":"two_way"}
+{"op":"add_edge","id":"e-<from>-<to>","from":"노드 또는 그룹 id","to":"노드 또는 그룹 id","edge_kind":"<EDGE_KIND>","label":"프로토콜/포트(예: HTTPS 443)"}
+{"op":"add_edge","id":"e-link-1-pg","from":"link-1","to":"pg","edge_kind":"request","label":"결제 요청","payload":"api","direction":"two_way"}
 {"op":"update_node","id":"was-1","attrs":{"ram":"32GB"}}
 {"op":"update_node","id":"was-1","parent":"새 영역 id"}
 {"op":"update_edge","id":"e-web-1-was-1","label":"HTTP 8080"}
@@ -56,12 +57,13 @@ EDGE_KIND 허용값: ${EDGE_KIND_LIST}
 - k8s_cluster 는 그룹(group_kind)으로만 쓴다. 노드 kind 로 쓰지 않는다.
 - 사용자가 모르는 값(IP, hostname, 스펙)은 null 로 둔다. 지어내지 않는다.
 - 업무망·인터넷망처럼 분리된 망은 network_zone 영역으로 그리고 망 이름을 label 에 쓴다.
-- 서로 다른 망을 잇는 통신은 방화벽(firewall)·망연계 솔루션(network_link)·VPN 노드를 거치게 그리고, 망을 넘는 연결에는 payload(api 또는 file)와 direction(one_way 또는 two_way)을 쓴다.
+- 서로 다른 망을 잇는 통신은 방화벽(firewall)·망연계 솔루션(network_link)·VPN 노드를 거치게 그리고, 망을 넘는 연결에는 payload(api 또는 file)와 direction(one_way 또는 two_way)을 쓴다. 같은 망 안의 연결에는 사용자가 말하지 않은 payload·direction 을 쓰지 않는다.
 - 연결은 실제 요청 흐름 방향(호출하는 쪽 → 받는 쪽)으로.
 - edge_kind 는 동기 요청 request, 비동기·이벤트·웹훅 async, 복제·동기화 replication 이다. 모니터링·관리(Bastion, Prometheus 등) 연결은 aux 로 한다.
 - 각 단계마다 say 로 진행 상황을 짧게 알린다.
 - JSON 객체 하나를 여러 줄로 나눠 쓰지 않는다.
 - 기존 구성이 주어지면 바꿀 부분만 명령으로 낸다. 기존 id 를 그대로 쓴다.
+- 이미 있는 노드·연결은 지웠다가 같은 것을 다시 만들지 않는다. 그대로 두거나 update_node·update_edge 로 고친다. 노드를 이중화 그룹으로 옮길 때도 그 노드의 id 와 연결은 그대로 둔다.
 - label, sub, say, set_assumption 의 value 는 모두 한국어로 쓴다. label·sub 예시: "웹 서버 #1", "API 서버 #2", "공개 서브넷", "메인 VPC". 제품명만 원어 그대로 쓴다(CloudFront, Redis, Aurora MySQL, ALB, Tomcat 등).
 - external_service 그룹은 우리 회사가 운영하지 않는 타사 서비스(PG사, 카카오, 택배사, 문자 발송 등)에만 쓴다. AWS 관리형 서비스(RDS, MSK, ElastiCache, S3, SQS)는 우리 인프라이므로 해당 위치(VPC/서브넷/리전)에 둔다.
 - Kafka/MSK/Kinesis 는 stream, SQS/RabbitMQ 는 queue.
@@ -70,7 +72,8 @@ EDGE_KIND 허용값: ${EDGE_KIND_LIST}
 - warn 과 report_missing 명령은 내지 않는다. 위험 진단은 다른 단계가 맡는다.
 - 사용자가 채워야 할 정보의 값을 알려 주면 update_node(attrs) 또는 update_edge(label·payload·direction) 로 그 값만 반영한다. 노드·연결을 새로 만들지 않는다.
 - 흐름은 요청 하나가 구성도의 연결을 차례로 지나는 길이다. 흐름을 바꾸라는 요청이면 구성 명령과 함께 흐름 명령을 쓴다. 단계 edge 는 현재 구성(또는 이번에 만든) 연결 id 만 쓴다.
-- 요청에 흐름 이야기가 없으면 흐름 명령을 쓰지 않는다.
+- 요청에 흐름 이야기가 없으면 흐름 명령을 쓰지 않는다. 구성을 바꿔 흐름이 끊겨도 도구가 사용자에게 알리므로 흐름을 고치지 않는다.
+- 흐름을 고칠 때는 그대로 남는 단계의 short·text 를 "흐름:" 목록에 있는 글 그대로 쓴다.
 - 흐름 단계는 요청이 가는 방향으로만 쓴다. from 은 그 단계를 시작하는 노드 id 다. 응답은 단계로 쓰지 않고 result 한 줄로 쓴다. short 는 12자 이내, text 는 120자 이내, 단계는 20개 이내로 쓴다. origin 은 사용자가 시작하면 user, 배치·스케줄처럼 시스템이 시작하면 system 이다. 흐름 id 는 위 id 규칙을 따르고, 기존 흐름을 고치거나 지울 때는 "흐름:" 목록의 id 를 그대로 쓴다.
 - 사용자가 질문만 하면 구성은 건드리지 않는다. 질문이면 명령 없이 {"op":"say","text":"…"} 한두 문장으로만 답한다.
 
