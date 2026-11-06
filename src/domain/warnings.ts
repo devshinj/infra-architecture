@@ -1,5 +1,7 @@
 import { isDirectCrossing } from "./boundary";
 import { categoryOf } from "./catalog";
+import type { NetworkKnowledge } from "./network";
+import { evaluateNetworkRules, LINK_RULES } from "./networkRules";
 import type { DNode, DiagramState, Edge, Warning, WarningLevel } from "./types";
 
 interface Target { node: DNode; edge?: Edge }
@@ -93,7 +95,7 @@ function make(state: DiagramState, rule: Rule, node: DNode, edge?: Edge): Warnin
 }
 
 /** 코드 규칙 5개를 평가한다. db_exposed 는 Clef 전용이라 여기서 만들지 않는다. */
-export function evaluateRules(state: DiagramState): Warning[] {
+export function evaluateRules(state: DiagramState, knowledge?: NetworkKnowledge): Warning[] {
   const nodes = Object.values(state.nodes);
   const edges = Object.values(state.edges);
   const out: Warning[] = [];
@@ -137,16 +139,18 @@ export function evaluateRules(state: DiagramState): Warning[] {
     for (const n of nodes) if (n.kind === "cache") out.push(make(state, cacheRule, n));
   }
 
+  if (knowledge) out.push(...evaluateNetworkRules(state, knowledge));
   return out;
 }
 
 /** 화면 표시용 병합: 지금 걸리는 code 경고 + 저장된 Clef 경고, 무시 목록 분리. */
-export function mergeWarnings(state: DiagramState): { active: Warning[]; ignored: Warning[] } {
+export function mergeWarnings(state: DiagramState, knowledge?: NetworkKnowledge): { active: Warning[]; ignored: Warning[] } {
   const stored = state.warnings ?? [];
   const storedById = new Map(stored.map((w) => [w.id, w]));
-  const merged: Warning[] = evaluateRules(state).map((w) => {
+  const merged: Warning[] = evaluateRules(state, knowledge).map((w) => {
     const s = storedById.get(w.id);
-    return s ? { ...w, text: s.text } : w;
+    // 망연계 예상 경고는 저장된 문구로 덮지 않는다(종류·지식이 바뀌면 문구도 달라진다).
+    return s && !(LINK_RULES as readonly string[]).includes(w.rule) ? { ...w, text: s.text } : w;
   });
   for (const w of stored) {
     if (w.rule === "db_exposed" && state.nodes[w.nodeId] && !merged.some((m) => m.id === w.id)) merged.push(w);

@@ -34,6 +34,7 @@ export function clefOpenItems(
   };
   const groups = new Map<string, string[]>();
   for (const m of items) {
+    if (m.targetKind === "group") continue; // 망 종류는 Task 8 에서 다룬다
     let target: string;
     if (m.targetKind === "node") {
       if (!seen(m.targetId)) continue;

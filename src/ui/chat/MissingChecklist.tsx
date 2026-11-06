@@ -64,6 +64,7 @@ function blocksOf(state: DiagramState, items: MissingItem[]): Block[] {
   const map = new Map<string, Block>();
   const nameOf = (id: string) => state.nodes[id]?.label ?? state.groups[id]?.label ?? id;
   for (const it of items) {
+    if (it.targetKind === "group") continue; // 망 종류 칸은 Task 6 에서 다룬다
     let b = map.get(it.targetId);
     if (!b) {
       const edge = it.targetKind === "edge" ? state.edges[it.targetId] : undefined;

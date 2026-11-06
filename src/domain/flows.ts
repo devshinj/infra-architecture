@@ -1,4 +1,6 @@
 import { BOUNDARY_NODE_KINDS, crossesBoundary, networkZoneOf } from "./boundary";
+import type { NetworkKnowledge } from "./network";
+import { linkVerdicts } from "./networkRules";
 import type { DiagramState } from "./types";
 
 export type FlowOrigin = "user" | "system";
@@ -76,7 +78,16 @@ export function shortLabel(s: string): string {
 }
 
 /** 단계 설명에 덧붙는 경계 넘김 문장(경계를 안 넘으면 null). */
-export function crossingNote(state: DiagramState, step: FlowStep): string | null {
+export function crossingNote(state: DiagramState, step: FlowStep, knowledge?: NetworkKnowledge): string | null {
+  const base = crossingBase(state, step);
+  if (!knowledge) return base;
+  const hit = linkVerdicts(state, knowledge).find((v) => v.path.edges.includes(step.edge));
+  if (!hit) return base;
+  const tail = hit.rule === "link_expected" ? "망연계 필요 예상" : "보통 잇지 않는 구간";
+  return base ? `${base} · ${tail}` : tail;
+}
+
+function crossingBase(state: DiagramState, step: FlowStep): string | null {
   const edge = state.edges[step.edge];
   if (!edge || !crossesBoundary(state, edge)) return null;
   const zoneLabel = (nodeId: string) => {

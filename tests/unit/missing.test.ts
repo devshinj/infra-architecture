@@ -1,6 +1,7 @@
-import { expect, test } from "vitest";
+import { describe, expect, test } from "vitest";
 
 import { computeMissing, isEmpty, missingReminder, requiredKeysFor } from "@/domain/missing";
+import type { NetworkKnowledge } from "@/domain/network";
 import { emptyState, type DiagramState } from "@/domain/types";
 
 const withNode = (attrs: Record<string, string | number | null>, unknown?: string[]): DiagramState => ({
@@ -125,4 +126,37 @@ test("non-crossing edge unchanged", () => {
   expect(edgeItems(s)).toEqual([]);
   s.edges.e.label = "";
   expect(edgeItems(s).map((i) => i.key)).toEqual(["label"]);
+});
+
+describe("망 종류 빠진 정보", () => {
+  const K: NetworkKnowledge = { types: { "admin-net": { key: "admin-net", name: "행정망", aliases: [], description: "", grade: "internal" } }, rules: [] };
+  const zones = (a?: { key: string }, b?: { key: string }): DiagramState => ({
+    ...emptyState(),
+    groups: {
+      za: { id: "za", groupKind: "network_zone", label: "A망", parent: null, ...(a ? { netType: { ...a, source: "user" as const, confirmed: true } } : {}) },
+      zb: { id: "zb", groupKind: "network_zone", label: "B망", parent: null, ...(b ? { netType: { ...b, source: "user" as const, confirmed: true } } : {}) },
+    },
+  });
+
+  test("망 둘 이상 + 종류 없음이면 group 항목", () => {
+    const r = computeMissing(zones({ key: "admin-net" }), K);
+    expect(r.items).toEqual([{ targetKind: "group", targetId: "zb", key: "net_type", label: "망 종류", unknown: false }]);
+    expect(r.count).toBe(1);
+    expect(r.byNode).toEqual({});
+  });
+
+  test("망 하나면 없음", () => {
+    const s = zones();
+    delete s.groups.zb;
+    expect(computeMissing(s, K).items).toEqual([]);
+  });
+
+  test("지식 없으면 없음", () => {
+    expect(computeMissing(zones()).items).toEqual([]);
+  });
+
+  test("지식에 없는 key 면 group 항목", () => {
+    const r = computeMissing(zones({ key: "admin-net" }, { key: "gone" }), K);
+    expect(r.items.map((i) => i.targetId)).toEqual(["zb"]);
+  });
 });
