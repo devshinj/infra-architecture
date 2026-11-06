@@ -610,14 +610,16 @@ describe("runChatTurn", () => {
 
     const clef = fakeClef({ intent: "missing_info_answer", confidence: 0.9 });
     const qwen = fakeQwen(JSON.stringify({ op: "update_node", id: "was-1", attrs: { ram: "16GB" } }));
-    await turn(ids, "RAM 은 16GB", { qwen, clef });
+    await turn(ids, "WAS#1 RAM 은 16GB", { qwen, clef });
 
+    // 글에 이름이 나온 대상(WAS#1, 그 연결)만 대상별로 묶어 넘긴다.
     const ctx = (clef.calls[0] as { context: { openItems?: string[] } }).context;
-    expect(ctx.openItems).toContain("WAS#1 RAM");
-    expect(ctx.openItems).toContain("WAS#1 → DB 프로토콜/포트");
-    expect(ctx.openItems).not.toContain("WAS#1 IP"); // 모름 항목 제외
-    expect(ctx.openItems).not.toContain("WAS#1 CPU"); // 이미 채워짐
-    expect(ctx.openItems).toHaveLength(missing.length);
+    expect(ctx.openItems).toHaveLength(2);
+    const wasLine = ctx.openItems!.find((l) => l.startsWith("WAS#1: "))!;
+    expect(wasLine.slice("WAS#1: ".length).split("·")).toContain("RAM");
+    expect(wasLine).not.toContain("IP"); // 모름 항목 제외
+    expect(wasLine).not.toContain("CPU"); // 이미 채워짐
+    expect(ctx.openItems!.find((l) => l.startsWith("WAS#1 → DB: "))).toContain("프로토콜/포트");
 
     const msgs = qwen.calls[0]!;
     expect(msgs[0]).toEqual({ role: "system", content: SYSTEM_PROMPT });
@@ -626,7 +628,7 @@ describe("runChatTurn", () => {
     expect(user).toContain("\nwas-1 ram(RAM)");
     expect(user).toContain("e-was-1-db-1 label(프로토콜/포트)");
     expect(user).not.toContain("was-1 ip(IP)");
-    expect(user.indexOf("채워야 할 정보:")).toBeLessThan(user.indexOf("요청: RAM 은 16GB"));
+    expect(user.indexOf("채워야 할 정보:")).toBeLessThan(user.indexOf("요청: WAS#1 RAM 은 16GB"));
   });
 
   test("structural change removes obsolete groups", async () => {

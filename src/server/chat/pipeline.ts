@@ -14,7 +14,7 @@ import { applyFlowOps, listFlows } from "@/server/flows";
 import { SESSION_GONE_MESSAGE, sessionPayload, type ChatEvent, type MessageMeta } from "./events";
 import { BUSY_MESSAGE } from "./busy";
 import { withDiagramLock } from "./lock";
-import { resolveIntent } from "./intent";
+import { clefOpenItems, resolveIntent } from "./intent";
 import { createMessage, listMessages } from "./messages";
 import { normalizeAiCommand } from "./normalize";
 import { checkWarnings } from "./warnings";
@@ -206,12 +206,7 @@ async function lockedTurn(args: TurnArgs, sessionId: string | null, followUp: bo
 
   // 차례 시작 상태의 열린(모름 아닌) 빠진 정보. 값만 알려 주는 답을 분류·반영하는 데 쓴다.
   const openMissing = computeMissing(state).items.filter((m) => !m.unknown);
-  const nameOf = (id: string) => state.nodes[id]?.label ?? state.groups[id]?.label ?? id;
-  const openItems = openMissing.map((m) => {
-    if (m.targetKind === "node") return `${nameOf(m.targetId)} ${m.label}`;
-    const e = state.edges[m.targetId];
-    return e ? `${nameOf(e.from)} → ${nameOf(e.to)} ${m.label}` : `${m.targetId} ${m.label}`;
-  });
+  const openItems = clefOpenItems(state, openMissing, { text: clean, lastAssistant, mentionIds: mentions.map((m) => m.id) });
   const intent: Intent | null = await resolveIntent(args.text, () =>
     deps.clef.classifyIntent(clean, { lastAssistant, openItems }, signal),
   );
