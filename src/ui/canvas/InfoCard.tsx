@@ -3,11 +3,14 @@
 import { useEffect, useId, useLayoutEffect, useMemo, useRef } from "react";
 
 import { computeMissing } from "@/domain/missing";
+import { parseLinkWarningId } from "@/domain/networkRules";
 import type { DiagramState, Warning } from "@/domain/types";
 import { mergeWarnings } from "@/domain/warnings";
 
 import { AssumptionChips } from "../chat/AssumptionChips";
-import { MissingChecklist, type MissingChecklistProps } from "../chat/MissingChecklist";
+import { MissingChecklist, type MissingChecklistProps, type ZoneTypeSave } from "../chat/MissingChecklist";
+import { useNetworkKnowledge } from "../network/NetworkKnowledgeContext";
+import { ZoneTypePicker } from "../network/ZoneTypePicker";
 import styles from "./infoCard.module.css";
 
 export interface InfoCardProps {
@@ -21,7 +24,9 @@ export interface InfoCardProps {
   onOpenChange(open: boolean): void;
   /** 바뀌면(펼친 상태에서) 주의 절로 스크롤한다. 대화의 `주의 N` 칩이 올린다. */
   scrollToWarnings?: number;
-  checklist: Omit<MissingChecklistProps, "state" | "busy" | "readOnly">;
+  checklist: Omit<MissingChecklistProps, "state" | "busy" | "readOnly" | "zoneType">;
+  /** 망 종류 저장(연결 방식 예상 줄·채워야 할 정보의 망 종류 줄). 없으면 고르기 단추를 숨긴다. */
+  zoneType?: ZoneTypeSave;
   onChooseAssumption(key: string, value: string): void;
   onConfirmAssumption(key: string): void;
   /** 주의 항목 클릭: 그 노드를 선택한다(설명 탭 → 주의할 점). */
@@ -50,14 +55,43 @@ function Chevron({ open }: { open: boolean }) {
   );
 }
 
+/** 연결 방식 예상 줄 아래: 그 짝의 두 망 가운데 종류가 AI 추정인 망마다 확인 줄을 둔다. */
+function GuessedZones({ state, warning, readOnly, busy, zoneType }: { state: DiagramState; warning: Warning; readOnly: boolean; busy: boolean; zoneType: ZoneTypeSave | undefined }) {
+  const pair = parseLinkWarningId(warning.id);
+  if (!pair) return null;
+  const zones = [pair.zoneA, pair.zoneB].filter((id) => {
+    const t = state.groups[id]?.netType;
+    return !!t && t.source === "ai" && !t.confirmed;
+  });
+  if (zones.length === 0) return null;
+  return (
+    <div className={styles.guesses}>
+      {zones.map((id) => (
+        <ZoneTypePicker
+          key={id}
+          diagramId={zoneType?.diagramId ?? ""}
+          groupId={id}
+          value={state.groups[id]!.netType}
+          label={state.groups[id]!.label}
+          readOnly={readOnly}
+          disabled={busy}
+          onSaved={(n) => zoneType?.onSaved(n)}
+        />
+      ))}
+    </div>
+  );
+}
+
 /**
  * 캔버스 왼쪽 아래의 구성 정보 카드. 접히면 한 줄(채워야 할 정보·주의·미확정 가정 수),
  * 펼치면 위로 열려 가정 → 채워야 할 정보 → 주의 세 절을 보인다.
  */
-export function InfoCard({ state, readOnly, busy, open, onOpenChange, scrollToWarnings, checklist, onChooseAssumption, onConfirmAssumption, onSelectWarning, onMeasure }: InfoCardProps) {
-  const miss = useMemo(() => computeMissing(state), [state]);
+export function InfoCard({ state, readOnly, busy, open, onOpenChange, scrollToWarnings, checklist, onChooseAssumption, onConfirmAssumption, onSelectWarning, onMeasure, zoneType }: InfoCardProps) {
+  const knowledge = useNetworkKnowledge();
+  const k = knowledge ?? undefined;
+  const miss = useMemo(() => computeMissing(state, k), [state, k]);
   const missing = miss.count;
-  const warnings = useMemo(() => mergeWarnings(state).active, [state]);
+  const warnings = useMemo(() => mergeWarnings(state, k).active, [state, k]);
   const assumptionCount = Object.keys(state.assumptions).length;
   const unconfirmed = Object.values(state.assumptions).filter((a) => !a.confirmed).length;
   const warningsRef = useRef<HTMLElement>(null);
@@ -128,7 +162,7 @@ export function InfoCard({ state, readOnly, busy, open, onOpenChange, scrollToWa
           <section className={styles.section} aria-label="가정">
             <h3 className={styles.heading}>가정</h3>
             {assumptionCount > 0 ? (
-              <AssumptionChips assumptions={state.assumptions} busy={busy} readOnly={readOnly} onChoose={onChooseAssumption} onConfirm={onConfirmAssumption} />
+              <AssumptionChips assumptions={state.assumptions} groups={state.groups} busy={busy} readOnly={readOnly} onChoose={onChooseAssumption} onConfirm={onConfirmAssumption} />
             ) : (
               <p className={styles.empty}>AI 가 세운 가정이 없어요.</p>
             )}
@@ -138,7 +172,7 @@ export function InfoCard({ state, readOnly, busy, open, onOpenChange, scrollToWa
               채워야 할 정보 <Count n={missing} />
             </h3>
             {miss.items.length > 0 ? (
-              <MissingChecklist {...checklist} state={state} busy={busy} readOnly={readOnly} />
+              <MissingChecklist {...checklist} state={state} busy={busy} readOnly={readOnly} {...(zoneType ? { zoneType } : {})} />
             ) : (
               <p className={styles.empty}>모든 정보가 채워졌어요.</p>
             )}
@@ -155,6 +189,7 @@ export function InfoCard({ state, readOnly, busy, open, onOpenChange, scrollToWa
                       <span className={styles.level}>{LEVEL_LABEL[w.level]}</span>
                       <span className={styles.warnText}>{w.text}</span>
                     </button>
+                    <GuessedZones state={state} warning={w} readOnly={readOnly || !zoneType} busy={busy} zoneType={zoneType} />
                   </li>
                 ))}
               </ul>

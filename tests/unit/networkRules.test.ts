@@ -4,7 +4,7 @@ import { noLinkKey, parseNoLinkKey } from "@/domain/assumptions";
 import { crossingNote } from "@/domain/flows";
 import type { NetworkKnowledge } from "@/domain/network";
 import { NETWORK_TYPE_SEED } from "@/domain/network-seed";
-import { crossingPaths, evaluateNetworkRules, linkWarningId } from "@/domain/networkRules";
+import { crossingPaths, evaluateNetworkRules, linkWarningId, parseLinkWarningId } from "@/domain/networkRules";
 import { emptyState, type DiagramState } from "@/domain/types";
 import { evaluateRules, mergeWarnings } from "@/domain/warnings";
 
@@ -150,4 +150,14 @@ test("crossingNote: link_expected 길의 단계에 '망연계 필요 예상'을 
   const closed = adminCase();
   closed.groups["admin-net"].netType = { key: "control-net", source: "user", confirmed: true };
   expect(crossingNote(closed, step, K)).toBe(`${plain} · 보통 잇지 않는 구간`);
+});
+
+test("parseLinkWarningId: 망 짝 경고 id 를 규칙과 두 망 id 로 푼다", () => {
+  expect(parseLinkWarningId(linkWarningId("link_expected", "gcloud-internet", "admin-net"))).toEqual({ rule: "link_expected", zoneA: "admin-net", zoneB: "gcloud-internet" });
+  expect(parseLinkWarningId("link_unusual:a--b-c")).toEqual({ rule: "link_unusual", zoneA: "a", zoneB: "b-c" });
+  // 망 id 안의 "--" 도 맞게 가른다(작은 쪽이 앞).
+  expect(parseLinkWarningId("link_expected:a--b--c")).toEqual({ rule: "link_expected", zoneA: "a", zoneB: "b--c" });
+  expect(parseLinkWarningId("spof:web")).toBeNull();
+  expect(parseLinkWarningId("link_expected:only")).toBeNull();
+  expect(parseLinkWarningId("link_expected:b--a")).toBeNull();
 });

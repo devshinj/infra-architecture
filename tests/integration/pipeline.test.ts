@@ -466,6 +466,16 @@ describe("runChatTurn", () => {
     expect(msgs.map((m) => m.role)).toEqual(["user"]);
   });
 
+  test("AI 가 없어도 done 의 빠진 정보 수는 망 지식으로 센다", async () => {
+    const ids = await makeOwnedDiagram();
+    const s = emptyState();
+    s.groups.z1 = { id: "z1", groupKind: "network_zone", label: "행정망", parent: null };
+    s.groups.z2 = { id: "z2", groupKind: "network_zone", label: "인터넷", parent: null };
+    await createVersion(ids.diagramId, s, { source: "import" });
+    const { events } = await turn(ids, "그려줘", { qwen: null, clef: fakeClef(null) });
+    expect(events.at(-1)).toMatchObject({ t: "done", missing: 2 });
+  });
+
   test("other user's diagram throws NotFoundError", async () => {
     const a = await makeOwnedDiagram();
     const b = await makeOwnedDiagram();

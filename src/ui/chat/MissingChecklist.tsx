@@ -7,6 +7,8 @@ import { type Category, NODE_KINDS } from "@/domain/catalog";
 import { computeMissing, type MissingItem } from "@/domain/missing";
 import type { DiagramState } from "@/domain/types";
 
+import { useNetworkKnowledge } from "../network/NetworkKnowledgeContext";
+import { ZoneTypePicker } from "../network/ZoneTypePicker";
 import styles from "./chat.module.css";
 
 export interface SaveFieldsDraft {
@@ -14,6 +16,12 @@ export interface SaveFieldsDraft {
   targetId: string;
   values: Record<string, string>;
   unknown: string[];
+}
+
+/** 망 종류 저장 대상 구성도와, 저장 뒤 최신 버전을 다시 불러오는 일. */
+export interface ZoneTypeSave {
+  diagramId: string;
+  onSaved(number: number | null): void;
 }
 
 export interface MissingChecklistProps {
@@ -35,6 +43,8 @@ export interface MissingChecklistProps {
   onExpandedChange: Dispatch<SetStateAction<ChecklistExpanded>>;
   /** 블록 제목(`<이름> 위치 보기`) 클릭: 캔버스가 그 대상으로 이동해 강조한다. 선택은 하지 않는다. */
   onLocate?(targetId: string): void;
+  /** 망 종류 줄의 저장. 없으면 그 줄은 지금 종류만 보인다. */
+  zoneType?: ZoneTypeSave;
 }
 
 // 대상별 초안. 모름은 사용자가 건드린 칸만 담고, 나머지는 서버 상태를 따른다.
@@ -43,7 +53,7 @@ export type ChecklistDrafts = Record<string, ChecklistDraft>;
 /** 대상별 블록 펼침. 없으면 접힘이다. */
 export type ChecklistExpanded = Record<string, boolean>;
 type Draft = ChecklistDraft;
-type Block = { targetKind: "node" | "edge"; targetId: string; title: string; category: Category | null; items: MissingItem[] };
+type Block = { targetKind: MissingItem["targetKind"]; targetId: string; title: string; category: Category | null; items: MissingItem[] };
 
 // 고르는 칸: 화면에는 쉬운 말, 저장 값은 enum.
 const CHOICES: Record<string, { value: string; text: string }[]> = {
@@ -64,7 +74,6 @@ function blocksOf(state: DiagramState, items: MissingItem[]): Block[] {
   const map = new Map<string, Block>();
   const nameOf = (id: string) => state.nodes[id]?.label ?? state.groups[id]?.label ?? id;
   for (const it of items) {
-    if (it.targetKind === "group") continue; // 망 종류 칸은 Task 6 에서 다룬다
     let b = map.get(it.targetId);
     if (!b) {
       const edge = it.targetKind === "edge" ? state.edges[it.targetId] : undefined;
@@ -77,6 +86,15 @@ function blocksOf(state: DiagramState, items: MissingItem[]): Block[] {
     b.items.push(it);
   }
   return [...map.values()];
+}
+
+/** 망 영역 블록의 머리 아이콘: 점선 상자. */
+function ZoneIcon() {
+  return (
+    <svg width={16} height={16} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={1.3} strokeDasharray="2.2 1.8" aria-hidden="true">
+      <rect x="2.25" y="3.25" width="11.5" height="9.5" rx="1.5" />
+    </svg>
+  );
 }
 
 /** 연결 블록의 머리 아이콘: 두 점을 잇는 선. */
@@ -98,8 +116,9 @@ function Chevron({ open }: { open: boolean }) {
   );
 }
 
-export function MissingChecklist({ state, busy, readOnly = false, focusId, focusToken, onFocusHandled, onSave, drafts, onDraftsChange: setDrafts, expanded, onExpandedChange: setExpanded, onLocate }: MissingChecklistProps) {
-  const { items } = useMemo(() => computeMissing(state), [state]);
+export function MissingChecklist({ state, busy, readOnly = false, focusId, focusToken, onFocusHandled, onSave, drafts, onDraftsChange: setDrafts, expanded, onExpandedChange: setExpanded, onLocate, zoneType }: MissingChecklistProps) {
+  const knowledge = useNetworkKnowledge();
+  const { items } = useMemo(() => computeMissing(state, knowledge ?? undefined), [state, knowledge]);
   const blocks = useMemo(() => blocksOf(state, items), [state, items]);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
@@ -133,7 +152,7 @@ export function MissingChecklist({ state, busy, readOnly = false, focusId, focus
     const el = blockRefs.current[pendingFocus];
     if (!el) return;
     el.scrollIntoView?.({ block: "nearest" });
-    const first = el.querySelector<HTMLInputElement>('input[type="text"]:not(:disabled)') ?? el.querySelector<HTMLInputElement>("input");
+    const first = el.querySelector<HTMLElement>('input[type="text"]:not(:disabled)') ?? el.querySelector<HTMLElement>("input, select");
     first?.focus();
     onFocusHandled?.();
     // eslint-disable-next-line react-hooks/exhaustive-deps -- 펼침·대상이 바뀔 때만 포커스한다
@@ -147,6 +166,7 @@ export function MissingChecklist({ state, busy, readOnly = false, focusId, focus
   const patch = (id: string, fn: (d: Draft) => Draft) => setDrafts((all) => ({ ...all, [id]: fn(all[id] ?? EMPTY) }));
 
   const save = async (b: Block) => {
+    if (b.targetKind === "group") return; // 망 종류 줄은 ZoneTypePicker 가 저장한다
     const d = draftOf(b.targetId);
     const values: Record<string, string> = {};
     const unknown: string[] = [];
@@ -201,7 +221,7 @@ export function MissingChecklist({ state, busy, readOnly = false, focusId, focus
                 <Chevron open={open} />
               </button>
               <span className={styles.blockIcon} style={b.category ? ({ "--cat": `var(--cat-${b.category})` } as React.CSSProperties) : undefined}>
-                {b.category ? <CategoryIcon category={b.category} /> : <EdgeIcon />}
+                {b.category ? <CategoryIcon category={b.category} /> : b.targetKind === "group" ? <ZoneIcon /> : <EdgeIcon />}
               </span>
               {onLocate ? (
                 <button type="button" className={styles.blockTitle} aria-label={`${b.title} 위치 보기`} onClick={() => onLocate(b.targetId)}>
@@ -214,7 +234,20 @@ export function MissingChecklist({ state, busy, readOnly = false, focusId, focus
                 {left}
               </span>
             </div>
-            {open && (
+            {open && b.targetKind === "group" && (
+              <div id={bodyId} className={styles.blockBody}>
+                <ZoneTypePicker
+                  diagramId={zoneType?.diagramId ?? ""}
+                  groupId={b.targetId}
+                  value={state.groups[b.targetId]?.netType}
+                  label={b.title}
+                  readOnly={readOnly || !zoneType}
+                  disabled={busy}
+                  onSaved={(n) => zoneType?.onSaved(n)}
+                />
+              </div>
+            )}
+            {open && b.targetKind !== "group" && (
               <div id={bodyId} className={styles.blockBody}>
                 {b.items.map((it) => {
                   const id = `missing-${b.targetId}-${it.key}`;

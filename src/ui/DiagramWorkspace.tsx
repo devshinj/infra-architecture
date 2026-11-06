@@ -21,6 +21,7 @@ import { assumptionChangeMessage, confirmAssumption } from "@/domain/assumptions
 import { isFlowCommand } from "@/domain/commands";
 import { diffStates } from "@/domain/diff";
 import { checkFlow } from "@/domain/flows";
+import type { NetworkKnowledge } from "@/domain/network";
 import type { DiagramState } from "@/domain/types";
 
 import styles from "./app.module.css";
@@ -41,6 +42,8 @@ import { MOBILE_VIEWS, MobileTabBar, type MobileView, mobileTabId } from "./Mobi
 import { PANEL_DEFAULT, PANEL_MAX, PANEL_MIN, PANEL_MIN_COMPACT, PanelResizer } from "./PanelResizer";
 import { PANEL_GAP, useShell } from "./Shell";
 import { RIGHT_PANEL_BODY_ID, RightPanel, type Tab } from "./RightPanel";
+import { NetworkKnowledgeProvider } from "./network/NetworkKnowledgeContext";
+import { PARTIAL_UNDO } from "./NodeInfo";
 
 /** 비어 있는 구성도 대화 세션의 안내. */
 const NEW_CHAT_HINT = "새 대화예요. 구성도는 그대로 이어서 바꾸고, 대화 기록만 따로 쌓여요.";
@@ -65,6 +68,8 @@ export interface DiagramWorkspaceProps {
   initialSessions?: SessionSummary[];
   /** 무리마다 다음 쪽 커서(없으면 더 없음)와 마지막으로 맞춘 시각. 없으면 더 불러올 것이 없다. */
   initialPaging?: SessionPaging;
+  /** 계정 공통 망 지식. 없으면(못 읽음) 망 종류·연결 방식 예상 없이 지금처럼 그린다. */
+  knowledge?: NetworkKnowledge | null;
 }
 
 /** Compare view draws current ∪ old so removed nodes appear as ghosts beside the live ones. */
@@ -108,7 +113,7 @@ function escapeBelongsElsewhere(e: KeyboardEvent): boolean {
   return document.querySelector('[role="tooltip"]') !== null;
 }
 
-export function DiagramWorkspace({ diagramId, name, projectName, latest, initialPinned, samples, initialChat = [], initialSessions = NO_SESSIONS, initialPaging }: DiagramWorkspaceProps) {
+export function DiagramWorkspace({ diagramId, name, projectName, latest, initialPinned, samples, initialChat = [], initialSessions = NO_SESSIONS, initialPaging, knowledge = null }: DiagramWorkspaceProps) {
   const router = useRouter();
   const [current, setCurrent] = useState(latest);
   const [pinned, setPinned] = useState<Pinned>(initialPinned);
@@ -701,6 +706,16 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
     }
   };
 
+  // 망 종류 확인·바꾸기, AI 추정 망연계 맞아요·아니에요 = 한 버전. 폼 저장과 같은 서버 상태 채택 경로를 쓴다.
+  const onZoneTypeSaved = (n: number | null) => {
+    if (n !== null) refreshFromServer();
+  };
+  const onLinkGuessSaved = (n: number | null, partial: boolean) => {
+    if (n !== null) refreshFromServer();
+    // 되돌리면 노드가 사라져 설명 탭의 안내도 함께 사라진다: 구성도 대화에도 한 줄 남긴다.
+    if (partial) pushDiagramLine({ kind: "system", text: PARTIAL_UNDO });
+  };
+
   const enter = (next: Mode, state: DiagramState) => {
     setMode(next);
     setEditMode(false);
@@ -797,168 +812,173 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
         : null;
 
   return (
-    <div
-      ref={workspaceRef}
-      className={styles.workspace}
-      data-workspace=""
-      data-mview={panelShown ? "panel" : "canvas"}
-      style={{ "--canvas-inset-left": `${insetLeft}px`, "--canvas-inset-right": `${insetRight}px` } as React.CSSProperties}
-    >
-      {/* 구성도 화면의 첫 Tab 칸: 캔버스 도구·노드를 건너뛰어 대화 입력으로. 포커스를 받을 때만 보인다. */}
-      <button type="button" className={styles.skipLink} onClick={skipToChat}>
-        대화로 건너뛰기
-      </button>
-      <section id={CANVAS_ID} className={styles.center} aria-label={name} {...(narrow ? { role: "tabpanel", "aria-labelledby": mobileTabId("구성도") } : {})}>
-        {/* 화면에 보이는 구성도 제목이 없어 보조기기용 제목만 둔다. */}
-        <h1 className={styles.srOnly}>{name}</h1>
-        {banner && (
-          <div className={styles.banner} role="status">
-            <span>{banner}</span>
-            <button type="button" onClick={backToLive}>현재로 돌아가기</button>
-            {mode.kind === "compare" && (
-              <div className={styles.legend} aria-label="범례">
-                <span><i className={`${styles.swatch} ${styles.swAdded}`} />추가 {mode.marks.added.size}</span>
-                <span><i className={`${styles.swatch} ${styles.swRemoved}`} />삭제 {mode.marks.removed.size}</span>
-                <span><i className={`${styles.swatch} ${styles.swChanged}`} />변경 {mode.marks.changed.size}</span>
-              </div>
-            )}
+    <NetworkKnowledgeProvider value={knowledge}>
+      <div
+        ref={workspaceRef}
+        className={styles.workspace}
+        data-workspace=""
+        data-mview={panelShown ? "panel" : "canvas"}
+        style={{ "--canvas-inset-left": `${insetLeft}px`, "--canvas-inset-right": `${insetRight}px` } as React.CSSProperties}
+      >
+        {/* 구성도 화면의 첫 Tab 칸: 캔버스 도구·노드를 건너뛰어 대화 입력으로. 포커스를 받을 때만 보인다. */}
+        <button type="button" className={styles.skipLink} onClick={skipToChat}>
+          대화로 건너뛰기
+        </button>
+        <section id={CANVAS_ID} className={styles.center} aria-label={name} {...(narrow ? { role: "tabpanel", "aria-labelledby": mobileTabId("구성도") } : {})}>
+          {/* 화면에 보이는 구성도 제목이 없어 보조기기용 제목만 둔다. */}
+          <h1 className={styles.srOnly}>{name}</h1>
+          {banner && (
+            <div className={styles.banner} role="status">
+              <span>{banner}</span>
+              <button type="button" onClick={backToLive}>현재로 돌아가기</button>
+              {mode.kind === "compare" && (
+                <div className={styles.legend} aria-label="범례">
+                  <span><i className={`${styles.swatch} ${styles.swAdded}`} />추가 {mode.marks.added.size}</span>
+                  <span><i className={`${styles.swatch} ${styles.swRemoved}`} />삭제 {mode.marks.removed.size}</span>
+                  <span><i className={`${styles.swatch} ${styles.swChanged}`} />변경 {mode.marks.changed.size}</span>
+                </div>
+              )}
+            </div>
+          )}
+          {/* 좁은 화면은 어느 탭에서든 보이게 위 막대 바로 밑에 띄운다(app.module.css .alertBanner). */}
+          {error && <div className={`${styles.banner} ${styles.alertBanner}`} role="alert">{error}</div>}
+          <div className={styles.canvasWrap}>
+            <Canvas
+              state={shown}
+              knowledge={knowledge}
+              pinned={live ? pinned : {}}
+              editMode={live && !locked && editMode}
+              options={canvasOptions}
+              motion={motion}
+              fitKey={`${board}:${mode.kind}:${mode.kind === "live" ? "" : mode.number}`}
+              streaming={live && mainTurn}
+              cameraInsets={cameraInsets}
+              onOptionsChange={changeOptions}
+              onSelect={onSelect}
+              flow={canvasFlow}
+              askDisabled={askLocked}
+              {...(askReason ? { askReason } : {})}
+              onPinnedChange={live ? onPinnedChange : () => {}}
+              onAutoArrange={onAutoArrange}
+              autoArrangeDisabled={!live}
+              fitRequest={arranged}
+              onEditModeChange={(v) => live && !locked && setEditMode(v)}
+              onMotionChange={setMotion}
+              onWarnBadgeClick={onWarnBadge}
+              samples={samples}
+              onImportSample={importSample}
+              importing={busy || locked}
+              onPlaced={fly.placed}
+              diagramName={name}
+              {...(projectName !== undefined ? { projectName } : {})}
+              {...(focusRequest ? { focusRequest } : {})}
+              {...(live ? { onMention, onBadgeClick, onAskNode: onAskFromMenu } : {})}
+              {...(mode.kind === "compare" ? { diffMarks: mode.marks } : {})}
+            />
+            <InfoCard
+              state={mode.kind === "view" ? mode.state : current.state}
+              readOnly={!live}
+              busy={locked}
+              open={cardOpen}
+              onOpenChange={changeCardOpen}
+              scrollToWarnings={warnScroll}
+              onChooseAssumption={(k, v) => void onChooseAssumption(k, v)}
+              onConfirmAssumption={onConfirmAssumption}
+              onSelectWarning={onSelectWarning}
+              onMeasure={onCardMeasure}
+              {...(live ? { zoneType: { diagramId, onSaved: onZoneTypeSaved } } : {})}
+              checklist={{
+                focusId: focus?.id ?? null,
+                ...(focus ? { focusToken: focus.token } : {}),
+                onFocusHandled: () => setFocus(null),
+                onSave: saveFields,
+                drafts: checklistDrafts,
+                onDraftsChange: setChecklistDrafts,
+                expanded: checklistExpanded,
+                onExpandedChange: setChecklistExpanded,
+                onLocate: locate,
+              }}
+            />
+            <Legend hideAux={canvasOptions.hideAux} empty={Object.keys(shown.nodes).length === 0} onMeasure={setLegendWidth} {...(legendBottom !== undefined ? { bottom: legendBottom } : {})} />
           </div>
-        )}
-        {/* 좁은 화면은 어느 탭에서든 보이게 위 막대 바로 밑에 띄운다(app.module.css .alertBanner). */}
-        {error && <div className={`${styles.banner} ${styles.alertBanner}`} role="alert">{error}</div>}
-        <div className={styles.canvasWrap}>
-          <Canvas
+        </section>
+        {!narrow && <PanelResizer width={shownPanelWidth} min={panelMin} max={panelMax} defaultWidth={PANEL_DEFAULT} onChange={changePanelWidth} offset={PANEL_GAP} />}
+        <div className={styles.panelDock} style={{ "--panel-width": `${shownPanelWidth}px` } as React.CSSProperties}>
+          <RightPanel
             state={shown}
-            pinned={live ? pinned : {}}
-            editMode={live && !locked && editMode}
-            options={canvasOptions}
-            motion={motion}
-            fitKey={`${board}:${mode.kind}:${mode.kind === "live" ? "" : mode.number}`}
-            streaming={live && mainTurn}
-            cameraInsets={cameraInsets}
-            onOptionsChange={changeOptions}
+            selectedId={options.selectedId}
             onSelect={onSelect}
-            flow={canvasFlow}
-            askDisabled={askLocked}
-            {...(askReason ? { askReason } : {})}
-            onPinnedChange={live ? onPinnedChange : () => {}}
-            onAutoArrange={onAutoArrange}
-            autoArrangeDisabled={!live}
-            fitRequest={arranged}
-            onEditModeChange={(v) => live && !locked && setEditMode(v)}
-            onMotionChange={setMotion}
-            onWarnBadgeClick={onWarnBadge}
-            samples={samples}
-            onImportSample={importSample}
-            importing={busy || locked}
-            onPlaced={fly.placed}
-            diagramName={name}
-            {...(projectName !== undefined ? { projectName } : {})}
-            {...(focusRequest ? { focusRequest } : {})}
-            {...(live ? { onMention, onBadgeClick, onAskNode: onAskFromMenu } : {})}
-            {...(mode.kind === "compare" ? { diffMarks: mode.marks } : {})}
-          />
-          <InfoCard
-            state={mode.kind === "view" ? mode.state : current.state}
-            readOnly={!live}
-            busy={locked}
-            open={cardOpen}
-            onOpenChange={changeCardOpen}
-            scrollToWarnings={warnScroll}
-            onChooseAssumption={(k, v) => void onChooseAssumption(k, v)}
-            onConfirmAssumption={onConfirmAssumption}
-            onSelectWarning={onSelectWarning}
-            onMeasure={onCardMeasure}
-            checklist={{
-              focusId: focus?.id ?? null,
-              ...(focus ? { focusToken: focus.token } : {}),
-              onFocusHandled: () => setFocus(null),
-              onSave: saveFields,
-              drafts: checklistDrafts,
-              onDraftsChange: setChecklistDrafts,
-              expanded: checklistExpanded,
-              onExpandedChange: setChecklistExpanded,
-              onLocate: locate,
+            onMention={onMention}
+            mentionDisabled={!live}
+            tab={tab}
+            onTabChange={setTab}
+            warningState={mode.kind === "compare" ? current.state : shown}
+            onHistoryOpen={loadVersions}
+            live={live}
+            flows={flowPanel}
+            {...(narrow ? { externalTabs: { tabIdOf: mobileTabId, request: tabRequest } } : {})}
+            {...(explain ? { explain } : {})}
+            {...(selKind === "node"
+              ? {
+                  ask: {
+                    disabled: askLocked,
+                    ...(askReason ? { disabledReason: askReason } : {}),
+                    onAsk: (text: string) => startAsk(selId!, text),
+                    ...(askFocus?.id === selId ? { focusToken: askFocus.token, onFocusHandled: () => setAskFocus(null) } : {}),
+                  },
+                }
+              : {})}
+            {...(live ? { cautions: { onIgnoreWarning, ignoreDisabled: locked || warnSaving, ignoreError: warnError } } : {})}
+            {...(live ? { linkGuess: { diagramId, disabled: locked, onSaved: onLinkGuessSaved } } : {})}
+            history={{
+              versions,
+              onView: view,
+              onRestore: restore,
+              onCompare: compare,
+              viewing: mode.kind === "live" ? null : mode.number,
+              disabled: locked,
+            }}
+            chat={{
+              lines: chatLines === "loading" ? [] : chatLines,
+              loading: chatLines === "loading",
+              busy: chat.busy && runningKey === sessions.active,
+              elsewhereBusy: chat.busy && runningKey !== sessions.active,
+              picker: {
+                sessions: sessions.sessions,
+                active: sessions.active,
+                labelOf,
+                onSelect: sessions.select,
+                pending: sessions.pending,
+                onNew: newChat,
+                newDisabled: !live || runningKey === NEW_SESSION,
+                onRename: sessions.rename,
+                onDelete: sessions.remove,
+                deleteDisabled: chat.busy,
+                more: sessions.more,
+                onMore: sessions.loadMore,
+              },
+              ...(activeSession ? { ask: { nodeId: activeSession.nodeId, nodeLabel: labelOf(activeSession.nodeId) } } : {}),
+              ...(activeSummary?.kind === "diagram" ? { emptyHint: NEW_CHAT_HINT } : {}),
+              handoffTo: diagramKey,
+              onSend: sendChat,
+              onStop: chat.stop,
+              onOpenWarnings: openWarnings,
+              health,
+              mentionRef,
+              ...(live ? {} : { disabledReason: "이전 버전을 보는 중에는 대화할 수 없어요." }),
             }}
           />
-          <Legend hideAux={canvasOptions.hideAux} empty={Object.keys(shown.nodes).length === 0} onMeasure={setLegendWidth} {...(legendBottom !== undefined ? { bottom: legendBottom } : {})} />
         </div>
-      </section>
-      {!narrow && <PanelResizer width={shownPanelWidth} min={panelMin} max={panelMax} defaultWidth={PANEL_DEFAULT} onChange={changePanelWidth} offset={PANEL_GAP} />}
-      <div className={styles.panelDock} style={{ "--panel-width": `${shownPanelWidth}px` } as React.CSSProperties}>
-        <RightPanel
-          state={shown}
-          selectedId={options.selectedId}
-          onSelect={onSelect}
-          onMention={onMention}
-          mentionDisabled={!live}
-          tab={tab}
-          onTabChange={setTab}
-          warningState={mode.kind === "compare" ? current.state : shown}
-          onHistoryOpen={loadVersions}
-          live={live}
-          flows={flowPanel}
-          {...(narrow ? { externalTabs: { tabIdOf: mobileTabId, request: tabRequest } } : {})}
-          {...(explain ? { explain } : {})}
-          {...(selKind === "node"
-            ? {
-                ask: {
-                  disabled: askLocked,
-                  ...(askReason ? { disabledReason: askReason } : {}),
-                  onAsk: (text: string) => startAsk(selId!, text),
-                  ...(askFocus?.id === selId ? { focusToken: askFocus.token, onFocusHandled: () => setAskFocus(null) } : {}),
-                },
-              }
-            : {})}
-          {...(live ? { cautions: { onIgnoreWarning, ignoreDisabled: locked || warnSaving, ignoreError: warnError } } : {})}
-          history={{
-            versions,
-            onView: view,
-            onRestore: restore,
-            onCompare: compare,
-            viewing: mode.kind === "live" ? null : mode.number,
-            disabled: locked,
-          }}
-          chat={{
-            lines: chatLines === "loading" ? [] : chatLines,
-            loading: chatLines === "loading",
-            busy: chat.busy && runningKey === sessions.active,
-            elsewhereBusy: chat.busy && runningKey !== sessions.active,
-            picker: {
-              sessions: sessions.sessions,
-              active: sessions.active,
-              labelOf,
-              onSelect: sessions.select,
-              pending: sessions.pending,
-              onNew: newChat,
-              newDisabled: !live || runningKey === NEW_SESSION,
-              onRename: sessions.rename,
-              onDelete: sessions.remove,
-              deleteDisabled: chat.busy,
-              more: sessions.more,
-              onMore: sessions.loadMore,
-            },
-            ...(activeSession ? { ask: { nodeId: activeSession.nodeId, nodeLabel: labelOf(activeSession.nodeId) } } : {}),
-            ...(activeSummary?.kind === "diagram" ? { emptyHint: NEW_CHAT_HINT } : {}),
-            handoffTo: diagramKey,
-            onSend: sendChat,
-            onStop: chat.stop,
-            onOpenWarnings: openWarnings,
-            health,
-            mentionRef,
-            ...(live ? {} : { disabledReason: "이전 버전을 보는 중에는 대화할 수 없어요." }),
-          }}
-        />
+        {narrow && (
+          <MobileTabBar
+            current={mobileView}
+            onChange={chooseView}
+            controls={(v) => (v === "구성도" ? CANVAS_ID : RIGHT_PANEL_BODY_ID)}
+            explainWaiting={explainWaiting}
+          />
+        )}
+        <FlyLayer ref={fly.layerRef} />
       </div>
-      {narrow && (
-        <MobileTabBar
-          current={mobileView}
-          onChange={chooseView}
-          controls={(v) => (v === "구성도" ? CANVAS_ID : RIGHT_PANEL_BODY_ID)}
-          explainWaiting={explainWaiting}
-        />
-      )}
-      <FlyLayer ref={fly.layerRef} />
-    </div>
+    </NetworkKnowledgeProvider>
   );
 }

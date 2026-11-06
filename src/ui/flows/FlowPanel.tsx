@@ -9,6 +9,7 @@ import type { StoredFlow } from "@/server/flows";
 
 import { type Dialog, DialogView, RowMenu, type RowMenuItem } from "../dialogs";
 import { AI_BADGE_SR, AI_SUGGEST_BADGE, isUnreviewedAi } from "../glossary/aiBadge";
+import { useNetworkKnowledge } from "../network/NetworkKnowledgeContext";
 
 import styles from "./flows.module.css";
 
@@ -58,6 +59,7 @@ const menuRootId = (key: string) => `flow-${key}`;
  * 행의 ⋯ 메뉴로 이름 바꾸기·삭제·맞아요(AI 제안 표시를 지운다). 대화상자는 SessionPicker 와 같은 길을 쓴다.
  */
 export function FlowPanel({ flows, state, activeKey, onActivate, onFocusStep, onSuggest, suggesting, error, onRename, onDelete, onConfirm, onRepair, onRemoveStep, disabled }: FlowPanelProps) {
+  const knowledge = useNetworkKnowledge() ?? undefined;
   // 행 메뉴는 하나만 열린다. 바깥을 누르면 닫는다(Esc·방향키는 RowMenu 가 맡는다).
   const [menu, setMenu] = useState<string | null>(null);
   useEffect(() => {
@@ -166,7 +168,7 @@ export function FlowPanel({ flows, state, activeKey, onActivate, onFocusStep, on
             {f.summary && <p className={styles.summary}>{f.summary}</p>}
             <ol id={stepsId} className={styles.steps} aria-label={`${f.name} 단계`}>
               {f.steps.map((s, i) => {
-                const note = crossingNote(state, s);
+                const note = crossingNote(state, s, knowledge);
                 const missing = f.problems.some((p) => p.step === i);
                 // 연결이 사라진 단계도 키보드로 닿아 "끊김"을 읽을 수 있게 disabled 대신 aria-disabled 로 둔다.
                 const gone = !state.edges[s.edge];

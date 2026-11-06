@@ -16,6 +16,21 @@ export function linkWarningId(rule: LinkRule, zoneA: string, zoneB: string): str
   return `${rule}:${a}--${b}`;
 }
 
+const ZONE_ID = /^[a-z0-9][a-z0-9-]{0,63}$/;
+
+/** linkWarningId 로 만든 id 면 규칙과 두 망 id(작은 쪽부터), 아니면 null. */
+export function parseLinkWarningId(id: string): { rule: LinkRule; zoneA: string; zoneB: string } | null {
+  const rule = LINK_RULES.find((r) => id.startsWith(`${r}:`));
+  if (!rule) return null;
+  const rest = id.slice(rule.length + 1);
+  for (let i = rest.indexOf("--"); i !== -1; i = rest.indexOf("--", i + 1)) {
+    const a = rest.slice(0, i);
+    const b = rest.slice(i + 2);
+    if (ZONE_ID.test(a) && ZONE_ID.test(b) && a < b) return { rule, zoneA: a, zoneB: b };
+  }
+  return null;
+}
+
 export const LINK_GUIDE = "망연계를 넣으려면 대화로 '망연계 넣어 줘'라고 말해 주세요.";
 
 /** 모든 통신 길. 연결 방향으로 따라가고, 경계 노드 고리에서 멈추며, 끝이 그룹인 연결은 건너뛴다. */

@@ -288,3 +288,11 @@ describe("name tooltip", () => {
     expect(document.querySelector(".node")).toHaveAttribute("title", "DB");
   });
 });
+
+test("AI 추정 망연계 노드는 보조 줄에 작은 AI 추정 표시가 있다", () => {
+  wrap(<NodeCard data={{ label: "망연계", fullLabel: "망연계", category: "network", state: "normal", guess: true }} {...rfProps} />);
+  expect(screen.getByText("AI 추정")).toHaveClass("node__guess");
+  cleanup();
+  wrap(<NodeCard data={{ label: "망연계", fullLabel: "망연계", category: "network", state: "normal" }} {...rfProps} />);
+  expect(screen.queryByText("AI 추정")).not.toBeInTheDocument();
+});

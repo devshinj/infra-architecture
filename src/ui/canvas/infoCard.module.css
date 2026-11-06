@@ -92,3 +92,5 @@
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   .card { background: var(--bg-sidebar); }
 }
+/* 연결 방식 예상 줄 아래의 망 종류 확인(추정 망마다 하나). 주의 줄 글자 칸과 줄을 맞춘다. */
+.guesses { display: flex; flex-direction: column; gap: 8px; padding: 2px 6px 6px; }

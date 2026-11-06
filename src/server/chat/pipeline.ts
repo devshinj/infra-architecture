@@ -199,19 +199,20 @@ async function lockedTurn(args: TurnArgs, sessionId: string | null, followUp: bo
 
   const counts = () => ({ nodes: Object.keys(state.nodes).length, edges: Object.keys(state.edges).length });
 
-  if (!deps.qwen) {
-    emit({ t: "start", messageId: userMsg.id, intent: null });
-    emit({ t: "error", message: AI_UNAVAILABLE_MESSAGE });
-    // 응답 메시지는 남기지 않는다. 클라이언트가 깨끗이 정리하도록 done 을 보낸다.
-    emit({ t: "done", version: null, status: "complete", applied: 0, changed: 0, skipped: 0, missing: computeMissing(state).count, ...counts(), assistantMessageId: "" });
-    return;
-  }
-
   // 망 지식(계정 공통). 못 읽으면 망 블록·종류 붙이기·연결 방식 판정 없이 지금처럼 돈다.
+  // 빠진 정보 수는 화면 체크리스트와 같게 지식으로 센다(망 종류 줄 포함).
   const knowledge: NetworkKnowledge | null = await getNetworkKnowledge(args.userId).catch((err) => {
     console.error("chat network knowledge failed", err);
     return null;
   });
+
+  if (!deps.qwen) {
+    emit({ t: "start", messageId: userMsg.id, intent: null });
+    emit({ t: "error", message: AI_UNAVAILABLE_MESSAGE });
+    // 응답 메시지는 남기지 않는다. 클라이언트가 깨끗이 정리하도록 done 을 보낸다.
+    emit({ t: "done", version: null, status: "complete", applied: 0, changed: 0, skipped: 0, missing: computeMissing(state, knowledge ?? undefined).count, ...counts(), assistantMessageId: "" });
+    return;
+  }
 
   // 차례 시작 상태의 열린(모름 아닌) 빠진 정보. 값만 알려 주는 답을 분류·반영하는 데 쓴다.
   // 망 종류(영역 항목)는 AI 가 프롬프트의 망 지식으로 추정하므로 넘기지 않는다.
@@ -417,7 +418,7 @@ async function lockedTurn(args: TurnArgs, sessionId: string | null, followUp: bo
   const skipped = tally.total();
   // 왜 건너뛰었는지 서버 로그에 한 줄로 남긴다(사용자 글·키는 넣지 않는다).
   if (skipped > 0) console.info("[chat] skipped", { diagramId, counts: tally.counts() });
-  const missing = computeMissing(state).count;
+  const missing = computeMissing(state, knowledge ?? undefined).count;
   const content = [...says, ...(answer ? [answer] : [])].join("\n");
   const meta: MessageMeta = {
     ...(intent ? { intent } : {}),

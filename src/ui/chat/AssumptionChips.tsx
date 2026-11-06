@@ -2,8 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 
-import { ASSUMPTION_CHOICES, ASSUMPTION_LABELS } from "@/domain/assumptions";
-import type { Assumption } from "@/domain/types";
+import { ASSUMPTION_CHOICES, ASSUMPTION_LABELS, parseNoLinkKey } from "@/domain/assumptions";
+import type { Assumption, Group } from "@/domain/types";
 
 import styles from "./chat.module.css";
 
@@ -14,6 +14,8 @@ export interface AssumptionChipsProps {
   onConfirm(key: string): void;
   /** 이력 보기·비교: 값만 보이고 고르기·확정은 없다. */
   readOnly?: boolean;
+  /** 망연계 거절 가정(no_link)의 망 이름을 찾는다. 없으면 id 를 보인다. */
+  groups?: Record<string, Group>;
 }
 
 const labelOf = (key: string) => ASSUMPTION_LABELS[key] ?? key;
@@ -26,7 +28,7 @@ function orderedKeys(assumptions: Record<string, Assumption>): string[] {
   return [...known, ...other];
 }
 
-export function AssumptionChips({ assumptions, busy, onChoose, onConfirm, readOnly = false }: AssumptionChipsProps) {
+export function AssumptionChips({ assumptions, busy, onChoose, onConfirm, readOnly = false, groups }: AssumptionChipsProps) {
   const [open, setOpen] = useState<string | null>(null);
   const root = useRef<HTMLUListElement>(null);
 
@@ -70,6 +72,19 @@ export function AssumptionChips({ assumptions, busy, onChoose, onConfirm, readOn
         const a = assumptions[key]!;
         const isOpen = open === key;
         const choices = ASSUMPTION_CHOICES[key] ?? [];
+        // 망연계 거절 기억: 망 이름 짝으로만 보이고 고를 대안이 없다.
+        const noLink = parseNoLinkKey(key);
+        if (noLink) {
+          const [nameA, nameB] = noLink.map((id) => groups?.[id]?.label ?? id);
+          return (
+            <li key={key} className={styles.assumptionItem}>
+              <span className={`${styles.assumptionChip} ${styles.assumptionStatic} ${a.confirmed ? styles.assumptionConfirmed : ""}`}>
+                <span>{`망연계 없음: ${nameA} ↔ ${nameB}`}</span>
+                {a.confirmed && <span className={styles.assumptionMark}>확정</span>}
+              </span>
+            </li>
+          );
+        }
         if (readOnly)
           return (
             <li key={key} className={styles.assumptionItem}>

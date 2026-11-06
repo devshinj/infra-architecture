@@ -46,9 +46,11 @@ export interface RightPanelProps {
   externalTabs?: { tabIdOf(tab: Tab): string; request: { tab: Tab; token: number } | null };
   /** 흐름 탭. 설명 탭의 "지나는 흐름" 칩도 이것으로 흐름을 켠다. 없으면 흐름 탭은 빈 안내만 보인다. */
   flows?: FlowPanelProps;
+  /** 설명 탭: AI 추정 망연계의 맞아요·아니에요. 없으면(이력 보기 등) 추정 표시만 보인다. */
+  linkGuess?: NodeInfoProps["linkGuess"];
 }
 
-export function RightPanel({ state, selectedId, onSelect, onMention, mentionDisabled, history, chat, onHistoryOpen, tab: controlledTab, onTabChange, cautions, warningState, explain, ask, live = true, externalTabs, flows }: RightPanelProps) {
+export function RightPanel({ state, selectedId, onSelect, onMention, mentionDisabled, history, chat, onHistoryOpen, tab: controlledTab, onTabChange, cautions, warningState, explain, ask, live = true, externalTabs, flows, linkGuess }: RightPanelProps) {
   const [innerTab, setInnerTab] = useState<Tab>("대화");
   const tab = controlledTab ?? innerTab;
   const setTab = (t: Tab) => {
@@ -112,7 +114,7 @@ export function RightPanel({ state, selectedId, onSelect, onMention, mentionDisa
             emptyDiagram={live && Object.keys(state.nodes).length === 0}
           />
         )}
-        {tab === "설명" && <NodeInfo state={state} selectedId={selectedId} onSelect={onSelect} {...(onMention ? { onMention } : {})} {...(mentionDisabled ? { mentionDisabled } : {})} {...cautions} {...(warningState ? { warningState } : {})} {...(explain ? { explain } : {})} {...(ask ? { ask } : {})} {...(flows ? { flows: { list: flows.flows, onOpen: openFlow } } : {})} />}
+        {tab === "설명" && <NodeInfo state={state} selectedId={selectedId} onSelect={onSelect} {...(onMention ? { onMention } : {})} {...(mentionDisabled ? { mentionDisabled } : {})} {...cautions} {...(warningState ? { warningState } : {})} {...(explain ? { explain } : {})} {...(ask ? { ask } : {})} {...(flows ? { flows: { list: flows.flows, onOpen: openFlow } } : {})} {...(linkGuess ? { linkGuess } : {})} />}
         {tab === "이력" && <HistoryPanel {...history} />}
         {tab === "흐름" && flows && <FlowPanel {...flows} />}
       </div>

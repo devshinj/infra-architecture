@@ -5,8 +5,10 @@ import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useSta
 import { crossesBoundary } from "@/domain/boundary";
 import { categoryOf } from "@/domain/catalog";
 import { computeMissing } from "@/domain/missing";
+import type { NetworkKnowledge } from "@/domain/network";
 import type { DiagramState } from "@/domain/types";
 import { mergeWarnings, warningsByNode } from "@/domain/warnings";
+import { AI_BADGE_SR, AI_GUESS_BADGE } from "@/ui/glossary/aiBadge";
 
 import { canvasAriaLabels, zoneDescription } from "./ariaLabels";
 import "./canvas.css";
@@ -34,6 +36,8 @@ type Pinned = Record<string, { x: number; y: number }>;
 
 export interface CanvasProps {
   state: DiagramState;
+  /** 계정 공통 망 지식: 연결 방식 예상 경고·망 종류 빠진 정보를 센다. 없으면 지식 전처럼 그린다. */
+  knowledge?: NetworkKnowledge | null;
   pinned: Pinned;
   editMode: boolean;
   options: CanvasOptions;
@@ -307,11 +311,12 @@ interface FlowProps extends CanvasProps {
   updated: Set<string>;
 }
 
-function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onPinnedChange, motion, layout, settled, layoutFailed, fitRequest, fitAllRequest, display, appearing, updated, diffMarks, fitKey, streaming = false, cameraInsets = NO_INSETS, focusRequest, onMention, onAskNode, askDisabled, askReason, onBadgeClick, onWarnBadgeClick, onPlaced, flow = null }: FlowProps) {
+function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onPinnedChange, motion, layout, settled, layoutFailed, fitRequest, fitAllRequest, display, appearing, updated, diffMarks, fitKey, streaming = false, cameraInsets = NO_INSETS, focusRequest, onMention, onAskNode, askDisabled, askReason, onBadgeClick, onWarnBadgeClick, onPlaced, flow = null, knowledge }: FlowProps) {
   const far = useStore((s) => s.transform[2] < FAR_ZOOM);
   const selected = drawnId(state, options.collapsed, options.selectedId);
-  const missingByNode = useMemo(() => computeMissing(state).byNode, [state]);
-  const warnByNode = useMemo(() => warningsByNode(mergeWarnings(state).active), [state]);
+  const k = knowledge ?? undefined;
+  const missingByNode = useMemo(() => computeMissing(state, k).byNode, [state, k]);
+  const warnByNode = useMemo(() => warningsByNode(mergeWarnings(state, k).active), [state, k]);
   // 마우스 강조: 지연 뒤 hoverId 가 되고, 위치 옮기기 드래그 중에는 받지 않는다.
   const hover = useHoverEmphasis();
   const dragging = useRef(false);
@@ -443,6 +448,7 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
         ...(ln.displayLabel !== n.label || ln.displaySub !== n.sub ? { truncated: true, ...(n.sub !== undefined ? { fullSub: n.sub } : {}) } : {}),
         ...(diff ? { diff } : {}),
         ...(pulse?.ids.has(ln.id) ? { pulse: pulse.token } : {}),
+        ...(n.guess ? { guess: true } : {}),
       };
       // 비교 모드에서는 배지를 모두 숨긴다.
       const missing = diffMarks || !options.showMissingBadges ? 0 : (missingByNode[ln.id] ?? 0);
@@ -458,7 +464,7 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
         position: { x: ln.x, y: ln.y },
         data,
         // 키보드 포커스를 받는 래퍼의 이름표: 화면에서 잘려도 전체 이름(과 보조 글자)을 읽어 준다.
-        ariaLabel: n.sub ? `${n.label} · ${n.sub}` : n.label,
+        ariaLabel: `${n.sub ? `${n.label} · ${n.sub}` : n.label}${n.guess ? ` · ${AI_GUESS_BADGE}${AI_BADGE_SR}` : ""}`,
         domAttributes: { tabIndex: n.id === stopRef.current ? 0 : -1 },
         // React Flow 의 선택을 화면 선택과 맞춘다(편집 모드 화살표 옮기기는 React Flow 가 선택한 노드에만 한다).
         selected: ln.id === selected,

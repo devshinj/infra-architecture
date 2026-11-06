@@ -2,6 +2,7 @@ import { useEffect, useId, useRef } from "react";
 import type { NodeProps } from "@xyflow/react";
 
 import type { Category } from "@/domain/catalog";
+import { AI_GUESS_BADGE } from "@/ui/glossary/aiBadge";
 
 import "./canvas.css";
 import { CategoryIcon } from "./icons";
@@ -18,6 +19,8 @@ export interface NodeCardData extends Record<string, unknown> {
   /** 빠진 정보 수와 경고 수. 둘 다 있으면 경고 "!" 가 빠진 정보 배지 왼쪽에 나란히 놓인다. */
   badges?: { missing?: number; warn?: number };
   az?: string;
+  /** AI 가 스스로 넣은 망연계(맞아요·아니에요 전). 보조 줄 끝에 작은 `AI 추정` 표시를 둔다. */
+  guess?: boolean;
   /** 이름이나 보조 글자가 줄임표로 잘렸는가. 참이면 title 대신 말풍선으로 전체를 보여 준다. */
   truncated?: boolean;
   /** 잘리지 않은 전체 보조 글자(말풍선용). */
@@ -65,10 +68,12 @@ export function NodeCard({ data, dragging }: Pick<NodeProps, "data"> & Partial<N
       </span>
       <span className="node__text">
         <span className="node__label">{d.label}</span>
-        {(d.sub || d.az) && (
+        {(d.sub || d.az || d.guess) && (
           <span className="node__subrow">
             {d.sub && <span className="node__sub">{d.sub}</span>}
             {d.az && <span className="node__az">AZ {d.az}</span>}
+            {/* 화면 읽기는 노드 래퍼의 이름표가 읽는다(Canvas ariaLabel). */}
+            {d.guess && <span className="node__guess" aria-hidden="true">{AI_GUESS_BADGE}</span>}
           </span>
         )}
       </span>

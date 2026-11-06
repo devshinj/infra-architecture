@@ -31,6 +31,8 @@
 .node__subrow { display: flex; align-items: baseline; gap: 6px; min-width: 0; }
 .node__sub { font-size: 11px; color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .node__az { flex: none; font-size: 11px; color: var(--text-secondary); border: 1px solid var(--line-node); border-radius: 3px; padding: 0 3px; }
+/* AI 추정 망연계: "AI 설명"·"AI 제안" 배지와 같은 무채색 테두리 글자. 멀리서 보면 숨긴다. */
+.node__guess { flex: none; font-size: 11px; line-height: 1.3; color: var(--text-secondary); border: 1px solid var(--line-node); border-radius: 4px; padding: 0 4px; white-space: nowrap; }
 
 /* 잘린 이름 말풍선: 노드 바로 위, 유리 칠. 마우스를 받지 않는다.
    --tip-scale(1/zoom)로 캔버스 확대를 되돌려 화면에서 늘 같은 크기로 읽힌다(아래 가운데를 기준으로, 노드와의 틈도 화면 8px). */
@@ -244,6 +246,7 @@ button.node__badge--pair-end::before { left: -1px; transform: none; }
 }
 [data-zoom="far"] .node__sub,
 [data-zoom="far"] .node__az,
+[data-zoom="far"] .node__guess,
 [data-zoom="far"] .edge-label { display: none; }
 .group--selected { outline: 1.5px solid var(--accent); outline-offset: 4px; }
 
