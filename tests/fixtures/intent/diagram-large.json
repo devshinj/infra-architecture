@@ -1,0 +1,383 @@
+{
+ "note": "여러 대상을 한꺼번에 고치는 요청(일괄 수정) 점검용 큰 구성도. 서버 10대(웹 3·WAS 4·배치 2·배스천 1), DB 3개.",
+ "commands": [
+  {
+   "op": "add_group",
+   "id": "biz",
+   "group_kind": "network_zone",
+   "label": "업무망",
+   "parent": null
+  },
+  {
+   "op": "add_group",
+   "id": "inet",
+   "group_kind": "network_zone",
+   "label": "인터넷망",
+   "parent": null
+  },
+  {
+   "op": "add_group",
+   "id": "dmz",
+   "group_kind": "dmz",
+   "label": "DMZ",
+   "parent": "inet"
+  },
+  {
+   "op": "add_group",
+   "id": "web-ha",
+   "group_kind": "redundancy_group",
+   "label": "웹 VIP",
+   "parent": "dmz"
+  },
+  {
+   "op": "add_group",
+   "id": "was-ha",
+   "group_kind": "redundancy_group",
+   "label": "WAS VIP",
+   "parent": "biz"
+  },
+  {
+   "op": "add_node",
+   "id": "user",
+   "kind": "client_web",
+   "label": "브라우저",
+   "parent": null
+  },
+  {
+   "op": "add_node",
+   "id": "admin",
+   "kind": "admin_user",
+   "label": "관리자",
+   "parent": null
+  },
+  {
+   "op": "add_node",
+   "id": "fw",
+   "kind": "firewall",
+   "label": "방화벽",
+   "parent": "inet"
+  },
+  {
+   "op": "add_node",
+   "id": "lb",
+   "kind": "lb_l7",
+   "label": "L7 로드밸런서",
+   "parent": "dmz"
+  },
+  {
+   "op": "add_node",
+   "id": "web-1",
+   "kind": "web_server",
+   "label": "웹 서버 #1",
+   "parent": "web-ha"
+  },
+  {
+   "op": "add_node",
+   "id": "web-2",
+   "kind": "web_server",
+   "label": "웹 서버 #2",
+   "parent": "web-ha"
+  },
+  {
+   "op": "add_node",
+   "id": "web-3",
+   "kind": "web_server",
+   "label": "웹 서버 #3",
+   "parent": "web-ha"
+  },
+  {
+   "op": "add_node",
+   "id": "was-1",
+   "kind": "was",
+   "label": "WAS #1",
+   "parent": "was-ha"
+  },
+  {
+   "op": "add_node",
+   "id": "was-2",
+   "kind": "was",
+   "label": "WAS #2",
+   "parent": "was-ha"
+  },
+  {
+   "op": "add_node",
+   "id": "was-3",
+   "kind": "was",
+   "label": "WAS #3",
+   "parent": "was-ha"
+  },
+  {
+   "op": "add_node",
+   "id": "was-4",
+   "kind": "was",
+   "label": "WAS #4",
+   "parent": "was-ha"
+  },
+  {
+   "op": "add_node",
+   "id": "batch-1",
+   "kind": "batch_server",
+   "label": "정산 배치",
+   "parent": "biz"
+  },
+  {
+   "op": "add_node",
+   "id": "batch-2",
+   "kind": "batch_server",
+   "label": "통계 배치",
+   "parent": "biz"
+  },
+  {
+   "op": "add_node",
+   "id": "bastion",
+   "kind": "bastion",
+   "label": "배스천",
+   "parent": "dmz"
+  },
+  {
+   "op": "add_node",
+   "id": "db-main",
+   "kind": "db_rdb",
+   "label": "회원 DB",
+   "parent": "biz"
+  },
+  {
+   "op": "add_node",
+   "id": "db-order",
+   "kind": "db_rdb",
+   "label": "주문 DB",
+   "parent": "biz"
+  },
+  {
+   "op": "add_node",
+   "id": "db-log",
+   "kind": "db_nosql",
+   "label": "로그 DB",
+   "parent": "biz"
+  },
+  {
+   "op": "add_node",
+   "id": "cache",
+   "kind": "cache",
+   "label": "세션 캐시",
+   "parent": "biz"
+  },
+  {
+   "op": "add_node",
+   "id": "link",
+   "kind": "network_link",
+   "label": "망연계",
+   "parent": "biz"
+  },
+  {
+   "op": "add_node",
+   "id": "pg",
+   "kind": "external_pg",
+   "label": "외부 결제(PG)",
+   "parent": "inet"
+  },
+  {
+   "op": "add_edge",
+   "id": "e-user-fw",
+   "from": "user",
+   "to": "fw",
+   "edge_kind": "request",
+   "label": "요청"
+  },
+  {
+   "op": "add_edge",
+   "id": "e-fw-lb",
+   "from": "fw",
+   "to": "lb",
+   "edge_kind": "request",
+   "label": "허용된 요청"
+  },
+  {
+   "op": "add_edge",
+   "id": "e-lb-web-1",
+   "from": "lb",
+   "to": "web-1",
+   "edge_kind": "request",
+   "label": "분배"
+  },
+  {
+   "op": "add_edge",
+   "id": "e-lb-web-2",
+   "from": "lb",
+   "to": "web-2",
+   "edge_kind": "request",
+   "label": "분배"
+  },
+  {
+   "op": "add_edge",
+   "id": "e-lb-web-3",
+   "from": "lb",
+   "to": "web-3",
+   "edge_kind": "request",
+   "label": "분배"
+  },
+  {
+   "op": "add_edge",
+   "id": "e-web-1-was-1",
+   "from": "web-1",
+   "to": "was-1",
+   "edge_kind": "request",
+   "label": "업무 처리"
+  },
+  {
+   "op": "add_edge",
+   "id": "e-web-2-was-1",
+   "from": "web-2",
+   "to": "was-1",
+   "edge_kind": "request",
+   "label": "업무 처리"
+  },
+  {
+   "op": "add_edge",
+   "id": "e-web-3-was-1",
+   "from": "web-3",
+   "to": "was-1",
+   "edge_kind": "request",
+   "label": "업무 처리"
+  },
+  {
+   "op": "add_edge",
+   "id": "e-was-1-db-main",
+   "from": "was-1",
+   "to": "db-main",
+   "edge_kind": "request",
+   "label": "회원 조회"
+  },
+  {
+   "op": "add_edge",
+   "id": "e-was-1-db-order",
+   "from": "was-1",
+   "to": "db-order",
+   "edge_kind": "request",
+   "label": "주문 저장"
+  },
+  {
+   "op": "add_edge",
+   "id": "e-was-1-cache",
+   "from": "was-1",
+   "to": "cache",
+   "edge_kind": "request",
+   "label": "세션"
+  },
+  {
+   "op": "add_edge",
+   "id": "e-was-2-db-main",
+   "from": "was-2",
+   "to": "db-main",
+   "edge_kind": "request",
+   "label": "회원 조회"
+  },
+  {
+   "op": "add_edge",
+   "id": "e-was-2-db-order",
+   "from": "was-2",
+   "to": "db-order",
+   "edge_kind": "request",
+   "label": "주문 저장"
+  },
+  {
+   "op": "add_edge",
+   "id": "e-was-2-cache",
+   "from": "was-2",
+   "to": "cache",
+   "edge_kind": "request",
+   "label": "세션"
+  },
+  {
+   "op": "add_edge",
+   "id": "e-was-3-db-main",
+   "from": "was-3",
+   "to": "db-main",
+   "edge_kind": "request",
+   "label": "회원 조회"
+  },
+  {
+   "op": "add_edge",
+   "id": "e-was-3-db-order",
+   "from": "was-3",
+   "to": "db-order",
+   "edge_kind": "request",
+   "label": "주문 저장"
+  },
+  {
+   "op": "add_edge",
+   "id": "e-was-3-cache",
+   "from": "was-3",
+   "to": "cache",
+   "edge_kind": "request",
+   "label": "세션"
+  },
+  {
+   "op": "add_edge",
+   "id": "e-was-4-db-main",
+   "from": "was-4",
+   "to": "db-main",
+   "edge_kind": "request",
+   "label": "회원 조회"
+  },
+  {
+   "op": "add_edge",
+   "id": "e-was-4-db-order",
+   "from": "was-4",
+   "to": "db-order",
+   "edge_kind": "request",
+   "label": "주문 저장"
+  },
+  {
+   "op": "add_edge",
+   "id": "e-was-4-cache",
+   "from": "was-4",
+   "to": "cache",
+   "edge_kind": "request",
+   "label": "세션"
+  },
+  {
+   "op": "add_edge",
+   "id": "e-was-1-link",
+   "from": "was-1",
+   "to": "link",
+   "edge_kind": "request",
+   "label": "결제 요청"
+  },
+  {
+   "op": "add_edge",
+   "id": "e-link-pg",
+   "from": "link",
+   "to": "pg",
+   "edge_kind": "request",
+   "label": "결제",
+   "payload": "api",
+   "direction": "two_way"
+  },
+  {
+   "op": "add_edge",
+   "id": "e-batch-1-db-order",
+   "from": "batch-1",
+   "to": "db-order",
+   "edge_kind": "async",
+   "label": "정산 집계"
+  },
+  {
+   "op": "add_edge",
+   "id": "e-batch-2-db-log",
+   "from": "batch-2",
+   "to": "db-log",
+   "edge_kind": "async",
+   "label": "통계 집계"
+  },
+  {
+   "op": "add_edge",
+   "id": "e-admin-bastion",
+   "from": "admin",
+   "to": "bastion",
+   "edge_kind": "aux",
+   "label": "관리 접속"
+  }
+ ],
+ "flows": []
+}

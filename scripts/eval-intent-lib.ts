@@ -6,6 +6,7 @@ export type QwenExpect =
   | { expect: "flow"; ops: string[] }
   | { expect: "edge"; edge: string; payload: string; direction: string }
   | { expect: "node_attr"; node: string }
+  | { expect: "nodes_attr"; nodes: string[]; key: string }
   | { expect: "record" }
   | { expect: "skip" };
 
@@ -77,6 +78,13 @@ export function judgeQwen(exp: QwenExpect, cmds: SeenCommand[]): string | null {
       const payload = lastDefined(hit.map((c) => c.payload));
       const direction = lastDefined(hit.map((c) => c.direction));
       if (payload !== exp.payload || direction !== exp.direction) return `값이 다름(${payload ?? "-"}, ${direction ?? "-"})`;
+      return null;
+    }
+    case "nodes_attr": {
+      const hit = new Set(cmds.filter((c) => c.op === "update_node" && c.id && c.attrs && exp.key in c.attrs).map((c) => c.id!));
+      const missed = exp.nodes.filter((n) => !hit.has(n));
+      const extra = [...hit].filter((n) => !exp.nodes.includes(n));
+      if (missed.length || extra.length) return `대상이 다름(빠짐: ${missed.join(", ") || "-"} / 더함: ${extra.join(", ") || "-"})`;
       return null;
     }
     case "node_attr": {

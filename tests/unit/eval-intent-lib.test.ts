@@ -84,3 +84,16 @@ describe("checkGuards", () => {
     expect(checkGuards({}, cmd([{ edge: "e1", short: "로그인 요청" }]), { guessed: [], flows })).toBeNull();
   });
 });
+
+describe("judgeQwen nodes_attr", () => {
+  const exp = { expect: "nodes_attr" as const, nodes: ["a", "b"], key: "os" };
+  it("대상 전부에 그 속성을 적어야 하고, 다른 노드에 적으면 안 된다", () => {
+    expect(judgeQwen(exp, [{ op: "update_node", id: "a", attrs: { os: "x" } }, { op: "update_node", id: "b", attrs: { os: "x" } }])).toBeNull();
+    expect(judgeQwen(exp, [{ op: "update_node", id: "a", attrs: { os: "x" } }, { op: "update_node", id: "c", attrs: { os: "x" } }])).toBe(
+      "대상이 다름(빠짐: b / 더함: c)",
+    );
+    expect(judgeQwen(exp, [{ op: "update_node", id: "a", attrs: { os: "x" } }, { op: "update_node", id: "b", attrs: { cpu: "4" } }])).toBe(
+      "대상이 다름(빠짐: b / 더함: -)",
+    );
+  });
+});

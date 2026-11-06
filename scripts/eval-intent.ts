@@ -38,6 +38,8 @@ interface Case {
   text: string;
   want: string;
   lastAssistant?: string;
+  /** 점검 구성도 이름. 없으면 diagram.json, 있으면 diagram-<이름>.json */
+  diagram?: string;
   qwen: QwenExpect & QwenGuards;
 }
 
@@ -76,28 +78,35 @@ async function main(): Promise<number> {
   const clef = createClefClient(cfg.clef, { classifyCapMs: CLASSIFY_CAP_MS });
   const qwen = !clefOnly && cfg.qwen ? createQwenClient(cfg.qwen) : null;
 
-  const fixture = JSON.parse(readFileSync(join(DIR, "diagram.json"), "utf8"));
-  let state: State = emptyState();
-  for (const raw of fixture.commands) {
-    const p = parseCommand(raw);
-    if (!p.ok) throw new Error(`점검 구성도 명령이 틀림: ${JSON.stringify(raw)} — ${p.error}`);
-    const r = applyCommand(state, p.cmd);
-    if (!r.ok) throw new Error(`점검 구성도 적용 실패: ${JSON.stringify(raw)} — ${r.error}`);
-    state = r.state;
-  }
-  const flows = fixture.flows;
-  const flowSteps: Record<string, { edge: string; short: string }[]> = Object.fromEntries(
-    flows.map((f: { id: string; steps: { edge: string; short: string }[] }) => [f.id, f.steps]),
-  );
+  type Flows = { id: string; name: string; origin: "user" | "system"; steps: { edge: string; from: string; short: string; text: string }[] }[];
+  const diagrams = new Map<string, { state: State; flows: Flows; flowSteps: Record<string, { edge: string; short: string }[]> }>();
+  const diagramOf = (name?: string) => {
+    const key = name ?? "";
+    const hit = diagrams.get(key);
+    if (hit) return hit;
+    const fixture = JSON.parse(readFileSync(join(DIR, name ? `diagram-${name}.json` : "diagram.json"), "utf8"));
+    let st: State = emptyState();
+    for (const raw of fixture.commands) {
+      const p = parseCommand(raw);
+      if (!p.ok) throw new Error(`점검 구성도 명령이 틀림: ${JSON.stringify(raw)} — ${p.error}`);
+      const r = applyCommand(st, p.cmd);
+      if (!r.ok) throw new Error(`점검 구성도 적용 실패: ${JSON.stringify(raw)} — ${r.error}`);
+      st = r.state;
+    }
+    const flows: Flows = fixture.flows;
+    const d = { state: st, flows, flowSteps: Object.fromEntries(flows.map((f) => [f.id, f.steps])) };
+    diagrams.set(key, d);
+    return d;
+  };
   const cases: Case[] = JSON.parse(readFileSync(join(DIR, "cases.json"), "utf8")).cases.filter((c: Case) => !only || only.has(c.id));
-
-  // 파이프라인과 같은 열린 빠진 정보. Clef 문맥은 문장마다 clefOpenItems 로 고른다.
-  const openMissing = computeMissing(state).items.filter((m) => !m.unknown);
 
   const results: CaseResult[] = [];
   const rows: string[][] = [];
   for (const c of cases) {
     const prev = c.lastAssistant ?? DEFAULT_PREV;
+    const { state, flows, flowSteps } = diagramOf(c.diagram);
+    // 파이프라인과 같은 열린 빠진 정보. Clef 문맥은 clefOpenItems 로 고른다.
+    const openMissing = computeMissing(state).items.filter((m) => !m.unknown);
     const { clean, mentions } = parseMentions(c.text, state);
     let raw: { intent: string; confidence: number } | null = null;
     const routedIntent = await resolveIntent(c.text, async () => {
