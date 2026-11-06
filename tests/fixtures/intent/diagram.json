@@ -1,0 +1,56 @@
+{
+  "note": "의도 점검(npm run eval:intent)용 구성도. 업무망·인터넷망과 흐름 3개가 있고, WAS→외부 인증 연결은 전달물·방향이 비어 있다.",
+  "commands": [
+    { "op": "add_group", "id": "biz", "group_kind": "network_zone", "label": "업무망", "parent": null },
+    { "op": "add_group", "id": "inet", "group_kind": "network_zone", "label": "인터넷망", "parent": null },
+    { "op": "add_node", "id": "user", "kind": "client_web", "label": "브라우저", "parent": null },
+    { "op": "add_node", "id": "fw", "kind": "firewall", "label": "방화벽", "parent": null },
+    { "op": "add_node", "id": "web", "kind": "web_server", "label": "웹 서버", "parent": "biz" },
+    { "op": "add_node", "id": "was", "kind": "was", "label": "WAS", "parent": "biz" },
+    { "op": "add_node", "id": "db", "kind": "db_rdb", "label": "회원 DB", "parent": "biz" },
+    { "op": "add_node", "id": "cache", "kind": "cache", "label": "캐시", "parent": "biz" },
+    { "op": "add_node", "id": "batch", "kind": "batch_server", "label": "배치 서버", "parent": "biz" },
+    { "op": "add_node", "id": "link", "kind": "network_link", "label": "망연계", "parent": "biz" },
+    { "op": "add_node", "id": "auth", "kind": "external_auth", "label": "외부 인증", "parent": "inet" },
+    { "op": "add_node", "id": "pg", "kind": "external_pg", "label": "외부 결제(PG)", "parent": "inet" },
+    { "op": "add_edge", "id": "e-user-fw", "from": "user", "to": "fw", "edge_kind": "request", "label": "요청" },
+    { "op": "add_edge", "id": "e-fw-web", "from": "fw", "to": "web", "edge_kind": "request", "label": "허용된 요청" },
+    { "op": "add_edge", "id": "e-web-was", "from": "web", "to": "was", "edge_kind": "request", "label": "업무 처리" },
+    { "op": "add_edge", "id": "e-was-db", "from": "was", "to": "db", "edge_kind": "request", "label": "회원 정보 저장" },
+    { "op": "add_edge", "id": "e-was-cache", "from": "was", "to": "cache", "edge_kind": "request", "label": "세션 조회" },
+    { "op": "add_edge", "id": "e-was-link", "from": "was", "to": "link", "edge_kind": "request", "label": "결제 요청" },
+    { "op": "add_edge", "id": "e-link-pg", "from": "link", "to": "pg", "edge_kind": "request", "label": "결제 요청", "payload": "api", "direction": "two_way" },
+    { "op": "add_edge", "id": "e-was-auth", "from": "was", "to": "auth", "edge_kind": "request", "label": "본인 확인" },
+    { "op": "add_edge", "id": "e-batch-db", "from": "batch", "to": "db", "edge_kind": "async", "label": "야간 집계" }
+  ],
+  "flows": [
+    {
+      "id": "signup", "name": "회원가입", "origin": "system", "summary": "브라우저에서 가입 정보를 보내 회원 DB에 저장한다", "result": "가입 완료",
+      "steps": [
+        { "edge": "e-user-fw", "from": "user", "short": "가입 요청", "text": "가입 정보를 보낸다" },
+        { "edge": "e-fw-web", "from": "fw", "short": "방화벽 통과", "text": "허용된 요청만 웹 서버로 간다" },
+        { "edge": "e-web-was", "from": "web", "short": "WAS 전달", "text": "웹 서버가 WAS로 넘긴다" },
+        { "edge": "e-was-db", "from": "was", "short": "회원 저장", "text": "WAS가 회원 정보를 저장한다" }
+      ]
+    },
+    {
+      "id": "pay", "name": "결제", "origin": "system", "summary": "주문 금액을 외부 결제로 보낸다", "result": "결제 승인",
+      "steps": [
+        { "edge": "e-user-fw", "from": "user", "short": "결제 요청", "text": "결제 버튼을 누른다" },
+        { "edge": "e-fw-web", "from": "fw", "short": "방화벽 통과", "text": "허용된 요청만 웹 서버로 간다" },
+        { "edge": "e-web-was", "from": "web", "short": "WAS 전달", "text": "웹 서버가 WAS로 넘긴다" },
+        { "edge": "e-was-link", "from": "was", "short": "망연계로", "text": "WAS가 망연계로 결제 요청을 보낸다" },
+        { "edge": "e-link-pg", "from": "link", "short": "PG 요청", "text": "망연계가 인터넷망의 PG로 넘긴다" }
+      ]
+    },
+    {
+      "id": "order", "name": "주문하기", "origin": "user", "summary": "주문을 받아 DB에 남긴다", "result": "주문 접수",
+      "steps": [
+        { "edge": "e-user-fw", "from": "user", "short": "주문 요청", "text": "주문 정보를 보낸다" },
+        { "edge": "e-fw-web", "from": "fw", "short": "방화벽 통과", "text": "허용된 요청만 웹 서버로 간다" },
+        { "edge": "e-web-was", "from": "web", "short": "WAS 전달", "text": "웹 서버가 WAS로 넘긴다" },
+        { "edge": "e-was-db", "from": "was", "short": "주문 저장", "text": "WAS가 주문을 저장한다" }
+      ]
+    }
+  ]
+}
