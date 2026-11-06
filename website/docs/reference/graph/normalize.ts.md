@@ -1,6 +1,6 @@
 ---
 title: "normalize.ts"
-sidebar_position: 53
+sidebar_position: 55
 ---
 # normalize.ts
 
@@ -26,8 +26,8 @@ sidebar_position: 53
 
 ## Relationships
 
-- [pipeline.ts](pipeline.ts.md) (3 shared connections)
-- [flowSuggest.ts](flowSuggest.ts.md) (3 shared connections)
+- [pipeline.ts](pipeline.ts.md) (4 shared connections)
+- [flowSuggest.ts](flowSuggest.ts.md) (2 shared connections)
 
 ## Source Files
 

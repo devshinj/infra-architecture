@@ -1,6 +1,6 @@
 ---
 title: "labelBox"
-sidebar_position: 60
+sidebar_position: 62
 ---
 # labelBox
 
@@ -25,9 +25,8 @@ sidebar_position: 60
 
 - [edgeLabels.ts](edgeLabels.ts.md) (13 shared connections)
 - [EdgeLayer.tsx](EdgeLayer.tsx.md) (8 shared connections)
-- [Review Focus](Review_Focus.md) (1 shared connections)
-- [domain/flows.ts](domain-flows.ts.md) (1 shared connections)
-- [server/flows.ts](server-flows.ts.md) (1 shared connections)
+- [domain/flows.ts](domain-flows.ts.md) (2 shared connections)
+- [useFlows](useFlows.md) (1 shared connections)
 - [text.ts](text.ts.md) (1 shared connections)
 
 ## Source Files

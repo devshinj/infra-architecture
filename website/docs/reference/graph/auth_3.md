@@ -1,6 +1,6 @@
 ---
 title: "auth"
-sidebar_position: 81
+sidebar_position: 86
 ---
 # auth
 
@@ -39,7 +39,7 @@ sidebar_position: 81
 - \[diagramId\]/page.tsx `EXTRACTED`
 - [explain/route.ts](explain-route.ts.md) `EXTRACTED`
 - sessions/route.ts `EXTRACTED`
-- [suggest/route.ts](suggest-route.ts.md) `EXTRACTED`
+- suggest/route.ts `EXTRACTED`
 - flows/route.ts `EXTRACTED`
 - glossary/page.tsx `EXTRACTED`
 - (app)/layout.tsx `EXTRACTED`

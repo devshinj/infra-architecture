@@ -1,20 +1,19 @@
 ---
 title: "auth"
-sidebar_position: 29
+sidebar_position: 40
 sidebar_label: "핵심 노드: auth"
 ---
 # auth
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 21 nodes · cohesion 0.15
+> 20 nodes · cohesion 0.16
 
 ## Key Concepts
 
 - **Shell.tsx** (22 connections) — `src/ui/Shell.tsx`
 - **(app)/layout.tsx** (11 connections) — `src/app/(app)/layout.tsx`
 - **(app)/page.tsx** (10 connections) — `src/app/(app)/page.tsx`
-- **useShell()** (8 connections) — `src/ui/Shell.tsx`
 - **AppLayout()** (5 connections) — `src/app/(app)/layout.tsx`
 - **Home()** (5 connections) — `src/app/(app)/page.tsx`
 - **listProjects()** (5 connections) — `src/server/projects.ts`
@@ -35,12 +34,13 @@ sidebar_label: "핵심 노드: auth"
 
 ## Relationships
 
-- [Sidebar.tsx](Sidebar.tsx.md) (7 shared connections)
-- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (7 shared connections)
-- [auth](auth.md) (6 shared connections)
-- [ref_react](ref_react.md) (4 shared connections)
+- [Sidebar.tsx](Sidebar.tsx.md) (6 shared connections)
+- [ref_react](ref_react.md) (6 shared connections)
+- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (5 shared connections)
+- [auth](auth.md) (4 shared connections)
 - [projects.ts](projects.ts.md) (4 shared connections)
-- [ChatPanel.tsx](ChatPanel.tsx.md) (3 shared connections)
+- [ChatPanel.tsx](ChatPanel.tsx.md) (1 shared connections)
+- [ShellValue](ShellValue.md) (1 shared connections)
 
 ## Source Files
 
@@ -52,7 +52,7 @@ sidebar_label: "핵심 노드: auth"
 
 ## Audit Trail
 
-- EXTRACTED: 63 (100%)
+- EXTRACTED: 57 (100%)
 - INFERRED: 0 (0%)
 - AMBIGUOUS: 0 (0%)
 

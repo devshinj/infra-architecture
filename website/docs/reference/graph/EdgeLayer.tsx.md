@@ -1,6 +1,6 @@
 ---
 title: "EdgeLayer.tsx"
-sidebar_position: 32
+sidebar_position: 39
 ---
 # EdgeLayer.tsx
 
@@ -15,7 +15,6 @@ sidebar_position: 32
 - **EdgeLayerProps** (7 connections) — `src/canvas/EdgeLayer.tsx`
 - **Task 2: 마우스 강조·흐리기** (5 connections) — `docs/superpowers/plans/2026-10-31-infrasketch-phase3e-readability.md`
 - **EdgeLayerPortal()** (4 connections) — `src/canvas/EdgeLayer.tsx`
-- **연결선 모양과 움직임** (3 connections) — `docs/superpowers/specs/2026-10-29-infra-architecture-visualizer-design.md`
 - **.onHover()** (3 connections) — `src/canvas/EdgeLayer.tsx`
 - **NodeVisualState** (3 connections) — `src/canvas/NodeCard.tsx`
 - **Box** (2 connections) — `src/canvas/edgeLabels.ts`
@@ -25,6 +24,7 @@ sidebar_position: 32
 - **onPolyline()** (2 connections) — `src/canvas/EdgeLayer.tsx`
 - **prefersReducedMotion()** (2 connections) — `src/canvas/EdgeLayer.tsx`
 - **toD()** (2 connections) — `src/canvas/EdgeLayer.tsx`
+- **MotionKind** (2 connections) — `src/canvas/motion.ts`
 - **ARROW** (1 connections) — `src/canvas/EdgeLayer.tsx`
 - **DIR** (1 connections) — `src/canvas/EdgeLayer.tsx`
 - **DIR_D** (1 connections) — `src/canvas/EdgeLayer.tsx`
@@ -34,30 +34,30 @@ sidebar_position: 32
 
 ## Relationships
 
+- [Canvas.tsx](Canvas.tsx.md) (8 shared connections)
 - [labelBox](labelBox.md) (8 shared connections)
-- [motion.ts](motion.ts.md) (6 shared connections)
-- [catalog.ts](catalog.ts.md) (6 shared connections)
-- [Layout](Layout.md) (5 shared connections)
+- [catalog.ts](catalog.ts.md) (7 shared connections)
 - [text.ts](text.ts.md) (5 shared connections)
-- [Canvas.tsx](Canvas.tsx.md) (4 shared connections)
-- [segments.ts](segments.ts.md) (4 shared connections)
+- [motion.ts](motion.ts.md) (5 shared connections)
+- [segments.ts](segments.ts.md) (5 shared connections)
 - [edgeLabels.ts](edgeLabels.ts.md) (4 shared connections)
-- [emphasis.ts](emphasis.ts.md) (4 shared connections)
 - [types.ts](types.ts.md) (3 shared connections)
-- [server/flows.ts](server-flows.ts.md) (2 shared connections)
-- [MissingChecklist.tsx](MissingChecklist.tsx.md) (1 shared connections)
+- [Layout](Layout.md) (2 shared connections)
+- [Rect](Rect.md) (2 shared connections)
+- [useFlows](useFlows.md) (2 shared connections)
+- [Review Focus](Review_Focus.md) (1 shared connections)
 
 ## Source Files
 
 - `docs/superpowers/plans/2026-10-31-infrasketch-phase3e-readability.md`
-- `docs/superpowers/specs/2026-10-29-infra-architecture-visualizer-design.md`
 - `src/canvas/EdgeLayer.tsx`
 - `src/canvas/NodeCard.tsx`
 - `src/canvas/edgeLabels.ts`
+- `src/canvas/motion.ts`
 
 ## Audit Trail
 
-- EXTRACTED: 82 (94%)
+- EXTRACTED: 81 (94%)
 - INFERRED: 5 (6%)
 - AMBIGUOUS: 0 (0%)
 

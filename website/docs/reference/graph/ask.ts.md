@@ -1,64 +1,68 @@
 ---
 title: "ask.ts"
-sidebar_position: 34
+sidebar_position: 37
 ---
 # ask.ts
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 20 nodes · cohesion 0.22
+> 21 nodes · cohesion 0.18
 
 ## Key Concepts
 
 - **ask.ts** (54 connections) — `src/server/chat/ask.ts`
-- **runAskTurn()** (14 connections) — `src/server/chat/ask.ts`
-- **getSession()** (14 connections) — `src/server/chat/sessions.ts`
+- **events.ts** (24 connections) — `src/server/chat/events.ts`
+- **messages.ts** (16 connections) — `src/server/chat/messages.ts`
 - **askInSession()** (12 connections) — `src/server/chat/ask.ts`
-- **runChatTurn()** (12 connections) — `src/server/chat/pipeline.ts`
-- **lockedAsk()** (10 connections) — `src/server/chat/ask.ts`
+- **MessageMeta** (12 connections) — `src/server/chat/events.ts`
+- **Warning** (11 connections) — `src/domain/types.ts`
+- **Task 2: 질문 차례(서버)** (9 connections) — `docs/superpowers/plans/2026-11-01-infrasketch-phase3c2-ask-node.md`
 - **ChatEvent** (9 connections) — `src/server/chat/events.ts`
-- **sessionTurn()** (8 connections) — `src/server/chat/pipeline.ts`
-- **POST()** (7 connections) — `src/app/api/diagrams/[id]/chat/route.ts`
 - **createMessage()** (7 connections) — `src/server/chat/messages.ts`
-- **.emit()** (7 connections) — `src/server/chat/pipeline.ts`
+- **buildAskMessages()** (6 connections) — `src/server/chat/prompt.ts`
 - **touchSession()** (6 connections) — `src/server/chat/sessions.ts`
+- **cachedNodeExplanation()** (6 connections) — `src/server/explain.ts`
 - **.emit()** (5 connections) — `src/server/chat/ask.ts`
-- **guardEmit()** (5 connections) — `src/server/chat/pipeline.ts`
+- **SESSION_GONE_MESSAGE** (5 connections) — `src/server/chat/events.ts`
+- **ChatDeps** (5 connections) — `src/server/chat/pipeline.ts`
 - **streamFailure()** (5 connections) — `src/server/chat/pipeline.ts`
 - **turnSignals()** (4 connections) — `src/server/chat/pipeline.ts`
-- **hasNode()** (3 connections) — `src/server/chat/ask.ts`
 - **AskArgs** (2 connections) — `src/server/chat/ask.ts`
-- **TurnArgs** (2 connections) — `src/server/chat/pipeline.ts`
+- **AI_UNAVAILABLE_MESSAGE** (2 connections) — `src/server/chat/pipeline.ts`
+- **HISTORY_FETCH** (2 connections) — `src/server/chat/pipeline.ts`
 - **HANDOFF_REPLY** (1 connections) — `src/server/chat/ask.ts`
 
 ## Relationships
 
+- [ask/route.ts](ask-route.ts.md) (25 shared connections)
 - [pipeline.ts](pipeline.ts.md) (22 shared connections)
-- [projects.ts](projects.ts.md) (20 shared connections)
-- [ask/route.ts](ask-route.ts.md) (19 shared connections)
-- [\[sessionId\]/route.ts]([sessionId]-route.ts.md) (15 shared connections)
-- [missing.ts](missing.ts.md) (8 shared connections)
-- [(app)/actions.ts](app-actions.ts.md) (4 shared connections)
-- [prompt.ts](prompt.ts.md) (3 shared connections)
-- [설명 생성과 품질 검사](설명_생성과_품질_검사.md) (3 shared connections)
-- [Review Focus](Review_Focus.md) (3 shared connections)
-- [types.ts](types.ts.md) (2 shared connections)
-- [auth](auth.md) (1 shared connections)
-- [flowSuggest.ts](flowSuggest.ts.md) (1 shared connections)
+- [types.ts](types.ts.md) (14 shared connections)
+- [\[sessionId\]/route.ts]([sessionId]-route.ts.md) (10 shared connections)
+- [auth](auth.md) (8 shared connections)
+- [schema.ts](schema.ts.md) (8 shared connections)
+- [prompt.ts](prompt.ts.md) (5 shared connections)
+- [설명 생성과 품질 검사](설명_생성과_품질_검사.md) (5 shared connections)
+- [createJsonlParser](createJsonlParser.md) (4 shared connections)
+- [domain/warnings.ts](domain-warnings.ts.md) (4 shared connections)
+- [MissingChecklist.tsx](MissingChecklist.tsx.md) (4 shared connections)
+- [useSessions.ts](useSessions.ts.md) (4 shared connections)
 
 ## Source Files
 
-- `src/app/api/diagrams/[id]/chat/route.ts`
+- `docs/superpowers/plans/2026-11-01-infrasketch-phase3c2-ask-node.md`
+- `src/domain/types.ts`
 - `src/server/chat/ask.ts`
 - `src/server/chat/events.ts`
 - `src/server/chat/messages.ts`
 - `src/server/chat/pipeline.ts`
+- `src/server/chat/prompt.ts`
 - `src/server/chat/sessions.ts`
+- `src/server/explain.ts`
 
 ## Audit Trail
 
-- EXTRACTED: 141 (97%)
-- INFERRED: 4 (3%)
+- EXTRACTED: 156 (94%)
+- INFERRED: 10 (6%)
 - AMBIGUOUS: 0 (0%)
 
 ---

@@ -1,6 +1,6 @@
 ---
 title: "FlowPanel.tsx"
-sidebar_position: 39
+sidebar_position: 44
 ---
 # FlowPanel.tsx
 
@@ -31,16 +31,14 @@ sidebar_position: 39
 
 ## Relationships
 
-- [Sidebar.tsx](Sidebar.tsx.md) (7 shared connections)
+- [SessionPicker.tsx](SessionPicker.tsx.md) (8 shared connections)
 - [Explanation.tsx](Explanation.tsx.md) (5 shared connections)
-- [NodeInfo.tsx](NodeInfo.tsx.md) (5 shared connections)
+- [RightPanel.tsx](RightPanel.tsx.md) (5 shared connections)
 - [domain/flows.ts](domain-flows.ts.md) (4 shared connections)
-- [server/flows.ts](server-flows.ts.md) (3 shared connections)
-- [flowSuggest.ts](flowSuggest.ts.md) (2 shared connections)
+- [types.ts](types.ts.md) (3 shared connections)
+- [useFlows](useFlows.md) (3 shared connections)
 - [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (2 shared connections)
-- [SessionPicker.tsx](SessionPicker.tsx.md) (1 shared connections)
 - [ref_react](ref_react.md) (1 shared connections)
-- [types.ts](types.ts.md) (1 shared connections)
 
 ## Source Files
 
