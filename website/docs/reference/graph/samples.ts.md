@@ -1,19 +1,17 @@
 ---
 title: "samples.ts"
-sidebar_position: 43
+sidebar_position: 48
 ---
 # samples.ts
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 19 nodes · cohesion 0.12
+> 17 nodes · cohesion 0.12
 
 ## Key Concepts
 
 - **samples.ts** (34 connections) — `src/server/samples.ts`
-- **importSample()** (6 connections) — `src/server/samples.ts`
 - **convertSpikeScenario()** (4 connections) — `src/server/samples.ts`
-- **SAMPLES** (3 connections) — `src/server/samples.ts`
 - **sampleState()** (3 connections) — `src/server/samples.ts`
 - **docs_superpowers_spike_spike_results** (1 connections)
 - **AddEdge** (1 connections) — `src/server/samples.ts`
@@ -33,13 +31,14 @@ sidebar_position: 43
 ## Relationships
 
 - [getOwnedDiagram](getOwnedDiagram.md) (6 shared connections)
-- [(app)/actions.ts](app-actions.ts.md) (4 shared connections)
 - [apply.ts](apply.ts.md) (3 shared connections)
-- [types.ts](types.ts.md) (3 shared connections)
-- [ZoneNameLayer.tsx](ZoneNameLayer.tsx.md) (2 shared connections)
-- [ask.ts](ask.ts.md) (2 shared connections)
-- [NODE_KINDS](NODE_KINDS.md) (1 shared connections)
-- [flowSuggest.ts](flowSuggest.ts.md) (1 shared connections)
+- [(app)/actions.ts](app-actions.ts.md) (3 shared connections)
+- [auth](auth.md) (2 shared connections)
+- [Legend.tsx](Legend.tsx.md) (1 shared connections)
+- [missing.ts](missing.ts.md) (1 shared connections)
+- [edgeCoalesce.ts](edgeCoalesce.ts.md) (1 shared connections)
+- [DiagramState](DiagramState.md) (1 shared connections)
+- [NodeCard.tsx](NodeCard.tsx.md) (1 shared connections)
 - [commands.ts](commands.ts.md) (1 shared connections)
 - [projects.ts](projects.ts.md) (1 shared connections)
 
@@ -49,7 +48,7 @@ sidebar_position: 43
 
 ## Audit Trail
 
-- EXTRACTED: 44 (100%)
+- EXTRACTED: 38 (100%)
 - INFERRED: 0 (0%)
 - AMBIGUOUS: 0 (0%)
 

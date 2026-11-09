@@ -1,6 +1,6 @@
 ---
 title: "Explanation.tsx"
-sidebar_position: 59
+sidebar_position: 60
 ---
 # Explanation.tsx
 
@@ -27,16 +27,15 @@ sidebar_position: 59
 
 ## Relationships
 
-- [useExplanations.ts](useExplanations.ts.md) (4 shared connections)
+- [FlowPanel.tsx](FlowPanel.tsx.md) (5 shared connections)
+- [NodeInfo.tsx](NodeInfo.tsx.md) (4 shared connections)
 - [RightPanel.tsx](RightPanel.tsx.md) (4 shared connections)
+- [useExplanations.ts](useExplanations.ts.md) (3 shared connections)
 - [GlossaryPage.tsx](GlossaryPage.tsx.md) (3 shared connections)
-- [ZoneTypePicker.tsx](ZoneTypePicker.tsx.md) (3 shared connections)
-- [NodeInfo.tsx](NodeInfo.tsx.md) (3 shared connections)
 - [glossary.ts](glossary.ts.md) (2 shared connections)
-- [ref_react](ref_react.md) (2 shared connections)
-- [FlowPanel.tsx](FlowPanel.tsx.md) (2 shared connections)
+- [NodeCard.tsx](NodeCard.tsx.md) (2 shared connections)
 - [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (1 shared connections)
-- [AskNode.tsx](AskNode.tsx.md) (1 shared connections)
+- [domain/explain.ts](domain-explain.ts.md) (1 shared connections)
 
 ## Source Files
 

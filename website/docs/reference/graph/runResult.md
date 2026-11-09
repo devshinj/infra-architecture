@@ -1,6 +1,6 @@
 ---
 title: "runResult()"
-sidebar_position: 98
+sidebar_position: 99
 sidebar_label: "핵심 노드: runResult()"
 ---
 # runResult()
@@ -9,7 +9,7 @@ sidebar_label: "핵심 노드: runResult()"
 
 > God node · 29 connections · `src/app/(app)/actions.ts`
 
-**Community:** [(app)/actions.ts](app-actions.ts.md)
+**Community:** [NetworkKnowledgePage.tsx](NetworkKnowledgePage.tsx.md)
 
 ## Connections by Relation
 

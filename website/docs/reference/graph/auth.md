@@ -1,79 +1,73 @@
 ---
 title: "auth"
-sidebar_position: 3
+sidebar_position: 30
 sidebar_label: "핵심 노드: auth"
 ---
 # auth
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 49 nodes · cohesion 0.07
+> 23 nodes · cohesion 0.17
 
 ## Key Concepts
 
 - **auth** (30 connections) — `src/auth.ts`
 - **auth.ts** (25 connections) — `src/auth.ts`
-- **Shell.tsx** (22 connections) — `src/ui/Shell.tsx`
-- **explain/route.ts** (18 connections) — `src/app/api/diagrams/[id]/explain/route.ts`
+- **ref_next** (24 connections)
+- **[diagramId]/page.tsx** (21 connections) — `src/app/(app)/p/[projectId]/d/[diagramId]/page.tsx`
+- **flows/route.ts** (12 connections) — `src/app/api/diagrams/[id]/flows/route.ts`
+- **listMessages()** (12 connections) — `src/server/chat/messages.ts`
 - **(app)/layout.tsx** (11 connections) — `src/app/(app)/layout.tsx`
 - **(app)/page.tsx** (10 connections) — `src/app/(app)/page.tsx`
-- **middleware.ts** (8 connections) — `src/middleware.ts`
-- **listSignatures()** (6 connections) — `src/server/explain.ts`
-- **ref_next_auth** (5 connections)
+- **DiagramPage()** (9 connections) — `src/app/(app)/p/[projectId]/d/[diagramId]/page.tsx`
+- **health/route.ts** (6 connections) — `src/app/api/llm/health/route.ts`
 - **AppLayout()** (5 connections) — `src/app/(app)/layout.tsx`
 - **Home()** (5 connections) — `src/app/(app)/page.tsx`
 - **listProjects()** (5 connections) — `src/server/projects.ts`
-- **ShellProvider()** (5 connections) — `src/ui/Shell.tsx`
-- **GET()** (4 connections) — `src/app/api/diagrams/[id]/explain/route.ts`
-- **POST()** (4 connections) — `src/app/api/diagrams/[id]/explain/route.ts`
-- **auth.config.ts** (4 connections) — `src/auth.config.ts`
-- **middleware-paths.ts** (4 connections) — `src/middleware-paths.ts`
 - **CreateButton()** (4 connections) — `src/ui/Shell.tsx`
-- **failure()** (3 connections) — `src/app/api/diagrams/[id]/explain/route.ts`
-- **logoutAction()** (3 connections) — `src/app/(app)/actions.ts`
-- **authConfig** (3 connections) — `src/auth.config.ts`
-- **signOut** (3 connections) — `src/auth.ts`
-- **authDecision** (3 connections) — `src/middleware-paths.ts`
+- **GET()** (3 connections) — `src/app/api/diagrams/[id]/flows/route.ts`
+- **GET()** (3 connections) — `src/app/api/llm/health/route.ts`
 - **lastActiveDiagram()** (3 connections) — `src/server/projects.ts`
-- **next-auth.d.ts** (3 connections) — `src/types/next-auth.d.ts`
-- *... and 24 more nodes in this community*
+- **SAMPLES** (3 connections) — `src/server/samples.ts`
+- **[...nextauth]/route.ts** (2 connections) — `src/app/api/auth/[...nextauth]/route.ts`
+- **handlers** (2 connections) — `src/auth.ts`
+- **Ctx** (1 connections) — `src/app/api/diagrams/[id]/flows/route.ts`
+- **dynamic** (1 connections) — `src/app/api/diagrams/[id]/flows/route.ts`
+- **runtime** (1 connections) — `src/app/api/diagrams/[id]/flows/route.ts`
 
 ## Relationships
 
-- [ref_react](ref_react.md) (11 shared connections)
-- [Sidebar.tsx](Sidebar.tsx.md) (8 shared connections)
-- [projects.ts](projects.ts.md) (7 shared connections)
-- [ask/route.ts](ask-route.ts.md) (6 shared connections)
-- [\[sessionId\]/route.ts]([sessionId]-route.ts.md) (6 shared connections)
-- [설명 생성과 품질 검사](설명_생성과_품질_검사.md) (5 shared connections)
-- [(app)/actions.ts](app-actions.ts.md) (5 shared connections)
-- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (5 shared connections)
-- [flows/route.ts](flows-route.ts.md) (3 shared connections)
-- [flowSuggest.ts](flowSuggest.ts.md) (3 shared connections)
-- [config.ts](config.ts.md) (3 shared connections)
-- [GlossaryPage.tsx](GlossaryPage.tsx.md) (3 shared connections)
+- [ask.ts](ask.ts.md) (14 shared connections)
+- [\[sessionId\]/route.ts]([sessionId]-route.ts.md) (13 shared connections)
+- [(app)/actions.ts](app-actions.ts.md) (8 shared connections)
+- [ref_react](ref_react.md) (8 shared connections)
+- [projects.ts](projects.ts.md) (8 shared connections)
+- [GlossaryPage.tsx](GlossaryPage.tsx.md) (6 shared connections)
+- [explain/route.ts](explain-route.ts.md) (5 shared connections)
+- [Sidebar.tsx](Sidebar.tsx.md) (5 shared connections)
+- [Shell.tsx](Shell.tsx.md) (5 shared connections)
+- [flowSuggest.ts](flowSuggest.ts.md) (4 shared connections)
+- [NetworkKnowledgePage.tsx](NetworkKnowledgePage.tsx.md) (4 shared connections)
+- [middleware.ts](middleware.ts.md) (4 shared connections)
 
 ## Source Files
 
-- `src/app/(app)/actions.ts`
 - `src/app/(app)/layout.tsx`
+- `src/app/(app)/p/[projectId]/d/[diagramId]/page.tsx`
 - `src/app/(app)/page.tsx`
 - `src/app/api/auth/[...nextauth]/route.ts`
-- `src/app/api/diagrams/[id]/explain/route.ts`
-- `src/auth.config.ts`
+- `src/app/api/diagrams/[id]/flows/route.ts`
+- `src/app/api/llm/health/route.ts`
 - `src/auth.ts`
-- `src/middleware-paths.ts`
-- `src/middleware.ts`
-- `src/server/explain.ts`
+- `src/server/chat/messages.ts`
 - `src/server/projects.ts`
-- `src/types/next-auth.d.ts`
+- `src/server/samples.ts`
 - `src/ui/Shell.tsx`
-- `src/ui/useMediaQuery.ts`
 
 ## Audit Trail
 
-- EXTRACTED: 151 (100%)
-- INFERRED: 0 (0%)
+- EXTRACTED: 153 (99%)
+- INFERRED: 2 (1%)
 - AMBIGUOUS: 0 (0%)
 
 ---

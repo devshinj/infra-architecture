@@ -1,71 +1,72 @@
 ---
 title: "flowSuggest.ts"
-sidebar_position: 15
+sidebar_position: 13
 ---
 # flowSuggest.ts
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 32 nodes · cohesion 0.10
+> 36 nodes · cohesion 0.09
 
 ## Key Concepts
 
-- **DiagramState** (53 connections) — `src/domain/types.ts`
 - **flowSuggest.ts** (53 connections) — `src/server/flowSuggest.ts`
 - **suggest/route.ts** (17 connections) — `src/app/api/diagrams/[id]/flows/suggest/route.ts`
 - **suggestFlows()** (14 connections) — `src/server/flowSuggest.ts`
 - **QwenClient** (9 connections) — `src/server/llm/qwen.ts`
+- **parseCommand()** (8 connections) — `src/domain/commands.ts`
 - **FlowSuggestRepo** (8 connections) — `src/server/flowSuggest.ts`
-- **FlowOp** (6 connections) — `src/domain/flows.ts`
+- **pickFlows()** (7 connections) — `src/server/flowSuggest.ts`
+- **Global Constraints** (5 connections) — `docs/superpowers/plans/2026-11-06-network-knowledge-link-guess.md`
+- **toFlowOp()** (5 connections) — `src/domain/commands.ts`
+- **ChatDeps** (5 connections) — `src/server/chat/pipeline.ts`
 - **.applyFlowOps()** (5 connections) — `src/server/flowSuggest.ts`
 - **diagrams** (4 connections) — `src/db/schema.ts`
-- **FLOW_LIMITS** (4 connections) — `src/domain/flows.ts`
 - **.getLatestState()** (4 connections) — `src/server/flowSuggest.ts`
 - **POST()** (3 connections) — `src/app/api/diagrams/[id]/flows/suggest/route.ts`
+- **flows** (3 connections) — `src/db/schema.ts`
 - **FLOW_BUSY_MESSAGE** (3 connections) — `src/server/flows.ts`
 - **complete()** (3 connections) — `src/server/flowSuggest.ts`
 - **.getOwnedDiagram()** (3 connections) — `src/server/flowSuggest.ts`
 - **.listFlows()** (3 connections) — `src/server/flowSuggest.ts`
+- **resolveDeps()** (3 connections) — `src/server/flowSuggest.ts`
 - **FLOW_SUGGEST_BUSY_MESSAGE** (2 connections) — `src/server/flowSuggest.ts`
 - **FlowSuggestDeps** (2 connections) — `src/server/flowSuggest.ts`
 - **.claimSuggest()** (2 connections) — `src/server/flowSuggest.ts`
 - **.releaseSuggest()** (2 connections) — `src/server/flowSuggest.ts`
 - **.withLock()** (2 connections) — `src/server/flowSuggest.ts`
-- **BodySchema** (1 connections) — `src/app/api/diagrams/[id]/flows/suggest/route.ts`
-- **Ctx** (1 connections) — `src/app/api/diagrams/[id]/flows/suggest/route.ts`
-- **dynamic** (1 connections) — `src/app/api/diagrams/[id]/flows/suggest/route.ts`
-- **maxDuration** (1 connections) — `src/app/api/diagrams/[id]/flows/suggest/route.ts`
-- *... and 7 more nodes in this community*
+- *... and 11 more nodes in this community*
 
 ## Relationships
 
-- [pipeline.ts](pipeline.ts.md) (8 shared connections)
-- [server/flows.ts](server-flows.ts.md) (8 shared connections)
+- [server/flows.ts](server-flows.ts.md) (12 shared connections)
 - [getOwnedDiagram](getOwnedDiagram.md) (8 shared connections)
-- [projects.ts](projects.ts.md) (6 shared connections)
-- [server/network.ts](server-network.ts.md) (6 shared connections)
-- [domain/flows.ts](domain-flows.ts.md) (6 shared connections)
-- [domain/warnings.ts](domain-warnings.ts.md) (6 shared connections)
-- [types.ts](types.ts.md) (5 shared connections)
-- [ref_react](ref_react.md) (4 shared connections)
-- [prompt.ts](prompt.ts.md) (4 shared connections)
-- [config.ts](config.ts.md) (4 shared connections)
-- [auth](auth.md) (3 shared connections)
+- [deps.ts](deps.ts.md) (7 shared connections)
+- [schema.ts](schema.ts.md) (6 shared connections)
+- [pipeline.ts](pipeline.ts.md) (6 shared connections)
+- [domain/warnings.ts](domain-warnings.ts.md) (5 shared connections)
+- [normalize.ts](normalize.ts.md) (4 shared connections)
+- [auth](auth.md) (4 shared connections)
+- [projects.ts](projects.ts.md) (4 shared connections)
+- [commands.ts](commands.ts.md) (4 shared connections)
+- [prompt.ts](prompt.ts.md) (3 shared connections)
+- [createJsonlParser](createJsonlParser.md) (3 shared connections)
 
 ## Source Files
 
+- `docs/superpowers/plans/2026-11-06-network-knowledge-link-guess.md`
 - `src/app/api/diagrams/[id]/flows/suggest/route.ts`
 - `src/db/schema.ts`
-- `src/domain/flows.ts`
-- `src/domain/types.ts`
+- `src/domain/commands.ts`
+- `src/server/chat/pipeline.ts`
 - `src/server/flowSuggest.ts`
 - `src/server/flows.ts`
 - `src/server/llm/qwen.ts`
 
 ## Audit Trail
 
-- EXTRACTED: 157 (96%)
-- INFERRED: 6 (4%)
+- EXTRACTED: 120 (92%)
+- INFERRED: 11 (8%)
 - AMBIGUOUS: 0 (0%)
 
 ---

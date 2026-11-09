@@ -1,17 +1,16 @@
 ---
 title: "DiagramWorkspace.tsx"
-sidebar_position: 18
+sidebar_position: 17
 ---
 # DiagramWorkspace.tsx
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 29 nodes · cohesion 0.12
+> 30 nodes · cohesion 0.10
 
 ## Key Concepts
 
 - **DiagramWorkspace.tsx** (106 connections) — `src/ui/DiagramWorkspace.tsx`
-- **DiagramWorkspace()** (46 connections) — `src/ui/DiagramWorkspace.tsx`
 - **MobileTabBar.tsx** (12 connections) — `src/ui/MobileTabBar.tsx`
 - **src_ui_app_module** (9 connections)
 - **PanelResizer.tsx** (9 connections) — `src/ui/PanelResizer.tsx`
@@ -28,42 +27,44 @@ sidebar_position: 18
 - **.controls()** (2 connections) — `src/ui/MobileTabBar.tsx`
 - **.onChange()** (2 connections) — `src/ui/MobileTabBar.tsx`
 - **MobileView** (2 connections) — `src/ui/MobileTabBar.tsx`
+- **PARTIAL_UNDO** (2 connections) — `src/ui/NodeInfo.tsx`
 - **PANEL_DEFAULT** (2 connections) — `src/ui/PanelResizer.tsx`
 - **PANEL_MAX** (2 connections) — `src/ui/PanelResizer.tsx`
 - **PANEL_MIN** (2 connections) — `src/ui/PanelResizer.tsx`
 - **PANEL_MIN_COMPACT** (2 connections) — `src/ui/PanelResizer.tsx`
+- **RIGHT_PANEL_BODY_ID** (2 connections) — `src/ui/RightPanel.tsx`
 - **MOBILE_VIEW_KEY** (1 connections) — `src/ui/DiagramWorkspace.tsx`
 - **Mode** (1 connections) — `src/ui/DiagramWorkspace.tsx`
-- **NO_SESSIONS** (1 connections) — `src/ui/DiagramWorkspace.tsx`
-- *... and 4 more nodes in this community*
+- *... and 5 more nodes in this community*
 
 ## Relationships
 
-- [(app)/actions.ts](app-actions.ts.md) (22 shared connections)
-- [RightPanel.tsx](RightPanel.tsx.md) (8 shared connections)
-- [useSessions.ts](useSessions.ts.md) (8 shared connections)
-- [InfoCard.tsx](InfoCard.tsx.md) (6 shared connections)
-- [auth](auth.md) (5 shared connections)
-- [ChatPanel.tsx](ChatPanel.tsx.md) (5 shared connections)
-- [Legend.tsx](Legend.tsx.md) (5 shared connections)
-- [FlyLayer.tsx](FlyLayer.tsx.md) (5 shared connections)
-- [getOwnedDiagram](getOwnedDiagram.md) (4 shared connections)
-- [apply.ts](apply.ts.md) (4 shared connections)
-- [display.ts](display.ts.md) (4 shared connections)
-- [domain/flows.ts](domain-flows.ts.md) (4 shared connections)
+- [(app)/actions.ts](app-actions.ts.md) (20 shared connections)
+- [RightPanel.tsx](RightPanel.tsx.md) (9 shared connections)
+- [useSessions.ts](useSessions.ts.md) (7 shared connections)
+- [MissingChecklist.tsx](MissingChecklist.tsx.md) (7 shared connections)
+- [layoutMetrics.ts](layoutMetrics.ts.md) (5 shared connections)
+- [auth](auth.md) (4 shared connections)
+- [Canvas.tsx](Canvas.tsx.md) (4 shared connections)
+- [FlowPanel.tsx](FlowPanel.tsx.md) (4 shared connections)
+- [DiagramState](DiagramState.md) (3 shared connections)
+- [Shell.tsx](Shell.tsx.md) (3 shared connections)
+- [ChatPanel.tsx](ChatPanel.tsx.md) (3 shared connections)
+- [types.ts](types.ts.md) (3 shared connections)
 
 ## Source Files
 
 - `src/domain/assumptions.ts`
 - `src/ui/DiagramWorkspace.tsx`
 - `src/ui/MobileTabBar.tsx`
+- `src/ui/NodeInfo.tsx`
 - `src/ui/PanelResizer.tsx`
 - `src/ui/RightPanel.tsx`
 
 ## Audit Trail
 
-- EXTRACTED: 181 (98%)
-- INFERRED: 3 (2%)
+- EXTRACTED: 147 (99%)
+- INFERRED: 1 (1%)
 - AMBIGUOUS: 0 (0%)
 
 ---

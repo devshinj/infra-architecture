@@ -1,6 +1,6 @@
 ---
 title: "Layout"
-sidebar_position: 77
+sidebar_position: 79
 ---
 # Layout
 
@@ -22,7 +22,7 @@ sidebar_position: 77
 ## Relationships
 
 - [layout.ts](layout.ts.md) (2 shared connections)
-- [Canvas.tsx](Canvas.tsx.md) (1 shared connections)
+- [layoutMetrics.ts](layoutMetrics.ts.md) (1 shared connections)
 - [useCamera.ts](useCamera.ts.md) (1 shared connections)
 - [InfraSketch 설계 문서](InfraSketch_설계_문서.md) (1 shared connections)
 

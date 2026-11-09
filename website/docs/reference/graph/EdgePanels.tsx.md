@@ -1,6 +1,6 @@
 ---
 title: "EdgePanels.tsx"
-sidebar_position: 51
+sidebar_position: 49
 ---
 # EdgePanels.tsx
 
@@ -30,17 +30,16 @@ sidebar_position: 51
 
 ## Relationships
 
+- [NodeCard.tsx](NodeCard.tsx.md) (6 shared connections)
 - [EdgeLayer.tsx](EdgeLayer.tsx.md) (5 shared connections)
-- [NodeCard.tsx](NodeCard.tsx.md) (5 shared connections)
-- [Canvas.tsx](Canvas.tsx.md) (3 shared connections)
-- [ref_react](ref_react.md) (2 shared connections)
-- [display.ts](display.ts.md) (2 shared connections)
-- [types.ts](types.ts.md) (2 shared connections)
+- [layoutMetrics.ts](layoutMetrics.ts.md) (4 shared connections)
+- [getOwnedDiagram](getOwnedDiagram.md) (2 shared connections)
+- [Canvas.tsx](Canvas.tsx.md) (2 shared connections)
 - [exportImage.ts](exportImage.ts.md) (2 shared connections)
 - [layout.ts](layout.ts.md) (1 shared connections)
+- [auth](auth.md) (1 shared connections)
 - [segments.ts](segments.ts.md) (1 shared connections)
-- [Flow](Flow.md) (1 shared connections)
-- [domain/flows.ts](domain-flows.ts.md) (1 shared connections)
+- [Review Focus](Review_Focus.md) (1 shared connections)
 
 ## Source Files
 

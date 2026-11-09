@@ -1,16 +1,19 @@
 ---
 title: "commands.ts"
-sidebar_position: 41
+sidebar_position: 31
 ---
 # commands.ts
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 20 nodes · cohesion 0.10
+> 23 nodes · cohesion 0.09
 
 ## Key Concepts
 
-- **commands.ts** (39 connections) — `src/domain/commands.ts`
+- **commands.ts** (40 connections) — `src/domain/commands.ts`
+- **isFlowCommand()** (7 connections) — `src/domain/commands.ts`
+- **Task 5: 대화 차례의 흐름 명령** (6 connections) — `docs/superpowers/plans/2026-11-05-flows-and-network-boundaries.md`
+- **isStructural()** (6 connections) — `src/domain/commands.ts`
 - **COMMAND_OPS** (2 connections) — `src/domain/commands.ts`
 - **SERVER_ONLY_OPS** (2 connections) — `src/domain/commands.ts`
 - **attrs** (1 connections) — `src/domain/commands.ts`
@@ -34,25 +37,27 @@ sidebar_position: 41
 ## Relationships
 
 - [pipeline.ts](pipeline.ts.md) (7 shared connections)
-- [ZoneNameLayer.tsx](ZoneNameLayer.tsx.md) (3 shared connections)
-- [flowSuggest.ts](flowSuggest.ts.md) (2 shared connections)
-- [ask/route.ts](ask-route.ts.md) (2 shared connections)
-- [types.ts](types.ts.md) (2 shared connections)
-- [NODE_KINDS](NODE_KINDS.md) (1 shared connections)
-- [apply.ts](apply.ts.md) (1 shared connections)
-- [domain/flows.ts](domain-flows.ts.md) (1 shared connections)
-- [samples.ts](samples.ts.md) (1 shared connections)
-- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (1 shared connections)
-- [createJsonlParser](createJsonlParser.md) (1 shared connections)
+- [flowSuggest.ts](flowSuggest.ts.md) (4 shared connections)
+- [Review Focus](Review_Focus.md) (2 shared connections)
+- [apply.ts](apply.ts.md) (2 shared connections)
+- [missing.ts](missing.ts.md) (2 shared connections)
+- [server/flows.ts](server-flows.ts.md) (2 shared connections)
+- [edgeCoalesce.ts](edgeCoalesce.ts.md) (2 shared connections)
+- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (2 shared connections)
+- [prompt.ts](prompt.ts.md) (1 shared connections)
+- [Legend.tsx](Legend.tsx.md) (1 shared connections)
+- [ZoneNameLayer.tsx](ZoneNameLayer.tsx.md) (1 shared connections)
+- [ref_react](ref_react.md) (1 shared connections)
 
 ## Source Files
 
+- `docs/superpowers/plans/2026-11-05-flows-and-network-boundaries.md`
 - `src/domain/commands.ts`
 
 ## Audit Trail
 
-- EXTRACTED: 41 (100%)
-- INFERRED: 0 (0%)
+- EXTRACTED: 50 (89%)
+- INFERRED: 6 (11%)
 - AMBIGUOUS: 0 (0%)
 
 ---

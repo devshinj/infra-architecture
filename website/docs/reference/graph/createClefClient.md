@@ -1,6 +1,6 @@
 ---
 title: "createClefClient"
-sidebar_position: 78
+sidebar_position: 80
 ---
 # createClefClient
 
@@ -22,7 +22,7 @@ sidebar_position: 78
 ## Relationships
 
 - [clef.ts](clef.ts.md) (3 shared connections)
-- [config.ts](config.ts.md) (2 shared connections)
+- [deps.ts](deps.ts.md) (2 shared connections)
 - [InfraSketch 설계 문서](InfraSketch_설계_문서.md) (2 shared connections)
 
 ## Source Files

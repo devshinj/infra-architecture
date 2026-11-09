@@ -1,12 +1,12 @@
 ---
 title: "EdgeLayer.tsx"
-sidebar_position: 39
+sidebar_position: 41
 ---
 # EdgeLayer.tsx
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 20 nodes · cohesion 0.15
+> 19 nodes · cohesion 0.15
 
 ## Key Concepts
 
@@ -14,7 +14,6 @@ sidebar_position: 39
 - **EdgeLayer()** (24 connections) — `src/canvas/EdgeLayer.tsx`
 - **EdgeLayerProps** (7 connections) — `src/canvas/EdgeLayer.tsx`
 - **Task 2: 마우스 강조·흐리기** (5 connections) — `docs/superpowers/plans/2026-10-31-infrasketch-phase3e-readability.md`
-- **EdgeLayerPortal()** (4 connections) — `src/canvas/EdgeLayer.tsx`
 - **.onHover()** (3 connections) — `src/canvas/EdgeLayer.tsx`
 - **NodeVisualState** (3 connections) — `src/canvas/NodeCard.tsx`
 - **Box** (2 connections) — `src/canvas/edgeLabels.ts`
@@ -33,18 +32,18 @@ sidebar_position: 39
 
 ## Relationships
 
-- [edgeLabels.ts](edgeLabels.ts.md) (14 shared connections)
-- [Canvas.tsx](Canvas.tsx.md) (6 shared connections)
-- [Flow](Flow.md) (5 shared connections)
-- [textWidth](textWidth.md) (5 shared connections)
-- [segments.ts](segments.ts.md) (5 shared connections)
+- [edgeLabels.ts](edgeLabels.ts.md) (12 shared connections)
+- [Canvas.tsx](Canvas.tsx.md) (9 shared connections)
+- [layout.ts](layout.ts.md) (6 shared connections)
+- [motion.ts](motion.ts.md) (5 shared connections)
 - [EdgePanels.tsx](EdgePanels.tsx.md) (5 shared connections)
-- [motion.ts](motion.ts.md) (4 shared connections)
+- [segments.ts](segments.ts.md) (4 shared connections)
+- [NodeCard.tsx](NodeCard.tsx.md) (4 shared connections)
+- [layoutMetrics.ts](layoutMetrics.ts.md) (3 shared connections)
+- [server/flows.ts](server-flows.ts.md) (3 shared connections)
 - [useCamera.ts](useCamera.ts.md) (2 shared connections)
-- [ZoneNameLayer.tsx](ZoneNameLayer.tsx.md) (2 shared connections)
-- [NodeCard.tsx](NodeCard.tsx.md) (2 shared connections)
+- [Legend.tsx](Legend.tsx.md) (2 shared connections)
 - [Review Focus](Review_Focus.md) (1 shared connections)
-- [layout.ts](layout.ts.md) (1 shared connections)
 
 ## Source Files
 
@@ -55,7 +54,7 @@ sidebar_position: 39
 
 ## Audit Trail
 
-- EXTRACTED: 80 (94%)
+- EXTRACTED: 78 (94%)
 - INFERRED: 5 (6%)
 - AMBIGUOUS: 0 (0%)
 

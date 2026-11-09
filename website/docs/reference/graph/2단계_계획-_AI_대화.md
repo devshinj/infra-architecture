@@ -21,7 +21,7 @@ sidebar_position: 86
 
 - [InfraSketch 설계 문서](InfraSketch_설계_문서.md) (3 shared connections)
 - [apply.ts](apply.ts.md) (1 shared connections)
-- [Canvas](Canvas.md) (1 shared connections)
+- [Canvas.tsx](Canvas.tsx.md) (1 shared connections)
 - [NODE_KINDS](NODE_KINDS.md) (1 shared connections)
 - [types.ts](types.ts.md) (1 shared connections)
 - [getOwnedDiagram](getOwnedDiagram.md) (1 shared connections)

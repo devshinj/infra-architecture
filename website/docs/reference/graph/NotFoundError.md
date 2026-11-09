@@ -1,6 +1,6 @@
 ---
 title: "NotFoundError"
-sidebar_position: 96
+sidebar_position: 97
 sidebar_label: "핵심 노드: NotFoundError"
 ---
 # NotFoundError
@@ -36,14 +36,14 @@ sidebar_label: "핵심 노드: NotFoundError"
 - [server/network.ts](server-network.ts.md) `EXTRACTED`
 - [server/flows.ts](server-flows.ts.md) `EXTRACTED`
 - [\[sessionId\]/route.ts]([sessionId]-route.ts.md) `EXTRACTED`
-- [ask/route.ts](ask-route.ts.md) `EXTRACTED`
+- ask/route.ts `EXTRACTED`
 - chat/route.ts `EXTRACTED`
 - [glossary.ts](glossary.ts.md) `EXTRACTED`
 - \[diagramId\]/page.tsx `EXTRACTED`
-- explain/route.ts `EXTRACTED`
+- [explain/route.ts](explain-route.ts.md) `EXTRACTED`
 - sessions/route.ts `EXTRACTED`
 - suggest/route.ts `EXTRACTED`
-- [flows/route.ts](flows-route.ts.md) `EXTRACTED`
+- flows/route.ts `EXTRACTED`
 
 ### method
 - .constructor() `EXTRACTED`

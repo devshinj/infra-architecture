@@ -1,21 +1,24 @@
 ---
 title: "useSessions.ts"
-sidebar_position: 48
+sidebar_position: 36
 ---
 # useSessions.ts
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 18 nodes · cohesion 0.16
+> 21 nodes · cohesion 0.15
 
 ## Key Concepts
 
 - **useSessions.ts** (27 connections) — `src/ui/chat/useSessions.ts`
+- **events.ts** (24 connections) — `src/server/chat/events.ts`
+- **NetworkKnowledge** (14 connections) — `src/domain/network.ts`
+- **Warning** (12 connections) — `src/domain/types.ts`
+- **MessageMeta** (12 connections) — `src/server/chat/events.ts`
 - **useSessions()** (10 connections) — `src/ui/chat/useSessions.ts`
 - **ChatLine** (9 connections) — `src/ui/chat/useChatTurn.ts`
 - **SessionSummary** (7 connections) — `src/ui/chat/useSessions.ts`
 - **DiagramWorkspaceProps** (6 connections) — `src/ui/DiagramWorkspace.tsx`
-- **NEW_SESSION** (4 connections) — `src/ui/chat/useSessions.ts`
 - **SessionPaging** (3 connections) — `src/ui/chat/useSessions.ts`
 - **SessionEventPayload** (2 connections) — `src/server/chat/events.ts`
 - **errorOf()** (2 connections) — `src/ui/chat/useSessions.ts`
@@ -31,20 +34,23 @@ sidebar_position: 48
 
 ## Relationships
 
-- [types.ts](types.ts.md) (9 shared connections)
-- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (8 shared connections)
-- [SessionPicker.tsx](SessionPicker.tsx.md) (7 shared connections)
-- [ask.ts](ask.ts.md) (3 shared connections)
-- [ask/route.ts](ask-route.ts.md) (2 shared connections)
-- [ChatPanel.tsx](ChatPanel.tsx.md) (2 shared connections)
-- [RightPanel.tsx](RightPanel.tsx.md) (1 shared connections)
-- [Flow](Flow.md) (1 shared connections)
-- [ref_react](ref_react.md) (1 shared connections)
-- [flowSuggest.ts](flowSuggest.ts.md) (1 shared connections)
-- [server/network.ts](server-network.ts.md) (1 shared connections)
+- [ask.ts](ask.ts.md) (10 shared connections)
+- [types.ts](types.ts.md) (8 shared connections)
+- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (7 shared connections)
+- [lines.ts](lines.ts.md) (7 shared connections)
+- [SessionPicker.tsx](SessionPicker.tsx.md) (6 shared connections)
+- [domain/warnings.ts](domain-warnings.ts.md) (5 shared connections)
+- [pipeline.ts](pipeline.ts.md) (4 shared connections)
+- [schema.ts](schema.ts.md) (4 shared connections)
+- [Canvas.tsx](Canvas.tsx.md) (3 shared connections)
+- [ChatPanel.tsx](ChatPanel.tsx.md) (3 shared connections)
+- [networkRules.ts](networkRules.ts.md) (2 shared connections)
+- [(app)/actions.ts](app-actions.ts.md) (2 shared connections)
 
 ## Source Files
 
+- `src/domain/network.ts`
+- `src/domain/types.ts`
 - `src/server/chat/events.ts`
 - `src/ui/DiagramWorkspace.tsx`
 - `src/ui/chat/useChatTurn.ts`
@@ -52,8 +58,8 @@ sidebar_position: 48
 
 ## Audit Trail
 
-- EXTRACTED: 58 (97%)
-- INFERRED: 2 (3%)
+- EXTRACTED: 106 (96%)
+- INFERRED: 4 (4%)
 - AMBIGUOUS: 0 (0%)
 
 ---

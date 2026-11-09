@@ -1,6 +1,6 @@
 ---
 title: "DiagramWorkspace()"
-sidebar_position: 92
+sidebar_position: 93
 sidebar_label: "핵심 노드: DiagramWorkspace()"
 ---
 # DiagramWorkspace()
@@ -9,7 +9,7 @@ sidebar_label: "핵심 노드: DiagramWorkspace()"
 
 > God node · 46 connections · `src/ui/DiagramWorkspace.tsx`
 
-**Community:** [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md)
+**Community:** [(app)/actions.ts](app-actions.ts.md)
 
 ## Connections by Relation
 

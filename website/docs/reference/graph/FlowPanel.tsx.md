@@ -1,26 +1,30 @@
 ---
 title: "FlowPanel.tsx"
-sidebar_position: 26
+sidebar_position: 14
 ---
 # FlowPanel.tsx
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 26 nodes · cohesion 0.12
+> 33 nodes · cohesion 0.10
 
 ## Key Concepts
 
 - **FlowPanel.tsx** (29 connections) — `src/ui/flows/FlowPanel.tsx`
+- **ZoneTypePicker.tsx** (19 connections) — `src/ui/network/ZoneTypePicker.tsx`
 - **FlowPanel()** (17 connections) — `src/ui/flows/FlowPanel.tsx`
-- **dialogs.tsx** (15 connections) — `src/ui/dialogs.tsx`
 - **FlowPanelProps** (14 connections) — `src/ui/flows/FlowPanel.tsx`
-- **DialogView()** (11 connections) — `src/ui/dialogs.tsx`
-- **Dialog** (5 connections) — `src/ui/dialogs.tsx`
-- **RowMenuItem** (4 connections) — `src/ui/dialogs.tsx`
+- **aiBadge.ts** (12 connections) — `src/ui/glossary/aiBadge.ts`
+- **NetworkKnowledgeContext.tsx** (12 connections) — `src/ui/network/NetworkKnowledgeContext.tsx`
+- **useNetworkKnowledge()** (11 connections) — `src/ui/network/NetworkKnowledgeContext.tsx`
+- **ZoneTypePicker()** (9 connections) — `src/ui/network/ZoneTypePicker.tsx`
+- **AI_BADGE_SR** (7 connections) — `src/ui/glossary/aiBadge.ts`
+- **AI_GUESS_BADGE** (5 connections) — `src/ui/glossary/aiBadge.ts`
+- **ZoneType** (3 connections) — `src/domain/types.ts`
+- **NetworkKnowledgeProvider()** (3 connections) — `src/ui/network/NetworkKnowledgeContext.tsx`
+- **ZoneTypePickerProps** (3 connections) — `src/ui/network/ZoneTypePicker.tsx`
 - **ref_react_dom** (2 connections)
 - **FlowOrigin** (2 connections) — `src/domain/flows.ts`
-- **focusables()** (2 connections) — `src/ui/dialogs.tsx`
-- **NameDialog** (2 connections) — `src/ui/dialogs.tsx`
 - **.onActivate()** (2 connections) — `src/ui/flows/FlowPanel.tsx`
 - **.onConfirm()** (2 connections) — `src/ui/flows/FlowPanel.tsx`
 - **.onDelete()** (2 connections) — `src/ui/flows/FlowPanel.tsx`
@@ -31,37 +35,35 @@ sidebar_position: 26
 - **menuRootId()** (2 connections) — `src/ui/flows/FlowPanel.tsx`
 - **stepMark()** (2 connections) — `src/ui/flows/FlowPanel.tsx`
 - **AI_SUGGEST_BADGE** (2 connections) — `src/ui/glossary/aiBadge.ts`
-- **DeleteDialog** (1 connections) — `src/ui/dialogs.tsx`
-- **Action** (1 connections) — `src/ui/flows/FlowPanel.tsx`
-- **.onSuggest()** (1 connections) — `src/ui/flows/FlowPanel.tsx`
-- **GROUPS** (1 connections) — `src/ui/flows/FlowPanel.tsx`
-- *... and 1 more nodes in this community*
+- *... and 8 more nodes in this community*
 
 ## Relationships
 
-- [SessionPicker.tsx](SessionPicker.tsx.md) (9 shared connections)
-- [Sidebar.tsx](Sidebar.tsx.md) (6 shared connections)
-- [domain/flows.ts](domain-flows.ts.md) (5 shared connections)
+- [MissingChecklist.tsx](MissingChecklist.tsx.md) (12 shared connections)
+- [(app)/actions.ts](app-actions.ts.md) (8 shared connections)
+- [dialogs.tsx](dialogs.tsx.md) (7 shared connections)
+- [NodeInfo.tsx](NodeInfo.tsx.md) (7 shared connections)
+- [server/flows.ts](server-flows.ts.md) (5 shared connections)
+- [Explanation.tsx](Explanation.tsx.md) (5 shared connections)
+- [NodeCard.tsx](NodeCard.tsx.md) (5 shared connections)
 - [RightPanel.tsx](RightPanel.tsx.md) (5 shared connections)
-- [NetworkKnowledgePage.tsx](NetworkKnowledgePage.tsx.md) (4 shared connections)
-- [ZoneTypePicker.tsx](ZoneTypePicker.tsx.md) (4 shared connections)
-- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (3 shared connections)
-- [server/flows.ts](server-flows.ts.md) (3 shared connections)
-- [ref_react](ref_react.md) (2 shared connections)
-- [useFlows](useFlows.md) (2 shared connections)
-- [Explanation.tsx](Explanation.tsx.md) (2 shared connections)
-- [NodeInfo.tsx](NodeInfo.tsx.md) (2 shared connections)
+- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (4 shared connections)
+- [getOwnedDiagram](getOwnedDiagram.md) (3 shared connections)
+- [missing.ts](missing.ts.md) (3 shared connections)
+- [Canvas.tsx](Canvas.tsx.md) (3 shared connections)
 
 ## Source Files
 
 - `src/domain/flows.ts`
-- `src/ui/dialogs.tsx`
+- `src/domain/types.ts`
 - `src/ui/flows/FlowPanel.tsx`
 - `src/ui/glossary/aiBadge.ts`
+- `src/ui/network/NetworkKnowledgeContext.tsx`
+- `src/ui/network/ZoneTypePicker.tsx`
 
 ## Audit Trail
 
-- EXTRACTED: 88 (99%)
+- EXTRACTED: 125 (99%)
 - INFERRED: 1 (1%)
 - AMBIGUOUS: 0 (0%)
 
