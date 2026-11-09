@@ -1,3 +1,5 @@
+import { randomInt } from "node:crypto";
+
 import { and, asc, eq, inArray, or, sql } from "drizzle-orm";
 
 import { db } from "@/db/client";
@@ -16,7 +18,6 @@ import type { DiagramState } from "@/domain/types";
 import { NotFoundError, ValidationError } from "@/server/projects";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const KEY_RE = /^[a-z0-9][a-z0-9-]{0,63}$/;
 
 const NAME_MAX = 30;
 const ALIAS_MAX = 30;
@@ -126,22 +127,23 @@ export async function listNetworkTypes(userId: string): Promise<NetTypeRow[]> {
   return rows.map(toRow);
 }
 
-/** 이름에서 id 모양 key 후보를 만든다. 영문·숫자가 남지 않으면(한글 등) net-1, net-2 … */
-function keyCandidates(name: string): string[] {
+const KEY_SUFFIX_LEN = 8;
+const KEY_TRIES = 5;
+const BASE36 = "0123456789abcdefghijklmnopqrstuvwxyz";
+
+/**
+ * 이름에서 id 모양 key 를 만든다. 영문·숫자가 남지 않으면(한글 등) net 으로 시작한다.
+ * 뒤에 무작위 글자를 붙여, 지운 종류의 key 를 새 종류에 다시 주지 않는다(그 key 를 가진 망이 엉뚱한 종류가 되지 않게).
+ */
+function newTypeKey(name: string): string {
   const slug = name
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "")
-    .slice(0, 56)
+    .slice(0, 64 - KEY_SUFFIX_LEN - 1)
     .replace(/-+$/g, "");
-  const out: string[] = [];
-  if (slug) {
-    out.push(slug);
-    for (let i = 2; i <= 50; i++) out.push(`${slug}-${i}`);
-  } else {
-    for (let i = 1; i <= 50; i++) out.push(`net-${i}`);
-  }
-  return out.filter((k) => KEY_RE.test(k));
+  const suffix = Array.from({ length: KEY_SUFFIX_LEN }, () => BASE36[randomInt(BASE36.length)]).join("");
+  return `${slug || "net"}-${suffix}`;
 }
 
 export async function addNetworkType(
@@ -155,7 +157,8 @@ export async function addNetworkType(
   // 기본 제공 key 와 겹치지 않게 먼저 채워 둔다.
   await ensureNetworkSeeded(userId);
 
-  for (const key of keyCandidates(name)) {
+  for (let i = 0; i < KEY_TRIES; i++) {
+    const key = newTypeKey(name);
     const [row] = await db
       .insert(networkTypes)
       .values({ userId, key, name, aliases, description, grade, source: "user" })
@@ -163,7 +166,7 @@ export async function addNetworkType(
       .returning();
     if (row) return toRow(row);
   }
-  throw new ValidationError("같은 이름의 종류가 너무 많아요");
+  throw new ValidationError("종류를 만들지 못했어요. 다시 해 주세요");
 }
 
 async function getOwnedType(userId: string, id: string): Promise<typeof networkTypes.$inferSelect> {

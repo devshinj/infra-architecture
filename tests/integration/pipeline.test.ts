@@ -1108,6 +1108,18 @@ describe("network knowledge in a chat turn", () => {
     expect(await versions(ids.diagramId)).toHaveLength(1);
   });
 
+  test("지식에 없는 key(지운 종류)의 사용자 종류는 확정으로 적지 않고 AI 가 다시 붙인다", async () => {
+    const { ids } = await govBase({ gov: { key: "gone-net", source: "user", confirmed: true }, cloud: AI_TYPES.cloud });
+    const qwen = fakeQwen(j({ op: "set_zone_type", id: "gov", type: "admin-net" }));
+    const { events } = await turn(ids, "망 종류 붙여 줘", { qwen, clef: clef() });
+    const user = qwen.calls[0]!.at(-1)!.content;
+    expect(user).toContain('그룹 gov [network_zone] "행정망" parent=-\n');
+    expect(user).not.toContain("gone-net");
+    expect(of(events, "skip")).toEqual([]);
+    expect(of(events, "cmd").map((e) => e.cmd)).toContainEqual({ op: "set_zone_type", id: "gov", type: "admin-net" });
+    expect((await getLatestState(ids.diagramId))!.state.groups.gov!.netType).toEqual({ key: "admin-net", source: "ai", confirmed: false });
+  });
+
   test("망 지식 읽기 실패면 판정·프롬프트 블록 없이 지금처럼 끝난다", async () => {
     const { ids } = await govBase(AI_TYPES);
     const read = vi.spyOn(networkServer, "getNetworkKnowledge").mockRejectedValueOnce(new Error("db down"));

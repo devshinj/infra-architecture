@@ -454,6 +454,19 @@ describe("망 지식 프롬프트", () => {
     expect(lines).toContain('노드 link-1 [network_link] "망연계" sub="" parent=- attrs={} guess');
   });
 
+  test("summarizeState 는 지식에 없는 종류(지운·숨긴 것)를 type= 로 적지 않는다", () => {
+    const s = zones();
+    s.groups["etc"] = { ...s.groups["etc"]!, netType: { key: "gone", source: "user", confirmed: true } };
+    const lines = summarizeState(s, knowledge).split("\n");
+    expect(lines).toContain('그룹 etc [network_zone] "기타망" parent=-');
+    expect(lines).toContain('그룹 cloud [network_zone] "GCloud 인터넷망" parent=- type=internet(확정)');
+    // 지식을 주지 않으면 지금처럼 적는다.
+    expect(summarizeState(s)).toContain("type=gone(확정)");
+    // buildMessages 도 지식으로 거른다.
+    const user = buildMessages({ intent: null, text: "x", state: s, mentions: [], history: [], network: knowledge }).at(-1)!.content;
+    expect(user).not.toContain("type=gone");
+  });
+
   test("buildMessages 는 network 가 있을 때만 망 블록을 현재 구성 뒤에 넣는다", () => {
     const withNet = buildMessages({ intent: null, text: "x", state: zones(), mentions: [], history: [], network: knowledge }).at(-1)!.content;
     expect(withNet).toContain("\n\n망 종류:\nadmin-net");

@@ -138,10 +138,11 @@ export function buildWarningMessages(items: { id: string; rule: string; facts: s
   ];
 }
 
-export function summarizeState(state: DiagramState): string {
+/** k 를 주면 지식에 없는 종류(지운·숨긴 것)는 종류 없음으로 보고 type= 을 적지 않는다. */
+export function summarizeState(state: DiagramState, k?: NetworkKnowledge): string {
   const lines: string[] = [];
   for (const g of Object.values(state.groups)) {
-    const t = g.netType ? ` type=${g.netType.key}(${g.netType.source === "user" || g.netType.confirmed ? "확정" : "추정"})` : "";
+    const t = g.netType && (!k || Object.hasOwn(k.types, g.netType.key)) ?` type=${g.netType.key}(${g.netType.source === "user" || g.netType.confirmed ? "확정" : "추정"})` : "";
     lines.push(`그룹 ${g.id} [${g.groupKind}] ${JSON.stringify(g.label)} parent=${g.parent ?? "-"}${t}`);
   }
   for (const n of Object.values(state.nodes)) {
@@ -264,7 +265,7 @@ export function buildMessages(input: {
   const cont = input.continuation ? `\n\n${CONTINUE_NOTE}` : "";
   const flowBlock = input.flows?.length ? `흐름:\n${summarizeFlows(input.flows)}\n\n` : "";
   const netBlock = input.network ? `${networkBlock(input.state, input.network)}\n\n` : "";
-  const user = `현재 구성:\n${summarizeState(input.state)}\n\n${netBlock}${flowBlock}참조 노드:\n${refs}\n\n${missingBlock}요청: ${input.text}${cont}`;
+  const user = `현재 구성:\n${summarizeState(input.state, input.network)}\n\n${netBlock}${flowBlock}참조 노드:\n${refs}\n\n${missingBlock}요청: ${input.text}${cont}`;
   return [
     { role: "system", content: system },
     ...input.history.slice(-HISTORY_LIMIT).map((h) => ({ role: h.role, content: h.content })),

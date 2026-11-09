@@ -83,15 +83,45 @@ test("updateNetworkType: seed 를 고치면 edited, reset 하면 seed 값으로"
   await expect(updateNetworkType(userId, t.id, { description: "가".repeat(201) })).rejects.toBeInstanceOf(ValidationError);
 });
 
-test("addNetworkType: 한글 이름은 net-n key, 영문은 slug 에 -2", async () => {
+test("addNetworkType: key 는 뒤에 무작위 글자를 붙인다(한글 이름은 net-…, 영문은 slug-…)", async () => {
   const userId = await newUser();
   const a = await addNetworkType(userId, { name: "우리 망", aliases: [], description: "", grade: "internal" });
   const b = await addNetworkType(userId, { name: "또 다른 망", aliases: [], description: "", grade: "external" });
-  expect([a.key, b.key]).toEqual(["net-1", "net-2"]);
+  expect(a.key).toMatch(/^net-[0-9a-z]{8}$/);
+  expect(b.key).toMatch(/^net-[0-9a-z]{8}$/);
+  expect(a.key).not.toBe(b.key);
   expect(a.source).toBe("user");
   const c = await addNetworkType(userId, { name: "Lab Net", aliases: [], description: "", grade: "internal" });
   const d = await addNetworkType(userId, { name: "lab net", aliases: [], description: "", grade: "internal" });
-  expect([c.key, d.key]).toEqual(["lab-net", "lab-net-2"]);
+  expect(c.key).toMatch(/^lab-net-[0-9a-z]{8}$/);
+  expect(d.key).toMatch(/^lab-net-[0-9a-z]{8}$/);
+  expect(c.key).not.toBe(d.key);
+  // 긴 영문 이름도 key 규칙(64자)을 지킨다.
+  const e = await addNetworkType(userId, { name: "a".repeat(30), aliases: [], description: "", grade: "internal" });
+  expect(e.key).toMatch(/^[a-z0-9][a-z0-9-]{0,63}$/);
+});
+
+test("addNetworkType: 지운 종류의 key 를 새 종류에 다시 주지 않는다", async () => {
+  const userId = await newUser();
+  const a = await addNetworkType(userId, { name: "우리기관 업무망", aliases: [], description: "", grade: "internal" });
+  await deleteNetworkType(userId, a.id);
+  const b = await addNetworkType(userId, { name: "협력사 외부망", aliases: [], description: "", grade: "external" });
+  expect(b.key).not.toBe(a.key);
+  const c = await addNetworkType(userId, { name: "Cloud X", aliases: [], description: "", grade: "external" });
+  await deleteNetworkType(userId, c.id);
+  const d = await addNetworkType(userId, { name: "Cloud-X", aliases: [], description: "", grade: "external" });
+  expect(d.key).not.toBe(c.key);
+  // 지운 key 는 지식에 없다(그 key 를 가진 망은 종류 없음으로 본다).
+  expect((await getNetworkKnowledge(userId)).types[a.key]).toBeUndefined();
+});
+
+test("addNetworkType: 같은 계열 이름을 50개 넘게 만들어도 막지 않는다", async () => {
+  const userId = await newUser();
+  const keys = new Set<string>();
+  for (let i = 0; i < 52; i++) {
+    keys.add((await addNetworkType(userId, { name: "우리 망", aliases: [], description: "", grade: "internal" })).key);
+  }
+  expect(keys.size).toBe(52);
 });
 
 test("deleteNetworkType: seed 는 거절, user 는 지우고 그 규칙도 지운다", async () => {

@@ -20,7 +20,12 @@ export function freeEdgeId(s: DiagramState, from: string, to: string): string {
   return id;
 }
 
-export function applyCommand(state: DiagramState, cmd: Command): ApplyResult {
+export interface ApplyOptions {
+  /** 지금 망 지식의 종류(key → 아무 값). 주면 여기에 없는 key(지운·숨긴 종류)의 망은 종류 없음으로 보고 AI 가 다시 붙일 수 있다. */
+  netTypes?: Readonly<Record<string, unknown>>;
+}
+
+export function applyCommand(state: DiagramState, cmd: Command, opts: ApplyOptions = {}): ApplyResult {
   switch (cmd.op) {
     case "add_group": {
       if (idTaken(state, cmd.id)) return fail(state, `id ${cmd.id} already exists`);
@@ -111,7 +116,8 @@ export function applyCommand(state: DiagramState, cmd: Command): ApplyResult {
       const group = has(state.groups, cmd.id) ? state.groups[cmd.id] : undefined;
       if (!group) return fail(state, `group ${cmd.id} not found`);
       if (group.groupKind !== "network_zone") return fail(state, `group ${cmd.id} is not a network zone`);
-      if (group.netType?.source === "user") return fail(state, `zone type ${cmd.id} is confirmed`);
+      const known = !!group.netType && (!opts.netTypes || has(opts.netTypes, group.netType.key));
+      if (group.netType?.source === "user" && known) return fail(state, `zone type ${cmd.id} is confirmed`);
       const next: Group = { ...group };
       if (cmd.type === null) delete next.netType;
       else next.netType = { key: cmd.type, source: "ai", confirmed: false };

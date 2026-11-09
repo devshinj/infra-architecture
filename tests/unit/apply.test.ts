@@ -204,6 +204,19 @@ describe("망 종류·망연계 추정 표시", () => {
     expect(r.state).toBe(s);
   });
 
+  test("apply set_zone_type: 지식에 없는 key 의 사용자 종류는 종류 없음으로 보고 AI 가 다시 붙인다", () => {
+    const s = withZone();
+    s.groups.dmz = { ...s.groups.dmz, netType: { key: "gone", source: "user", confirmed: true } };
+    const cmd = { op: "set_zone_type", id: "dmz", type: "dmz" } as const;
+    const r = applyCommand(s, cmd, { netTypes: { dmz: {} } });
+    expect(r.ok && r.state.groups.dmz.netType).toEqual({ key: "dmz", source: "ai", confirmed: false });
+    // 지식에 있는 key 면 그대로 막는다.
+    const known = applyCommand(s, cmd, { netTypes: { gone: {}, dmz: {} } });
+    expect(known).toMatchObject({ ok: false, error: "zone type dmz is confirmed" });
+    // 지식을 주지 않으면 지금처럼 막는다.
+    expect(applyCommand(s, cmd).ok).toBe(false);
+  });
+
   test("apply set_zone_type: null 이면 칸을 지운다", () => {
     const a = applyCommand(withZone(), { op: "set_zone_type", id: "dmz", type: "dmz" });
     if (!a.ok) throw new Error("x");

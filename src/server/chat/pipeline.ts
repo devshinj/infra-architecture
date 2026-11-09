@@ -287,7 +287,8 @@ async function lockedTurn(args: TurnArgs, sessionId: string | null, followUp: bo
         emit({ t: "cmd", cmd });
         return;
       }
-      const r = applyCommand(state, parsed.cmd);
+      // 지식에 없는 종류(지운·숨긴 것)가 붙은 망은 종류 없음으로 보고 AI 가 다시 붙이게 한다.
+      const r = applyCommand(state, parsed.cmd, knowledge ? { netTypes: knowledge.types } : {});
       if (!r.ok) return skip(`적용할 수 없는 명령(${op}) ${r.error}`, skipKey("apply", op, r.error));
       state = r.state;
       if (applied === 0) emit({ t: "status", phase: "drawing" });

@@ -325,8 +325,10 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
     onCommand: (cmd) => {
       // 흐름 명령은 구성도를 바꾸지 않는다(서버가 흐름 저장소에 저장한다).
       if (isFlowCommand(cmd)) return;
-      const next = applyCommand(current.state, cmd).state;
-      setCurrent((c) => ({ number: c.number, state: applyCommand(c.state, cmd).state }));
+      // 서버와 같게: 지식에 없는 종류가 붙은 망에는 AI 가 종류를 다시 붙일 수 있다.
+      const opts = knowledge ? { netTypes: knowledge.types } : {};
+      const next = applyCommand(current.state, cmd, opts).state;
+      setCurrent((c) => ({ number: c.number, state: applyCommand(c.state, cmd, opts).state }));
       // 선택한 노드·연결·영역을 대화가 지우면(빈 영역 정리 포함) 선택을 푼다: 흐림이 남지 않게.
       setOptions((o) => (o.selectedId !== null && !hasId(next, o.selectedId) ? { ...o, selectedId: null } : o));
       if (cmd.op === "add_node" && live && !current.state.nodes[cmd.id]) fly.queue(cmd.id);
