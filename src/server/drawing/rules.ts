@@ -53,8 +53,8 @@ EDGE_KIND 허용값: ${EDGE_KIND_LIST}
 ${ATTR_LIST}`;
 
 /**
- * 그리기 규칙 글머리. Qwen 전용 줄이 중간에 끼어 있던 자리마다 끊어 둔 묶음이다(SYSTEM_PROMPT 가 그 사이에 자기 줄을 넣는다).
- * 묶음은 원래 줄 순서 그대로다.
+ * 그리기 규칙 글머리를 Qwen 전용 줄이 끼어 있던 자리마다 끊어 둔 묶음(원래 줄 순서·글 그대로).
+ * SYSTEM_PROMPT 가 묶음 사이에 자기 줄을 넣는다. 첫 묶음 끝 줄은 영역 규칙의 앞부분이고, 뒷부분(Qwen 전용)은 prompt.ts 가 잇는다.
  */
 export const DRAW_RULE_GROUPS = [
   `- id 는 영문 소문자·숫자·하이픈만 쓰고 ^[a-z0-9][a-z0-9-]{0,63}$ 형식이어야 한다. 노드·그룹·연결 id 는 서로 겹치면 안 된다.
@@ -63,7 +63,8 @@ export const DRAW_RULE_GROUPS = [
 - 그룹을 먼저, 그 안의 노드를 다음, 연결은 양 끝 노드가 생긴 뒤에 출력한다.
 - 이중화 서버는 redundancy_group 그룹으로 묶고 label 에 VIP 를 적는다(예: "WAS VIP"). 2대 이상이면 몇 대든 하나의 redundancy_group 으로 묶는다.
 - AZ(가용 영역)는 az 그룹을 만들지 않는다. 대신 서브넷·노드의 attrs.az 속성(예: "az":"2a")으로 표시한다.
-- 외부 서비스는 external_service 그룹 안에 접점 노드(external_api/external_auth/external_pg)로 그린다.`,
+- 외부 서비스는 external_service 그룹 안에 접점 노드(external_api/external_auth/external_pg)로 그린다.
+- 영역(그룹)의 이름·상위 영역은 바꿀 수 없다.`,
   `- 환경(environment)이나 배포 방식(deploy) 가정이 바뀌면 이 순서로 바꾼다: ① 새 가정에 맞는 영역을 add_group 으로 만든다 ② 새 구성에서도 쓰는 노드(WAS·DB 등)는 지우지 말고 update_node 의 parent 로 새 영역에 옮긴다 ③ 그 뒤에 남은 맞지 않는 노드는 remove_node, 영역은 remove_group 으로 지운다. remove_group 은 안의 노드까지 지우므로 옮길 노드를 먼저 옮긴다.
 - k8s_cluster 는 그룹(group_kind)으로만 쓴다. 노드 kind 로 쓰지 않는다.
 - 사용자가 모르는 값(IP, hostname, 스펙)은 null 로 둔다. 지어내지 않는다.
@@ -82,12 +83,34 @@ export const DRAW_RULE_GROUPS = [
 - Kafka/MSK/Kinesis 는 stream, SQS/RabbitMQ 는 queue.
 - CDN, WAF, DNS 처럼 VPC 밖 전역 서비스는 VPC 밖(리전 그룹 또는 최상위)에 둔다.
 - 사용자(client_*)에서 시작하는 진입 연결을 반드시 그린다.`,
-  `- 흐름은 요청 하나가 구성도의 연결을 차례로 지나는 길이다. 흐름을 바꾸라는 요청이면 구성 명령과 함께 흐름 명령을 쓴다. 단계 edge 는 현재 구성(또는 이번에 만든) 연결 id 만 쓴다.`,
-  `- 흐름 단계는 요청이 가는 방향으로만 쓴다. from 은 그 단계를 시작하는 노드 id 다. 응답은 단계로 쓰지 않고 result 한 줄로 쓴다. short 는 12자 이내, text 는 120자 이내, 단계는 20개 이내로 쓴다. origin 은 사용자가 시작하면 user, 배치·스케줄처럼 시스템이 시작하면 system 이다. 흐름 id 는 위 id 규칙을 따르고, 기존 흐름을 고치거나 지울 때는 "흐름:" 목록의 id 를 그대로 쓴다.`,
+  `- 사용자가 채워야 할 정보의 값을 알려 주면 update_node(attrs) 또는 update_edge(label·payload·direction) 로 그 값만 반영한다. 노드·연결을 새로 만들지 않는다.
+- "모든 서버", "WAS 전부"처럼 여러 대상을 말하면 현재 구성에서 그 조건에 맞는 노드를 하나도 빠뜨리지 말고 노드마다 update_node 를 낸다. 그 값의 칸이 없는 종류에는 쓰지 않는다.
+- 흐름은 요청 하나가 구성도의 연결을 차례로 지나는 길이다. 흐름을 바꾸라는 요청이면 구성 명령과 함께 흐름 명령을 쓴다. 단계 edge 는 현재 구성(또는 이번에 만든) 연결 id 만 쓴다.
+- 요청에 흐름 이야기가 없으면 흐름 명령을 쓰지 않는다. 구성을 바꿔 흐름이 끊겨도 도구가 사용자에게 알리므로 흐름을 고치지 않는다.
+- 흐름을 고칠 때는 그대로 남는 단계의 short·text 를 "흐름:" 목록에 있는 글 그대로 쓴다.
+- 흐름 단계는 요청이 가는 방향으로만 쓴다. from 은 그 단계를 시작하는 노드 id 다. 응답은 단계로 쓰지 않고 result 한 줄로 쓴다. short 는 12자 이내, text 는 120자 이내, 단계는 20개 이내로 쓴다. origin 은 사용자가 시작하면 user, 배치·스케줄처럼 시스템이 시작하면 system 이다. 흐름 id 는 위 id 규칙을 따르고, 기존 흐름을 고치거나 지울 때는 "흐름:" 목록의 id 를 그대로 쓴다.`,
 ] as const;
 
-/** 그리기 규칙 글머리 전부(Qwen 전용 줄 제외). */
-export const DRAW_RULES: string = DRAW_RULE_GROUPS.join("\n");
+/**
+ * say 를 말하는 Qwen 규칙 줄(망 짝 안내·한국어 쓰기) 가운데 그리기 뜻만 남긴 안내 전용 글.
+ * SYSTEM_PROMPT 에는 원래 줄이 그대로 있고, 이 글은 get_guide 에만 쓴다.
+ */
+export const GUIDE_ONLY_LINES = {
+  unlinkedPair: `- "망 짝 규칙"이 보통 잇지 않음인 두 망을 이으라고 하면 요청대로 그리고, 보통 잇지 않는 구간이라고 사용자에게 알린다.`,
+  koreanText: `- label, sub, set_assumption 의 value 는 모두 한국어로 쓴다. label·sub 예시: "웹 서버 #1", "API 서버 #2", "공개 서브넷", "메인 VPC". 제품명만 원어 그대로 쓴다(CloudFront, Redis, Aurora MySQL, ALB, Tomcat 등).`,
+} as const;
+
+/** 그리기 규칙 글머리 전부(get_guide 용). SYSTEM_PROMPT 와 같은 순서이고 Qwen 출력 방식 줄은 없다. */
+export const DRAW_RULES: string = [
+  DRAW_RULE_GROUPS[0],
+  DRAW_RULE_GROUPS[1],
+  GUIDE_ONLY_LINES.unlinkedPair,
+  DRAW_RULE_GROUPS[2],
+  DRAW_RULE_GROUPS[3],
+  GUIDE_ONLY_LINES.koreanText,
+  DRAW_RULE_GROUPS[4],
+  DRAW_RULE_GROUPS[5],
+].join("\n");
 
 /** 쓰는 패턴 블록. */
 export function patternBlock(): string {

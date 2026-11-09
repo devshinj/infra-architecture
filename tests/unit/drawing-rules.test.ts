@@ -3,7 +3,7 @@ import { describe, expect, test } from "vitest";
 import { parseCommand } from "@/domain/commands";
 import { GRADE_LABELS, GRADE_RULES, METHOD_LABELS, type NetworkKnowledge } from "@/domain/network";
 import { NETWORK_TYPE_SEED } from "@/domain/network-seed";
-import { COMMAND_EXAMPLES, DRAW_RULES, KIND_BLOCK, networkGuideText, patternBlock } from "@/server/drawing/rules";
+import { COMMAND_EXAMPLES, DRAW_RULES, GUIDE_ONLY_LINES, KIND_BLOCK, networkGuideText, patternBlock } from "@/server/drawing/rules";
 import { ATTR_LIST, SYSTEM_PROMPT } from "@/server/chat/prompt";
 
 describe("그리기 규칙 공용 모듈", () => {
@@ -14,6 +14,15 @@ describe("그리기 규칙 공용 모듈", () => {
       expect(text).not.toContain("warn 과 report_missing");
       expect(text).not.toContain("질문이면 명령 없이");
     }
+  });
+
+  test("섞였던 규칙도 공용 글에 있고 say 는 없다", () => {
+    expect(DRAW_RULES).toContain("영역(그룹)의 이름·상위 영역은 바꿀 수 없다");
+    expect(DRAW_RULES).toContain("하나도 빠뜨리지 말고");
+    expect(DRAW_RULES).toContain("단계 edge 는 현재 구성");
+    expect(DRAW_RULES).toContain("요청대로 그리고");
+    expect(DRAW_RULES).toContain("label, sub, set_assumption 의 value 는 모두 한국어로");
+    expect(DRAW_RULES).not.toContain("say");
   });
 
   test("COMMAND_EXAMPLES 의 명령 줄은 모두 parseCommand 를 통과한다", () => {
@@ -52,7 +61,8 @@ describe("그리기 규칙 공용 모듈", () => {
     expect(KIND_BLOCK).toContain(ATTR_LIST);
     // Qwen 전용 줄이 사이에 끼어 있어 DRAW_RULES 는 줄 단위로, 순서대로 들어 있다.
     let at = 0;
-    for (const line of DRAW_RULES.split("\n")) {
+    const guideOnly: string[] = Object.values(GUIDE_ONLY_LINES);
+    for (const line of DRAW_RULES.split("\n").filter((l) => !guideOnly.includes(l))) {
       const i = SYSTEM_PROMPT.indexOf(line, at);
       expect(i, line).toBeGreaterThanOrEqual(at);
       at = i + line.length;
