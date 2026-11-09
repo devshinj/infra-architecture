@@ -4,15 +4,18 @@ import { describe, expect, test } from "vitest";
 import { db } from "@/db/client";
 import { diagramVersions } from "@/db/schema";
 import { noLinkKey } from "@/domain/assumptions";
-import { linkWarningId } from "@/domain/networkRules";
+import { evaluateNetworkRules, linkWarningId } from "@/domain/networkRules";
 import { emptyState, type DiagramState } from "@/domain/types";
 import { BUSY_MESSAGE } from "@/server/chat/busy";
 import { withDiagramLock } from "@/server/chat/lock";
+import { summarizeState } from "@/server/chat/prompt";
 import { applyFlowOps, listFlows } from "@/server/flows";
 import { confirmLinkGuessFor, rejectLinkGuessFor } from "@/server/linkGuess";
 import { NotFoundError, ValidationError } from "@/server/projects";
 import { createVersion, getLatestState } from "@/server/versions";
 import { setZoneTypeFor } from "@/server/zoneType";
+
+import { adminCase, KNOWLEDGE } from "../fixtures/network";
 
 import { makeOwnedDiagram } from "./helpers";
 
@@ -113,6 +116,26 @@ describe("rejectLinkGuessFor", () => {
     expect(after.nodes.link).toBeUndefined();
     expect(Object.keys(after.assumptions)).toEqual([]);
     expect(after.ignoredWarnings).toBeUndefined();
+  });
+
+  test("방화벽이 망 밖이어도 통신 길의 두 끝 망 짝을 기억해 안내를 끄고, 다음 차례에 확정 가정을 넘긴다", async () => {
+    // 행정망 PC → 망 밖 방화벽 → [망연계, AI 추정] → GCloud WAS. 망연계는 방화벽 → WAS 연결을 대신했다.
+    const s = adminCase();
+    delete s.edges.e2;
+    s.nodes["link-1"] = { id: "link-1", kind: "network_link", label: "망연계", parent: null, attrs: {}, guess: { replaced: [], bridge: { from: "fw", to: "was", edgeKind: "request" } } };
+    s.edges.e3 = { id: "e3", from: "fw", to: "link-1", edgeKind: "request" };
+    s.edges.e4 = { id: "e4", from: "link-1", to: "was", edgeKind: "request" };
+    const ids = await setup(s);
+    expect((await rejectLinkGuessFor(ids.userId, ids.diagramId, "link-1")).number).toBe(2);
+    const after = await latest(ids.diagramId);
+    expect(after.nodes["link-1"]).toBeUndefined();
+    const key = noLinkKey("admin-net", "gcloud-internet");
+    expect(after.assumptions[key]).toEqual({ key, value: "망연계 없이 통신(사용자 확인)", confirmed: true });
+    // 그 구간의 망연계 예상 안내가 사라진다(가정이 없으면 같은 모양에서 안내가 뜬다).
+    expect(evaluateNetworkRules(adminCase(), KNOWLEDGE).some((w) => w.rule === "link_expected")).toBe(true);
+    expect(evaluateNetworkRules(after, KNOWLEDGE).some((w) => w.rule === "link_expected")).toBe(false);
+    // 다음 차례 프롬프트에 확정 가정이 실려 AI 가 망연계를 다시 넣지 않게 한다.
+    expect(summarizeState(after, KNOWLEDGE)).toContain(`가정 ${JSON.stringify(key)}=${JSON.stringify("망연계 없이 통신(사용자 확인)")} (확정)`);
   });
 
   test("잠금 중이면 BUSY_MESSAGE", async () => {

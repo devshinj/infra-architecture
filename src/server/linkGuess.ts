@@ -1,7 +1,8 @@
 import { noLinkKey } from "@/domain/assumptions";
 import { networkZoneOf } from "@/domain/boundary";
 import { mergeFlowSteps, revertLinkGuess } from "@/domain/linkGuess";
-import { linkWarningId } from "@/domain/networkRules";
+import { pairKey } from "@/domain/network";
+import { crossingPaths, linkWarningId } from "@/domain/networkRules";
 import { emptyState, type DiagramState } from "@/domain/types";
 import { BUSY_MESSAGE } from "@/server/chat/busy";
 import { withDiagramLock } from "@/server/chat/lock";
@@ -50,14 +51,19 @@ export async function rejectLinkGuessFor(
     const r = revertLinkGuess(before, nodeId);
     if (!r.ok) return { number: null, partial: false };
 
-    // 대신한 연결의 양 끝이 속한 망 짝(되돌리기 전 상태 기준).
-    const guess = before.nodes[nodeId].guess!;
-    const ends = guess.replaced.length > 0 ? guess.replaced : guess.bridge ? [guess.bridge] : [];
+    // 이 망연계를 지나던 통신 길의 두 끝(경계 노드가 아닌 노드)이 속한 망 짝(되돌리기 전 상태 기준).
+    // 방화벽이 망 밖에 그려져 대신한 연결의 끝이 망 밖이어도 짝을 찾는다.
     const pairs = new Map<string, [string, string]>();
-    for (const e of ends) {
-      const a = networkZoneOf(before, e.from);
-      const b = networkZoneOf(before, e.to);
-      if (a && b && a !== b) pairs.set(noLinkKey(a, b), [a, b]);
+    const addPair = (a: string | null, b: string | null) => {
+      if (a && b && a !== b) pairs.set(noLinkKey(a, b), pairKey(a, b));
+    };
+    for (const p of crossingPaths(before)) {
+      if (p.via.includes(nodeId)) addPair(networkZoneOf(before, p.from), networkZoneOf(before, p.to));
+    }
+    // 끝이 영역(그룹)인 연결은 통신 길에 들지 않으므로, 대신한 연결의 양 끝으로도 찾는다.
+    const guess = before.nodes[nodeId].guess!;
+    for (const e of guess.replaced.length > 0 ? guess.replaced : guess.bridge ? [guess.bridge] : []) {
+      addPair(networkZoneOf(before, e.from), networkZoneOf(before, e.to));
     }
 
     const state: DiagramState = structuredClone(r.state);
