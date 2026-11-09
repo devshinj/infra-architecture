@@ -27,9 +27,25 @@ import { saveFieldsFor, type SaveFieldsInput } from "@/server/fields";
 import { BusyError, confirmFlow, deleteFlow, removeFlowStep, renameFlow } from "@/server/flows";
 import { ensureSeeded, listTerms, updateTerm, type TermPatch } from "@/server/glossary";
 import { setWarningIgnoredFor } from "@/server/ignore";
+import { confirmLinkGuessFor, rejectLinkGuessFor, removeNoLinkFor } from "@/server/linkGuess";
+import { setZoneTypeFor } from "@/server/zoneType";
 import { importSample, SAMPLES } from "@/server/samples";
 import { listMessages } from "@/server/chat/messages";
 import { toGlossaryItem, type GlossaryItem } from "@/domain/glossary-types";
+import { GRADE_LABELS, METHOD_LABELS, type LinkMethod, type NetGrade, type NetRule } from "@/domain/network";
+import {
+  addNetworkType,
+  countZonesUsingType,
+  deleteNetworkRule,
+  deleteNetworkType,
+  listNetworkRules,
+  listNetworkTypes,
+  resetNetworkType,
+  setNetworkTypeHidden,
+  updateNetworkType,
+  upsertNetworkRule,
+  type NetTypeRow,
+} from "@/server/network";
 import { getVersion, listVersions, restoreVersionWithMessage } from "@/server/versions";
 
 const DIAGRAM_ROUTE = "/p/[projectId]/d/[diagramId]";
@@ -223,6 +239,51 @@ export async function setWarningIgnoredAction(
   });
 }
 
+export async function setZoneTypeAction(
+  diagramId: string,
+  groupId: string,
+  key: string | null,
+): Promise<ActionResult<{ number: number | null }>> {
+  return runResult(async (uid) => {
+    const r = await setZoneTypeFor(uid, diagramId, groupId, key);
+    refreshDiagram();
+    return r;
+  });
+}
+
+export async function confirmLinkGuessAction(
+  diagramId: string,
+  nodeId: string,
+): Promise<ActionResult<{ number: number | null }>> {
+  return runResult(async (uid) => {
+    const r = await confirmLinkGuessFor(uid, diagramId, nodeId);
+    refreshDiagram();
+    return r;
+  });
+}
+
+export async function rejectLinkGuessAction(
+  diagramId: string,
+  nodeId: string,
+): Promise<ActionResult<{ number: number | null; partial: boolean }>> {
+  return runResult(async (uid) => {
+    const r = await rejectLinkGuessFor(uid, diagramId, nodeId);
+    refreshDiagram();
+    return r;
+  });
+}
+
+export async function removeNoLinkAction(
+  diagramId: string,
+  key: string,
+): Promise<ActionResult<{ number: number | null }>> {
+  return runResult(async (uid) => {
+    const r = await removeNoLinkFor(uid, diagramId, key);
+    refreshDiagram();
+    return r;
+  });
+}
+
 // 흐름은 흐름 라우트로 따로 불러오므로 페이지를 다시 그리지 않는다. 대화 차례가 돌고 있으면 BusyError 안내를 데이터로 돌려준다.
 export async function renameFlowAction(diagramId: string, key: string, name: string): Promise<ActionResult> {
   return runResult(async (uid) => {
@@ -316,6 +377,125 @@ export async function setTermReviewedAction(id: string, reviewed: boolean): Prom
     const row = await updateTerm(uid, id, { reviewed });
     revalidatePath("/glossary");
     return { term: toGlossaryItem(row) };
+  });
+}
+
+// ---- 망 지식(망 종류·기관 연결 규칙) ----
+
+export type NetworkRuleRow = NetRule & { id: string };
+export type NetworkKnowledgeData = { types: NetTypeRow[]; rules: NetworkRuleRow[] };
+
+const bad = (what: string) => new ValidationError(`${what} 값이 올바르지 않아요`);
+const reqString = (v: unknown, what: string): string => {
+  if (typeof v !== "string") throw bad(what);
+  return v;
+};
+const reqStrings = (v: unknown, what: string): string[] => {
+  if (!Array.isArray(v) || v.some((x) => typeof x !== "string")) throw bad(what);
+  return v as string[];
+};
+const reqGrade = (v: unknown): NetGrade => {
+  if (typeof v !== "string" || !Object.hasOwn(GRADE_LABELS, v)) throw bad("등급");
+  return v as NetGrade;
+};
+const reqMethod = (v: unknown): LinkMethod => {
+  if (typeof v !== "string" || !Object.hasOwn(METHOD_LABELS, v)) throw bad("연결 방식");
+  return v as LinkMethod;
+};
+
+/** 지우기 확인에 보일 수. 지울 때만 세므로(구성도를 모두 훑는다) 목록에는 싣지 않는다. */
+export async function countNetworkTypeUsageAction(id: string): Promise<ActionResult<{ count: number }>> {
+  return runResult(async (uid) => {
+    const key = (await listNetworkTypes(uid)).find((t) => t.id === reqString(id, "종류"))?.key;
+    if (!key) throw new NotFoundError();
+    return { count: await countZonesUsingType(uid, key) };
+  });
+}
+
+export async function addNetworkTypeAction(input: {
+  name: string;
+  aliases: string[];
+  description: string;
+  grade: NetGrade;
+}): Promise<ActionResult<{ type: NetTypeRow }>> {
+  return runResult(async (uid) => {
+    const type = await addNetworkType(uid, {
+      name: reqString(input?.name, "이름"),
+      aliases: reqStrings(input?.aliases, "다른 이름"),
+      description: reqString(input?.description, "설명"),
+      grade: reqGrade(input?.grade),
+    });
+    revalidatePath("/network");
+    return { type };
+  });
+}
+
+export async function updateNetworkTypeAction(
+  id: string,
+  patch: Partial<{ name: string; aliases: string[]; description: string; grade: NetGrade }>,
+): Promise<ActionResult<{ type: NetTypeRow }>> {
+  return runResult(async (uid) => {
+    const p: Parameters<typeof updateNetworkType>[2] = {};
+    if (patch?.name !== undefined) p.name = reqString(patch.name, "이름");
+    if (patch?.aliases !== undefined) p.aliases = reqStrings(patch.aliases, "다른 이름");
+    if (patch?.description !== undefined) p.description = reqString(patch.description, "설명");
+    if (patch?.grade !== undefined) p.grade = reqGrade(patch.grade);
+    const type = await updateNetworkType(uid, reqString(id, "종류"), p);
+    revalidatePath("/network");
+    return { type };
+  });
+}
+
+export async function resetNetworkTypeAction(id: string): Promise<ActionResult<{ type: NetTypeRow }>> {
+  return runResult(async (uid) => {
+    const type = await resetNetworkType(uid, reqString(id, "종류"));
+    revalidatePath("/network");
+    return { type };
+  });
+}
+
+export async function setNetworkTypeHiddenAction(id: string, hidden: boolean): Promise<ActionResult<{ type: NetTypeRow }>> {
+  return runResult(async (uid) => {
+    if (typeof hidden !== "boolean") throw bad("숨김");
+    const type = await setNetworkTypeHidden(uid, reqString(id, "종류"), hidden);
+    revalidatePath("/network");
+    return { type };
+  });
+}
+
+/** 지운 종류를 쓰던 규칙도 함께 지워지므로 남은 규칙을 돌려준다. */
+export async function deleteNetworkTypeAction(id: string): Promise<ActionResult<{ rules: NetworkRuleRow[] }>> {
+  return runResult(async (uid) => {
+    await deleteNetworkType(uid, reqString(id, "종류"));
+    revalidatePath("/network");
+    return { rules: await listNetworkRules(uid) };
+  });
+}
+
+export async function upsertNetworkRuleAction(rule: {
+  a: string;
+  b: string;
+  method: LinkMethod;
+  note?: string;
+}): Promise<ActionResult<{ rules: NetworkRuleRow[] }>> {
+  return runResult(async (uid) => {
+    const note = rule?.note === undefined ? "" : reqString(rule.note, "근거");
+    await upsertNetworkRule(uid, {
+      a: reqString(rule?.a, "종류"),
+      b: reqString(rule?.b, "종류"),
+      method: reqMethod(rule?.method),
+      note,
+    });
+    revalidatePath("/network");
+    return { rules: await listNetworkRules(uid) };
+  });
+}
+
+export async function deleteNetworkRuleAction(id: string): Promise<ActionResult<{ rules: NetworkRuleRow[] }>> {
+  return runResult(async (uid) => {
+    await deleteNetworkRule(uid, reqString(id, "규칙"));
+    revalidatePath("/network");
+    return { rules: await listNetworkRules(uid) };
   });
 }
 

@@ -3,10 +3,16 @@ import { cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, expect, test, vi } from "vitest";
 
-import { emptyState } from "@/domain/types";
+import { confirmLinkGuessAction, rejectLinkGuessAction } from "@/app/(app)/actions";
+import { type DiagramState, emptyState } from "@/domain/types";
 import { NodeInfo } from "@/ui/NodeInfo";
 
 import { fx } from "../fixtures/spike";
+
+vi.mock("@/app/(app)/actions", () => ({
+  confirmLinkGuessAction: vi.fn(async () => ({ ok: true, number: 5 })),
+  rejectLinkGuessAction: vi.fn(async () => ({ ok: true, number: 6, partial: false })),
+}));
 
 afterEach(cleanup);
 
@@ -218,4 +224,65 @@ test("lists flows through node and click activates", async () => {
   // 지나는 흐름이 없으면 절이 없다.
   rerender(<NodeInfo state={s} selectedId="was-1" onSelect={vi.fn()} flows={{ list: [broken], onOpen }} />);
   expect(screen.queryByRole("region", { name: "이 노드를 지나는 흐름" })).not.toBeInTheDocument();
+});
+
+// AI 가 스스로 넣은 망연계: 방화벽 → 망연계 → WAS (방화벽 → WAS 를 대신했다).
+const guessState = (): DiagramState => ({
+  ...emptyState(),
+  nodes: {
+    fw: { id: "fw", kind: "firewall", label: "방화벽", parent: null, attrs: {} },
+    nl: { id: "nl", kind: "network_link", label: "망연계", parent: null, attrs: {}, guess: { replaced: [{ from: "fw", to: "was", edgeKind: "request", id: "e-old" }] } },
+    was: { id: "was", kind: "was", label: "WAS", parent: null, attrs: {} },
+  },
+  edges: {
+    a: { id: "a", from: "fw", to: "nl", edgeKind: "request" },
+    b: { id: "b", from: "nl", to: "was", edgeKind: "request" },
+  },
+});
+
+test("NodeInfo: guess 노드에 AI 추정·맞아요·아니에요, 아니에요 누르면 rejectLinkGuessAction, partial 이면 안내 문장", async () => {
+  vi.mocked(rejectLinkGuessAction).mockClear();
+  const onSaved = vi.fn();
+  vi.mocked(rejectLinkGuessAction).mockResolvedValueOnce({ ok: true, number: 6, partial: true });
+  render(<NodeInfo state={guessState()} selectedId="nl" onSelect={vi.fn()} linkGuess={{ diagramId: "d1", onSaved }} />);
+  const g = screen.getByRole("group", { name: "AI 추정 망연계" });
+  expect(within(g).getByText("AI 추정")).toBeInTheDocument();
+  expect(within(g).getByRole("button", { name: "맞아요" })).toBeInTheDocument();
+  await userEvent.click(within(g).getByRole("button", { name: "아니에요" }));
+  expect(rejectLinkGuessAction).toHaveBeenCalledWith("d1", "nl");
+  expect(onSaved).toHaveBeenCalledWith(6, true);
+  expect(await screen.findByRole("status")).toHaveTextContent("주변 연결이 바뀌어 일부만 되돌렸어요.");
+});
+
+test("NodeInfo: 깔끔하게 되돌리면 안내 문장이 없다, 맞아요는 confirmLinkGuessAction", async () => {
+  vi.mocked(confirmLinkGuessAction).mockClear();
+  const onSaved = vi.fn();
+  const { rerender } = render(<NodeInfo state={guessState()} selectedId="nl" onSelect={vi.fn()} linkGuess={{ diagramId: "d1", onSaved }} />);
+  await userEvent.click(screen.getByRole("button", { name: "아니에요" }));
+  expect(onSaved).toHaveBeenCalledWith(6, false);
+  expect(screen.queryByText("주변 연결이 바뀌어 일부만 되돌렸어요.")).not.toBeInTheDocument();
+  rerender(<NodeInfo state={guessState()} selectedId="nl" onSelect={vi.fn()} linkGuess={{ diagramId: "d1", onSaved }} />);
+  await userEvent.click(screen.getByRole("button", { name: "맞아요" }));
+  expect(confirmLinkGuessAction).toHaveBeenCalledWith("d1", "nl");
+  expect(onSaved).toHaveBeenLastCalledWith(5, false);
+});
+
+test("NodeInfo: 저장 실패 문구, 대화 중에는 단추를 막는다", async () => {
+  vi.mocked(confirmLinkGuessAction).mockResolvedValueOnce({ ok: false, error: "다른 대화가 돌고 있어요." });
+  const { rerender } = render(<NodeInfo state={guessState()} selectedId="nl" onSelect={vi.fn()} linkGuess={{ diagramId: "d1", onSaved: vi.fn() }} />);
+  await userEvent.click(screen.getByRole("button", { name: "맞아요" }));
+  expect(await screen.findByRole("alert")).toHaveTextContent("다른 대화가 돌고 있어요.");
+  rerender(<NodeInfo state={guessState()} selectedId="nl" onSelect={vi.fn()} linkGuess={{ diagramId: "d1", disabled: true, onSaved: vi.fn() }} />);
+  expect(screen.getByRole("button", { name: "맞아요" })).toBeDisabled();
+  expect(screen.getByRole("button", { name: "아니에요" })).toBeDisabled();
+});
+
+test("NodeInfo: 이력 보기(linkGuess 없음)는 AI 추정 표시만, 추정 아닌 노드는 표시 없음", () => {
+  const { rerender } = render(<NodeInfo state={guessState()} selectedId="nl" onSelect={vi.fn()} />);
+  expect(screen.getByText("AI 추정")).toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "맞아요" })).not.toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "아니에요" })).not.toBeInTheDocument();
+  rerender(<NodeInfo state={guessState()} selectedId="fw" onSelect={vi.fn()} linkGuess={{ diagramId: "d1", onSaved: vi.fn() }} />);
+  expect(screen.queryByText("AI 추정")).not.toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "맞아요" })).not.toBeInTheDocument();
 });

@@ -10,8 +10,10 @@ vi.mock("@/app/(app)/actions", () => ({
   listVersionsAction: vi.fn(async () => []), restoreVersionAction: vi.fn(), savePinnedAction: vi.fn(),
   saveFieldsAction: vi.fn(async () => ({ ok: true, number: 2 })),
   setWarningIgnoredAction: vi.fn(async () => ({ ok: true, number: 2 })),
+  setZoneTypeAction: vi.fn(async () => ({ ok: true, number: 2 })),
   listTermsAction: vi.fn(async () => []),
   confirmAssumptionAction: vi.fn(async () => ({ ok: true })),
+  removeNoLinkAction: vi.fn(async () => ({ ok: true, number: 2 })),
   renameFlowAction: vi.fn(async () => ({ ok: true })), deleteFlowAction: vi.fn(async () => ({ ok: true })), confirmFlowAction: vi.fn(async () => ({ ok: true })), removeFlowStepAction: vi.fn(async () => ({ ok: true })),
 }));
 vi.mock("@/canvas/Canvas", () => ({
@@ -53,10 +55,12 @@ vi.mock("@/ui/chat/useChatTurn", () => ({
 
 import { readFileSync } from "node:fs";
 
-import { clearPinnedAction, confirmAssumptionAction, getVersionAction, importSampleAction, listVersionsAction, removeFlowStepAction, saveFieldsAction, setWarningIgnoredAction } from "@/app/(app)/actions";
+import { clearPinnedAction, confirmAssumptionAction, getVersionAction, importSampleAction, listVersionsAction, removeFlowStepAction, removeNoLinkAction, saveFieldsAction, setWarningIgnoredAction, setZoneTypeAction } from "@/app/(app)/actions";
 import { emptyState } from "@/domain/types";
 import { DiagramWorkspace } from "@/ui/DiagramWorkspace";
 import { ShellProvider } from "@/ui/Shell";
+
+import { KNOWLEDGE, adminCase } from "../fixtures/network";
 
 afterEach(() => {
   cleanup();
@@ -1135,4 +1139,40 @@ test("흐름 다시 맞추기 sends the repair request to the diagram chat", asy
   fireEvent.click(await screen.findByRole("button", { name: "로그인 흐름 다시 맞추기" }));
   expect(hookState.send).toHaveBeenCalledWith('"로그인" 흐름을 지금 구성에 맞게 다시 맞춰 줘');
   expect(screen.getByRole("tab", { name: "대화" })).toHaveAttribute("aria-selected", "true");
+});
+
+test("망 지식을 넘기면 연결 방식 예상과 망 종류 맞아요가 보이고, 저장 뒤 최신 버전을 다시 불러온다", async () => {
+  vi.mocked(listVersionsAction).mockClear();
+  const latest = { number: 1, state: adminCase() };
+  render(<DiagramWorkspace diagramId="d" name="n" latest={latest as never} initialPinned={{}} samples={[]} knowledge={KNOWLEDGE} />);
+  fireEvent.click(screen.getByRole("button", { name: "구성 정보 펼치기" }));
+  const warn = screen.getByRole("region", { name: "주의" });
+  expect(within(warn).getByText(/망연계가 필요해요/)).toBeInTheDocument();
+  await act(async () => {
+    fireEvent.click(within(warn).getByRole("button", { name: "맞아요" }));
+  });
+  expect(setZoneTypeAction).toHaveBeenCalledWith("d", "admin-net", "admin-net");
+  expect(listVersionsAction).toHaveBeenCalled();
+  cleanup();
+  // 지식이 없으면 같은 그림이어도 예상 안내와 확인 단추가 없다.
+  render(<DiagramWorkspace diagramId="d" name="n" latest={latest as never} initialPinned={{}} samples={[]} />);
+  fireEvent.click(screen.getByRole("button", { name: "구성 정보 펼치기" }));
+  expect(screen.queryByText(/망연계가 필요해요/)).not.toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "맞아요" })).not.toBeInTheDocument();
+});
+
+test("가정 칩에서 망연계 거절 기억을 지우면 서버에 지우고 칩이 사라진다", async () => {
+  hookState.busy = false;
+  hookState.lines = [];
+  stubFetch();
+  const key = "no_link:admin-net--gcloud-internet";
+  const latest = { number: 1, state: { ...adminCase(), assumptions: { [key]: { key, value: "망연계 없이 통신(사용자 확인)", confirmed: true } } } };
+  render(<DiagramWorkspace diagramId="d" name="n" latest={latest as never} initialPinned={{}} samples={[]} knowledge={KNOWLEDGE} />);
+  fireEvent.click(cardToggle());
+  expect(screen.getByText("망연계 없음: 행정망 ↔ GCloud 인터넷망")).toBeInTheDocument();
+  await act(async () => {
+    fireEvent.click(screen.getByRole("button", { name: "행정망 ↔ GCloud 인터넷망 망연계 없음 기억 지우기" }));
+  });
+  expect(removeNoLinkAction).toHaveBeenCalledWith("d", key);
+  expect(screen.queryByText("망연계 없음: 행정망 ↔ GCloud 인터넷망")).not.toBeInTheDocument();
 });

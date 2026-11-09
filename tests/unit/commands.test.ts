@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest";
 
 import { EDGE_KINDS, GROUP_KINDS, NODE_KINDS, categoryOf } from "@/domain/catalog";
 import { applyCommand } from "@/domain/apply";
-import { COMMAND_OPS, FLOW_OPS, isFlowCommand, isStructural, parseCommand, type Command, type FlowCommand } from "@/domain/commands";
+import { COMMAND_OPS, FLOW_OPS, SERVER_ONLY_OPS, isFlowCommand, isStructural, parseCommand, type Command, type FlowCommand } from "@/domain/commands";
 import type { FlowOp } from "@/domain/flows";
 import { emptyState } from "@/domain/types";
 
@@ -97,5 +97,27 @@ describe("flow commands", () => {
     const cmd: FlowCommand = { op: "update_flow", id: "f", steps: [step(1)] };
     const op: FlowOp = cmd;
     expect(op.op).toBe("update_flow");
+  });
+});
+
+describe("망 종류·망연계 추정 명령", () => {
+  test("commands: set_zone_type 의 type 은 id 형식 또는 null", () => {
+    expect(parseCommand({ op: "set_zone_type", id: "dmz", type: "dmz" }).ok).toBe(true);
+    expect(parseCommand({ op: "set_zone_type", id: "dmz", type: null }).ok).toBe(true);
+    expect(parseCommand({ op: "set_zone_type", id: "dmz", type: "Not Id" }).ok).toBe(false);
+    expect(parseCommand({ op: "set_zone_type", id: "dmz" }).ok).toBe(false);
+    expect(isStructural({ op: "set_zone_type", id: "dmz", type: "dmz" })).toBe(true);
+  });
+  test("commands: isStructural(set_link_guess) === false", () => {
+    const cmd = { op: "set_link_guess", id: "lnk", guess: { replaced: [{ from: "a", to: "b", edgeKind: "request" }] } };
+    const r = parseCommand(cmd);
+    expect(r.ok && isStructural(r.cmd)).toBe(false);
+    expect(parseCommand({ op: "set_link_guess", id: "lnk", guess: null }).ok).toBe(true);
+    expect(parseCommand({ op: "set_link_guess", id: "lnk", guess: { replaced: [{ from: "a", to: "b", edgeKind: "zzz" }] } }).ok).toBe(false);
+    expect(SERVER_ONLY_OPS.has("set_link_guess")).toBe(true);
+    expect(COMMAND_OPS).toContain("set_link_guess");
+  });
+  test("add_node 는 guess 를 받는다", () => {
+    expect(parseCommand({ op: "add_node", id: "l", kind: "network_link", label: "L", parent: null, guess: true }).ok).toBe(true);
   });
 });

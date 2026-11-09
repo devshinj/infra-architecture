@@ -130,6 +130,55 @@ function netSuggestLines(): string[] {
   ].map((l) => JSON.stringify(l));
 }
 
+/**
+ * 망 지식 E2E. "GCloud 인터넷망": 행정망 PC → 방화벽 → (AI 가 추정으로 넣은 망연계) → GCloud WAS.
+ * 새로 그리는 차례라 대신한 연결이 없으므로, 되돌리면 방화벽 → WAS 가 바로 이어진다(방화벽은 행정망 안이라 망 짝이 남는다).
+ * "업무존": 행정망 PC → 방화벽 → G-클라우드 업무존 WAS(망연계 없음). 기본 규칙(내부 ↔ 내부)으로는 방화벽이면 되지만
+ * 기관 규칙을 넣으면 망연계 필요 예상이 뜬다.
+ */
+export const ADMIN = {
+  zoneAdmin: "zone-admin",
+  zoneGcloud: "zone-gcloud",
+  zoneWork: "zone-work",
+  pc: "admin-pc",
+  fw: "admin-fw",
+  link: "admin-link",
+  was: "gcloud-was",
+  workWas: "work-was",
+} as const;
+export const ADMIN_NODE_COUNT = 4;
+export const WORK_NODE_COUNT = 3;
+function adminLines(): string[] {
+  return [
+    { op: "say", text: "행정망과 GCloud 인터넷망 사이에 망연계를 넣어 그렸어요." },
+    { op: "add_group", id: ADMIN.zoneAdmin, group_kind: "network_zone", label: "행정망", parent: null },
+    { op: "add_group", id: ADMIN.zoneGcloud, group_kind: "network_zone", label: "GCloud 인터넷망", parent: null },
+    { op: "set_zone_type", id: ADMIN.zoneAdmin, type: "admin-net" },
+    { op: "set_zone_type", id: ADMIN.zoneGcloud, type: "gcloud-internet" },
+    { op: "add_node", id: ADMIN.pc, kind: "client_web", label: "행정망 PC", parent: ADMIN.zoneAdmin },
+    { op: "add_node", id: ADMIN.fw, kind: "firewall", label: "행정망 방화벽", parent: ADMIN.zoneAdmin },
+    { op: "add_node", id: ADMIN.link, kind: "network_link", label: "망연계 솔루션", parent: null, guess: true },
+    { op: "add_node", id: ADMIN.was, kind: "was", label: "GCloud WAS", parent: ADMIN.zoneGcloud },
+    { op: "add_edge", id: "e-pc-fw", from: ADMIN.pc, to: ADMIN.fw, edge_kind: "request", label: "HTTPS 443" },
+    { op: "add_edge", id: "e-fw-link", from: ADMIN.fw, to: ADMIN.link, edge_kind: "request", label: "자료 전달", payload: "api", direction: "two_way" },
+    { op: "add_edge", id: "e-link-was", from: ADMIN.link, to: ADMIN.was, edge_kind: "request", label: "자료 전달", payload: "api", direction: "two_way" },
+  ].map((l) => JSON.stringify(l));
+}
+function workLines(): string[] {
+  return [
+    { op: "say", text: "행정망과 G-클라우드 업무존을 방화벽으로 이어 그렸어요." },
+    { op: "add_group", id: ADMIN.zoneAdmin, group_kind: "network_zone", label: "행정망", parent: null },
+    { op: "add_group", id: ADMIN.zoneWork, group_kind: "network_zone", label: "G-클라우드 업무존", parent: null },
+    { op: "set_zone_type", id: ADMIN.zoneAdmin, type: "admin-net" },
+    { op: "set_zone_type", id: ADMIN.zoneWork, type: "gcloud-internal" },
+    { op: "add_node", id: ADMIN.pc, kind: "client_web", label: "행정망 PC", parent: ADMIN.zoneAdmin },
+    { op: "add_node", id: ADMIN.fw, kind: "firewall", label: "행정망 방화벽", parent: ADMIN.zoneAdmin },
+    { op: "add_node", id: ADMIN.workWas, kind: "was", label: "업무존 WAS", parent: ADMIN.zoneWork },
+    { op: "add_edge", id: "e-pc-fw", from: ADMIN.pc, to: ADMIN.fw, edge_kind: "request", label: "HTTPS 443" },
+    { op: "add_edge", id: "e-fw-was", from: ADMIN.fw, to: ADMIN.workWas, edge_kind: "request", label: "자료 전달", payload: "api", direction: "two_way" },
+  ].map((l) => JSON.stringify(l));
+}
+
 type Msg = { role: string; content: string };
 
 /** 흐름 제안 요청의 사용자 글(현재 구성 요약). */
@@ -205,6 +254,8 @@ async function linesFor(messages: Msg[]): Promise<{ lines: string[]; delay: numb
   // 흐름: s1(쇼핑몰) 구성 위에 흐름 하나. 다른 키워드 분기 뒤, 쇼핑몰 앞에 둬 다른 분기를 가리지 않는다.
   // 망분리: 망 경계 예시. "흐름" 보다 먼저 맞춘다(망분리 요청 글에 흐름이 없게 쓰지만 순서로도 막는다).
   if (request.includes("망분리")) return { lines: netLines(), delay };
+  if (request.includes("GCloud 인터넷망")) return { lines: adminLines(), delay };
+  if (request.includes("업무존")) return { lines: workLines(), delay };
   if (request.includes("흐름")) return { lines: s1FlowLines(), delay };
   if (request.includes("쇼핑몰")) return { lines: s1Lines(), delay };
   return { lines: [JSON.stringify({ op: "say", text: "네, 알겠습니다." })], delay };
@@ -257,6 +308,10 @@ function intentFor(state: unknown): string {
   return t.includes("왜") ? "question" : "structure_change";
 }
 
+/** 받은 대화 요청의 마지막 사용자 글(넘치면 오래된 것부터 버린다). E2E 가 "다음 프롬프트에 무엇이 들어갔나"를 본다. */
+const received: string[] = [];
+const RECEIVED_LIMIT = 200;
+
 export function startFakeLlm(): Promise<http.Server> {
   const server = http.createServer(async (req, res) => {
     const url = req.url ?? "";
@@ -266,6 +321,7 @@ export function startFakeLlm(): Promise<http.Server> {
     };
     if (req.method === "GET" && url === "/v1/models") return json(200, { data: [{ id: MODEL }] });
     if (req.method === "GET" && url === "/health") return json(200, { ok: true });
+    if (req.method === "GET" && url === "/e2e/received") return json(200, { messages: received });
     if (req.method === "POST" && url === "/v1/systemone") {
       const body = JSON.parse(await readBody(req)) as { state?: unknown; questions?: Record<string, { type?: string }> };
       // noul 질문은 기본 0.1, 상태에 "외부DB" 가 있으면 0.95. 의도 분류는 항상 structure_change 0.95.
@@ -284,6 +340,8 @@ export function startFakeLlm(): Promise<http.Server> {
     }
     if (req.method === "POST" && url === "/v1/chat/completions") {
       const body = JSON.parse(await readBody(req)) as { messages: Msg[] };
+      received.push([...body.messages].reverse().find((m) => m.role === "user")?.content ?? "");
+      if (received.length > RECEIVED_LIMIT) received.shift();
       const isWarning = body.messages.some((m) => m.role === "system" && m.content === WARNING_PROMPT);
       const sys = body.messages.find((m) => m.role === "system")?.content;
       const askQuestion = sys === ASK_PROMPT ? ([...body.messages].reverse().find((m) => m.role === "user")?.content.split("질문: ").pop() ?? "") : null;

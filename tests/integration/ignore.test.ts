@@ -96,3 +96,12 @@ test("other user's diagram is not found", async () => {
   const other = await makeOwnedDiagram();
   await expect(setWarningIgnoredFor(other.userId, ids.diagramId, WID, true)).rejects.toBeInstanceOf(NotFoundError);
 });
+
+test("망 짝 id(rule:<id>--<id>)도 받는다", async () => {
+  const ids = await setup();
+  const pair = "link_expected:admin-net--gcloud-internet";
+  const r = await setWarningIgnoredFor(ids.userId, ids.diagramId, pair, true);
+  expect(r.number).toBe(2);
+  expect((await getLatestState(ids.diagramId))!.state.ignoredWarnings).toEqual([pair]);
+  await expect(setWarningIgnoredFor(ids.userId, ids.diagramId, "link_expected:--a", true)).rejects.toBeInstanceOf(ValidationError);
+});

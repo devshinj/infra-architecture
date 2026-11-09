@@ -13,7 +13,7 @@
 
 /** op 별로 "생략 가능, null 불가" 인 칸. parent 는 null 을 받으므로 넣지 않는다. */
 const DROP_NULL: Readonly<Record<string, readonly string[]>> = {
-  add_node: ["sub", "attrs"],
+  add_node: ["sub", "attrs", "guess"],
   add_edge: ["id", "label", "payload", "direction"],
   update_node: ["label", "sub", "attrs"],
   update_edge: ["label", "edge_kind", "payload", "direction"],
@@ -60,6 +60,8 @@ export function normalizeAiCommand(raw: unknown): unknown {
   for (const key of ID_FIELDS) {
     if (key in out) out[key] = normalizeId(out[key]);
   }
+  // 망 종류 키도 id 형식이다. null(종류 지우기)은 그대로 둔다.
+  if (op === "set_zone_type" && "type" in out) out.type = normalizeId(out.type);
   if (op === "add_edge" || op === "update_edge") {
     for (const [key, table] of [["payload", PAYLOADS], ["direction", DIRECTIONS]] as const) {
       if (!(key in out)) continue;

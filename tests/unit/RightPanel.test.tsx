@@ -9,6 +9,9 @@ import { emptyState } from "@/domain/types";
 
 import { fx } from "../fixtures/spike";
 
+// 설명 탭(NodeInfo)이 망연계 맞아요·아니에요 서버 액션을 불러온다: 서버 모듈을 들이지 않게 막는다.
+vi.mock("@/app/(app)/actions", () => ({ confirmLinkGuessAction: vi.fn(), rejectLinkGuessAction: vi.fn() }));
+
 afterEach(cleanup);
 
 const props = (selectedId: string | null): RightPanelProps => ({

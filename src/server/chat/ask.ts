@@ -3,6 +3,7 @@ import type { DiagramState } from "@/domain/types";
 import type { Intent } from "@/server/llm/clef";
 import { cachedNodeExplanation } from "@/server/explain";
 import { createThinkStripper } from "@/server/llm/think";
+import { getNetworkKnowledge } from "@/server/network";
 import { getOwnedDiagram, NotFoundError, ValidationError } from "@/server/projects";
 import { getLatestState } from "@/server/versions";
 
@@ -118,6 +119,12 @@ async function askInSession(
   const userMsg = await createMessage(diagramId, "user", args.text, {}, sessionId);
 
   const counts = { nodes: Object.keys(state.nodes).length, edges: Object.keys(state.edges).length };
+  // 빠진 정보 수는 화면 체크리스트와 같게 망 지식으로 센다. 못 읽으면 지식 없이 센다.
+  const knowledge = await getNetworkKnowledge(args.userId).catch((err) => {
+    console.error("ask network knowledge failed", err);
+    return null;
+  });
+  const missing = computeMissing(state, knowledge ?? undefined).count;
   const done = (status: "complete" | "aborted", assistantMessageId: string): ChatEvent => ({
     t: "done",
     version: null,
@@ -125,7 +132,7 @@ async function askInSession(
     applied: 0,
     changed: 0,
     skipped: 0,
-    missing: computeMissing(state).count,
+    missing,
     ...counts,
     assistantMessageId,
   });

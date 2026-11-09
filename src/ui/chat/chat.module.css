@@ -81,7 +81,11 @@ button.result:focus-visible { outline: 1.5px solid var(--text-secondary); outlin
 .assumptionChoice { font: inherit; font-size: 13px; text-align: left; color: var(--text-primary); background: transparent; border: 0; border-radius: 4px; padding: 6px 8px; cursor: pointer; }
 .assumptionChoice:hover:not(:disabled) { background: var(--line-node); }
 .assumptionChoice:disabled { opacity: 0.5; cursor: default; }
-.assumptionChip:focus-visible, .assumptionChoice:focus-visible { outline: 1.5px solid var(--text-secondary); outline-offset: 2px; }
+/* 망연계 거절 기억 칩 옆의 작은 지우기 단추 */
+.assumptionRemove { font: inherit; font-size: 11px; color: var(--text-secondary); background: transparent; border: 0; border-radius: 4px; padding: 2px 4px; margin-left: 2px; cursor: pointer; text-decoration: underline; }
+.assumptionRemove:hover:not(:disabled) { color: var(--text-primary); }
+.assumptionRemove:disabled { opacity: 0.5; cursor: default; }
+.assumptionChip:focus-visible, .assumptionChoice:focus-visible, .assumptionRemove:focus-visible { outline: 1.5px solid var(--text-secondary); outline-offset: 2px; }
 /* 빠진 정보 체크리스트(캔버스 구성 정보 카드 안). 노드별 블록을 접고 펼친다. 남은 수만 --state-missing-text. */
 .checklist { margin: 0 -6px; display: flex; flex-direction: column; gap: 2px; }
 .missingBlock { border-radius: var(--radius-node); }

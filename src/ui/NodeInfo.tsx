@@ -1,3 +1,8 @@
+"use client";
+
+import { useEffect, useState } from "react";
+
+import { confirmLinkGuessAction, rejectLinkGuessAction } from "@/app/(app)/actions";
 import { CategoryIcon } from "@/canvas/icons";
 import { categoryOf, EDGE_KINDS, GROUP_KINDS, NODE_KINDS } from "@/domain/catalog";
 import { flowsThrough, type Flow } from "@/domain/flows";
@@ -7,6 +12,9 @@ import { mergeWarnings } from "@/domain/warnings";
 
 import { AskNode, type AskNodeProps } from "./explain/AskNode";
 import { Explanation, type ExplanationProps } from "./explain/Explanation";
+import { AI_BADGE_SR, AI_GUESS_BADGE } from "./glossary/aiBadge";
+import { useNetworkKnowledge } from "./network/NetworkKnowledgeContext";
+import netStyles from "./network/network.module.css";
 
 import styles from "./panel.module.css";
 
@@ -31,6 +39,15 @@ export interface NodeInfoProps {
   ask?: Omit<AskNodeProps, "nodeId" | "nodeLabel">;
   /** 구성도의 흐름과, 흐름 이름 칩을 눌렀을 때(그 흐름을 켜고 흐름 탭으로). 없으면 지나는 흐름 절을 그리지 않는다. */
   flows?: { list: Flow[]; onOpen(key: string): void };
+  /** AI 가 스스로 넣은 망연계 노드의 맞아요·아니에요. 없으면(이력 보기 등) 추정 표시만 보인다. */
+  linkGuess?: LinkGuessSave;
+}
+
+/** 저장 대상 구성도, 차례 중 막기, 저장 뒤 최신 버전 다시 불러오기(partial: 일부만 되돌렸다). */
+export interface LinkGuessSave {
+  diagramId: string;
+  disabled?: boolean;
+  onSaved(number: number | null, partial: boolean): void;
 }
 
 type CautionProps = Pick<NodeInfoProps, "onIgnoreWarning" | "ignoreDisabled" | "ignoreError">;
@@ -145,13 +162,77 @@ function FlowChips({ state, id, title, flows }: { state: DiagramState; id: strin
   );
 }
 
+export const PARTIAL_UNDO = "주변 연결이 바뀌어 일부만 되돌렸어요.";
+const SAVE_FAILED = "저장하지 못했어요. 다시 시도해 주세요.";
+
+/** AI 추정 망연계: 표시와 맞아요(일반 노드로)·아니에요(넣기 전으로 되돌리기). */
+function LinkGuessPart({ nodeId, save }: { nodeId: string; save?: LinkGuessSave }) {
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [partial, setPartial] = useState(false);
+  useEffect(() => {
+    setError(null);
+    setPartial(false);
+  }, [nodeId]);
+
+  const run = async (reject: boolean) => {
+    if (!save) return;
+    setSaving(true);
+    setError(null);
+    setPartial(false);
+    try {
+      const r = reject
+        ? await rejectLinkGuessAction(save.diagramId, nodeId)
+        : await confirmLinkGuessAction(save.diagramId, nodeId).then((x) => (x.ok ? { ...x, partial: false } : x));
+      if (!r.ok) return setError(r.error);
+      setPartial(r.partial);
+      save.onSaved(r.number, r.partial);
+    } catch {
+      setError(SAVE_FAILED);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const off = !!save?.disabled || saving;
+  return (
+    <section className={styles.section} role="group" aria-label="AI 추정 망연계">
+      <p className={netStyles.notice}>
+        <span className={netStyles.badge}>{AI_GUESS_BADGE}</span>
+        <span className={netStyles.srOnly}>{AI_BADGE_SR}</span> 두 망 사이에 망연계가 필요할 것 같아 AI 가 넣었어요.
+      </p>
+      {save && (
+        <div className={netStyles.row}>
+          <button type="button" className={netStyles.btn} disabled={off} onClick={() => void run(false)}>
+            맞아요
+          </button>
+          <button type="button" className={netStyles.btn} disabled={off} onClick={() => void run(true)}>
+            아니에요
+          </button>
+        </div>
+      )}
+      {partial && (
+        <p className={netStyles.notice} role="status">
+          {PARTIAL_UNDO}
+        </p>
+      )}
+      {error && (
+        <p className={netStyles.error} role="alert">
+          {error}
+        </p>
+      )}
+    </section>
+  );
+}
+
 const PAYLOAD_NAME = { api: "API", file: "파일" } as const;
 const DIRECTION_NAME = { one_way: "단방향", two_way: "양방향" } as const;
 
-export function NodeInfo({ state, selectedId, onSelect, onMention, mentionDisabled, warningState, explain, ask, flows, ...caution }: NodeInfoProps) {
+export function NodeInfo({ state, selectedId, onSelect, onMention, mentionDisabled, warningState, explain, ask, flows, linkGuess, ...caution }: NodeInfoProps) {
+  const knowledge = useNetworkKnowledge();
   if (selectedId === null) return <p className={styles.empty}>캔버스에서 노드를 선택하면 설명이 여기에 표시돼요.</p>;
 
-  const warnings = mergeWarnings(warningState ?? state);
+  const warnings = mergeWarnings(warningState ?? state, knowledge ?? undefined);
   const pick = (f: (w: Warning) => boolean) => ({ active: warnings.active.filter(f), ignored: warnings.ignored.filter(f) });
 
   const edge = state.edges[selectedId];
@@ -214,6 +295,7 @@ export function NodeInfo({ state, selectedId, onSelect, onMention, mentionDisabl
         </div>
       </header>
       <LinkButton id={node.id} onMention={onMention} disabled={mentionDisabled} />
+      {node.guess && <LinkGuessPart nodeId={node.id} {...(linkGuess ? { save: linkGuess } : {})} />}
       {explain && <Explanation {...explain} />}
       <Cautions {...pick((w) => w.nodeId === node.id)} {...caution} />
       <Fields title="스펙 · SW" fields={SPEC_FIELDS} attrs={node.attrs} unknown={node.unknown ?? []} />

@@ -13,6 +13,16 @@ const edgeKind = z.enum(tuple(EDGE_KINDS));
 const parent = id.nullable();
 const payload = z.enum(["api", "file"]);
 const direction = z.enum(["one_way", "two_way"]);
+const replacedEdge = z.object({
+  from: id,
+  to: id,
+  edgeKind,
+  label: z.string().optional(),
+  payload: payload.optional(),
+  direction: direction.optional(),
+  id: id.optional(),
+});
+const linkGuess = z.object({ replaced: z.array(replacedEdge), bridge: replacedEdge.optional() });
 const attrs = z.record(z.string(), z.union([z.string(), z.number(), z.null()]));
 // 흐름 명령. 저장소(applyFlowOps)는 이 검사를 믿는다: 이름 1~60자(앞뒤 공백 제거), 요약·결과 200자, 단계 설명 120자, 단계 1~20개.
 // 짧은 설명(short)은 길이를 묻지 않는다(저장할 때 자른다).
@@ -23,7 +33,7 @@ const flowSteps = z.array(flowStep).min(1).max(20);
 
 export const commandSchema = z.discriminatedUnion("op", [
   z.object({ op: z.literal("add_group"), id, group_kind: groupKind, label: z.string().min(1), parent }),
-  z.object({ op: z.literal("add_node"), id, kind: nodeKind, label: z.string().min(1), sub: z.string().optional(), parent, attrs: attrs.optional() }),
+  z.object({ op: z.literal("add_node"), id, kind: nodeKind, label: z.string().min(1), sub: z.string().optional(), parent, attrs: attrs.optional(), guess: z.boolean().optional() }),
   z.object({ op: z.literal("add_edge"), id: id.optional(), from: id, to: id, edge_kind: edgeKind, label: z.string().optional(), payload: payload.optional(), direction: direction.optional() }),
   z.object({ op: z.literal("update_node"), id, label: z.string().min(1).optional(), sub: z.string().optional(), parent: parent.optional(), attrs: attrs.optional() }),
   z.object({ op: z.literal("update_edge"), id, label: z.string().optional(), edge_kind: edgeKind.optional(), payload: payload.optional(), direction: direction.optional() }),
@@ -31,6 +41,8 @@ export const commandSchema = z.discriminatedUnion("op", [
   z.object({ op: z.literal("remove_edge"), id }),
   z.object({ op: z.literal("remove_group"), id }),
   z.object({ op: z.literal("set_assumption"), key: z.string().min(1), value: z.string() }),
+  z.object({ op: z.literal("set_zone_type"), id, type: id.nullable() }),
+  z.object({ op: z.literal("set_link_guess"), id, guess: linkGuess.nullable() }),
   z.object({ op: z.literal("add_flow"), id, name: flowName, origin: z.enum(["user", "system"]), summary: flowNote.optional(), result: flowNote.optional(), steps: flowSteps }),
   z.object({ op: z.literal("update_flow"), id, name: flowName.optional(), summary: flowNote.optional(), result: flowNote.optional(), steps: flowSteps.optional() }),
   z.object({ op: z.literal("remove_flow"), id }),
@@ -43,14 +55,17 @@ export type FlowCommand = Extract<Command, { op: "add_flow" | "update_flow" | "r
 export const FLOW_OPS: ReadonlySet<Command["op"]> = new Set<Command["op"]>(["add_flow", "update_flow", "remove_flow"]);
 export const isFlowCommand = (c: Command): c is FlowCommand => FLOW_OPS.has(c.op);
 
+/** AI 가 낼 수 없는 명령(서버가 판정 결과로만 만든다). */
+export const SERVER_ONLY_OPS: ReadonlySet<Command["op"]> = new Set<Command["op"]>(["set_link_guess"]);
+
 /** 흐름 명령을 저장소 명령 모양으로(모양이 같다는 것을 타입으로 확인한다). */
 export const toFlowOp = (c: FlowCommand): FlowOp => c;
 
 /**
  * 구성(노드·연결·영역과 그 속성)을 바꾸는 명령인지. 요약의 "바꾼 곳" 은 이것만 센다.
- * set_assumption(가정)은 적용·저장하지만 바꾼 곳으로 세지 않는다. 흐름 명령도 세지 않는다.
+ * set_assumption(가정)·set_link_guess(망연계 추정 표시)는 적용·저장하지만 바꾼 곳으로 세지 않는다. 흐름 명령도 세지 않는다.
  */
-export const isStructural = (cmd: Command): boolean => cmd.op !== "set_assumption" && !isFlowCommand(cmd);
+export const isStructural = (cmd: Command): boolean => cmd.op !== "set_assumption" && cmd.op !== "set_link_guess" && !isFlowCommand(cmd);
 
 /** 스키마가 받는 명령 이름 전부(스키마에서 뽑는다). */
 export const COMMAND_OPS: readonly Command["op"][] = commandSchema.options.map((o) => o.shape.op.value);

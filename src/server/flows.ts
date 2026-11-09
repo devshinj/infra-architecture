@@ -130,6 +130,22 @@ export async function applyFlowOps(
   return { saved, rejected };
 }
 
+/**
+ * 구성도의 흐름마다 rewrite 를 돌려, 새 흐름을 돌려준 것만 저장한다(null 이면 그대로). 바뀐 흐름 수를 돌려준다.
+ * 도구가 정해진 규칙으로 고치는 것이라 출처·검수 상태는 그대로 둔다. 구성도 잠금은 호출자(대화 차례)가 쥐고 있다.
+ */
+export async function rewriteFlows(diagramId: string, rewrite: (f: Flow) => Flow | null): Promise<number> {
+  const rows = await db.select({ key: flows.key, data: flows.data }).from(flows).where(eq(flows.diagramId, diagramId));
+  let n = 0;
+  for (const r of rows) {
+    const next = rewrite(r.data);
+    if (!next) continue;
+    await db.update(flows).set({ data: next, updatedAt: sql`now()` }).where(byKey(diagramId, r.key));
+    n++;
+  }
+  return n;
+}
+
 /** 구성도의 흐름을 만든 순서로 돌려준다. 끊김은 최신 구성도 상태로 다시 계산한다. */
 export async function listFlows(userId: string, diagramId: string): Promise<StoredFlow[]> {
   await getOwnedDiagram(userId, diagramId);

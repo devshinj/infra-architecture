@@ -1,3 +1,4 @@
+import { pairKey } from "./network";
 import type { DiagramState } from "./types";
 
 export const ASSUMPTION_LABELS: Record<string, string> = {
@@ -39,4 +40,25 @@ export function assumptionChangeMessage(key: string, value: string): string {
 /** True for a message made by assumptionChangeMessage (it always asks for a structure change). */
 export function isAssumptionChangeMessage(text: string): boolean {
   return text.trimStart().startsWith(ASSUMPTION_CHANGE_PREFIX);
+}
+
+const NO_LINK_PREFIX = "no_link:";
+const ZONE_ID = /^[a-z0-9][a-z0-9-]{0,63}$/;
+
+/** "아니에요"로 거절한 망 짝의 가정 key. 두 망 id 를 작은 쪽부터 쓴다. */
+export function noLinkKey(zoneA: string, zoneB: string): string {
+  const [a, b] = pairKey(zoneA, zoneB);
+  return `${NO_LINK_PREFIX}${a}--${b}`;
+}
+
+/** noLinkKey 로 만든 key 면 [작은 id, 큰 id], 아니면 null. */
+export function parseNoLinkKey(key: string): [string, string] | null {
+  if (!key.startsWith(NO_LINK_PREFIX)) return null;
+  const rest = key.slice(NO_LINK_PREFIX.length);
+  for (let i = rest.indexOf("--"); i !== -1; i = rest.indexOf("--", i + 1)) {
+    const a = rest.slice(0, i);
+    const b = rest.slice(i + 2);
+    if (ZONE_ID.test(a) && ZONE_ID.test(b) && a < b) return [a, b];
+  }
+  return null;
 }

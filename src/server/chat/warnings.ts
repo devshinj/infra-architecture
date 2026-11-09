@@ -1,4 +1,6 @@
 import type { DiagramState, DNode, Warning, WarningLevel } from "@/domain/types";
+import type { NetworkKnowledge } from "@/domain/network";
+import { LINK_RULES } from "@/domain/networkRules";
 import { DATA_KINDS, evaluateRules, RULES } from "@/domain/warnings";
 import type { ClefClient } from "@/server/llm/clef";
 import { noulProbability } from "@/server/llm/clef";
@@ -16,6 +18,8 @@ const WARN_AT = 0.8;
 const CHECK_AT = 0.5;
 
 const EXPOSED = RULES.find((r) => r.rule === "db_exposed")!;
+const LINK_RULE_SET: ReadonlySet<string> = new Set(LINK_RULES);
+const isLinkRule = (rule: string) => LINK_RULE_SET.has(rule);
 
 /**
  * 대상 노드와 이웃(조상 그룹·연결 상대)을 요약한 줄들.
@@ -194,10 +198,10 @@ export async function checkWarnings(
   prev: Warning[] | undefined,
   deps: { clef: ClefClient; qwen: QwenClient | null },
   signal: AbortSignal,
-  opts: { clefLimit?: number; textTimeoutMs?: number; clefCapMs?: number } = {},
+  opts: { clefLimit?: number; textTimeoutMs?: number; clefCapMs?: number; knowledge?: NetworkKnowledge } = {},
 ): Promise<{ warnings: Warning[]; fresh: Warning[] }> {
   const prevById = new Map((prev ?? []).map((w) => [w.id, w]));
-  const code = evaluateRules(state);
+  const code = evaluateRules(state, opts.knowledge);
   let warnings = code;
 
   const flagged = new Set(code.filter((w) => w.rule === "db_public").map((w) => w.nodeId));
@@ -214,13 +218,15 @@ export async function checkWarnings(
   }
   warnings = [...code, ...exposed.filter((w) => !code.some((c) => c.id === w.id))];
 
+  // 연결 방식 예상(link_*) 문구는 정해진 문구다. 지난 문구를 이어 쓰지도, Qwen 으로 다듬지도 않는다(늘 새로 계산한 그대로).
   warnings = warnings.map((w) => {
+    if (isLinkRule(w.rule)) return w;
     const t = prevById.get(w.id)?.text;
     return typeof t === "string" ? { ...w, text: t } : w;
   });
 
   const isNew = (w: Warning) => !prevById.has(w.id);
-  const needText = warnings.filter(isNew);
+  const needText = warnings.filter((w) => isNew(w) && !isLinkRule(w.rule));
   if (deps.qwen && needText.length && !signal.aborted) {
     const items = needText.map((w) => ({ id: w.id, rule: w.rule, facts: `정해진 문구 ${JSON.stringify(w.text)} | ${describeTarget(state, state.nodes[w.nodeId]!)}` }));
     const texts = await writeTexts(deps.qwen, items, signal, opts.textTimeoutMs ?? TEXT_TIMEOUT_MS);

@@ -4,7 +4,7 @@ import { withDiagramLock } from "@/server/chat/lock";
 import { getOwnedDiagram, ValidationError } from "@/server/projects";
 import { createVersion, getLatestState } from "@/server/versions";
 
-const WARNING_ID = /^[a-z_]{1,32}:[a-z0-9][a-z0-9-]{0,63}$/;
+const WARNING_ID = /^[a-z_]{1,32}:[a-z0-9][a-z0-9-]{0,63}(--[a-z0-9][a-z0-9-]{0,63})?$/;
 
 /**
  * 경고 하나를 "의도된 구성"으로 무시하거나 다시 경고하도록 되돌리고 `form` 버전 하나로 저장한다.
