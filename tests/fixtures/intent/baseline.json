@@ -1,5 +1,5 @@
 {
-  "savedAt": "2026-11-06",
+  "savedAt": "2026-11-09",
   "results": [
     {
       "id": "flow-create-signup",
@@ -185,9 +185,8 @@
       "confidence": 0.8969211566641299,
       "routed": "structure_change",
       "intentOk": true,
-      "qwenOk": false,
-      "qwenNote": "망을 안 넘는 연결에 전달물·방향을 지어냄: e-link-auth",
-      "qwenPasses": 2,
+      "qwenOk": true,
+      "qwenPasses": 3,
       "qwenRuns": 3
     },
     {
@@ -206,9 +205,8 @@
       "confidence": 0.967887794000258,
       "routed": "structure_change",
       "intentOk": true,
-      "qwenOk": false,
-      "qwenNote": "나오면 안 되는 명령: remove_edge, update_flow",
-      "qwenPasses": 1,
+      "qwenOk": true,
+      "qwenPasses": 3,
       "qwenRuns": 3
     },
     {
@@ -287,9 +285,8 @@
       "confidence": 0.7330958060753943,
       "routed": "structure_change",
       "intentOk": true,
-      "qwenOk": false,
-      "qwenNote": "대상이 다름(빠짐: web-1, web-2, web-3, was-1, was-2, was-3, was-4, batch-1, batch-2, bastion / 더함: -)",
-      "qwenPasses": 2,
+      "qwenOk": true,
+      "qwenPasses": 3,
       "qwenRuns": 3
     },
     {

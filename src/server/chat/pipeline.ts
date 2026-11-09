@@ -1,6 +1,7 @@
 import { computeMissing } from "@/domain/missing";
 import { applyCommand, pruneEmptyGroups } from "@/domain/apply";
-import { COMMAND_OPS, isFlowCommand, isStructural, parseCommand, SERVER_ONLY_OPS, toFlowOp, type Command } from "@/domain/commands";
+import { COMMAND_OPS, isFlowCommand, isStructural, parseCommand, SERVER_ONLY_OPS, toFlowOp, type Command, type FlowCommand } from "@/domain/commands";
+import { createEdgeCoalescer } from "@/domain/edgeCoalesce";
 import { asksStepText, FLOW_LIMITS, keepStepText, type FlowOp } from "@/domain/flows";
 import { recordReplaced, splitFlowSteps, splitsFor, type StepSplit } from "@/domain/linkGuess";
 import type { NetworkKnowledge } from "@/domain/network";
@@ -259,6 +260,34 @@ async function lockedTurn(args: TurnArgs, sessionId: string | null, followUp: bo
     const keepText = !asksStepText(clean);
     emit({ t: "status", phase: "thinking" });
 
+    const edges = createEdgeCoalescer();
+    // 흐름 명령은 받은 그대로 모으고, 저장 직전에 연결 id 를 다시 바꾼다(흐름 명령 뒤에 짝을 알게 될 수 있다).
+    // 연결 id 를 바꾼 뒤 단계 글 지키기를 한다(keepStepText 는 연결·시작 노드로 맞춘다).
+    const flowCmds: FlowCommand[] = [];
+    // 단계 글을 고쳐 달라는 요청이 아니면, 남는 단계의 글은 원래 흐름 것을 쓴다.
+    const prepareFlow = (c: FlowCommand) => {
+      const mapped = edges.mapFlow(c);
+      return keepText ? keepStepText(mapped, flows) : mapped;
+    };
+    const applyOne = (cmd: Command) => {
+      if (isFlowCommand(cmd)) {
+        flowCmds.push(cmd);
+        if (applied === 0) emit({ t: "status", phase: "drawing" });
+        applied++;
+        emit({ t: "cmd", cmd: prepareFlow(cmd) });
+        return;
+      }
+      // 지식에 없는 종류(지운·숨긴 것)가 붙은 망은 종류 없음으로 보고 AI 가 다시 붙이게 한다.
+      const r = applyCommand(state, cmd, knowledge ? { netTypes: knowledge.types } : {});
+      if (!r.ok) return skip(`적용할 수 없는 명령(${cmd.op}) ${r.error}`, skipKey("apply", cmd.op, r.error));
+      state = r.state;
+      if (applied === 0) emit({ t: "status", phase: "drawing" });
+      applied++;
+      if (isStructural(cmd)) changed++;
+      else assumed++;
+      emit({ t: "cmd", cmd });
+    };
+
     const onLine = (raw: unknown) => {
       if (signal.aborted) return;
       if (raw && typeof raw === "object" && (raw as { op?: unknown }).op === "say") {
@@ -278,24 +307,12 @@ async function lockedTurn(args: TurnArgs, sessionId: string | null, followUp: bo
       if (parsed.cmd.op === "set_zone_type" && (!knowledge || (parsed.cmd.type !== null && !Object.hasOwn(knowledge.types, parsed.cmd.type)))) {
         return skip(`알 수 없는 망 종류(${parsed.cmd.type})`, skipKey("invalid", op, "unknown net type"));
       }
-      if (isFlowCommand(parsed.cmd)) {
-        // 단계 글을 고쳐 달라는 요청이 아니면, 남는 단계의 글은 원래 흐름 것을 쓴다.
-        const cmd = keepText ? keepStepText(parsed.cmd, flows) : parsed.cmd;
-        pendingFlowOps.push(toFlowOp(cmd));
-        if (applied === 0) emit({ t: "status", phase: "drawing" });
-        applied++;
-        emit({ t: "cmd", cmd });
-        return;
-      }
-      // 지식에 없는 종류(지운·숨긴 것)가 붙은 망은 종류 없음으로 보고 AI 가 다시 붙이게 한다.
-      const r = applyCommand(state, parsed.cmd, knowledge ? { netTypes: knowledge.types } : {});
-      if (!r.ok) return skip(`적용할 수 없는 명령(${op}) ${r.error}`, skipKey("apply", op, r.error));
-      state = r.state;
-      if (applied === 0) emit({ t: "status", phase: "drawing" });
-      applied++;
-      if (isStructural(parsed.cmd)) changed++;
-      else assumed++;
-      emit({ t: "cmd", cmd: parsed.cmd });
+      // 같은 두 노드 사이 연결을 지웠다 다시 만들면 짝을 지운다(연결 id 유지). 바꾼 명령만 적용·전송한다.
+      for (const cmd of edges.push(parsed.cmd, state)) applyOne(cmd);
+    };
+    // 미뤄 둔 연결 지우기를 지금 적용한다(이어 쓰기 직전·차례 끝). 그사이 사라진 연결은 조용히 버린다.
+    const flushEdges = () => {
+      for (const cmd of edges.flush(state)) applyOne(cmd);
     };
     const onBad = () => {
       if (!signal.aborted) skip("읽을 수 없는 줄", skipKey("bad_json"));
@@ -337,11 +354,13 @@ async function lockedTurn(args: TurnArgs, sessionId: string | null, followUp: bo
             },
           });
           if (signal.aborted) throw abortError();
-          // 이번 호출이 아무것도 반영하지 못했으면(같은 걸 되풀이하는 등) 더 이어 쓰지 않는다.
-          const more = r.finishReason === "length" && part <= MAX_CONTINUATIONS && applied > appliedBefore;
+          // 이번 호출이 아무것도 반영하지 못했으면(같은 걸 되풀이하는 등) 더 이어 쓰지 않는다. 미뤄 둔 연결 지우기도 반영으로 센다.
+          const more = r.finishReason === "length" && part <= MAX_CONTINUATIONS && (applied > appliedBefore || edges.pending() > 0);
           // 이어 쓸 때만 끊긴 마지막 줄을 조용히 버린다(마지막 시도까지 끊기면 지금처럼 건너뜀으로 센다).
           parser.end({ dropPartial: more });
           if (!more) break;
+          // 이어 쓰기는 지금 상태를 보고 쓰므로, 미뤄 둔 지우기를 먼저 적용한다.
+          flushEdges();
           const n = part + 1;
           console.info("[chat] output cut by length, continuing", { diagramId, part: n });
           emit({ t: "status", phase: "drawing", part: { n, of: MAX_CONTINUATIONS + 1 } });
@@ -351,6 +370,9 @@ async function lockedTurn(args: TurnArgs, sessionId: string | null, followUp: bo
     } catch (err) {
       status = streamFailure(err, { outer: args.signal, signal, timeout }, emit);
     }
+    // 중단·오류여도 미뤄 둔 지우기는 적용한다(바로 적용했을 때와 같은 결과). 그다음 흐름 명령을 마지막 짝 정보로 바꾼다.
+    flushEdges();
+    pendingFlowOps.push(...flowCmds.map((c) => toFlowOp(prepareFlow(c))));
     answer = shown.trim();
   }
 
