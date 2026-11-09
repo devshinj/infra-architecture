@@ -97,6 +97,11 @@ describe("SYSTEM_PROMPT examples", () => {
   });
 });
 
+describe("프롬프트 글 고정(리팩터 전과 같은지)", () => {
+  test("SYSTEM_PROMPT 글이 리팩터 전과 같다", () => expect(SYSTEM_PROMPT).toMatchSnapshot());
+  test("ANSWER_PROMPT 글이 리팩터 전과 같다", () => expect(ANSWER_PROMPT).toMatchSnapshot());
+});
+
 describe("ANSWER_PROMPT", () => {
   test("is plain-text Korean guidance without command ops", () => {
     expect(ANSWER_PROMPT).toContain("한국어");
