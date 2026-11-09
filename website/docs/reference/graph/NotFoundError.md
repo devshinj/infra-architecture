@@ -1,44 +1,49 @@
 ---
 title: "NotFoundError"
-sidebar_position: 92
+sidebar_position: 96
 sidebar_label: "핵심 노드: NotFoundError"
 ---
 # NotFoundError
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> God node · 24 connections · `src/server/projects.ts`
+> God node · 30 connections · `src/server/projects.ts`
 
 **Community:** [projects.ts](projects.ts.md)
 
 ## Connections by Relation
 
 ### calls
-- [getOwnedDiagram()](getOwnedDiagram.md) `EXTRACTED`
+- [getOwnedDiagram()](getOwnedDiagram_2.md) `EXTRACTED`
 - runAskTurn() `EXTRACTED`
 - runChatTurn() `EXTRACTED`
 - withOwnedFlow() `EXTRACTED`
+- updateNetworkType() `EXTRACTED`
+- countNetworkTypeUsageAction() `EXTRACTED`
 - assertOwnedProject() `EXTRACTED`
 - updateTerm() `EXTRACTED`
+- getOwnedType() `EXTRACTED`
+- deleteNetworkRule() `EXTRACTED`
 - assertUuid() `EXTRACTED`
 
 ### contains
 - [projects.ts](projects.ts.md) `EXTRACTED`
 
 ### imports
-- [pipeline.ts](pipeline.ts.md) `EXTRACTED`
 - [(app)/actions.ts](app-actions.ts.md) `EXTRACTED`
-- ask.ts `EXTRACTED`
+- [pipeline.ts](pipeline.ts.md) `EXTRACTED`
+- [ask.ts](ask.ts.md) `EXTRACTED`
+- [server/network.ts](server-network.ts.md) `EXTRACTED`
 - [server/flows.ts](server-flows.ts.md) `EXTRACTED`
 - [\[sessionId\]/route.ts]([sessionId]-route.ts.md) `EXTRACTED`
 - [ask/route.ts](ask-route.ts.md) `EXTRACTED`
 - chat/route.ts `EXTRACTED`
 - [glossary.ts](glossary.ts.md) `EXTRACTED`
 - \[diagramId\]/page.tsx `EXTRACTED`
-- [explain/route.ts](explain-route.ts.md) `EXTRACTED`
+- explain/route.ts `EXTRACTED`
 - sessions/route.ts `EXTRACTED`
-- [suggest/route.ts](suggest-route.ts.md) `EXTRACTED`
-- flows/route.ts `EXTRACTED`
+- suggest/route.ts `EXTRACTED`
+- [flows/route.ts](flows-route.ts.md) `EXTRACTED`
 
 ### method
 - .constructor() `EXTRACTED`
@@ -46,6 +51,7 @@ sidebar_label: "핵심 노드: NotFoundError"
 ### references
 - Task 4: 서버 설명 생성 `INFERRED`
 - Task 2: 용어 사전 시드와 서버 함수 `INFERRED`
+- Task 5: DB와 서버 — 망 지식 테이블, 기본 제공 채우기, 읽기·고치기 `INFERRED`
 
 ---
 

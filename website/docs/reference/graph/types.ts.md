@@ -1,67 +1,67 @@
 ---
 title: "types.ts"
-sidebar_position: 23
+sidebar_position: 17
 ---
 # types.ts
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 24 nodes · cohesion 0.14
+> 30 nodes · cohesion 0.12
 
 ## Key Concepts
 
-- **types.ts** (57 connections) — `src/domain/types.ts`
-- **catalog.ts** (34 connections) — `src/domain/catalog.ts`
-- **missing.ts** (26 connections) — `src/domain/missing.ts`
-- **computeMissing()** (17 connections) — `src/domain/missing.ts`
-- **boundary.ts** (13 connections) — `src/domain/boundary.ts`
-- **DNode** (11 connections) — `src/domain/types.ts`
-- **NODE_KINDS** (10 connections) — `src/domain/catalog.ts`
-- **Edge** (7 connections) — `src/domain/types.ts`
-- **requiredKeysFor()** (5 connections) — `src/domain/missing.ts`
-- **NodeKind** (4 connections) — `src/domain/catalog.ts`
-- **requiredKeysForEdge()** (4 connections) — `src/domain/missing.ts`
-- **FIELD_LABELS** (3 connections) — `src/domain/missing.ts`
-- **labelOf()** (3 connections) — `src/domain/missing.ts`
-- **requiredKeysForNode()** (3 connections) — `src/domain/missing.ts`
-- **Target** (3 connections) — `src/domain/warnings.ts`
-- **BOUNDARY_NODE_KINDS** (2 connections) — `src/domain/boundary.ts`
-- **EDGE_DIRECTIONS** (2 connections) — `src/domain/types.ts`
-- **EDGE_PAYLOADS** (2 connections) — `src/domain/types.ts`
-- **DATA** (1 connections) — `src/domain/catalog.ts`
-- **GUARD** (1 connections) — `src/domain/catalog.ts`
-- **nk()** (1 connections) — `src/domain/catalog.ts`
-- **NodeKindDef** (1 connections) — `src/domain/catalog.ts`
-- **SERVER** (1 connections) — `src/domain/catalog.ts`
-- **Attrs** (1 connections) — `src/domain/types.ts`
+- **useChatTurn.ts** (29 connections) — `src/ui/chat/useChatTurn.ts`
+- **lines.ts** (20 connections) — `src/ui/chat/lines.ts`
+- **useChatTurn()** (18 connections) — `src/ui/chat/useChatTurn.ts`
+- **messagesToLines()** (11 connections) — `src/ui/chat/lines.ts`
+- **UseChatTurnArgs** (8 connections) — `src/ui/chat/useChatTurn.ts`
+- **Command** (7 connections) — `src/domain/commands.ts`
+- **keepsCard()** (5 connections) — `src/ui/chat/lines.ts`
+- **summaryText()** (5 connections) — `src/ui/chat/lines.ts`
+- **warningsChip()** (4 connections) — `src/ui/chat/lines.ts`
+- **.onCommand()** (3 connections) — `src/ui/chat/useChatTurn.ts`
+- **.onSession()** (3 connections) — `src/ui/chat/useChatTurn.ts`
+- **.onSessionLines()** (3 connections) — `src/ui/chat/useChatTurn.ts`
+- **changedOf()** (2 connections) — `src/ui/chat/lines.ts`
+- **legacySummaryText()** (2 connections) — `src/ui/chat/lines.ts`
+- **timeOf()** (2 connections) — `src/ui/chat/lines.ts`
+- **isAbort()** (2 connections) — `src/ui/chat/useChatTurn.ts`
+- **nextId()** (2 connections) — `src/ui/chat/useChatTurn.ts`
+- **ProgressCard** (2 connections) — `src/ui/chat/useChatTurn.ts`
+- **.onDone()** (2 connections) — `src/ui/chat/useChatTurn.ts`
+- **.onInterrupted()** (2 connections) — `src/ui/chat/useChatTurn.ts`
+- **.onOpenHistory()** (2 connections) — `src/ui/chat/useChatTurn.ts`
+- **.onRelayout()** (2 connections) — `src/ui/chat/useChatTurn.ts`
+- **NOT_APPLIED_MESSAGE** (1 connections) — `src/ui/chat/lines.ts`
+- **Row** (1 connections) — `src/ui/chat/lines.ts`
+- **TurnResult** (1 connections) — `src/ui/chat/lines.ts`
+- *... and 5 more nodes in this community*
 
 ## Relationships
 
-- [domain/warnings.ts](domain-warnings.ts.md) (12 shared connections)
-- [pipeline.ts](pipeline.ts.md) (10 shared connections)
-- [projects.ts](projects.ts.md) (10 shared connections)
-- [display.ts](display.ts.md) (9 shared connections)
-- [server/flows.ts](server-flows.ts.md) (8 shared connections)
-- [MissingChecklist.tsx](MissingChecklist.tsx.md) (8 shared connections)
-- [NodeInfo.tsx](NodeInfo.tsx.md) (8 shared connections)
-- [Canvas.tsx](Canvas.tsx.md) (6 shared connections)
-- [prompt.ts](prompt.ts.md) (6 shared connections)
-- [ZoneNameLayer.tsx](ZoneNameLayer.tsx.md) (5 shared connections)
-- [useExplanations.ts](useExplanations.ts.md) (5 shared connections)
-- [flowSuggest.ts](flowSuggest.ts.md) (4 shared connections)
+- [useSessions.ts](useSessions.ts.md) (9 shared connections)
+- [ask.ts](ask.ts.md) (7 shared connections)
+- [ask/route.ts](ask-route.ts.md) (3 shared connections)
+- [ChatPanel.tsx](ChatPanel.tsx.md) (3 shared connections)
+- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (3 shared connections)
+- [commands.ts](commands.ts.md) (2 shared connections)
+- [server/network.ts](server-network.ts.md) (2 shared connections)
+- [types.ts](types.ts.md) (2 shared connections)
+- [Review Focus](Review_Focus.md) (2 shared connections)
+- [SessionPicker.tsx](SessionPicker.tsx.md) (2 shared connections)
+- [apply.ts](apply.ts.md) (1 shared connections)
+- [pipeline.ts](pipeline.ts.md) (1 shared connections)
 
 ## Source Files
 
-- `src/domain/boundary.ts`
-- `src/domain/catalog.ts`
-- `src/domain/missing.ts`
-- `src/domain/types.ts`
-- `src/domain/warnings.ts`
+- `src/domain/commands.ts`
+- `src/ui/chat/lines.ts`
+- `src/ui/chat/useChatTurn.ts`
 
 ## Audit Trail
 
-- EXTRACTED: 171 (99%)
-- INFERRED: 2 (1%)
+- EXTRACTED: 89 (96%)
+- INFERRED: 4 (4%)
 - AMBIGUOUS: 0 (0%)
 
 ---

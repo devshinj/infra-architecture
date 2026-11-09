@@ -1,6 +1,6 @@
 ---
 title: "Sidebar.tsx"
-sidebar_position: 10
+sidebar_position: 12
 ---
 # Sidebar.tsx
 
@@ -10,13 +10,12 @@ sidebar_position: 10
 
 ## Key Concepts
 
-- **Sidebar.tsx** (41 connections) — `src/ui/Sidebar.tsx`
-- **Sidebar()** (27 connections) — `src/ui/Sidebar.tsx`
-- **runResult()** (17 connections) — `src/app/(app)/actions.ts`
+- **Sidebar.tsx** (42 connections) — `src/ui/Sidebar.tsx`
+- **Sidebar()** (28 connections) — `src/ui/Sidebar.tsx`
+- **Svg()** (9 connections) — `src/ui/Sidebar.tsx`
+- **deleteDiagramAction()** (8 connections) — `src/app/(app)/actions.ts`
 - **refreshAll()** (8 connections) — `src/app/(app)/actions.ts`
-- **RowMenu()** (8 connections) — `src/ui/dialogs.tsx`
 - **useShell()** (8 connections) — `src/ui/Shell.tsx`
-- **Svg()** (8 connections) — `src/ui/Sidebar.tsx`
 - **duplicateDiagramAction()** (7 connections) — `src/app/(app)/actions.ts`
 - **createDiagramAction()** (6 connections) — `src/app/(app)/actions.ts`
 - **createProjectAction()** (6 connections) — `src/app/(app)/actions.ts`
@@ -31,6 +30,7 @@ sidebar_position: 10
 - **IconCollapse()** (3 connections) — `src/ui/Sidebar.tsx`
 - **IconExpand()** (3 connections) — `src/ui/Sidebar.tsx`
 - **IconMenu()** (3 connections) — `src/ui/Sidebar.tsx`
+- **IconNetwork()** (3 connections) — `src/ui/Sidebar.tsx`
 - **IconPlus()** (3 connections) — `src/ui/Sidebar.tsx`
 - **IconUser()** (3 connections) — `src/ui/Sidebar.tsx`
 - **.setCollapsed()** (2 connections) — `src/ui/Shell.tsx`
@@ -39,16 +39,16 @@ sidebar_position: 10
 
 ## Relationships
 
-- [(app)/actions.ts](app-actions.ts.md) (20 shared connections)
-- [FlowPanel.tsx](FlowPanel.tsx.md) (9 shared connections)
+- [(app)/actions.ts](app-actions.ts.md) (17 shared connections)
 - [auth](auth.md) (8 shared connections)
-- [projects.ts](projects.ts.md) (7 shared connections)
-- [useFlows](useFlows.md) (5 shared connections)
+- [projects.ts](projects.ts.md) (6 shared connections)
+- [FlowPanel.tsx](FlowPanel.tsx.md) (6 shared connections)
 - [ref_react](ref_react.md) (5 shared connections)
-- [GlossaryPage.tsx](GlossaryPage.tsx.md) (2 shared connections)
-- [SessionPicker.tsx](SessionPicker.tsx.md) (2 shared connections)
-- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (2 shared connections)
+- [getOwnedDiagram](getOwnedDiagram.md) (3 shared connections)
+- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (3 shared connections)
 - [ChatPanel.tsx](ChatPanel.tsx.md) (2 shared connections)
+- [SessionPicker.tsx](SessionPicker.tsx.md) (2 shared connections)
+- [useFlows](useFlows.md) (1 shared connections)
 - [Review Focus](Review_Focus.md) (1 shared connections)
 
 ## Source Files
@@ -57,12 +57,11 @@ sidebar_position: 10
 - `src/ui/Shell.tsx`
 - `src/ui/Sidebar.tsx`
 - `src/ui/brand/Logo.tsx`
-- `src/ui/dialogs.tsx`
 
 ## Audit Trail
 
-- EXTRACTED: 131 (98%)
-- INFERRED: 2 (2%)
+- EXTRACTED: 122 (99%)
+- INFERRED: 1 (1%)
 - AMBIGUOUS: 0 (0%)
 
 ---

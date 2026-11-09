@@ -1,19 +1,21 @@
 ---
 title: "useSessions.ts"
-sidebar_position: 50
+sidebar_position: 48
 ---
 # useSessions.ts
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 16 nodes · cohesion 0.17
+> 18 nodes · cohesion 0.16
 
 ## Key Concepts
 
 - **useSessions.ts** (27 connections) — `src/ui/chat/useSessions.ts`
 - **useSessions()** (10 connections) — `src/ui/chat/useSessions.ts`
+- **ChatLine** (9 connections) — `src/ui/chat/useChatTurn.ts`
 - **SessionSummary** (7 connections) — `src/ui/chat/useSessions.ts`
-- **DiagramWorkspaceProps** (5 connections) — `src/ui/DiagramWorkspace.tsx`
+- **DiagramWorkspaceProps** (6 connections) — `src/ui/DiagramWorkspace.tsx`
+- **NEW_SESSION** (4 connections) — `src/ui/chat/useSessions.ts`
 - **SessionPaging** (3 connections) — `src/ui/chat/useSessions.ts`
 - **SessionEventPayload** (2 connections) — `src/server/chat/events.ts`
 - **errorOf()** (2 connections) — `src/ui/chat/useSessions.ts`
@@ -29,27 +31,29 @@ sidebar_position: 50
 
 ## Relationships
 
-- [SessionPicker.tsx](SessionPicker.tsx.md) (6 shared connections)
-- [lines.ts](lines.ts.md) (5 shared connections)
-- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (5 shared connections)
-- [types.ts](types.ts.md) (4 shared connections)
+- [types.ts](types.ts.md) (9 shared connections)
+- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (8 shared connections)
+- [SessionPicker.tsx](SessionPicker.tsx.md) (7 shared connections)
+- [ask.ts](ask.ts.md) (3 shared connections)
 - [ask/route.ts](ask-route.ts.md) (2 shared connections)
-- [pipeline.ts](pipeline.ts.md) (2 shared connections)
+- [ChatPanel.tsx](ChatPanel.tsx.md) (2 shared connections)
+- [RightPanel.tsx](RightPanel.tsx.md) (1 shared connections)
+- [Flow](Flow.md) (1 shared connections)
 - [ref_react](ref_react.md) (1 shared connections)
-- [(app)/actions.ts](app-actions.ts.md) (1 shared connections)
-- [MentionInput](MentionInput.md) (1 shared connections)
 - [flowSuggest.ts](flowSuggest.ts.md) (1 shared connections)
+- [server/network.ts](server-network.ts.md) (1 shared connections)
 
 ## Source Files
 
 - `src/server/chat/events.ts`
 - `src/ui/DiagramWorkspace.tsx`
+- `src/ui/chat/useChatTurn.ts`
 - `src/ui/chat/useSessions.ts`
 
 ## Audit Trail
 
-- EXTRACTED: 48 (98%)
-- INFERRED: 1 (2%)
+- EXTRACTED: 58 (97%)
+- INFERRED: 2 (3%)
 - AMBIGUOUS: 0 (0%)
 
 ---

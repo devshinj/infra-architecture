@@ -1,6 +1,6 @@
 ---
 title: "SessionPicker.tsx"
-sidebar_position: 22
+sidebar_position: 28
 ---
 # SessionPicker.tsx
 
@@ -13,6 +13,7 @@ sidebar_position: 22
 - **SessionPicker.tsx** (29 connections) — `src/ui/chat/SessionPicker.tsx`
 - **SessionPicker()** (16 connections) — `src/ui/chat/SessionPicker.tsx`
 - **SessionPickerProps** (14 connections) — `src/ui/chat/SessionPicker.tsx`
+- **RowMenu()** (8 connections) — `src/ui/dialogs.tsx`
 - **SessionKey** (7 connections) — `src/ui/chat/useSessions.ts`
 - **SessionKind** (4 connections) — `src/ui/chat/useSessions.ts`
 - **sessionName()** (3 connections) — `src/ui/chat/SessionPicker.tsx`
@@ -20,7 +21,6 @@ sidebar_position: 22
 - **.onSelect()** (3 connections) — `src/ui/chat/SessionPicker.tsx`
 - **when()** (3 connections) — `src/ui/chat/SessionPicker.tsx`
 - **MoreState** (3 connections) — `src/ui/chat/useSessions.ts`
-- **ref_react_dom** (2 connections)
 - **byRecent()** (2 connections) — `src/ui/chat/SessionPicker.tsx`
 - **Chevron()** (2 connections) — `src/ui/chat/SessionPicker.tsx`
 - **menuRootId()** (2 connections) — `src/ui/chat/SessionPicker.tsx`
@@ -37,26 +37,27 @@ sidebar_position: 22
 
 ## Relationships
 
-- [FlowPanel.tsx](FlowPanel.tsx.md) (6 shared connections)
-- [useSessions.ts](useSessions.ts.md) (6 shared connections)
-- [ChatPanel.tsx](ChatPanel.tsx.md) (4 shared connections)
-- [types.ts](types.ts.md) (3 shared connections)
-- [Canvas.tsx](Canvas.tsx.md) (3 shared connections)
+- [FlowPanel.tsx](FlowPanel.tsx.md) (9 shared connections)
+- [useSessions.ts](useSessions.ts.md) (7 shared connections)
+- [ChatPanel.tsx](ChatPanel.tsx.md) (6 shared connections)
+- [ExportMenu.tsx](ExportMenu.tsx.md) (3 shared connections)
+- [types.ts](types.ts.md) (2 shared connections)
 - [Sidebar.tsx](Sidebar.tsx.md) (2 shared connections)
-- [MentionInput](MentionInput.md) (2 shared connections)
 - [ref_react](ref_react.md) (1 shared connections)
 - [RightPanel.tsx](RightPanel.tsx.md) (1 shared connections)
 - [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (1 shared connections)
+- [domain/flows.ts](domain-flows.ts.md) (1 shared connections)
 
 ## Source Files
 
 - `src/ui/chat/SessionPicker.tsx`
 - `src/ui/chat/useSessions.ts`
+- `src/ui/dialogs.tsx`
 
 ## Audit Trail
 
-- EXTRACTED: 66 (97%)
-- INFERRED: 2 (3%)
+- EXTRACTED: 70 (96%)
+- INFERRED: 3 (4%)
 - AMBIGUOUS: 0 (0%)
 
 ---

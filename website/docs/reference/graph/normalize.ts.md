@@ -1,17 +1,18 @@
 ---
 title: "normalize.ts"
-sidebar_position: 62
+sidebar_position: 58
 ---
 # normalize.ts
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 13 nodes · cohesion 0.19
+> 14 nodes · cohesion 0.18
 
 ## Key Concepts
 
 - **normalize.ts** (14 connections) — `src/server/chat/normalize.ts`
-- **normalizeAiCommand()** (8 connections) — `src/server/chat/normalize.ts`
+- **normalizeAiCommand()** (9 connections) — `src/server/chat/normalize.ts`
+- **Global Constraints** (5 connections) — `docs/superpowers/plans/2026-11-06-network-knowledge-link-guess.md`
 - **flattenAttr()** (2 connections) — `src/server/chat/normalize.ts`
 - **isPlainObject()** (2 connections) — `src/server/chat/normalize.ts`
 - **normalizeId()** (2 connections) — `src/server/chat/normalize.ts`
@@ -26,17 +27,21 @@ sidebar_position: 62
 
 ## Relationships
 
-- [pipeline.ts](pipeline.ts.md) (4 shared connections)
+- [pipeline.ts](pipeline.ts.md) (5 shared connections)
 - [flowSuggest.ts](flowSuggest.ts.md) (2 shared connections)
+- [domain/warnings.ts](domain-warnings.ts.md) (1 shared connections)
+- [apply.ts](apply.ts.md) (1 shared connections)
+- [getOwnedDiagram](getOwnedDiagram.md) (1 shared connections)
 
 ## Source Files
 
+- `docs/superpowers/plans/2026-11-06-network-knowledge-link-guess.md`
 - `src/server/chat/normalize.ts`
 
 ## Audit Trail
 
-- EXTRACTED: 21 (100%)
-- INFERRED: 0 (0%)
+- EXTRACTED: 22 (85%)
+- INFERRED: 4 (15%)
 - AMBIGUOUS: 0 (0%)
 
 ---

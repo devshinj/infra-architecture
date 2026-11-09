@@ -1,6 +1,6 @@
 ---
 title: "deps.ts"
-sidebar_position: 73
+sidebar_position: 76
 ---
 # deps.ts
 
@@ -21,13 +21,12 @@ sidebar_position: 73
 
 ## Relationships
 
-- [ask/route.ts](ask-route.ts.md) (3 shared connections)
+- [config.ts](config.ts.md) (3 shared connections)
+- [flowSuggest.ts](flowSuggest.ts.md) (3 shared connections)
 - [prompt.ts](prompt.ts.md) (2 shared connections)
 - [설명 생성과 품질 검사](설명_생성과_품질_검사.md) (2 shared connections)
-- [flowSuggest.ts](flowSuggest.ts.md) (2 shared connections)
 - [pipeline.ts](pipeline.ts.md) (1 shared connections)
 - [domain/warnings.ts](domain-warnings.ts.md) (1 shared connections)
-- [QwenClient](QwenClient.md) (1 shared connections)
 - [InfraSketch 설계 문서](InfraSketch_설계_문서.md) (1 shared connections)
 
 ## Source Files

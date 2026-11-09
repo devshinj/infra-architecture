@@ -11,11 +11,11 @@ InfraSketch 는 Next.js 15 (App Router) 하나로 화면과 서버를 함께 띄
 
 | 폴더 | 역할 |
 | --- | --- |
-| `src/app` | 라우트. `(app)` 은 로그인 후 화면(구성도 작업 화면, 용어 사전 `(app)/glossary`), `(auth)` 는 로그인·가입·비밀번호 재설정(공통 입력칸과 제출 훅은 `(auth)/_components`), `api` 는 대화(`diagrams/[id]/chat`)·노드 질문(`diagrams/[id]/ask`)·흐름 목록(`diagrams/[id]/flows`)·흐름 제안(`diagrams/[id]/flows/suggest`)·질문 세션 조회(`diagrams/[id]/sessions/[sessionId]`)·설명(`diagrams/[id]/explain`)·인증·AI 상태 API. 폼 저장·경고 무시·용어 사전 편집 같은 나머지 쓰기는 `(app)/actions.ts` 의 서버 액션이 맡습니다 |
-| `src/ui` | 작업 화면 컴포넌트. 전체 틀(`Shell.tsx`), 사이드바, 오른쪽 패널(대화·설명·이력·흐름)과 너비 조절 손잡이(`PanelResizer.tsx`), 대화 입력·체크리스트·질문 세션 선택(`chat/`, `SessionPicker.tsx`), 설명 패널과 “이 노드에 대해 물어보기”(`explain/`, `AskNode.tsx`), 흐름 탭(`flows/FlowPanel.tsx`, 목록·상태를 맡는 `flows/useFlows.ts`), 용어 사전 화면(`glossary/`), 로고(`brand/`), 캔버스 위에 뜨는 정보 카드(`canvas/InfoCard.tsx`)와 범례(`canvas/Legend.tsx`, 연결선 종류 견본·보조 연결 숨김 표시), 노드가 날아가 앉는 효과(`FlyLayer.tsx`), 용어 배지 규칙(`glossary/aiBadge.ts`: AI가 추가했고 아직 확인하지 않은 설명에만 “AI 설명” 배지). 폭 640px 이하(휴대폰)에서는 위 막대와 서랍으로 연 사이드바, 아래 탭 막대(`MobileTabBar.tsx`: 구성도·대화·설명·이력·흐름)로 한 번에 한 화면만 보이고, 폭 900px 이하는 사이드바를 접은 채 시작합니다(`useMediaQuery.ts`, `Shell.tsx`) |
+| `src/app` | 라우트. `(app)` 은 로그인 후 화면(구성도 작업 화면, 용어 사전 `(app)/glossary`, 망 지식 `(app)/network`), `(auth)` 는 로그인·가입·비밀번호 재설정(공통 입력칸과 제출 훅은 `(auth)/_components`), `api` 는 대화(`diagrams/[id]/chat`)·노드 질문(`diagrams/[id]/ask`)·흐름 목록(`diagrams/[id]/flows`)·흐름 제안(`diagrams/[id]/flows/suggest`)·질문 세션 조회(`diagrams/[id]/sessions/[sessionId]`)·설명(`diagrams/[id]/explain`)·인증·AI 상태 API. 폼 저장·경고 무시·용어 사전 편집·망 지식 편집·망 종류 확정·망연계 맞아요/아니에요 같은 나머지 쓰기는 `(app)/actions.ts` 의 서버 액션이 맡습니다 |
+| `src/ui` | 작업 화면 컴포넌트. 전체 틀(`Shell.tsx`), 사이드바, 오른쪽 패널(대화·설명·이력·흐름)과 너비 조절 손잡이(`PanelResizer.tsx`), 대화 입력·체크리스트·질문 세션 선택(`chat/`, `SessionPicker.tsx`), 설명 패널과 “이 노드에 대해 물어보기”(`explain/`, `AskNode.tsx`), 흐름 탭(`flows/FlowPanel.tsx`, 목록·상태를 맡는 `flows/useFlows.ts`), 용어 사전 화면(`glossary/`), 망 지식 화면과 망 종류 고르개(`network/`: `NetworkKnowledgePage.tsx`, `ZoneTypePicker.tsx`, 정보 카드에 지식을 내려 주는 `NetworkKnowledgeContext.tsx`), 로고(`brand/`), 캔버스 위에 뜨는 정보 카드(`canvas/InfoCard.tsx`)와 범례(`canvas/Legend.tsx`, 연결선 종류 견본·보조 연결 숨김 표시), 노드가 날아가 앉는 효과(`FlyLayer.tsx`), 용어 배지 규칙(`glossary/aiBadge.ts`: AI가 추가했고 아직 확인하지 않은 설명에만 “AI 설명” 배지). 폭 640px 이하(휴대폰)에서는 위 막대와 서랍으로 연 사이드바, 아래 탭 막대(`MobileTabBar.tsx`: 구성도·대화·설명·이력·흐름)로 한 번에 한 화면만 보이고, 폭 900px 이하는 사이드바를 접은 채 시작합니다(`useMediaQuery.ts`, `Shell.tsx`) |
 | `src/canvas` | React Flow(`@xyflow/react`) 캔버스. 노드·영역·연결선 그리기, ELK.js 자동 배치(`layout.ts`), 확대·이동 카메라(`useCamera.ts`), 선택·호버 강조 집합 계산(`emphasis.ts`)과 호버 지연(`useHoverEmphasis.ts`), 잘린 이름을 보여 주는 말풍선(`NameTooltip.tsx`), 키보드 조작(캔버스는 Tab 정지점 하나이고 안에서는 화살표·Home·End 로 노드와 영역을 오감(`roving.ts`), Enter·Space 로 선택, Esc 로 해제, 영역에서 Space 로 접기·펴기, 편집 모드에서 고른 노드는 화살표로 옮기고 키를 뗄 때 저장)과 한국어 화면 읽기 안내(`ariaLabels.ts`), 안쪽 영역을 바깥 영역 위에 쌓는 순서(`stacking.ts`), 맞춤 보기(도구 막대·정보 카드를 피하고 글자를 읽을 크기 아래로는 줄이지 않으며 그때는 위쪽부터 보임, “전체 보기”만 늘 전부 보임), 애니메이션, 경고 배지, 구성도 전체를 PNG·SVG(어두운·흰 바탕)로 저장하는 이미지 저장(`exportImage.ts`, `ExportMenu.tsx`, html-to-image) |
-| `src/domain` | 구성도 규칙. 변경 명령 스키마(`commands.ts`), 명령 적용(`apply.ts`), 노드 종류 목록(`catalog.ts`), 빠진 정보 계산(`missing.ts`), 경고 규칙(`warnings.ts`), 흐름 타입·끊김 계산(`flows.ts`), 망 경계 판정(`boundary.ts`), 구성 패턴(`patterns.ts`), 설명 모양·길이 상한·서명(`explain.ts`), 용어 사전 시드와 화면용 타입(`glossary-seed.ts`, `glossary-types.ts`) |
-| `src/server` | 서버 로직. 대화 파이프라인·노드 질문·질문 세션·경고 점검(`chat/`), AI 연동(`llm/`), 설명 생성(`explain.ts`), 용어 사전(`glossary.ts`), 체크리스트 폼 저장(`fields.ts`), 경고 무시(`ignore.ts`), 흐름 저장소(`flows.ts`)와 흐름 제안(`flowSuggest.ts`), 프로젝트·버전 저장(프로젝트와 첫 구성도를 함께 만들고, 이름 중복을 막고, 홈에서 이어 갈 최근 구성도를 고름), 인증(가입·재설정·로그인이 함께 쓰는 입력 규칙과 문구는 `auth/rules.ts`) |
+| `src/domain` | 구성도 규칙. 변경 명령 스키마(`commands.ts`), 명령 적용(`apply.ts`), 노드 종류 목록(`catalog.ts`), 빠진 정보 계산(`missing.ts`), 경고 규칙(`warnings.ts`), 흐름 타입·끊김 계산(`flows.ts`), 망 경계 판정(`boundary.ts`), 망 지식 계산(`network.ts`: 망 종류·등급·두 종류 사이에 보통 필요한 연결 방식)과 기본 망 종류 시드(`network-seed.ts`), 통신 길 판정과 망연계 예상 경고(`networkRules.ts`), 망연계 추정의 기록·되돌리기·흐름 단계 나누기(`linkGuess.ts`), 구성 패턴(`patterns.ts`), 설명 모양·길이 상한·서명(`explain.ts`), 용어 사전 시드와 화면용 타입(`glossary-seed.ts`, `glossary-types.ts`) |
+| `src/server` | 서버 로직. 대화 파이프라인·노드 질문·질문 세션·경고 점검(`chat/`), AI 연동(`llm/`), 설명 생성(`explain.ts`), 용어 사전(`glossary.ts`), 체크리스트 폼 저장(`fields.ts`), 경고 무시(`ignore.ts`), 흐름 저장소(`flows.ts`)와 흐름 제안(`flowSuggest.ts`), 망 지식 저장소(`network.ts`: 종류·규칙 편집, 처음 쓸 때 시드 채우기), 망 종류 확정(`zoneType.ts`), 망연계 맞아요·아니에요(`linkGuess.ts`), 프로젝트·버전 저장(프로젝트와 첫 구성도를 함께 만들고, 이름 중복을 막고, 홈에서 이어 갈 최근 구성도를 고름), 인증(가입·재설정·로그인이 함께 쓰는 입력 규칙과 문구는 `auth/rules.ts`) |
 | `src/db` | Drizzle 스키마와 마이그레이션 |
 | `src/styles` | 색·간격 토큰(`tokens.css`). 사이드바·캔버스·오른쪽 패널은 바탕 명도를 3단으로 달리해 영역을 구분합니다. 화면마다 주 동작 하나만 금색으로 채우고(`--accent-fill`, `--on-accent`), 빨간 글자는 대비를 맞춘 `--state-missing-text`, 입력칸 테두리는 `--line-input` 을 씁니다 |
 
@@ -33,7 +33,8 @@ chat/route.ts ── 로그인·본문·소유권 확인 (401 / 400 / 404)
   │
   ▼
 runChatTurn ── 구성도별 잠금 (이미 진행 중이면 409)
-  1. 최신 버전 상태와 최근 대화 기록을 읽는다
+  1. 최신 버전 상태와 최근 대화 기록을 읽고, 계정의 망 지식을 읽는다
+       (`server/network.ts` 의 `getNetworkKnowledge`. 못 읽으면 망 지식 없이 지금까지처럼 돈다)
   2. @멘션을 노드 ID 로 풀고, 사용자 메시지를 저장한다
   3. 의도를 정한다 (`server/chat/intent.ts` 의 `resolveIntent`)
        메시지가 “가정 변경:” 으로 시작하면 Clef 를 부르지 않고 무조건 구조 변경
@@ -41,16 +42,19 @@ runChatTurn ── 구성도별 잠금 (이미 진행 중이면 409)
        문맥: 직전 AI 답변 + 아직 열린(‘모름’ 아닌) 빠진 정보 목록
        재정렬이면 Qwen 을 부르지 않고 안내 한 줄과 relayout 이벤트만 보낸 뒤 버전 없이 끝
   4. 그 밖의 의도는 의도에 맞는 프롬프트로 Qwen 을 스트리밍 호출한다
-       (구조 변경 프롬프트에는 저장된 흐름 목록이 `흐름:` 블록으로 붙는다)
+       (구조 변경 프롬프트에는 저장된 흐름 목록이 `흐름:` 블록으로, 망 지식이 있으면 `망 종류:`·`등급 규칙`·`기관 규칙`·`망 짝 규칙` 블록이 “현재 구성” 바로 뒤에 붙는다)
        ├ 구조 변경 경로: JSON Lines 를 줄 단위로 파싱
        │    → id 칸 정규화(normalizeAiCommand) → parseCommand(스키마 검증) → applyCommand(상태 적용)
        │    → 성공하면 cmd 이벤트, 실패하면 skip 이벤트
+       │    (`set_zone_type` 은 망 지식에 있는 종류 key 만 받고, 서버만 만드는 `set_link_guess` 는 AI 가 써도 건너뜀)
        │    (흐름 명령은 상태에 적용하지 않고 모아 둔다)
        └ 답변 경로: <think> 를 지운 글을 answer 이벤트로 흘림
   5. 적용된 명령이 있으면 먼저 비게 된 영역을 정리한다(pruneEmptyGroups)
-     그 뒤 경고를 점검하고(checking) 새 버전을 만든다
-  6. 모아 둔 흐름 명령을 차례가 끝난 상태로 검사해 흐름 저장소에 저장한다
-  7. 빠진 정보 수를 다시 계산하고 응답 메시지를 저장한 뒤
+     AI 가 `guess: true` 로 넣은 망연계마다 대신한 연결을 기록하고(`set_link_guess` cmd 이벤트)
+     그 뒤 경고를 점검하고(checking, 망 지식 포함) 새 버전을 만든다
+  6. 망연계가 끼어든 연결을 지나던 흐름 단계를 둘로 나누고(`rewriteFlows`),
+     모아 둔 흐름 명령을 차례가 끝난 상태로 검사해 흐름 저장소에 저장한다
+  7. 빠진 정보 수를 (망 지식으로 센 망 종류 줄을 포함해) 다시 계산하고 응답 메시지를 저장한 뒤
      새 경고가 있으면 warnings 이벤트, 마지막으로 done 이벤트
 ```
 
@@ -62,6 +66,18 @@ runChatTurn ── 구성도별 잠금 (이미 진행 중이면 409)
 - **노드 attrs 칸 목록**(`prompt.ts` 의 `ATTR_LIST`): 카탈로그의 종류별 칸(`requiredAttrs`)을 “web_server, was, …: hostname(호스트명), cpu(CPU), …” 한 줄씩 생성 프롬프트에 넣고, os(운영체제)와 sw(설치 소프트웨어)를 구분하게 합니다. “모든 서버”, “WAS 전부”처럼 여러 대상을 말하면 조건에 맞는 노드를 빠뜨리지 말고 노드마다 `update_node` 를 내고, 그 칸이 없는 종류에는 쓰지 말라고 지시합니다.
 - **모았다가 차례 끝에 저장**(`pipeline.ts`): `add_flow`·`update_flow`·`remove_flow` 는 구성도 상태에 적용하지 않고 모읍니다(이어 그리는 요청 사이에도 모읍니다). 구성 변경이 있으면 정리·경고 점검·버전 저장을 먼저 마치고, 그 **버전이 만든 최종 상태**로 `applyFlowOps` 가 검사해 저장하므로 같은 차례에 만든 연결도 단계로 쓸 수 있습니다. 거절된 흐름은 `skip` 하나로 알리고, 저장 자체가 실패해도 차례는 끝까지 마쳐 버전·응답 메시지·`done` 을 남깁니다(건너뜀 “흐름을 저장하지 못했어요”).
 - **흐름만 바꾼 차례는 버전을 만들지 않습니다.** 정리·경고 점검·버전은 구성·가정을 바꾼 명령이 있을 때만 돌고, 흐름 명령은 `isStructural` 에서 빠집니다. 저장된 수는 `done.flows`(0보다 클 때)와 응답 메시지 메타의 `flows` 에 남고, 요약 칩의 “바꾼 곳”에는 세지 않습니다.
+
+### 망 지식과 망연계 예상
+
+계정 공통의 **망 지식**(망 종류와 기관 연결 규칙)을 보고, 서로 다른 망 사이에 망연계가 필요할 것 같으면 안내하거나 `AI 추정` 망연계를 넣어 그립니다. 판정이 아니라 **예상**이라서 문구는 늘 기관 규정과 방화벽 담당자에게 확인하라고 덧붙입니다.
+
+- **망 종류와 등급**(`domain/network.ts`): 종류마다 key·이름·다른 이름·설명·등급(폐쇄·내부·경계·외부)이 있습니다. 두 종류 사이에 보통 필요한 방식(`requiredMethod`)은 **기관 규칙을 먼저, 없으면 기본 등급 규칙**(`GRADE_RULES`: 폐쇄망은 잇지 않음, 내부–외부는 망연계, 그 밖은 방화벽)으로 정합니다. 종류가 없거나 같은 종류면 규칙이 없습니다. 지식에 없는 종류(지운 것·숨긴 것)가 붙은 망은 **종류 없음**으로 칩니다.
+- **프롬프트의 망 블록**(`prompt.ts` 의 `networkBlock`): 망 지식이 있으면 늘(영역이 아직 없는 처음 차례에도) `망 종류:`(key·이름·다른 이름·등급, 설명은 뺌), `등급 규칙(기관 규칙이 없을 때):`, `기관 규칙:`(보이는 종류끼리만, 없으면 “없음”), `망 짝 규칙:`(이 구성도에서 종류가 붙은 망 짝)을 넣습니다. 요약에는 영역마다 `type=<key>(확정|추정)`, 노드에는 `guess` 가 붙습니다. 규칙 문구는 AI 에게 `set_zone_type` 으로 망 종류를 붙이고, 망연계가 필요한 두 망 사이에는 `network_link` 노드를 `guess: true` 로 넣고, 사용자가 “방화벽으로 바로”라고 하면 따르되 `no_link:<망 id>--<망 id>` 가정을 남기라고 지시합니다. 사용자가 망연계를 넣어 달라고 했으면 `guess` 를 쓰지 않습니다.
+- **통신 길과 경고**(`domain/networkRules.ts`): `crossingPaths` 가 방화벽·망연계·VPN 같은 경계 노드만 거쳐 이어진 길을 모읍니다. 길의 두 끝 망 종류로 필요한 방식을 구해 망연계가 필요한데 길에 망연계가 없으면 `link_expected`(망연계 필요 예상), 필요한 방식이 “보통 잇지 않음”이면 `link_unusual` 입니다. 둘 다 단계는 확인(`check`)이고, 같은 두 망 사이는 길이 여럿이어도 경고 하나(`link_expected:<망 id>--<망 id>`)입니다. 이 문구는 정해진 문구라서 이어 쓰지도 Qwen 으로 다듬지도 않고 늘 새로 계산합니다. 사용자가 **확정**한 “망연계 없음” 가정(`no_link:…`)이 있는 짝은 `link_expected` 를 끕니다. 대화로 받은 미확정 가정은 끄지 않습니다.
+- **추정 망연계의 기록과 되돌리기**(`domain/linkGuess.ts`): 차례 끝에 `recordReplaced` 가 AI 가 넣은 `guess` 망연계가 대신한 연결을 `set_link_guess` 로 노드에 적어 둡니다(되돌릴 때 다시 그리려는 기록). 흐름의 단계가 그 연결을 지났으면 단계를 둘로 나누고(`splitFlowSteps`), 되돌리면 다시 합칩니다(`mergeFlowSteps`). 흐름 저장 실패는 차례나 되돌리기를 막지 않습니다.
+- **“맞아요”·“아니에요”**(`server/linkGuess.ts`, 서버 액션 `confirmLinkGuessAction`·`rejectLinkGuessAction`): 맞아요는 `guess` 표시만 지웁니다. 아니에요는 망연계 노드를 지우고 원래 연결을 되살리며, 통신 길(`crossingPaths`)의 두 끝이 속한 망 짝을 찾아 `no_link:<망 id>--<망 id>` 가정을 **확정**으로 남깁니다. 방화벽이 망 밖에 있어도 짝을 찾습니다. 이 가정이 그 짝의 안내를 끄므로 경고 무시 목록(`ignoredWarnings`)에는 쓰지 않습니다. 가정 칩의 “지우기”(`removeNoLinkAction`)로 거절 기억을 지우면 안내가 다시 보입니다.
+- **망 종류 확정**(`server/zoneType.ts`, `setZoneTypeAction`): 사람이 정하면 `source: "user"` 로 저장돼 AI 가 바꾸지 못합니다. 영역 정보 카드의 고르개(`ZoneTypePicker.tsx`)로 정하거나 지웁니다. 단, 그 key 가 지식에 더는 없으면(지운·숨긴 종류) 종류 없음으로 보고 AI 가 다시 붙일 수 있습니다(`applyCommand` 의 `netTypes` 옵션, 클라이언트 재생도 같은 옵션).
+- **종류 key**(`server/network.ts` 의 `newTypeKey`): 새 종류의 key 는 `<이름 슬러그>-<무작위 8자>`(슬러그가 없으면 `net-<8자>`)이고, 지운 key 를 다시 주지 않습니다. 겹치면 최대 5번 다시 뽑습니다.
 
 ### 의도 분류 보호와 영역 정리
 
@@ -78,15 +94,15 @@ runChatTurn ── 구성도별 잠금 (이미 진행 중이면 409)
 
 적용된 변경이 있는 차례만 `server/chat/warnings.ts` 의 `checkWarnings` 로 위험한 구성을 점검합니다. 질문·이력 차례는 점검하지 않습니다.
 
-1. **코드 규칙** (`domain/warnings.ts` 의 `evaluateRules`): 공개 구역의 DB·캐시(`db_public`), 이중화 묶음 밖의 서버·DB·로드밸런서·DB 중계·캐시(`spof`), 외부에서 방화벽 없이 서버·DB 로 바로 오는 연결(`no_firewall`, 인그레스·배스천은 예외), 원본 DB 없는 캐시(`cache_without_db`), 서로 다른 망 사이를 방화벽·망연계·VPN 없이 바로 잇는 연결(`network_direct`) 다섯 가지입니다. `spof` 는 단일 장애 지점 종류(`SPOF_KINDS`: 웹 서버·WAS·앱 서버·RDB·NoSQL·L4/L7 로드밸런서·DB 중계·캐시) 노드가 `redundancy_group` 안에 있지 않으면, 이중화 가정 값과 상관없이 켜집니다. 사용자가 이중화 가정을 "이중화 없음"으로 **확정**(의도)했을 때만 꺼집니다.
+1. **코드 규칙** (`domain/warnings.ts` 의 `evaluateRules`): 공개 구역의 DB·캐시(`db_public`), 이중화 묶음 밖의 서버·DB·로드밸런서·DB 중계·캐시(`spof`), 외부에서 방화벽 없이 서버·DB 로 바로 오는 연결(`no_firewall`, 인그레스·배스천은 예외), 원본 DB 없는 캐시(`cache_without_db`), 서로 다른 망 사이를 방화벽·망연계·VPN 없이 바로 잇는 연결(`network_direct`) 다섯 가지입니다. 망 지식이 있으면 여기에 망연계 필요 예상(`link_expected`)과 보통 잇지 않는 구간(`link_unusual`) 두 가지가 더해집니다(`evaluateNetworkRules`, 위 “망 지식과 망연계 예상” 참고). `spof` 는 단일 장애 지점 종류(`SPOF_KINDS`: 웹 서버·WAS·앱 서버·RDB·NoSQL·L4/L7 로드밸런서·DB 중계·캐시) 노드가 `redundancy_group` 안에 있지 않으면, 이중화 가정 값과 상관없이 켜집니다. 사용자가 이중화 가정을 "이중화 없음"으로 **확정**(의도)했을 때만 꺼집니다.
 2. **Clef 판정** (`db_exposed`): 코드 규칙에 걸리지 않은 저장소 노드(DB·캐시·검색·DB 중계·파일 저장소) 중 **최대 5개**를 Clef `noul` 질문으로 "외부에서 직접 접근될 수 있는가"를 묻습니다. Clef 응답의 실제 `noul` 칸(예: `{ type: "noul", noul: 0.97 }`)을 먼저 읽고, 없을 때만 예전 추정 모양을 봅니다. 확률 0.8 이상이면 경고(`warn`), 0.5 이상이면 확인(`check`)입니다. 이 단계는 대기열을 포함해 **3초 상한**이고 재시도하지 않습니다(다음 차례의 의도 분류가 밀리지 않게). 판정이 실패하거나 시간을 넘기거나 5개 밖에 있는 노드는 **이전 판정을 그대로 이어 갑니다**.
-3. **Qwen 문구**: 이번에 **새로 생긴 경고만** Qwen 한 번 호출로 쉬운 문구(80자 이내)를 받습니다. 상한은 **8초**이고, 받지 못한 경고는 규칙에 정해진 문구를 씁니다. 이미 있던 경고는 저장된 문구를 다시 씁니다.
+3. **Qwen 문구**: 이번에 **새로 생긴 경고만**(`link_*` 는 정해진 문구라 뺌) Qwen 한 번 호출로 쉬운 문구(80자 이내)를 받습니다. 상한은 **8초**이고, 받지 못한 경고는 규칙에 정해진 문구를 씁니다. 이미 있던 경고는 저장된 문구를 다시 씁니다.
 
 점검 결과는 버전 상태의 `warnings` 에 저장되고, 새 경고 중 사용자가 "의도된 구성"으로 무시하지 않은 것만 `warnings` 이벤트와 응답 메시지 메타로 알립니다. AI 단계가 실패해도 점검은 오류를 던지지 않습니다.
 
 ### 빠진 정보 수
 
-`domain/missing.ts` 의 `computeMissing` 이 노드 종류별 필수 항목(스펙·IP·hostname 등)과 흐름 연결(`request`·`async`)의 프로토콜/포트, 그리고 망 경계를 넘는 연결의 전달물·방향 중 빈 칸을 셉니다. 사용자가 체크리스트에서 "모름"으로 표시한 항목은 목록에는 남지만 수에서는 빠집니다. `done.missing` 은 늘 이 수를 담고, 응답 메시지 메타의 `missing` 은 적용된 변경이 있고 0보다 클 때만 남깁니다.
+`domain/missing.ts` 의 `computeMissing` 이 노드 종류별 필수 항목(스펙·IP·hostname 등)과 흐름 연결(`request`·`async`)의 프로토콜/포트, 그리고 망 경계를 넘는 연결의 전달물·방향 중 빈 칸을 셉니다. 망 영역이 둘 이상이고 망 지식이 있으면 종류가 없는(또는 지식에 없는 종류의) 망도 “망 종류”라는 빠진 정보 한 줄로 셉니다. 이 줄은 영역 대상이라 AI 에게 넘기는 열린 항목에는 넣지 않습니다(AI 가 망 지식으로 추정합니다). 사용자가 체크리스트에서 "모름"으로 표시한 항목은 목록에는 남지만 수에서는 빠집니다. `done.missing` 은 늘 이 수를 담고, 응답 메시지 메타의 `missing` 은 적용된 변경이 있고 0보다 클 때만 남깁니다.
 
 ### 중단과 시간 초과
 
@@ -162,10 +178,12 @@ AI 는 구성도를 직접 그리지 않고 **작은 변경 명령**을 연달�
 | `add_node` / `update_node` / `remove_node` | 노드 추가·수정·삭제. `update_node` 의 `parent` 로 노드를 다른 영역으로 옮깁니다 |
 | `add_edge` / `update_edge` / `remove_edge` | 연결 추가·수정·삭제 |
 | `remove_group` | 영역 삭제. 안의 하위 영역·노드와 그에 닿은 연결까지 함께 지웁니다(없는 영역이면 거부) |
-| `set_assumption` | 구조를 정한 가정(환경, 규모, 이중화 등) 기록 |
+| `set_assumption` | 구조를 정한 가정(환경, 규모, 이중화 등) 기록. 망연계 거절 기억은 key 가 `no_link:<망 id>--<망 id>` 인 가정입니다 |
+| `set_zone_type` | 망 영역(`network_zone`)에 망 종류 key 를 붙이거나(`null` 이면 지움) 합니다. AI 가 붙이면 `source: ai`(추정)이고, 사람이 확정한(`source: user`) 영역은 거부합니다 |
+| `set_link_guess` | 망연계 노드가 AI 추정이라는 표시와, 그 노드가 대신한 연결(`replaced`, 되돌릴 때 다시 그림)을 기록하거나 지웁니다. **서버만 만드는 명령**이라 AI 가 쓰면 건너뛰고, “바꾼 곳”에 세지 않습니다 |
 | `add_flow` / `update_flow` / `remove_flow` | 흐름 추가·수정·삭제. 구성 상태가 아니라 **흐름 저장소**에 적용하고, “바꾼 곳”에 세지 않습니다 |
 
-`add_edge`·`update_edge` 에는 선택 칸 `payload`(전달물: `api` | `file`)와 `direction`(방향: `one_way` | `two_way`)가 있습니다. 망 경계를 넘는 연결을 설명하는 칸입니다.
+`add_node` 에는 선택 칸 `guess`(망연계 노드를 추정으로 넣는다는 표시)가 있습니다. `add_edge`·`update_edge` 에는 선택 칸 `payload`(전달물: `api` | `file`)와 `direction`(방향: `one_way` | `two_way`)가 있습니다. 망 경계를 넘는 연결을 설명하는 칸입니다.
 
 흐름 명령의 제한은 스키마가 정합니다: 이름 1~60자(앞뒤 공백 제거), `summary`·`result` 200자, 단계 1~20개(단계는 `edge`·`from`·`short`·`text`, 설명 `text` 120자), `origin` 은 `user` | `system`. 저장소는 이 검사를 믿고, 화면의 짧은 설명(`shortLabel`)은 12자를 넘으면 11자 뒤에 “…”를 붙입니다.
 
@@ -176,6 +194,7 @@ AI 는 구성도를 직접 그리지 않고 **작은 변경 명령**을 연달�
 ## AI 연동과 장애 대응
 
 - **Qwen** (`server/llm/qwen.ts`): 대화 응답, 변경 명령, 경고 문구, 노드·연결 설명처럼 글을 만드는 일을 모두 맡습니다. OpenAI 호환 API 를 씁니다.
+- **망 지식**: 구조 변경 프롬프트에 망 블록이 붙습니다(위 “망 지식과 망연계 예상”). AI 는 망 종류를 추정해 붙이고 망연계를 추정으로 넣을 뿐, 판정은 코드(`evaluateNetworkRules`)가 합니다. 노드 질문(`ask.ts`)은 망 블록 없이 빠진 정보 수만 망 지식으로 셉니다.
 - **Clef** (`server/llm/clef.ts`): 글을 만들지 않고 선택지 확률만 돌려주는 판정 모델입니다. 세 곳에 씁니다.
   - `classifyIntent`: 매 차례 앞의 의도 분류. 선택지는 구조 변경(노드를 다른 영역으로 옮기거나 필요 없는 것을 정리하는 요청, 흐름을 만들거나 고치거나 지우거나 보여 달라는 요청 포함)·질문(용어·구성·흐름·망에 대해 묻기만 하는 말)·빠진 정보 답변(연결의 전달물·방향을 알려 주는 말 포함)·이력·재정렬·기타입니다. 재정렬(`layout`)은 노드·연결·영역을 하나도 바꾸지 않고 화면 배치만 다시 해 달라는 요청일 때만 고릅니다. 직전 AI 답변(300자)과 열린 빠진 정보 목록(`openItems`)을 문맥으로 넘겨, 값만 알려 주는 답을 `missing_info_answer` 로 가립니다. 빠진 정보는 사용자 글·직전 AI 답에 이름이 나왔거나 참조한 대상(연결은 한쪽 끝)만 골라 "WAS: CPU·RAM" 처럼 대상별로 묶습니다(`server/chat/intent.ts` 의 `clefOpenItems`, 앞 20개·600자). 관계없는 항목을 길게 넘기면 질문과 값만 알려 주는 답의 확신도가 떨어지기 때문입니다. 대기열·재시도를 포함해 3초 상한이고, 확신도 0.6 미만이면 의도 없이 진행합니다.
   - `decide` + `noulProbability`: 경고의 `db_exposed` 판정. 예/아니오 확률을 읽습니다.
@@ -224,17 +243,19 @@ Qwen 요청 하나는 30초 상한이고, 실패하면 "설명을 만들지 못�
 | `diagram_versions` | 구성도 상태 스냅샷. AI 변경 한 차례마다 버전 하나가 생기고, 이력 탭에서 비교하고 되돌립니다. 체크리스트 폼 저장과 경고 무시도 `form` 버전 하나를 만듭니다 |
 | `glossary_terms` | 사용자별 용어 사전. 정규화한 `key` 와 별칭(`aliases`), 정의·필요한 이유·비교, 검수 여부(`reviewed`), 출처(`seed`/`ai`). 처음 쓸 때 시드 50개를 미검수로 복사합니다. 화면의 “AI 설명” 배지와 필터는 출처가 `ai` 인 미검수 항목에만 붙고, 시드는 미검수여도 배지가 없습니다 |
 | `flows` | 구성도의 흐름(마이그레이션 0006). `diagram_id`(구성도가 지워지면 함께 지움)·`key`(흐름 id, 구성도마다 유일)·`data`(jsonb: 이름·시작 주체·요약·결과·단계)·출처 `source`(`ai`/`user`)·검수 여부 `reviewed`·생성/갱신 시각 |
+| `network_types` | 계정 공통 망 종류(마이그레이션 0007). `key`(사용자 안에서 유일)·이름·별칭·설명·등급(`grade`)·출처 `source`(`seed` 기본 제공 / `user` 직접 만듦)·고침 여부 `edited`·숨김 `hidden`. 처음 쓸 때 기본 종류 시드를 채우고, 시드는 고치거나 숨기거나 되돌릴 수 있습니다. 숨긴 종류는 망 지식에서 빠집니다 |
+| `network_rules` | 계정 공통 기관 연결 규칙(마이그레이션 0007). 두 종류(`type_a` < `type_b` 로 정렬해 저장, 짝은 유일)·방식 `method`(`firewall` / `network_link` / `none`)·근거 `note`. 두 종류는 규칙을 만든 뒤 바꾸지 못하고 방식과 근거만 고칩니다 |
 | `explanations` | 노드·연결 설명 캐시. 구성도·대상별로 하나이고, 내용 서명(`signature`)이 바뀌면 다시 만듭니다 |
 
 버전 상태(`DiagramState`, `domain/types.ts`)는 JSON 으로 저장되며 다음을 담습니다.
 
-- `groups`, `nodes`, `edges`, `assumptions`: 구성도 자체. 노드와 연결의 `unknown` 은 사용자가 "모름"으로 표시한 필수 항목 키 목록입니다.
+- `groups`, `nodes`, `edges`, `assumptions`: 구성도 자체. 노드와 연결의 `unknown` 은 사용자가 "모름"으로 표시한 필수 항목 키 목록입니다. 망 영역에는 선택 칸 `netType`(`{ key, source: ai|user, confirmed }`), 망연계 노드에는 선택 칸 `guess`(추정 표시와 대신한 연결 기록)가 있습니다.
 - `warnings`: 마지막 점검의 경고 목록(규칙·대상·수준·문구·안내). 코드 규칙 경고는 화면이 지금 상태로 다시 계산하고, 저장된 문구와 Clef 판정(`db_exposed`)만 여기서 가져옵니다.
-- `ignoredWarnings`: 사용자가 "의도된 구성"으로 무시한 경고 ID 목록. 설명 탭의 주의할 점에서 다시 경고하도록 되돌릴 수 있습니다.
+- `ignoredWarnings`: 사용자가 "의도된 구성"으로 무시한 경고 ID 목록(`link_expected:a--b` 처럼 망 짝 id 가 붙은 형태도 받습니다). 망연계 “아니에요”는 여기에 쓰지 않습니다. 설명 탭의 주의할 점에서 다시 경고하도록 되돌릴 수 있습니다.
 
 **흐름은 버전 상태에 넣지 않고 `flows` 테이블에 따로 저장합니다.** 그래서 이력에서 구성도를 되돌려도 흐름은 남습니다. 단계가 가리키는 연결이 사라지거나 방향이 어긋나는 **끊김은 저장하지 않고 불러올 때마다 최신 상태로 계산**합니다(`domain/flows.ts` 의 `checkFlow`: 없는 연결·시작 노드 불일치·앞 단계와 이어지지 않음·단방향 연결을 거슬러 감. 갈래는 허용). 끊긴 흐름은 대화로 다시 맞추거나 단계를 하나 지워 고칠 수 있고, 마지막 단계는 지울 수 없습니다.
 
-마이그레이션은 `src/db/migrations` 에 있으며, 용어 사전·설명 테이블은 `0002`, 질문 세션 테이블과 `messages.session_id` 는 `0003` 에서 추가됐습니다. `0004` 는 이미 겹친 프로젝트·구성도 이름 중 나중 것에 ` 2`, ` 3` … 을 붙여 정리한 뒤 이름 유니크 인덱스를 만들고, `0006_flows` 는 `flows` 테이블과 `diagrams.flows_suggested_at` 을 추가합니다.
+마이그레이션은 `src/db/migrations` 에 있으며, 용어 사전·설명 테이블은 `0002`, 질문 세션 테이블과 `messages.session_id` 는 `0003` 에서 추가됐습니다. `0004` 는 이미 겹친 프로젝트·구성도 이름 중 나중 것에 ` 2`, ` 3` … 을 붙여 정리한 뒤 이름 유니크 인덱스를 만들고, `0006_flows` 는 `flows` 테이블과 `diagrams.flows_suggested_at` 을 추가하고, `0007_network_knowledge` 는 `network_types`·`network_rules` 테이블을 추가합니다.
 
 `listMessages` 는 `sessionId` 가 null 이면 구성도 대화만, 아니면 그 세션의 것만 돌려줍니다. 그래서 `pipeline.ts` 의 대화 기록과 Clef 에 넘기는 직전 AI 답변(`lastAssistant`)에는 구성도 대화 메시지만 쓰이고, 질문 세션의 글은 섞이지 않습니다.
 
@@ -251,11 +272,19 @@ Qwen 요청 하나는 30초 상한이고, 실패하면 "설명을 만들지 못�
 
 - **망 경계 판정**(`domain/boundary.ts`): 노드의 가장 가까운 `network_zone` 조상 영역이 망입니다(`networkZoneOf`). 구성도에 망이 하나라도 있고 연결의 두 끝 망이 서로 다르면(한쪽이 망 밖이어도) 경계를 넘는 연결(`crossesBoundary`)입니다. 방화벽·망연계 솔루션(`network_link`)·VPN 은 경계를 정당하게 넘겨 주는 노드(`BOUNDARY_NODE_KINDS`)라서, 경계를 넘으면서 두 끝 어느 쪽도 이런 노드가 아니면 직접 넘김(`isDirectCrossing`)이고 `network_direct` 경고를 냅니다.
 - **경계 표시**(`EdgeLayer.tsx`, `edgeLabels.ts`): 경계를 넘는 연결에는 선 위에 점(`boundaryDotAt`)과 태그(`tagSpots`)를 그립니다. 태그에는 전달물(API·파일)과 방향 화살표가 들어가고, 아직 안 정한 칸은 **빠진 정보**(전달물·방향)로 셉니다.
-- **흐름 강조**: 흐름을 켜면 노드 선택을 풀고 그 흐름의 연결만 밝히며, 단계마다 “n. 짧은 설명” 이름표(`stepLabels`, `shortLabel`)를 붙입니다. 경계를 넘는 단계의 설명에는 “A망에서 B망으로 넘어가요(방화벽 거침)” 문장이 덧붙습니다(`crossingNote`). 노드나 연결을 고르거나 Esc 를 누르면 흐름 보기를 풉니다. 입력칸·열린 메뉴 안의 Esc 는 흐름 보기를 풀지 않습니다.
+- **흐름 강조**: 흐름을 켜면 노드 선택을 풀고 그 흐름의 연결만 밝히며, 단계마다 “n. 짧은 설명” 이름표(`stepLabels`, `shortLabel`)를 붙입니다. 경계를 넘는 단계의 설명에는 “A망에서 B망으로 넘어가요(방화벽 거침)” 문장이 덧붙습니다(`crossingNote`). 망 지식이 있으면 망연계 예상에 걸린 단계에는 “망연계 필요 예상” 또는 “보통 잇지 않는 구간”이 덧붙습니다. 노드나 연결을 고르거나 Esc 를 누르면 흐름 보기를 풉니다. 입력칸·열린 메뉴 안의 Esc 는 흐름 보기를 풀지 않습니다.
 
 ## 흐름 탭
 
 오른쪽 패널의 “흐름” 탭(`ui/flows/FlowPanel.tsx`)에서 흐름 목록, 이름 바꾸기·지우기, “맞아요”(AI 제안 표시 지우기), 끊긴 단계 안내와 “다시 맞추기”(구성도 대화로 `"<이름>" 흐름을 지금 구성에 맞게 다시 맞춰 줘` 를 보냄)를 다룹니다. 상태와 불러오기는 `useFlows.ts` 가 맡고, 대화 차례가 끝나면 다시 불러옵니다. 노드·연결 정보 카드(`NodeInfo.tsx`)에는 “이 노드를 지나는 흐름”(연결은 “이 연결이 들어간 흐름”) 이름 칩이 있어, 누르면 그 흐름을 켜고 흐름 탭으로 갑니다. 끊긴 단계만 걸친 흐름은 칩에 넣지 않습니다.
+
+## 망 지식 화면
+
+사이드바의 “망 지식”(`/network`, `src/app/(app)/network/page.tsx`)에서 계정 공통의 망 종류와 기관 연결 규칙을 봅니다. 서버 컴포넌트가 로그인을 확인하고(없으면 `/login`) 종류·규칙 목록을 읽어 `NetworkKnowledgePage` 에 넘기며, 편집은 `(app)/actions.ts` 의 서버 액션(`addNetworkTypeAction`·`updateNetworkTypeAction`·`resetNetworkTypeAction`·`setNetworkTypeHiddenAction`·`deleteNetworkTypeAction`·`upsertNetworkRuleAction`·`deleteNetworkRuleAction`)이 합니다.
+
+- **망 종류**: 기본 제공 종류는 고치면 “고침” 표시가 붙고 처음 값으로 되돌리거나 숨길 수 있습니다. 직접 만든 종류는 지울 수 있고, 지우기 전에 쓰는 영역 수(`countNetworkTypeUsageAction`)를 알려 줍니다. 종류를 지우면 그 종류를 쓰던 규칙도 함께 지워집니다.
+- **기관 규칙**: 두 종류와 연결 방식, 근거를 적습니다. 고칠 때는 두 종류를 잠그고 방식과 근거만 바꿉니다. 종류를 바꾸려면 지우고 새로 추가합니다.
+- 구성도 화면에서는 영역 정보 카드가 망 종류(추정·확정 표시)를 보여 주고 고르개로 바꾸게 하며, 망연계 노드 카드에는 추정일 때 “맞아요·아니에요” 버튼이, 가정 칩에는 거절 기억의 “지우기”가 있습니다.
 
 ## 더 보기
 

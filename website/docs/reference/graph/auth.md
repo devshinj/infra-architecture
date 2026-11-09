@@ -1,61 +1,78 @@
 ---
 title: "auth"
-sidebar_position: 32
+sidebar_position: 3
 sidebar_label: "핵심 노드: auth"
 ---
 # auth
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 21 nodes · cohesion 0.16
+> 49 nodes · cohesion 0.07
 
 ## Key Concepts
 
+- **auth** (30 connections) — `src/auth.ts`
+- **auth.ts** (25 connections) — `src/auth.ts`
 - **Shell.tsx** (22 connections) — `src/ui/Shell.tsx`
+- **explain/route.ts** (18 connections) — `src/app/api/diagrams/[id]/explain/route.ts`
 - **(app)/layout.tsx** (11 connections) — `src/app/(app)/layout.tsx`
 - **(app)/page.tsx** (10 connections) — `src/app/(app)/page.tsx`
-- **src_ui_app_module** (9 connections)
+- **middleware.ts** (8 connections) — `src/middleware.ts`
+- **listSignatures()** (6 connections) — `src/server/explain.ts`
+- **ref_next_auth** (5 connections)
 - **AppLayout()** (5 connections) — `src/app/(app)/layout.tsx`
 - **Home()** (5 connections) — `src/app/(app)/page.tsx`
 - **listProjects()** (5 connections) — `src/server/projects.ts`
 - **ShellProvider()** (5 connections) — `src/ui/Shell.tsx`
+- **GET()** (4 connections) — `src/app/api/diagrams/[id]/explain/route.ts`
+- **POST()** (4 connections) — `src/app/api/diagrams/[id]/explain/route.ts`
+- **auth.config.ts** (4 connections) — `src/auth.config.ts`
+- **middleware-paths.ts** (4 connections) — `src/middleware-paths.ts`
 - **CreateButton()** (4 connections) — `src/ui/Shell.tsx`
+- **failure()** (3 connections) — `src/app/api/diagrams/[id]/explain/route.ts`
+- **logoutAction()** (3 connections) — `src/app/(app)/actions.ts`
+- **authConfig** (3 connections) — `src/auth.config.ts`
+- **signOut** (3 connections) — `src/auth.ts`
+- **authDecision** (3 connections) — `src/middleware-paths.ts`
 - **lastActiveDiagram()** (3 connections) — `src/server/projects.ts`
-- **useMediaQuery.ts** (3 connections) — `src/ui/useMediaQuery.ts`
-- **useMediaQuery()** (3 connections) — `src/ui/useMediaQuery.ts`
-- **extentOf()** (2 connections) — `src/ui/Shell.tsx`
-- **PANEL_GAP** (2 connections) — `src/ui/Shell.tsx`
-- **COMPACT_QUERY** (1 connections) — `src/ui/Shell.tsx`
-- **CreateRequest** (1 connections) — `src/ui/Shell.tsx`
-- **NARROW_QUERY** (1 connections) — `src/ui/Shell.tsx`
-- **RAIL_WIDTH** (1 connections) — `src/ui/Shell.tsx`
-- **ShellContext** (1 connections) — `src/ui/Shell.tsx`
-- **SIDEBAR_COLLAPSED_KEY** (1 connections) — `src/ui/Shell.tsx`
-- **SIDEBAR_WIDTH** (1 connections) — `src/ui/Shell.tsx`
+- **next-auth.d.ts** (3 connections) — `src/types/next-auth.d.ts`
+- *... and 24 more nodes in this community*
 
 ## Relationships
 
+- [ref_react](ref_react.md) (11 shared connections)
 - [Sidebar.tsx](Sidebar.tsx.md) (8 shared connections)
+- [projects.ts](projects.ts.md) (7 shared connections)
+- [ask/route.ts](ask-route.ts.md) (6 shared connections)
+- [\[sessionId\]/route.ts]([sessionId]-route.ts.md) (6 shared connections)
+- [설명 생성과 품질 검사](설명_생성과_품질_검사.md) (5 shared connections)
+- [(app)/actions.ts](app-actions.ts.md) (5 shared connections)
 - [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (5 shared connections)
-- [auth](auth.md) (4 shared connections)
-- [ref_react](ref_react.md) (4 shared connections)
-- [projects.ts](projects.ts.md) (4 shared connections)
-- [auth.ts](auth.ts.md) (2 shared connections)
-- [FlowPanel.tsx](FlowPanel.tsx.md) (1 shared connections)
-- [RightPanel.tsx](RightPanel.tsx.md) (1 shared connections)
-- [ChatPanel.tsx](ChatPanel.tsx.md) (1 shared connections)
+- [flows/route.ts](flows-route.ts.md) (3 shared connections)
+- [flowSuggest.ts](flowSuggest.ts.md) (3 shared connections)
+- [config.ts](config.ts.md) (3 shared connections)
+- [GlossaryPage.tsx](GlossaryPage.tsx.md) (3 shared connections)
 
 ## Source Files
 
+- `src/app/(app)/actions.ts`
 - `src/app/(app)/layout.tsx`
 - `src/app/(app)/page.tsx`
+- `src/app/api/auth/[...nextauth]/route.ts`
+- `src/app/api/diagrams/[id]/explain/route.ts`
+- `src/auth.config.ts`
+- `src/auth.ts`
+- `src/middleware-paths.ts`
+- `src/middleware.ts`
+- `src/server/explain.ts`
 - `src/server/projects.ts`
+- `src/types/next-auth.d.ts`
 - `src/ui/Shell.tsx`
 - `src/ui/useMediaQuery.ts`
 
 ## Audit Trail
 
-- EXTRACTED: 63 (100%)
+- EXTRACTED: 151 (100%)
 - INFERRED: 0 (0%)
 - AMBIGUOUS: 0 (0%)
 

@@ -1,16 +1,17 @@
 ---
 title: "samples.ts"
-sidebar_position: 42
+sidebar_position: 43
 ---
 # samples.ts
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 18 nodes · cohesion 0.12
+> 19 nodes · cohesion 0.12
 
 ## Key Concepts
 
 - **samples.ts** (34 connections) — `src/server/samples.ts`
+- **importSample()** (6 connections) — `src/server/samples.ts`
 - **convertSpikeScenario()** (4 connections) — `src/server/samples.ts`
 - **SAMPLES** (3 connections) — `src/server/samples.ts`
 - **sampleState()** (3 connections) — `src/server/samples.ts`
@@ -31,15 +32,16 @@ sidebar_position: 42
 
 ## Relationships
 
-- [projects.ts](projects.ts.md) (5 shared connections)
-- [types.ts](types.ts.md) (4 shared connections)
+- [getOwnedDiagram](getOwnedDiagram.md) (6 shared connections)
 - [(app)/actions.ts](app-actions.ts.md) (4 shared connections)
 - [apply.ts](apply.ts.md) (3 shared connections)
-- [auth](auth.md) (2 shared connections)
-- [Legend.tsx](Legend.tsx.md) (1 shared connections)
+- [types.ts](types.ts.md) (3 shared connections)
+- [ZoneNameLayer.tsx](ZoneNameLayer.tsx.md) (2 shared connections)
+- [ask.ts](ask.ts.md) (2 shared connections)
+- [NODE_KINDS](NODE_KINDS.md) (1 shared connections)
 - [flowSuggest.ts](flowSuggest.ts.md) (1 shared connections)
 - [commands.ts](commands.ts.md) (1 shared connections)
-- [schema.ts](schema.ts.md) (1 shared connections)
+- [projects.ts](projects.ts.md) (1 shared connections)
 
 ## Source Files
 
@@ -47,7 +49,7 @@ sidebar_position: 42
 
 ## Audit Trail
 
-- EXTRACTED: 40 (100%)
+- EXTRACTED: 44 (100%)
 - INFERRED: 0 (0%)
 - AMBIGUOUS: 0 (0%)
 
