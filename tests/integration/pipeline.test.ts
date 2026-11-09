@@ -980,6 +980,48 @@ describe("flow commands in a chat turn", () => {
     expect((await listFlows(ids.userId, ids.diagramId))[0]!.steps[0]).toMatchObject({ short: "주문 보내기", text: "AI 가 새로 쓴 글" });
   });
 
+  test("AI 가 연결을 지웠다가 같은 두 노드 사이에 다시 만들면 원래 연결을 두고, 새 id 를 가리킨 흐름 단계도 원래 id 로 저장한다", async () => {
+    const ids = await base();
+    await turn(ids, "주문 흐름", { qwen: fakeQwen(flowLine("order", "e-a-b", "a")), clef: clef() });
+    const lines = [
+      nodeLine("c"),
+      j({ op: "remove_edge", id: "e-a-b" }),
+      j({ op: "add_edge", id: "e9", from: "a", to: "b", edge_kind: "request", label: "HTTP 8080" }),
+      j({ op: "add_edge", id: "e-b-c", from: "b", to: "c", edge_kind: "request" }),
+      j({ op: "update_flow", id: "order", steps: [{ edge: "e9", from: "a", short: "주문", text: "주문" }, { edge: "e-b-c", from: "b", short: "저장", text: "저장한다" }] }),
+    ];
+    const { events } = await turn(ids, "c 를 붙이고 주문 흐름에 넣어 줘", { qwen: fakeQwen(lines.join("\n")), clef: clef() });
+    expect(of(events, "skip")).toEqual([]);
+    const cmds = of(events, "cmd").map((e) => e.cmd);
+    expect(cmds.slice(0, 3)).toEqual([
+      { op: "add_node", id: "c", kind: "was", label: "c", parent: null },
+      { op: "update_edge", id: "e-a-b", label: "HTTP 8080" },
+      { op: "add_edge", id: "e-b-c", from: "b", to: "c", edge_kind: "request" },
+    ]);
+    expect(cmds[3]).toMatchObject({ op: "update_flow", steps: [{ edge: "e-a-b", short: "주문 요청" }, { edge: "e-b-c" }] });
+    expect(cmds.map((c) => c.op)).not.toContain("remove_edge");
+    expect(events.at(-1)).toMatchObject({ t: "done", version: 2, applied: 4, changed: 3, flows: 1, skipped: 0 });
+
+    // 클라이언트처럼 받은 명령을 차례 시작 상태에 다시 적용하면 저장된 구성과 같다.
+    const prev = (await versions(ids.diagramId))[0]!.state;
+    const replayed = applyCommands(prev, cmds).state;
+    const st = (await getLatestState(ids.diagramId))!.state;
+    expect(replayed.edges).toEqual(st.edges);
+    expect(Object.keys(st.edges).sort()).toEqual(["e-a-b", "e-b-c"]);
+    expect(st.edges["e-a-b"]).toMatchObject({ from: "a", to: "b", label: "HTTP 8080" });
+
+    const flows = await listFlows(ids.userId, ids.diagramId);
+    expect(flows[0]).toMatchObject({ id: "order", problems: [], steps: [{ edge: "e-a-b", from: "a", short: "주문 요청", text: "주문을 보낸다" }, { edge: "e-b-c", from: "b" }] });
+  });
+
+  test("짝이 없는 연결 지우기는 차례 끝에 적용하고 센다", async () => {
+    const ids = await base();
+    const { events } = await turn(ids, "a-b 연결 지워줘", { qwen: fakeQwen(j({ op: "remove_edge", id: "e-a-b" })), clef: clef() });
+    expect(of(events, "cmd").map((e) => e.cmd)).toEqual([{ op: "remove_edge", id: "e-a-b" }]);
+    expect(events.at(-1)).toMatchObject({ t: "done", version: 2, applied: 1, changed: 1, skipped: 0 });
+    expect((await getLatestState(ids.diagramId))!.state.edges).toEqual({});
+  });
+
   test("saved flows are listed in the next prompt", async () => {
     const ids = await base();
     await turn(ids, "주문 흐름", { qwen: fakeQwen(flowLine("order", "e-a-b", "a")), clef: clef() });

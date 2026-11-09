@@ -60,6 +60,9 @@ async function main(): Promise<number> {
   const { normalizeAiCommand } = await import("../src/server/chat/normalize");
   const { isFlowCommand, parseCommand } = await import("../src/domain/commands");
   const { asksStepText, keepStepText } = await import("../src/domain/flows");
+  const { createEdgeCoalescer } = await import("../src/domain/edgeCoalesce");
+  type Command = import("../src/domain/commands").Command;
+  type FlowCommand = import("../src/domain/commands").FlowCommand;
   const { applyCommand } = await import("../src/domain/apply");
   const { emptyState } = await import("../src/domain/types");
   const { computeMissing } = await import("../src/domain/missing");
@@ -143,22 +146,40 @@ async function main(): Promise<number> {
           const seen: SeenCommand[] = [];
           const touched = new Set<string>(); // 전달물·방향을 적은 연결 id
           let st = state;
+          // 파이프라인과 같이, 같은 두 노드 사이 연결을 지웠다 다시 만들면 짝을 지운다. 판정은 바꾼 명령으로 한다.
+          const edges = createEdgeCoalescer();
+          // 흐름 명령은 파이프라인처럼 끝에 마지막 짝 정보로 연결 id 를 바꾼 뒤 단계 글 지키기를 한다.
+          const flowAt: { at: number; cmd: FlowCommand }[] = [];
+          const toSeen = (c: Command): SeenCommand => {
+            const x = c as SeenCommand;
+            return { op: x.op, id: x.id, payload: x.payload, direction: x.direction, attrs: x.attrs, steps: x.steps };
+          };
+          const prepareFlow = (c: FlowCommand) => {
+            const mapped = edges.mapFlow(c);
+            // 단계 글을 고쳐 달라는 요청이 아니면 남는 단계의 글은 원래 흐름 것을 쓴다.
+            return asksStepText(clean) ? mapped : keepStepText(mapped, flows);
+          };
+          const take = (c: Command) => {
+            seen.push(toSeen(c));
+            if (isFlowCommand(c)) {
+              flowAt.push({ at: seen.length - 1, cmd: c });
+              return;
+            }
+            const r = applyCommand(st, c);
+            if (!r.ok) return;
+            st = r.state;
+            const cmd = c as SeenCommand & { from?: string; to?: string };
+            if ((cmd.op === "add_edge" || cmd.op === "update_edge") && (cmd.payload || cmd.direction)) {
+              const id = cmd.id ?? Object.values(st.edges).find((e) => e.from === cmd.from && e.to === cmd.to)?.id;
+              if (id) touched.add(id);
+            }
+          };
           const parser = createJsonlParser(
             (v) => {
               if ((v as { op?: unknown } | null)?.op === "say") return;
               const p = parseCommand(normalizeAiCommand(v));
               if (!p.ok) return;
-              // 파이프라인과 같이, 단계 글을 고쳐 달라는 요청이 아니면 남는 단계의 글은 원래 흐름 것을 쓴다.
-              const kept = isFlowCommand(p.cmd) && !asksStepText(clean) ? keepStepText(p.cmd, flows) : p.cmd;
-              const cmd = kept as SeenCommand & { from?: string; to?: string };
-              seen.push({ op: cmd.op, id: cmd.id, payload: cmd.payload, direction: cmd.direction, attrs: cmd.attrs, steps: cmd.steps });
-              const r = applyCommand(st, p.cmd);
-              if (!r.ok) return;
-              st = r.state;
-              if ((cmd.op === "add_edge" || cmd.op === "update_edge") && (cmd.payload || cmd.direction)) {
-                const id = cmd.id ?? Object.values(st.edges).find((e) => e.from === cmd.from && e.to === cmd.to)?.id;
-                if (id) touched.add(id);
-              }
+              for (const c of edges.push(p.cmd, st)) take(c);
             },
             () => {},
           );
@@ -168,6 +189,8 @@ async function main(): Promise<number> {
           } catch (e) {
             return { note: `호출 실패: ${(e as Error).name}`, ops: "-" };
           }
+          for (const c of edges.flush(st)) take(c);
+          for (const { at, cmd } of flowAt) seen[at] = toSeen(prepareFlow(cmd));
           // 사용자가 값을 정해 준 문장(expect edge)은 묻지 않는다.
           const guessed =
             c.qwen.expect === "edge" || c.qwen.allowPayload ? [] : [...touched].filter((id) => st.edges[id] && !crossesBoundary(st, st.edges[id]!));
