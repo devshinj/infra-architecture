@@ -4,8 +4,14 @@ import userEvent from "@testing-library/user-event";
 import { useState } from "react";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
+import { setZoneTypeAction } from "@/app/(app)/actions";
 import { type DiagramState, emptyState } from "@/domain/types";
+import { NetworkKnowledgeProvider } from "@/ui/network/NetworkKnowledgeContext";
 import { type ChecklistDrafts, type ChecklistExpanded, MissingChecklist as Controlled, type MissingChecklistProps } from "@/ui/chat/MissingChecklist";
+
+import { KNOWLEDGE } from "../fixtures/network";
+
+vi.mock("@/app/(app)/actions", () => ({ setZoneTypeAction: vi.fn(async () => ({ ok: true, number: 4 })) }));
 
 type OuterProps = Omit<MissingChecklistProps, "drafts" | "onDraftsChange" | "expanded" | "onExpandedChange">;
 // 부모가 초안·블록 펼침을 들고 있는 모양을 흉내 낸다.
@@ -240,4 +246,62 @@ test("payload and direction render as selects with 쉬운 말 options (API/파�
   await userEvent.selectOptions(direction, "양방향");
   await userEvent.click(within(b).getByRole("button", { name: "저장" }));
   expect(onSave).toHaveBeenCalledWith({ targetKind: "edge", targetId: "e", values: { payload: "file", direction: "two_way" }, unknown: [] });
+});
+
+// 망 둘, 종류 없음. 노드는 빠진 정보가 없다.
+const zonesState = (): DiagramState => ({
+  ...emptyState(),
+  groups: {
+    z1: { id: "z1", groupKind: "network_zone", label: "행정망", parent: null },
+    z2: { id: "z2", groupKind: "network_zone", label: "인터넷", parent: null, netType: { key: "internet", source: "user", confirmed: true } },
+    z3: { id: "z3", groupKind: "network_zone", label: "옛 망", parent: null, netType: { key: "gone-type", source: "user", confirmed: true } },
+  },
+});
+
+test("망 종류 줄은 종류 고르기로 보인다", async () => {
+  vi.mocked(setZoneTypeAction).mockClear();
+  const onSaved = vi.fn();
+  render(
+    <NetworkKnowledgeProvider value={KNOWLEDGE}>
+      <MissingChecklist state={zonesState()} busy={false} focusId={null} onSave={vi.fn()} zoneType={{ diagramId: "d1", onSaved }} />
+    </NetworkKnowledgeProvider>,
+  );
+  // 종류 없는 망과 지식에 없는 종류의 망이 줄로 나온다. 종류가 맞는 망은 없다.
+  expect(screen.queryByRole("group", { name: "인터넷" })).not.toBeInTheDocument();
+  expect(within(block("옛 망")).getByText("1")).toBeInTheDocument();
+  await expand("행정망");
+  const b = block("행정망");
+  // 저장 폼(글 칸·모름·저장) 대신 종류 고르기.
+  expect(within(b).queryByRole("textbox")).not.toBeInTheDocument();
+  expect(within(b).queryByRole("checkbox")).not.toBeInTheDocument();
+  expect(within(b).queryByRole("button", { name: "저장" })).not.toBeInTheDocument();
+  const select = within(b).getByRole("combobox", { name: "행정망 망 종류 고르기" });
+  expect(select).toHaveValue("");
+  // 등급별 묶음
+  expect(within(select).getByRole("group", { name: "내부" })).toBeInTheDocument();
+  expect(within(select).getByRole("group", { name: "폐쇄" })).toBeInTheDocument();
+  expect(within(b).queryByText("AI 추정")).not.toBeInTheDocument();
+  await userEvent.selectOptions(select, "admin-net");
+  await userEvent.click(within(b).getByRole("button", { name: "정하기" }));
+  expect(setZoneTypeAction).toHaveBeenCalledWith("d1", "z1", "admin-net");
+  expect(onSaved).toHaveBeenCalledWith(4);
+});
+
+test("망 종류 줄: 저장 실패 문구를 보인다", async () => {
+  vi.mocked(setZoneTypeAction).mockResolvedValueOnce({ ok: false, error: "다른 대화가 돌고 있어요." });
+  render(
+    <NetworkKnowledgeProvider value={KNOWLEDGE}>
+      <MissingChecklist state={zonesState()} busy={false} focusId={null} onSave={vi.fn()} zoneType={{ diagramId: "d1", onSaved: vi.fn() }} />
+    </NetworkKnowledgeProvider>,
+  );
+  await expand("행정망");
+  const b = block("행정망");
+  await userEvent.selectOptions(within(b).getByRole("combobox"), "admin-net");
+  await userEvent.click(within(b).getByRole("button", { name: "정하기" }));
+  expect(await within(b).findByRole("alert")).toHaveTextContent("다른 대화가 돌고 있어요.");
+});
+
+test("망 종류 줄: 지식이 없으면 나오지 않는다", () => {
+  const { container } = setup({ state: zonesState() });
+  expect(container).toBeEmptyDOMElement();
 });

@@ -1,0 +1,96 @@
+import type { NetType } from "./network";
+
+// 기본 제공 망 종류. 일반 지식 수준이며 기관마다 다를 수 있다.
+export const NETWORK_TYPE_SEED: readonly NetType[] = [
+  {
+    key: "admin-net",
+    name: "행정망",
+    aliases: ["정부 업무망", "행정 내부망"],
+    description: "행정기관이 업무에 쓰는 내부 망이에요. 인터넷과는 나뉘어 있어요.",
+    grade: "internal",
+  },
+  {
+    key: "business-net",
+    name: "업무망",
+    aliases: ["내부망", "인트라넷"],
+    description: "기관 안에서 업무용으로 쓰는 망이에요. 바깥 인터넷과는 분리해 둬요.",
+    grade: "internal",
+  },
+  {
+    key: "mgmt-net",
+    name: "관리망",
+    aliases: ["운영망", "관리 전용망"],
+    description: "서버와 장비를 운영하고 관리하는 데만 쓰는 망이에요.",
+    grade: "internal",
+  },
+  {
+    key: "backup-net",
+    name: "백업망",
+    aliases: ["백업 전용망"],
+    description: "데이터 백업을 옮기는 데 쓰는 망이에요. 업무 통신과 따로 둬요.",
+    grade: "internal",
+  },
+  {
+    key: "dev-net",
+    name: "개발·테스트망",
+    aliases: ["개발망", "테스트망", "스테이징망"],
+    description: "개발하고 시험해 보는 데 쓰는 망이에요. 운영 망과 나눠서 써요.",
+    grade: "internal",
+  },
+  {
+    key: "gcloud-internal",
+    name: "공공 클라우드 내부 영역",
+    aliases: ["G-클라우드 업무존", "GCloud 내부망", "공공 클라우드 업무 영역"],
+    description: "공공 클라우드 안에서 업무 시스템을 두는 내부 영역이에요.",
+    grade: "internal",
+  },
+  {
+    key: "control-net",
+    name: "제어망",
+    aliases: ["OT망", "SCADA망", "제어시스템망"],
+    description: "설비나 장치를 제어하는 망이에요. 원칙적으로 바깥과 잇지 않아요.",
+    grade: "closed",
+  },
+  {
+    key: "finance-net",
+    name: "금융 전산망",
+    aliases: ["금융 폐쇄망", "전산 폐쇄망"],
+    description: "금융 거래 같은 중요한 전산에 쓰는 완전히 닫힌 망이에요.",
+    grade: "closed",
+  },
+  {
+    key: "dmz",
+    name: "DMZ",
+    aliases: ["비무장지대", "완충망", "경계망"],
+    description: "안쪽 망과 바깥 사이에 두는 중간 망이에요. 바깥에 보여 줄 서버를 여기에 둬요.",
+    grade: "boundary",
+  },
+  {
+    key: "internet",
+    name: "인터넷망",
+    aliases: ["대외 인터넷", "외부망", "인터넷"],
+    description: "누구나 닿을 수 있는 공개 인터넷이에요.",
+    grade: "external",
+  },
+  {
+    key: "inter-agency",
+    name: "기관 간 연계망",
+    aliases: ["대외망", "대외 연계망", "기관 연계망"],
+    description: "다른 기관과 자료를 주고받을 때 쓰는 망이에요.",
+    grade: "external",
+  },
+  {
+    key: "gcloud-internet",
+    name: "공공 클라우드 인터넷 영역",
+    aliases: ["GCloud 인터넷망", "G-클라우드 인터넷존", "공공 클라우드 외부 영역"],
+    description: "공공 클라우드 안에서 인터넷과 닿는 영역이에요.",
+    grade: "external",
+  },
+  {
+    key: "private-cloud",
+    name: "민간 클라우드",
+    aliases: ["상용 클라우드", "퍼블릭 클라우드"],
+    description: "민간 회사가 제공하는 클라우드예요. 기관 밖에 있는 망으로 봐요.",
+    grade: "external",
+  },
+];

@@ -4,9 +4,15 @@ import userEvent from "@testing-library/user-event";
 import { useState } from "react";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
+import { setZoneTypeAction } from "@/app/(app)/actions";
 import { type DiagramState, emptyState } from "@/domain/types";
 import { type ChecklistDrafts, type ChecklistExpanded } from "@/ui/chat/MissingChecklist";
 import { InfoCard, type InfoCardProps } from "@/ui/canvas/InfoCard";
+import { NetworkKnowledgeProvider } from "@/ui/network/NetworkKnowledgeContext";
+
+import { KNOWLEDGE, adminCase } from "../fixtures/network";
+
+vi.mock("@/app/(app)/actions", () => ({ setZoneTypeAction: vi.fn(async () => ({ ok: true, number: 8 })) }));
 
 afterEach(cleanup);
 const origScroll = Object.getOwnPropertyDescriptor(Element.prototype, "scrollIntoView");
@@ -46,6 +52,7 @@ function Card(p: Outer) {
       onSelectWarning={p.onSelectWarning ?? vi.fn()}
       {...(p.scrollToWarnings !== undefined ? { scrollToWarnings: p.scrollToWarnings } : {})}
       {...(p.onMeasure ? { onMeasure: p.onMeasure } : {})}
+      {...(p.zoneType ? { zoneType: p.zoneType } : {})}
       checklist={{ focusId: null, onSave: p.onSave ?? (async () => ({ ok: true })), drafts, onDraftsChange: setDrafts, expanded, onExpandedChange: setExpanded, onLocate: vi.fn() }}
     />
   );
@@ -171,4 +178,65 @@ test("reports its size for the camera", () => {
   const onMeasure = vi.fn();
   render(<Card onMeasure={onMeasure} />);
   expect(onMeasure).toHaveBeenCalledWith({ width: expect.any(Number), height: expect.any(Number), lineHeight: expect.any(Number) });
+});
+
+const warnRegion = () => screen.getByRole("region", { name: "주의" });
+
+test("행정망 사례 경고와 추정 망의 맞아요 단추, 누르면 setZoneTypeAction(…, key)", async () => {
+  vi.mocked(setZoneTypeAction).mockClear();
+  const onSaved = vi.fn();
+  render(
+    <NetworkKnowledgeProvider value={KNOWLEDGE}>
+      <Card state={adminCase()} open zoneType={{ diagramId: "d1", onSaved }} />
+    </NetworkKnowledgeProvider>,
+  );
+  const w = within(warnRegion());
+  expect(w.getByText(/^행정망을\(를\) '행정망'\(으\)로 추정했어요\. .*망연계가 필요해요/)).toBeInTheDocument();
+  // 추정 망(행정망)만 확인 줄이 붙는다. 사용자가 정한 GCloud 는 붙지 않는다.
+  const picker = w.getByRole("group", { name: "행정망 망 종류" });
+  expect(w.queryByRole("group", { name: "GCloud 인터넷망 망 종류" })).not.toBeInTheDocument();
+  expect(within(picker).getByText("AI 추정")).toBeInTheDocument();
+  expect(within(picker).getByRole("combobox", { name: "행정망 망 종류 고르기" })).toHaveValue("admin-net");
+  await userEvent.click(within(picker).getByRole("button", { name: "맞아요" }));
+  expect(setZoneTypeAction).toHaveBeenCalledWith("d1", "admin-net", "admin-net");
+  expect(onSaved).toHaveBeenCalledWith(8);
+});
+
+test("안내 카드: 다른 종류를 골라 바꾸기를 누르면 그 종류로 저장한다", async () => {
+  vi.mocked(setZoneTypeAction).mockClear();
+  render(
+    <NetworkKnowledgeProvider value={KNOWLEDGE}>
+      <Card state={adminCase()} open zoneType={{ diagramId: "d1", onSaved: vi.fn() }} />
+    </NetworkKnowledgeProvider>,
+  );
+  const picker = within(warnRegion()).getByRole("group", { name: "행정망 망 종류" });
+  const change = within(picker).getByRole("button", { name: "바꾸기" });
+  expect(change).toBeDisabled(); // 고른 값이 지금과 같으면 누를 것이 없다
+  await userEvent.selectOptions(within(picker).getByRole("combobox"), "business-net");
+  await userEvent.click(change);
+  expect(setZoneTypeAction).toHaveBeenCalledWith("d1", "admin-net", "business-net");
+});
+
+test("안내 카드: 이력 보기에서는 추정 표시만 있고 단추가 없다", () => {
+  render(
+    <NetworkKnowledgeProvider value={KNOWLEDGE}>
+      <Card state={adminCase()} open readOnly zoneType={{ diagramId: "d1", onSaved: vi.fn() }} />
+    </NetworkKnowledgeProvider>,
+  );
+  const picker = within(warnRegion()).getByRole("group", { name: "행정망 망 종류" });
+  expect(within(picker).getByText("AI 추정")).toBeInTheDocument();
+  expect(within(picker).getByText("행정망")).toBeInTheDocument();
+  expect(within(picker).queryByRole("button")).not.toBeInTheDocument();
+  expect(within(picker).queryByRole("combobox")).not.toBeInTheDocument();
+});
+
+test("지식 없이 렌더하면 새 줄·배지가 없다", () => {
+  const state = adminCase();
+  delete state.groups["gcloud-internet"]!.netType; // 지식이 있으면 망 종류 빠진 정보가 될 자리
+  render(<Card state={state} open zoneType={{ diagramId: "d1", onSaved: vi.fn() }} />);
+  expect(screen.queryByText(/추정했어요/)).not.toBeInTheDocument();
+  expect(screen.queryByText("AI 추정")).not.toBeInTheDocument();
+  expect(screen.queryByRole("group", { name: /망 종류$/ })).not.toBeInTheDocument();
+  expect(screen.queryByRole("group", { name: "GCloud 인터넷망" })).not.toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "맞아요" })).not.toBeInTheDocument();
 });

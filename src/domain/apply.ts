@@ -1,5 +1,5 @@
 import type { Command } from "./commands";
-import type { DiagramState } from "./types";
+import type { DiagramState, DNode, Group } from "./types";
 
 export type ApplyResult =
   | { ok: true; state: DiagramState }
@@ -12,7 +12,20 @@ const idTaken = (s: DiagramState, id: string) => has(s.groups, id) || has(s.node
 const parentOk = (s: DiagramState, parent: string | null) => parent === null || has(s.groups, parent);
 const endpointOk = (s: DiagramState, id: string) => has(s.nodes, id) || has(s.groups, id);
 
-export function applyCommand(state: DiagramState, cmd: Command): ApplyResult {
+/** add_edge 가 id 를 안 받았을 때 쓰는 규칙: e-<from>-<to>, 있으면 -2, -3… */
+export function freeEdgeId(s: DiagramState, from: string, to: string): string {
+  const stem = `e-${from}-${to}`;
+  let id = stem;
+  for (let n = 2; idTaken(s, id); n++) id = `${stem}-${n}`;
+  return id;
+}
+
+export interface ApplyOptions {
+  /** 지금 망 지식의 종류(key → 아무 값). 주면 여기에 없는 key(지운·숨긴 종류)의 망은 종류 없음으로 보고 AI 가 다시 붙일 수 있다. */
+  netTypes?: Readonly<Record<string, unknown>>;
+}
+
+export function applyCommand(state: DiagramState, cmd: Command, opts: ApplyOptions = {}): ApplyResult {
   switch (cmd.op) {
     case "add_group": {
       if (idTaken(state, cmd.id)) return fail(state, `id ${cmd.id} already exists`);
@@ -35,6 +48,7 @@ export function applyCommand(state: DiagramState, cmd: Command): ApplyResult {
         ...(cmd.sub !== undefined ? { sub: cmd.sub } : {}),
         parent: cmd.parent,
         attrs: { ...(cmd.attrs ?? {}) },
+        ...(cmd.guess === true && cmd.kind === "network_link" ? { guess: { replaced: [] } } : {}),
       };
       return { ok: true, state: { ...state, nodes: { ...state.nodes, [cmd.id]: node } } };
     }
@@ -43,9 +57,7 @@ export function applyCommand(state: DiagramState, cmd: Command): ApplyResult {
       if (!endpointOk(state, cmd.to)) return fail(state, `endpoint ${cmd.to} not found`);
       let id = cmd.id;
       if (id === undefined) {
-        const stem = `e-${cmd.from}-${cmd.to}`;
-        id = stem;
-        for (let n = 2; idTaken(state, id); n++) id = `${stem}-${n}`;
+        id = freeEdgeId(state, cmd.from, cmd.to);
       } else if (idTaken(state, id)) {
         return fail(state, `id ${id} already exists`);
       }
@@ -99,6 +111,25 @@ export function applyCommand(state: DiagramState, cmd: Command): ApplyResult {
       if (cur?.confirmed) return fail(state, `assumption ${cmd.key} is confirmed`);
       const next = { key: cmd.key, value: cmd.value, confirmed: false };
       return { ok: true, state: { ...state, assumptions: { ...state.assumptions, [cmd.key]: next } } };
+    }
+    case "set_zone_type": {
+      const group = has(state.groups, cmd.id) ? state.groups[cmd.id] : undefined;
+      if (!group) return fail(state, `group ${cmd.id} not found`);
+      if (group.groupKind !== "network_zone") return fail(state, `group ${cmd.id} is not a network zone`);
+      const known = !!group.netType && (!opts.netTypes || has(opts.netTypes, group.netType.key));
+      if (group.netType?.source === "user" && known) return fail(state, `zone type ${cmd.id} is confirmed`);
+      const next: Group = { ...group };
+      if (cmd.type === null) delete next.netType;
+      else next.netType = { key: cmd.type, source: "ai", confirmed: false };
+      return { ok: true, state: { ...state, groups: { ...state.groups, [cmd.id]: next } } };
+    }
+    case "set_link_guess": {
+      const node = has(state.nodes, cmd.id) ? state.nodes[cmd.id] : undefined;
+      if (!node) return fail(state, `node ${cmd.id} not found`);
+      const next: DNode = { ...node };
+      if (cmd.guess === null) delete next.guess;
+      else next.guess = cmd.guess;
+      return { ok: true, state: { ...state, nodes: { ...state.nodes, [cmd.id]: next } } };
     }
     // 흐름 명령은 흐름 저장소에 적용한다(서버가 차례 끝에). 구성도는 그대로 둬 클라이언트 재생도 안전하다.
     case "add_flow":

@@ -5,6 +5,7 @@ import { db } from "@/db/client";
 import { chatSessions, explanations } from "@/db/schema";
 import type { NodeExplanation } from "@/domain/explain";
 import { signatureOf } from "@/domain/explain";
+import { computeMissing } from "@/domain/missing";
 import { emptyState, type DiagramState } from "@/domain/types";
 import { HANDOFF_REPLY, NODE_GONE_MESSAGE, runAskTurn } from "@/server/chat/ask";
 import type { ChatEvent } from "@/server/chat/events";
@@ -121,6 +122,16 @@ const of = <T extends ChatEvent["t"]>(events: ChatEvent[], t: T) =>
 const sessionsOf = (diagramId: string) => db.select().from(chatSessions).where(eq(chatSessions.diagramId, diagramId));
 
 describe("runAskTurn", () => {
+  test("done 의 빠진 정보 수는 망 지식으로 센다(종류 없는 망 둘 포함)", async () => {
+    const ids = await makeOwnedDiagram();
+    const s = sample();
+    s.groups.z1 = { id: "z1", groupKind: "network_zone", label: "행정망", parent: null };
+    s.groups.z2 = { id: "z2", groupKind: "network_zone", label: "인터넷", parent: null };
+    await createVersion(ids.diagramId, s, { source: "import" });
+    const { events } = await ask(ids, { text: "뭐야?" }, { qwen: null, clef: question });
+    expect(events.at(-1)).toMatchObject({ t: "done", missing: computeMissing(s).count + 2 });
+  });
+
   test("first question creates a session and streams an answer", async () => {
     const ids = await seeded();
     const qwen = fakeQwen("<think>음</think>WAS#1 은 Tomcat 으로 요청을 처리해요.");

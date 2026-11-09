@@ -1,5 +1,6 @@
 import { crossesBoundary } from "./boundary";
 import { NODE_KINDS } from "./catalog";
+import type { NetworkKnowledge } from "./network";
 import type { DNode, DiagramState, Edge } from "./types";
 
 // 빠진 정보 칸의 한국어 이름. 여기 없는 키는 키 그대로 보여 준다.
@@ -25,10 +26,11 @@ export const FIELD_LABELS: Record<string, string> = {
   label: "프로토콜/포트",
   payload: "전달물",
   direction: "방향",
+  net_type: "망 종류",
 };
 
 export interface MissingItem {
-  targetKind: "node" | "edge";
+  targetKind: "node" | "edge" | "group";
   targetId: string;
   key: string;
   label: string;
@@ -60,7 +62,7 @@ export function requiredKeysFor(state: DiagramState, targetKind: "node" | "edge"
   return edge ? requiredKeysForEdge(state, edge) : null;
 }
 
-export function computeMissing(state: DiagramState): {
+export function computeMissing(state: DiagramState, knowledge?: NetworkKnowledge): {
   items: MissingItem[];
   count: number;
   byNode: Record<string, number>;
@@ -87,6 +89,17 @@ export function computeMissing(state: DiagramState): {
       const unknown = edge.unknown?.includes(key) ?? false;
       items.push({ targetKind: "edge", targetId: edge.id, key, label: labelOf(key), unknown });
       if (!unknown) count += 1;
+    }
+  }
+  // 망이 둘 이상이고 지식이 있으면 종류 없는(또는 지식에 없는 종류의) 망을 빠진 정보로 센다. byNode 에는 넣지 않는다.
+  if (knowledge) {
+    const zones = Object.values(state.groups).filter((g) => g.groupKind === "network_zone");
+    if (zones.length >= 2) {
+      for (const g of zones) {
+        if (g.netType && knowledge.types[g.netType.key]) continue;
+        items.push({ targetKind: "group", targetId: g.id, key: "net_type", label: labelOf("net_type"), unknown: false });
+        count += 1;
+      }
     }
   }
   return { items, count, byNode };

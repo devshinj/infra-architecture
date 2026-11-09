@@ -215,3 +215,13 @@ describe("normalizeAiCommand flow commands", () => {
     expect(parseCommand(up).ok).toBe(true);
   });
 });
+
+describe("normalizeAiCommand: 망 종류·추정 표시", () => {
+  test("set_zone_type 의 id·type 을 id 형식으로 맞추고 type null 은 그대로 둔다", () => {
+    expect(normalizeAiCommand({ op: "set_zone_type", id: "Zone_A", type: "Internal_Net" })).toEqual({ op: "set_zone_type", id: "zone-a", type: "internal-net" });
+    expect(normalizeAiCommand({ op: "set_zone_type", id: "z", type: null })).toEqual({ op: "set_zone_type", id: "z", type: null });
+  });
+  test("add_node 의 guess: null 은 키를 지운다", () => {
+    expect(normalizeAiCommand({ op: "add_node", id: "l", kind: "network_link", label: "L", parent: null, guess: null })).not.toHaveProperty("guess");
+  });
+});

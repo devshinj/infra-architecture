@@ -13,6 +13,7 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 
+import type { LinkMethod, NetGrade } from "@/domain/network";
 import type { EdgeExplanation, NodeExplanation } from "@/domain/explain";
 import type { Flow } from "@/domain/flows";
 import type { DiagramState } from "@/domain/types";
@@ -201,4 +202,40 @@ export const flows = pgTable(
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [unique().on(t.diagramId, t.key)],
+);
+
+export type NetworkTypeSource = "seed" | "user";
+
+// 계정 공통 망 종류. seed 는 기본 제공(고치면 edited, 숨길 수 있음), user 는 직접 만든 것이다.
+export const networkTypes = pgTable(
+  "network_types",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    key: text("key").notNull(),
+    name: text("name").notNull(),
+    aliases: jsonb("aliases").$type<string[]>().notNull().default(sql`'[]'::jsonb`),
+    description: text("description").notNull().default(""),
+    grade: text("grade").$type<NetGrade>().notNull(),
+    source: text("source").$type<NetworkTypeSource>().notNull(),
+    edited: boolean("edited").notNull().default(false),
+    hidden: boolean("hidden").notNull().default(false),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [unique().on(t.userId, t.key)],
+);
+
+// 계정 공통 망 종류 짝 규칙. typeA < typeB 로 정렬해 저장한다.
+export const networkRules = pgTable(
+  "network_rules",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    typeA: text("type_a").notNull(),
+    typeB: text("type_b").notNull(),
+    method: text("method").$type<LinkMethod>().notNull(),
+    note: text("note").notNull().default(""),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [unique().on(t.userId, t.typeA, t.typeB)],
 );
