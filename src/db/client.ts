@@ -11,6 +11,9 @@ function makeDb() {
   return drizzle(postgres(url), { schema });
 }
 
+/** db.transaction 콜백이 받는 트랜잭션 타입. */
+export type Tx = Parameters<Parameters<Db["transaction"]>[0]>[0];
+
 let instance: Db | undefined;
 
 // 연결은 처음 쓸 때 만든다. import 만으로는 연결하지 않아 단위 테스트가 DB 없이 돈다.

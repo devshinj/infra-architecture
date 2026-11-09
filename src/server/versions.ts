@@ -1,6 +1,6 @@
 import { and, desc, eq, sql } from "drizzle-orm";
 
-import { db } from "@/db/client";
+import { db, type Tx } from "@/db/client";
 import { diagramVersions, type VersionSource, type VersionStatus } from "@/db/schema";
 import type { DiagramState } from "@/domain/types";
 import { createMessage } from "@/server/chat/messages";
@@ -10,6 +10,10 @@ export interface CreateVersionOpts {
   status?: VersionStatus;
   restoredFrom?: number;
   messageId?: string;
+  via?: "mcp";
+  summary?: string;
+  /** 주어지면 이 트랜잭션 안에서 만든다(새 트랜잭션을 열지 않는다). */
+  tx?: Tx;
 }
 
 export async function createVersion(
@@ -17,7 +21,7 @@ export async function createVersion(
   state: DiagramState,
   opts: CreateVersionOpts,
 ): Promise<{ id: string; number: number }> {
-  return db.transaction(async (tx) => {
+  const run = async (tx: Tx) => {
     // 같은 구성도의 동시 생성을 직렬화해 번호가 겹치지 않게 한다.
     await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${diagramId}))`);
     const [{ max }] = await tx
@@ -34,10 +38,13 @@ export async function createVersion(
         status: opts.status ?? "complete",
         restoredFrom: opts.restoredFrom ?? null,
         messageId: opts.messageId ?? null,
+        via: opts.via ?? null,
+        summary: opts.summary ?? null,
       })
       .returning({ id: diagramVersions.id, number: diagramVersions.number });
     return row;
-  });
+  };
+  return opts.tx ? run(opts.tx) : db.transaction(run);
 }
 
 export async function listVersions(diagramId: string) {
@@ -47,6 +54,8 @@ export async function listVersions(diagramId: string) {
       source: diagramVersions.source,
       status: diagramVersions.status,
       restoredFrom: diagramVersions.restoredFrom,
+      via: diagramVersions.via,
+      summary: diagramVersions.summary,
       createdAt: diagramVersions.createdAt,
     })
     .from(diagramVersions)
