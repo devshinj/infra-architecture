@@ -1,9 +1,9 @@
 import { computeMissing } from "@/domain/missing";
-import { applyCommand, pruneEmptyGroups } from "@/domain/apply";
+import { applyCommand } from "@/domain/apply";
 import { COMMAND_OPS, isFlowCommand, isStructural, parseCommand, SERVER_ONLY_OPS, toFlowOp, type Command, type FlowCommand } from "@/domain/commands";
 import { createEdgeCoalescer } from "@/domain/edgeCoalesce";
 import { asksStepText, FLOW_LIMITS, keepStepText, type FlowOp } from "@/domain/flows";
-import { recordReplaced, splitFlowSteps, splitsFor, type StepSplit } from "@/domain/linkGuess";
+import { splitFlowSteps, type StepSplit } from "@/domain/linkGuess";
 import type { NetworkKnowledge } from "@/domain/network";
 import { emptyState, type DiagramState, type Warning } from "@/domain/types";
 import type { ClefClient, Intent } from "@/server/llm/clef";
@@ -22,6 +22,7 @@ import { clefOpenItems, resolveIntent } from "./intent";
 import { createMessage, listMessages } from "./messages";
 import { normalizeAiCommand } from "./normalize";
 import { checkWarnings } from "./warnings";
+import { settleTurn } from "./settle";
 import { createSkipTally, skipKey } from "./skips";
 import { buildMessages, parseMentions } from "./prompt";
 import { createSession, getSession, touchSession } from "./sessions";
@@ -139,18 +140,6 @@ function opName(raw: unknown): string {
 const KNOWN_OPS: ReadonlySet<string> = new Set(COMMAND_OPS);
 const SKIP_PREFIX = "건너뜀: ";
 const SKIP_MAX = 120;
-
-/** 정리로 사라진 그룹 id 를 깊은 것부터(자식이 부모보다 먼저) 돌려준다. */
-function prunedOrder(before: DiagramState, after: DiagramState): string[] {
-  const depth = (id: string) => {
-    let d = 0;
-    for (let p = before.groups[id]?.parent ?? null; p !== null; p = before.groups[p]?.parent ?? null) d++;
-    return d;
-  };
-  return Object.keys(before.groups)
-    .filter((id) => !Object.hasOwn(after.groups, id))
-    .sort((a, b) => depth(b) - depth(a));
-}
 
 /** 잠금 안: 새 세션이면 만들고 알린 뒤 차례를 돌리고, 세션이면 최근 이어간 순서를 갱신한다. */
 async function sessionTurn(args: TurnArgs, deps: ChatDeps): Promise<"ok" | "session_gone"> {
@@ -382,20 +371,11 @@ async function lockedTurn(args: TurnArgs, sessionId: string | null, followUp: bo
   let splits: StepSplit[] = [];
   // 구성도를 바꾼 명령(구성·가정)이 있을 때만 정리·점검·버전을 한다. 흐름만 바꾼 차례는 버전을 만들지 않는다.
   if (changed + assumed > 0) {
-    // 이번 차례에 비게 된 영역을 지운다. 클라이언트도 같은 명령으로 맞추도록 안쪽부터 보낸다.
-    const pruned = pruneEmptyGroups(turnStartState, state);
-    for (const id of prunedOrder(state, pruned)) emit({ t: "cmd", cmd: { op: "remove_group", id } });
-    state = pruned;
-    // AI 가 추정으로 넣은 망연계마다 대신한 연결을 기록한다(되돌리기용). 클라이언트도 같은 명령으로 맞춘다.
-    const recorded = recordReplaced(turnStartState, state);
-    for (const { nodeId, guess } of recorded) {
-      const cmd: Command = { op: "set_link_guess", id: nodeId, guess };
-      const r = applyCommand(state, cmd);
-      if (!r.ok) continue;
-      state = r.state;
-      emit({ t: "cmd", cmd });
-    }
-    splits = splitsFor(turnStartState, state, recorded);
+    // 비게 된 영역 지우기와 망연계 기록. 클라이언트도 같은 명령으로 맞추도록 적용한 순서대로 보낸다.
+    const settled = settleTurn(turnStartState, state);
+    for (const cmd of settled.emitted) emit({ t: "cmd", cmd });
+    state = settled.state;
+    splits = settled.splits;
     // 변경이 있었던 차례만 점검한다. 중단·오류면 이미 중단된 신호로 불러 코드 규칙만 받는다.
     if (status === "complete") emit({ t: "status", phase: "checking" });
     const checkSignal = status === "complete" ? signal : AbortSignal.abort();

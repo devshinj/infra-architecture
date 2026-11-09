@@ -200,30 +200,18 @@ export async function checkWarnings(
   signal: AbortSignal,
   opts: { clefLimit?: number; textTimeoutMs?: number; clefCapMs?: number; knowledge?: NetworkKnowledge } = {},
 ): Promise<{ warnings: Warning[]; fresh: Warning[] }> {
+  // 중단된 차례는 판정·문구 다듬기를 건너뛰고 코드 규칙과 이전 db_exposed 만 쓴다.
+  if (signal.aborted) return checkCodeWarnings(state, prev, opts.knowledge);
   const prevById = new Map((prev ?? []).map((w) => [w.id, w]));
   const code = evaluateRules(state, opts.knowledge);
-  let warnings = code;
-
-  const flagged = new Set(code.filter((w) => w.rule === "db_public").map((w) => w.nodeId));
+  const flagged = flaggedPublic(code);
   let exposed: Warning[];
-  if (signal.aborted) {
-    // 중단된 차례는 판정을 건너뛰고 이전 db_exposed 를 이어 간다.
-    exposed = carryExposed(Object.values(state.nodes).filter((n) => DATA_KINDS.includes(n.kind) && !flagged.has(n.id)), prevById);
-  } else {
-    try {
-      exposed = await judgeExposed(state, flagged, prevById, deps.clef, signal, opts.clefLimit ?? CLEF_LIMIT, opts.clefCapMs ?? CLEF_CAP_MS);
-    } catch {
-      exposed = carryExposed(Object.values(state.nodes).filter((n) => DATA_KINDS.includes(n.kind) && !flagged.has(n.id)), prevById);
-    }
+  try {
+    exposed = await judgeExposed(state, flagged, prevById, deps.clef, signal, opts.clefLimit ?? CLEF_LIMIT, opts.clefCapMs ?? CLEF_CAP_MS);
+  } catch {
+    exposed = carryExposed(unjudged(state, flagged), prevById);
   }
-  warnings = [...code, ...exposed.filter((w) => !code.some((c) => c.id === w.id))];
-
-  // 연결 방식 예상(link_*) 문구는 정해진 문구다. 지난 문구를 이어 쓰지도, Qwen 으로 다듬지도 않는다(늘 새로 계산한 그대로).
-  warnings = warnings.map((w) => {
-    if (isLinkRule(w.rule)) return w;
-    const t = prevById.get(w.id)?.text;
-    return typeof t === "string" ? { ...w, text: t } : w;
-  });
+  let warnings = mergeWarnings(code, exposed, prevById);
 
   const isNew = (w: Warning) => !prevById.has(w.id);
   const needText = warnings.filter((w) => isNew(w) && !isLinkRule(w.rule));
@@ -236,6 +224,44 @@ export async function checkWarnings(
     });
   }
 
+  return withFresh(state, prevById, warnings);
+}
+
+/**
+ * Clef·Qwen 없이 하는 경고 점검: 코드 규칙(망 지식 포함) + prev 의 db_exposed 이어 받기.
+ * checkWarnings 의 Clef 실패·중단 경로(Qwen 없음)와 결과가 같다. MCP 쓰기도 이것을 쓴다.
+ */
+export function checkCodeWarnings(
+  state: DiagramState,
+  prev: Warning[] | undefined,
+  knowledge?: NetworkKnowledge,
+): { warnings: Warning[]; fresh: Warning[] } {
+  const prevById = new Map((prev ?? []).map((w) => [w.id, w]));
+  const code = evaluateRules(state, knowledge);
+  const exposed = carryExposed(unjudged(state, flaggedPublic(code)), prevById);
+  return withFresh(state, prevById, mergeWarnings(code, exposed, prevById));
+}
+
+/** db_public 이 이미 걸린 노드(db_exposed 를 따로 보지 않는다). */
+const flaggedPublic = (code: Warning[]) => new Set(code.filter((w) => w.rule === "db_public").map((w) => w.nodeId));
+
+/** db_exposed 를 볼 데이터 노드. */
+const unjudged = (state: DiagramState, flagged: Set<string>) =>
+  Object.values(state.nodes).filter((n) => DATA_KINDS.includes(n.kind) && !flagged.has(n.id));
+
+/** 코드 규칙 뒤에 db_exposed 를 붙이고, 이미 알린 경고는 지난 문구를 다시 쓴다. */
+function mergeWarnings(code: Warning[], exposed: Warning[], prevById: Map<string, Warning>): Warning[] {
+  const merged = [...code, ...exposed.filter((w) => !code.some((c) => c.id === w.id))];
+  // 연결 방식 예상(link_*) 문구는 정해진 문구다. 지난 문구를 이어 쓰지도, Qwen 으로 다듬지도 않는다(늘 새로 계산한 그대로).
+  return merged.map((w) => {
+    if (isLinkRule(w.rule)) return w;
+    const t = prevById.get(w.id)?.text;
+    return typeof t === "string" ? { ...w, text: t } : w;
+  });
+}
+
+/** 새 경고(prev 에 없고 무시하지 않은 것)를 골라 함께 돌려준다. */
+function withFresh(state: DiagramState, prevById: Map<string, Warning>, warnings: Warning[]): { warnings: Warning[]; fresh: Warning[] } {
   const ignored = new Set(state.ignoredWarnings ?? []);
-  return { warnings, fresh: warnings.filter((w) => isNew(w) && !ignored.has(w.id)) };
+  return { warnings, fresh: warnings.filter((w) => !prevById.has(w.id) && !ignored.has(w.id)) };
 }
