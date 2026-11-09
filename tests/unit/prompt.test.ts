@@ -428,6 +428,18 @@ describe("망 지식 프롬프트", () => {
         'dmz "DMZ" 다른 이름=[] 등급=경계',
         'internet "인터넷망" 다른 이름=["외부망"] 등급=외부',
         "",
+        "등급 규칙(기관 규칙이 없을 때):",
+        "폐쇄 -- 모든 등급: 보통 잇지 않음(예외 확인)",
+        "내부 -- 외부: 망연계 필요",
+        "내부 -- 경계: 방화벽(또는 VPN)으로 됨",
+        "경계 -- 외부: 방화벽(또는 VPN)으로 됨",
+        "내부 -- 내부: 방화벽(또는 VPN)으로 됨",
+        "경계 -- 경계: 방화벽(또는 VPN)으로 됨",
+        "외부 -- 외부: 방화벽(또는 VPN)으로 됨",
+        "",
+        "기관 규칙:",
+        "없음",
+        "",
         "망 짝 규칙:",
         "cloud -- gov: 망연계 필요",
       ].join("\n"),
@@ -437,6 +449,28 @@ describe("망 지식 프롬프트", () => {
     const one = zones();
     delete one.groups["cloud"];
     expect(networkBlock(one, knowledge)).toContain("망 짝 규칙:\n없음");
+  });
+
+  test("networkBlock 은 망이 아직 없어도(처음 그리는 차례) 등급 규칙과 기관 규칙을 넣는다", () => {
+    const k = { ...knowledge, rules: [{ a: "admin-net", b: "internet", method: "none" as const, note: "○○ 지침 3조" }] };
+    const block = networkBlock(emptyState(), k);
+    expect(block).toContain("등급 규칙(기관 규칙이 없을 때):\n폐쇄 -- 모든 등급: 보통 잇지 않음(예외 확인)\n내부 -- 외부: 망연계 필요\n");
+    expect(block).toContain('기관 규칙:\nadmin-net -- internet: 보통 잇지 않음(예외 확인) 근거="○○ 지침 3조"\n');
+    expect(block).toContain("망 짝 규칙:\n없음");
+    expect(block).not.toContain("설명");
+  });
+
+  test("networkBlock 의 기관 규칙은 지금 보이는 종류끼리만 적는다", () => {
+    const k = {
+      ...knowledge,
+      rules: [
+        { a: "admin-net", b: "dmz", method: "firewall" as const },
+        { a: "admin-net", b: "hidden-net", method: "network_link" as const },
+      ],
+    };
+    const block = networkBlock(emptyState(), k);
+    expect(block).toContain("기관 규칙:\nadmin-net -- dmz: 방화벽(또는 VPN)으로 됨\n");
+    expect(block).not.toContain("hidden-net");
   });
 
   test("networkBlock 은 사용자 규칙이면 근거를 함께 적는다", () => {
@@ -483,7 +517,7 @@ describe("망 지식 프롬프트", () => {
     expect(zoneLine).toBe('{"op":"set_zone_type","id":"망 영역 id","type":"망 종류 key 또는 null"}');
     const guessLine = lines.find((l) => l.startsWith('{"op":"add_node"') && l.includes('"guess":true'))!;
     expect(parseCommand(JSON.parse(guessLine)).ok).toBe(true);
-    for (const phrase of ['"망 종류:" 목록', "(확정)", "망연계 필요", '"guess":true', "보통 잇지 않음", "no_link:", "망연계 없이 통신", "외부 SaaS"]) {
+    for (const phrase of ['"망 종류:" 목록', "(확정)", "망연계 필요", '"guess":true', "보통 잇지 않음", "no_link:", "망연계 없이 통신", "외부 SaaS", '"기관 규칙"', '"등급 규칙"']) {
       expect(SYSTEM_PROMPT).toContain(phrase);
     }
     expect(SYSTEM_PROMPT).not.toContain('"op":"set_link_guess"');

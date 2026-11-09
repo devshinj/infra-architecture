@@ -2,7 +2,7 @@ import { EDGE_KINDS, GROUP_KINDS, NODE_KINDS } from "@/domain/catalog";
 import { LIMITS, type NodeExplanation } from "@/domain/explain";
 import type { Flow } from "@/domain/flows";
 import { FIELD_LABELS, type MissingItem } from "@/domain/missing";
-import { GRADE_LABELS, METHOD_LABELS, pairKey, requiredMethod, type NetworkKnowledge } from "@/domain/network";
+import { GRADE_LABELS, GRADE_RULES, METHOD_LABELS, pairKey, requiredMethod, type NetworkKnowledge } from "@/domain/network";
 import { patternPromptBlock } from "@/domain/patterns";
 import type { DiagramState } from "@/domain/types";
 import type { Intent } from "@/server/llm/clef";
@@ -78,6 +78,7 @@ ${ATTR_LIST}
 - 업무망·인터넷망처럼 분리된 망은 network_zone 영역으로 그리고 망 이름을 label 에 쓴다.
 - 서로 다른 망을 잇는 통신은 방화벽(firewall)·망연계 솔루션(network_link)·VPN 노드를 거치게 그리고, 망을 넘는 연결에는 payload(api 또는 file)와 direction(one_way 또는 two_way)을 쓴다. 같은 망 안의 연결에는 사용자가 말하지 않은 payload·direction 을 쓰지 않는다.
 - network_zone 영역에는 set_zone_type 으로 망 종류를 붙인다. type 은 "망 종류:" 목록의 key 만 쓰고, 맞는 것이 없거나 근거가 없으면 쓰지 않는다. 요약에 type=…(확정) 이 붙은 망은 바꾸지 않는다. 종류가 없는 기존 망도 이번 요청에 근거가 있으면 붙인다.
+- 이번 요청에서 새로 그리거나 종류를 붙인 망처럼 "망 짝 규칙"에 없는 짝은 두 망 종류로 따져 "기관 규칙"을 먼저, 없으면 "등급 규칙"을 망 짝 규칙으로 쓴다.
 - "망 짝 규칙"이 망연계 필요인 두 망을 잇게 되면 사이에 network_link 노드를 넣고 그 add_node 에 "guess":true 를 쓴다. 사용자가 망연계를 넣어 달라고 했으면 guess 를 쓰지 않는다.
 - "망 짝 규칙"이 보통 잇지 않음인 두 망을 이으라고 하면 요청대로 그리고, 보통 잇지 않는 구간이라고 say 로 한 줄 알린다.
 - 사용자가 "방화벽으로 바로"처럼 망연계 없이 이으라고 하면 그대로 따르고, set_assumption 의 key 를 no_link:<망 id>--<망 id>(두 망 id 를 사전순으로), value 를 "망연계 없이 통신" 으로 쓴다. 가정에 no_link:<a>--<b> 가 있는 두 망 사이에는 망연계를 넣지 않는다.
@@ -163,13 +164,22 @@ export function summarizeState(state: DiagramState, k?: NetworkKnowledge): strin
 const byStr = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
 
 /**
- * 망 지식 블록: 망 종류 목록(key·이름·다른 이름·등급, 설명은 뺀다) + 이 구성도에서 종류가 붙은 망 짝의 필요한 방식.
+ * 망 지식 블록: 망 종류 목록(key·이름·다른 이름·등급, 설명은 뺀다) + 기본 등급 규칙 + 보이는 종류끼리의 기관 규칙
+ * + 이 구성도에서 종류가 붙은 망 짝의 필요한 방식. 등급·기관 규칙은 망이 아직 없는 처음 그리는 차례에도 AI 가 쓰게 늘 넣는다.
  * 이름·다른 이름·근거(사용자 글)는 JSON 으로 감싸 줄바꿈이 새 줄을 만들지 못하게 한다.
  */
 export function networkBlock(state: DiagramState, k: NetworkKnowledge): string {
   const types = Object.values(k.types)
     .sort((a, b) => byStr(a.key, b.key))
     .map((t) => `${t.key} ${JSON.stringify(t.name)} 다른 이름=${JSON.stringify(t.aliases)} 등급=${GRADE_LABELS[t.grade]}`);
+  const grades = GRADE_RULES.map((r) => `${GRADE_LABELS[r.a]} -- ${r.b === "*" ? "모든 등급" : GRADE_LABELS[r.b]}: ${METHOD_LABELS[r.method]}`);
+  const userRules = k.rules
+    .filter((r) => Object.hasOwn(k.types, r.a) && Object.hasOwn(k.types, r.b))
+    .map((r) => {
+      const [a, b] = pairKey(r.a, r.b);
+      return `${a} -- ${b}: ${METHOD_LABELS[r.method]}${r.note ? ` 근거=${JSON.stringify(r.note)}` : ""}`;
+    })
+    .sort(byStr);
   const zones = Object.values(state.groups)
     .filter((g) => g.groupKind === "network_zone" && g.netType)
     .sort((a, b) => byStr(a.id, b.id));
@@ -183,7 +193,12 @@ export function networkBlock(state: DiagramState, k: NetworkKnowledge): string {
       pairs.push(`${a} -- ${b}: ${METHOD_LABELS[req.method]}${basis}`);
     }
   }
-  return `망 종류:\n${types.join("\n")}\n\n망 짝 규칙:\n${pairs.length ? pairs.join("\n") : "없음"}`;
+  return [
+    `망 종류:\n${types.join("\n")}`,
+    `등급 규칙(기관 규칙이 없을 때):\n${grades.join("\n")}`,
+    `기관 규칙:\n${userRules.length ? userRules.join("\n") : "없음"}`,
+    `망 짝 규칙:\n${pairs.length ? pairs.join("\n") : "없음"}`,
+  ].join("\n\n");
 }
 
 /** 흐름 한 개를 한 줄로: 지나는 연결 id 를 차례로. 이름(사용자 글)은 JSON 으로 감싸 줄바꿈이 새 줄을 만들지 못하게 한다. */
