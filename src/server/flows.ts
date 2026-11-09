@@ -1,17 +1,8 @@
 import { and, asc, eq, sql } from "drizzle-orm";
 
-import { db } from "@/db/client";
+import { db, type Tx } from "@/db/client";
 import { flows, type FlowSource } from "@/db/schema";
-import {
-  checkFlow,
-  FLOW_LIMITS,
-  shortLabel,
-  type Flow,
-  type FlowOp,
-  type FlowProblem,
-  type FlowStep,
-  type FlowStepInput,
-} from "@/domain/flows";
+import { checkFlow, judgeFlowOps, type Flow, type FlowOp, type FlowProblem } from "@/domain/flows";
 import { emptyState, type DiagramState } from "@/domain/types";
 import { withDiagramLock } from "@/server/chat/lock";
 import { getOwnedDiagram, NotFoundError, ValidationError } from "@/server/projects";
@@ -39,92 +30,42 @@ const NAME_MAX = 60;
 
 const byKey = (diagramId: string, key: string) => and(eq(flows.diagramId, diagramId), eq(flows.key, key));
 
-const toSteps = (steps: FlowStepInput[]): FlowStep[] =>
-  steps.map((s) => ({ edge: s.edge, from: s.from, short: shortLabel(s.short), text: s.text }));
-
-/** 검사에 걸린 문제 종류(겹치지 않게, 처음 나온 순서). */
-const problemReason = (problems: FlowProblem[]) => [...new Set(problems.map((p) => p.kind))].join(",");
+/** 트랜잭션을 주면 그 안에서, 아니면 공용 연결로 읽고 쓴다. */
+interface WriteOpts { tx?: Tx }
 
 /**
- * AI 흐름 명령을 흐름 저장소에 적용한다. 구성도 잠금은 호출자(대화 차례)가 쥐고 있다.
- * 명령마다 따로 저장·거절하고, 거절한 명령은 id 와 이유를 돌려준다.
- * - add: 같은 id 가 있거나, 흐름이 상한에 찼거나, 단계가 상한을 넘거나, 검사에 걸리면 거절.
- * - update: 없으면 거절. 준 칸만 바꾸고, 바꾼 결과가 검사에 걸리면 거절. AI 가 고친 흐름은 다시 "AI 제안"이 된다.
- * - remove: 없으면 거절.
+ * AI 흐름 명령을 흐름 저장소에 적용한다. 구성도 잠금은 호출자(대화 차례·MCP)가 쥐고 있다.
+ * 판정은 judgeFlowOps(쓰기 없음)가 하고, 통과한 명령만 저장한다. 거절한 명령은 id 와 이유를 돌려준다.
+ * AI 가 고친 흐름은 다시 "AI 제안"이 된다.
  */
 export async function applyFlowOps(
   diagramId: string,
   state: DiagramState,
   ops: FlowOp[],
   source: "ai",
+  opts: WriteOpts = {},
 ): Promise<{ saved: number; rejected: { id: string; reason: string }[] }> {
-  const rows = await db.select({ key: flows.key, data: flows.data }).from(flows).where(eq(flows.diagramId, diagramId));
-  const current = new Map(rows.map((r) => [r.key, r.data]));
+  const q = opts.tx ?? db;
+  const rows = await q.select({ data: flows.data }).from(flows).where(eq(flows.diagramId, diagramId));
+  const outcomes = judgeFlowOps(state, rows.map((r) => r.data), ops);
   const rejected: { id: string; reason: string }[] = [];
   let saved = 0;
-  const reject = (id: string, reason: string) => rejected.push({ id, reason });
-
-  for (const op of ops) {
-    if (op.op === "remove_flow") {
-      if (!current.has(op.id)) {
-        reject(op.id, "not_found");
-        continue;
-      }
-      await db.delete(flows).where(byKey(diagramId, op.id));
-      current.delete(op.id);
-      saved++;
+  for (const [i, out] of outcomes.entries()) {
+    const op = ops[i]!;
+    if (out.kind === "rejected") {
+      rejected.push({ id: op.id, reason: out.reason });
       continue;
     }
-
-    let next: Flow;
-    if (op.op === "add_flow") {
-      if (current.has(op.id)) {
-        reject(op.id, "exists");
-        continue;
-      }
-      if (current.size >= FLOW_LIMITS.flows) {
-        reject(op.id, "too_many_flows");
-        continue;
-      }
-      next = { id: op.id, name: op.name, origin: op.origin, steps: toSteps(op.steps) };
-      if (op.summary !== undefined) next.summary = op.summary;
-      if (op.result !== undefined) next.result = op.result;
+    if (out.kind === "removed") {
+      await q.delete(flows).where(byKey(diagramId, op.id));
+    } else if (op.op === "add_flow") {
+      await q.insert(flows).values({ diagramId, key: op.id, data: out.flow, source, reviewed: false });
     } else {
-      const prev = current.get(op.id);
-      if (!prev) {
-        reject(op.id, "not_found");
-        continue;
-      }
-      next = structuredClone(prev);
-      if (op.name !== undefined) next.name = op.name;
-      if (op.summary !== undefined) next.summary = op.summary;
-      if (op.result !== undefined) next.result = op.result;
-      if (op.steps !== undefined) next.steps = toSteps(op.steps);
-    }
-
-    if (next.steps.length === 0) {
-      reject(op.id, "no_steps");
-      continue;
-    }
-    if (next.steps.length > FLOW_LIMITS.steps) {
-      reject(op.id, "too_many_steps");
-      continue;
-    }
-    const problems = checkFlow(state, next);
-    if (problems.length) {
-      reject(op.id, problemReason(problems));
-      continue;
-    }
-
-    if (op.op === "add_flow") {
-      await db.insert(flows).values({ diagramId, key: op.id, data: next, source, reviewed: false });
-    } else {
-      await db
+      await q
         .update(flows)
-        .set({ data: next, source, reviewed: false, updatedAt: sql`now()` })
+        .set({ data: out.flow, source, reviewed: false, updatedAt: sql`now()` })
         .where(byKey(diagramId, op.id));
     }
-    current.set(op.id, next);
     saved++;
   }
   return { saved, rejected };
@@ -132,15 +73,16 @@ export async function applyFlowOps(
 
 /**
  * 구성도의 흐름마다 rewrite 를 돌려, 새 흐름을 돌려준 것만 저장한다(null 이면 그대로). 바뀐 흐름 수를 돌려준다.
- * 도구가 정해진 규칙으로 고치는 것이라 출처·검수 상태는 그대로 둔다. 구성도 잠금은 호출자(대화 차례)가 쥐고 있다.
+ * 도구가 정해진 규칙으로 고치는 것이라 출처·검수 상태는 그대로 둔다. 구성도 잠금은 호출자(대화 차례·MCP)가 쥐고 있다.
  */
-export async function rewriteFlows(diagramId: string, rewrite: (f: Flow) => Flow | null): Promise<number> {
-  const rows = await db.select({ key: flows.key, data: flows.data }).from(flows).where(eq(flows.diagramId, diagramId));
+export async function rewriteFlows(diagramId: string, rewrite: (f: Flow) => Flow | null, opts: WriteOpts = {}): Promise<number> {
+  const q = opts.tx ?? db;
+  const rows = await q.select({ key: flows.key, data: flows.data }).from(flows).where(eq(flows.diagramId, diagramId));
   let n = 0;
   for (const r of rows) {
     const next = rewrite(r.data);
     if (!next) continue;
-    await db.update(flows).set({ data: next, updatedAt: sql`now()` }).where(byKey(diagramId, r.key));
+    await q.update(flows).set({ data: next, updatedAt: sql`now()` }).where(byKey(diagramId, r.key));
     n++;
   }
   return n;

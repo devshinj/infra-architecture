@@ -59,6 +59,66 @@ export function checkFlow(state: DiagramState, flow: Flow): FlowProblem[] {
   return problems;
 }
 
+const toSteps = (steps: FlowStepInput[]): FlowStep[] =>
+  steps.map((s) => ({ edge: s.edge, from: s.from, short: shortLabel(s.short), text: s.text }));
+
+/** 검사에 걸린 문제 종류(겹치지 않게, 처음 나온 순서). */
+const problemReason = (problems: FlowProblem[]) => [...new Set(problems.map((p) => p.kind))].join(",");
+
+/** 흐름 명령 하나의 판정. saved 는 저장할 흐름(만들기·고치기), removed 는 지우기. */
+export type FlowOpOutcome = { kind: "rejected"; reason: string } | { kind: "saved"; flow: Flow } | { kind: "removed" };
+
+/**
+ * 흐름 명령을 쓰기 없이 순서대로 판정한다. 거절한 명령은 뒤 명령에 영향을 주지 않는다(저장소 적용과 같다).
+ * - add: 같은 id 가 있거나, 흐름이 상한에 찼거나, 단계가 상한을 넘거나, 검사에 걸리면 거절.
+ * - update: 없으면 거절. 준 칸만 바꾸고, 바꾼 결과가 검사에 걸리면 거절.
+ * - remove: 없으면 거절.
+ */
+export function judgeFlowOps(state: DiagramState, existing: Flow[], ops: FlowOp[]): FlowOpOutcome[] {
+  const current = new Map(existing.map((f) => [f.id, f]));
+  return ops.map((op): FlowOpOutcome => {
+    if (op.op === "remove_flow") {
+      if (!current.delete(op.id)) return { kind: "rejected", reason: "not_found" };
+      return { kind: "removed" };
+    }
+    let next: Flow;
+    if (op.op === "add_flow") {
+      if (current.has(op.id)) return { kind: "rejected", reason: "exists" };
+      if (current.size >= FLOW_LIMITS.flows) return { kind: "rejected", reason: "too_many_flows" };
+      next = { id: op.id, name: op.name, origin: op.origin, steps: toSteps(op.steps) };
+      if (op.summary !== undefined) next.summary = op.summary;
+      if (op.result !== undefined) next.result = op.result;
+    } else {
+      const prev = current.get(op.id);
+      if (!prev) return { kind: "rejected", reason: "not_found" };
+      next = structuredClone(prev);
+      if (op.name !== undefined) next.name = op.name;
+      if (op.summary !== undefined) next.summary = op.summary;
+      if (op.result !== undefined) next.result = op.result;
+      if (op.steps !== undefined) next.steps = toSteps(op.steps);
+    }
+    if (next.steps.length === 0) return { kind: "rejected", reason: "no_steps" };
+    if (next.steps.length > FLOW_LIMITS.steps) return { kind: "rejected", reason: "too_many_steps" };
+    const problems = checkFlow(state, next);
+    if (problems.length) return { kind: "rejected", reason: problemReason(problems) };
+    current.set(op.id, next);
+    return { kind: "saved", flow: next };
+  });
+}
+
+/** 흐름 명령을 미리 검사한다(쓰기 없음). 하나라도 거절이면 거절 전부(명령 순서 index)를 돌려준다. */
+export function planFlowOps(
+  state: DiagramState,
+  existing: Flow[],
+  ops: FlowOp[],
+): { ok: true; changed: number } | { ok: false; rejected: { index: number; reason: string }[] } {
+  const rejected: { index: number; reason: string }[] = [];
+  judgeFlowOps(state, existing, ops).forEach((o, index) => {
+    if (o.kind === "rejected") rejected.push({ index, reason: o.reason });
+  });
+  return rejected.length ? { ok: false, rejected } : { ok: true, changed: ops.length };
+}
+
 /** 이 노드·연결을 지나는 흐름(끊긴 단계는 세지 않는다). */
 export function flowsThrough(state: DiagramState, flows: Flow[], id: string): Flow[] {
   return flows.filter((f) =>
