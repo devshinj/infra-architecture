@@ -13,6 +13,7 @@ vi.mock("@/app/(app)/actions", () => ({
   setZoneTypeAction: vi.fn(async () => ({ ok: true, number: 2 })),
   listTermsAction: vi.fn(async () => []),
   confirmAssumptionAction: vi.fn(async () => ({ ok: true })),
+  removeNoLinkAction: vi.fn(async () => ({ ok: true, number: 2 })),
   renameFlowAction: vi.fn(async () => ({ ok: true })), deleteFlowAction: vi.fn(async () => ({ ok: true })), confirmFlowAction: vi.fn(async () => ({ ok: true })), removeFlowStepAction: vi.fn(async () => ({ ok: true })),
 }));
 vi.mock("@/canvas/Canvas", () => ({
@@ -54,7 +55,7 @@ vi.mock("@/ui/chat/useChatTurn", () => ({
 
 import { readFileSync } from "node:fs";
 
-import { clearPinnedAction, confirmAssumptionAction, getVersionAction, importSampleAction, listVersionsAction, removeFlowStepAction, saveFieldsAction, setWarningIgnoredAction, setZoneTypeAction } from "@/app/(app)/actions";
+import { clearPinnedAction, confirmAssumptionAction, getVersionAction, importSampleAction, listVersionsAction, removeFlowStepAction, removeNoLinkAction, saveFieldsAction, setWarningIgnoredAction, setZoneTypeAction } from "@/app/(app)/actions";
 import { emptyState } from "@/domain/types";
 import { DiagramWorkspace } from "@/ui/DiagramWorkspace";
 import { ShellProvider } from "@/ui/Shell";
@@ -1158,4 +1159,20 @@ test("망 지식을 넘기면 연결 방식 예상과 망 종류 맞아요가 �
   fireEvent.click(screen.getByRole("button", { name: "구성 정보 펼치기" }));
   expect(screen.queryByText(/망연계가 필요해요/)).not.toBeInTheDocument();
   expect(screen.queryByRole("button", { name: "맞아요" })).not.toBeInTheDocument();
+});
+
+test("가정 칩에서 망연계 거절 기억을 지우면 서버에 지우고 칩이 사라진다", async () => {
+  hookState.busy = false;
+  hookState.lines = [];
+  stubFetch();
+  const key = "no_link:admin-net--gcloud-internet";
+  const latest = { number: 1, state: { ...adminCase(), assumptions: { [key]: { key, value: "망연계 없이 통신(사용자 확인)", confirmed: true } } } };
+  render(<DiagramWorkspace diagramId="d" name="n" latest={latest as never} initialPinned={{}} samples={[]} knowledge={KNOWLEDGE} />);
+  fireEvent.click(cardToggle());
+  expect(screen.getByText("망연계 없음: 행정망 ↔ GCloud 인터넷망")).toBeInTheDocument();
+  await act(async () => {
+    fireEvent.click(screen.getByRole("button", { name: "행정망 ↔ GCloud 인터넷망 망연계 없음 기억 지우기" }));
+  });
+  expect(removeNoLinkAction).toHaveBeenCalledWith("d", key);
+  expect(screen.queryByText("망연계 없음: 행정망 ↔ GCloud 인터넷망")).not.toBeInTheDocument();
 });

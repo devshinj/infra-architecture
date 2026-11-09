@@ -27,7 +27,7 @@ import { saveFieldsFor, type SaveFieldsInput } from "@/server/fields";
 import { BusyError, confirmFlow, deleteFlow, removeFlowStep, renameFlow } from "@/server/flows";
 import { ensureSeeded, listTerms, updateTerm, type TermPatch } from "@/server/glossary";
 import { setWarningIgnoredFor } from "@/server/ignore";
-import { confirmLinkGuessFor, rejectLinkGuessFor } from "@/server/linkGuess";
+import { confirmLinkGuessFor, rejectLinkGuessFor, removeNoLinkFor } from "@/server/linkGuess";
 import { setZoneTypeFor } from "@/server/zoneType";
 import { importSample, SAMPLES } from "@/server/samples";
 import { listMessages } from "@/server/chat/messages";
@@ -268,6 +268,17 @@ export async function rejectLinkGuessAction(
 ): Promise<ActionResult<{ number: number | null; partial: boolean }>> {
   return runResult(async (uid) => {
     const r = await rejectLinkGuessFor(uid, diagramId, nodeId);
+    refreshDiagram();
+    return r;
+  });
+}
+
+export async function removeNoLinkAction(
+  diagramId: string,
+  key: string,
+): Promise<ActionResult<{ number: number | null }>> {
+  return runResult(async (uid) => {
+    const r = await removeNoLinkFor(uid, diagramId, key);
     refreshDiagram();
     return r;
   });

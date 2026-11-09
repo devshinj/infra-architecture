@@ -10,7 +10,7 @@ import { BUSY_MESSAGE } from "@/server/chat/busy";
 import { withDiagramLock } from "@/server/chat/lock";
 import { summarizeState } from "@/server/chat/prompt";
 import { applyFlowOps, listFlows } from "@/server/flows";
-import { confirmLinkGuessFor, rejectLinkGuessFor } from "@/server/linkGuess";
+import { confirmLinkGuessFor, rejectLinkGuessFor, removeNoLinkFor } from "@/server/linkGuess";
 import { NotFoundError, ValidationError } from "@/server/projects";
 import { createVersion, getLatestState } from "@/server/versions";
 import { setZoneTypeFor } from "@/server/zoneType";
@@ -78,7 +78,7 @@ describe("confirmLinkGuessFor", () => {
 });
 
 describe("rejectLinkGuessFor", () => {
-  test("노드만 지우고 원래 연결 복원, 확정 no_link 가정, 경고 무시, 흐름 단계 합침, 버전 하나", async () => {
+  test("노드만 지우고 원래 연결 복원, 확정 no_link 가정(경고 무시 목록에는 넣지 않는다), 흐름 단계 합침, 버전 하나", async () => {
     const ids = await setup();
     await applyFlowOps(ids.diagramId, guessed(), [{
       op: "add_flow", id: "f", name: "흐름", origin: "user", result: "끝",
@@ -94,7 +94,8 @@ describe("rejectLinkGuessFor", () => {
     expect(s.edges.e0).toMatchObject({ from: "web", to: "db" });
     const key = noLinkKey("biz", "adm");
     expect(s.assumptions[key]).toEqual({ key, value: "망연계 없이 통신(사용자 확인)", confirmed: true });
-    expect(s.ignoredWarnings).toContain(linkWarningId("link_expected", "biz", "adm"));
+    // 안내는 확정 가정으로 꺼진다. 무시 목록에 넣으면 가정을 지워도 안내가 꺼진 채 남는다.
+    expect(s.ignoredWarnings ?? []).not.toContain(linkWarningId("link_expected", "biz", "adm"));
     const [f] = await listFlows(ids.userId, ids.diagramId);
     expect(f.steps.map((x) => x.edge)).toEqual(["e0"]);
   });
@@ -136,6 +137,26 @@ describe("rejectLinkGuessFor", () => {
     expect(evaluateNetworkRules(after, KNOWLEDGE).some((w) => w.rule === "link_expected")).toBe(false);
     // 다음 차례 프롬프트에 확정 가정이 실려 AI 가 망연계를 다시 넣지 않게 한다.
     expect(summarizeState(after, KNOWLEDGE)).toContain(`가정 ${JSON.stringify(key)}=${JSON.stringify("망연계 없이 통신(사용자 확인)")} (확정)`);
+  });
+
+  test("removeNoLinkFor: 거절 기억을 지우면 버전 하나, 그 구간 안내가 다시 보인다", async () => {
+    const key = noLinkKey("admin-net", "gcloud-internet");
+    const s = adminCase();
+    s.assumptions[key] = { key, value: "망연계 없이 통신(사용자 확인)", confirmed: true };
+    s.assumptions.scale = { key: "scale", value: "소규모", confirmed: false };
+    expect(evaluateNetworkRules(s, KNOWLEDGE).some((w) => w.rule === "link_expected")).toBe(false);
+    const ids = await setup(s);
+    expect(await removeNoLinkFor(ids.userId, ids.diagramId, key)).toEqual({ number: 2 });
+    const after = await latest(ids.diagramId);
+    expect(Object.keys(after.assumptions)).toEqual(["scale"]);
+    expect(evaluateNetworkRules(after, KNOWLEDGE).some((w) => w.rule === "link_expected")).toBe(true);
+    // 이미 없으면 버전 없음.
+    expect(await removeNoLinkFor(ids.userId, ids.diagramId, key)).toEqual({ number: null });
+    expect(await count(ids.diagramId)).toBe(2);
+    // 망연계 거절 기억이 아닌 가정은 지우지 않는다.
+    await expect(removeNoLinkFor(ids.userId, ids.diagramId, "scale")).rejects.toThrow(ValidationError);
+    const other = await makeOwnedDiagram();
+    await expect(removeNoLinkFor(other.userId, ids.diagramId, key)).rejects.toThrow(NotFoundError);
   });
 
   test("잠금 중이면 BUSY_MESSAGE", async () => {

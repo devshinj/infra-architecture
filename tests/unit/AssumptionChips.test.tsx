@@ -83,3 +83,22 @@ test("AssumptionChips: no_link 가정은 망 이름 짝으로 보인다", () => 
   expect(screen.queryByRole("button", { name: /망연계 없음/ })).not.toBeInTheDocument();
   expect(screen.queryByText(/no_link:/)).not.toBeInTheDocument();
 });
+
+test("AssumptionChips: no_link 가정은 지우기 단추로 지운다(이력 보기·바쁠 때는 못 지운다)", async () => {
+  const groups = {
+    "admin-net": { id: "admin-net", groupKind: "network_zone" as const, label: "행정망", parent: null },
+    "gcloud-internet": { id: "gcloud-internet", groupKind: "network_zone" as const, label: "GCloud 인터넷망", parent: null },
+  };
+  const key = "no_link:admin-net--gcloud-internet";
+  const assumptions = { [key]: { key, value: "망연계 없이 통신(사용자 확인)", confirmed: true } };
+  const onRemoveNoLink = vi.fn();
+  const name = "행정망 ↔ GCloud 인터넷망 망연계 없음 기억 지우기";
+  const { rerender } = render(<AssumptionChips assumptions={assumptions} groups={groups} busy={false} onChoose={vi.fn()} onConfirm={vi.fn()} onRemoveNoLink={onRemoveNoLink} />);
+  await userEvent.click(screen.getByRole("button", { name }));
+  expect(onRemoveNoLink).toHaveBeenCalledWith(key);
+  rerender(<AssumptionChips assumptions={assumptions} groups={groups} busy onChoose={vi.fn()} onConfirm={vi.fn()} onRemoveNoLink={onRemoveNoLink} />);
+  expect(screen.getByRole("button", { name })).toBeDisabled();
+  rerender(<AssumptionChips assumptions={assumptions} groups={groups} busy={false} readOnly onChoose={vi.fn()} onConfirm={vi.fn()} onRemoveNoLink={onRemoveNoLink} />);
+  expect(screen.queryByRole("button", { name })).not.toBeInTheDocument();
+  expect(screen.getByText("망연계 없음: 행정망 ↔ GCloud 인터넷망")).toBeInTheDocument();
+});

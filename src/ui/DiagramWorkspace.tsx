@@ -9,6 +9,7 @@ import {
   getVersionAction,
   importSampleAction,
   listVersionsAction,
+  removeNoLinkAction,
   restoreVersionAction,
   saveFieldsAction,
   savePinnedAction,
@@ -593,6 +594,27 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
     void confirmKey(key, a.value);
   };
 
+  // 망연계 거절 기억 지우기(가정 칩): 서버에 지우고 화면에서도 뺀다. 그 구간의 망연계 안내가 다시 보인다.
+  const onRemoveNoLink = async (key: string) => {
+    if (!live || chat.busy || !current.state.assumptions[key]) return;
+    toDiagramChat(); // 실패 줄이 보이게
+    try {
+      const r = await removeNoLinkAction(diagramId, key);
+      if (!r.ok) {
+        pushDiagramLine({ kind: "error", text: r.error });
+        return;
+      }
+      setCurrent((c) => {
+        const assumptions = { ...c.state.assumptions };
+        delete assumptions[key];
+        return { number: c.number, state: { ...c.state, assumptions } };
+      });
+      refreshFromServer();
+    } catch {
+      pushDiagramLine({ kind: "error", text: "망연계 없음 기억을 지우지 못했어요. 다시 시도해 주세요." });
+    }
+  };
+
   // 구성 정보 카드(캔버스 왼쪽 아래). 초안·카드 펼침(위)·블록 펼침은 여기 둔다: 카드를 접으면 내용이 내려간다.
   const [checklistDrafts, setChecklistDrafts] = useState<ChecklistDrafts>({});
   const [checklistExpanded, setChecklistExpanded] = useState<ChecklistExpanded>({});
@@ -886,6 +908,7 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
               scrollToWarnings={warnScroll}
               onChooseAssumption={(k, v) => void onChooseAssumption(k, v)}
               onConfirmAssumption={onConfirmAssumption}
+              {...(live ? { onRemoveNoLink: (k: string) => void onRemoveNoLink(k) } : {})}
               onSelectWarning={onSelectWarning}
               onMeasure={onCardMeasure}
               {...(live ? { zoneType: { diagramId, onSaved: onZoneTypeSaved } } : {})}

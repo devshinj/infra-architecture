@@ -29,6 +29,8 @@ export interface InfoCardProps {
   zoneType?: ZoneTypeSave;
   onChooseAssumption(key: string, value: string): void;
   onConfirmAssumption(key: string): void;
+  /** 망연계 거절 기억(no_link 가정) 지우기. 없으면 지우기 단추를 숨긴다. */
+  onRemoveNoLink?(key: string): void;
   /** 주의 항목 클릭: 그 노드를 선택한다(설명 탭 → 주의할 점). */
   onSelectWarning(nodeId: string): void;
   /** 카드 크기(px): 카메라가 접힌 줄 높이만큼 아래를 비우고, 열린 카드는 위치 보기에서 피한다. */
@@ -86,7 +88,7 @@ function GuessedZones({ state, warning, readOnly, busy, zoneType }: { state: Dia
  * 캔버스 왼쪽 아래의 구성 정보 카드. 접히면 한 줄(채워야 할 정보·주의·미확정 가정 수),
  * 펼치면 위로 열려 가정 → 채워야 할 정보 → 주의 세 절을 보인다.
  */
-export function InfoCard({ state, readOnly, busy, open, onOpenChange, scrollToWarnings, checklist, onChooseAssumption, onConfirmAssumption, onSelectWarning, onMeasure, zoneType }: InfoCardProps) {
+export function InfoCard({ state, readOnly, busy, open, onOpenChange, scrollToWarnings, checklist, onChooseAssumption, onConfirmAssumption, onRemoveNoLink, onSelectWarning, onMeasure, zoneType }: InfoCardProps) {
   const knowledge = useNetworkKnowledge();
   const k = knowledge ?? undefined;
   const miss = useMemo(() => computeMissing(state, k), [state, k]);
@@ -162,7 +164,7 @@ export function InfoCard({ state, readOnly, busy, open, onOpenChange, scrollToWa
           <section className={styles.section} aria-label="가정">
             <h3 className={styles.heading}>가정</h3>
             {assumptionCount > 0 ? (
-              <AssumptionChips assumptions={state.assumptions} groups={state.groups} busy={busy} readOnly={readOnly} onChoose={onChooseAssumption} onConfirm={onConfirmAssumption} />
+              <AssumptionChips assumptions={state.assumptions} groups={state.groups} busy={busy} readOnly={readOnly} onChoose={onChooseAssumption} onConfirm={onConfirmAssumption} {...(onRemoveNoLink ? { onRemoveNoLink } : {})} />
             ) : (
               <p className={styles.empty}>AI 가 세운 가정이 없어요.</p>
             )}

@@ -16,6 +16,8 @@ export interface AssumptionChipsProps {
   readOnly?: boolean;
   /** 망연계 거절 가정(no_link)의 망 이름을 찾는다. 없으면 id 를 보인다. */
   groups?: Record<string, Group>;
+  /** 망연계 거절 기억(no_link 가정)을 지운다. 주면 그 칩에 지우기 단추가 생긴다(이력 보기에서는 없다). */
+  onRemoveNoLink?(key: string): void;
 }
 
 const labelOf = (key: string) => ASSUMPTION_LABELS[key] ?? key;
@@ -28,7 +30,7 @@ function orderedKeys(assumptions: Record<string, Assumption>): string[] {
   return [...known, ...other];
 }
 
-export function AssumptionChips({ assumptions, busy, onChoose, onConfirm, readOnly = false, groups }: AssumptionChipsProps) {
+export function AssumptionChips({ assumptions, busy, onChoose, onConfirm, readOnly = false, groups, onRemoveNoLink }: AssumptionChipsProps) {
   const [open, setOpen] = useState<string | null>(null);
   const root = useRef<HTMLUListElement>(null);
 
@@ -72,7 +74,7 @@ export function AssumptionChips({ assumptions, busy, onChoose, onConfirm, readOn
         const a = assumptions[key]!;
         const isOpen = open === key;
         const choices = ASSUMPTION_CHOICES[key] ?? [];
-        // 망연계 거절 기억: 망 이름 짝으로만 보이고 고를 대안이 없다.
+        // 망연계 거절 기억: 망 이름 짝으로만 보이고 고를 대안이 없다. 지우면 그 구간의 안내가 다시 보인다.
         const noLink = parseNoLinkKey(key);
         if (noLink) {
           const [nameA, nameB] = noLink.map((id) => groups?.[id]?.label ?? id);
@@ -82,6 +84,18 @@ export function AssumptionChips({ assumptions, busy, onChoose, onConfirm, readOn
                 <span>{`망연계 없음: ${nameA} ↔ ${nameB}`}</span>
                 {a.confirmed && <span className={styles.assumptionMark}>확정</span>}
               </span>
+              {onRemoveNoLink && !readOnly && (
+                <button
+                  type="button"
+                  className={styles.assumptionRemove}
+                  aria-label={`${nameA} ↔ ${nameB} 망연계 없음 기억 지우기`}
+                  title="지우면 이 구간의 망연계 안내가 다시 보여요"
+                  disabled={busy}
+                  onClick={() => onRemoveNoLink(key)}
+                >
+                  지우기
+                </button>
+              )}
             </li>
           );
         }

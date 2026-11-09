@@ -1,8 +1,7 @@
-import { noLinkKey } from "@/domain/assumptions";
+import { noLinkKey, parseNoLinkKey } from "@/domain/assumptions";
 import { networkZoneOf } from "@/domain/boundary";
 import { mergeFlowSteps, revertLinkGuess } from "@/domain/linkGuess";
-import { pairKey } from "@/domain/network";
-import { crossingPaths, linkWarningId } from "@/domain/networkRules";
+import { crossingPaths } from "@/domain/networkRules";
 import { emptyState, type DiagramState } from "@/domain/types";
 import { BUSY_MESSAGE } from "@/server/chat/busy";
 import { withDiagramLock } from "@/server/chat/lock";
@@ -35,8 +34,8 @@ export async function confirmLinkGuessFor(
 }
 
 /**
- * "아니에요": 망연계 노드만 지우고 원래 연결을 되살린다. 그 망 짝은 "망연계 없이 통신"으로 확정해 기억하고,
- * 같은 짝의 망연계 예상 경고는 무시한다. 흐름 단계는 다시 합친다(실패해도 되돌리기는 끝난 것으로 본다).
+ * "아니에요": 망연계 노드만 지우고 원래 연결을 되살린다. 그 망 짝은 "망연계 없이 통신"으로 확정해 기억한다
+ * (그 가정이 같은 짝의 망연계 예상 안내를 끈다). 흐름 단계는 다시 합친다(실패해도 되돌리기는 끝난 것으로 본다).
  */
 export async function rejectLinkGuessFor(
   userId: string,
@@ -53,9 +52,9 @@ export async function rejectLinkGuessFor(
 
     // 이 망연계를 지나던 통신 길의 두 끝(경계 노드가 아닌 노드)이 속한 망 짝(되돌리기 전 상태 기준).
     // 방화벽이 망 밖에 그려져 대신한 연결의 끝이 망 밖이어도 짝을 찾는다.
-    const pairs = new Map<string, [string, string]>();
+    const pairs = new Set<string>();
     const addPair = (a: string | null, b: string | null) => {
-      if (a && b && a !== b) pairs.set(noLinkKey(a, b), pairKey(a, b));
+      if (a && b && a !== b) pairs.add(noLinkKey(a, b));
     };
     for (const p of crossingPaths(before)) {
       if (p.via.includes(nodeId)) addPair(networkZoneOf(before, p.from), networkZoneOf(before, p.to));
@@ -66,15 +65,13 @@ export async function rejectLinkGuessFor(
       addPair(networkZoneOf(before, e.from), networkZoneOf(before, e.to));
     }
 
+    // 확정한 no_link 가정이 그 짝의 망연계 예상 안내를 끈다(경고 무시 목록에는 넣지 않는다: 가정을 지우면 안내가 다시 보이게).
     const state: DiagramState = structuredClone(r.state);
-    const ignored = new Set(state.ignoredWarnings ?? []);
-    for (const [key, [a, b]] of pairs) {
+    for (const key of pairs) {
       if (!state.assumptions[key]?.confirmed) {
         state.assumptions[key] = { key, value: NO_LINK_VALUE, confirmed: true };
       }
-      ignored.add(linkWarningId("link_expected", a, b));
     }
-    if (ignored.size > 0) state.ignoredWarnings = [...ignored];
 
     const { number } = await createVersion(diagramId, state, { source: "form" });
     if (r.merges.length > 0) {
@@ -85,6 +82,23 @@ export async function rejectLinkGuessFor(
       }
     }
     return { number, partial: r.partial };
+  });
+  if (!locked.ok) throw new ValidationError(BUSY_MESSAGE);
+  return locked.value;
+}
+
+/** 가정 칩의 지우기: 망연계 거절 기억(no_link 가정) 하나를 지운다. 그 짝의 안내가 다시 보인다. 없으면 `number: null`. */
+export async function removeNoLinkFor(userId: string, diagramId: string, key: string): Promise<{ number: number | null }> {
+  await getOwnedDiagram(userId, diagramId);
+  if (typeof key !== "string" || !parseNoLinkKey(key)) throw new ValidationError("가정 항목이 올바르지 않아요");
+  const locked = await withDiagramLock(diagramId, async () => {
+    const latest = await getLatestState(diagramId);
+    const before = latest?.state ?? emptyState();
+    if (!Object.hasOwn(before.assumptions, key)) return { number: null };
+    const state: DiagramState = structuredClone(before);
+    delete state.assumptions[key];
+    const { number } = await createVersion(diagramId, state, { source: "form" });
+    return { number };
   });
   if (!locked.ok) throw new ValidationError(BUSY_MESSAGE);
   return locked.value;
