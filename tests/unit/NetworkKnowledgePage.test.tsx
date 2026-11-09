@@ -132,3 +132,32 @@ test("쓰지 않는 종류를 가리키는 기관 규칙을 고쳐도 그 종류
   await user.click(within(form).getByRole("button", { name: "저장" }));
   expect(fns.upsertNetworkRuleAction).toHaveBeenCalledWith({ a: "dmz", b: "internet", method: "firewall", note: "" });
 });
+
+test("기관 규칙 고치기에서는 두 종류를 바꿀 수 없고, 방식·근거만 바꿔 같은 짝으로 저장한다", async () => {
+  const user = userEvent.setup();
+  fns.upsertNetworkRuleAction.mockResolvedValue({ ok: true, rules: [] });
+  render(
+    <NetworkKnowledgePage
+      initialTypes={types}
+      initialRules={[{ id: "r1", a: "dmz", b: "internal-net", method: "firewall", note: "" }]}
+    />,
+  );
+  await user.click(screen.getByRole("button", { name: /규칙 고치기/ }));
+  const form = screen.getByRole("form", { name: "기관 규칙 고치기" });
+  expect(within(form).getByLabelText("종류 하나")).toBeDisabled();
+  expect(within(form).getByLabelText("다른 종류")).toBeDisabled();
+  expect(within(form).getByText("종류를 바꾸려면 이 규칙을 지우고 새로 추가해 주세요.")).toBeInTheDocument();
+  await user.selectOptions(within(form).getByLabelText("연결 방식"), "network_link");
+  await user.type(within(form).getByLabelText("근거"), "지침 2조");
+  await user.click(within(form).getByRole("button", { name: "저장" }));
+  expect(fns.upsertNetworkRuleAction).toHaveBeenCalledWith({ a: "dmz", b: "internal-net", method: "network_link", note: "지침 2조" });
+});
+
+test("기관 규칙 추가에서는 두 종류를 고를 수 있다", async () => {
+  const user = userEvent.setup();
+  render(<NetworkKnowledgePage initialTypes={types} initialRules={[]} />);
+  await user.click(screen.getByRole("button", { name: "기관 규칙 추가" }));
+  const form = screen.getByRole("form", { name: "기관 규칙 추가" });
+  expect(within(form).getByLabelText("종류 하나")).toBeEnabled();
+  expect(within(form).queryByText("종류를 바꾸려면 이 규칙을 지우고 새로 추가해 주세요.")).toBeNull();
+});

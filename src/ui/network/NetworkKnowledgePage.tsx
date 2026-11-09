@@ -319,10 +319,12 @@ function RuleForm({ draft, options, pending, onSave, onCancel }: {
   const set = <K extends keyof RuleDraft>(k: K, v: RuleDraft[K]) => setD((x) => ({ ...x, [k]: v }));
   // 쓰지 않는 종류는 고를 수 없지만, 이 규칙이 이미 가리키는 종류는 보여야 한다(안 그러면 다른 값이 보인다).
   const shown = options.filter((t) => !t.hidden || t.key === d.a || t.key === d.b);
+  // 고칠 때는 두 종류를 바꾸지 못한다(바꾸면 새 규칙이 생기고 옛 규칙이 남는다). 방식·근거만 고친다.
+  const editing = !!draft.id;
   const typeSelect = (label: string, k: "a" | "b") => (
     <label>
       {label}
-      <select value={d[k]} onChange={(e) => set(k, e.target.value)}>
+      <select value={d[k]} disabled={editing} onChange={(e) => set(k, e.target.value)}>
         {shown.map((t) => <option key={t.key} value={t.key}>{t.hidden ? `${t.name} (쓰지 않음)` : t.name}</option>)}
       </select>
     </label>
@@ -331,6 +333,7 @@ function RuleForm({ draft, options, pending, onSave, onCancel }: {
     <form className={styles.form} aria-label={draft.id ? "기관 규칙 고치기" : "기관 규칙 추가"} onSubmit={(e) => { e.preventDefault(); onSave(d); }}>
       {typeSelect("종류 하나", "a")}
       {typeSelect("다른 종류", "b")}
+      {editing && <p className={styles.meta}>종류를 바꾸려면 이 규칙을 지우고 새로 추가해 주세요.</p>}
       <label>
         연결 방식
         <select value={d.method} onChange={(e) => set("method", e.target.value as LinkMethod)}>
