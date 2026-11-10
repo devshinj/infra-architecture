@@ -46,6 +46,7 @@ import {
   upsertNetworkRule,
   type NetTypeRow,
 } from "@/server/network";
+import { createMcpKey, deleteMcpKey, listMcpKeys } from "@/server/mcpKeys";
 import { getVersion, listVersions, restoreVersionWithMessage } from "@/server/versions";
 
 const DIAGRAM_ROUTE = "/p/[projectId]/d/[diagramId]";
@@ -501,4 +502,36 @@ export async function deleteNetworkRuleAction(id: string): Promise<ActionResult<
 
 export async function logoutAction(): Promise<void> {
   await signOut({ redirectTo: "/login" });
+}
+
+/** Claude Code 연결 키. 날짜는 문자열로 넘긴다(화면에서 그대로 보이고 서버 액션 경계도 가볍다). */
+export type McpKeyRow = { id: string; name: string; prefix: string; createdAt: string; lastUsedAt: string | null };
+
+const toKeyRow = (k: Awaited<ReturnType<typeof listMcpKeys>>[number]): McpKeyRow => ({
+  id: k.id,
+  name: k.name,
+  prefix: k.prefix,
+  createdAt: k.createdAt.toISOString(),
+  lastUsedAt: k.lastUsedAt ? k.lastUsedAt.toISOString() : null,
+});
+
+export async function listMcpKeysAction(): Promise<ActionResult<{ keys: McpKeyRow[] }>> {
+  return runResult(async (uid) => ({ keys: (await listMcpKeys(uid)).map(toKeyRow) }));
+}
+
+/** 키 원문은 이 응답으로만 한 번 나간다. */
+export async function createMcpKeyAction(name: string): Promise<ActionResult<{ id: string; key: string; prefix: string }>> {
+  return runResult(async (uid) => {
+    const k = await createMcpKey(uid, typeof name === "string" ? name : "");
+    revalidatePath("/claude-code");
+    return k;
+  });
+}
+
+export async function deleteMcpKeyAction(id: string): Promise<ActionResult> {
+  return runResult(async (uid) => {
+    await deleteMcpKey(uid, reqString(id, "키"));
+    revalidatePath("/claude-code");
+    return {};
+  });
 }

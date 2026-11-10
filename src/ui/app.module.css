@@ -35,7 +35,7 @@
 .railFoot { position: relative; margin-top: auto; }
 .accountPop {
   position: absolute; left: calc(100% + 10px); bottom: 0; z-index: 30; min-width: 160px;
-  display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 8px 8px 12px; font-size: 13px;
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 8px 8px 12px; font-size: 13px;
   background: var(--bg-panel-raised); border: 1px solid var(--line-node); border-radius: var(--radius-node);
 }
 .accountPop span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -81,7 +81,7 @@
 .menu button:disabled { opacity: 0.5; cursor: default; }
 .menu .menuDanger { color: var(--state-missing-text); }
 .sideFoot { padding: 8px; border-top: 1px solid var(--glass-line); display: flex; flex-direction: column; gap: 8px; }
-.user { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 12px; color: var(--text-secondary); padding: 0 4px; }
+.user { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; font-size: 12px; color: var(--text-secondary); padding: 0 4px; }
 .user span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .btn {
   font: inherit; font-size: 13px; color: var(--text-primary); background: var(--bg-node);
@@ -105,6 +105,7 @@
 .linkBtn:hover { color: var(--text-primary); }
 .sideLink { font-size: 13px; color: var(--text-secondary); text-decoration: none; padding: 4px; border-radius: 4px; }
 .sideLinkActive { color: var(--text-primary); background: var(--bg-panel-raised); font-weight: 600; }
+.accountLink { flex: 1 0 100%; }
 .sideLink:hover { color: var(--text-primary); }
 .sideLink:focus-visible { outline: 1.5px solid var(--text-secondary); outline-offset: 2px; }
 .sidebar button:focus-visible, .panel button:focus-visible, .banner button:focus-visible, .dialog button:focus-visible, .dialog input:focus-visible { outline: 1.5px solid var(--text-secondary); outline-offset: 2px; }
