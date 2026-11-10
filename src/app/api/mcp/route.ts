@@ -25,13 +25,16 @@ function bearerKey(request: Request): string | null {
 export async function POST(request: Request) {
   const key = bearerKey(request);
   if (!key) return NextResponse.json({ error: NO_KEY }, { status: 401 });
-  // 키는 왔는데 틀렸거나 지워졌으면 403. 401 이면 Claude Code(SDK)가 OAuth 를 찾아 나서서 이 문구가 안 보인다.
-  const userId = await verifyMcpKey(key);
-  if (!userId) return NextResponse.json({ error: WRONG_KEY }, { status: 403 });
 
-  const server = createMcpServer(userId);
-  const transport = new WebStandardStreamableHTTPServerTransport({ sessionIdGenerator: undefined, enableJsonResponse: true });
+  let server: ReturnType<typeof createMcpServer> | null = null;
   try {
+    // 키 확인도 try 안에서 한다. DB 가 안 되면 Next 기본 HTML 500 대신 아래 JSON 500 으로 답한다.
+    const userId = await verifyMcpKey(key);
+    // 키는 왔는데 틀렸거나 지워졌으면 403. 401 이면 Claude Code(SDK)가 OAuth 를 찾아 나서서 이 문구가 안 보인다.
+    if (!userId) return NextResponse.json({ error: WRONG_KEY }, { status: 403 });
+
+    server = createMcpServer(userId);
+    const transport = new WebStandardStreamableHTTPServerTransport({ sessionIdGenerator: undefined, enableJsonResponse: true });
     await server.connect(transport);
     return await transport.handleRequest(request);
   } catch (err) {
@@ -39,7 +42,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: GENERIC }, { status: 500 });
   } finally {
     // JSON 응답은 handleRequest 가 끝나면 다 만들어져 있다.
-    await server.close();
+    await server?.close();
   }
 }
 
