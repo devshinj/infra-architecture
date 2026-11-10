@@ -10,20 +10,20 @@
 }
 .main { position: absolute; inset: 0; min-width: 0; min-height: 0; }
 /* 캔버스가 아닌 화면은 떠 있는 사이드바 오른쪽에서 시작한다(--shell-inset-left 는 Shell.tsx 가 준다). */
-/* 빈 홈: 아직 아무것도 그리지 않은 한 장. 모서리 눈금만 있는 빈 도면 안 왼쪽 아래에 제목·설명·시작 버튼을 둔다. */
+/* 빈 홈: 빈 구성도(작업 화면 캔버스가 비었을 때)와 한 가족. 점 격자 캔버스 가운데에 모서리 눈금을 두른 안내 한 덩이. */
 .emptyState {
-  box-sizing: border-box; height: 100%; display: grid; padding: 24px; padding-left: calc(var(--shell-inset-left, 0px) + var(--safe-l, 0px) + 24px);
+  box-sizing: border-box; height: 100%; display: grid; place-items: center; padding: 24px; padding-left: calc(var(--shell-inset-left, 0px) + var(--safe-l, 0px) + 24px);
 }
 .emptySheet {
-  position: relative; display: flex; flex-direction: column; justify-content: flex-end; align-items: flex-start; gap: 12px;
-  min-width: 0; padding: 40px; color: var(--text-primary);
+  display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center;
+  min-width: 0; max-width: 480px; padding: 32px 40px; background: var(--bg-canvas); color: var(--text-primary);
 }
 .emptySheet h1 {
   margin: 0; max-width: 20ch; font-size: var(--text-hero); font-weight: var(--weight-display); line-height: 1.1;
   letter-spacing: var(--tracking-display); overflow-wrap: break-word; min-width: 0; text-wrap: balance; word-break: keep-all;
 }
-.emptySheet p { margin: 0; font-size: 15px; line-height: 1.6; color: var(--text-secondary); max-width: 46ch; word-break: keep-all; text-wrap: pretty; }
-.emptyActions { margin-top: 12px; display: flex; }
+.emptySheet p { margin: 0; font-size: 14px; line-height: 1.6; color: var(--text-secondary); max-width: 46ch; word-break: keep-all; text-wrap: pretty; }
+.emptyActions { margin-top: 8px; display: flex; justify-content: center; }
 .emptyActions .primaryBtn { min-height: 44px; padding: 0 24px; font-size: 14px; }
 
 .sidebar {
@@ -101,6 +101,9 @@
 .sideFoot { padding: 8px; border-top: 1px solid var(--glass-line); display: flex; flex-direction: column; gap: 8px; }
 .user { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; font-size: 12px; color: var(--text-secondary); padding: 0 4px; }
 .user span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* 펼친 사이드바 바닥: 새 프로젝트, 그 아래 화면 링크 셋(용어 사전·망 지식·Claude Code 연결)을 한 묶음으로, 계정 줄은 제 이음매 아래. */
+.pageLinks { display: flex; flex-direction: column; gap: 4px; }
+.userSeam { flex: none; padding: 8px 12px; border-top: 1px solid var(--glass-line); }
 /* 둘째 버튼: 머리카락 선 알약, 칠 없음. */
 .btn {
   font: inherit; font-size: 13px; color: var(--text-primary); background: transparent;
@@ -138,7 +141,7 @@
 }
 
 .backdrop { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; background: color-mix(in srgb, var(--bg-canvas) 70%, transparent); }
-.dialog { width: min(320px, calc(100% - 32px)); box-sizing: border-box; display: flex; flex-direction: column; gap: 12px; padding: 16px; background: var(--bg-sidebar); border: 1px solid var(--line-node); border-radius: var(--radius-card); }
+.dialog { width: min(320px, calc(100% - 32px)); box-sizing: border-box; display: flex; flex-direction: column; gap: 12px; padding: 16px; background: var(--color-paper-2); border: 1px solid var(--line-node); border-radius: var(--radius-card); }
 .dialog h2 { margin: 0; font-size: var(--text-title); font-weight: 600; }
 .dialog p { margin: 0; font-size: 13px; line-height: 1.5; }
 .dialog .dialogHint { font-size: 12px; color: var(--text-secondary); }
@@ -175,7 +178,7 @@
 .banner {
   display: flex; align-items: center; gap: 12px; padding: 8px 16px; font-size: 13px;
   margin: var(--panel-gap) calc(var(--canvas-inset-right, 0px) + var(--safe-r, 0px)) 0 calc(var(--canvas-inset-left, 0px) + var(--safe-l, 0px));
-  background: var(--bg-sidebar); border: 1px solid var(--line-node); border-radius: var(--radius-card); color: var(--text-primary);
+  background: var(--color-paper-2); border: 1px solid var(--line-node); border-radius: var(--radius-card); color: var(--text-primary);
 }
 .banner button { font: inherit; font-size: 12px; color: var(--text-primary); background: transparent; border: 1px solid var(--line-node); border-radius: var(--radius-pill); padding: 4px 12px; cursor: pointer; }
 .banner button:hover { border-color: var(--text-secondary); }

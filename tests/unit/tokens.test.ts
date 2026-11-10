@@ -20,13 +20,13 @@ function rule(css: string, selector: string): string {
 
 test("tokens.css defines the shell tokens with exact values", () => {
   const css = read("src/styles/tokens.css");
-  expect(css).toMatch(/--bg-sidebar:\s*#091015;/);
-  expect(css).toMatch(/--bg-panel:\s*#091015;/);
+  expect(css).toMatch(/--bg-sidebar:\s*#04090C;/);
+  expect(css).toMatch(/--bg-panel:\s*#04090C;/);
   expect(css).toMatch(/--bg-panel-raised:\s*#182126;/);
   expect(css).toMatch(/--line-shell:\s*#20282C;/);
-  // 캔버스·노드 토큰(Vantage paper · paper-3)
+  // 캔버스·노드 토큰(Vantage paper · 노드는 가장 깊은 영역 칠보다 한 단 밝게)
   expect(css).toMatch(/--bg-canvas:\s*#04090C;/);
-  expect(css).toMatch(/--bg-node:\s*#111A1F;/);
+  expect(css).toMatch(/--bg-node:\s*#1D252B;/);
 });
 
 test("fly dot token is a silver brighter than the glass highlight", () => {
@@ -35,9 +35,9 @@ test("fly dot token is a silver brighter than the glass highlight", () => {
   expect(read("docs/superpowers/specs/2026-10-29-infra-architecture-visualizer-design.md")).toMatch(/\| `fly-dot` \| `#DCE3EE` \|/);
 });
 
-test("floating panel tokens have exact values (flat paper-2, hairline, no blur)", () => {
+test("floating panel tokens have exact values (flat paper, hairline, no blur)", () => {
   const css = read("src/styles/tokens.css");
-  expect(css).toContain("--glass-bg: rgba(9, 16, 21, 1);");
+  expect(css).toContain("--glass-bg: rgba(4, 9, 12, 1);");
   expect(css).toContain("--glass-line: rgba(32, 40, 44, 1);");
   expect(css).not.toContain("--glass-highlight:");
   expect(css).not.toContain("--glass-blur:");
@@ -45,7 +45,7 @@ test("floating panel tokens have exact values (flat paper-2, hairline, no blur)"
   expect(css).toContain("--panel-gap: 12px;");
 });
 
-test("sidebar and panel float as flat paper-2 panels with a hairline over the full-bleed canvas", () => {
+test("sidebar and panel float as flat paper panels with a hairline over the full-bleed canvas", () => {
   const css = read("src/ui/app.module.css");
   expect(rule(css, ".shell")).toContain("background: var(--bg-canvas)");
   for (const sel of [".sidebar", ".panel"]) {

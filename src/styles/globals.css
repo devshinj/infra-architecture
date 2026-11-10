@@ -41,6 +41,13 @@ body {
   mask: conic-gradient(at var(--tick) var(--tick), transparent 75%, var(--text-primary) 0) 0 0 / calc(100% - var(--tick)) calc(100% - var(--tick));
 }
 
+/* 캔버스 점 격자: React Flow 배경과 같은 20px 간격 1px 점. 빈 홈·빈 구성도가 같은 빈 캔버스로 보이게 쓴다. */
+.dot-grid {
+  background-color: var(--bg-canvas);
+  background-image: radial-gradient(circle at 1px 1px, var(--dot-grid) 0.6px, transparent 1px);
+  background-size: 20px 20px;
+}
+
 /* 스크롤이 필요한 모든 영역(대화·구성 정보·패널·사이드바 트리·용어 사전·이력)에 얇은 테마 스크롤바를 쓴다. */
 /* Chrome 121+ 는 scrollbar-width/color 가 있으면 ::-webkit-scrollbar 를 무시한다. 웹킷 규칙을 쓸 수 있는 엔진(Chromium·Safari)은 그것을, 못 쓰는 엔진(Firefox)은 표준 속성을 쓴다. */
 @supports not selector(::-webkit-scrollbar) {

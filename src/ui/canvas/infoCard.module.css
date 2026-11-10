@@ -21,12 +21,7 @@
   border: 1px solid var(--glass-line);
   border-radius: var(--radius-panel);
 }
-/* 잰 것(채울 정보·주의·가정의 수)을 담은 판이라 모서리 눈금을 두른다(Vantage). */
-.card::before {
-  content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none; border: var(--rule-hair) solid var(--text-secondary);
-  -webkit-mask: conic-gradient(at var(--tick) var(--tick), transparent 75%, var(--text-primary) 0) 0 0 / calc(100% - var(--tick)) calc(100% - var(--tick));
-  mask: conic-gradient(at var(--tick) var(--tick), transparent 75%, var(--text-primary) 0) 0 0 / calc(100% - var(--tick)) calc(100% - var(--tick));
-}
+/* 범례와 같은 한 가지 판: paper 칠 + 머리카락 선 상자(모서리 눈금은 빈 도면·로그인 그림에만). */
 
 .toggle {
   flex: none;
@@ -50,8 +45,8 @@
 .toggle:hover { color: var(--text-primary); }
 .toggle:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: -3px; border-radius: var(--radius-card); }
 .line { flex: 1; min-width: 0; line-height: 1.5; font-variant-numeric: tabular-nums; }
-/* 한 항목(· 이름 수)은 끊지 않고, 항목 사이에서만 줄을 바꾼다. */
-.seg { white-space: nowrap; }
+/* 한 항목(이름 수)은 끊지 않고, 항목 사이에서만 줄을 바꾼다. */
+.seg { white-space: nowrap; display: inline-block; margin-left: 4px; padding-left: 4px; border-left: 1px solid var(--line-node); line-height: 1.2; }
 .title { color: var(--text-primary); font-size: 13px; font-weight: 600; white-space: nowrap; }
 .num { color: var(--text-primary); font-weight: 600; font-variant-numeric: tabular-nums; }
 .num[data-zero] { color: var(--text-secondary); font-weight: 400; opacity: 0.5; }

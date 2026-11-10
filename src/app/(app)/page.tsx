@@ -15,7 +15,7 @@ export default async function Home() {
   const projects = await listProjects(session.user.id);
   if (projects.length === 0) {
     return (
-      <div className={styles.emptyState}>
+      <div className={`${styles.emptyState} dot-grid`}>
         <section className={`${styles.emptySheet} ticks`}>
           <h1>아직 프로젝트가 없어요</h1>
           <p>프로젝트는 하나의 서비스(예: 쇼핑몰)를 담는 폴더예요.</p>
@@ -29,7 +29,7 @@ export default async function Home() {
   }
   const first = projects[0];
   return (
-    <div className={styles.emptyState}>
+    <div className={`${styles.emptyState} dot-grid`}>
       <section className={`${styles.emptySheet} ticks`}>
         <h1>구성도가 없어요</h1>
         <p>구성도는 프로젝트 안에 그리는 한 장의 그림이에요. 운영·개발처럼 나눠 여러 장 둘 수 있어요.</p>
