@@ -50,6 +50,18 @@ test("망 지식 link is current only on /network, in expanded and rail forms", 
   window.localStorage.removeItem("infrasketch.sidebarCollapsed");
 });
 
+test("Claude Code 연결 link is current only on /claude-code", () => {
+  path = "/claude-code";
+  render(<Sidebar projects={[]} userName="a" />);
+  const link = screen.getByRole("link", { name: "Claude Code 연결" });
+  expect(link).toHaveAttribute("href", "/claude-code");
+  expect(link).toHaveAttribute("aria-current", "page");
+  cleanup();
+  path = "/";
+  render(<Sidebar projects={[]} userName="a" />);
+  expect(screen.getByRole("link", { name: "Claude Code 연결" })).not.toHaveAttribute("aria-current");
+});
+
 // ---- 접는 사이드바 (P3D Task 6) ----
 const COLLAPSE_KEY = "infrasketch.sidebarCollapsed";
 const shell = () => (
