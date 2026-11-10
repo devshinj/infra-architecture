@@ -6,13 +6,13 @@
 .lead { margin: 0; font-size: 14px; line-height: 1.6; color: var(--text-secondary); max-width: 64ch; word-break: keep-all; }
 .section { display: flex; flex-direction: column; gap: 12px; }
 .section h2, .fresh h2 { margin: 0; font-size: var(--text-title); font-weight: 600; text-wrap: balance; }
-.form { display: flex; flex-direction: column; gap: 12px; padding: 16px; background: var(--bg-sidebar); border: 0; border-radius: var(--radius-card); max-width: 560px; }
+.form { display: flex; flex-direction: column; gap: 12px; padding: 16px; background: var(--color-paper-2); border: 0; border-radius: var(--radius-card); max-width: 560px; }
 .form label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--text-secondary); }
 .form input {
   font: inherit; font-size: 13px; min-height: 28px; color: var(--text-primary); background: var(--bg-panel-raised);
   border: 1px solid var(--line-input); border-radius: var(--radius-card); padding: 8px 8px;
 }
-.fresh { display: flex; flex-direction: column; gap: 12px; padding: 16px; background: var(--bg-sidebar); border: 1px solid var(--line-node); border-radius: var(--radius-card); max-width: 760px; }
+.fresh { display: flex; flex-direction: column; gap: 12px; padding: 16px; background: var(--color-paper-2); border: 1px solid var(--line-node); border-radius: var(--radius-card); max-width: 760px; }
 .warn { margin: 0; font-size: 13px; font-weight: 600; }
 .code { display: block; font-family: var(--font-mono); font-size: 12.5px; line-height: 1.5; padding: 8px 12px; background: var(--bg-canvas); border: 1px solid var(--line-shell); border-radius: var(--radius-card); overflow-wrap: anywhere; user-select: all; }
 .meta { margin: 0; font-size: 12px; line-height: 1.4; color: var(--text-secondary); }
@@ -21,10 +21,12 @@
 .table th, .table td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line-shell); }
 .table th { font-weight: 600; color: var(--text-secondary); font-size: 12px; }
 .actions { display: flex; flex-wrap: wrap; gap: 8px; }
+/* 버튼 34px, 누를 자리는 위아래로 넓혀 44px. */
 .btn {
-  font: inherit; font-size: 13px; min-height: 28px; color: var(--text-primary); background: transparent;
-  border: 1px solid var(--line-node); border-radius: var(--radius-pill); padding: 4px 12px; cursor: pointer;
+  position: relative; font: inherit; font-size: 13px; min-height: 34px; color: var(--text-primary); background: transparent;
+  border: 1px solid var(--line-node); border-radius: var(--radius-pill); padding: 4px 16px; cursor: pointer;
 }
+.btn::before { content: ""; position: absolute; inset: -5px 0; }
 .btn:hover:not(:disabled) { border-color: var(--text-secondary); }
 .btn:active:not(:disabled) { background: var(--bg-panel-raised); }
 .btn:disabled { opacity: 0.55; cursor: not-allowed; color: var(--text-secondary); }
