@@ -1,8 +1,9 @@
 /* Hallmark · part of the InfraSketch Vantage redesign, stamped in src/styles/globals.css · shape: app screen · posture: restrained */
 /*
- * 로그인 옆 장면: 대화 한 줄 → 구성도가 그려진다. 노드·영역·연결선은 캔버스 클래스(canvas.css·edges.css)를 그대로 쓰고,
- * 여기서는 자리와 나타나는 차례만 정한다. 다 그린 그림이 기본이고, 움직임은 .play 가 붙고 움직임을 꺼 두지 않았을 때만 덧입힌다.
- * 움직이는 것은 opacity·transform 과 연결선의 stroke-dashoffset 뿐이다.
+ * 로그인 옆 별자리 장면: 말 한 줄이 쳐지고, 그 말대로 구성도가 별자리처럼 켜진다.
+ * 점 = 노드(들어오는 자리는 고리, 서버는 작은 점), 등고선 = 영역(큰 반지름 머리카락 선, 왼쪽 위 틈에 이름), 부드러운 곡선 = 연결.
+ * 다 그린 장면이 기본이고, 한 번의 등장(치기 → 켜기 → 긋기)은 스크립트가 켜져 있고 움직임을 줄이지 않았을 때만 덧입힌다.
+ * 움직이는 것은 opacity·transform 과 선의 stroke-dashoffset 뿐이다. 연두는 흐름 빛과 입력 커서에만 쓴다.
  */
 /* 판(auth.module.css .showcase 와 같은 요소): 배경 층·훑기 층을 가두고, 그 위에 장면을 세운다. */
 .pane {
@@ -25,9 +26,9 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  opacity: 0.28;
-  /* 그림 속 연두 점이 장면의 흐름 빛(연두 혜성)보다 늘 어둡도록 채도도 조금 낮춘다. */
-  filter: blur(6px) saturate(0.6);
+  opacity: 0.34;
+  /* 별자리 띠가 장면과 같은 말로 읽히되, 그림 속 연두 점은 흐름 빛(연두 혜성)보다 늘 어둡도록 채도를 낮춘다. */
+  filter: blur(2px) saturate(0.45);
   transform: scale(1.06);
   pointer-events: none;
 }
@@ -88,82 +89,160 @@
   outline: 2px solid var(--focus-ring);
   outline-offset: 2px;
 }
-/* 대화 줄과 그림을 그림 폭 한 줄기로 세운다. 말풍선은 대화 탭처럼 오른쪽에 붙는다. */
+
+/* 문장과 그림이 한 왼쪽 끝을 나눈다. 판 가운데에 그림 폭 한 줄기로 선다. */
 .column {
   display: flex;
   flex-direction: column;
-  gap: 32px;
+  gap: 40px;
   width: max-content;
   max-width: 100%;
   margin-inline: auto;
 }
+/* 판의 주인공: 말 한 줄. 말풍선 없이 큰 가는 글자로, 두 줄로 나뉜다. */
 .prompt {
-  max-width: 100%;
+  max-width: 500px;
+  margin: 0;
+  font-size: clamp(26px, 2.6vw, 34px);
+  font-weight: 300;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+  word-break: keep-all;
+  text-wrap: balance;
+  overflow-wrap: break-word;
+  min-width: 0;
 }
-/* 그림은 캔버스 100% 크기(폭 512)로 그린다. 판이 그보다 좁거나(60rem 바로 위) 화면이 낮으면 캔버스를 줌아웃하듯 통째로 줄인다. */
+.char {
+  position: relative;
+}
+/* 입력 커서: 글자 하나가 쳐지는 동안만 그 글자 오른쪽에 선다(평소에는 없다). */
+.char::after {
+  content: "";
+  position: absolute;
+  top: 0.14em;
+  bottom: 0.08em;
+  right: -0.08em;
+  width: 2px;
+  background: var(--accent);
+  opacity: 0;
+}
+/* 그림은 1 = 화면 1px(폭 500). 판이 그보다 좁거나(60rem 바로 위) 화면이 낮으면 통째로 줄인다. */
 @media (max-width: 65rem), (max-height: 46rem) {
   .column {
     zoom: 0.88;
   }
 }
-.stage {
-  position: relative;
+.map {
+  display: block;
   flex: none;
+  overflow: visible;
+  font-family: var(--font-body);
 }
-.at {
-  position: absolute;
+.contour {
+  fill: none;
+  stroke: var(--scene-contour);
+  stroke-width: 1;
 }
-.zone {
-  z-index: 0;
+.zoneName {
+  font-size: 11px;
+  font-weight: 400;
+  fill: var(--text-secondary);
+  dominant-baseline: central;
 }
-.edges {
-  z-index: 9;
+.curve {
+  fill: none;
+  stroke: var(--scene-point-dim);
+  stroke-width: 1;
+  stroke-opacity: 0.75;
 }
-.name {
-  transform: translateY(-50%);
-  pointer-events: none;
+/* 노드 점: 번짐 없이 또렷하게. 고리는 바탕색으로 채워 곡선이 고리 안으로 들어오지 않는다. */
+.ring {
+  fill: var(--bg-canvas);
+  stroke: var(--scene-point);
+  stroke-width: 1;
 }
-/* 영역 이름 층은 연결선 위, 노드 아래(캔버스와 같은 순서). */
+.dot {
+  fill: var(--scene-point);
+}
+/* 켜질 때 한 번 퍼지며 사라지는 가는 고리(평소에는 없다). */
+.halo {
+  fill: none;
+  stroke: var(--scene-point);
+  stroke-width: 1;
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+}
 .label {
-  z-index: 9;
+  font-size: 12px;
+  font-weight: 500;
+  fill: var(--text-secondary);
+  dominant-baseline: central;
 }
-.node {
-  z-index: 10;
+/* 흐름 빛(혜성) 세 겹: 꼬리는 강철, 가운데는 옅은 연두, 머리는 연두. 스크립트가 길이를 재고 나서야 보인다. */
+.comet {
+  fill: none;
+  stroke-linecap: round;
+  visibility: hidden;
+}
+.cometTail {
+  stroke: var(--motion-comet-tail);
+  stroke-opacity: 0.5;
+  stroke-width: 1.6;
+}
+.cometMid {
+  stroke: var(--motion-comet-mid);
+  stroke-opacity: 0.85;
+  stroke-width: 1.8;
+}
+.cometHead {
+  stroke: var(--accent);
+  stroke-width: 2.6;
 }
 
 /*
- * 차례(대화 줄이 뜬 뒤 약 3초):
- *   0.20s  대화 줄이 8px 떠오르며 나타난다
- *   0.70s  영역이 바깥부터 차례로(60ms 간격) 옅게 깔린다
- *   1.05s  노드가 하나씩(150ms 간격) 6px 떠오르며 놓인다
- *   2.20s  연결선이 흐름 차례로(130ms 간격) 그어지고, 끝나면 화살촉·갈림점이 붙는다 — 3.2s 에 멈춘다
- * animation-fill-mode: backwards 라 시작 전까지만 숨고, 끝나면 원래(다 그린) 모습으로 돌아간다.
+ * 한 번의 등장(처음 그리는 장면만, 약 3.2초):
+ *   0.30s  말이 한 글자씩 쳐진다(45ms 간격), 마지막 글자 뒤에서 커서가 두 번 깜박이고 사라진다
+ *   1.50s  점이 흐름 차례로(120ms 간격) 켜지고, 가는 고리가 한 번 퍼진다
+ *   1.70s  영역 등고선이 그어진다(100ms 간격)
+ *   2.10s  곡선이 흐름 차례로(180ms 간격) 그어진다 — 2.96s 에 멈춘다
+ * 스크립트가 꺼져 있으면(scripting: none) 다 그린 장면을 바로 보인다. fill-mode: backwards 라 끝나면 원래 모습 그대로다.
  */
-@media (prefers-reduced-motion: no-preference) {
+@media (scripting: enabled) and (prefers-reduced-motion: no-preference) {
   .play {
-    --scene-zone-at: 700ms;
-    --scene-node-at: 1050ms;
-    --scene-edge-at: 2200ms;
-    --scene-enter: 420ms;
-    --scene-place: 360ms;
-    --scene-draw: 300ms;
+    --type-at: 300ms;
+    --type-step: 45ms;
+    --ignite-at: 1500ms;
+    --contour-at: 1700ms;
+    --curve-at: 2100ms;
   }
-  .play .prompt {
-    animation: scene-rise var(--scene-enter) var(--ease-out) 200ms backwards;
+  .play .char {
+    animation: scene-show 1ms linear calc(var(--type-at) + var(--c) * var(--type-step)) backwards;
   }
-  .play .zone {
-    animation: scene-fade var(--scene-enter) var(--ease-out) calc(var(--scene-zone-at) + var(--i) * 60ms) backwards;
+  .play .char::after {
+    animation: scene-caret var(--type-step) linear calc(var(--type-at) + var(--c) * var(--type-step));
   }
-  .play .node {
-    animation: scene-place var(--scene-place) var(--ease-out) calc(var(--scene-node-at) + var(--i) * 150ms) backwards;
+  .play .charLast::after {
+    animation: scene-caret-end 1100ms linear calc(var(--type-at) + var(--c) * var(--type-step));
   }
-  .play .line {
-    animation: scene-draw var(--scene-draw) var(--ease-out) calc(var(--scene-edge-at) + var(--i) * 130ms) backwards;
+  .play .point {
+    animation: scene-fade var(--dur-short) var(--ease-out) calc(var(--ignite-at) + var(--i) * 120ms) backwards;
   }
-  .play .joint {
-    animation: scene-fade var(--dur-short) var(--ease-out) calc(var(--scene-edge-at) + var(--i) * 130ms + var(--scene-draw) - 60ms) backwards;
+  .play .halo {
+    animation: scene-ignite 700ms var(--ease-out) calc(var(--ignite-at) + var(--i) * 120ms);
+  }
+  .play .contour {
+    animation: scene-draw 600ms var(--ease-out) calc(var(--contour-at) + var(--i) * 100ms) backwards;
+  }
+  .play .zoneName {
+    animation: scene-fade 420ms var(--ease-out) calc(var(--contour-at) + var(--i) * 100ms + 200ms) backwards;
+  }
+  .play .curve {
+    animation: scene-draw 500ms var(--ease-out) calc(var(--curve-at) + var(--i) * 180ms) backwards;
   }
 }
+
 /* 훑기: 7초마다 한 번, 2.8초에 걸쳐 왼쪽 밖에서 오른쪽 밖으로. 멈춤(.paused)·탭 숨김·화면 밖이면 그 자리에서 선다. */
 @media (prefers-reduced-motion: no-preference) {
   .live .sweep {
@@ -209,10 +288,34 @@
     transform: translateX(-100%);
   }
 }
-@keyframes scene-rise {
+@keyframes scene-show {
   from {
     opacity: 0;
-    transform: translateY(8px);
+  }
+}
+@keyframes scene-caret {
+  from,
+  to {
+    opacity: 1;
+  }
+}
+/* 마지막 글자 뒤 커서: 두 번 깜박이고 사라진다. */
+@keyframes scene-caret-end {
+  0%,
+  24% {
+    opacity: 1;
+  }
+  25%,
+  49% {
+    opacity: 0;
+  }
+  50%,
+  74% {
+    opacity: 1;
+  }
+  75%,
+  100% {
+    opacity: 0;
   }
 }
 @keyframes scene-fade {
@@ -220,13 +323,17 @@
     opacity: 0;
   }
 }
-@keyframes scene-place {
+@keyframes scene-ignite {
   from {
+    opacity: 0.9;
+    transform: scale(1);
+  }
+  to {
     opacity: 0;
-    transform: translateY(6px);
+    transform: scale(3.2);
   }
 }
-/* 연결선은 pathLength=1 이라 길이를 재지 않고 1 에서 0 으로 그린다. */
+/* 선은 pathLength=1 이라 길이를 재지 않고 1 에서 0 으로 긋는다. */
 @keyframes scene-draw {
   from {
     stroke-dasharray: 1 1;
