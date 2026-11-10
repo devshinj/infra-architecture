@@ -1,0 +1,114 @@
+/* Hallmark · part of the InfraSketch Vantage redesign, stamped in src/styles/globals.css · shape: app screen · posture: restrained */
+/*
+ * 로그인 옆 장면: 대화 한 줄 → 구성도가 그려진다. 노드·영역·연결선은 캔버스 클래스(canvas.css·edges.css)를 그대로 쓰고,
+ * 여기서는 자리와 나타나는 차례만 정한다. 다 그린 그림이 기본이고, 움직임은 .play 가 붙고 움직임을 꺼 두지 않았을 때만 덧입힌다.
+ * 움직이는 것은 opacity·transform 과 연결선의 stroke-dashoffset 뿐이다.
+ */
+.scene {
+  margin: 0;
+  min-width: 0;
+}
+/* 대화 줄과 그림을 그림 폭 한 줄기로 세운다. 말풍선은 대화 탭처럼 오른쪽에 붙는다. */
+.column {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  width: max-content;
+  max-width: 100%;
+  margin-inline: auto;
+}
+.prompt {
+  max-width: 100%;
+}
+/* 그림은 캔버스 100% 크기(폭 512)로 그린다. 판이 그보다 좁거나(60rem 바로 위) 화면이 낮으면 캔버스를 줌아웃하듯 통째로 줄인다. */
+@media (max-width: 65rem), (max-height: 46rem) {
+  .column {
+    zoom: 0.88;
+  }
+}
+.stage {
+  position: relative;
+  flex: none;
+}
+.at {
+  position: absolute;
+}
+.zone {
+  z-index: 0;
+}
+.edges {
+  z-index: 9;
+}
+.name {
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+/* 영역 이름 층은 연결선 위, 노드 아래(캔버스와 같은 순서). */
+.label {
+  z-index: 9;
+}
+.node {
+  z-index: 10;
+}
+
+/*
+ * 차례(대화 줄이 뜬 뒤 약 3초):
+ *   0.20s  대화 줄이 8px 떠오르며 나타난다
+ *   0.70s  영역이 바깥부터 차례로(60ms 간격) 옅게 깔린다
+ *   1.05s  노드가 하나씩(150ms 간격) 6px 떠오르며 놓인다
+ *   2.20s  연결선이 흐름 차례로(130ms 간격) 그어지고, 끝나면 화살촉·갈림점이 붙는다 — 3.2s 에 멈춘다
+ * animation-fill-mode: backwards 라 시작 전까지만 숨고, 끝나면 원래(다 그린) 모습으로 돌아간다.
+ */
+@media (prefers-reduced-motion: no-preference) {
+  .play {
+    --scene-zone-at: 700ms;
+    --scene-node-at: 1050ms;
+    --scene-edge-at: 2200ms;
+    --scene-enter: 420ms;
+    --scene-place: 360ms;
+    --scene-draw: 300ms;
+  }
+  .play .prompt {
+    animation: scene-rise var(--scene-enter) var(--ease-out) 200ms backwards;
+  }
+  .play .zone {
+    animation: scene-fade var(--scene-enter) var(--ease-out) calc(var(--scene-zone-at) + var(--i) * 60ms) backwards;
+  }
+  .play .node {
+    animation: scene-place var(--scene-place) var(--ease-out) calc(var(--scene-node-at) + var(--i) * 150ms) backwards;
+  }
+  .play .line {
+    animation: scene-draw var(--scene-draw) var(--ease-out) calc(var(--scene-edge-at) + var(--i) * 130ms) backwards;
+  }
+  .play .joint {
+    animation: scene-fade var(--dur-short) var(--ease-out) calc(var(--scene-edge-at) + var(--i) * 130ms + var(--scene-draw) - 60ms) backwards;
+  }
+}
+@keyframes scene-rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+@keyframes scene-fade {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes scene-place {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+/* 연결선은 pathLength=1 이라 길이를 재지 않고 1 에서 0 으로 그린다. */
+@keyframes scene-draw {
+  from {
+    stroke-dasharray: 1 1;
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dasharray: 1 1;
+    stroke-dashoffset: 0;
+  }
+}

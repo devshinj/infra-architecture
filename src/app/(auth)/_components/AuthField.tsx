@@ -1,9 +1,9 @@
 "use client";
 
-import Image from "next/image";
-import { useId, useState, type CSSProperties } from "react";
+import { useId, useState } from "react";
 
 import styles from "../auth.module.css";
+import { AuthScene } from "./scene/AuthScene";
 
 type Props = {
   label: string;
@@ -87,41 +87,12 @@ export function AuthSubmit({ pending, label, pendingLabel }: { pending: boolean;
 }
 
 /**
- * 로그인·가입·비밀번호 화면 옆에 두는 실제 구성도 한 장(사내 IDC WEB-WAS-DB 이중화 샘플의 한 띠를 앱에서 그대로 찍은 것).
- * 모서리 눈금 테두리 안에 두고, 그림 속 두 곳을 지시선으로 짚는다. 좁은 화면에서는 숨긴다(양식 아래로 밀지 않는다).
+ * 로그인·가입·비밀번호 화면 옆 판: 대화 한 줄이 구성도로 그려지는 장면(AuthScene). 좁은 화면에서는 숨긴다(양식 아래로 밀지 않는다).
  */
 export function AuthShowcase() {
   return (
-    <figure className={styles.showcase}>
-      <div className={styles.shot} style={{ "--ratio": SAMPLE.width / SAMPLE.height } as CSSProperties}>
-        <Image
-          src="/brand/sample-diagram.png"
-          width={SAMPLE.width}
-          height={SAMPLE.height}
-          alt="사내 IDC 구성도 예시의 DMZ 와 WEB·WAS 이중화 부분"
-          className={styles.shotImg}
-          priority
-        />
-        {SAMPLE.callouts.map((c) => (
-          <span key={c.label} className={styles.callout} style={{ "--x": c.x, "--y": c.y, "--len": c.len } as CSSProperties} aria-hidden="true">
-            <span className={styles.calloutLabel}>{c.label}</span>
-          </span>
-        ))}
-      </div>
-    </figure>
+    <div className={styles.showcase}>
+      <AuthScene />
+    </div>
   );
 }
-
-/**
- * public/brand/sample-diagram.png: 샘플의 DMZ → WEB VIP → WAS VIP 띠를 2배 밀도로 찍은 것(1332×1420 픽셀, 화면 크기 666×710).
- * 지시선은 그림에 적혀 있지 않은 것을 짚는다. x·y 는 점(영역 왼쪽 테두리 가운데), len 은 이름+선 길이(그림 너비 %).
- * 그림을 다시 찍으면 .hallmark/sample.json 값으로 같이 고친다.
- */
-const SAMPLE = {
-  width: 666,
-  height: 710,
-  callouts: [
-    { label: "망 경계: DMZ", x: 28.02, y: 27.48, len: 26.22 },
-    { label: "이중화 2대", x: 30.39, y: 84.6, len: 28.59 },
-  ],
-} as const;
