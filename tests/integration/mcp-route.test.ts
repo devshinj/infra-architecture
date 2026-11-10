@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import type { OAuthClientProvider } from "@modelcontextprotocol/sdk/client/auth.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import { afterEach, describe, expect, test } from "vitest";
@@ -14,6 +15,7 @@ import { makeOwnedDiagram } from "./helpers";
 
 const URL_MCP = "http://localhost/api/mcp";
 const GUIDE_LINE = "InfraSketch에 처음 그리기 전에 get_guide를 먼저 읽으세요.";
+const WRONG_KEY = "키가 맞지 않거나 지워졌어요. Claude Code 연결 화면에서 새 키를 만들어 다시 등록해 주세요.";
 
 async function makeUserKey(): Promise<{ userId: string; key: string }> {
   const tag = randomUUID().slice(0, 8);
@@ -73,13 +75,49 @@ const post = (headers: Record<string, string>) =>
   );
 
 describe("/api/mcp", () => {
-  test("키가 없거나 틀리면 401", async () => {
-    const cases: Record<string, string>[] = [{}, { authorization: "Bearer isk_wrong" }, { authorization: `Bearer isk_${"a".repeat(43)}` }];
+  test("키가 없으면 401", async () => {
+    const cases: Record<string, string>[] = [{}, { authorization: "Basic abc" }, { authorization: "Bearer" }];
     for (const headers of cases) {
       const res = await post(headers);
       expect(res.status).toBe(401);
       expect(await res.json()).toEqual({ error: "키가 맞지 않아요." });
     }
+  });
+
+  test("키가 있는데 틀렸거나 지워졌으면 403 과 새 키 안내", async () => {
+    const cases: Record<string, string>[] = [{ authorization: "Bearer isk_wrong" }, { authorization: `Bearer isk_${"a".repeat(43)}` }];
+    for (const headers of cases) {
+      const res = await post(headers);
+      expect(res.status).toBe(403);
+      expect(await res.json()).toEqual({ error: WRONG_KEY });
+    }
+  });
+
+  test("틀린 키로 붙으면 OAuth 로 넘어가지 않고 SDK 오류에 안내 문구가 그대로 실린다", async () => {
+    // Claude Code 처럼 authProvider 를 붙인다. 401 이면 SDK 가 OAuth 를 시작하지만 403 이면 시작하지 않는다.
+    const oauthCalls: string[] = [];
+    const record = (name: string) => () => {
+      oauthCalls.push(name);
+      throw new Error(`OAuth 시작: ${name}`);
+    };
+    const authProvider = {
+      get redirectUrl() { return "http://localhost/callback"; },
+      get clientMetadata() { return { redirect_uris: ["http://localhost/callback"] }; },
+      clientInformation: record("clientInformation"),
+      tokens: () => undefined,
+      saveTokens: record("saveTokens"),
+      redirectToAuthorization: record("redirectToAuthorization"),
+      saveCodeVerifier: record("saveCodeVerifier"),
+      codeVerifier: record("codeVerifier"),
+    } as unknown as OAuthClientProvider;
+    const transport = new StreamableHTTPClientTransport(new URL(URL_MCP), {
+      fetch: routeFetch,
+      authProvider,
+      requestInit: { headers: { Authorization: `Bearer isk_${"b".repeat(43)}` } },
+    });
+    const client = new Client({ name: "test", version: "0.0.0" });
+    await expect(client.connect(transport)).rejects.toThrow(WRONG_KEY);
+    expect(oauthCalls).toEqual([]);
   });
 
   test("GET·DELETE 는 405", async () => {

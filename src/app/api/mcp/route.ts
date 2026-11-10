@@ -7,7 +7,8 @@ import { verifyMcpKey } from "@/server/mcpKeys";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const BAD_KEY = "키가 맞지 않아요.";
+const NO_KEY = "키가 맞지 않아요.";
+const WRONG_KEY = "키가 맞지 않거나 지워졌어요. Claude Code 연결 화면에서 새 키를 만들어 다시 등록해 주세요.";
 const GENERIC = "요청을 처리하지 못했어요. 잠시 뒤 다시 시도해 주세요.";
 
 /** "Bearer <키>" 에서 키만 꺼낸다. 키·헤더는 로그에 쓰지 않는다. */
@@ -23,8 +24,10 @@ function bearerKey(request: Request): string | null {
  */
 export async function POST(request: Request) {
   const key = bearerKey(request);
-  const userId = key ? await verifyMcpKey(key) : null;
-  if (!userId) return NextResponse.json({ error: BAD_KEY }, { status: 401 });
+  if (!key) return NextResponse.json({ error: NO_KEY }, { status: 401 });
+  // 키는 왔는데 틀렸거나 지워졌으면 403. 401 이면 Claude Code(SDK)가 OAuth 를 찾아 나서서 이 문구가 안 보인다.
+  const userId = await verifyMcpKey(key);
+  if (!userId) return NextResponse.json({ error: WRONG_KEY }, { status: 403 });
 
   const server = createMcpServer(userId);
   const transport = new WebStandardStreamableHTTPServerTransport({ sessionIdGenerator: undefined, enableJsonResponse: true });

@@ -58,6 +58,8 @@ test("만들면 키와 설정 예가 보이고, 닫으면 키 원문이 DOM 에�
     ),
   ).toBeInTheDocument();
   expect(screen.getByText("새 키")).toBeInTheDocument(); // 목록에도 추가
+  // 키가 틀렸거나 지워졌을 때 다시 등록하는 법도 설정 예 옆에 있다.
+  expect(screen.getByText(/'키가 맞지 않아요' 오류가 나면/)).toHaveTextContent("claude mcp remove infrasketch");
 
   await user.click(screen.getByRole("button", { name: "닫기" }));
   expect(document.body.innerHTML).not.toContain(RAW);

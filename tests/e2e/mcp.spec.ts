@@ -31,6 +31,8 @@ async function openKeyScreen(page: Page) {
   await page.waitForURL(/\/claude-code$/);
 }
 
+const WRONG_KEY = "키가 맞지 않거나 지워졌어요. Claude Code 연결 화면에서 새 키를 만들어 다시 등록해 주세요.";
+
 const MCP_HEADERS = (key: string) => ({
   authorization: `Bearer ${key}`,
   "content-type": "application/json",
@@ -52,7 +54,7 @@ async function callTool<T>(request: APIRequestContext, key: string, name: string
   return JSON.parse(text.slice(text.indexOf("\n") + 1)) as T;
 }
 
-test("Claude Code 연동: 키 만들기, 열어 둔 구성도에 변경이 뜨고 이력에 남는다, 키를 지우면 401", async ({ page, request }) => {
+test("Claude Code 연동: 키 만들기, 열어 둔 구성도에 변경이 뜨고 이력에 남는다, 키를 지우면 403", async ({ page, request }) => {
   await signup(page);
   await newProject(page, "연동 시험");
   const diagramUrl = page.url();
@@ -79,8 +81,15 @@ test("Claude Code 연동: 키 만들기, 열어 둔 구성도에 변경이 뜨�
   // 화면이 다 뜨고 첫 확인(head)까지 끝난 뒤에 바꿔야, 바뀐 것이 처음 불러올 때 딸려 오지 않고 확인으로 알아챈 것이 된다.
   await firstHead;
 
-  // 틀린 키는 401.
-  expect((await rpc(request, "isk_wrong", "tools/list", {})).status()).toBe(401);
+  // 키가 없으면 401, 틀린 키는 403 과 새 키 안내.
+  const noKey = await request.post("/api/mcp", {
+    headers: { "content-type": "application/json", accept: "application/json, text/event-stream" },
+    data: { jsonrpc: "2.0", id: ++rpcId, method: "tools/list", params: {} },
+  });
+  expect(noKey.status()).toBe(401);
+  const wrong = await rpc(request, "isk_wrong", "tools/list", {});
+  expect(wrong.status()).toBe(403);
+  expect(await wrong.json()).toEqual({ error: WRONG_KEY });
 
   // Claude Code 가 하는 대로: initialize, 도구 목록, 읽기, 쓰기.
   const init = await rpc(request, key, "initialize", {
@@ -109,7 +118,7 @@ test("Claude Code 연동: 키 만들기, 열어 둔 구성도에 변경이 뜨�
   await page.getByRole("tab", { name: "이력" }).click();
   await expect(page.getByRole("tabpanel").getByText("Claude Code에서", { exact: true })).toBeVisible();
 
-  // 키를 지우면 같은 호출이 401.
+  // 키를 지우면 같은 호출이 403.
   await openKeyScreen(page);
   // 다시 들어온 키 화면에는 한 번 보여 준 원문이 남아 있지 않다.
   await expect(page.getByRole("heading", { name: "내 키" })).toBeVisible();
@@ -119,5 +128,6 @@ test("Claude Code 연동: 키 만들기, 열어 둔 구성도에 변경이 뜨�
   await page.getByRole("alertdialog").getByRole("button", { name: "삭제", exact: true }).click();
   await expect(page.getByText("만든 키가 없어요.")).toBeVisible();
   const after = await rpc(request, key, "tools/call", { name: "get_diagram", arguments: { diagram_id: diagramId } });
-  expect(after.status()).toBe(401);
+  expect(after.status()).toBe(403);
+  expect(await after.json()).toEqual({ error: WRONG_KEY });
 });

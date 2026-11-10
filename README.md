@@ -110,6 +110,8 @@ Claude Code 에서 내 구성도를 읽고 고치게 할 수 있습니다. 앱�
    claude mcp add --transport http infrasketch <앱 주소>/api/mcp --header "Authorization: Bearer <키>"
    ```
 
+   키를 지웠거나 "키가 맞지 않아요" 오류가 나면 새 키를 만들고, `claude mcp remove infrasketch` 를 실행한 뒤 위 명령을 새 키로 다시 실행하세요.
+
 열어 둔 구성도는 Claude Code 가 바꾼 것을 몇 초 안에 보여 주고, 이력에는 "Claude Code에서"로 남습니다.
 
 도구 9개:

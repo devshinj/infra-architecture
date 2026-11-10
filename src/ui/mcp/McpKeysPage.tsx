@@ -126,6 +126,9 @@ export function McpKeysPage({ initialKeys }: { initialKeys: McpKeyRow[] }) {
             <button type="button" className={styles.btn} onClick={() => copy(commandFor(fresh.key))}>설정 예 복사</button>
             <button type="button" className={styles.btn} onClick={() => { focusAfter.current = "name"; setFresh(null); setCopyNote(null); setAnnounce(""); }}>닫기</button>
           </div>
+          <p className={styles.meta}>
+            나중에 키를 지웠거나 &apos;키가 맞지 않아요&apos; 오류가 나면, 새 키를 만들고 claude mcp remove infrasketch 를 실행한 뒤 위 명령을 다시 실행하세요.
+          </p>
           <p className={styles.meta} role="status">{copyNote ?? ""}</p>
         </section>
       )}
