@@ -1,33 +1,38 @@
+/* Hallmark · part of the InfraSketch Vantage redesign, stamped in src/styles/globals.css · shape: app screen · posture: restrained */
 /* Claude Code 연결 화면. Tokens only (망 지식 화면과 같은 모양). */
-.page { box-sizing: border-box; height: 100%; overflow-y: auto; background: var(--bg-canvas); color: var(--text-primary); padding: 24px; padding-left: calc(var(--shell-inset-left, 0px) + var(--safe-l, 0px) + 24px); display: flex; flex-direction: column; gap: 16px; }
-.title { margin: 0; font-size: 16px; font-weight: 600; }
-.lead { margin: 0; font-size: 13px; line-height: 1.5; color: var(--text-secondary); max-width: 70ch; }
-.section { display: flex; flex-direction: column; gap: 10px; }
-.section h2, .fresh h2 { margin: 0; font-size: 14px; font-weight: 600; }
-.form { display: flex; flex-direction: column; gap: 10px; padding: 14px; background: var(--bg-panel-raised); border: 1px solid var(--line-shell); border-radius: 6px; max-width: 560px; }
+.page { box-sizing: border-box; height: 100%; overflow-y: auto; background: var(--bg-canvas); color: var(--text-primary); padding: 32px 32px 40px; padding-left: calc(var(--shell-inset-left, 0px) + var(--safe-l, 0px) + 40px); display: flex; flex-direction: column; gap: 24px; }
+/* 화면 제목: 가는 굵기의 큰 글자 하나(작업 화면 1.2 비율 단계의 맨 위). */
+.title { margin: 0; font-size: var(--text-page); font-weight: var(--weight-display); letter-spacing: var(--tracking-display); line-height: 1.15; overflow-wrap: break-word; min-width: 0; }
+.lead { margin: 0; font-size: 14px; line-height: 1.6; color: var(--text-secondary); max-width: 64ch; word-break: keep-all; }
+.section { display: flex; flex-direction: column; gap: 12px; }
+.section h2, .fresh h2 { margin: 0; font-size: var(--text-title); font-weight: 600; text-wrap: balance; }
+.form { display: flex; flex-direction: column; gap: 12px; padding: 16px; background: var(--color-paper-2); border: 0; border-radius: var(--radius-card); max-width: 560px; }
 .form label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--text-secondary); }
 .form input {
-  font: inherit; font-size: 13px; min-height: 28px; color: var(--text-primary); background: var(--bg-canvas);
-  border: 1px solid var(--line-node); border-radius: var(--radius-node); padding: 6px 9px;
+  font: inherit; font-size: 13px; min-height: 28px; color: var(--text-primary); background: var(--bg-panel-raised);
+  border: 1px solid var(--line-input); border-radius: var(--radius-card); padding: 8px 8px;
 }
-.fresh { display: flex; flex-direction: column; gap: 10px; padding: 14px; background: var(--bg-panel-raised); border: 1px solid var(--line-node); border-radius: 6px; max-width: 760px; }
+.fresh { display: flex; flex-direction: column; gap: 12px; padding: 16px; background: var(--color-paper-2); border: 1px solid var(--line-node); border-radius: var(--radius-card); max-width: 760px; }
 .warn { margin: 0; font-size: 13px; font-weight: 600; }
-.code { display: block; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12.5px; line-height: 1.5; padding: 8px 10px; background: var(--bg-canvas); border: 1px solid var(--line-shell); border-radius: var(--radius-node); overflow-wrap: anywhere; user-select: all; }
+.code { display: block; font-family: var(--font-mono); font-size: 12.5px; line-height: 1.5; padding: 8px 12px; background: var(--bg-canvas); border: 1px solid var(--line-shell); border-radius: var(--radius-card); overflow-wrap: anywhere; user-select: all; }
 .meta { margin: 0; font-size: 12px; line-height: 1.4; color: var(--text-secondary); }
 .empty { margin: 0; padding: 8px 12px; font-size: 13px; color: var(--text-secondary); }
-.table { border-collapse: collapse; font-size: 13px; background: var(--bg-panel); border: 1px solid var(--line-shell); width: 100%; max-width: 760px; }
-.table th, .table td { text-align: left; padding: 6px 12px; border-bottom: 1px solid var(--line-shell); }
+.table { border-collapse: collapse; font-size: 13px; border-top: 1px solid var(--line-shell); width: 100%; max-width: 760px; }
+.table th, .table td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line-shell); }
 .table th { font-weight: 600; color: var(--text-secondary); font-size: 12px; }
 .actions { display: flex; flex-wrap: wrap; gap: 8px; }
+/* 버튼 34px, 누를 자리는 위아래로 넓혀 44px. */
 .btn {
-  font: inherit; font-size: 13px; min-height: 28px; color: var(--text-primary); background: var(--bg-panel);
-  border: 1px solid var(--line-node); border-radius: 6px; padding: 4px 10px; cursor: pointer;
+  position: relative; font: inherit; font-size: 13px; min-height: 34px; color: var(--text-primary); background: transparent;
+  border: 1px solid var(--line-node); border-radius: var(--radius-pill); padding: 4px 16px; cursor: pointer;
 }
+.btn::before { content: ""; position: absolute; inset: -5px 0; }
 .btn:hover:not(:disabled) { border-color: var(--text-secondary); }
-.btn:disabled { opacity: 0.5; cursor: default; }
+.btn:active:not(:disabled) { background: var(--bg-panel-raised); }
+.btn:disabled { opacity: 0.55; cursor: not-allowed; color: var(--text-secondary); }
 .danger { border-color: var(--state-missing); }
-.page button:focus-visible, .page input:focus-visible { outline: 1.5px solid var(--text-secondary); outline-offset: 2px; }
-.error { margin: 0; font-size: 12px; color: var(--text-primary); border: 1px solid var(--state-missing); border-radius: var(--radius-node); padding: 5px 8px; }
+.page button:focus-visible, .page input:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+.error { margin: 0; font-size: 12px; color: var(--text-primary); border: 1px solid var(--state-missing); border-radius: var(--radius-card); padding: 4px 8px; }
 .srOnly { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
 @media (max-width: 640px) {
@@ -36,5 +41,10 @@
   .table { display: block; overflow-x: auto; }
 }
 @media (prefers-reduced-motion: no-preference) {
-  .btn { transition: border-color 0.15s, background-color 0.15s; }
+  .btn { transition: border-color var(--dur-micro) var(--ease-out), background-color var(--dur-micro) var(--ease-out); }
 }
+/* 양식의 저장·만들기 = 이 화면의 주 동작: 연두 칠 알약 하나. */
+.form button[type="submit"] { color: var(--on-accent); background: var(--accent-fill); border-color: var(--accent-fill); font-weight: 600; }
+.form button[type="submit"]:hover:not(:disabled) { background: var(--accent-fill-hover); border-color: var(--accent-fill-hover); }
+.form button[type="submit"]:active:not(:disabled) { background: var(--accent-fill-active); border-color: var(--accent-fill-active); }
+.form button[type="submit"]:disabled { background: var(--bg-panel-raised); border-color: var(--line-node); color: var(--text-secondary); }

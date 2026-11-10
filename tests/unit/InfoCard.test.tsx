@@ -65,7 +65,7 @@ test("card collapsed line shows counts", () => {
   const t = toggle();
   expect(t).toHaveAccessibleName("구성 정보 펼치기");
   expect(t).toHaveAttribute("aria-expanded", "false");
-  expect(t).toHaveTextContent("구성 정보 · 채워야 할 정보 1 · 주의 1 · 미확정 가정 1");
+  expect(t).toHaveTextContent("구성 정보 채워야 할 정보 1 주의 1 미확정 가정 1");
   expect(screen.queryByRole("region")).not.toBeInTheDocument();
   cleanup();
   // 0 인 항목은 숫자가 흐리다.
@@ -73,7 +73,7 @@ test("card collapsed line shows counts", () => {
   st.nodes.web!.attrs.hostname = "h";
   st.assumptions = { redundancy: { key: "redundancy", value: "이중화 없음", confirmed: true } };
   render(<Card state={st} />);
-  expect(toggle()).toHaveTextContent("구성 정보 · 채워야 할 정보 0 · 주의 0 · 미확정 가정 0");
+  expect(toggle()).toHaveTextContent("구성 정보 채워야 할 정보 0 주의 0 미확정 가정 0");
   for (const n of within(toggle()).getAllByText("0")) expect(n).toHaveAttribute("data-zero");
 });
 
@@ -147,7 +147,7 @@ test("read-only in history view", async () => {
 
 test("toggle is described by the visible counts line", () => {
   render(<Card />);
-  expect(toggle()).toHaveAccessibleDescription("구성 정보 · 채워야 할 정보 1 · 주의 1 · 미확정 가정 1");
+  expect(toggle()).toHaveAccessibleDescription("구성 정보 채워야 할 정보 1 주의 1 미확정 가정 1");
 });
 
 test("scroll request moves focus to the first warning item", () => {

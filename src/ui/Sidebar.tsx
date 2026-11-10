@@ -370,23 +370,32 @@ export function Sidebar({ projects, userName }: { projects: SidebarProject[]; us
       {rail ? <IconNetwork /> : "망 지식"}
     </Link>
   );
-  const accountRow = (
+  // inAccount: 접힌 레일의 계정 팝오버 안(한 줄 전체를 차지한다). 펼친 사이드바에서는 용어 사전·망 지식과 한 묶음이다.
+  const claudeCodeLink = (inAccount: boolean) => (
+    <Link
+      href="/claude-code"
+      className={`${styles.sideLink} ${inAccount ? styles.accountLink : ""} ${claudeCodeCurrent ? styles.sideLinkActive : ""}`}
+      aria-current={claudeCodeCurrent ? "page" : undefined}
+      onClick={() => {
+        setAccount(false);
+        setDrawer(false);
+      }}
+    >
+      Claude Code 연결
+    </Link>
+  );
+  const userRow = (
     <>
-      <Link
-        href="/claude-code"
-        className={`${styles.sideLink} ${styles.accountLink} ${claudeCodeCurrent ? styles.sideLinkActive : ""}`}
-        aria-current={claudeCodeCurrent ? "page" : undefined}
-        onClick={() => {
-          setAccount(false);
-          setDrawer(false);
-        }}
-      >
-        Claude Code 연결
-      </Link>
       <span title={userName}>{userName}</span>
       <form action={logoutAction}>
         <button type="submit" className={styles.linkBtn}>로그아웃</button>
       </form>
+    </>
+  );
+  const accountRow = (
+    <>
+      {claudeCodeLink(true)}
+      {userRow}
     </>
   );
 
@@ -562,11 +571,14 @@ export function Sidebar({ projects, userName }: { projects: SidebarProject[]; us
         <p className={styles.sideStatus} role="status">{duplicating ? "복제하는 중…" : ""}</p>
         {notice && <p className={`${styles.error} ${styles.sideNotice}`} role="alert">{notice}</p>}
         <div className={styles.sideFoot}>
-          {glossaryLink(false)}
-          {networkLink(false)}
           <button ref={newProjectBtn} type="button" className={styles.btn} onClick={newProject}>새 프로젝트</button>
-          <div className={styles.user}>{accountRow}</div>
+          <div className={styles.pageLinks}>
+            {glossaryLink(false)}
+            {networkLink(false)}
+            {claudeCodeLink(false)}
+          </div>
         </div>
+        <div className={`${styles.user} ${styles.userSeam}`}>{userRow}</div>
       </nav>
     );
   }

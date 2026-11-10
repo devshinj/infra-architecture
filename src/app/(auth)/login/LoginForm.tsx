@@ -6,7 +6,7 @@ import { loginAction } from "@/server/auth/actions";
 import { MESSAGES, normalizeUsername } from "@/server/auth/rules";
 import { Logo } from "@/ui/brand/Logo";
 
-import { AuthField, AuthSubmit } from "../_components/AuthField";
+import { AuthField, AuthShowcase, AuthSubmit } from "../_components/AuthField";
 import { useAuthForm, type FieldErrors } from "../_components/useAuthForm";
 import styles from "../auth.module.css";
 
@@ -52,6 +52,7 @@ export function LoginForm({ notice }: { notice?: string }) {
           <Link href="/reset">비밀번호 찾기</Link>
         </div>
       </form>
+      <AuthShowcase />
     </main>
   );
 }
