@@ -35,6 +35,7 @@ import { NEW_SESSION, type SessionKey, type SessionPaging, type SessionSummary, 
 import { type CardMeasure, InfoCard } from "./canvas/InfoCard";
 import { Legend, legendPlacement } from "./canvas/Legend";
 import { FlyLayer, useFly } from "./FlyLayer";
+import { GhostLayer, useGhosts } from "./GhostLayer";
 import type { ExplanationProps } from "./explain/Explanation";
 import { type TargetKind, useExplanations } from "./explain/useExplanations";
 import type { FlowPanelProps } from "./flows/FlowPanel";
@@ -45,6 +46,7 @@ import { PANEL_GAP, useShell } from "./Shell";
 import { RIGHT_PANEL_BODY_ID, RightPanel, type Tab } from "./RightPanel";
 import { NetworkKnowledgeProvider } from "./network/NetworkKnowledgeContext";
 import { PARTIAL_UNDO } from "./NodeInfo";
+import { REMOTE_CHANGED, REMOTE_LOAD, useRemoteChanges } from "./useRemoteChanges";
 
 /** 비어 있는 구성도 대화 세션의 안내. */
 const NEW_CHAT_HINT = "새 대화예요. 구성도는 그대로 이어서 바꾸고, 대화 기록만 따로 쌓여요.";
@@ -276,6 +278,8 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
   // 좁은 화면은 대화와 캔버스가 한 화면에 함께 보이지 않아 날리지 않는다.
   const fly = useFly({ motion, chatVisible: tab === "대화" && !narrow });
   const clearFly = fly.clear;
+  // 바깥(Claude Code)에서 받은 새 버전의 지운 노드·연결을 잠깐 유령으로 보인다.
+  const ghosts = useGhosts({ motion });
   useEffect(() => clearFly(), [diagramId, board, clearFly]); // 다른 구성도·새 판: 기다리던 빛점을 버린다
   const fail = (e: unknown) => setError(e instanceof Error ? e.message : "처리하지 못했어요");
   const run = (fn: () => Promise<void>) =>
@@ -302,9 +306,12 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
     router.refresh();
     loadVersions();
   };
+  // 다음 채택이 바깥(Claude Code) 변경을 불러온 것인가: 그때만 나타남·사라짐 효과를 낸다.
+  const remoteAdopt = useRef(false);
   // Import/restore bring a new board: stop treating the next adoption as the after-chat refresh.
   const expectNewBoard = () => {
     adoptAfterChat.current = false;
+    remoteAdopt.current = false;
     if (timer.current) clearTimeout(timer.current);
     timer.current = null;
   };
@@ -352,6 +359,18 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
   // The server re-renders with a newer version after import/restore/chat: adopt it, but never mid-turn
   // (it would wipe the commands already streamed); the done-refresh brings the newer version later.
   if (!chat.busy && latest.number !== current.number) {
+    // 바깥 변경: 캔버스가 새 상태를 그리기 전(지금 화면)에 지워질 것을 떠 두고, 새 노드는 대화와 같은 나타나는 효과로.
+    if (remoteAdopt.current) {
+      remoteAdopt.current = false;
+      if (live) {
+        const { added, removed } = diffStates(current.state, latest.state);
+        ghosts.capture(workspaceRef.current, {
+          nodes: [...removed].filter((id) => id in current.state.nodes),
+          edges: [...removed].filter((id) => id in current.state.edges),
+        });
+        for (const id of added) if (latest.state.nodes[id]) fly.queue(id);
+      }
+    }
     setCurrent(latest);
     if (!adoptAfterChat.current) setBoard((n) => n + 1);
     setOptions((o) =>
@@ -388,6 +407,26 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
   const flowsHook = useFlows({ diagramId, live, busy: chat.busy, versionKey: current.number });
   afterTurnRef.current = flowsHook.afterTurn;
   const { activeKey: activeFlowKey, setActive: setActiveFlow } = flowsHook;
+
+  // 열어 둔 구성도: Claude Code 가 바꾼 것을 몇 초 안에 알아챈다. 입력 중·대화상자·이력 보기 중에는 끼어들지 않고 안내만 띄운다.
+  const remotePaused = () => {
+    if (mode.kind !== "live") return true;
+    if (document.querySelector('[role="dialog"], [role="alertdialog"]')) return true;
+    const a = document.activeElement;
+    if (!(a instanceof HTMLElement) || !workspaceRef.current?.contains(a)) return false;
+    return a.isContentEditable || a.matches('input, textarea, [contenteditable]:not([contenteditable="false"])');
+  };
+  const remote = useRemoteChanges({
+    diagramId,
+    version: current.number,
+    paused: remotePaused,
+    busy: chat.busy,
+    onVersion: () => {
+      remoteAdopt.current = true;
+      refreshFromServer();
+    },
+    onFlows: () => void flowsHook.refresh(),
+  });
   const activateFlow = useCallback(
     (key: string | null) => {
       setActiveFlow(key);
@@ -525,6 +564,7 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
     if (!live || chat.busy) return;
     setEditMode(false);
     adoptAfterChat.current = false;
+    remoteAdopt.current = false;
     if (diagramKey === "main") return void chat.send(text);
     if (diagramKey === NEW_SESSION) {
       // 새 구성도 대화의 첫 메시지: 서버가 세션을 만들고 id 를 준다. 앞서 실패한 첫 메시지 줄은 비우고 다시 시작한다.
@@ -864,6 +904,12 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
               )}
             </div>
           )}
+          {remote.pending && (
+            <div className={styles.banner} role="status">
+              <span>{REMOTE_CHANGED}</span>
+              <button type="button" onClick={remote.load}>{REMOTE_LOAD}</button>
+            </div>
+          )}
           {/* 좁은 화면은 어느 탭에서든 보이게 위 막대 바로 밑에 띄운다(app.module.css .alertBanner). */}
           {error && <div className={`${styles.banner} ${styles.alertBanner}`} role="alert">{error}</div>}
           <div className={styles.canvasWrap}>
@@ -1003,6 +1049,7 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
           />
         )}
         <FlyLayer ref={fly.layerRef} />
+        <GhostLayer ref={ghosts.layerRef} />
       </div>
     </NetworkKnowledgeProvider>
   );

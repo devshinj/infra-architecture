@@ -1,7 +1,7 @@
 import { and, asc, eq, sql } from "drizzle-orm";
 
 import { db, type Tx } from "@/db/client";
-import { flows, type FlowSource } from "@/db/schema";
+import { diagramVersions, flows, type FlowSource } from "@/db/schema";
 import { checkFlow, judgeFlowOps, type Flow, type FlowOp, type FlowProblem } from "@/domain/flows";
 import { emptyState, type DiagramState } from "@/domain/types";
 import { withDiagramLock } from "@/server/chat/lock";
@@ -98,6 +98,29 @@ export async function listFlows(userId: string, diagramId: string): Promise<Stor
     .where(eq(flows.diagramId, diagramId))
     .orderBy(asc(flows.createdAt), asc(flows.id));
   return rows.map((r) => ({ ...r.data, source: r.source, reviewed: r.reviewed, problems: checkFlow(state, r.data) }));
+}
+
+export interface DiagramHead {
+  /** 최신 버전 번호(버전이 없으면 0). */
+  version: number;
+  /** 흐름 수와 마지막으로 고친 시각. 지우기는 행이 사라져 시각으로 못 알아채므로 수를 함께 본다. */
+  flows: { count: number; updatedAt: string | null };
+}
+
+/** 열어 둔 브라우저가 바뀐 것을 알아채려고 자주 묻는 머리 정보. 구성도 상태·흐름 내용은 읽지 않는다. */
+export async function getDiagramHead(userId: string, diagramId: string): Promise<DiagramHead> {
+  await getOwnedDiagram(userId, diagramId);
+  const [[v], [f]] = await Promise.all([
+    db
+      .select({ max: sql<number | null>`max(${diagramVersions.number})` })
+      .from(diagramVersions)
+      .where(eq(diagramVersions.diagramId, diagramId)),
+    db
+      .select({ count: sql<number>`count(*)::int`, max: sql<Date | null>`max(${flows.updatedAt})`.mapWith(flows.updatedAt) })
+      .from(flows)
+      .where(eq(flows.diagramId, diagramId)),
+  ]);
+  return { version: v?.max ?? 0, flows: { count: f?.count ?? 0, updatedAt: f?.max ? f.max.toISOString() : null } };
 }
 
 /** 소유자 검사 → 잠금 안에서 흐름 행을 찾아 fn 을 돌린다. 없는 흐름은 NotFoundError, 차례가 돌고 있으면 BusyError. */
