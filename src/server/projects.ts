@@ -107,7 +107,7 @@ export function copyName(base: string, taken: readonly string[]): string {
   }
 }
 
-async function assertOwnedProject(userId: string, projectId: string): Promise<void> {
+export async function assertOwnedProject(userId: string, projectId: string): Promise<void> {
   assertUuid(projectId);
   const [row] = await db
     .select({ id: projects.id })
@@ -152,6 +152,41 @@ export async function listProjects(userId: string) {
     name: p.name,
     diagrams: ds.filter((d) => d.projectId === p.id).map((d) => ({ id: d.id, name: d.name })),
   }));
+}
+
+// 구성도의 가장 큰 버전 번호. 버전이 하나도 없으면 0. 단독 select 에서는 drizzle 이 열 이름을 한정하지 않아 diagrams 를 직접 적는다.
+const latestNumber = sql<number>`coalesce((select max(${diagramVersions.number}) from ${diagramVersions} where ${diagramVersions.diagramId} = "diagrams"."id"), 0)::int`;
+
+/** listProjects 와 같지만 구성도마다 최신 버전 번호를 붙인다(쿼리 두 번, 구성도 수와 무관). */
+export async function listProjectsWithVersions(userId: string) {
+  const ps = await db
+    .select({ id: projects.id, name: projects.name })
+    .from(projects)
+    .where(eq(projects.ownerId, userId))
+    .orderBy(asc(projects.createdAt), asc(projects.id));
+  if (ps.length === 0) return [];
+  const ds = await db
+    .select({ id: diagrams.id, name: diagrams.name, projectId: diagrams.projectId, version: latestNumber })
+    .from(diagrams)
+    .innerJoin(projects, eq(projects.id, diagrams.projectId))
+    .where(eq(projects.ownerId, userId))
+    .orderBy(asc(diagrams.createdAt), asc(diagrams.id));
+  return ps.map((p) => ({
+    id: p.id,
+    name: p.name,
+    diagrams: ds.filter((d) => d.projectId === p.id).map((d) => ({ id: d.id, name: d.name, version: d.version })),
+  }));
+}
+
+/** 한 프로젝트의 구성도 목록(최신 버전 번호 포함). 남의 프로젝트면 NotFoundError. */
+export async function listDiagramsWithVersions(userId: string, projectId: string) {
+  await assertOwnedProject(userId, projectId);
+  const ds = await db
+    .select({ id: diagrams.id, name: diagrams.name, version: latestNumber })
+    .from(diagrams)
+    .where(eq(diagrams.projectId, projectId))
+    .orderBy(asc(diagrams.createdAt), asc(diagrams.id));
+  return ds;
 }
 
 /**

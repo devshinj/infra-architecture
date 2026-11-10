@@ -11,7 +11,6 @@ import { computeMissing, type MissingItem } from "@/domain/missing";
 import type { NetworkKnowledge } from "@/domain/network";
 import { linkVerdicts, type LinkVerdict } from "@/domain/networkRules";
 import { emptyState, type DiagramState, type Warning } from "@/domain/types";
-import { env } from "@/env";
 import { withDiagramLock } from "@/server/chat/lock";
 import { settleTurn } from "@/server/chat/settle";
 import { checkCodeWarnings } from "@/server/chat/warnings";
@@ -21,14 +20,14 @@ import { getOwnedDiagram } from "@/server/projects";
 import { createVersion, getLatestState, getVersion, lockLatestNumber, StaleVersionError } from "@/server/versions";
 
 import { explainRejection, FLOW_REJECT_PREFIX, REJECT } from "./explain";
+import { diagramUrl } from "./url";
 
 export const MCP_BUSY_MESSAGE = "지금 다른 변경이 진행 중이에요. 잠시 뒤 다시 시도해 주세요.";
 export const staleMessage = (latest: number) => `구성도가 바뀌었어요(지금 버전 ${latest}). get_diagram 으로 다시 읽어 주세요.`;
 const SUMMARY_MAX = 80;
 export const NOT_ARRAY_MESSAGE = "commands 는 명령 목록(배열)이어야 해요. 아무것도 저장하지 않았어요.";
 
-/** 브라우저에서 이 구성도를 여는 주소. */
-export const diagramUrl = (projectId: string, diagramId: string) => `${env.APP_URL}/p/${projectId}/d/${diagramId}`;
+export { diagramUrl };
 
 /** 이력에 남길 한 줄: 앞뒤 공백을 지우고, 비면 "Claude Code에서 N곳 바꿈", 80자에서 자른다. */
 export function versionSummary(summary: string | undefined, changed: number): string {
