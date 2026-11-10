@@ -17,6 +17,8 @@ describe("buildGuide", () => {
     expect(guide).toContain("get_diagram 으로 다시 읽");
     expect(guide).toContain("모르는 값은 비워");
     expect(guide).toContain("흐름은 버전과 따로");
+    expect(guide).toContain("흐름만 바꿀 때는 base_version 검사를 받지 않아요");
+    expect(guide).toContain("흐름을 고치기 전에 get_diagram 으로 최신 흐름");
     expect(guide).toContain("base_version");
     expect(guide).toContain("dry_run");
     expect(guide).toContain("배열의 원소");

@@ -123,7 +123,21 @@ describe("applyMcpCommands", () => {
     expect(await flowRows(ids.diagramId)).toHaveLength(0);
   });
 
-  test("흐름만 바꾼 호출도 저장 순간에 버전이 바뀌었으면 stale, 흐름 그대로", async () => {
+  // base_version 은 구성만 지킨다(spec 4). 흐름만 바꾸는 호출은 버전이 달라도 지금 구성으로 검사해 저장한다.
+  test("흐름만 바꾼 호출은 base_version 이 옛 버전이어도 저장, 버전 없음, flowsChanged 1", async () => {
+    const ids = await setup();
+    await createVersion(ids.diagramId, sample(), { source: "form" });
+    const r = await applyMcpCommands({
+      ...ids,
+      baseVersion: 1,
+      commands: [{ op: "add_flow", id: "f1", name: "접속", origin: "user", steps: [step("e1", "web")] }],
+    });
+    expect(r).toMatchObject({ ok: true, version: null, changed: 0, flowsChanged: 1 });
+    expect(await versionCount(ids.diagramId)).toBe(2);
+    expect(await flowRows(ids.diagramId)).toHaveLength(1);
+  });
+
+  test("흐름만 바꾼 호출은 검사 뒤 저장 전에 버전이 바뀌어도 저장", async () => {
     const ids = await setup();
     hooks.knowledge = async () => {
       await createVersion(ids.diagramId, sample(), { source: "form" });
@@ -133,7 +147,31 @@ describe("applyMcpCommands", () => {
       baseVersion: 1,
       commands: [{ op: "add_flow", id: "f1", name: "접속", origin: "user", steps: [step("e1", "web")] }],
     });
+    expect(r).toMatchObject({ ok: true, version: null, flowsChanged: 1 });
+    expect(await flowRows(ids.diagramId)).toHaveLength(1);
+  });
+
+  test("흐름만 바꿔도 지금 구성에 없는 연결을 가리키면 거절", async () => {
+    const ids = await setup();
+    const r = await applyMcpCommands({
+      ...ids,
+      baseVersion: 0,
+      commands: [{ op: "add_flow", id: "f1", name: "접속", origin: "user", steps: [step("ghost", "web")] }],
+    });
+    expect(r).toMatchObject({ ok: false, kind: "rejected" });
+    expect(await flowRows(ids.diagramId)).toHaveLength(0);
+  });
+
+  test("구성과 흐름을 함께 바꾸는 호출은 base_version 이 옛 버전이면 stale", async () => {
+    const ids = await setup();
+    await createVersion(ids.diagramId, sample(), { source: "form" });
+    const r = await applyMcpCommands({
+      ...ids,
+      baseVersion: 1,
+      commands: [addDb, { op: "add_flow", id: "f1", name: "접속", origin: "user", steps: [step("e1", "web")] }],
+    });
     expect(r).toMatchObject({ ok: false, kind: "stale", latestVersion: 2 });
+    expect(await versionCount(ids.diagramId)).toBe(2);
     expect(await flowRows(ids.diagramId)).toHaveLength(0);
   });
 

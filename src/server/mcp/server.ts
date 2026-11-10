@@ -139,7 +139,7 @@ export function createMcpServer(userId: string): McpServer {
     "apply_commands",
     {
       description: describe(
-        "구성도에 명령을 적용해요. 전부 적용하거나 하나도 적용하지 않아요. base_version 이 최신이 아니면 저장하지 않아요. dry_run 이면 검사만 하고 저장하지 않아요.",
+        "구성도에 명령을 적용해요. 전부 적용하거나 하나도 적용하지 않아요. 구성을 바꿀 때 base_version 이 최신이 아니면 저장하지 않아요(흐름만 바꿀 때는 보지 않아요). dry_run 이면 검사만 하고 저장하지 않아요.",
       ),
       inputSchema: {
         diagram_id: diagramId,

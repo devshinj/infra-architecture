@@ -3,7 +3,7 @@ import { asc, eq } from "drizzle-orm";
 import { db, type Tx } from "@/db/client";
 import { flows } from "@/db/schema";
 import { applyCommand } from "@/domain/apply";
-import { COMMAND_OPS, isFlowCommand, isStructural, parseCommand, SERVER_ONLY_OPS, toFlowOp, type Command, type FlowCommand } from "@/domain/commands";
+import { COMMAND_OPS, FLOW_OPS, isFlowCommand, isStructural, parseCommand, SERVER_ONLY_OPS, toFlowOp, type Command, type FlowCommand } from "@/domain/commands";
 import { createEdgeCoalescer } from "@/domain/edgeCoalesce";
 import { FLOW_LIMITS, planFlowOps, type Flow, type FlowOp } from "@/domain/flows";
 import { splitFlowSteps, type StepSplit } from "@/domain/linkGuess";
@@ -17,7 +17,7 @@ import { checkCodeWarnings } from "@/server/chat/warnings";
 import { applyFlowOps, listFlows, rewriteFlows } from "@/server/flows";
 import { getNetworkKnowledge } from "@/server/network";
 import { getOwnedDiagram } from "@/server/projects";
-import { createVersion, getLatestState, getVersion, lockLatestNumber, StaleVersionError } from "@/server/versions";
+import { createVersion, getLatestState, getVersion, StaleVersionError } from "@/server/versions";
 
 import { explainRejection, FLOW_REJECT_PREFIX, REJECT } from "./explain";
 import { diagramUrl } from "./url";
@@ -128,6 +128,17 @@ function checkCommands(start: DiagramState, commands: unknown[], knowledge: Netw
   return { state, errors, flowOps, changed, assumed };
 }
 
+/** 흐름 명령(add_flow·update_flow·remove_flow)만 담은 호출. 이런 호출은 base_version 검사를 받지 않는다. */
+function isFlowOnly(commands: unknown[]): boolean {
+  return (
+    commands.length > 0 &&
+    commands.every((raw) => {
+      const op = raw && typeof raw === "object" ? (raw as { op?: unknown }).op : undefined;
+      return typeof op === "string" && FLOW_OPS.has(op as Command["op"]);
+    })
+  );
+}
+
 /** 망연계가 끼어든 연결을 지나던 흐름 단계를 둘로 나눈다(대화 차례와 같은 규칙: 단계 상한을 넘으면 그대로). */
 const splitRewrite = (splits: StepSplit[]) => (f: Flow) => {
   const next = splitFlowSteps(f, splits);
@@ -141,7 +152,8 @@ async function readFlows(diagramId: string): Promise<Flow[]> {
 
 /**
  * Claude Code 가 보낸 명령을 전부 적용하거나 하나도 적용하지 않는다. 흐름 명령도 함께 검사한다.
- * base_version 이 최신이 아니면 덮어쓰지 않는다. dryRun 이면 검사만 하고 저장하지 않는다.
+ * 구성을 바꾸는 호출은 base_version 이 최신이 아니면 덮어쓰지 않는다. 흐름만 바꾸는 호출은 base_version 을 보지 않고
+ * 지금 구성으로 흐름을 검사한다(spec 4: base_version 은 구성만 지킨다). dryRun 이면 검사만 하고 저장하지 않는다.
  * 성공하면 대화 차례 끝과 같은 정리(빈 영역·망연계 기록·흐름 단계 나누기·코드 규칙 경고)를 하고,
  * 버전과 흐름을 한 트랜잭션으로 저장한다. 대화 메시지는 남기지 않고 Clef·Qwen 도 부르지 않는다.
  * 남의 구성도면 NotFoundError 를 던진다.
@@ -159,7 +171,8 @@ async function lockedApply(input: McpApplyInput, url: string): Promise<McpApplyR
   if (!Array.isArray(input.commands)) return { ok: false, kind: "rejected", message: NOT_ARRAY_MESSAGE };
   const latest = await getLatestState(diagramId);
   const latestVersion = latest?.number ?? 0;
-  if (latestVersion !== input.baseVersion) {
+  const flowOnly = isFlowOnly(input.commands);
+  if (!flowOnly && latestVersion !== input.baseVersion) {
     return { ok: false, kind: "stale", message: staleMessage(latestVersion), latestVersion };
   }
   const start = latest?.state ?? emptyState();
@@ -223,7 +236,8 @@ async function lockedApply(input: McpApplyInput, url: string): Promise<McpApplyR
   if (result.dryRun || (!touched && flowOps.length === 0)) return result;
 
   // 잠금 없이 버전을 만드는 브라우저 쓰기(되돌리기·가정 확인 등)가 검사 뒤에 끼어들 수 있다.
-  // 저장 트랜잭션 안에서 번호를 잠그고 다시 확인해, 바뀌었으면 되감고 stale 로 돌려준다(흐름만 바꾼 호출도 같다).
+  // 구성을 바꾸는 호출은 저장 트랜잭션 안에서 번호를 잠그고 다시 확인해, 바뀌었으면 되감고 stale 로 돌려준다.
+  // 흐름만 바꾸는 호출은 버전을 만들지 않고 base_version 도 보지 않으니 다시 확인하지 않는다.
   try {
     await db.transaction((tx) => saveInTx(tx));
   } catch (err) {
@@ -238,8 +252,6 @@ async function lockedApply(input: McpApplyInput, url: string): Promise<McpApplyR
       const summary = versionSummary(input.summary, checked.changed + checked.assumed);
       const v = await createVersion(diagramId, state, { source: "mcp", via: "mcp", summary, tx, expectedLatest: input.baseVersion });
       result.version = v.number;
-    } else {
-      await lockLatestNumber(tx, diagramId, input.baseVersion);
     }
     if (splits.length > 0) await rewriteFlows(diagramId, splitRewrite(splits), { tx });
     if (flowOps.length > 0) {
