@@ -1,109 +1,48 @@
-import { EDGE_KINDS, GROUP_KINDS, NODE_KINDS } from "@/domain/catalog";
+import { NODE_KINDS } from "@/domain/catalog";
 import { LIMITS, type NodeExplanation } from "@/domain/explain";
 import type { Flow } from "@/domain/flows";
-import { FIELD_LABELS, type MissingItem } from "@/domain/missing";
-import { GRADE_LABELS, GRADE_RULES, METHOD_LABELS, pairKey, requiredMethod, type NetworkKnowledge } from "@/domain/network";
-import { patternPromptBlock } from "@/domain/patterns";
+import type { MissingItem } from "@/domain/missing";
+import { METHOD_LABELS, pairKey, requiredMethod, type NetworkKnowledge } from "@/domain/network";
 import type { DiagramState } from "@/domain/types";
 import type { Intent } from "@/server/llm/clef";
+import { COMMAND_EXAMPLES, DRAW_RULE_GROUPS, KIND_BLOCK, patternBlock, gradeRuleLines, networkTypeLines, userRuleLines } from "@/server/drawing/rules";
 import type { ChatMessage } from "@/server/llm/qwen";
 
 export const HISTORY_LIMIT = 20;
 const MISSING_LINES_MAX = 40;
 
-// 허용값 목록은 catalog 에서 만든다(손으로 복사하지 않는다).
-// k8s_cluster 는 그룹으로만 쓴다(노드 kind 목록에서 제외).
-const KIND_LIST = NODE_KINDS.map((k) => k.kind).filter((k) => k !== "k8s_cluster").join(", ");
-const GROUP_KIND_LIST = GROUP_KINDS.map((k) => k.kind).join(", ");
-const EDGE_KIND_LIST = EDGE_KINDS.map((k) => k.kind).join(", ");
-
-/** 노드 종류별 attrs 칸. 칸이 같은 종류끼리 한 줄로 묶는다(예: "web_server, was: hostname(호스트명), …"). */
-export const ATTR_LIST = (() => {
-  const byKeys = new Map<string, string[]>();
-  for (const k of NODE_KINDS) {
-    if (k.requiredAttrs.length === 0) continue;
-    const keys = k.requiredAttrs.join(",");
-    byKeys.set(keys, [...(byKeys.get(keys) ?? []), k.kind]);
-  }
-  return [...byKeys]
-    .map(([keys, kinds]) => `${kinds.join(", ")}: ${keys.split(",").map((key) => `${key}(${FIELD_LABELS[key] ?? key})`).join(", ")}`)
-    .join("\n");
-})();
+// 그리기 규칙·종류 목록·attrs 칸 목록은 공용 모듈(MCP get_guide 와 같은 글)에 있다.
+export { ATTR_LIST } from "@/server/drawing/rules";
 
 const MISSING_FORMAT_NOTE =
   "값을 반영하는 명령은 한 줄에 JSON 하나로, 줄바꿈 없이 쓴다. 사용자가 말한 대상마다 따로 update_node 를 낸다. 연결의 전달물·방향은 update_edge 의 payload·direction 으로 낸다.";
+
+const R = DRAW_RULE_GROUPS;
 
 export const SYSTEM_PROMPT = `너는 인프라 아키텍처 구성도를 그리는 도구의 엔진이다.
 사용자 요청을 받아 구성도 변경 명령을 JSON Lines 로만 출력한다. 한 줄에 JSON 객체 하나. 다른 글, 코드펜스, 설명 금지.
 
 명령 종류:
 {"op":"say","text":"진행 상황 한 줄(예: L7 로드밸런서 추가…)"}
-{"op":"set_assumption","key":"environment|scale|redundancy|deploy|replication|external","value":"짧은 문장"}
-{"op":"add_group","id":"영문-소문자-id","group_kind":"<GROUP_KIND>","label":"표시이름","parent":"상위 그룹 id 또는 null"}
-{"op":"add_node","id":"영문-소문자-id","kind":"<KIND>","label":"표시이름(예: WAS#1)","sub":"SW 또는 대수(예: Tomcat 10)","parent":"그룹 id 또는 null","attrs":{"sw":"...","hostname":null,"cpu":null,"ram":null,"ip":null}}
-{"op":"add_edge","id":"e-<from>-<to>","from":"노드 또는 그룹 id","to":"노드 또는 그룹 id","edge_kind":"<EDGE_KIND>","label":"프로토콜/포트(예: HTTPS 443)"}
-{"op":"add_edge","id":"e-link-1-pg","from":"link-1","to":"pg","edge_kind":"request","label":"결제 요청","payload":"api","direction":"two_way"}
-{"op":"update_node","id":"was-1","attrs":{"ram":"32GB"}}
-{"op":"update_node","id":"was-1","parent":"새 영역 id"}
-{"op":"update_edge","id":"e-web-1-was-1","label":"HTTP 8080"}
-{"op":"update_edge","id":"e-web-1-was-1","payload":"file","direction":"one_way"}
-{"op":"remove_node","id":"기존 노드 id"}
-{"op":"remove_edge","id":"기존 연결 id"}
-{"op":"remove_group","id":"기존 영역 id"}
-{"op":"set_zone_type","id":"망 영역 id","type":"망 종류 key 또는 null"}
-{"op":"add_node","id":"link-1","kind":"network_link","label":"망연계 솔루션","parent":null,"guess":true}
-{"op":"add_flow","id":"login","name":"로그인","origin":"user","summary":"사용자가 로그인한다","result":"로그인 결과를 화면에 돌려준다","steps":[{"edge":"e-client-web-was-1","from":"client-web","short":"로그인 요청","text":"아이디와 비밀번호를 WAS 로 보낸다"},{"edge":"e-was-1-db-1","from":"was-1","short":"회원 조회","text":"DB 에서 회원 정보를 확인한다"}]}
-{"op":"update_flow","id":"login","name":"회원 로그인","result":"확인 결과를 돌려준다"}
-{"op":"remove_flow","id":"기존 흐름 id"}
+${COMMAND_EXAMPLES}
 
-KIND 허용값: ${KIND_LIST}
-GROUP_KIND 허용값: ${GROUP_KIND_LIST}
-EDGE_KIND 허용값: ${EDGE_KIND_LIST}
-
-노드 attrs 칸(종류별). 이 칸 이름만 쓴다. os 는 운영체제(예: Rocky Linux 9), sw 는 설치한 소프트웨어(예: Tomcat 10)다.
-${ATTR_LIST}
+${KIND_BLOCK}
 
 규칙:
-- id 는 영문 소문자·숫자·하이픈만 쓰고 ^[a-z0-9][a-z0-9-]{0,63}$ 형식이어야 한다. 노드·그룹·연결 id 는 서로 겹치면 안 된다.
-- 요청이 애매하면 가정하고 set_assumption 으로 그 가정을 먼저 밝힌다.
-- 이미 확정된 가정은 바꾸지 않는다. 요약에 (확정) 표시가 붙은 가정은 set_assumption 으로 다시 내지 않는다.
-- 그룹을 먼저, 그 안의 노드를 다음, 연결은 양 끝 노드가 생긴 뒤에 출력한다.
-- 이중화 서버는 redundancy_group 그룹으로 묶고 label 에 VIP 를 적는다(예: "WAS VIP"). 2대 이상이면 몇 대든 하나의 redundancy_group 으로 묶는다.
-- AZ(가용 영역)는 az 그룹을 만들지 않는다. 대신 서브넷·노드의 attrs.az 속성(예: "az":"2a")으로 표시한다.
-- 외부 서비스는 external_service 그룹 안에 접점 노드(external_api/external_auth/external_pg)로 그린다.
-- 영역(그룹)의 이름·상위 영역은 바꿀 수 없다. 영역을 바꿔야 하면 say 로 알리고 노드만 수정한다.
-- 환경(environment)이나 배포 방식(deploy) 가정이 바뀌면 이 순서로 바꾼다: ① 새 가정에 맞는 영역을 add_group 으로 만든다 ② 새 구성에서도 쓰는 노드(WAS·DB 등)는 지우지 말고 update_node 의 parent 로 새 영역에 옮긴다 ③ 그 뒤에 남은 맞지 않는 노드는 remove_node, 영역은 remove_group 으로 지운다. remove_group 은 안의 노드까지 지우므로 옮길 노드를 먼저 옮긴다.
-- k8s_cluster 는 그룹(group_kind)으로만 쓴다. 노드 kind 로 쓰지 않는다.
-- 사용자가 모르는 값(IP, hostname, 스펙)은 null 로 둔다. 지어내지 않는다.
-- 업무망·인터넷망처럼 분리된 망은 network_zone 영역으로 그리고 망 이름을 label 에 쓴다.
-- 서로 다른 망을 잇는 통신은 방화벽(firewall)·망연계 솔루션(network_link)·VPN 노드를 거치게 그리고, 망을 넘는 연결에는 payload(api 또는 file)와 direction(one_way 또는 two_way)을 쓴다. 같은 망 안의 연결에는 사용자가 말하지 않은 payload·direction 을 쓰지 않는다.
-- network_zone 영역에는 set_zone_type 으로 망 종류를 붙인다. type 은 "망 종류:" 목록의 key 만 쓰고, 맞는 것이 없거나 근거가 없으면 쓰지 않는다. 요약에 type=…(확정) 이 붙은 망은 바꾸지 않는다. 종류가 없는 기존 망도 이번 요청에 근거가 있으면 붙인다.
-- 이번 요청에서 새로 그리거나 종류를 붙인 망처럼 "망 짝 규칙"에 없는 짝은 두 망 종류로 따져 "기관 규칙"을 먼저, 없으면 "등급 규칙"을 망 짝 규칙으로 쓴다.
-- "망 짝 규칙"이 망연계 필요인 두 망을 잇게 되면 사이에 network_link 노드를 넣고 그 add_node 에 "guess":true 를 쓴다. 사용자가 망연계를 넣어 달라고 했으면 guess 를 쓰지 않는다.
+${R[0]} 영역을 바꿔야 하면 say 로 알리고 노드만 수정한다.
+${R[1]}
 - "망 짝 규칙"이 보통 잇지 않음인 두 망을 이으라고 하면 요청대로 그리고, 보통 잇지 않는 구간이라고 say 로 한 줄 알린다.
-- 사용자가 "방화벽으로 바로"처럼 망연계 없이 이으라고 하면 그대로 따르고, set_assumption 의 key 를 no_link:<망 id>--<망 id>(두 망 id 를 사전순으로), value 를 "망연계 없이 통신" 으로 쓴다. 가정에 no_link:<a>--<b> 가 있는 두 망 사이에는 망연계를 넣지 않는다.
-- 종류가 붙은 망이 있으면 인터넷·클라우드 쪽 서버(클라우드 WAS 등)도 알맞은 network_zone 안에 그린다. 외부 사용자와 외부 SaaS 는 망 밖에 그대로 둔다.
-- 연결은 실제 요청 흐름 방향(호출하는 쪽 → 받는 쪽)으로.
-- edge_kind 는 동기 요청 request, 비동기·이벤트·웹훅 async, 복제·동기화 replication 이다. 모니터링·관리(Bastion, Prometheus 등) 연결은 aux 로 한다.
+${R[2]}
 - 각 단계마다 say 로 진행 상황을 짧게 알린다.
 - JSON 객체 하나를 여러 줄로 나눠 쓰지 않는다.
-- 기존 구성이 주어지면 바꿀 부분만 명령으로 낸다. 기존 id 를 그대로 쓴다.
-- 이미 있는 노드·연결은 지웠다가 같은 것을 다시 만들지 않는다. 그대로 두거나 update_node·update_edge 로 고친다. 노드를 이중화 그룹으로 옮길 때도 그 노드의 id 와 연결은 그대로 둔다.
+${R[3]}
 - label, sub, say, set_assumption 의 value 는 모두 한국어로 쓴다. label·sub 예시: "웹 서버 #1", "API 서버 #2", "공개 서브넷", "메인 VPC". 제품명만 원어 그대로 쓴다(CloudFront, Redis, Aurora MySQL, ALB, Tomcat 등).
-- external_service 그룹은 우리 회사가 운영하지 않는 타사 서비스(PG사, 카카오, 택배사, 문자 발송 등)에만 쓴다. AWS 관리형 서비스(RDS, MSK, ElastiCache, S3, SQS)는 우리 인프라이므로 해당 위치(VPC/서브넷/리전)에 둔다.
-- Kafka/MSK/Kinesis 는 stream, SQS/RabbitMQ 는 queue.
-- CDN, WAF, DNS 처럼 VPC 밖 전역 서비스는 VPC 밖(리전 그룹 또는 최상위)에 둔다.
-- 사용자(client_*)에서 시작하는 진입 연결을 반드시 그린다.
+${R[4]}
 - warn 과 report_missing 명령은 내지 않는다. 위험 진단은 다른 단계가 맡는다.
-- 사용자가 채워야 할 정보의 값을 알려 주면 update_node(attrs) 또는 update_edge(label·payload·direction) 로 그 값만 반영한다. 노드·연결을 새로 만들지 않는다.
-- "모든 서버", "WAS 전부"처럼 여러 대상을 말하면 현재 구성에서 그 조건에 맞는 노드를 하나도 빠뜨리지 말고 노드마다 update_node 를 낸다. 그 값의 칸이 없는 종류에는 쓰지 않는다.
-- 흐름은 요청 하나가 구성도의 연결을 차례로 지나는 길이다. 흐름을 바꾸라는 요청이면 구성 명령과 함께 흐름 명령을 쓴다. 단계 edge 는 현재 구성(또는 이번에 만든) 연결 id 만 쓴다.
-- 요청에 흐름 이야기가 없으면 흐름 명령을 쓰지 않는다. 구성을 바꿔 흐름이 끊겨도 도구가 사용자에게 알리므로 흐름을 고치지 않는다.
-- 흐름을 고칠 때는 그대로 남는 단계의 short·text 를 "흐름:" 목록에 있는 글 그대로 쓴다.
-- 흐름 단계는 요청이 가는 방향으로만 쓴다. from 은 그 단계를 시작하는 노드 id 다. 응답은 단계로 쓰지 않고 result 한 줄로 쓴다. short 는 12자 이내, text 는 120자 이내, 단계는 20개 이내로 쓴다. origin 은 사용자가 시작하면 user, 배치·스케줄처럼 시스템이 시작하면 system 이다. 흐름 id 는 위 id 규칙을 따르고, 기존 흐름을 고치거나 지울 때는 "흐름:" 목록의 id 를 그대로 쓴다.
+${R[5]}
 - 사용자가 질문만 하면 구성은 건드리지 않는다. 질문이면 명령 없이 {"op":"say","text":"…"} 한두 문장으로만 답한다.
 
-${patternPromptBlock()}`;
+${patternBlock()}`;
 
 export const ANSWER_PROMPT = `너는 인프라 아키텍처 구성도 도구의 도우미다.
 사용자의 질문이나 말에 한국어로 답한다. 답할 때는 아래 "현재 구성" 요약을 근거로, 지금 그려진 구성도에 대해 설명한다.
@@ -169,17 +108,9 @@ const byStr = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
  * 이름·다른 이름·근거(사용자 글)는 JSON 으로 감싸 줄바꿈이 새 줄을 만들지 못하게 한다.
  */
 export function networkBlock(state: DiagramState, k: NetworkKnowledge): string {
-  const types = Object.values(k.types)
-    .sort((a, b) => byStr(a.key, b.key))
-    .map((t) => `${t.key} ${JSON.stringify(t.name)} 다른 이름=${JSON.stringify(t.aliases)} 등급=${GRADE_LABELS[t.grade]}`);
-  const grades = GRADE_RULES.map((r) => `${GRADE_LABELS[r.a]} -- ${r.b === "*" ? "모든 등급" : GRADE_LABELS[r.b]}: ${METHOD_LABELS[r.method]}`);
-  const userRules = k.rules
-    .filter((r) => Object.hasOwn(k.types, r.a) && Object.hasOwn(k.types, r.b))
-    .map((r) => {
-      const [a, b] = pairKey(r.a, r.b);
-      return `${a} -- ${b}: ${METHOD_LABELS[r.method]}${r.note ? ` 근거=${JSON.stringify(r.note)}` : ""}`;
-    })
-    .sort(byStr);
+  const types = networkTypeLines(k);
+  const grades = gradeRuleLines();
+  const userRules = userRuleLines(k);
   const zones = Object.values(state.groups)
     .filter((g) => g.groupKind === "network_zone" && g.netType)
     .sort((a, b) => byStr(a.id, b.id));

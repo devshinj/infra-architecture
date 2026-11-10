@@ -40,3 +40,17 @@ test("disabled prop disables view, restore and compare", async () => {
   expect(screen.getByRole("button", { name: "이 버전으로 되돌리기" })).toBeDisabled();
   expect(screen.getByRole("button", { name: "현재와 비교" })).toBeDisabled();
 });
+
+test("MCP 로 만든 버전은 'Claude Code에서' 와 요약을 보여준다", () => {
+  const rows = [{ number: 4, source: "mcp" as const, via: "mcp" as const, summary: "Redis 추가", status: "complete" as const, restoredFrom: null, createdAt: new Date() }];
+  render(<HistoryPanel versions={rows} {...mk()} />);
+  expect(screen.getByText("Claude Code에서")).toBeInTheDocument();
+  expect(screen.getByText("Redis 추가")).toBeInTheDocument();
+});
+
+test("Claude Code 에서 되돌린 버전은 '되돌리기 · Claude Code에서' 와 원본 번호를 보여준다", () => {
+  const rows = [{ number: 5, source: "restore" as const, via: "mcp" as const, summary: null, status: "complete" as const, restoredFrom: 3, createdAt: new Date() }];
+  render(<HistoryPanel versions={rows} {...mk()} />);
+  expect(screen.getByText("되돌리기 · Claude Code에서")).toBeInTheDocument();
+  expect(screen.getByText("v3에서")).toBeInTheDocument();
+});

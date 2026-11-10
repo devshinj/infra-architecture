@@ -66,6 +66,7 @@ export function Sidebar({ projects, userName }: { projects: SidebarProject[]; us
   const [account, setAccount] = useState(false);
   const glossaryCurrent = pathname === "/glossary";
   const networkCurrent = pathname === "/network";
+  const claudeCodeCurrent = pathname === "/claude-code";
   const { narrow } = shell;
 
   // 좁은 화면: 사이드바는 위 막대의 ☰ 로 여는 서랍이다. 다른 화면으로 가거나 넓은 화면이 되면 닫는다.
@@ -371,6 +372,17 @@ export function Sidebar({ projects, userName }: { projects: SidebarProject[]; us
   );
   const accountRow = (
     <>
+      <Link
+        href="/claude-code"
+        className={`${styles.sideLink} ${styles.accountLink} ${claudeCodeCurrent ? styles.sideLinkActive : ""}`}
+        aria-current={claudeCodeCurrent ? "page" : undefined}
+        onClick={() => {
+          setAccount(false);
+          setDrawer(false);
+        }}
+      >
+        Claude Code 연결
+      </Link>
       <span title={userName}>{userName}</span>
       <form action={logoutAction}>
         <button type="submit" className={styles.linkBtn}>로그아웃</button>
@@ -407,6 +419,8 @@ export function Sidebar({ projects, userName }: { projects: SidebarProject[]; us
               <span className={styles.topbarDiagram}>용어 사전</span>
             ) : networkCurrent ? (
               <span className={styles.topbarDiagram}>망 지식</span>
+            ) : claudeCodeCurrent ? (
+              <span className={styles.topbarDiagram}>Claude Code 연결</span>
             ) : (
               <span className={styles.topbarBrand}>
                 <LogoMark size={18} />
