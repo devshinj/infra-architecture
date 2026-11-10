@@ -79,6 +79,16 @@ npm run eval:intent -- --repeat 3    # Qwen 을 문장마다 3번(통과 횟수)
 npm run eval:intent -- --update      # 지금 결과를 기준으로 저장
 ```
 
+## Claude Code 연결 (선택)
+
+Claude Code 에서 내 구성도를 읽고 고치게 할 수 있습니다. 앱에 로그인해 사이드바 아래 계정 영역의 **Claude Code 연결**(`/claude-code`)에서 키(`isk_...`)를 만듭니다. 키는 만들 때 한 번만 보이니 바로 복사하세요. 그다음 Claude Code 터미널에서 실행합니다.
+
+```bash
+claude mcp add --transport http infrasketch <앱 주소>/api/mcp --header "Authorization: Bearer <키>"
+```
+
+“키가 맞지 않아요” 오류가 나면 새 키를 만들고 `claude mcp remove infrasketch` 뒤에 위 명령을 새 키로 다시 실행합니다. 새 테이블(`mcp_keys`)이 필요하므로 마이그레이션(`0008`)을 먼저 실행해 두세요. 자세한 동작은 [아키텍처](./architecture.md) 의 “Claude Code 연동”을 참고하세요.
+
 ## 테스트
 
 | 명령 | 설명 | 사전 준비 |

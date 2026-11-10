@@ -1,6 +1,6 @@
 ---
 title: "useCamera.ts"
-sidebar_position: 19
+sidebar_position: 27
 ---
 # useCamera.ts
 
@@ -10,7 +10,7 @@ sidebar_position: 19
 
 ## Key Concepts
 
-- **useCamera.ts** (27 connections) — `src/canvas/useCamera.ts`
+- **useCamera.ts** (28 connections) — `src/canvas/useCamera.ts`
 - **Rect** (17 connections) — `src/canvas/layout.ts`
 - **useCamera()** (11 connections) — `src/canvas/useCamera.ts`
 - **unionRect()** (5 connections) — `src/canvas/useCamera.ts`
@@ -47,7 +47,8 @@ sidebar_position: 19
 - [edgeLabels.ts](edgeLabels.ts.md) (1 shared connections)
 - [layoutMetrics.ts](layoutMetrics.ts.md) (1 shared connections)
 - [Layout](Layout.md) (1 shared connections)
-- [NodeCard.tsx](NodeCard.tsx.md) (1 shared connections)
+- [ref_react](ref_react.md) (1 shared connections)
+- [GhostLayer.tsx](GhostLayer.tsx.md) (1 shared connections)
 
 ## Source Files
 
@@ -57,7 +58,7 @@ sidebar_position: 19
 
 ## Audit Trail
 
-- EXTRACTED: 64 (98%)
+- EXTRACTED: 65 (98%)
 - INFERRED: 1 (2%)
 - AMBIGUOUS: 0 (0%)
 

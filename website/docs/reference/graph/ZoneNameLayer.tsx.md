@@ -1,6 +1,6 @@
 ---
 title: "ZoneNameLayer.tsx"
-sidebar_position: 33
+sidebar_position: 41
 ---
 # ZoneNameLayer.tsx
 
@@ -38,11 +38,11 @@ sidebar_position: 33
 - [Canvas.tsx](Canvas.tsx.md) (12 shared connections)
 - [NodeCard.tsx](NodeCard.tsx.md) (8 shared connections)
 - [layout.ts](layout.ts.md) (7 shared connections)
-- [layoutMetrics.ts](layoutMetrics.ts.md) (2 shared connections)
-- [commands.ts](commands.ts.md) (1 shared connections)
+- [display.ts](display.ts.md) (2 shared connections)
+- [mcp/apply.ts](mcp-apply.ts.md) (1 shared connections)
 - [prompt.ts](prompt.ts.md) (1 shared connections)
 - [NodeInfo.tsx](NodeInfo.tsx.md) (1 shared connections)
-- [getOwnedDiagram](getOwnedDiagram.md) (1 shared connections)
+- [types.ts](types.ts.md) (1 shared connections)
 
 ## Source Files
 

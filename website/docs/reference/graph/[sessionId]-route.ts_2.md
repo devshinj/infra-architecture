@@ -1,6 +1,6 @@
 ---
 title: "[sessionId]/route.ts"
-sidebar_position: 107
+sidebar_position: 100
 ---
 # [sessionId]/route.ts
 
@@ -28,14 +28,16 @@ sidebar_position: 107
 
 ## Relationships
 
-- [ask.ts](ask.ts.md) (7 shared connections)
 - [getOwnedDiagram](getOwnedDiagram.md) (6 shared connections)
-- [auth](auth.md) (6 shared connections)
 - [\[sessionId\]/route.ts]([sessionId]-route.ts.md) (6 shared connections)
+- [\[diagramId\]/page.tsx]([diagramId]-page.tsx.md) (4 shared connections)
+- [ask/route.ts](ask-route.ts.md) (3 shared connections)
+- [ask.ts](ask.ts.md) (3 shared connections)
 - [projects.ts](projects.ts.md) (2 shared connections)
-- [ref_react](ref_react.md) (1 shared connections)
-- [useSessions.ts](useSessions.ts.md) (1 shared connections)
-- [schema.ts](schema.ts.md) (1 shared connections)
+- [Shell.tsx](Shell.tsx.md) (2 shared connections)
+- [ref_react](ref_react.md) (2 shared connections)
+- [explain/route.ts](explain-route.ts.md) (1 shared connections)
+- [middleware.ts](middleware.ts.md) (1 shared connections)
 - [pipeline.ts](pipeline.ts.md) (1 shared connections)
 
 ## Source Files

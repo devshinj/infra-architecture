@@ -1,15 +1,15 @@
 ---
 title: "runResult()"
-sidebar_position: 99
+sidebar_position: 93
 sidebar_label: "핵심 노드: runResult()"
 ---
 # runResult()
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> God node · 29 connections · `src/app/(app)/actions.ts`
+> God node · 33 connections · `src/app/(app)/actions.ts`
 
-**Community:** [NetworkKnowledgePage.tsx](NetworkKnowledgePage.tsx.md)
+**Community:** [useFlows](useFlows.md)
 
 ## Connections by Relation
 
@@ -34,10 +34,13 @@ sidebar_label: "핵심 노드: runResult()"
 - createDiagramAction() `EXTRACTED`
 - createProjectAction() `EXTRACTED`
 - deleteFlowAction() `EXTRACTED`
-- *…and 8 more `calls` connection(s) not listed (lowest-degree first to go)*
+- *…and 11 more `calls` connection(s) not listed (lowest-degree first to go)*
 
 ### contains
 - [(app)/actions.ts](app-actions.ts.md) `EXTRACTED`
+
+### references
+- Task 8: 키 화면 `INFERRED`
 
 ---
 

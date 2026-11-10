@@ -1,15 +1,15 @@
 ---
 title: "ValidationError"
-sidebar_position: 91
+sidebar_position: 85
 sidebar_label: "핵심 노드: ValidationError"
 ---
 # ValidationError
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> God node · 52 connections · `src/server/projects.ts`
+> God node · 56 connections · `src/server/projects.ts`
 
-**Community:** [getOwnedDiagram](getOwnedDiagram.md)
+**Community:** [server/network.ts](server-network.ts.md)
 
 ## Connections by Relation
 
@@ -34,7 +34,7 @@ sidebar_label: "핵심 노드: ValidationError"
 - setNetworkTypeHidden() `EXTRACTED`
 - upsertNetworkRule() `EXTRACTED`
 - cleanName() `EXTRACTED`
-- *…and 10 more `calls` connection(s) not listed (lowest-degree first to go)*
+- *…and 11 more `calls` connection(s) not listed (lowest-degree first to go)*
 
 ### contains
 - [projects.ts](projects.ts.md) `EXTRACTED`
@@ -46,16 +46,19 @@ sidebar_label: "핵심 노드: ValidationError"
 - [ask.ts](ask.ts.md) `EXTRACTED`
 - [server/network.ts](server-network.ts.md) `EXTRACTED`
 - [server/flows.ts](server-flows.ts.md) `EXTRACTED`
-- ask/route.ts `EXTRACTED`
+- [ask/route.ts](ask-route.ts.md) `EXTRACTED`
+- server.ts `EXTRACTED`
 - server/linkGuess.ts `EXTRACTED`
 - chat/route.ts `EXTRACTED`
 - [glossary.ts](glossary.ts.md) `EXTRACTED`
 - fields.ts `EXTRACTED`
 - [explain/route.ts](explain-route.ts.md) `EXTRACTED`
+- mcpKeys.ts `EXTRACTED`
 - suggest/route.ts `EXTRACTED`
 - zoneType.ts `EXTRACTED`
 - ignore.ts `EXTRACTED`
 - flows/route.ts `EXTRACTED`
+- head/route.ts `EXTRACTED`
 - server/assumptions.ts `EXTRACTED`
 
 ### method

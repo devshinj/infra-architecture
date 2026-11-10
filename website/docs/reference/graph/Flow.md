@@ -1,6 +1,6 @@
 ---
 title: "Flow()"
-sidebar_position: 95
+sidebar_position: 90
 sidebar_label: "핵심 노드: Flow()"
 ---
 # Flow()
@@ -16,15 +16,15 @@ sidebar_label: "핵심 노드: Flow()"
 ### calls
 - computeMissing() `EXTRACTED`
 - Canvas() `EXTRACTED`
-- mergeWarnings() `EXTRACTED`
 - useCamera() `EXTRACTED`
+- mergeWarnings() `EXTRACTED`
 - crossesBoundary() `EXTRACTED`
 - NodeMenu() `EXTRACTED`
 - categoryOf() `EXTRACTED`
+- prefersReducedMotion() `EXTRACTED`
 - emphasisOf() `EXTRACTED`
 - displayEdgeFor() `EXTRACTED`
 - unionRect() `EXTRACTED`
-- prefersReducedMotion() `EXTRACTED`
 - warningsByNode() `EXTRACTED`
 - useHoverEmphasis() `EXTRACTED`
 - flowEmphasis() `EXTRACTED`

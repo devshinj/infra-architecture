@@ -1,12 +1,12 @@
 ---
 title: "SessionPicker.tsx"
-sidebar_position: 27
+sidebar_position: 36
 ---
 # SessionPicker.tsx
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 23 nodes · cohesion 0.15
+> 24 nodes · cohesion 0.14
 
 ## Key Concepts
 
@@ -20,6 +20,7 @@ sidebar_position: 27
 - **.onSelect()** (3 connections) — `src/ui/chat/SessionPicker.tsx`
 - **when()** (3 connections) — `src/ui/chat/SessionPicker.tsx`
 - **MoreState** (3 connections) — `src/ui/chat/useSessions.ts`
+- **ref_react_dom** (2 connections)
 - **byRecent()** (2 connections) — `src/ui/chat/SessionPicker.tsx`
 - **Chevron()** (2 connections) — `src/ui/chat/SessionPicker.tsx`
 - **menuRootId()** (2 connections) — `src/ui/chat/SessionPicker.tsx`
@@ -36,14 +37,14 @@ sidebar_position: 27
 
 ## Relationships
 
-- [dialogs.tsx](dialogs.tsx.md) (7 shared connections)
-- [useSessions.ts](useSessions.ts.md) (6 shared connections)
-- [ChatPanel.tsx](ChatPanel.tsx.md) (5 shared connections)
-- [types.ts](types.ts.md) (3 shared connections)
+- [useChatTurn.ts](useChatTurn.ts.md) (9 shared connections)
+- [ChatPanel.tsx](ChatPanel.tsx.md) (6 shared connections)
+- [dialogs.tsx](dialogs.tsx.md) (5 shared connections)
 - [ExportMenu.tsx](ExportMenu.tsx.md) (3 shared connections)
-- [MentionInput](MentionInput.md) (2 shared connections)
-- [NodeCard.tsx](NodeCard.tsx.md) (1 shared connections)
+- [Sidebar.tsx](Sidebar.tsx.md) (2 shared connections)
 - [FlowPanel.tsx](FlowPanel.tsx.md) (1 shared connections)
+- [ref_react](ref_react.md) (1 shared connections)
+- [RightPanel.tsx](RightPanel.tsx.md) (1 shared connections)
 - [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (1 shared connections)
 
 ## Source Files
@@ -53,7 +54,7 @@ sidebar_position: 27
 
 ## Audit Trail
 
-- EXTRACTED: 65 (97%)
+- EXTRACTED: 66 (97%)
 - INFERRED: 2 (3%)
 - AMBIGUOUS: 0 (0%)
 

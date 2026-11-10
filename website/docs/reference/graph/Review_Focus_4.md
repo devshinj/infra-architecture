@@ -1,49 +1,43 @@
 ---
 title: "Review Focus"
-sidebar_position: 106
+sidebar_position: 99
 ---
 # Review Focus
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 9 nodes · cohesion 0.22
+> 7 nodes · cohesion 0.29
 
 ## Key Concepts
 
-- **Review Focus** (10 connections) — `docs/superpowers/plans/2026-11-05-flows-and-network-boundaries.md`
-- **흐름 보기와 망 경계 표시 Implementation Plan** (5 connections) — `docs/superpowers/plans/2026-11-05-flows-and-network-boundaries.md`
-- **FlowCommand** (5 connections) — `src/domain/commands.ts`
-- **Task 1: 망 영역·망연계 노드·연결 전달물/방향** (4 connections) — `docs/superpowers/plans/2026-11-05-flows-and-network-boundaries.md`
-- **Task 6: AI 흐름 제안(처음 그린 뒤 자동 + 버튼)** (4 connections) — `docs/superpowers/plans/2026-11-05-flows-and-network-boundaries.md`
-- **Task 2: 망 경계 판정·경고·채워야 할 정보** (3 connections) — `docs/superpowers/plans/2026-11-05-flows-and-network-boundaries.md`
-- **2026-11-05-flows-and-network-boundaries.md** (1 connections) — `docs/superpowers/plans/2026-11-05-flows-and-network-boundaries.md`
-- **Global Constraints** (1 connections) — `docs/superpowers/plans/2026-11-05-flows-and-network-boundaries.md`
-- **Task 9: E2E·화면 확인·문서** (1 connections) — `docs/superpowers/plans/2026-11-05-flows-and-network-boundaries.md`
+- **Review Focus** (11 connections) — `docs/superpowers/plans/2026-11-06-network-knowledge-link-guess.md`
+- **Global Constraints** (5 connections) — `docs/superpowers/plans/2026-11-06-network-knowledge-link-guess.md`
+- **망 종류 지식과 망연계 예상 Implementation Plan** (5 connections) — `docs/superpowers/plans/2026-11-06-network-knowledge-link-guess.md`
+- **Task 2: 구성도 상태 — 망 종류 칸, `set_zone_type`, 망연계 추정 표시 명령** (2 connections) — `docs/superpowers/plans/2026-11-06-network-knowledge-link-guess.md`
+- **2026-11-06-network-knowledge-link-guess.md** (1 connections) — `docs/superpowers/plans/2026-11-06-network-knowledge-link-guess.md`
+- **Task 10: E2E 와 문서** (1 connections) — `docs/superpowers/plans/2026-11-06-network-knowledge-link-guess.md`
+- **Task 1: 망 지식 도메인 — 타입, 기본 제공 목록, 필요한 방식 계산** (1 connections) — `docs/superpowers/plans/2026-11-06-network-knowledge-link-guess.md`
 
 ## Relationships
 
-- [missing.ts](missing.ts.md) (2 shared connections)
-- [useFlows](useFlows.md) (2 shared connections)
-- [commands.ts](commands.ts.md) (2 shared connections)
 - [getOwnedDiagram](getOwnedDiagram.md) (2 shared connections)
-- [edgeLabels.ts](edgeLabels.ts.md) (1 shared connections)
-- [dialogs.tsx](dialogs.tsx.md) (1 shared connections)
-- [EdgePanels.tsx](EdgePanels.tsx.md) (1 shared connections)
-- [domain/warnings.ts](domain-warnings.ts.md) (1 shared connections)
-- [prompt.ts](prompt.ts.md) (1 shared connections)
-- [createJsonlParser](createJsonlParser.md) (1 shared connections)
-- [DiagramState](DiagramState.md) (1 shared connections)
+- [mcp/apply.ts](mcp-apply.ts.md) (2 shared connections)
+- [chat/warnings.ts](chat-warnings.ts.md) (2 shared connections)
+- [domain/linkGuess.ts](domain-linkGuess.ts.md) (2 shared connections)
+- [missing.ts](missing.ts.md) (2 shared connections)
 - [apply.ts](apply.ts.md) (1 shared connections)
+- [normalize.ts](normalize.ts.md) (1 shared connections)
+- [prompt.ts](prompt.ts.md) (1 shared connections)
+- [NetworkKnowledgePage.tsx](NetworkKnowledgePage.tsx.md) (1 shared connections)
 
 ## Source Files
 
-- `docs/superpowers/plans/2026-11-05-flows-and-network-boundaries.md`
-- `src/domain/commands.ts`
+- `docs/superpowers/plans/2026-11-06-network-knowledge-link-guess.md`
 
 ## Audit Trail
 
-- EXTRACTED: 15 (58%)
-- INFERRED: 11 (42%)
+- EXTRACTED: 13 (65%)
+- INFERRED: 7 (35%)
 - AMBIGUOUS: 0 (0%)
 
 ---

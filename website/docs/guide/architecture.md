@@ -11,11 +11,11 @@ InfraSketch 는 Next.js 15 (App Router) 하나로 화면과 서버를 함께 띄
 
 | 폴더 | 역할 |
 | --- | --- |
-| `src/app` | 라우트. `(app)` 은 로그인 후 화면(구성도 작업 화면, 용어 사전 `(app)/glossary`, 망 지식 `(app)/network`), `(auth)` 는 로그인·가입·비밀번호 재설정(공통 입력칸과 제출 훅은 `(auth)/_components`), `api` 는 대화(`diagrams/[id]/chat`)·노드 질문(`diagrams/[id]/ask`)·흐름 목록(`diagrams/[id]/flows`)·흐름 제안(`diagrams/[id]/flows/suggest`)·질문 세션 조회(`diagrams/[id]/sessions/[sessionId]`)·설명(`diagrams/[id]/explain`)·인증·AI 상태 API. 폼 저장·경고 무시·용어 사전 편집·망 지식 편집·망 종류 확정·망연계 맞아요/아니에요 같은 나머지 쓰기는 `(app)/actions.ts` 의 서버 액션이 맡습니다 |
-| `src/ui` | 작업 화면 컴포넌트. 전체 틀(`Shell.tsx`), 사이드바, 오른쪽 패널(대화·설명·이력·흐름)과 너비 조절 손잡이(`PanelResizer.tsx`), 대화 입력·체크리스트·질문 세션 선택(`chat/`, `SessionPicker.tsx`), 설명 패널과 “이 노드에 대해 물어보기”(`explain/`, `AskNode.tsx`), 흐름 탭(`flows/FlowPanel.tsx`, 목록·상태를 맡는 `flows/useFlows.ts`), 용어 사전 화면(`glossary/`), 망 지식 화면과 망 종류 고르개(`network/`: `NetworkKnowledgePage.tsx`, `ZoneTypePicker.tsx`, 정보 카드에 지식을 내려 주는 `NetworkKnowledgeContext.tsx`), 로고(`brand/`), 캔버스 위에 뜨는 정보 카드(`canvas/InfoCard.tsx`)와 범례(`canvas/Legend.tsx`, 연결선 종류 견본·보조 연결 숨김 표시), 노드가 날아가 앉는 효과(`FlyLayer.tsx`), 용어 배지 규칙(`glossary/aiBadge.ts`: AI가 추가했고 아직 확인하지 않은 설명에만 “AI 설명” 배지). 폭 640px 이하(휴대폰)에서는 위 막대와 서랍으로 연 사이드바, 아래 탭 막대(`MobileTabBar.tsx`: 구성도·대화·설명·이력·흐름)로 한 번에 한 화면만 보이고, 폭 900px 이하는 사이드바를 접은 채 시작합니다(`useMediaQuery.ts`, `Shell.tsx`) |
+| `src/app` | 라우트. `(app)` 은 로그인 후 화면(구성도 작업 화면, 용어 사전 `(app)/glossary`, 망 지식 `(app)/network`), `(auth)` 는 로그인·가입·비밀번호 재설정(공통 입력칸과 제출 훅은 `(auth)/_components`), `api` 는 대화(`diagrams/[id]/chat`)·노드 질문(`diagrams/[id]/ask`)·흐름 목록(`diagrams/[id]/flows`)·흐름 제안(`diagrams/[id]/flows/suggest`)·질문 세션 조회(`diagrams/[id]/sessions/[sessionId]`)·설명(`diagrams/[id]/explain`)·인증·AI 상태 API. 폼 저장·경고 무시·용어 사전 편집·망 지식 편집·망 종류 확정·망연계 맞아요/아니에요 같은 나머지 쓰기는 `(app)/actions.ts` 의 서버 액션이 맡습니다. Claude Code 연동 주소 `api/mcp`(MCP 서버)와 열어 둔 구성도가 최신 버전을 묻는 `diagrams/[id]/head`, 키 관리 화면 `(app)/claude-code`(`/claude-code`)|
+| `src/ui` | 작업 화면 컴포넌트. 전체 틀(`Shell.tsx`), 사이드바, 오른쪽 패널(대화·설명·이력·흐름)과 너비 조절 손잡이(`PanelResizer.tsx`), 대화 입력·체크리스트·질문 세션 선택(`chat/`, `SessionPicker.tsx`), 설명 패널과 “이 노드에 대해 물어보기”(`explain/`, `AskNode.tsx`), 흐름 탭(`flows/FlowPanel.tsx`, 목록·상태를 맡는 `flows/useFlows.ts`), 용어 사전 화면(`glossary/`), 망 지식 화면과 망 종류 고르개(`network/`: `NetworkKnowledgePage.tsx`, `ZoneTypePicker.tsx`, 정보 카드에 지식을 내려 주는 `NetworkKnowledgeContext.tsx`), 로고(`brand/`), 캔버스 위에 뜨는 정보 카드(`canvas/InfoCard.tsx`)와 범례(`canvas/Legend.tsx`, 연결선 종류 견본·보조 연결 숨김 표시), 노드가 날아가 앉는 효과(`FlyLayer.tsx`), 용어 배지 규칙(`glossary/aiBadge.ts`: AI가 추가했고 아직 확인하지 않은 설명에만 “AI 설명” 배지). 폭 640px 이하(휴대폰)에서는 위 막대와 서랍으로 연 사이드바, 아래 탭 막대(`MobileTabBar.tsx`: 구성도·대화·설명·이력·흐름)로 한 번에 한 화면만 보이고, 폭 900px 이하는 사이드바를 접은 채 시작합니다(`useMediaQuery.ts`, `Shell.tsx`). Claude Code 연결 화면(`mcp/McpKeysPage.tsx`: 키 만들기·지우기·설정 예 복사), 바깥 변경을 몇 초마다 묻는 `useRemoteChanges.ts`, 지워진 노드·연결이 잠깐 비쳤다 사라지는 `GhostLayer.tsx` |
 | `src/canvas` | React Flow(`@xyflow/react`) 캔버스. 노드·영역·연결선 그리기, ELK.js 자동 배치(`layout.ts`), 확대·이동 카메라(`useCamera.ts`), 선택·호버 강조 집합 계산(`emphasis.ts`)과 호버 지연(`useHoverEmphasis.ts`), 잘린 이름을 보여 주는 말풍선(`NameTooltip.tsx`), 키보드 조작(캔버스는 Tab 정지점 하나이고 안에서는 화살표·Home·End 로 노드와 영역을 오감(`roving.ts`), Enter·Space 로 선택, Esc 로 해제, 영역에서 Space 로 접기·펴기, 편집 모드에서 고른 노드는 화살표로 옮기고 키를 뗄 때 저장)과 한국어 화면 읽기 안내(`ariaLabels.ts`), 안쪽 영역을 바깥 영역 위에 쌓는 순서(`stacking.ts`), 맞춤 보기(도구 막대·정보 카드를 피하고 글자를 읽을 크기 아래로는 줄이지 않으며 그때는 위쪽부터 보임, “전체 보기”만 늘 전부 보임), 애니메이션, 경고 배지, 구성도 전체를 PNG·SVG(어두운·흰 바탕)로 저장하는 이미지 저장(`exportImage.ts`, `ExportMenu.tsx`, html-to-image) |
 | `src/domain` | 구성도 규칙. 변경 명령 스키마(`commands.ts`), 명령 적용(`apply.ts`), 노드 종류 목록(`catalog.ts`), 빠진 정보 계산(`missing.ts`), 경고 규칙(`warnings.ts`), 흐름 타입·끊김 계산(`flows.ts`), 망 경계 판정(`boundary.ts`), 망 지식 계산(`network.ts`: 망 종류·등급·두 종류 사이에 보통 필요한 연결 방식)과 기본 망 종류 시드(`network-seed.ts`), 통신 길 판정과 망연계 예상 경고(`networkRules.ts`), 망연계 추정의 기록·되돌리기·흐름 단계 나누기(`linkGuess.ts`), 구성 패턴(`patterns.ts`), 설명 모양·길이 상한·서명(`explain.ts`), 용어 사전 시드와 화면용 타입(`glossary-seed.ts`, `glossary-types.ts`) |
-| `src/server` | 서버 로직. 대화 파이프라인·노드 질문·질문 세션·경고 점검(`chat/`), AI 연동(`llm/`), 설명 생성(`explain.ts`), 용어 사전(`glossary.ts`), 체크리스트 폼 저장(`fields.ts`), 경고 무시(`ignore.ts`), 흐름 저장소(`flows.ts`)와 흐름 제안(`flowSuggest.ts`), 망 지식 저장소(`network.ts`: 종류·규칙 편집, 처음 쓸 때 시드 채우기), 망 종류 확정(`zoneType.ts`), 망연계 맞아요·아니에요(`linkGuess.ts`), 프로젝트·버전 저장(프로젝트와 첫 구성도를 함께 만들고, 이름 중복을 막고, 홈에서 이어 갈 최근 구성도를 고름), 인증(가입·재설정·로그인이 함께 쓰는 입력 규칙과 문구는 `auth/rules.ts`) |
+| `src/server` | 서버 로직. 대화 파이프라인·노드 질문·질문 세션·경고 점검(`chat/`), AI 연동(`llm/`), 설명 생성(`explain.ts`), 용어 사전(`glossary.ts`), 체크리스트 폼 저장(`fields.ts`), 경고 무시(`ignore.ts`), 흐름 저장소(`flows.ts`)와 흐름 제안(`flowSuggest.ts`), 망 지식 저장소(`network.ts`: 종류·규칙 편집, 처음 쓸 때 시드 채우기), 망 종류 확정(`zoneType.ts`), 망연계 맞아요·아니에요(`linkGuess.ts`), 프로젝트·버전 저장(프로젝트와 첫 구성도를 함께 만들고, 이름 중복을 막고, 홈에서 이어 갈 최근 구성도를 고름), 인증(가입·재설정·로그인이 함께 쓰는 입력 규칙과 문구는 `auth/rules.ts`). Claude Code 연동(`mcp/`: 도구 9개를 등록하는 `server.ts`, 읽기 `read.ts`, 쓰기 `apply.ts`, 변경 설명 `explain.ts`), 키 저장소(`mcpKeys.ts`), 그리기 규칙 공용 모듈(`drawing/rules.ts`), 차례 끝 정리 공용 함수(`chat/settle.ts`) |
 | `src/db` | Drizzle 스키마와 마이그레이션 |
 | `src/styles` | 색·간격 토큰(`tokens.css`). 사이드바·캔버스·오른쪽 패널은 바탕 명도를 3단으로 달리해 영역을 구분합니다. 화면마다 주 동작 하나만 금색으로 채우고(`--accent-fill`, `--on-accent`), 빨간 글자는 대비를 맞춘 `--state-missing-text`, 입력칸 테두리는 `--line-input` 을 씁니다 |
 
@@ -49,7 +49,7 @@ runChatTurn ── 구성도별 잠금 (이미 진행 중이면 409)
        │    (`set_zone_type` 은 망 지식에 있는 종류 key 만 받고, 서버만 만드는 `set_link_guess` 는 AI 가 써도 건너뜀)
        │    (흐름 명령은 상태에 적용하지 않고 모아 둔다)
        └ 답변 경로: <think> 를 지운 글을 answer 이벤트로 흘림
-  5. 적용된 명령이 있으면 먼저 비게 된 영역을 정리한다(pruneEmptyGroups)
+  5. 적용된 명령이 있으면 먼저 비게 된 영역을 정리한다(settleTurn: pruneEmptyGroups)
      AI 가 `guess: true` 로 넣은 망연계마다 대신한 연결을 기록하고(`set_link_guess` cmd 이벤트)
      그 뒤 경고를 점검하고(checking, 망 지식 포함) 새 버전을 만든다
   6. 망연계가 끼어든 연결을 지나던 흐름 단계를 둘로 나누고(`rewriteFlows`),
@@ -89,7 +89,7 @@ runChatTurn ── 구성도별 잠금 (이미 진행 중이면 409)
 - **반영 못 한 차례의 안내**(`ui/chat/lines.ts` 의 `summaryText`): 차례가 정상으로 끝났는데 적용된 명령이 0개이고 건너뛴 명령이 1개 이상이면(재정렬 차례 제외) 요약 칩에 “요청을 반영하지 못했어요. 다시 말해 주세요.”를 보여 줍니다. 건너뛴 것도 없고 답도 없을 때만 “변경 사항이 없어요.”입니다. 그 밖의 요약은 `노드 N · 연결 M · K곳 바꿨어요`(바꾼 것이 없으면 “바꾼 곳이 없어요”)로, 건너뛴 수는 화면에 보이지 않고 메타에만 남습니다.
 - **이름 숫자 순서 배치**(`src/canvas/layout.ts`): `redundancy_group`·`k8s_cluster` 안에서 나란히 놓인 노드 중 이름이 같은 접두어에 숫자로만 끝나는 것(`웹 서버 #1`, `#2`, `API 2` 등)은 숫자 순서대로 놓으려 합니다. ELK 가 입력 순서를 지키지 않아, ELK 가 배치한 뒤 같은 줄 안에서 자리를 바꾸는 방식이며 **가능할 때만** 합니다. 바꾼 결과가 끝점이 아닌 노드를 가로지르는 연결을 새로 만들거나, 노드가 겹치거나, 서로 다른 연결이 같은 선 위에서 겹치게 되면 그 줄은 바꾸지 않고 ELK 의 순서와 경로를 그대로 둡니다. 안쪽 영역이 섞인 묶음은 건드리지 않고, 숫자가 없거나 접두어가 다른 이름(`Aurora Writer`, `주 DB`)은 대상이 아닙니다.
 - **재정렬**: `layout` 의도는 노드·연결·영역을 바꾸지 않으므로 Qwen 호출도 새 버전도 없습니다. `relayout` 이벤트를 받은 브라우저가 고정 위치를 풀고 다시 배치합니다.
-- **빈 영역 정리**: 적용된 명령이 있는 차례는 경고 점검과 버전 저장 전에 `domain/apply.ts` 의 `pruneEmptyGroups` 로 이번 차례에 비게 된 영역을 지웁니다. 차례 시작 때 이미 비어 있었거나 새로 만든 영역은 남기고, 안쪽부터 반복하므로 자식이 모두 지워진 부모도 함께 지워집니다. 지운 영역마다 `remove_group` 명령을 `cmd` 이벤트로 안쪽부터 보내, 브라우저가 서버와 같은 상태로 맞춥니다.
+- **빈 영역 정리**(차례 끝 정리는 `server/chat/settle.ts` 의 `settleTurn` 하나로 모았고, 대화와 Claude Code 연동이 똑같이 씁니다. 정리한 영역 삭제 → 추정 망연계 기록 → 흐름 단계 나눔 순서도 같습니다): 적용된 명령이 있는 차례는 경고 점검과 버전 저장 전에 `domain/apply.ts` 의 `pruneEmptyGroups` 로 이번 차례에 비게 된 영역을 지웁니다. 차례 시작 때 이미 비어 있었거나 새로 만든 영역은 남기고, 안쪽부터 반복하므로 자식이 모두 지워진 부모도 함께 지워집니다. 지운 영역마다 `remove_group` 명령을 `cmd` 이벤트로 안쪽부터 보내, 브라우저가 서버와 같은 상태로 맞춥니다.
 
 ### 차례 끝의 경고 점검
 
@@ -195,6 +195,7 @@ AI 는 구성도를 직접 그리지 않고 **작은 변경 명령**을 연달�
 ## AI 연동과 장애 대응
 
 - **Qwen** (`server/llm/qwen.ts`): 대화 응답, 변경 명령, 경고 문구, 노드·연결 설명처럼 글을 만드는 일을 모두 맡습니다. OpenAI 호환 API 를 씁니다.
+- **그리기 규칙 공용 모듈**(`server/drawing/rules.ts`): 노드·영역·연결 종류 목록, 종류별 attrs 칸, 명령 예, 그리기 규칙 글을 한곳에 두고 Qwen 시스템 프롬프트(`chat/prompt.ts`)와 Claude Code 의 `get_guide` 가 같은 글을 씁니다. 목록은 `domain/catalog` 에서 만들어 손으로 복사하지 않습니다. Qwen 출력 방식(JSON Lines·말하기·질문·이어 쓰기)에 관한 줄만 `prompt.ts` 에 남습니다.
 - **망 지식**: 구조 변경 프롬프트에 망 블록이 붙습니다(위 “망 지식과 망연계 예상”). AI 는 망 종류를 추정해 붙이고 망연계를 추정으로 넣을 뿐, 판정은 코드(`evaluateNetworkRules`)가 합니다. 노드 질문(`ask.ts`)은 망 블록 없이 빠진 정보 수만 망 지식으로 셉니다.
 - **Clef** (`server/llm/clef.ts`): 글을 만들지 않고 선택지 확률만 돌려주는 판정 모델입니다. 세 곳에 씁니다.
   - `classifyIntent`: 매 차례 앞의 의도 분류. 선택지는 구조 변경(노드를 다른 영역으로 옮기거나 필요 없는 것을 정리하는 요청, 흐름을 만들거나 고치거나 지우거나 보여 달라는 요청 포함)·질문(용어·구성·흐름·망에 대해 묻기만 하는 말)·빠진 정보 답변(연결의 전달물·방향을 알려 주는 말 포함)·이력·재정렬·기타입니다. 재정렬(`layout`)은 노드·연결·영역을 하나도 바꾸지 않고 화면 배치만 다시 해 달라는 요청일 때만 고릅니다. 직전 AI 답변(300자)과 열린 빠진 정보 목록(`openItems`)을 문맥으로 넘겨, 값만 알려 주는 답을 `missing_info_answer` 로 가립니다. 빠진 정보는 사용자 글·직전 AI 답에 이름이 나왔거나 참조한 대상(연결은 한쪽 끝)만 골라 "WAS: CPU·RAM" 처럼 대상별로 묶습니다(`server/chat/intent.ts` 의 `clefOpenItems`, 앞 20개·600자). 관계없는 항목을 길게 넘기면 질문과 값만 알려 주는 답의 확신도가 떨어지기 때문입니다. 대기열·재시도를 포함해 3초 상한이고, 확신도 0.6 미만이면 의도 없이 진행합니다.
@@ -230,6 +231,57 @@ Qwen 요청 하나는 30초 상한이고, 실패하면 "설명을 만들지 못�
 - 경고 문구가 늦으면 정해진 문구를 씁니다.
 - 한 차례에는 시간 제한이 있고, 넘으면 중단 상태로 저장합니다.
 
+## Claude Code 연동 (MCP)
+
+Claude Code 에서 내 구성도를 읽고 고치게 하는 길입니다. 앱이 `/api/mcp` 에 MCP 서버(Streamable HTTP)를 열어 두고, 이 길은 Qwen·Clef 를 부르지 않습니다. 서버는 상태를 기억하지 않아서(stateless), 요청마다 키로 계정을 확인하고 그 계정만 보는 서버를 새로 만들어 JSON 으로 답합니다. GET·DELETE 는 405 입니다. 로그인 세션 대신 라우트가 직접 키를 확인하므로 `/api/mcp` 는 로그인 검사에서 빼 둡니다(`middleware-paths.ts`).
+
+### 도구 9개
+
+모든 도구 설명은 “처음 그리기 전에 `get_guide` 를 먼저 읽으세요”로 끝납니다.
+
+| 도구 | 하는 일 |
+| --- | --- |
+| `get_guide` | 그리는 법: 명령 형식, 종류 목록, 그리기 규칙, 표준 구성 패턴, 이 계정의 망 지식 |
+| `list_projects` | 내 프로젝트와 그 안 구성도 목록(id·이름·최신 버전 번호) |
+| `create_project` | 새 프로젝트를 만듭니다. 첫 구성도(버전 1)가 함께 생깁니다 |
+| `list_diagrams` | 프로젝트 안 구성도 목록 |
+| `create_diagram` | 프로젝트 안에 새 구성도(버전 1)를 만듭니다 |
+| `get_diagram` | 구성도 최신 모습을 한 번에 읽습니다: 버전 번호, 영역·노드·연결·가정, 망 영역 종류, 망연계 추정, 흐름과 끊긴 흐름, 경고, 빠진 정보, 브라우저 주소 |
+| `list_versions` | 변경 이력(최근 50개, 최신부터): 번호·시각·출처·요약 한 줄 |
+| `apply_commands` | 명령을 적용합니다(최대 500개). `dry_run` 이면 검사만 하고 저장하지 않습니다 |
+| `restore_version` | 예전 버전으로 되돌립니다. 새 버전이 하나 생기고 흐름은 되돌아가지 않습니다 |
+
+일부러 넣지 않은 것은 프로젝트·구성도 삭제, 망 지식 편집, 계정 설정, Qwen 을 쓰는 기능입니다. 되돌리기 어려운 일은 브라우저에서만 하게 했습니다.
+
+`get_guide` 글은 20,000자까지로 제한합니다. 넘으면 망 지식 부분을 줄여 맞춥니다(`mcp/read.ts`).
+
+### 키 인증
+
+- 키는 `isk_` 로 시작하는 43자 무작위 값입니다(`mcpKeys.ts`). 만들 때 한 번만 화면에 보이고, DB 에는 SHA-256 해시만 저장합니다. 한 계정에 10개까지, 이름은 40자까지입니다.
+- Claude Code 는 `Authorization: Bearer <키>` 를 보냅니다. 라우트가 해시로 계정을 찾고, 찾으면 마지막 사용 시각을 갱신합니다. 키 모양이 아니면 DB 를 보지 않습니다.
+- **키가 없으면 401**, **키가 틀렸거나 지워졌으면 403** 과 한국어 안내(“새 키를 만들어 다시 등록해 주세요”)를 돌려줍니다. 틀린 키에 401 을 주면 Claude Code(SDK)가 OAuth 를 찾아 나서서 안내가 보이지 않기 때문에 403 으로 나눴습니다. 키 확인 중 DB 오류가 나도 JSON 500 으로 답합니다.
+- 키는 화면(`/claude-code`)에서 만들고 지웁니다. 지우면 그 키로는 바로 403 이 됩니다.
+
+### 전부 아니면 하나도 아니게, 그리고 덮어쓰기 막기
+
+`apply_commands` 는 명령을 전부 적용하거나 하나도 적용하지 않습니다(`mcp/apply.ts`). 하나라도 규칙에 어긋나면 어느 명령이 왜 안 되는지 알려 주고 아무것도 저장하지 않습니다. 대화 파이프라인과 같은 규칙을 쓰고, 차례 끝 정리(`settleTurn`)도 거칩니다.
+
+- **`base_version`**: `get_diagram` 으로 읽은 버전을 함께 보냅니다. 구성을 바꾸는 호출에서 이 번호가 최신이 아니면 저장하지 않습니다. **흐름만 바꾸는 호출은 `base_version` 을 보지 않습니다.** 흐름은 버전 상태 밖의 `flows` 테이블에 따로 저장하기 때문입니다. 흐름만 바뀌면 구성도 버전은 그대로입니다.
+- **저장 순간 다시 확인**: 읽을 때 최신이었어도 저장하는 사이 다른 쪽이 새 버전을 만들 수 있습니다. 그래서 버전 번호를 잠근 트랜잭션 안에서 `createVersion` 이 최신 번호를 한 번 더 확인합니다(`expectedLatest`, `lockLatestNumber`). 다르면 `StaleVersionError` 로 저장하지 않고 다시 읽으라고 알립니다. `restore_version` 도 같은 확인을 합니다.
+- **이력 요약**: `summary` 를 비우면 “Claude Code에서 N곳 바꿈”(N 은 적용한 명령 수)이 남습니다. 최대 80자입니다.
+- 버전은 `source: "mcp"`, `via: "mcp"` 로 저장되고, 이력 탭에 “Claude Code에서”로 보입니다.
+
+### 그리기 규칙 공용 모듈
+
+Claude Code 에게 알려 주는 그리기 규칙과 Qwen 프롬프트의 규칙이 어긋나지 않게, 종류 목록·attrs 칸·명령 예·규칙 글을 `server/drawing/rules.ts` 한곳에 모았습니다. Qwen 프롬프트(`chat/prompt.ts`)와 `get_guide`(`mcp/read.ts` 의 `buildGuide`)가 둘 다 이 모듈을 읽습니다. 차례 끝 정리도 `chat/settle.ts` 의 `settleTurn` 하나를 대화와 MCP 가 함께 씁니다.
+
+### 열어 둔 화면이 바뀐 것을 알아채기
+
+- 열어 둔 구성도는 탭이 보일 때 몇 초(3초)마다 `GET /api/diagrams/[id]/head` 를 묻습니다(`ui/useRemoteChanges.ts`). 답에는 최신 버전 `version`, **Claude Code 가 만든 최신 버전 `mcpVersion`**, 흐름 수와 마지막 수정 시각이 들어 있습니다.
+- 브라우저는 `mcpVersion` 이 지금 보는 버전보다 클 때만 새로 불러옵니다. 브라우저가 스스로 만든 버전은 `mcpVersion` 을 올리지 않으므로 자기 저장을 바깥 변경으로 오해하지 않습니다. 흐름 수나 수정 시각이 바뀌면 흐름 목록만 다시 불러옵니다.
+- 입력 중이거나 대화상자·이력 보기 중이면 끼어들지 않고 “Claude Code가 구성도를 바꿨어요 [불러오기]” 안내만 띄웁니다. 대화 차례 중에는 묻지도 않습니다.
+- **유령 효과**: 불러오면 Claude Code 가 지운 노드·연결이 점선 테두리로 1초 동안 비쳤다가 사라집니다(`ui/GhostLayer.tsx`). 캔버스 “움직임”이 꺼졌거나 움직임 줄이기 설정이면 그리지 않습니다.
+
 ## 데이터 모델
 
 `src/db/schema.ts` 의 주요 테이블입니다.
@@ -241,7 +293,8 @@ Qwen 요청 하나는 30초 상한이고, 실패하면 "설명을 만들지 못�
 | `diagrams` | 프로젝트 안의 구성도. 같은 프로젝트 안에서 이름이 겹치지 않습니다(대소문자 무시, `diagrams_project_name_uidx`). `flows_suggested_at` 은 흐름 자동 제안을 한 번만 하려는 표식입니다 |
 | `chat_sessions` | 대화 세션. 종류(`kind`: `node` 노드 질문, `diagram` 구성도 대화), 구성도(`diagram_id`)·노드(`node_id`, 노드 질문만)·만들 때의 노드 이름(`node_label`, 노드 질문만)·제목·갱신 시각(DB 시계). 종류와 노드 칸이 맞는지 CHECK 로 지킵니다(마이그레이션 0005). 구성도가 지워지면 함께 지워집니다 |
 | `messages` | 대화 기록 (메타에 의도·적용 수·버전·빠진 정보 수·새 경고 등). `session_id` 가 비어 있으면(NULL) 구성도 대화이고, 값이 있으면 그 질문 세션의 메시지입니다. 세션이 지워지면 함께 지워집니다 |
-| `diagram_versions` | 구성도 상태 스냅샷. AI 변경 한 차례마다 버전 하나가 생기고, 이력 탭에서 비교하고 되돌립니다. 체크리스트 폼 저장과 경고 무시도 `form` 버전 하나를 만듭니다 |
+| `diagram_versions` | 구성도 상태 스냅샷. AI 변경 한 차례마다 버전 하나가 생기고, 이력 탭에서 비교하고 되돌립니다. 체크리스트 폼 저장과 경고 무시도 `form` 버전 하나를 만듭니다. 출처 `source` 에 Claude Code 가 만든 `mcp` 가 더해졌고(마이그레이션 0008), 추가 칸 `via`(`mcp` 이면 Claude Code 를 거친 버전, Claude Code 로 되돌린 버전에도 붙음)와 `summary`(이력에 남길 한 줄)가 있습니다 |
+| `mcp_keys` | Claude Code 연결 키(마이그레이션 0008). 사용자(`user_id`, 계정이 지워지면 함께 지움)·이름·앞 8글자 `prefix`(화면에서 알아보는 용도)·SHA-256 해시 `hash`(유일)·만든 시각·마지막 사용 시각. 키 원문은 저장하지 않습니다 |
 | `glossary_terms` | 사용자별 용어 사전. 정규화한 `key` 와 별칭(`aliases`), 정의·필요한 이유·비교, 검수 여부(`reviewed`), 출처(`seed`/`ai`). 처음 쓸 때 시드 50개를 미검수로 복사합니다. 화면의 “AI 설명” 배지와 필터는 출처가 `ai` 인 미검수 항목에만 붙고, 시드는 미검수여도 배지가 없습니다 |
 | `flows` | 구성도의 흐름(마이그레이션 0006). `diagram_id`(구성도가 지워지면 함께 지움)·`key`(흐름 id, 구성도마다 유일)·`data`(jsonb: 이름·시작 주체·요약·결과·단계)·출처 `source`(`ai`/`user`)·검수 여부 `reviewed`·생성/갱신 시각 |
 | `network_types` | 계정 공통 망 종류(마이그레이션 0007). `key`(사용자 안에서 유일)·이름·별칭·설명·등급(`grade`)·출처 `source`(`seed` 기본 제공 / `user` 직접 만듦)·고침 여부 `edited`·숨김 `hidden`. 처음 쓸 때 기본 종류 시드를 채우고, 시드는 고치거나 숨기거나 되돌릴 수 있습니다. 숨긴 종류는 망 지식에서 빠집니다 |
@@ -256,7 +309,7 @@ Qwen 요청 하나는 30초 상한이고, 실패하면 "설명을 만들지 못�
 
 **흐름은 버전 상태에 넣지 않고 `flows` 테이블에 따로 저장합니다.** 그래서 이력에서 구성도를 되돌려도 흐름은 남습니다. 단계가 가리키는 연결이 사라지거나 방향이 어긋나는 **끊김은 저장하지 않고 불러올 때마다 최신 상태로 계산**합니다(`domain/flows.ts` 의 `checkFlow`: 없는 연결·시작 노드 불일치·앞 단계와 이어지지 않음·단방향 연결을 거슬러 감. 갈래는 허용). 끊긴 흐름은 대화로 다시 맞추거나 단계를 하나 지워 고칠 수 있고, 마지막 단계는 지울 수 없습니다.
 
-마이그레이션은 `src/db/migrations` 에 있으며, 용어 사전·설명 테이블은 `0002`, 질문 세션 테이블과 `messages.session_id` 는 `0003` 에서 추가됐습니다. `0004` 는 이미 겹친 프로젝트·구성도 이름 중 나중 것에 ` 2`, ` 3` … 을 붙여 정리한 뒤 이름 유니크 인덱스를 만들고, `0006_flows` 는 `flows` 테이블과 `diagrams.flows_suggested_at` 을 추가하고, `0007_network_knowledge` 는 `network_types`·`network_rules` 테이블을 추가합니다.
+마이그레이션은 `src/db/migrations` 에 있으며, 용어 사전·설명 테이블은 `0002`, 질문 세션 테이블과 `messages.session_id` 는 `0003` 에서 추가됐습니다. `0004` 는 이미 겹친 프로젝트·구성도 이름 중 나중 것에 ` 2`, ` 3` … 을 붙여 정리한 뒤 이름 유니크 인덱스를 만들고, `0006_flows` 는 `flows` 테이블과 `diagrams.flows_suggested_at` 을 추가하고, `0007_network_knowledge` 는 `network_types`·`network_rules` 테이블을 추가하고, `0008` 은 `mcp_keys` 테이블과 `diagram_versions.via`·`summary` 를 추가합니다.
 
 `listMessages` 는 `sessionId` 가 null 이면 구성도 대화만, 아니면 그 세션의 것만 돌려줍니다. 그래서 `pipeline.ts` 의 대화 기록과 Clef 에 넘기는 직전 AI 답변(`lastAssistant`)에는 구성도 대화 메시지만 쓰이고, 질문 세션의 글은 섞이지 않습니다.
 

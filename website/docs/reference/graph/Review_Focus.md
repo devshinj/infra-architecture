@@ -1,6 +1,6 @@
 ---
 title: "Review Focus"
-sidebar_position: 46
+sidebar_position: 50
 ---
 # Review Focus
 
@@ -30,12 +30,11 @@ sidebar_position: 46
 
 ## Relationships
 
+- [useChatTurn.ts](useChatTurn.ts.md) (2 shared connections)
 - [ChatPanel.tsx](ChatPanel.tsx.md) (1 shared connections)
 - [(app)/actions.ts](app-actions.ts.md) (1 shared connections)
 - [MissingChecklist.tsx](MissingChecklist.tsx.md) (1 shared connections)
 - [Sidebar.tsx](Sidebar.tsx.md) (1 shared connections)
-- [types.ts](types.ts.md) (1 shared connections)
-- [lines.ts](lines.ts.md) (1 shared connections)
 - [apply.ts](apply.ts.md) (1 shared connections)
 
 ## Source Files

@@ -1,6 +1,6 @@
 ---
 title: "ExportMenu.tsx"
-sidebar_position: 29
+sidebar_position: 38
 ---
 # ExportMenu.tsx
 
@@ -39,7 +39,7 @@ sidebar_position: 29
 - [Canvas.tsx](Canvas.tsx.md) (11 shared connections)
 - [exportImage.ts](exportImage.ts.md) (4 shared connections)
 - [SessionPicker.tsx](SessionPicker.tsx.md) (3 shared connections)
-- [NodeCard.tsx](NodeCard.tsx.md) (2 shared connections)
+- [ref_react](ref_react.md) (2 shared connections)
 
 ## Source Files
 
