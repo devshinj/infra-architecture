@@ -23,7 +23,10 @@ const nodes = (page: Page) => page.locator(".react-flow__node-infra");
 /** 키 화면 링크는 펼친 사이드바에 바로 있거나, 레일이면 "계정" 팝오버 안에 있다. */
 async function openKeyScreen(page: Page) {
   const link = page.getByRole("link", { name: "Claude Code 연결" });
-  if (!(await link.isVisible())) await page.getByRole("button", { name: "계정" }).click();
+  const rail = page.getByRole("button", { name: "계정" });
+  // 펼친 사이드바의 링크나 레일의 계정 버튼 중 먼저 나타나는 쪽을 기다린다.
+  await link.or(rail).first().waitFor();
+  if (await rail.isVisible()) await rail.click();
   await link.click();
   await page.waitForURL(/\/claude-code$/);
 }
@@ -68,8 +71,13 @@ test("Claude Code 연동: 키 만들기, 열어 둔 구성도에 변경이 뜨�
   await expect(page.getByRole("table", { name: "키 목록" })).toContainText(key.slice(0, 8));
 
   // 구성도를 다시 열어 둔다.
+  const firstHead = page.waitForResponse((r) => /\/api\/diagrams\/[^/]+\/head/.test(r.url()) && r.ok());
   await page.goto(diagramUrl);
+  const canvas = page.getByRole("region", { name: "새 구성도" });
+  await expect(canvas).toBeVisible();
   await expect(nodes(page)).toHaveCount(0);
+  // 화면이 다 뜨고 첫 확인(head)까지 끝난 뒤에 바꿔야, 바뀐 것이 처음 불러올 때 딸려 오지 않고 확인으로 알아챈 것이 된다.
+  await firstHead;
 
   // 틀린 키는 401.
   expect((await rpc(request, "isk_wrong", "tools/list", {})).status()).toBe(401);
@@ -95,14 +103,18 @@ test("Claude Code 연동: 키 만들기, 열어 둔 구성도에 변경이 뜨�
 
   // 열어 둔 화면이 몇 초 안에 새 노드를 보여 준다(다시 불러오지 않는다).
   await expect(nodes(page)).toHaveCount(1, { timeout: 10_000 });
-  await expect(page.getByTitle("MCP WAS", { exact: true })).toBeVisible();
+  await expect(canvas.getByTitle("MCP WAS", { exact: true })).toBeVisible();
 
   // 이력에 Claude Code 에서 만든 버전이 보인다.
   await page.getByRole("tab", { name: "이력" }).click();
-  await expect(page.getByText("Claude Code에서", { exact: true }).first()).toBeVisible();
+  await expect(page.getByRole("tabpanel").getByText("Claude Code에서", { exact: true })).toBeVisible();
 
   // 키를 지우면 같은 호출이 401.
   await openKeyScreen(page);
+  // 다시 들어온 키 화면에는 한 번 보여 준 원문이 남아 있지 않다.
+  await expect(page.getByRole("heading", { name: "내 키" })).toBeVisible();
+  await expect(page.getByText("키를 만들었어요")).toHaveCount(0);
+  await expect(page.getByText(key, { exact: false })).toHaveCount(0);
   await page.getByRole("button", { name: "시험 키 지우기" }).click();
   await page.getByRole("alertdialog").getByRole("button", { name: "삭제", exact: true }).click();
   await expect(page.getByText("만든 키가 없어요.")).toBeVisible();

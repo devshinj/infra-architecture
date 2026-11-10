@@ -112,9 +112,19 @@ Claude Code 에서 내 구성도를 읽고 고치게 할 수 있습니다. 앱�
 
 열어 둔 구성도는 Claude Code 가 바꾼 것을 몇 초 안에 보여 주고, 이력에는 "Claude Code에서"로 남습니다.
 
-도구 9개: `get_guide`(그리는 법), `list_projects`, `create_project`, `list_diagrams`, `create_diagram`, `get_diagram`, `list_versions`, `apply_commands`(전부 적용하거나 하나도 적용하지 않음, `dry_run` 가능), `restore_version`.
+도구 9개:
 
-일부러 넣지 않은 것: 프로젝트·구성도 삭제, 망 지식 편집, 계정 설정, Qwen 을 쓰는 기능(대화 생성·설명 만들기 등). 이런 일은 앱 화면에서 하세요.
+- `get_guide`: 구성도를 그리는 법을 알려 줍니다. 처음 그리기 전에 읽게 됩니다.
+- `list_projects`: 내 프로젝트 목록
+- `create_project`: 프로젝트 만들기
+- `list_diagrams`: 프로젝트의 구성도 목록
+- `create_diagram`: 구성도 만들기
+- `get_diagram`: 구성도의 지금 내용과 버전 읽기
+- `list_versions`: 버전 이력 보기
+- `apply_commands`: 명령 적용. 전부 적용하거나 하나도 적용하지 않고, `dry_run` 으로 검사만 할 수 있습니다.
+- `restore_version`: 예전 버전으로 되돌리기
+
+일부러 넣지 않은 것: 프로젝트·구성도 삭제, 망 지식 편집, 계정 설정, Qwen 을 쓰는 기능(대화 생성·설명 만들기 등). 되돌리기 어려운 일은 브라우저에서만 하도록 뺐습니다.
 
 ## 테스트
 
