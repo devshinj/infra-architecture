@@ -2,10 +2,12 @@ import { describe, expect, test, vi } from "vitest";
 
 import type { GroupKind, NodeKind } from "@/domain/catalog";
 import { emptyState, type DiagramState, type DNode, type Warning } from "@/domain/types";
-import { RULES } from "@/domain/warnings";
-import { checkWarnings } from "@/server/chat/warnings";
+import { evaluateRules, RULES } from "@/domain/warnings";
+import { checkCodeWarnings, checkWarnings } from "@/server/chat/warnings";
 import type { ClefAnswers, ClefClient } from "@/server/llm/clef";
 import type { ChatMessage, QwenClient } from "@/server/llm/qwen";
+
+import { adminCase, KNOWLEDGE } from "../fixtures/network";
 
 const node = (id: string, kind: NodeKind, label: string, parent: string | null = null): DNode => ({ id, kind, label, parent, attrs: {} });
 const build = (
@@ -254,5 +256,62 @@ describe("checkWarnings", () => {
     // 사용자 글 때문에 생긴 줄은 없다.
     for (const line of state.split("\n")) expect(line.startsWith("노드 x")).toBe(false);
     expect(state.split("\n").some((l) => l.startsWith("둘째 줄"))).toBe(false);
+  });
+});
+
+describe("checkCodeWarnings", () => {
+  // 행정망 PC → 방화벽 → GCloud WAS(link_*) + 공개 구역 검색(db_public) + 내부 DB(db_exposed 이어 받기 대상).
+  const mixed = (): DiagramState => {
+    const s = adminCase();
+    return {
+      ...s,
+      groups: {
+        ...s.groups,
+        pub: { id: "pub", groupKind: "subnet_public", label: "pub", parent: null },
+        priv: { id: "priv", groupKind: "subnet_private", label: "priv", parent: null },
+      },
+      nodes: { ...s.nodes, sr: node("sr", "search", "검색", "pub"), db: node("db", "db_rdb", "DB", "priv") },
+      ignoredWarnings: ["spof:db"],
+    };
+  };
+  const prev = (s: DiagramState): Warning[] => [
+    { id: "db_exposed:db", rule: "db_exposed", nodeId: "db", level: "warn", text: "예전 노출 문구", guide: "g" },
+    { id: "db_exposed:gone", rule: "db_exposed", nodeId: "gone", level: "warn", text: "없는 노드", guide: "g" },
+    // 이미 알린 경고는 지난 문구를 다시 쓰고, link_* 는 지난 문구를 쓰지 않는다.
+    ...evaluateRules(s, KNOWLEDGE).filter((w) => w.id === "spof:was" || w.rule.startsWith("link_")).map((w) => ({ ...w, text: "지난 문구" })),
+  ];
+
+  test("Clef 실패·중단 경로의 checkWarnings 와 같은 결과", async () => {
+    const s = mixed();
+    const p = prev(s);
+    const { clef } = fakeClef(() => null);
+    const viaCheck = await checkWarnings(s, p, { clef, qwen: null }, AbortSignal.abort(), { knowledge: KNOWLEDGE });
+    const viaFail = await checkWarnings(s, p, { clef, qwen: null }, live(), { knowledge: KNOWLEDGE });
+    const code = checkCodeWarnings(s, p, KNOWLEDGE);
+    expect(code).toEqual(viaCheck);
+    expect(code).toEqual(viaFail);
+    expect(code.warnings.some((w) => w.rule.startsWith("link_"))).toBe(true);
+    for (const w of code.warnings.filter((x) => x.rule.startsWith("link_"))) expect(w.text).not.toBe("지난 문구");
+    expect(byId(code.warnings, "spof:was")!.text).toBe("지난 문구");
+    expect(byId(code.warnings, "db_public:sr")).toBeDefined();
+    expect(byId(code.warnings, "spof:db")).toBeDefined();
+    expect(code.fresh.map((w) => w.id)).not.toContain("spof:db");
+    expect(code.fresh.map((w) => w.id)).not.toContain("spof:was");
+    expect(code.fresh.map((w) => w.id)).toContain("db_public:sr");
+  });
+
+  test("prev 의 db_exposed 가 남고, 없어진 노드 것은 사라진다", () => {
+    const s = mixed();
+    const r = checkCodeWarnings(s, prev(s), KNOWLEDGE);
+    expect(byId(r.warnings, "db_exposed:db")).toMatchObject({ level: "warn", text: "예전 노출 문구" });
+    expect(byId(r.warnings, "db_exposed:gone")).toBeUndefined();
+    expect(r.fresh.map((w) => w.id)).not.toContain("db_exposed:db");
+  });
+
+  test("prev 가 없으면 코드 규칙만 모두 새 경고", () => {
+    const s = mixed();
+    const r = checkCodeWarnings(s, undefined, KNOWLEDGE);
+    expect(r.warnings).toEqual(evaluateRules(s, KNOWLEDGE));
+    expect(r.fresh.map((w) => w.id)).toEqual(r.warnings.map((w) => w.id).filter((id) => id !== "spof:db"));
   });
 });

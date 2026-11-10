@@ -16,6 +16,7 @@
     "eval:intent": "tsx --env-file=.env scripts/eval-intent.ts"
   },
   "dependencies": {
+    "@modelcontextprotocol/sdk": "1.32.2",
     "@xyflow/react": "^12.12.0",
     "bcryptjs": "^3.0.3",
     "drizzle-orm": "^0.45.4",

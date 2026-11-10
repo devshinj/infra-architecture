@@ -1,7 +1,7 @@
-import { expect, test } from "vitest";
+import { describe, expect, test } from "vitest";
 
 import type { NodeKind } from "@/domain/catalog";
-import { asksStepText, checkFlow, crossingNote, flowsThrough, keepStepText, shortLabel, stepEnd, type Flow, type FlowStep } from "@/domain/flows";
+import { asksStepText, checkFlow, crossingNote, flowsThrough, keepStepText, planFlowOps, shortLabel, stepEnd, type Flow, type FlowOp, type FlowStep } from "@/domain/flows";
 import { emptyState, type DiagramState } from "@/domain/types";
 
 const n = (id: string, kind: NodeKind, label: string, parent: string | null) => ({ id, kind, label, parent, attrs: {} });
@@ -140,4 +140,46 @@ test("asksStepText: 단계 글을 고쳐 달라는 요청만", () => {
   expect(asksStepText("2단계 문구 고쳐 줘")).toBe(true);
   expect(asksStepText("주문하기 흐름에 캐시 조회 단계도 넣어 줘")).toBe(false);
   expect(asksStepText("가입할 때 외부 인증도 거치게 회원가입 흐름 고쳐 줘")).toBe(false);
+});
+
+describe("planFlowOps", () => {
+  const add = (id: string, steps: FlowStep[] = [step("e1", "browser")]): FlowOp => ({ op: "add_flow", id, name: id, origin: "user", steps });
+
+  test("모두 통과하면 바꿀 흐름 수", () => {
+    const r = planFlowOps(build(), [signup()], [add("a"), { op: "update_flow", id: "signup", name: "새 이름" }, { op: "remove_flow", id: "a" }]);
+    expect(r).toEqual({ ok: true, changed: 3 });
+  });
+
+  test("거절은 명령 순서(index)와 applyFlowOps 와 같은 이유", () => {
+    const r = planFlowOps(build(), [signup()], [
+      add("signup"),
+      { op: "update_flow", id: "ghost", name: "x" },
+      add("b", [step("e9", "browser")]),
+      { op: "update_flow", id: "signup", steps: [] },
+      add("c", Array.from({ length: 21 }, () => step("e1", "browser"))),
+      { op: "remove_flow", id: "ghost" },
+    ]);
+    expect(r).toEqual({
+      ok: false,
+      rejected: [
+        { index: 0, reason: "exists" },
+        { index: 1, reason: "not_found" },
+        { index: 2, reason: "missing_edge" },
+        { index: 3, reason: "no_steps" },
+        { index: 4, reason: "too_many_steps" },
+        { index: 5, reason: "not_found" },
+      ],
+    });
+  });
+
+  test("앞에서 만든 흐름을 뒤에서 고칠 수 있고, 거절한 명령은 뒤에 영향을 주지 않는다", () => {
+    expect(planFlowOps(build(), [], [add("a"), { op: "update_flow", id: "a", name: "b" }])).toEqual({ ok: true, changed: 2 });
+    const r = planFlowOps(build(), [], [add("a", [step("e9", "browser")]), { op: "remove_flow", id: "a" }]);
+    expect(r).toEqual({ ok: false, rejected: [{ index: 0, reason: "missing_edge" }, { index: 1, reason: "not_found" }] });
+  });
+
+  test("흐름 상한", () => {
+    const many: Flow[] = Array.from({ length: 20 }, (_, i) => ({ ...signup(), id: `f-${i}` }));
+    expect(planFlowOps(build(), many, [add("x")])).toEqual({ ok: false, rejected: [{ index: 0, reason: "too_many_flows" }] });
+  });
 });

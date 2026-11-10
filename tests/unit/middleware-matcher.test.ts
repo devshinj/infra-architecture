@@ -13,12 +13,12 @@ const matcher = new RegExp(`^${pattern}$`);
 const protectedPath = (p: string) => matcher.test(p) && !isPublicPath(p);
 
 describe("middleware matcher", () => {
-  test.each(["/projects/xpng", "/apitxt", "/signup-foo", "/_nextfoo", "/", "/projects/1"])(
+  test.each(["/projects/xpng", "/apitxt", "/signup-foo", "/_nextfoo", "/", "/projects/1", "/api/mcpx", "/api/mcp/x"])(
     "%s is protected",
     (p) => expect(protectedPath(p)).toBe(true),
   );
   test.each([
-    "/login", "/signup", "/reset", "/reset/abc", "/api/auth/session",
+    "/login", "/signup", "/reset", "/reset/abc", "/api/auth/session", "/api/mcp",
     "/_next/static/x.js", "/favicon.ico", "/logo.png",
   ])("%s is public", (p) => expect(protectedPath(p)).toBe(false));
 });
@@ -35,6 +35,8 @@ describe("authDecision", () => {
   });
   test("public and authed pass", () => {
     expect(authDecision("/api/auth/session", false)).toBe("next");
+    // MCP 는 로그인 세션 대신 라우트가 직접 키를 확인한다
+    expect(authDecision("/api/mcp", false)).toBe("next");
     expect(authDecision("/login", false)).toBe("next");
     expect(authDecision("/api/diagrams/x/chat", true)).toBe("next");
   });

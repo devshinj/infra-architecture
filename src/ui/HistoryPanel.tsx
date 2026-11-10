@@ -6,9 +6,11 @@ import styles from "./panel.module.css";
 
 export type VersionRow = {
   number: number;
-  source: "import" | "restore" | "ai" | "form";
+  source: "import" | "restore" | "ai" | "form" | "mcp";
   status: "complete" | "aborted";
   restoredFrom: number | null;
+  via?: "mcp" | null;
+  summary?: string | null;
   createdAt: Date;
 };
 
@@ -23,7 +25,7 @@ export interface HistoryPanelProps {
   disabled?: boolean;
 }
 
-const SOURCE_LABEL: Record<VersionRow["source"], string> = { import: "가져오기", restore: "되돌리기", ai: "AI", form: "직접 입력" };
+const SOURCE_LABEL: Record<VersionRow["source"], string> = { import: "가져오기", restore: "되돌리기", ai: "AI", form: "직접 입력", mcp: "Claude Code에서" };
 
 export function HistoryPanel({ versions, onView, onRestore, onCompare, viewing = null, disabled = false }: HistoryPanelProps) {
   const [selected, setSelected] = useState<number | null>(null);
@@ -38,8 +40,9 @@ export function HistoryPanel({ versions, onView, onRestore, onCompare, viewing =
           <li key={v.number} className={styles.version} data-viewing={viewing === v.number || undefined}>
             <button type="button" className={styles.versionRow} aria-expanded={open} onClick={() => setSelected(open ? null : v.number)}>
               <span className={styles.versionNo}>v{v.number}</span>
-              <span>{SOURCE_LABEL[v.source]}</span>
+              <span>{v.source === "restore" && v.via === "mcp" ? "되돌리기 · Claude Code에서" : SOURCE_LABEL[v.source]}</span>
               {v.source === "restore" && v.restoredFrom !== null && <span className={styles.relText}>v{v.restoredFrom}에서</span>}
+              {v.summary && <span className={styles.relText}>{v.summary}</span>}
               {v.status === "aborted" && <span className={styles.badge}>중단됨</span>}
               <time className={styles.time} dateTime={new Date(v.createdAt).toISOString()}>
                 {new Date(v.createdAt).toLocaleString("ko-KR")}
