@@ -69,6 +69,25 @@ describe("그리기 규칙 공용 모듈", () => {
     }
   });
 
+  // 안내 전용 줄은 Qwen 원래 줄에서 say 부분만 뺀 글이다. 한쪽 규칙만 고치면 여기서 깨진다.
+  test("안내 전용 줄은 Qwen 원래 줄과 say 부분만 다르다", () => {
+    const promptLine = (start: string) => {
+      const line = SYSTEM_PROMPT.split("\n").find((l) => l.startsWith(start));
+      expect(line, start).toBeDefined();
+      return line!;
+    };
+
+    const pairQwen = promptLine('- "망 짝 규칙"이 보통 잇지 않음인');
+    const QWEN_TAIL = "say 로 한 줄 알린다.";
+    const GUIDE_TAIL = "사용자에게 알린다.";
+    expect(pairQwen.endsWith(QWEN_TAIL)).toBe(true);
+    expect(GUIDE_ONLY_LINES.unlinkedPair.endsWith(GUIDE_TAIL)).toBe(true);
+    expect(GUIDE_ONLY_LINES.unlinkedPair.slice(0, -GUIDE_TAIL.length)).toBe(pairQwen.slice(0, -QWEN_TAIL.length));
+
+    const koreanQwen = promptLine("- label, sub, say, set_assumption 의 value");
+    expect(GUIDE_ONLY_LINES.koreanText).toBe(koreanQwen.replace("label, sub, say, ", "label, sub, "));
+  });
+
   test("networkGuideText 는 망 종류·등급 표를 담고 종류 설명은 담지 않는다", () => {
     const k: NetworkKnowledge = { types: Object.fromEntries(NETWORK_TYPE_SEED.map((t) => [t.key, t])), rules: [] };
     const text = networkGuideText(k);
