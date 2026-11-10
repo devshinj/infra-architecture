@@ -2,7 +2,7 @@ import "@testing-library/jest-dom/vitest";
 import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
-const hookState = vi.hoisted(() => ({ send: vi.fn(), busy: false, onCommand: null as null | ((c: unknown) => void), badgeFns: [] as unknown[], warnFns: [] as unknown[], lines: [] as unknown[], insets: [] as unknown[], focus: [] as unknown[], turn: null as null | { onDone(): void; onInterrupted(): void; onRelayout?(): void; onSessionLines?(key: string, fn: (ls: { id: string; kind: string; text: string }[]) => { id: string; kind: string; text: string }[]): void }, pushLine: vi.fn(), pinned: [] as unknown[], fitRequest: [] as unknown[], placed: null as null | ((locate: (id: string) => { x: number; y: number } | null) => void), flow: [] as unknown[], selected: [] as unknown[], refresh: vi.fn() }));
+const hookState = vi.hoisted(() => ({ send: vi.fn(), busy: false, onCommand: null as null | ((c: unknown) => void), badgeFns: [] as unknown[], warnFns: [] as unknown[], lines: [] as unknown[], insets: [] as unknown[], focus: [] as unknown[], turn: null as null | { onDone(): void; onInterrupted(): void; onRelayout?(): void; onSessionLines?(key: string, fn: (ls: { id: string; kind: string; text: string }[]) => { id: string; kind: string; text: string }[]): void }, pushLine: vi.fn(), pinned: [] as unknown[], fitRequest: [] as unknown[], placed: null as null | ((locate: (id: string) => { x: number; y: number } | null) => void), flow: [] as unknown[], selected: [] as unknown[], refresh: vi.fn(), rfNodes: false }));
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: hookState.refresh }) }));
 vi.mock("@/app/(app)/actions", () => ({
@@ -30,6 +30,7 @@ vi.mock("@/canvas/Canvas", () => ({
     return (
     <div>
       <div data-testid="n">{Object.keys(state.nodes).join(",")}</div>
+      {hookState.rfNodes && Object.keys(state.nodes).map((id) => <div key={id} className="react-flow__node" data-id={id}><div className="node">{id}</div></div>)}
       <div data-testid="fit">{fitKey}</div>
       {onMention && <button onClick={() => onMention("a")}>멘션a</button>}
       {onAskNode && <button onClick={() => onAskNode("a")}>메뉴로 묻기a</button>}
@@ -55,7 +56,7 @@ vi.mock("@/ui/chat/useChatTurn", () => ({
 
 import { readFileSync } from "node:fs";
 
-import { clearPinnedAction, confirmAssumptionAction, getVersionAction, importSampleAction, listVersionsAction, removeFlowStepAction, removeNoLinkAction, saveFieldsAction, setWarningIgnoredAction, setZoneTypeAction } from "@/app/(app)/actions";
+import { clearPinnedAction, confirmAssumptionAction, getVersionAction, importSampleAction, listVersionsAction, removeFlowStepAction, removeNoLinkAction, restoreVersionAction, saveFieldsAction, setWarningIgnoredAction, setZoneTypeAction } from "@/app/(app)/actions";
 import { emptyState } from "@/domain/types";
 import { DiagramWorkspace } from "@/ui/DiagramWorkspace";
 import { ShellProvider } from "@/ui/Shell";
@@ -1179,28 +1180,124 @@ test("가정 칩에서 망연계 거절 기억을 지우면 서버에 지우고 
 });
 
 describe("Claude Code 변경 알아채기", () => {
-  let head = { version: 1, flows: { count: 0, updatedAt: null as string | null } };
+  type Head = { version: number; mcpVersion: number; flows: { count: number; updatedAt: string | null } };
+  let head: Head = { version: 1, mcpVersion: 0, flows: { count: 0, updatedAt: null } };
+  const origRect = Element.prototype.getBoundingClientRect;
   beforeEach(() => {
     vi.useFakeTimers({ toFake: ["setInterval", "clearInterval"] });
     hookState.busy = false;
     hookState.lines = [];
+    hookState.rfNodes = false;
     hookState.refresh.mockClear();
-    head = { version: 1, flows: { count: 0, updatedAt: null } };
+    head = { version: 1, mcpVersion: 0, flows: { count: 0, updatedAt: null } };
     vi.stubGlobal("fetch", vi.fn(async (url: string) => (String(url).endsWith("/head") ? Response.json(head) : String(url).endsWith("/flows") ? Response.json({ flows: [] }) : Response.json({ qwen: "ok", clef: "ok" }))));
   });
-  afterEach(() => vi.useRealTimers());
+  afterEach(() => {
+    vi.useRealTimers();
+    hookState.rfNodes = false;
+    Element.prototype.getBoundingClientRect = origRect;
+    vi.mocked(listVersionsAction).mockResolvedValue([]);
+  });
   const poll = () => act(async () => { await vi.advanceTimersByTimeAsync(POLL_MS); });
   const headCalls = () => vi.mocked(fetch).mock.calls.filter(([u]) => String(u).endsWith("/head")).length;
+  const claudeWrote = (n: number) => {
+    head = { ...head, version: n, mcpVersion: n };
+  };
+  const notice = () => screen.queryByText("Claude Code가 구성도를 바꿨어요");
+  const versionRows = (...ns: number[]) => ns.map((number) => ({ number, source: "ai", status: "complete", restoredFrom: null, createdAt: new Date(0) }));
+  /** 화면에 그려진 노드처럼 크기를 준다(유령은 크기 0 인 것을 뜨지 않는다). */
+  const drawNodes = () => {
+    hookState.rfNodes = true;
+    vi.stubGlobal("matchMedia", () => ({ matches: false, addEventListener() {}, removeEventListener() {} }));
+    Element.prototype.getBoundingClientRect = function () {
+      const r = { left: 10, top: 20, width: 120, height: 52 };
+      return { ...r, x: r.left, y: r.top, right: r.left + r.width, bottom: r.top + r.height, toJSON: () => r } as DOMRect;
+    };
+  };
+  const ghosts = () => document.querySelectorAll("[data-ghost]");
 
-  test("a newer version on the server is loaded through router.refresh", async () => {
-    render(ui(mk(1, ["a", "b"])));
-    await poll();
+  test("asks right away on mount, and a newer Claude Code version is loaded through router.refresh with ghosts", async () => {
+    drawNodes();
+    const { rerender } = render(ui(mk(1, ["a", "b"])));
+    await act(async () => {});
     expect(headCalls()).toBe(1);
     expect(hookState.refresh).not.toHaveBeenCalled();
-    head = { ...head, version: 2 };
+    claudeWrote(2);
     await poll();
     expect(hookState.refresh).toHaveBeenCalledTimes(1);
-    expect(screen.queryByText("Claude Code가 구성도를 바꿨어요")).not.toBeInTheDocument();
+    expect(notice()).not.toBeInTheDocument();
+    // 받아 오면 지운 노드 b 가 비교 보기 유령으로 잠깐 남는다.
+    rerender(ui(mk(2, ["a"])));
+    expect(screen.getByTestId("n")).toHaveTextContent(/^a$/);
+    expect(ghosts()).toHaveLength(1);
+    expect(document.querySelector("[data-ghost] .node")).toHaveTextContent("b");
+    expect(document.querySelector("[data-ghost] .node")).toHaveClass("node--diff-removed");
+  });
+
+  test("restore racing a poll: board bumps, no ghosts, no notice, no extra refresh", async () => {
+    drawNodes();
+    vi.mocked(listVersionsAction).mockResolvedValue(versionRows(2, 1) as never);
+    let finish!: () => void;
+    vi.mocked(restoreVersionAction).mockImplementationOnce(() => new Promise<never>((r) => { finish = () => r(undefined as never); }));
+    const { rerender } = render(ui(mk(2, ["a", "b"])));
+    await act(async () => {
+      fireEvent.click(screen.getByRole("tab", { name: "이력" }));
+    });
+    fireEvent.click(await screen.findByRole("button", { name: /v1/ }));
+    const before = screen.getByTestId("fit").textContent;
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "이 버전으로 되돌리기" }));
+    });
+    // 되돌리기가 저장된 뒤 아직 받아 오기 전에 물음이 온다(가장 나쁜 경우: Claude Code 버전처럼 보여도).
+    claudeWrote(3);
+    await poll();
+    expect(hookState.refresh).not.toHaveBeenCalled();
+    expect(notice()).not.toBeInTheDocument();
+    await act(async () => finish());
+    rerender(ui(mk(3, ["a"])));
+    expect(screen.getByTestId("fit").textContent).not.toBe(before);
+    expect(screen.getByTestId("fit").textContent).toMatch(/:live:$/);
+    expect(ghosts()).toHaveLength(0);
+    await poll();
+    expect(hookState.refresh).not.toHaveBeenCalled();
+  });
+
+  test("chat end racing a poll: router.refresh is called once", async () => {
+    hookState.busy = true;
+    const { rerender } = render(ui(mk(1, ["a"])));
+    await poll();
+    expect(headCalls()).toBe(0);
+    hookState.busy = false;
+    rerender(ui(mk(1, ["a"])));
+    act(() => hookState.turn!.onDone());
+    expect(hookState.refresh).toHaveBeenCalledTimes(1);
+    // 대화가 저장한 v2 를 아직 받아 오기 전에 물음이 온다.
+    head = { ...head, version: 2 };
+    await poll();
+    await poll();
+    expect(hookState.refresh).toHaveBeenCalledTimes(1);
+    rerender(ui(mk(2, ["a", "x"])));
+    await poll();
+    expect(hookState.refresh).toHaveBeenCalledTimes(1);
+    expect(notice()).not.toBeInTheDocument();
+  });
+
+  test("field save while paused shows no notice", async () => {
+    const { rerender } = render(ui(two() as never));
+    fireEvent.click(screen.getByRole("button", { name: "배지a" }));
+    const field = () => within(screen.getByRole("group", { name: "a" })).getByRole("textbox", { name: "호스트명" });
+    fireEvent.change(field(), { target: { value: "web-01" } });
+    field().focus();
+    await act(async () => {
+      fireEvent.click(within(screen.getByRole("group", { name: "a" })).getByRole("button", { name: "저장" }));
+    });
+    field().focus();
+    head = { ...head, version: 2 }; // 폼 저장이 만든 버전
+    await poll();
+    expect(notice()).not.toBeInTheDocument();
+    rerender(ui({ ...two(), number: 2 } as never));
+    await poll();
+    expect(notice()).not.toBeInTheDocument();
   });
 
   test("does not adopt while typing: shows the notice and loads on 불러오기", async () => {
@@ -1208,17 +1305,40 @@ describe("Claude Code 변경 알아채기", () => {
     const box = screen.getByRole("textbox");
     fireEvent.change(box, { target: { value: "쓰던 글" } });
     box.focus();
-    head = { ...head, version: 2 };
+    claudeWrote(2);
     await poll();
     expect(hookState.refresh).not.toHaveBeenCalled();
-    expect(screen.getByText("Claude Code가 구성도를 바꿨어요")).toBeInTheDocument();
+    expect(notice()).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "불러오기" }));
     expect(hookState.refresh).toHaveBeenCalledTimes(1);
     rerender(ui(mk(2, ["a"])));
     expect(screen.getByTestId("n")).toHaveTextContent(/^a$/);
-    expect(screen.queryByText("Claude Code가 구성도를 바꿨어요")).not.toBeInTheDocument();
+    expect(notice()).not.toBeInTheDocument();
     // 쓰던 글은 그대로다.
     expect(screen.getByRole("textbox")).toHaveValue("쓰던 글");
+  });
+
+  test("a poll-started load that lands during history view waits until back to live", async () => {
+    vi.mocked(listVersionsAction).mockResolvedValue(versionRows(1) as never);
+    vi.mocked(getVersionAction).mockResolvedValue(mk(1, ["old"]).state as never);
+    const { rerender } = render(ui(mk(1, ["a", "b"])));
+    claudeWrote(2);
+    await poll();
+    expect(hookState.refresh).toHaveBeenCalledTimes(1);
+    // 받아 오는 사이 사용자가 이전 버전 보기를 연다.
+    await act(async () => {
+      fireEvent.click(screen.getByRole("tab", { name: "이력" }));
+    });
+    fireEvent.click(await screen.findByRole("button", { name: /v1/ }));
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "이 버전 보기" }));
+    });
+    expect(screen.getByText("v1 보는 중")).toBeInTheDocument();
+    rerender(ui(mk(2, ["a"])));
+    expect(screen.getByText("v1 보는 중")).toBeInTheDocument();
+    expect(screen.getByTestId("n")).toHaveTextContent("old");
+    fireEvent.click(screen.getByRole("button", { name: "현재로 돌아가기" }));
+    expect(screen.getByTestId("n")).toHaveTextContent(/^a$/);
   });
 
   test("does not ask during a chat turn", async () => {

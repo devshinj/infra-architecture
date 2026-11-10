@@ -103,6 +103,8 @@ export async function listFlows(userId: string, diagramId: string): Promise<Stor
 export interface DiagramHead {
   /** 최신 버전 번호(버전이 없으면 0). */
   version: number;
+  /** Claude Code(via mcp)가 만든 가장 새 버전 번호(없으면 0). 브라우저는 이것으로 제 변경과 Claude Code 변경을 가른다. */
+  mcpVersion: number;
   /** 흐름 수와 마지막으로 고친 시각. 지우기는 행이 사라져 시각으로 못 알아채므로 수를 함께 본다. */
   flows: { count: number; updatedAt: string | null };
 }
@@ -112,7 +114,10 @@ export async function getDiagramHead(userId: string, diagramId: string): Promise
   await getOwnedDiagram(userId, diagramId);
   const [[v], [f]] = await Promise.all([
     db
-      .select({ max: sql<number | null>`max(${diagramVersions.number})` })
+      .select({
+        max: sql<number | null>`max(${diagramVersions.number})`,
+        mcp: sql<number | null>`max(${diagramVersions.number}) filter (where ${diagramVersions.via} = 'mcp')`,
+      })
       .from(diagramVersions)
       .where(eq(diagramVersions.diagramId, diagramId)),
     db
@@ -120,7 +125,7 @@ export async function getDiagramHead(userId: string, diagramId: string): Promise
       .from(flows)
       .where(eq(flows.diagramId, diagramId)),
   ]);
-  return { version: v?.max ?? 0, flows: { count: f?.count ?? 0, updatedAt: f?.max ? f.max.toISOString() : null } };
+  return { version: v?.max ?? 0, mcpVersion: v?.mcp ?? 0, flows: { count: f?.count ?? 0, updatedAt: f?.max ? f.max.toISOString() : null } };
 }
 
 /** 소유자 검사 → 잠금 안에서 흐름 행을 찾아 fn 을 돌린다. 없는 흐름은 NotFoundError, 차례가 돌고 있으면 BusyError. */

@@ -35,7 +35,7 @@ import { NEW_SESSION, type SessionKey, type SessionPaging, type SessionSummary, 
 import { type CardMeasure, InfoCard } from "./canvas/InfoCard";
 import { Legend, legendPlacement } from "./canvas/Legend";
 import { FlyLayer, useFly } from "./FlyLayer";
-import { GhostLayer, useGhosts } from "./GhostLayer";
+import { GhostLayer, type GhostRequest } from "./GhostLayer";
 import type { ExplanationProps } from "./explain/Explanation";
 import { type TargetKind, useExplanations } from "./explain/useExplanations";
 import type { FlowPanelProps } from "./flows/FlowPanel";
@@ -102,6 +102,9 @@ const CARD_WIDTH = 300;
 const optionsFor = (state: DiagramState): CanvasOptions => ({ ...defaultDisplayOptions(state), hoverLabels: true, showMissingBadges: false });
 
 const NO_SESSIONS: SessionSummary[] = [];
+
+/** 스스로 쓴 버전을 받아 오기를 기다리는 가장 긴 시간. 그동안은 Claude Code 변경을 묻지 않는다(넘으면 다시 묻는다). */
+const OWN_WRITE_MS = 5000;
 
 /**
  * 흐름 보기를 풀지 않을 Esc: 입력칸(글 지우기 등 입력칸 몫), 열린 메뉴·대화상자·목록 안(그것을 닫는 몫),
@@ -278,8 +281,8 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
   // 좁은 화면은 대화와 캔버스가 한 화면에 함께 보이지 않아 날리지 않는다.
   const fly = useFly({ motion, chatVisible: tab === "대화" && !narrow });
   const clearFly = fly.clear;
-  // 바깥(Claude Code)에서 받은 새 버전의 지운 노드·연결을 잠깐 유령으로 보인다.
-  const ghosts = useGhosts({ motion });
+  // 바깥(Claude Code)에서 받은 새 버전의 지운 노드·연결을 잠깐 유령으로 보인다(GhostLayer 가 그 커밋 직전 화면을 뜬다).
+  const [ghostRequest, setGhostRequest] = useState<GhostRequest | null>(null);
   useEffect(() => clearFly(), [diagramId, board, clearFly]); // 다른 구성도·새 판: 기다리던 빛점을 버린다
   const fail = (e: unknown) => setError(e instanceof Error ? e.message : "처리하지 못했어요");
   const run = (fn: () => Promise<void>) =>
@@ -301,17 +304,29 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
   useEffect(() => { adoptAfterChat.current = false; }, [current.number]);
+  // 브라우저가 스스로 쓴 버전(대화·되돌리기·가져오기·폼 저장 등)을 받아 오는 중: 그동안은 Claude Code 변경을 묻지 않는다.
+  // 그 버전을 바깥 변경으로 오해해 한 번 더 불러오거나 안내를 띄우지 않게. 새 버전을 받으면(아래 effect) 또는 OWN_WRITE_MS 뒤 풀린다.
+  const ownWriteUntil = useRef(0);
+  const markOwnWrite = () => {
+    ownWriteUntil.current = Date.now() + OWN_WRITE_MS;
+  };
+  useEffect(() => {
+    ownWriteUntil.current = 0;
+  }, [current.number]);
   const refreshFromServer = () => {
     adoptAfterChat.current = true;
+    markOwnWrite();
     router.refresh();
     loadVersions();
   };
   // 다음 채택이 바깥(Claude Code) 변경을 불러온 것인가: 그때만 나타남·사라짐 효과를 낸다.
-  const remoteAdopt = useRef(false);
+  // "poll" 은 물어서 저절로, "load" 는 [불러오기]를 눌러서. 저절로 온 것은 이력 보기·비교 중이면 현재로 돌아올 때까지 미룬다.
+  const remoteAdopt = useRef<null | "poll" | "load">(null);
   // Import/restore bring a new board: stop treating the next adoption as the after-chat refresh.
   const expectNewBoard = () => {
     adoptAfterChat.current = false;
-    remoteAdopt.current = false;
+    remoteAdopt.current = null;
+    markOwnWrite();
     if (timer.current) clearTimeout(timer.current);
     timer.current = null;
   };
@@ -358,16 +373,17 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
   });
   // The server re-renders with a newer version after import/restore/chat: adopt it, but never mid-turn
   // (it would wipe the commands already streamed); the done-refresh brings the newer version later.
-  if (!chat.busy && latest.number !== current.number) {
-    // 바깥 변경: 캔버스가 새 상태를 그리기 전(지금 화면)에 지워질 것을 떠 두고, 새 노드는 대화와 같은 나타나는 효과로.
+  // 물어서 저절로 온 바깥 변경은 이력 보기·비교 중이면 미룬다(보던 화면에서 끌어내지 않는다). 현재로 돌아오면 그때 받는다.
+  const deferRemote = remoteAdopt.current === "poll" && !live;
+  if (!chat.busy && latest.number !== current.number && !deferRemote) {
+    // 바깥 변경: 지워질 노드·연결은 GhostLayer 가 이 커밋 직전 화면에서 떠서 유령으로, 새 노드는 대화와 같은 나타나는 효과로.
     if (remoteAdopt.current) {
-      remoteAdopt.current = false;
+      remoteAdopt.current = null;
       if (live) {
         const { added, removed } = diffStates(current.state, latest.state);
-        ghosts.capture(workspaceRef.current, {
-          nodes: [...removed].filter((id) => id in current.state.nodes),
-          edges: [...removed].filter((id) => id in current.state.edges),
-        });
+        const nodes = [...removed].filter((id) => id in current.state.nodes);
+        const edges = [...removed].filter((id) => id in current.state.edges);
+        if (nodes.length > 0 || edges.length > 0) setGhostRequest({ key: latest.number, nodes, edges });
         for (const id of added) if (latest.state.nodes[id]) fly.queue(id);
       }
     }
@@ -418,11 +434,12 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
   };
   const remote = useRemoteChanges({
     diagramId,
-    version: current.number,
+    // 받아 오는 중인 버전(latest)까지는 이미 가진 것으로 친다.
+    version: Math.max(current.number, latest.number),
     paused: remotePaused,
-    busy: chat.busy,
+    busy: () => chat.busy || Date.now() < ownWriteUntil.current,
     onVersion: () => {
-      remoteAdopt.current = true;
+      remoteAdopt.current = mode.kind === "live" ? "poll" : "load";
       refreshFromServer();
     },
     onFlows: () => void flowsHook.refresh(),
@@ -564,7 +581,7 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
     if (!live || chat.busy) return;
     setEditMode(false);
     adoptAfterChat.current = false;
-    remoteAdopt.current = false;
+    remoteAdopt.current = null;
     if (diagramKey === "main") return void chat.send(text);
     if (diagramKey === NEW_SESSION) {
       // 새 구성도 대화의 첫 메시지: 서버가 세션을 만들고 id 를 준다. 앞서 실패한 첫 메시지 줄은 비우고 다시 시작한다.
@@ -607,6 +624,7 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
   // Confirm first (the model cannot overwrite confirmed assumptions), then ask the AI to adjust the structure.
   const confirmKey = async (key: string, value: string): Promise<boolean> => {
     try {
+      markOwnWrite();
       const r = await confirmAssumptionAction(diagramId, key, value);
       if (!r.ok) {
         pushDiagramLine({ kind: "error", text: r.error });
@@ -639,6 +657,7 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
     if (!live || chat.busy || !current.state.assumptions[key]) return;
     toDiagramChat(); // 실패 줄이 보이게
     try {
+      markOwnWrite();
       const r = await removeNoLinkAction(diagramId, key);
       if (!r.ok) {
         pushDiagramLine({ kind: "error", text: r.error });
@@ -742,6 +761,7 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
   // Form save = one version (source form); adopt it through the same server-state path as assumptions.
   const saveFields: MissingChecklistProps["onSave"] = async (input) => {
     try {
+      markOwnWrite();
       const r = await saveFieldsAction(diagramId, input);
       if (!r.ok) return { ok: false, message: r.error };
       if (r.number !== null) refreshFromServer();
@@ -760,6 +780,7 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
     setWarnSaving(true);
     setWarnError(null);
     try {
+      markOwnWrite();
       const r = await setWarningIgnoredAction(diagramId, id, ignored);
       if (!r.ok) setWarnError(r.error);
       else if (r.number !== null) refreshFromServer();
@@ -904,8 +925,9 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
               )}
             </div>
           )}
+          {/* 좁은 화면에서 대화 탭에 있어도 보이게 오류 띠와 같은 자리에 띄운다(app.module.css .alertBanner). */}
           {remote.pending && (
-            <div className={styles.banner} role="status">
+            <div className={`${styles.banner} ${styles.alertBanner}`} role="status">
               <span>{REMOTE_CHANGED}</span>
               <button type="button" onClick={remote.load}>{REMOTE_LOAD}</button>
             </div>
@@ -1049,7 +1071,7 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
           />
         )}
         <FlyLayer ref={fly.layerRef} />
-        <GhostLayer ref={ghosts.layerRef} />
+        <GhostLayer request={ghostRequest} root={workspaceRef} motion={motion} />
       </div>
     </NetworkKnowledgeProvider>
   );
