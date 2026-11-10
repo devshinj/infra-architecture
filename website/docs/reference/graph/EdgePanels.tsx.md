@@ -1,6 +1,6 @@
 ---
 title: "EdgePanels.tsx"
-sidebar_position: 60
+sidebar_position: 62
 ---
 # EdgePanels.tsx
 
@@ -28,10 +28,12 @@ sidebar_position: 60
 ## Relationships
 
 - [NodeCard.tsx](NodeCard.tsx.md) (5 shared connections)
-- [display.ts](display.ts.md) (4 shared connections)
+- [display.ts](display.ts.md) (3 shared connections)
 - [EdgeLayer.tsx](EdgeLayer.tsx.md) (3 shared connections)
-- [ref_react](ref_react.md) (2 shared connections)
+- [layoutMetrics.ts](layoutMetrics.ts.md) (1 shared connections)
+- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (1 shared connections)
 - [layout.ts](layout.ts.md) (1 shared connections)
+- [ref_react](ref_react.md) (1 shared connections)
 - [Canvas.tsx](Canvas.tsx.md) (1 shared connections)
 
 ## Source Files

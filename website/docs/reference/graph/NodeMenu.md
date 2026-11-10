@@ -21,7 +21,7 @@ sidebar_position: 78
 ## Relationships
 
 - [Canvas.tsx](Canvas.tsx.md) (3 shared connections)
-- [ref_react](ref_react.md) (1 shared connections)
+- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (1 shared connections)
 - [NodeInfo.tsx](NodeInfo.tsx.md) (1 shared connections)
 
 ## Source Files

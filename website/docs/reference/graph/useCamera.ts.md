@@ -1,6 +1,6 @@
 ---
 title: "useCamera.ts"
-sidebar_position: 27
+sidebar_position: 28
 ---
 # useCamera.ts
 
@@ -41,14 +41,14 @@ sidebar_position: 27
 
 - [Canvas.tsx](Canvas.tsx.md) (12 shared connections)
 - [layout.ts](layout.ts.md) (5 shared connections)
-- [EdgeLayer.tsx](EdgeLayer.tsx.md) (2 shared connections)
+- [FlyLayer.tsx](FlyLayer.tsx.md) (3 shared connections)
 - [exportImage.ts](exportImage.ts.md) (2 shared connections)
-- [FlyLayer.tsx](FlyLayer.tsx.md) (2 shared connections)
+- [EdgeLayerProps](EdgeLayerProps.md) (1 shared connections)
 - [edgeLabels.ts](edgeLabels.ts.md) (1 shared connections)
+- [EdgeLayer.tsx](EdgeLayer.tsx.md) (1 shared connections)
 - [layoutMetrics.ts](layoutMetrics.ts.md) (1 shared connections)
 - [Layout](Layout.md) (1 shared connections)
-- [ref_react](ref_react.md) (1 shared connections)
-- [GhostLayer.tsx](GhostLayer.tsx.md) (1 shared connections)
+- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (1 shared connections)
 
 ## Source Files
 

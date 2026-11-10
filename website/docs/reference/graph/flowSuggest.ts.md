@@ -13,20 +13,20 @@ sidebar_position: 21
 - **flowSuggest.ts** (53 connections) — `src/server/flowSuggest.ts`
 - **suggest/route.ts** (17 connections) — `src/app/api/diagrams/[id]/flows/suggest/route.ts`
 - **suggestFlows()** (14 connections) — `src/server/flowSuggest.ts`
+- **QwenClient** (9 connections) — `src/server/llm/qwen.ts`
 - **FlowSuggestRepo** (8 connections) — `src/server/flowSuggest.ts`
-- **buildFlowSuggestMessages()** (5 connections) — `src/server/chat/prompt.ts`
+- **.streamCompletion()** (6 connections) — `src/server/llm/qwen.ts`
 - **.applyFlowOps()** (5 connections) — `src/server/flowSuggest.ts`
 - **diagrams** (4 connections) — `src/db/schema.ts`
-- **flows** (4 connections) — `src/db/schema.ts`
 - **.getLatestState()** (4 connections) — `src/server/flowSuggest.ts`
 - **POST()** (3 connections) — `src/app/api/diagrams/[id]/flows/suggest/route.ts`
-- **summarizeFlows()** (3 connections) — `src/server/chat/prompt.ts`
+- **complete()** (3 connections) — `src/server/explain.ts`
 - **FLOW_BUSY_MESSAGE** (3 connections) — `src/server/flows.ts`
 - **complete()** (3 connections) — `src/server/flowSuggest.ts`
 - **.getOwnedDiagram()** (3 connections) — `src/server/flowSuggest.ts`
 - **.listFlows()** (3 connections) — `src/server/flowSuggest.ts`
-- **resolveDeps()** (3 connections) — `src/server/flowSuggest.ts`
 - **FLOW_SUGGEST_BUSY_MESSAGE** (2 connections) — `src/server/flowSuggest.ts`
+- **FlowSuggestDeps** (2 connections) — `src/server/flowSuggest.ts`
 - **.claimSuggest()** (2 connections) — `src/server/flowSuggest.ts`
 - **.releaseSuggest()** (2 connections) — `src/server/flowSuggest.ts`
 - **.withLock()** (2 connections) — `src/server/flowSuggest.ts`
@@ -39,31 +39,32 @@ sidebar_position: 21
 
 ## Relationships
 
-- [mcp/apply.ts](mcp-apply.ts.md) (9 shared connections)
-- [ref_react](ref_react.md) (7 shared connections)
-- [domain/flows.ts](domain-flows.ts.md) (5 shared connections)
-- [deps.ts](deps.ts.md) (5 shared connections)
+- [getOwnedDiagram](getOwnedDiagram.md) (8 shared connections)
+- [schema.ts](schema.ts.md) (7 shared connections)
+- [deps.ts](deps.ts.md) (7 shared connections)
 - [projects.ts](projects.ts.md) (4 shared connections)
-- [getOwnedDiagram](getOwnedDiagram.md) (4 shared connections)
-- [server/flows.ts](server-flows.ts.md) (3 shared connections)
-- [prompt.ts](prompt.ts.md) (3 shared connections)
-- [edgeCoalesce.ts](edgeCoalesce.ts.md) (3 shared connections)
-- [Shell.tsx](Shell.tsx.md) (2 shared connections)
-- [server/network.ts](server-network.ts.md) (2 shared connections)
-- [pipeline.ts](pipeline.ts.md) (2 shared connections)
+- [설명 생성과 품질 검사](설명_생성과_품질_검사.md) (4 shared connections)
+- [normalize.ts](normalize.ts.md) (4 shared connections)
+- [mcp/apply.ts](mcp-apply.ts.md) (4 shared connections)
+- [auth](auth.md) (3 shared connections)
+- [pipeline.ts](pipeline.ts.md) (3 shared connections)
+- [chat/warnings.ts](chat-warnings.ts.md) (3 shared connections)
+- [ref_react](ref_react.md) (2 shared connections)
+- [server/flows.ts](server-flows.ts.md) (2 shared connections)
 
 ## Source Files
 
 - `src/app/api/diagrams/[id]/flows/suggest/route.ts`
 - `src/db/schema.ts`
-- `src/server/chat/prompt.ts`
+- `src/server/explain.ts`
 - `src/server/flowSuggest.ts`
 - `src/server/flows.ts`
+- `src/server/llm/qwen.ts`
 
 ## Audit Trail
 
-- EXTRACTED: 102 (95%)
-- INFERRED: 5 (5%)
+- EXTRACTED: 103 (92%)
+- INFERRED: 9 (8%)
 - AMBIGUOUS: 0 (0%)
 
 ---

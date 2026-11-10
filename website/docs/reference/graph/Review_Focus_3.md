@@ -1,6 +1,6 @@
 ---
 title: "Review Focus"
-sidebar_position: 98
+sidebar_position: 101
 ---
 # Review Focus
 
@@ -23,7 +23,7 @@ sidebar_position: 98
 ## Relationships
 
 - [ref_react](ref_react.md) (1 shared connections)
-- [EdgeLayer.tsx](EdgeLayer.tsx.md) (1 shared connections)
+- [EdgeLayerProps](EdgeLayerProps.md) (1 shared connections)
 
 ## Source Files
 

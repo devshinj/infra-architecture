@@ -1,13 +1,13 @@
 ---
 title: "InfraSketch 설계 문서"
-sidebar_position: 14
+sidebar_position: 18
 sidebar_label: "핵심 노드: InfraSketch 설계 문서"
 ---
 # InfraSketch 설계 문서
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 36 nodes · cohesion 0.09
+> 32 nodes · cohesion 0.10
 
 ## Key Concepts
 
@@ -17,10 +17,7 @@ sidebar_label: "핵심 노드: InfraSketch 설계 문서"
 - **Clef-Flash 판정 모델** (5 connections) — `docs/superpowers/specs/2026-10-29-infra-architecture-visualizer-design.md`
 - **1단계 계획: 기반과 캔버스** (4 connections) — `docs/superpowers/plans/2026-10-29-infrasketch-phase1-foundation-canvas.md`
 - **대화 차례 파이프라인** (4 connections) — `docs/superpowers/plans/2026-10-29-infrasketch-phase2-ai-chat.md`
-- **3A단계 계획: 빠진 정보 채우기** (4 connections) — `docs/superpowers/plans/2026-10-29-infrasketch-phase3a-missing-info.md`
 - **요청 의도 분류** (4 connections) — `docs/superpowers/specs/2026-10-29-infra-architecture-visualizer-design.md`
-- **폼 저장 = "직접 입력" 버전** (3 connections) — `docs/superpowers/plans/2026-10-29-infrasketch-phase3a-missing-info.md`
-- **빈 칸 계산은 순수 함수 하나** (3 connections) — `docs/superpowers/plans/2026-10-29-infrasketch-phase3a-missing-info.md`
 - **이상한 구성 경고** (3 connections) — `docs/superpowers/specs/2026-10-29-infra-architecture-visualizer-design.md`
 - **반목표 (장황한 설명·엉킨 캔버스·자유 드래그)** (3 connections) — `docs/superpowers/specs/2026-10-29-infra-architecture-visualizer-design.md`
 - **자동 배치 (ELK layered)** (3 connections) — `docs/superpowers/specs/2026-10-29-infra-architecture-visualizer-design.md`
@@ -32,38 +29,40 @@ sidebar_label: "핵심 노드: InfraSketch 설계 문서"
 - **실시간 생성 (노드가 하나씩 나타남)** (3 connections) — `docs/superpowers/specs/2026-10-29-infra-architecture-visualizer-design.md`
 - **스파이크 결과** (3 connections) — `docs/superpowers/specs/2026-10-29-infra-architecture-visualizer-design.md`
 - **기본 정리 옵션 4종** (3 connections) — `docs/superpowers/specs/2026-10-29-infra-architecture-visualizer-design.md`
-- **"모름" 표시** (3 connections) — `docs/superpowers/specs/2026-10-29-infra-architecture-visualizer-design.md`
 - **표시 파이프라인 (표시 변환 → ELK → React Flow + SVG 연결선)** (2 connections) — `docs/superpowers/plans/2026-10-29-infrasketch-phase1-foundation-canvas.md`
 - **NDJSON 스트리밍 API** (2 connections) — `docs/superpowers/plans/2026-10-29-infrasketch-phase2-ai-chat.md`
 - **구성도당 한 차례 잠금 (409)** (2 connections) — `docs/superpowers/plans/2026-10-29-infrasketch-phase2-ai-chat.md`
-- *... and 11 more nodes in this community*
+- **"중단됨" 버전** (2 connections) — `docs/superpowers/specs/2026-10-29-infra-architecture-visualizer-design.md`
+- **AZ 는 그룹이 아닌 속성** (2 connections) — `docs/superpowers/specs/2026-10-29-infra-architecture-visualizer-design.md`
+- **Clef 장애 시 대체 동작** (2 connections) — `docs/superpowers/specs/2026-10-29-infra-architecture-visualizer-design.md`
+- **설명 패널** (2 connections) — `docs/superpowers/specs/2026-10-29-infra-architecture-visualizer-design.md`
+- *... and 7 more nodes in this community*
 
 ## Relationships
 
-- [missing.ts](missing.ts.md) (5 shared connections)
-- [getOwnedDiagram](getOwnedDiagram.md) (3 shared connections)
-- [apply.ts](apply.ts.md) (2 shared connections)
-- [createClefClient](createClefClient.md) (2 shared connections)
+- [missing.ts](missing.ts.md) (7 shared connections)
+- [domain/apply.ts](domain-apply.ts.md) (2 shared connections)
+- [getOwnedDiagram](getOwnedDiagram.md) (2 shared connections)
+- [clef.ts](clef.ts.md) (2 shared connections)
 - [deps.ts](deps.ts.md) (2 shared connections)
-- [display.ts](display.ts.md) (2 shared connections)
 - [Canvas.tsx](Canvas.tsx.md) (1 shared connections)
-- [ask.ts](ask.ts.md) (1 shared connections)
+- [ask/route.ts](ask-route.ts.md) (1 shared connections)
 - [useChatTurn.ts](useChatTurn.ts.md) (1 shared connections)
 - [layout.ts](layout.ts.md) (1 shared connections)
 - [types.ts](types.ts.md) (1 shared connections)
-- [samples.ts](samples.ts.md) (1 shared connections)
+- [segments.ts](segments.ts.md) (1 shared connections)
+- [ChatPanel.tsx](ChatPanel.tsx.md) (1 shared connections)
 
 ## Source Files
 
 - `docs/superpowers/plans/2026-10-29-infrasketch-phase1-foundation-canvas.md`
 - `docs/superpowers/plans/2026-10-29-infrasketch-phase2-ai-chat.md`
-- `docs/superpowers/plans/2026-10-29-infrasketch-phase3a-missing-info.md`
 - `docs/superpowers/specs/2026-10-29-infra-architecture-visualizer-design.md`
 
 ## Audit Trail
 
-- EXTRACTED: 77 (95%)
-- INFERRED: 4 (5%)
+- EXTRACTED: 72 (96%)
+- INFERRED: 3 (4%)
 - AMBIGUOUS: 0 (0%)
 
 ---

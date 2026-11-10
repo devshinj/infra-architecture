@@ -1,6 +1,6 @@
 ---
 title: "server/flows.ts"
-sidebar_position: 28
+sidebar_position: 29
 ---
 # server/flows.ts
 
@@ -39,18 +39,18 @@ sidebar_position: 28
 
 ## Relationships
 
-- [getOwnedDiagram](getOwnedDiagram.md) (13 shared connections)
-- [domain/flows.ts](domain-flows.ts.md) (9 shared connections)
+- [getOwnedDiagram](getOwnedDiagram.md) (15 shared connections)
+- [schema.ts](schema.ts.md) (10 shared connections)
+- [projects.ts](projects.ts.md) (9 shared connections)
 - [useFlows](useFlows.md) (9 shared connections)
-- [projects.ts](projects.ts.md) (8 shared connections)
-- [ref_react](ref_react.md) (7 shared connections)
+- [mcp/apply.ts](mcp-apply.ts.md) (7 shared connections)
 - [(app)/actions.ts](app-actions.ts.md) (6 shared connections)
-- [server/network.ts](server-network.ts.md) (5 shared connections)
-- [mcp/apply.ts](mcp-apply.ts.md) (5 shared connections)
+- [domain/flows.ts](domain-flows.ts.md) (5 shared connections)
 - [read.ts](read.ts.md) (5 shared connections)
-- [Shell.tsx](Shell.tsx.md) (4 shared connections)
-- [versions.ts](versions.ts.md) (4 shared connections)
-- [flowSuggest.ts](flowSuggest.ts.md) (3 shared connections)
+- [auth](auth.md) (4 shared connections)
+- [ask/route.ts](ask-route.ts.md) (4 shared connections)
+- [ref_react](ref_react.md) (4 shared connections)
+- [pipeline.ts](pipeline.ts.md) (3 shared connections)
 
 ## Source Files
 
