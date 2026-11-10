@@ -1,3 +1,8 @@
+/* Hallmark · part of the InfraSketch Vantage redesign, stamped in src/styles/globals.css · shape: app screen · posture: restrained */
+/*
+ * 로그인·가입·비밀번호 화면. 왼쪽은 맨 바탕(paper) 위의 양식, 오른쪽은 paper-2 띠 위에 실제 구성도 한 장(모서리 눈금 테두리 + 지시선 둘).
+ * 좁은 화면(60rem 미만)에서는 양식만 보인다.
+ */
 .page {
   /* 다크 단일 테마 — 자동완성·스크롤바 같은 브라우저 기본 컨트롤도 어둡게 그린다. */
   color-scheme: dark;
@@ -5,28 +10,35 @@
   min-height: 100vh;
   min-height: 100dvh;
   display: grid;
-  place-items: center;
-  padding: 24px 16px;
+  grid-template-columns: minmax(0, 1fr);
   background: var(--bg-canvas);
   color: var(--text-primary);
 }
 .form {
   /* 좁은 화면에서는 좌우 여백(16px) 안으로 줄어든다. */
+  box-sizing: border-box;
   width: 100%;
-  max-width: 320px;
+  max-width: 352px;
+  align-self: center;
+  justify-self: center;
   display: flex;
   flex-direction: column;
   gap: 16px;
+  padding: 40px 16px;
 }
 .title {
-  font-size: 20px;
-  font-weight: 600;
-  margin: 0;
+  font-size: var(--text-hero);
+  font-weight: var(--weight-display);
+  letter-spacing: var(--tracking-display);
+  line-height: 1.1;
+  margin: 0 0 8px;
+  overflow-wrap: break-word;
+  min-width: 0;
 }
 .field {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 }
 .label {
   font-size: 14px;
@@ -39,13 +51,16 @@
 .input {
   box-sizing: border-box;
   width: 100%;
-  min-height: 40px;
-  background: var(--bg-node);
+  min-height: 44px;
+  background: var(--bg-sidebar);
   border: 1px solid var(--line-input);
-  border-radius: var(--radius-node);
+  border-radius: var(--radius-card);
   color: var(--text-primary);
-  padding: 8px 10px;
+  padding: 8px 12px;
   font: inherit;
+}
+.input:hover {
+  border-color: var(--text-secondary);
 }
 .inputWithReveal {
   padding-right: 64px;
@@ -53,7 +68,10 @@
 .input[aria-invalid="true"] {
   border-color: var(--state-missing);
 }
-.input:focus-visible,
+.input:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: -2px;
+}
 .button:focus-visible,
 .reveal:focus-visible,
 .linkButton:focus-visible,
@@ -61,7 +79,7 @@
 .linkLine a:focus-visible,
 .doneBox:focus-visible {
   outline: 2px solid var(--focus-ring);
-  outline-offset: 1px;
+  outline-offset: 2px;
 }
 .reveal {
   position: absolute;
@@ -71,7 +89,7 @@
   min-width: 52px;
   background: transparent;
   border: 0;
-  border-radius: var(--radius-node);
+  border-radius: var(--radius-card);
   color: var(--text-secondary);
   font: inherit;
   font-size: 13px;
@@ -80,12 +98,20 @@
 .reveal:hover {
   color: var(--text-primary);
 }
+.reveal:active {
+  background: var(--bg-panel-raised);
+}
+.reveal:focus-visible {
+  outline-offset: -2px;
+}
 .hint {
   color: var(--text-secondary);
   font-size: 12px;
+  line-height: 1.5;
   margin: 0;
+  word-break: keep-all;
 }
-/* --state-missing 그대로는 바탕과의 대비가 낮아(약 2.7:1) 글자에는 밝게 섞은 글자 토큰을 쓴다(약 6:1). */
+/* --state-missing 그대로는 글자 대비가 모자라 밝게 섞은 글자 토큰을 쓴다(7:1 이상). */
 .error {
   color: var(--state-missing-text);
   font-size: 13px;
@@ -93,18 +119,19 @@
 }
 .alert {
   color: var(--text-primary);
-  background: var(--bg-node);
+  background: var(--bg-sidebar);
   border: 1px solid var(--state-missing);
-  border-radius: var(--radius-node);
-  padding: 8px 10px;
+  border-radius: var(--radius-card);
+  padding: 8px 12px;
   font-size: 13px;
   margin: 0;
 }
 .notice {
   color: var(--text-secondary);
   font-size: 14px;
-  line-height: 1.5;
+  line-height: 1.6;
   margin: 0;
+  word-break: keep-all;
 }
 .sentTo {
   color: var(--text-primary);
@@ -117,29 +144,39 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
-  border-radius: var(--radius-node);
+  border-radius: var(--radius-card);
 }
+/* 둘째 버튼: 머리카락 선 알약. */
 .button,
 .linkButton {
   box-sizing: border-box;
-  min-height: 40px;
-  background: var(--bg-node);
+  min-height: 44px;
+  background: transparent;
   border: 1px solid var(--line-node);
-  border-radius: var(--radius-node);
+  border-radius: var(--radius-pill);
   color: var(--text-primary);
-  padding: 9px 12px;
+  padding: 8px 16px;
   font: inherit;
   font-weight: 500;
   cursor: pointer;
   text-align: center;
   text-decoration: none;
 }
+.button:hover:not(:disabled),
+.linkButton:hover {
+  border-color: var(--text-secondary);
+}
+.button:active:not(:disabled),
+.linkButton:active {
+  background: var(--bg-panel-raised);
+}
 .button:disabled {
-  opacity: 0.6;
+  opacity: 0.55;
   cursor: progress;
 }
-/* 화면의 주 동작(제출) — 화면마다 하나만 금색으로 채운다. 나머지 버튼은 위 .button 그대로. */
+/* 화면의 주 동작(제출) — 화면마다 하나만 연두로 채운다. 나머지 버튼은 위 .button 그대로. */
 .primary {
+  margin-top: 8px;
   background: var(--accent-fill);
   border-color: var(--accent-fill);
   color: var(--on-accent);
@@ -153,17 +190,15 @@
   background: var(--accent-fill-active);
   border-color: var(--accent-fill-active);
 }
-/* 보내는 중: 덜 흐리게 해 진행 문구를 읽을 수 있게 둔다(바탕 위 약 5.3:1). */
+/* 보내는 중: 덜 흐리게 해 진행 문구를 읽을 수 있게 둔다. */
 .primary:disabled {
   opacity: 0.75;
 }
-/* 은빛 링이 금색과 붙으면 구분이 약해(1.4:1) 바탕이 한 줄 보이게 띄운다(바탕과 10:1). */
-.primary:focus-visible {
-  outline-offset: 2px;
-}
 @media (prefers-reduced-motion: no-preference) {
-  .primary {
-    transition: background-color 0.15s, border-color 0.15s, opacity 0.15s;
+  .primary,
+  .button,
+  .input {
+    transition: background-color var(--dur-micro) var(--ease-out), border-color var(--dur-micro) var(--ease-out), opacity var(--dur-micro) var(--ease-out);
   }
 }
 .links {
@@ -176,6 +211,11 @@
 .links a,
 .linkLine a {
   color: var(--text-secondary);
+  text-underline-offset: 0.2em;
+}
+.links a:hover,
+.linkLine a:hover {
+  color: var(--text-primary);
 }
 /* "이미 계정이 있나요? 로그인" 처럼 문장 안의 링크 */
 .linkLine {
@@ -184,6 +224,103 @@
   margin: 0;
 }
 .logo {
-  align-self: center;
-  margin-bottom: 12px;
+  align-self: flex-start;
+  margin-bottom: 24px;
+}
+
+/* 옆 그림: paper-2 띠 위에 실제 구성도 한 장. */
+.showcase {
+  display: none;
+  margin: 0;
+}
+.shot {
+  /* 그림 높이: 화면 높이에 맞추되 원본(1309px)보다 키우지 않는다. 너비는 비율로 따라온다. */
+  --shot-h: min(calc(100dvh - 160px), 1309px);
+  position: relative;
+  min-width: 0;
+  padding: 24px;
+}
+/* 모서리 눈금 테두리(Vantage): 잰 것만 네 모서리에 짧은 선. */
+.shot::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border: var(--rule-hair) solid var(--text-secondary);
+  -webkit-mask: conic-gradient(at var(--tick) var(--tick), transparent 75%, var(--text-primary) 0) 0 0 / calc(100% - var(--tick)) calc(100% - var(--tick));
+  mask: conic-gradient(at var(--tick) var(--tick), transparent 75%, var(--text-primary) 0) 0 0 / calc(100% - var(--tick)) calc(100% - var(--tick));
+}
+.shotImg {
+  display: block;
+  width: auto;
+  height: var(--shot-h);
+  border-radius: var(--radius-card);
+}
+/* 지시선: 그림 속 한 점(4px 점)에서 머리카락 선, 끝에 이름. --x·--y 는 그림 안 백분율(숫자). */
+.callout {
+  position: absolute;
+  left: calc(24px + (100% - 48px) * var(--x) / 100);
+  top: calc(24px + (100% - 48px) * var(--y) / 100);
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+}
+.callout::before {
+  content: "";
+  flex: none;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--text-primary);
+}
+.callout::after {
+  content: "";
+  order: 1;
+  flex: none;
+  width: 32px;
+  height: 1px;
+  background: var(--text-secondary);
+}
+/* 왼쪽으로: 이름 · 선 · 점(오른쪽 끝이 그 점). */
+.callout[data-dir="left"] {
+  flex-direction: row-reverse;
+  transform: translate(calc(-100% + 2px), -50%);
+}
+/* 위로: 이름이 위, 선이 아래로 점까지. */
+.callout[data-dir="up"] {
+  flex-direction: column-reverse;
+  transform: translate(-50%, calc(-100% + 2px));
+}
+/* 위로 가는 선은 그림 크기를 따라 줄어든다(원본 75px = 그림 높이의 5.7%): 이름이 DB 중계 서버와 DB VIP 영역 사이 빈자리에 놓인다. */
+.callout[data-dir="up"]::after {
+  width: 1px;
+  height: calc(var(--shot-h) * 0.057);
+}
+.calloutLabel {
+  order: 2;
+  padding: 4px 8px;
+  font-size: 12px;
+  line-height: 1.3;
+  white-space: nowrap;
+  color: var(--text-primary);
+  background: var(--bg-canvas);
+  border-radius: var(--radius-card);
+}
+
+@media (min-width: 60rem) {
+  .page {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+  .form {
+    max-width: 400px;
+    padding: 64px 40px;
+  }
+  .showcase {
+    display: grid;
+    place-items: center;
+    min-width: 0;
+    padding: 40px;
+    background: var(--bg-sidebar);
+    border-left: 1px solid var(--line-shell);
+  }
 }
