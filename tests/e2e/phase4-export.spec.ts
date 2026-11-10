@@ -94,7 +94,7 @@ test("구성도를 PNG·SVG, 어두운·흰 바탕으로 내보낸다", async ({
   expect(darkText.startsWith("<svg")).toBe(true);
   expect(darkText).toContain("WAS#1");
   expect(darkText).toContain("@font-face");
-  expect(darkText).toContain("rgb(27, 38, 56)");
+  expect(darkText).toContain("rgb(4, 9, 12)");
 
   const lightSvg = await exportAs(page, "SVG 흰 바탕(문서용)");
   expect(lightSvg.name).toBe("쇼핑몰-새 구성도.svg");
@@ -115,7 +115,7 @@ test("구성도를 PNG·SVG, 어두운·흰 바탕으로 내보낸다", async ({
 
   // 화면은 흰 바탕으로 바뀌지 않았고 선택도 그대로다.
   const bg = await page.locator(".canvas").evaluate((el) => getComputedStyle(el).backgroundColor);
-  expect(bg).toBe("rgb(27, 38, 56)");
+  expect(bg).toBe("rgb(4, 9, 12)");
   await expect(page.locator(".node--selected")).toHaveCount(1);
   await expect(page.locator(".export-stage")).toHaveCount(0);
 });

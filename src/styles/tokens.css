@@ -1,113 +1,154 @@
 /*
- * InfraSketch 디자인 토큰 — 스펙 §5.2.2 "미드나잇 다이얼" (P1+)
- * 모든 색·반경은 이 변수만 참조한다. 컴포넌트에 색을 직접 쓰지 않는다.
- * 다크 단일 테마. 라이트 테마 확장을 대비해 토큰 구조를 유지한다.
+ * InfraSketch 디자인 토큰 — Hallmark 재설계 "Vantage · steel" (2026-11-10). 스펙 §5.2.2 표와 같은 값.
+ * 모든 색·글꼴·반경은 이 변수만 참조한다. 컴포넌트에 색을 직접 쓰지 않는다.
+ * 다크 단일 테마: 푸른 검정 바탕(paper), 강철빛 글자(ink), 연두 신호 하나(accent).
+ * 이름은 예전 그대로 두고 값만 바꿨다(흰 바탕 내보내기 LIGHT_TOKENS 가 같은 이름을 덮는다).
+ * 색 토큰은 #RRGGBB·rgba 로 적는다(대비 시험·내보내기가 이 꼴을 읽는다). 새 Vantage 이름(--color-*)은 그 별칭이다.
  */
 :root {
-  /* 배경·노드 */
-  --bg-canvas: #1B2638; /* 캔버스 바탕 */
-  --bg-node: #223147; /* 노드 채움 */
-  --line-node: #3D4D66; /* 노드 테두리 */
+  color-scheme: dark;
 
-  /* 영역 구분 — 사이드바·캔버스·패널 명도 3단 */
-  --bg-sidebar: #121A27; /* 프로젝트 사이드바 바탕 */
-  --bg-panel: #212E42; /* 오른쪽 대화·설명·이력 패널 바탕 */
-  --bg-panel-raised: #2A3A52; /* 패널 위 입력칸·말풍선·카드·메뉴 */
-  --line-shell: #2C3A50; /* 영역 경계선 */
+  /* 배경·노드 — paper(캔버스) · paper-3(노드 칠) · rule-2(노드 테두리) */
+  --bg-canvas: #04090C; /* 캔버스 바탕 = paper, oklch(13.5% 0.012 235) */
+  --bg-node: #1D252B; /* 노드 칠 oklch(26% 0.016 235): 가장 깊이 겹친 영역 칠(#192026)보다 한 단 밝아 노드가 구멍처럼 보이지 않는다 */
+  --line-node: #30393F; /* 노드 테두리 = rule-2, oklch(34% 0.016 235) */
 
-  /* 떠 있는 유리 패널 — 캔버스 위 사이드바·오른쪽 패널. 그림자 없이 반투명·1px 선으로 층을 나눈다. */
-  --glass-bg: rgba(18, 26, 39, 0.78); /* 패널 칠 */
-  --glass-line: rgba(232, 235, 238, 0.08); /* 패널 테두리·안쪽 구분선 */
-  --glass-highlight: rgba(208, 218, 232, 0.42); /* 패널 머리 은빛 선 */
-  --glass-blur: 14px; /* 뒤 캔버스 흐림 */
+  /* 영역 구분 — 작업 화면 테두리(사이드바·패널)는 캔버스와 같은 paper 로 물러난다(머리카락 선으로만 가른다). 앞에 서는 것은 노드다. */
+  --bg-sidebar: #04090C; /* 사이드바·막대 바탕 = paper */
+  --bg-panel: #04090C; /* 오른쪽 패널 바탕 = paper */
+  --bg-panel-raised: #182126; /* 패널 위 입력칸·말풍선·메뉴·고른 줄 = oklch(24% 0.016 235) */
+  --line-shell: #20282C; /* 영역 경계 머리카락 선 = rule, oklch(27% 0.014 235) */
 
-  /* 위치 보기 강조 링(은빛, 금색 --accent 아님) */
-  --focus-ring: #C9D3E2;
+  /* 떠 있는 판(사이드바·패널·도구 막대·카드): 흐림 없이 불투명한 paper 와 머리카락 선 하나. 그림자도 없다. */
+  --glass-bg: rgba(4, 9, 12, 1); /* = --bg-sidebar */
+  --glass-line: rgba(32, 40, 44, 1); /* = --line-shell */
+
+  /* 포커스·위치 보기 링: 연두 신호(바탕과 15:1, 노드와 13:1) */
+  --focus-ring: #BCF053;
 
   /* 얇은 테마 스크롤바(스크롤 영역 전체) */
   --scrollbar-thumb: rgba(154, 167, 186, 0.28);
   --scrollbar-thumb-hover: rgba(154, 167, 186, 0.5);
 
-  /* 대화에서 캔버스로 날아가는 빛점(은빛 단색 원, glass-highlight 보다 밝게) */
+  /* 대화에서 캔버스로 날아가는 빛점(은빛 단색 원) */
   --fly-dot: #DCE3EE;
 
-  /* 텍스트 */
-  --text-primary: #E8EBEE; /* 노드 이름 등 */
-  --text-secondary: #9AA7BA; /* 부제, 영역 이름 */
+  /* 텍스트 — ink · muted */
+  --text-primary: #EBEFF2; /* ink, oklch(95% 0.006 230) */
+  --text-secondary: #8F9AA0; /* muted 강철, oklch(68% 0.016 230): 모든 바탕에서 5.6:1 이상 */
 
-  /* 강조 (유일한 강조색 — 흐름 점·선택·방금 수정됨) */
-  --accent: #D4AE6C;
+  /* 강조 (유일한 신호색 — 주 동작·지금 고른 것·흐름 점·방금 바뀜) */
+  --accent: #BCF053; /* lime, oklch(89% 0.19 126) */
 
-  /* 망 경계 표시(금색 점·"망 넘음" 알약 테두리). --accent 와 같은 값이지만 흰 바탕 내보내기에서 따로 짝을 둔다. */
-  --boundary-mark: #D4AE6C;
+  /* 망 경계 표시(점·"망 넘음" 알약 테두리). --accent 와 같은 값이지만 흰 바탕 내보내기에서 따로 짝을 둔다. */
+  --boundary-mark: #BCF053;
 
-  /* 주 동작 버튼 — 화면마다 하나만 금색으로 채운다. 이 값들은 :root 에서 한 번 풀리므로 흰 바탕 내보내기(exportImage)가
-     --accent 를 덮어도 따라가지 않는다. 버튼은 구성도 그림에 담기지 않아 흰 바탕 짝을 두지 않는다. */
+  /* 주 동작 버튼 — 화면마다 하나만 연두로 채운다. :root 에서 한 번 풀리므로 흰 바탕 내보내기가 --accent 를 덮어도 따라가지 않는다. */
   --accent-fill: var(--accent); /* 칠 */
   --accent-fill-hover: color-mix(in srgb, var(--accent) 85%, var(--text-primary)); /* 올렸을 때 조금 밝게 */
   --accent-fill-active: color-mix(in srgb, var(--accent) 88%, var(--bg-sidebar)); /* 누를 때 조금 어둡게 */
-  --on-accent: var(--bg-sidebar); /* 금색 위 글자(대비 8.4:1, 올림 9.1:1, 누름 6.7:1) */
+  --on-accent: var(--bg-sidebar); /* 연두 위 글자(대비 14:1, 올림 14:1, 누름 11:1) */
 
-  /* 입력칸 테두리 — 어느 칸 칠 위에서도 3:1 이상(WCAG 1.4.11): --bg-panel-raised 3.4:1, --bg-node 3.9:1, --bg-canvas 4.5:1.
-     --line-node 그대로는 1.2~1.5:1 이다. 흰 바탕 내보내기에는 입력칸이 없어 짝을 두지 않는다. */
+  /* 입력칸 테두리 — 어느 칸 칠 위에서도 3:1 이상(WCAG 1.4.11). */
   --line-input: color-mix(in srgb, var(--text-secondary) 70%, var(--line-node));
 
-  /* 노드 분류 (아이콘 + 옅은 색조 원) */
-  --cat-client: #A5B2C2; /* 사용자 */
-  --cat-network: #86AED3; /* 네트워크·진입 */
-  --cat-compute: #C6CEDA; /* 서버 */
-  --cat-data: #92C3A3; /* 데이터 */
-  --cat-external: #CE9E82; /* 외부 서비스 */
+  /* 노드 분류 (아이콘 + 옅은 색조 원). 강철 바탕에 맞춰 채도를 낮췄다. */
+  --cat-client: #A7B3BB; /* 사용자 */
+  --cat-network: #8FB7D4; /* 네트워크·진입 */
+  --cat-compute: #C3CCD1; /* 서버 */
+  --cat-data: #90C5AD; /* 데이터 */
+  --cat-external: #D0A88D; /* 외부 서비스 */
 
-  /* 연결선 */
-  --edge-request: #7A8BA6; /* 동기 요청선 */
-  --edge-async: #B08E7A; /* 비동기·웹훅 */
-  --edge-replication: #88AE93; /* 복제 */
-  --edge-aux: #56657C; /* 관리·모니터링 */
+  /* 연결선 — 강철 계열, 네 종류는 밝기·옅은 색조·선 모양(실선·점선·겹선·짧은 점선)으로 가른다 */
+  --edge-request: #7E8F99; /* 동기 요청선 */
+  --edge-async: #AA8B74; /* 비동기·웹훅 */
+  --edge-replication: #7CA391; /* 복제 */
+  --edge-aux: #505D65; /* 관리·모니터링 */
 
-  /* 연결선 강조 색: 고른 대상에 닿은 선. 기본색과 같은 계열에서 어두운 캔버스(#1B2638) 위에 확실히 밝게 */
-  --edge-request-lit: #B9C8DE; /* 요청선 강조 (슬레이트 블루, 밝게) */
-  --edge-async-lit: #E6C3AC; /* 비동기·웹훅 강조 (테라코타, 밝게) */
-  --edge-replication-lit: #B5DCC1; /* 복제 강조 (세이지 그린, 밝게) */
-  --edge-aux-lit: #94A7C4; /* 관리·모니터링 강조 (회청색, 밝게) */
-  --edge-glow: #AFC3E0; /* 강조선 뒤 번짐 색 */
+  /* 연결선 강조 색: 고른 대상에 닿은 선. 같은 계열에서 확실히 밝게 */
+  --edge-request-lit: #B9CEDC;
+  --edge-async-lit: #E9C2A4;
+  --edge-replication-lit: #ADDEC7;
+  --edge-aux-lit: #90A1AC;
+  --edge-glow: #ACC1CF; /* 강조선 뒤 번짐 색 */
 
-  /* 연결선 움직임 (빛 꼬리·패킷·광택) */
-  --motion-comet-tail: #C9D3E2; /* 빛 꼬리 바깥 */
-  --motion-comet-mid: #E9DDBF; /* 빛 꼬리 가운데 */
-  --motion-capsule: #E3C7AE; /* 비동기 패킷 */
-  --motion-sheen: #D5E9DB; /* 복제 광택 */
+  /* 연결선 움직임 (빛 꼬리·패킷·광택). 꼬리 머리는 --accent(흐름 점) */
+  --motion-comet-tail: #BECDD5;
+  --motion-comet-mid: #D7F5AB;
+  --motion-capsule: #EACAB1;
+  --motion-sheen: #C7E7D7;
 
   /* 상태 배지 */
-  --state-missing: #C9574A; /* 빠진 정보 — 테두리·칠. 글자에 그대로 쓰면 바탕과 대비가 모자라다(2.7~4.1:1). */
-  --state-missing-text: #D79A94; /* 빠진 정보·위험 글자 = state-missing 55% + text-primary (모든 바탕에서 4.9:1 이상) */
-  --state-warn: #D4AE6C; /* 경고 */
+  --state-missing: #D9544B; /* 빠진 정보 — 테두리·칠. 글자에는 아래 글자 토큰을 쓴다. */
+  --state-missing-text: #E19A96; /* = state-missing 55% + text-primary (모든 바탕에서 7.2:1 이상) */
+  --state-warn: #EEB154; /* 경고(호박색, 연두 신호와 따로) */
 
   /* 영역 테두리 */
-  --zone-region: #384A62; /* 리전/IDC (점선) */
-  --zone-vpc: #445876; /* VPC (채움 흰색 2%) */
-  --zone-subnet-public: #384A66; /* 공개 구역 */
-  --zone-subnet-private: #34465F; /* 내부 구역 */
-  --zone-redundancy: #536986; /* 이중화 묶음 (짧은 점선) */
-  --zone-external: #82695B; /* 외부 서비스 상자 (점선) */
+  --zone-region: #333F46; /* 리전/IDC (점선) */
+  --zone-vpc: #3C4A54; /* VPC */
+  --zone-subnet-public: #314349; /* 공개 구역 */
+  --zone-subnet-private: #343B46; /* 내부 구역 */
+  --zone-redundancy: #4E5A62; /* 이중화 묶음 (짧은 점선) */
+  --zone-external: #685346; /* 외부 서비스 상자 (점선) */
 
-  /* 영역 색조 — 구역 칠·테두리·이름 태그의 바탕색 (옅게 섞어 쓴다) */
-  --zone-tint-region: #5B7BA0; /* 클라우드 리전 */
-  --zone-tint-vpc: #4F7FB8; /* VPC */
-  --zone-tint-public: #3F93A8; /* 공개 구역(청록) */
-  --zone-tint-private: #6874B8; /* 내부 구역(남색) */
-  --zone-tint-dmz: #B08B4F; /* DMZ(황동) */
-  --zone-tint-k8s: #4E9A8E; /* 쿠버네티스 클러스터 */
-  --zone-tint-external: #A9765E; /* 외부 서비스(구리) */
-  --zone-tint-redundancy: #7F95B5; /* 이중화 묶음 */
-  --zone-tint-onprem: #7A8696; /* IDC·온프레미스 */
-  --zone-tint-network: #8B72B8; /* 망(업무망·인터넷망 등, 보라) */
+  /* 영역 색조 — 구역 칠·테두리·이름 태그의 바탕색 (옅게 섞어 쓴다). 푸른 검정 위에 가라앉게 채도를 낮췄다. */
+  --zone-tint-region: #718A9C; /* 클라우드 리전 */
+  --zone-tint-vpc: #688AA8; /* VPC */
+  --zone-tint-public: #68959D; /* 공개 구역(청록) */
+  --zone-tint-private: #777E9F; /* 내부 구역(남색) */
+  --zone-tint-dmz: #A68F68; /* DMZ(황동) */
+  --zone-tint-k8s: #6A978D; /* 쿠버네티스 클러스터 */
+  --zone-tint-external: #A68471; /* 외부 서비스(구리) */
+  --zone-tint-redundancy: #8196A2; /* 이중화 묶음 */
+  --zone-tint-onprem: #7E888E; /* IDC·온프레미스 */
+  --zone-tint-network: #857A9A; /* 망(업무망·인터넷망 등) */
 
-  /* 반경 */
+  /* 반경 — 캔버스 노드·영역은 그대로(구성도 모양은 움직이지 않는다), 작업 화면 테두리는 4px 이하 */
   --radius-node: 6px;
   --radius-zone: 8px;
-  --radius-panel: 14px; /* 떠 있는 패널 */
+  --radius-panel: 4px; /* 떠 있는 판 */
+  --radius-card: 4px; /* 버튼·입력칸·메뉴·카드 */
+  --radius-pill: 999px; /* 탭·칩·주 동작 알약 */
 
   /* 간격 */
-  --panel-gap: 12px; /* 떠 있는 패널과 화면 가장자리 사이 */
+  --panel-gap: 12px; /* 떠 있는 판과 화면 가장자리 사이 */
+
+  /* ---- Vantage 이름(위 토큰의 별칭과 새 값). 새 색은 oklch 로 적는다 — 흰 바탕 짝이 없는 작업 화면 전용. ---- */
+  --color-paper: var(--bg-canvas);
+  --color-paper-2: oklch(17% 0.014 235); /* 로그인 옆 띠·입력칸 우물·대화상자 */
+  --color-paper-3: var(--bg-node);
+  --color-ink: var(--text-primary);
+  --color-ink-2: oklch(82% 0.012 230);
+  --color-muted: var(--text-secondary);
+  --color-rule: var(--line-shell);
+  --color-rule-2: var(--line-node);
+  --color-accent: var(--accent);
+  --color-accent-hi: oklch(93% 0.17 126);
+  --color-accent-ink: oklch(19% 0.04 126);
+  --color-focus: var(--focus-ring);
+  --color-error: var(--state-missing-text);
+  --dot-grid: oklch(64% 0.012 285); /* 캔버스 점 격자(React Flow 기본 점과 같은 값) — 빈 홈·빈 구성도도 같은 격자 */
+
+  /* 글꼴 — SUIT 하나(Geologica 는 한글이 없다). --font-suit 는 next/font 가 body 에 준다. */
+  --font-body: var(--font-suit), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-body);
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; /* 키·명령 같은 코드에만 */
+
+  /* 작업 화면 글자 크기: 1.2 비율 고정 단계(13px 본문 기준) */
+  --text-label: 12px;
+  --text-body: 13px;
+  --text-title: 15px;
+  --text-page: 22px; /* 화면 제목(가는 굵기) */
+  --text-hero: 32px; /* 빈 홈·로그인 제목 */
+  --weight-display: 300;
+  --tracking-display: -0.02em;
+
+  /* 모서리 눈금 테두리: 잰 것·내세운 것만 네 모서리에 짧은 선 */
+  --rule-hair: 1px;
+  --tick: 10px;
+
+  /* 움직임 */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --dur-micro: 120ms;
+  --dur-short: 220ms;
 }

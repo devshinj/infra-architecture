@@ -7,6 +7,8 @@ const suit = localFont({
   src: "./fonts/SUIT-Variable.woff2",
   weight: "100 900",
   display: "swap",
+  // 글꼴은 토큰(--font-body)으로 쓴다: <html> 에 이 변수를 두고(:root 의 --font-body 가 읽는다) globals.css 가 font-family 를 준다.
+  variable: "--font-suit",
 });
 
 export const metadata: Metadata = {
@@ -27,8 +29,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ko">
-      <body className={suit.className}>{children}</body>
+    <html lang="ko" className={suit.variable}>
+      <body>{children}</body>
     </html>
   );
 }

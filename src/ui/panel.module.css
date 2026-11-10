@@ -1,7 +1,9 @@
+/* Hallmark · part of the InfraSketch Vantage redesign, stamped in src/styles/globals.css · shape: app screen · posture: restrained */
+/* Hallmark · answered F5 · the node info icon repeats the canvas node coin so the panel names the same node */
 /* Right-panel content: NodeInfo and HistoryPanel. Tokens only. */
 .empty { margin: 0; padding: 16px; font-size: 13px; line-height: 1.6; color: var(--text-secondary); }
 .info { display: flex; flex-direction: column; gap: 16px; padding: 16px; }
-.head { display: flex; align-items: center; gap: 10px; }
+.head { display: flex; align-items: center; gap: 12px; }
 .icon {
   flex: none; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center;
   color: var(--cat); background: color-mix(in srgb, var(--cat) 14%, transparent);
@@ -10,23 +12,23 @@
 .kind { margin: 2px 0 0; font-size: 12px; color: var(--text-secondary); }
 .section { display: flex; flex-direction: column; gap: 8px; }
 .heading { margin: 0; font-size: 11px; font-weight: 500; color: var(--text-secondary); }
-.fields { margin: 0; display: flex; flex-direction: column; gap: 6px; }
+.fields { margin: 0; display: flex; flex-direction: column; gap: 8px; }
 .field { display: flex; justify-content: space-between; gap: 12px; font-size: 13px; }
 .field dt { color: var(--text-secondary); }
 .field dd { margin: 0; color: var(--text-primary); text-align: right; word-break: break-all; }
 .missing { color: var(--text-secondary) !important; font-style: italic; font-size: 13px; margin: 0; }
-.relations { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: var(--text-primary); }
+.relations { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 8px; font-size: 13px; color: var(--text-primary); }
 .relText { color: var(--text-secondary); font-size: 12px; }
-.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
 .chip, .actions button {
   font: inherit; font-size: 12px; color: var(--text-primary); background: var(--bg-panel-raised);
-  border: 1px solid var(--line-node); border-radius: 999px; padding: 3px 10px; cursor: pointer;
+  border: 1px solid var(--line-node); border-radius: 999px; padding: 4px 12px; cursor: pointer;
 }
 .chip:hover, .actions button:hover:not(:disabled) { border-color: var(--text-secondary); }
-.chip:focus-visible, .actions button:focus-visible, .versionRow:focus-visible { outline: 1.5px solid var(--text-secondary); outline-offset: 2px; }
+.chip:focus-visible, .actions button:focus-visible, .versionRow:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
 
 .versions { margin: 0; padding: 8px; list-style: none; display: flex; flex-direction: column; gap: 4px; }
-.version { border: 1px solid transparent; border-radius: var(--radius-node); }
+.version { border: 1px solid transparent; border-radius: var(--radius-card); }
 .version[data-viewing] { border-color: var(--text-secondary); }
 .versionRow {
   width: 100%; display: flex; align-items: center; gap: 8px; font: inherit; font-size: 13px;
@@ -35,66 +37,66 @@
 .versionRow:hover { background: var(--bg-panel-raised); }
 .versionNo { font-weight: 600; min-width: 28px; }
 .time { margin-left: auto; font-size: 11px; color: var(--text-secondary); }
-.badge { font-size: 11px; color: var(--text-primary); border: 1px solid var(--state-missing); border-radius: 4px; padding: 0 5px; }
-.actions { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 8px 10px; }
-.actions button { border-radius: 6px; }
-.actions button:disabled { opacity: 0.4; cursor: default; }
+.badge { font-size: 11px; color: var(--text-primary); border: 1px solid var(--state-missing); border-radius: 4px; padding: 0 4px; }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; padding: 0 8px 12px; }
+.actions button { border-radius: var(--radius-card); }
+.actions button:disabled { opacity: 0.55; cursor: not-allowed; }
 .linkBtn {
   align-self: flex-start; font: inherit; font-size: 12px; color: var(--text-primary); background: var(--bg-panel-raised);
-  border: 1px solid var(--line-node); border-radius: var(--radius-node); padding: 4px 10px; cursor: pointer;
+  border: 1px solid var(--line-node); border-radius: var(--radius-card); padding: 4px 12px; cursor: pointer;
 }
 .linkBtn:hover:not(:disabled) { border-color: var(--text-secondary); }
-.linkBtn:disabled { opacity: 0.5; cursor: default; }
-.linkBtn:focus-visible { outline: 1.5px solid var(--text-secondary); outline-offset: 2px; }
+.linkBtn:disabled { opacity: 0.55; cursor: not-allowed; }
+.linkBtn:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
 /* 주의할 점: 등급 표시만 --state-warn 으로 강조한다. */
 .subheading { margin: 4px 0 0; font-size: 11px; font-weight: 500; color: var(--text-secondary); }
-.cautions { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 10px; }
-.caution { display: flex; flex-direction: column; gap: 4px; padding: 8px 10px; border: 1px solid var(--line-node); border-radius: var(--radius-node); }
+.cautions { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 12px; }
+.caution { display: flex; flex-direction: column; gap: 4px; padding: 8px 12px; border: 1px solid var(--line-node); border-radius: var(--radius-card); }
 .cautionIgnored { opacity: 0.75; }
-.level { align-self: flex-start; font-size: 11px; font-weight: 600; color: var(--text-primary); border: 1px solid var(--state-warn); border-radius: 4px; padding: 0 5px; }
+.level { align-self: flex-start; font-size: 11px; font-weight: 600; color: var(--text-primary); border: 1px solid var(--state-warn); border-radius: 4px; padding: 0 4px; }
 .level[data-level="check"] { border-color: var(--line-node); color: var(--text-secondary); }
 .cautionText { margin: 0; font-size: 13px; line-height: 1.5; color: var(--text-primary); }
 .cautionGuide { margin: 0; font-size: 12px; line-height: 1.5; color: var(--text-secondary); }
-.cautionError { margin: 0; font-size: 12px; color: var(--text-primary); border: 1px solid var(--state-missing); border-radius: var(--radius-node); padding: 5px 8px; }
+.cautionError { margin: 0; font-size: 12px; color: var(--text-primary); border: 1px solid var(--state-missing); border-radius: var(--radius-card); padding: 4px 8px; }
 /* 설명: 정의·역할·ADR. 강조색 없이 중립 토큰만 쓴다. */
 .explain { display: flex; flex-direction: column; gap: 16px; }
 .explainText { margin: 0; font-size: 13px; line-height: 1.6; color: var(--text-primary); }
-.unreviewed { margin-left: 6px; font-size: 11px; color: var(--text-secondary); border: 1px solid var(--line-node); border-radius: 4px; padding: 0 5px; white-space: nowrap; }
+.unreviewed { margin-left: 8px; font-size: 11px; color: var(--text-secondary); border: 1px solid var(--line-node); border-radius: 4px; padding: 0 4px; white-space: nowrap; }
 .srOnly { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
-.adr { margin: 0; display: flex; flex-direction: column; gap: 6px; }
+.adr { margin: 0; display: flex; flex-direction: column; gap: 8px; }
 .adrRow { display: grid; grid-template-columns: 36px 1fr; gap: 8px; font-size: 13px; line-height: 1.5; }
 .adrRow dt { color: var(--text-secondary); }
 .adrRow dd { margin: 0; color: var(--text-primary); }
-.rewrite { display: flex; gap: 6px; align-items: center; }
+.rewrite { display: flex; gap: 8px; align-items: center; }
 .rewriteInput {
   flex: 1; min-width: 0; font: inherit; font-size: 12px; color: var(--text-primary); background: var(--bg-panel-raised);
-  border: 1px solid var(--line-node); border-radius: var(--radius-node); padding: 4px 8px;
+  border: 1px solid var(--line-node); border-radius: var(--radius-card); padding: 4px 8px;
 }
-.rewriteInput:focus-visible { outline: 1.5px solid var(--text-secondary); outline-offset: 1px; }
-.rewriteInput:disabled { opacity: 0.5; }
+.rewriteInput:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 1px; }
+.rewriteInput:disabled { opacity: 0.55; cursor: not-allowed; color: var(--text-secondary); }
 .explain :global(abbr.term) { text-decoration: underline dotted; text-underline-offset: 3px; cursor: help; }
-.explain :global(abbr.term):focus-visible { outline: 1.5px solid var(--text-secondary); outline-offset: 1px; }
+.explain :global(abbr.term):focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 1px; }
 /* 용어 풀이: 포커스·호버에 한 줄 풀이를 보인다(title 은 보조용으로 남김). */
 .explain :global(abbr.term) { position: relative; }
 .explain :global(abbr.term):hover::after,
 .explain :global(abbr.term):focus-visible::after {
   content: attr(data-def); position: absolute; left: 0; top: calc(100% + 4px); z-index: 10; width: max-content; max-width: 220px;
   padding: 4px 8px; font-size: 11.5px; line-height: 1.5; font-style: normal; text-decoration: none; white-space: normal;
-  color: var(--text-primary); background: var(--bg-panel-raised); border: 1px solid var(--line-node); border-radius: var(--radius-node);
+  color: var(--text-primary); background: var(--bg-panel-raised); border: 1px solid var(--line-node); border-radius: var(--radius-card);
 }
 /* 노드에 대해 물어보기: 한 줄 입력 + 보내기 아이콘 버튼. */
-.ask { display: flex; gap: 6px; align-items: center; }
+.ask { display: flex; gap: 8px; align-items: center; }
 .askInput {
   flex: 1; min-width: 0; font: inherit; font-size: 12px; color: var(--text-primary); background: var(--bg-panel-raised);
-  border: 1px solid var(--line-node); border-radius: var(--radius-node); padding: 6px 8px;
+  border: 1px solid var(--line-node); border-radius: var(--radius-card); padding: 8px 8px;
 }
-.askInput:focus-visible { outline: 1.5px solid var(--text-secondary); outline-offset: 1px; }
-.askInput:disabled { opacity: 0.5; }
+.askInput:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 1px; }
+.askInput:disabled { opacity: 0.55; cursor: not-allowed; color: var(--text-secondary); }
 .askSend {
   flex: none; display: grid; place-items: center; width: 28px; height: 28px; color: var(--text-primary);
-  background: var(--bg-panel-raised); border: 1px solid var(--line-node); border-radius: var(--radius-node); cursor: pointer;
+  background: var(--bg-panel-raised); border: 1px solid var(--line-node); border-radius: var(--radius-card); cursor: pointer;
 }
 .askSend:hover:not(:disabled) { border-color: var(--text-secondary); }
-.askSend:disabled { opacity: 0.5; cursor: default; }
-.askSend:focus-visible { outline: 1.5px solid var(--text-secondary); outline-offset: 2px; }
+.askSend:disabled { opacity: 0.55; cursor: not-allowed; }
+.askSend:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
 .askReason { margin: 0; font-size: 11px; color: var(--text-secondary); }

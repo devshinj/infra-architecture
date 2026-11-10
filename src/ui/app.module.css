@@ -1,5 +1,6 @@
+/* Hallmark · part of the InfraSketch Vantage redesign, stamped in src/styles/globals.css · shape: app screen · posture: restrained */
 /* App shell, sidebar, right panel, workspace. Tokens only. */
-/* 캔버스가 바탕 전체를 채우고, 사이드바·오른쪽 패널은 사방 --panel-gap 을 두고 유리 판으로 떠 있다. */
+/* 캔버스가 바탕 전체를 채우고, 사이드바·오른쪽 패널은 사방 --panel-gap 을 두고 떠 있다: 흐림 없는 paper-2 판과 머리카락 선 하나(캔버스가 앞에 선다). */
 .shell {
   position: fixed; inset: 0; overflow: hidden; background: var(--bg-canvas); color: var(--text-primary);
   /* 노치·홈 표시줄(가로 휴대폰): 떠 있는 판의 바깥 여백이 max(--panel-gap, 안전 영역)이 되도록 더할 몫. 보통 화면은 0. */
@@ -9,131 +10,156 @@
 }
 .main { position: absolute; inset: 0; min-width: 0; min-height: 0; }
 /* 캔버스가 아닌 화면은 떠 있는 사이드바 오른쪽에서 시작한다(--shell-inset-left 는 Shell.tsx 가 준다). */
-.emptyState { height: 100%; display: grid; place-content: center; text-align: center; gap: 8px; padding: 24px; padding-left: calc(var(--shell-inset-left, 0px) + var(--safe-l, 0px) + 24px); }
-.emptyState h1 { margin: 0; font-size: 16px; font-weight: 600; }
-.emptyState p { margin: 0; font-size: 13px; line-height: 1.6; color: var(--text-secondary); max-width: 360px; }
+/* 빈 홈: 빈 구성도(작업 화면 캔버스가 비었을 때)와 한 가족. 점 격자 캔버스 가운데에 모서리 눈금을 두른 안내 한 덩이. */
+.emptyState {
+  box-sizing: border-box; height: 100%; display: grid; place-items: center; padding: 24px; padding-left: calc(var(--shell-inset-left, 0px) + var(--safe-l, 0px) + 24px);
+}
+.emptySheet {
+  display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center;
+  min-width: 0; max-width: 480px; padding: 32px 40px; background: var(--bg-canvas); color: var(--text-primary);
+}
+.emptySheet h1 {
+  margin: 0; max-width: 20ch; font-size: var(--text-hero); font-weight: var(--weight-display); line-height: 1.1;
+  letter-spacing: var(--tracking-display); overflow-wrap: break-word; min-width: 0; text-wrap: balance; word-break: keep-all;
+}
+.emptySheet p { margin: 0; font-size: 14px; line-height: 1.6; color: var(--text-secondary); max-width: 46ch; word-break: keep-all; text-wrap: pretty; }
 .emptyActions { margin-top: 8px; display: flex; justify-content: center; }
+.emptyActions .primaryBtn { min-height: 44px; padding: 0 24px; font-size: 14px; }
 
 .sidebar {
   position: absolute; top: var(--panel-gap); bottom: calc(var(--panel-gap) + var(--safe-b, 0px)); left: calc(var(--panel-gap) + var(--safe-l, 0px)); z-index: 40; width: 240px;
   display: flex; flex-direction: column; min-height: 0;
-  background: var(--glass-bg); backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur));
-  border: 1px solid var(--glass-line); border-top-color: var(--glass-highlight); border-radius: var(--radius-panel);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-line); border-radius: var(--radius-panel);
 }
-.sideHead { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 8px 8px 16px; }
+.sideHead { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 8px 8px 16px; }
 .brand { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 14px; font-weight: 600; letter-spacing: -0.01em; }
 .iconBtn, .railBtn {
   flex: none; display: grid; place-items: center; width: 32px; height: 32px; padding: 0;
-  color: var(--text-secondary); background: transparent; border: 0; border-radius: 8px; cursor: pointer; text-decoration: none;
+  color: var(--text-secondary); background: transparent; border: 0; border-radius: var(--radius-card); cursor: pointer; text-decoration: none;
 }
 .iconBtn:hover, .railBtn:hover { color: var(--text-primary); background: var(--bg-panel-raised); }
 .railBtn { width: 36px; height: 36px; }
 .railBtnActive { color: var(--text-primary); background: var(--bg-panel-raised); }
-.railBtn:focus-visible { outline: 1.5px solid var(--text-secondary); outline-offset: 2px; }
+.railBtn:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
 /* 접힌 레일: 아이콘 버튼만 세로로. */
-.rail { width: 56px; align-items: center; gap: 4px; padding: 9px 0; }
+.rail { width: 56px; align-items: center; gap: 4px; padding: 8px 0; }
 .railFoot { position: relative; margin-top: auto; }
 .accountPop {
   position: absolute; left: calc(100% + 10px); bottom: 0; z-index: 30; min-width: 160px;
   display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 8px 8px 12px; font-size: 13px;
-  background: var(--bg-panel-raised); border: 1px solid var(--line-node); border-radius: var(--radius-node);
+  background: var(--bg-panel-raised); border: 1px solid var(--line-node); border-radius: var(--radius-card);
 }
 .accountPop span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .tree { flex: 1; min-height: 0; overflow-y: auto; margin: 0; padding: 0 8px; list-style: none; }
 .subtree { margin: 0; padding: 0; list-style: none; }
-.row { display: flex; align-items: center; gap: 2px; border-radius: var(--radius-node); position: relative; }
+.row { display: flex; align-items: center; gap: 2px; border-radius: var(--radius-card); position: relative; }
 .row:hover { background: var(--bg-panel-raised); }
 /* 지금 연 구성도를 품은 프로젝트: 접혀 있어도 어디에 있는지 보이게. */
 .currentProject .rowMain { font-weight: 600; }
 .currentProject .caret { color: var(--accent); }
 .rowMain {
   flex: 1; min-width: 0; text-align: left; font: inherit; font-size: 13px; color: var(--text-primary);
-  background: transparent; border: 0; padding: 7px 8px; cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  background: transparent; border: 0; padding: 8px; cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
-.projectMain { display: flex; align-items: center; gap: 6px; }
+.projectMain { display: flex; align-items: center; gap: 8px; }
 .caret { flex: none; color: var(--text-secondary); }
 .rowName { display: block; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .count { flex: none; font-size: 11px; font-weight: 400; color: var(--text-secondary); }
-.diagramRow { margin-left: 14px; }
+.diagramRow { margin-left: 12px; }
 .addRow {
-  display: block; width: calc(100% - 14px); margin-left: 14px; text-align: left; font: inherit; font-size: 12px;
-  color: var(--text-secondary); background: transparent; border: 0; border-radius: var(--radius-node); padding: 6px 8px; cursor: pointer;
+  display: block; width: calc(100% - 12px); margin-left: 12px; text-align: left; font: inherit; font-size: 12px;
+  color: var(--text-secondary); background: transparent; border: 0; border-radius: var(--radius-card); padding: 4px 8px; cursor: pointer;
 }
 .addRow:hover { color: var(--text-primary); background: var(--bg-panel-raised); }
 .treeEmpty { margin: 0; padding: 4px 16px 8px; font-size: 12px; line-height: 1.5; color: var(--text-secondary); }
 .sideStatus { margin: 0; padding: 0 16px; font-size: 12px; color: var(--text-secondary); }
-.sideNotice { margin: 0; padding: 0 16px 6px; }
+.sideNotice { margin: 0; padding: 0 16px 8px; }
 .srOnly { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+/* 지금 연 구성도: 고른 것 = 연두 신호 한 줄(왼쪽 안쪽 2px)과 한 단 밝은 칠. */
 .current { background: var(--bg-panel-raised); font-weight: 600; }
+.current::before, .sideLinkActive::before { content: ""; position: absolute; left: 0; top: 4px; bottom: 4px; width: 2px; border-radius: 1px; background: var(--accent); }
 .menuBtn {
   flex: none; font: inherit; font-size: 14px; line-height: 1; color: var(--text-secondary); background: transparent;
-  border: 0; border-radius: 4px; padding: 4px 6px; cursor: pointer;
+  border: 0; border-radius: var(--radius-card); padding: 4px 8px; cursor: pointer;
 }
 .menuBtn:hover, .menuBtn[aria-expanded="true"] { color: var(--text-primary); }
+.menuBtn:active, .addRow:active, .rowMain:active, .iconBtn:active, .railBtn:active, .linkBtn:active, .sideLink:active { color: var(--text-primary); background: var(--line-shell); }
+.menuBtn:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: -2px; }
 .menuRoot { flex: none; display: contents; }
 .menu {
   position: absolute; right: 4px; top: 100%; z-index: 30; min-width: 120px; display: flex; flex-direction: column;
-  background: var(--bg-node); border: 1px solid var(--line-node); border-radius: var(--radius-node); padding: 4px;
+  background: var(--bg-panel-raised); border: 1px solid var(--line-node); border-radius: var(--radius-card); padding: 4px;
 }
 .menuUp { top: auto; bottom: 100%; }
-.menu button { font: inherit; font-size: 13px; color: var(--text-primary); background: transparent; border: 0; text-align: left; padding: 6px 8px; border-radius: 4px; cursor: pointer; }
-.menu button:hover:not(:disabled), .menu button:focus-visible { background: var(--bg-canvas); outline: none; }
-.menu button:disabled { opacity: 0.5; cursor: default; }
+.menu button { font: inherit; font-size: 13px; color: var(--text-primary); background: transparent; border: 0; text-align: left; padding: 8px; border-radius: var(--radius-card); cursor: pointer; }
+.menu button:hover:not(:disabled) { background: var(--bg-node); }
+.menu button:active:not(:disabled) { background: var(--bg-canvas); }
+.menu button:focus-visible { background: var(--bg-node); outline: 2px solid var(--focus-ring); outline-offset: -2px; }
+.menu button:disabled { opacity: 0.55; cursor: not-allowed; color: var(--text-secondary); }
 .menu .menuDanger { color: var(--state-missing-text); }
 .sideFoot { padding: 8px; border-top: 1px solid var(--glass-line); display: flex; flex-direction: column; gap: 8px; }
 .user { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; font-size: 12px; color: var(--text-secondary); padding: 0 4px; }
 .user span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* 펼친 사이드바 바닥: 새 프로젝트, 그 아래 화면 링크 셋(용어 사전·망 지식·Claude Code 연결)을 한 묶음으로, 계정 줄은 제 이음매 아래. */
+.pageLinks { display: flex; flex-direction: column; gap: 4px; }
+.userSeam { flex: none; padding: 8px 12px; border-top: 1px solid var(--glass-line); }
+/* 둘째 버튼: 머리카락 선 알약, 칠 없음. */
 .btn {
-  font: inherit; font-size: 13px; color: var(--text-primary); background: var(--bg-node);
-  border: 1px solid var(--line-node); border-radius: 6px; padding: 6px 10px; cursor: pointer;
+  font: inherit; font-size: 13px; color: var(--text-primary); background: transparent;
+  border: 1px solid var(--line-node); border-radius: var(--radius-pill); padding: 8px 12px; cursor: pointer;
 }
 .btn:hover:not(:disabled) { border-color: var(--text-secondary); }
-.btn:disabled { opacity: 0.5; cursor: default; }
-/* 대화상자의 주 동작·빈 화면 시작 버튼(금색 칠 — 화면마다 하나), 삭제(빠진 정보 색, 금색 아님). */
+.btn:active:not(:disabled) { background: var(--bg-panel-raised); }
+.btn:disabled { opacity: 0.55; cursor: not-allowed; color: var(--text-secondary); }
+/* 대화상자의 주 동작·빈 화면 시작 버튼(연두 칠 알약 — 화면마다 하나), 삭제(빠진 정보 색, 연두 아님). */
 .primaryBtn, .dangerBtn {
-  font: inherit; font-size: 13px; font-weight: 600; background: var(--bg-node);
-  border: 1px solid; border-radius: 6px; padding: 6px 12px; cursor: pointer;
+  font: inherit; font-size: 13px; font-weight: 600; background: transparent;
+  border: 1px solid; border-radius: var(--radius-pill); padding: 8px 16px; cursor: pointer; white-space: nowrap;
 }
 .primaryBtn { color: var(--on-accent); background: var(--accent-fill); border-color: var(--accent-fill); }
 .primaryBtn:hover:not(:disabled) { background: var(--accent-fill-hover); border-color: var(--accent-fill-hover); }
 .primaryBtn:active:not(:disabled) { background: var(--accent-fill-active); border-color: var(--accent-fill-active); }
 .dangerBtn { color: var(--state-missing-text); border-color: var(--state-missing); }
 .dangerBtn:hover:not(:disabled) { background: var(--bg-panel-raised); }
-.primaryBtn:disabled, .dangerBtn:disabled { opacity: 0.5; cursor: default; }
-.dangerBtn:focus-visible { outline: 1.5px solid var(--text-secondary); outline-offset: 2px; }
+.dangerBtn:active:not(:disabled) { background: var(--line-shell); }
+.primaryBtn:disabled, .dangerBtn:disabled { opacity: 0.55; cursor: not-allowed; }
+.primaryBtn:disabled { background: var(--bg-panel-raised); border-color: var(--line-node); color: var(--text-secondary); }
+.dangerBtn:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
 .linkBtn { font: inherit; font-size: 12px; color: var(--text-secondary); background: transparent; border: 0; cursor: pointer; padding: 2px 4px; }
 .linkBtn:hover { color: var(--text-primary); }
-.sideLink { font-size: 13px; color: var(--text-secondary); text-decoration: none; padding: 4px; border-radius: 4px; }
-.sideLinkActive { color: var(--text-primary); background: var(--bg-panel-raised); font-weight: 600; }
+.sideLink { font-size: 13px; color: var(--text-secondary); text-decoration: none; padding: 4px; border-radius: var(--radius-card); }
+.sideLinkActive { position: relative; color: var(--text-primary); background: var(--bg-panel-raised); font-weight: 600; }
 .accountLink { flex: 1 0 100%; }
 .sideLink:hover { color: var(--text-primary); }
-.sideLink:focus-visible { outline: 1.5px solid var(--text-secondary); outline-offset: 2px; }
-.sidebar button:focus-visible, .panel button:focus-visible, .banner button:focus-visible, .dialog button:focus-visible, .dialog input:focus-visible { outline: 1.5px solid var(--text-secondary); outline-offset: 2px; }
-/* 금색 칠 버튼의 포커스: 은빛 링(--focus-ring)을 바탕 한 줄 띄워 두른다(링·금색 1.4:1 이라 붙이면 묻힌다, 띄우면 바탕과 9:1 이상). */
+.sideLink:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+.sidebar button:focus-visible, .panel button:focus-visible, .banner button:focus-visible, .dialog button:focus-visible, .dialog input:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+/* 연두 칠 버튼의 포커스: 연두 링을 바탕 한 줄(2px) 띄워 두른다(붙이면 칠과 묻힌다, 띄우면 바탕과 15:1). */
 .primaryBtn:focus-visible, .dialog .primaryBtn:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
 @media (prefers-reduced-motion: no-preference) {
-  .primaryBtn { transition: background-color 0.15s, border-color 0.15s, opacity 0.15s; }
+  .primaryBtn { transition: background-color var(--dur-micro) var(--ease-out), border-color var(--dur-micro) var(--ease-out), opacity var(--dur-micro) var(--ease-out); }
 }
 
 .backdrop { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; background: color-mix(in srgb, var(--bg-canvas) 70%, transparent); }
-.dialog { width: min(320px, calc(100vw - 32px)); box-sizing: border-box; display: flex; flex-direction: column; gap: 12px; padding: 16px; background: var(--bg-node); border: 1px solid var(--line-node); border-radius: var(--radius-zone); }
-.dialog h2 { margin: 0; font-size: 14px; font-weight: 600; }
+.dialog { width: min(320px, calc(100% - 32px)); box-sizing: border-box; display: flex; flex-direction: column; gap: 12px; padding: 16px; background: var(--color-paper-2); border: 1px solid var(--line-node); border-radius: var(--radius-card); }
+.dialog h2 { margin: 0; font-size: var(--text-title); font-weight: 600; }
 .dialog p { margin: 0; font-size: 13px; line-height: 1.5; }
 .dialog .dialogHint { font-size: 12px; color: var(--text-secondary); }
 .dialog input::placeholder { color: var(--text-secondary); opacity: 0.7; }
-.dialog label { display: flex; flex-direction: column; gap: 6px; font-size: 12px; color: var(--text-secondary); }
-.dialog input { font: inherit; font-size: 13px; color: var(--text-primary); background: var(--bg-canvas); border: 1px solid var(--line-input); border-radius: var(--radius-node); padding: 7px 9px; }
+.dialog label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--text-secondary); }
+.dialog input { font: inherit; font-size: 13px; min-height: 36px; box-sizing: border-box; color: var(--text-primary); background: var(--bg-panel-raised); border: 1px solid var(--line-input); border-radius: var(--radius-card); padding: 8px; }
+.dialog input:hover { border-color: var(--text-secondary); }
+.dialog input:focus-visible { outline-offset: -2px; }
 .dialogActions { display: flex; justify-content: flex-end; gap: 8px; }
 .error { margin: 0; color: var(--state-missing-text); font-size: 12px; }
 
 .workspace { position: relative; height: 100%; min-height: 0; }
-/* 대화로 건너뛰기: 키보드 포커스를 받기 전에는 숨기고(보조기기는 읽는다), 받으면 캔버스 왼쪽 위에 떠 있는 유리 단추로 보인다. */
+/* 대화로 건너뛰기: 키보드 포커스를 받기 전에는 숨기고(보조기기는 읽는다), 받으면 캔버스 왼쪽 위에 떠 있는 판 단추로 보인다. */
 .skipLink {
   position: absolute; z-index: 60; top: var(--panel-gap); left: calc(max(var(--panel-gap), var(--canvas-inset-left, 0px)) + var(--safe-l, 0px));
   font: inherit; font-size: 13px; font-weight: 600; color: var(--text-primary); white-space: nowrap; cursor: pointer;
-  padding: 8px 14px; min-height: 36px; border-radius: var(--radius-panel);
+  padding: 8px 16px; min-height: 36px; border-radius: var(--radius-panel);
   background: var(--glass-bg); border: 1px solid var(--glass-line);
-  -webkit-backdrop-filter: blur(var(--glass-blur)); backdrop-filter: blur(var(--glass-blur));
 }
 .skipLink:not(:focus) { width: 1px; height: 1px; min-height: 0; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); border: 0; }
 .skipLink:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
@@ -150,13 +176,15 @@
 .canvasWrap { flex: 1; min-height: 0; position: relative; }
 /* 보기·비교·오류 띠: 떠 있는 패널 사이의 보이는 캔버스 폭에 맞춘다. */
 .banner {
-  display: flex; align-items: center; gap: 12px; padding: 8px 14px; font-size: 13px;
+  display: flex; align-items: center; gap: 12px; padding: 8px 16px; font-size: 13px;
   margin: var(--panel-gap) calc(var(--canvas-inset-right, 0px) + var(--safe-r, 0px)) 0 calc(var(--canvas-inset-left, 0px) + var(--safe-l, 0px));
-  background: var(--bg-node); border: 1px solid var(--line-node); border-radius: var(--radius-zone); color: var(--text-primary);
+  background: var(--color-paper-2); border: 1px solid var(--line-node); border-radius: var(--radius-card); color: var(--text-primary);
 }
-.banner button { font: inherit; font-size: 12px; color: var(--text-primary); background: transparent; border: 1px solid var(--line-node); border-radius: 6px; padding: 3px 9px; cursor: pointer; }
+.banner button { font: inherit; font-size: 12px; color: var(--text-primary); background: transparent; border: 1px solid var(--line-node); border-radius: var(--radius-pill); padding: 4px 12px; cursor: pointer; }
+.banner button:hover { border-color: var(--text-secondary); }
+.banner button:active { background: var(--bg-panel-raised); }
 .legend { display: flex; gap: 12px; margin-left: auto; font-size: 11.5px; color: var(--text-secondary); }
-.legend span { display: inline-flex; align-items: center; gap: 5px; }
+.legend span { display: inline-flex; align-items: center; gap: 4px; }
 .swatch { width: 14px; height: 10px; border-radius: 3px; border: 1.5px solid; box-sizing: border-box; }
 .swAdded { border-color: var(--cat-data); }
 .swChanged { border-color: var(--accent); }
@@ -164,26 +192,22 @@
 
 .panel {
   flex: 1; display: flex; flex-direction: column; min-width: 0; min-height: 0; overflow: hidden;
-  background: var(--glass-bg); backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur));
-  border: 1px solid var(--glass-line); border-top-color: var(--glass-highlight); border-radius: var(--radius-panel);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-line); border-radius: var(--radius-panel);
 }
 /* 알약 탭 */
 .tabs { display: flex; gap: 4px; padding: 8px; border-bottom: 1px solid var(--glass-line); }
 .tab {
   flex: 1; font: inherit; font-size: 13px; color: var(--text-secondary); background: transparent; border: 0;
-  border-radius: 999px; padding: 6px 0; cursor: pointer;
+  border-radius: 999px; padding: 8px 0; cursor: pointer;
 }
 .tab:hover { color: var(--text-primary); }
+.tab:active { background: var(--line-shell); }
 .tab[aria-selected="true"] { background: var(--bg-panel-raised); color: var(--text-primary); font-weight: 600; }
 .panelBody { flex: 1; min-height: 0; overflow-y: auto; }
 
 @media (prefers-reduced-motion: no-preference) {
-  .tab, .iconBtn, .railBtn { transition: background-color 0.15s, color 0.15s; }
-}
-
-/* 흐림을 못 그리는 브라우저: 반투명 칠 대신 불투명한 사이드바 바탕으로 글자를 읽히게 한다. */
-@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  .sidebar, .panel { background: var(--bg-sidebar); }
+  .tab, .iconBtn, .railBtn { transition: background-color var(--dur-micro) var(--ease-out), color var(--dur-micro) var(--ease-out); }
 }
 
 /*
@@ -204,9 +228,9 @@
   }
   .main { top: var(--topbar-h); }
   /* 빈 홈 화면: 한국어는 어절 단위로 줄을 바꾸고, 시작 버튼은 손가락 크기로. */
-  .emptyState { padding: 24px 20px; }
-  .emptyState p { word-break: keep-all; }
-  .emptyActions .primaryBtn { min-height: 44px; padding: 10px 18px; font-size: 14px; }
+  .emptyState { padding: 16px; }
+  .emptySheet { padding: 24px; }
+  .emptySheet h1 { font-size: 24px; }
   /* 떠 있는 사이드바·레일은 서랍(.drawerNav)으로 바뀐다. */
   .sidebar:not(.drawerNav) { display: none; }
 
@@ -220,7 +244,7 @@
   .resizer { display: none; }
   .panelDock { top: 0; right: 0; left: 0; bottom: var(--tabbar-h); width: auto; }
   /* 화면을 다 채우는 패널: 유리 판 대신 사이드바 바탕, 모서리·테두리 없이. 탭은 아래 막대가 맡는다. */
-  .panel { border: 0; border-radius: 0; background: var(--bg-sidebar); backdrop-filter: none; -webkit-backdrop-filter: none; }
+  .panel { border: 0; border-radius: 0; background: var(--bg-sidebar); }
   .panel > .tabs { display: none; }
   /* 한 번에 한 화면. 숨긴 쪽도 크기를 지켜(visibility) 캔버스 카메라·대화 스크롤이 돌아왔을 때 그대로다. */
   .workspace[data-mview="canvas"] .panelDock,
@@ -239,11 +263,11 @@
 }
 .topbarBtn {
   flex: none; display: grid; place-items: center; width: 44px; height: 44px; padding: 0;
-  color: var(--text-secondary); background: transparent; border: 0; border-radius: 10px; cursor: pointer;
+  color: var(--text-secondary); background: transparent; border: 0; border-radius: var(--radius-card); cursor: pointer;
 }
 .topbarBtn:hover, .topbarBtn[aria-expanded="true"] { color: var(--text-primary); background: var(--bg-panel-raised); }
-.topbarBtn:focus-visible { outline: 1.5px solid var(--text-secondary); outline-offset: -2px; }
-.topbarTitle { flex: 1; min-width: 0; margin: 0; display: flex; align-items: baseline; gap: 6px; font-size: 14px; white-space: nowrap; }
+.topbarBtn:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: -2px; }
+.topbarTitle { flex: 1; min-width: 0; margin: 0; display: flex; align-items: baseline; gap: 8px; font-size: 14px; white-space: nowrap; }
 /* 긴 이름은 프로젝트를 먼저 줄이고 구성도 이름을 남긴다. */
 .topbarProject { flex: 0 1 auto; min-width: 0; max-width: 45%; overflow: hidden; text-overflow: ellipsis; color: var(--text-secondary); }
 .topbarSep { flex: none; color: var(--text-secondary); opacity: 0.6; }
@@ -256,21 +280,21 @@
 .sidebar.drawerNav {
   position: relative; inset: auto; flex: 1; width: auto; min-width: 0;
   padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom) env(safe-area-inset-left);
-  background: var(--bg-sidebar); backdrop-filter: none; -webkit-backdrop-filter: none;
+  background: var(--bg-sidebar);
   border: 0; border-right: 1px solid var(--line-shell); border-radius: 0;
 }
 /* 손가락으로 누르는 서랍: 줄·버튼을 44px 높이로. */
 .drawerNav .sideHead { padding: 4px 4px 4px 16px; }
-.drawerNav .iconBtn { width: 44px; height: 44px; border-radius: 10px; }
-.drawerNav .rowMain { min-height: 44px; padding: 10px 8px; font-size: 14px; }
+.drawerNav .iconBtn { width: 44px; height: 44px; border-radius: var(--radius-card); }
+.drawerNav .rowMain { min-height: 44px; padding: 8px; font-size: 14px; }
 .drawerNav .menuBtn { min-width: 44px; min-height: 44px; }
 .drawerNav .addRow { min-height: 44px; font-size: 13px; }
 .drawerNav .sideLink, .drawerNav .btn { min-height: 44px; box-sizing: border-box; display: flex; align-items: center; font-size: 14px; }
 .drawerNav .btn { justify-content: center; }
 .drawerNav .linkBtn { min-height: 44px; padding: 0 8px; font-size: 13px; }
 @media (prefers-reduced-motion: no-preference) {
-  .drawer { animation: drawer-in 0.2s cubic-bezier(0.16, 1, 0.3, 1); }
-  .drawerBackdrop { animation: backdrop-in 0.2s ease-out; }
+  .drawer { animation: drawer-in var(--dur-short) var(--ease-out); }
+  .drawerBackdrop { animation: backdrop-in var(--dur-short) var(--ease-out); }
 }
 @keyframes drawer-in { from { transform: translateX(-100%); } }
 @keyframes backdrop-in { from { opacity: 0; } }
@@ -278,20 +302,21 @@
 /* 좁은 화면 작업 화면 아래 탭 막대: 구성도 | 대화 | 설명 | 이력. 고른 탭은 오른쪽 패널 알약 탭과 같은 칠. */
 .tabbar {
   position: absolute; left: 0; right: 0; bottom: 0; z-index: 60; height: var(--tabbar-h, 56px); box-sizing: border-box;
-  display: flex; gap: 4px; padding: 4px max(6px, env(safe-area-inset-right)) env(safe-area-inset-bottom) max(6px, env(safe-area-inset-left));
+  display: flex; gap: 4px; padding: 4px max(8px, env(safe-area-inset-right)) env(safe-area-inset-bottom) max(8px, env(safe-area-inset-left));
   background: var(--bg-sidebar); border-top: 1px solid var(--line-shell);
 }
 .tabbarTab {
   flex: 1; min-width: 0; min-height: 48px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
-  font: inherit; font-size: 12px; color: var(--text-secondary); background: transparent; border: 0; border-radius: 12px; cursor: pointer;
+  font: inherit; font-size: 12px; color: var(--text-secondary); background: transparent; border: 0; border-radius: var(--radius-card); cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
 .tabbarTab:hover { color: var(--text-primary); }
+.tabbarTab:active, .topbarBtn:active { background: var(--line-shell); }
 .tabbarTab[aria-selected="true"] { color: var(--text-primary); font-weight: 600; background: var(--bg-panel-raised); }
-.tabbarTab:focus-visible { outline: 1.5px solid var(--text-secondary); outline-offset: -2px; }
+.tabbarTab:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: -2px; }
 .tabbarIcon { position: relative; display: grid; place-items: center; }
-/* 구성도를 보는 중에 고른 노드의 설명이 설명 탭에 있다는 표시(선택 색 = 강조색). */
+/* 구성도를 보는 중에 고른 노드의 설명이 설명 탭에 있다는 표시(선택 색 = 연두 신호). */
 .tabbarDot { position: absolute; top: -4px; right: -7px; width: 7px; height: 7px; border: 2px solid var(--bg-sidebar); border-radius: 50%; background: var(--accent); }
 @media (prefers-reduced-motion: no-preference) {
-  .tabbarTab, .topbarBtn { transition: background-color 0.15s, color 0.15s; }
+  .tabbarTab, .topbarBtn { transition: background-color var(--dur-micro) var(--ease-out), color var(--dur-micro) var(--ease-out); }
 }

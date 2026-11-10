@@ -20,13 +20,13 @@ function rule(css: string, selector: string): string {
 
 test("tokens.css defines the shell tokens with exact values", () => {
   const css = read("src/styles/tokens.css");
-  expect(css).toMatch(/--bg-sidebar:\s*#121A27;/);
-  expect(css).toMatch(/--bg-panel:\s*#212E42;/);
-  expect(css).toMatch(/--bg-panel-raised:\s*#2A3A52;/);
-  expect(css).toMatch(/--line-shell:\s*#2C3A50;/);
-  // 캔버스·노드 토큰은 그대로
-  expect(css).toMatch(/--bg-canvas:\s*#1B2638;/);
-  expect(css).toMatch(/--bg-node:\s*#223147;/);
+  expect(css).toMatch(/--bg-sidebar:\s*#04090C;/);
+  expect(css).toMatch(/--bg-panel:\s*#04090C;/);
+  expect(css).toMatch(/--bg-panel-raised:\s*#182126;/);
+  expect(css).toMatch(/--line-shell:\s*#20282C;/);
+  // 캔버스·노드 토큰(Vantage paper · 노드는 가장 깊은 영역 칠보다 한 단 밝게)
+  expect(css).toMatch(/--bg-canvas:\s*#04090C;/);
+  expect(css).toMatch(/--bg-node:\s*#1D252B;/);
 });
 
 test("fly dot token is a silver brighter than the glass highlight", () => {
@@ -35,27 +35,27 @@ test("fly dot token is a silver brighter than the glass highlight", () => {
   expect(read("docs/superpowers/specs/2026-10-29-infra-architecture-visualizer-design.md")).toMatch(/\| `fly-dot` \| `#DCE3EE` \|/);
 });
 
-test("glass panel tokens have exact values", () => {
+test("floating panel tokens have exact values (flat paper, hairline, no blur)", () => {
   const css = read("src/styles/tokens.css");
-  expect(css).toContain("--glass-bg: rgba(18, 26, 39, 0.78);");
-  expect(css).toContain("--glass-line: rgba(232, 235, 238, 0.08);");
-  expect(css).toContain("--glass-highlight: rgba(208, 218, 232, 0.42);");
-  expect(css).toContain("--glass-blur: 14px;");
-  expect(css).toContain("--radius-panel: 14px;");
+  expect(css).toContain("--glass-bg: rgba(4, 9, 12, 1);");
+  expect(css).toContain("--glass-line: rgba(32, 40, 44, 1);");
+  expect(css).not.toContain("--glass-highlight:");
+  expect(css).not.toContain("--glass-blur:");
+  expect(css).toContain("--radius-panel: 4px;");
   expect(css).toContain("--panel-gap: 12px;");
 });
 
-test("sidebar and panel float as glass over the full-bleed canvas", () => {
+test("sidebar and panel float as flat paper panels with a hairline over the full-bleed canvas", () => {
   const css = read("src/ui/app.module.css");
   expect(rule(css, ".shell")).toContain("background: var(--bg-canvas)");
   for (const sel of [".sidebar", ".panel"]) {
     const r = rule(css, sel);
     expect(r, sel).toContain("background: var(--glass-bg)");
-    expect(r, sel).toContain("backdrop-filter: blur(var(--glass-blur))");
+    expect(r, sel).not.toContain("backdrop-filter");
     expect(r, sel).toContain("border: 1px solid var(--glass-line)");
-    expect(r, sel).toContain("border-top-color: var(--glass-highlight)");
     expect(r, sel).toContain("border-radius: var(--radius-panel)");
   }
+  expect(css).not.toContain("backdrop-filter");
   expect(rule(css, ".sidebar")).toContain("position: absolute");
   expect(rule(css, ".panelDock")).toContain("position: absolute");
   expect(css).not.toMatch(/box-shadow|gradient/);
@@ -86,7 +86,7 @@ test("text-secondary reaches 4.5:1 on every surface and stays dimmer than text-p
   const css = read("src/styles/tokens.css");
   const token = (name: string) => css.match(new RegExp(`--${name}:[ ]*(#[0-9A-Fa-f]{6});`))![1];
   const secondary = token("text-secondary");
-  expect(secondary).toBe("#9AA7BA");
+  expect(secondary).toBe("#8F9AA0");
   for (const bg of ["bg-panel-raised", "bg-panel", "bg-node", "bg-canvas", "bg-sidebar"]) {
     expect(contrast(secondary, token(bg)), bg).toBeGreaterThanOrEqual(4.5);
   }
@@ -95,8 +95,8 @@ test("text-secondary reaches 4.5:1 on every surface and stays dimmer than text-p
 
 // ---- 캔버스 구역·노드 색 구분 (P3D Task 4) ----
 const TINTS: Record<string, string> = {
-  region: "#5B7BA0", vpc: "#4F7FB8", public: "#3F93A8", private: "#6874B8", dmz: "#B08B4F",
-  k8s: "#4E9A8E", external: "#A9765E", redundancy: "#7F95B5", onprem: "#7A8696", network: "#8B72B8",
+  region: "#718A9C", vpc: "#688AA8", public: "#68959D", private: "#777E9F", dmz: "#A68F68",
+  k8s: "#6A978D", external: "#A68471", redundancy: "#8196A2", onprem: "#7E888E", network: "#857A9A",
 };
 
 // sRGB 공간에서 a 를 pct% 만큼 b 에 섞는다(color-mix in srgb 와 같다).
@@ -143,21 +143,6 @@ test("canvas.css paints zones and nodes with the agreed mixes and no side stripe
   expect(css).toContain("color-mix(in srgb, var(--cat) 26%, var(--bg-node))");
   expect(css).toContain("color-mix(in srgb, var(--cat) 38%, var(--line-node))");
   expect(css).not.toMatch(/border-left:/);
-});
-
-test("glass panels fall back to an opaque background without backdrop-filter", () => {
-  const css = read("src/ui/app.module.css");
-  const block = css.slice(css.indexOf("@supports not"));
-  expect(block).toMatch(/@supports not \(\(backdrop-filter: blur\(1px\)\)/);
-  expect(block).toContain(".sidebar, .panel { background: var(--bg-sidebar); }");
-});
-
-test("name tooltip, legend and info card fall back to an opaque background without backdrop-filter", () => {
-  for (const [file, sel] of [["src/canvas/canvas.css", ".name-tooltip"], ["src/ui/canvas/legend.module.css", ".legend"], ["src/ui/canvas/infoCard.module.css", ".card"]] as const) {
-    const css = read(file);
-    const block = css.slice(css.indexOf("@supports not ((backdrop-filter"));
-    expect(block, file).toContain(`${sel} { background: var(--bg-sidebar); }`);
-  }
 });
 
 test("info card and legend body text is 13px (panel body rule)", () => {

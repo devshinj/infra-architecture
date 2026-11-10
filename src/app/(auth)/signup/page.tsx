@@ -6,7 +6,7 @@ import { signupAction } from "@/server/auth/actions";
 import { checkEmail, checkNewPassword, checkUsername, HINTS } from "@/server/auth/rules";
 import { Logo } from "@/ui/brand/Logo";
 
-import { AuthField, AuthSubmit } from "../_components/AuthField";
+import { AuthField, AuthShowcase, AuthSubmit } from "../_components/AuthField";
 import { useAuthForm, type FieldErrors } from "../_components/useAuthForm";
 import styles from "../auth.module.css";
 
@@ -63,6 +63,7 @@ export default function SignupPage() {
           이미 계정이 있나요? <Link href="/login">로그인</Link>
         </p>
       </form>
+      <AuthShowcase />
     </main>
   );
 }
