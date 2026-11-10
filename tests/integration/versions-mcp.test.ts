@@ -3,7 +3,7 @@ import { describe, expect, test } from "vitest";
 
 import { db } from "@/db/client";
 import { diagramVersions } from "@/db/schema";
-import { createVersion, listVersions } from "@/server/versions";
+import { createVersion, listVersions, StaleVersionError } from "@/server/versions";
 
 import { fx } from "../fixtures/spike";
 import { makeDiagram } from "./helpers";
@@ -42,5 +42,15 @@ describe("MCP 버전 칸", () => {
     await createVersion(d, s1, { source: "import" });
     const r = await db.transaction((tx) => createVersion(d, s1, { source: "ai", tx }));
     expect(r.number).toBe(2);
+  });
+
+  test("expectedLatest 가 최신과 다르면 StaleVersionError(latest), 버전은 생기지 않는다", async () => {
+    const d = await makeDiagram();
+    await createVersion(d, s1, { source: "import" });
+    const err = await createVersion(d, s1, { source: "mcp", expectedLatest: 0 }).catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(StaleVersionError);
+    expect((err as StaleVersionError).latest).toBe(1);
+    expect(await listVersions(d)).toHaveLength(1);
+    expect((await createVersion(d, s1, { source: "mcp", expectedLatest: 1 })).number).toBe(2);
   });
 });

@@ -1,5 +1,5 @@
 import { eq } from "drizzle-orm";
-import { describe, expect, test } from "vitest";
+import { afterEach, describe, expect, test, vi } from "vitest";
 
 import { db } from "@/db/client";
 import { diagramVersions, flows, messages } from "@/db/schema";
@@ -14,6 +14,33 @@ import { createVersion, getLatestState, listVersions } from "@/server/versions";
 import { adminCase } from "../fixtures/network";
 
 import { makeOwnedDiagram } from "./helpers";
+
+// 검사와 저장 사이에 다른 쓰기를 끼워 넣으려는 시험용 고리. 비어 있으면 원래 함수 그대로다.
+const hooks: { knowledge: (() => Promise<void>) | null; getVersion: (() => Promise<void>) | null } = { knowledge: null, getVersion: null };
+vi.mock("@/server/network", async (importOriginal) => {
+  const orig = await importOriginal<typeof import("@/server/network")>();
+  return {
+    ...orig,
+    getNetworkKnowledge: async (userId: string) => {
+      await hooks.knowledge?.();
+      return orig.getNetworkKnowledge(userId);
+    },
+  };
+});
+vi.mock("@/server/versions", async (importOriginal) => {
+  const orig = await importOriginal<typeof import("@/server/versions")>();
+  return {
+    ...orig,
+    getVersion: async (diagramId: string, number: number) => {
+      await hooks.getVersion?.();
+      return orig.getVersion(diagramId, number);
+    },
+  };
+});
+afterEach(() => {
+  hooks.knowledge = null;
+  hooks.getVersion = null;
+});
 
 function sample(): DiagramState {
   const s = emptyState();
@@ -64,6 +91,65 @@ describe("applyMcpCommands", () => {
     expect(v.summary).toBe("가".repeat(80));
     await applyMcpCommands({ ...ids, baseVersion: 2, commands: [relabel], summary: "   " });
     expect((await listVersions(ids.diagramId))[0].summary).toBe("Claude Code에서 1곳 바꿈");
+  });
+
+  test("기본 요약의 N 은 가정 명령도 센다(0곳이 되지 않는다)", async () => {
+    const ids = await setup();
+    const r = await applyMcpCommands({ ...ids, baseVersion: 1, commands: [{ op: "set_assumption", key: "ha", value: "이중화 없음" }] });
+    expect(r).toMatchObject({ ok: true, version: 2, changed: 0 });
+    expect((await listVersions(ids.diagramId))[0].summary).toBe("Claude Code에서 1곳 바꿈");
+  });
+
+  test("commands 가 배열이 아니면 거절", async () => {
+    const ids = await setup();
+    const r = await applyMcpCommands({ ...ids, baseVersion: 1, commands: "add_node" as unknown as unknown[] });
+    expect(r).toEqual({ ok: false, kind: "rejected", message: "commands 는 명령 목록(배열)이어야 해요. 아무것도 저장하지 않았어요." });
+    expect(await versionCount(ids.diagramId)).toBe(1);
+  });
+
+  test("검사 뒤 저장 전에 잠금 없는 쓰기가 버전을 만들면 stale, 버전·흐름 그대로", async () => {
+    const ids = await setup();
+    hooks.knowledge = async () => {
+      await createVersion(ids.diagramId, sample(), { source: "form" });
+    };
+    const r = await applyMcpCommands({
+      ...ids,
+      baseVersion: 1,
+      commands: [addDb, addEdge, { op: "add_flow", id: "f1", name: "주문", origin: "user", steps: [step("e1", "web"), step("e2", "was")] }],
+    });
+    expect(r).toEqual({ ok: false, kind: "stale", message: "구성도가 바뀌었어요(지금 버전 2). get_diagram 으로 다시 읽어 주세요.", latestVersion: 2 });
+    expect(await versionCount(ids.diagramId)).toBe(2);
+    expect((await listVersions(ids.diagramId))[0].source).toBe("form");
+    expect(await flowRows(ids.diagramId)).toHaveLength(0);
+  });
+
+  test("흐름만 바꾼 호출도 저장 순간에 버전이 바뀌었으면 stale, 흐름 그대로", async () => {
+    const ids = await setup();
+    hooks.knowledge = async () => {
+      await createVersion(ids.diagramId, sample(), { source: "form" });
+    };
+    const r = await applyMcpCommands({
+      ...ids,
+      baseVersion: 1,
+      commands: [{ op: "add_flow", id: "f1", name: "접속", origin: "user", steps: [step("e1", "web")] }],
+    });
+    expect(r).toMatchObject({ ok: false, kind: "stale", latestVersion: 2 });
+    expect(await flowRows(ids.diagramId)).toHaveLength(0);
+  });
+
+  test("망 지식을 못 읽으면 set_zone_type 은 서버 문제라고 알린다", async () => {
+    const ids = await setup(adminCase(null));
+    hooks.knowledge = async () => {
+      throw new Error("db down");
+    };
+    const err = vi.spyOn(console, "error").mockImplementation(() => {});
+    const r = await applyMcpCommands({ ...ids, baseVersion: 1, commands: [{ op: "set_zone_type", id: "admin-net", type: null }] });
+    err.mockRestore();
+    expect(r).toMatchObject({
+      ok: false,
+      kind: "rejected",
+      errors: ["1번: 지금 망 지식을 읽지 못해 망 종류를 붙일 수 없어요. 잠시 뒤 다시 시도해 주세요."],
+    });
   });
 
   test("새 경고·빠진 정보·망연계 예상을 돌려준다", async () => {
@@ -304,10 +390,22 @@ describe("restoreMcpVersion", () => {
       ok: false,
       kind: "stale",
       message: "구성도가 바뀌었어요(지금 버전 2). get_diagram 으로 다시 읽어 주세요.",
+      latestVersion: 2,
     });
     const held = await withDiagramLock(ids.diagramId, () => restoreMcpVersion({ ...ids, baseVersion: 2, number: 1 }));
     expect(held).toEqual({ ok: true, value: { ok: false, kind: "busy", message: MCP_BUSY_MESSAGE } });
     expect(await restoreMcpVersion({ ...ids, baseVersion: 2, number: 9 })).toEqual({ ok: false, kind: "not_found", message: "버전 9 이(가) 없어요. list_versions 로 번호를 확인해 주세요." });
     expect(await versionCount(ids.diagramId)).toBe(2);
+  });
+
+  test("확인 뒤 저장 전에 잠금 없는 쓰기가 버전을 만들면 stale, 되돌리지 않는다", async () => {
+    const ids = await setup();
+    hooks.getVersion = async () => {
+      await createVersion(ids.diagramId, sample(), { source: "form" });
+    };
+    const r = await restoreMcpVersion({ ...ids, baseVersion: 1, number: 1 });
+    expect(r).toEqual({ ok: false, kind: "stale", message: "구성도가 바뀌었어요(지금 버전 2). get_diagram 으로 다시 읽어 주세요.", latestVersion: 2 });
+    expect(await versionCount(ids.diagramId)).toBe(2);
+    expect((await listVersions(ids.diagramId))[0].source).toBe("form");
   });
 });

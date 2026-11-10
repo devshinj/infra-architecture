@@ -35,6 +35,12 @@ describe("explainRejection", () => {
     );
   });
 
+  test("망 지식을 못 읽었으면 서버 문제라고 알린다", () => {
+    expect(explainRejection(0, { op: "set_zone_type", id: "gov", type: null }, REJECT.noKnowledge)).toBe(
+      "1번: 지금 망 지식을 읽지 못해 망 종류를 붙일 수 없어요. 잠시 뒤 다시 시도해 주세요.",
+    );
+  });
+
   test("흐름 거절 이유", () => {
     const f = { op: "add_flow", id: "login" };
     expect(explainRejection(4, f, "flow not_found")).toBe("5번: 흐름 login 이(가) 없어요");

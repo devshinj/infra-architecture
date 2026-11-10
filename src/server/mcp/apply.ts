@@ -1,6 +1,6 @@
 import { asc, eq } from "drizzle-orm";
 
-import { db } from "@/db/client";
+import { db, type Tx } from "@/db/client";
 import { flows } from "@/db/schema";
 import { applyCommand } from "@/domain/apply";
 import { COMMAND_OPS, isFlowCommand, isStructural, parseCommand, SERVER_ONLY_OPS, toFlowOp, type Command, type FlowCommand } from "@/domain/commands";
@@ -18,13 +18,14 @@ import { checkCodeWarnings } from "@/server/chat/warnings";
 import { applyFlowOps, listFlows, rewriteFlows } from "@/server/flows";
 import { getNetworkKnowledge } from "@/server/network";
 import { getOwnedDiagram } from "@/server/projects";
-import { createVersion, getLatestState, getVersion } from "@/server/versions";
+import { createVersion, getLatestState, getVersion, lockLatestNumber, StaleVersionError } from "@/server/versions";
 
 import { explainRejection, FLOW_REJECT_PREFIX, REJECT } from "./explain";
 
 export const MCP_BUSY_MESSAGE = "지금 다른 변경이 진행 중이에요. 잠시 뒤 다시 시도해 주세요.";
 export const staleMessage = (latest: number) => `구성도가 바뀌었어요(지금 버전 ${latest}). get_diagram 으로 다시 읽어 주세요.`;
 const SUMMARY_MAX = 80;
+export const NOT_ARRAY_MESSAGE = "commands 는 명령 목록(배열)이어야 해요. 아무것도 저장하지 않았어요.";
 
 /** 브라우저에서 이 구성도를 여는 주소. */
 export const diagramUrl = (projectId: string, diagramId: string) => `${env.APP_URL}/p/${projectId}/d/${diagramId}`;
@@ -60,7 +61,7 @@ export type McpApplyResult =
     };
 
 export type McpRestoreResult =
-  | { ok: false; kind: "busy" | "stale" | "not_found"; message: string }
+  | { ok: false; kind: "busy" | "stale" | "not_found"; message: string; latestVersion?: number }
   | { ok: true; version: number; brokenFlows: { id: string; name: string }[]; url: string };
 
 const KNOWN_OPS: ReadonlySet<string> = new Set(COMMAND_OPS);
@@ -107,9 +108,10 @@ function checkCommands(start: DiagramState, commands: unknown[], knowledge: Netw
     const parsed = parseCommand(raw);
     if (!parsed.ok) return reject(index, raw, parsed.error);
     const cmd = parsed.cmd;
-    // 망 종류는 망 지식에 있는 key 만 붙인다(null 은 지우기). 지식을 못 읽었으면 모두 거절한다.
-    if (cmd.op === "set_zone_type" && (!knowledge || (cmd.type !== null && !Object.hasOwn(knowledge.types, cmd.type)))) {
-      return reject(index, raw, REJECT.unknownNetType);
+    // 망 종류는 망 지식에 있는 key 만 붙인다(null 은 지우기). 지식을 못 읽었으면 서버 문제라고 알리고 거절한다.
+    if (cmd.op === "set_zone_type") {
+      if (!knowledge) return reject(index, raw, REJECT.noKnowledge);
+      if (cmd.type !== null && !Object.hasOwn(knowledge.types, cmd.type)) return reject(index, raw, REJECT.unknownNetType);
     }
     if (isFlowCommand(cmd)) {
       flowCmds.push({ index, raw, cmd });
@@ -155,6 +157,7 @@ export async function applyMcpCommands(input: McpApplyInput): Promise<McpApplyRe
 
 async function lockedApply(input: McpApplyInput, url: string): Promise<McpApplyResult> {
   const { diagramId } = input;
+  if (!Array.isArray(input.commands)) return { ok: false, kind: "rejected", message: NOT_ARRAY_MESSAGE };
   const latest = await getLatestState(diagramId);
   const latestVersion = latest?.number ?? 0;
   if (latestVersion !== input.baseVersion) {
@@ -167,7 +170,7 @@ async function lockedApply(input: McpApplyInput, url: string): Promise<McpApplyR
     return null;
   });
 
-  const checked = checkCommands(start, Array.isArray(input.commands) ? input.commands : [], knowledge);
+  const checked = checkCommands(start, input.commands, knowledge);
   let state = checked.state;
   const touched = checked.changed + checked.assumed > 0;
 
@@ -220,10 +223,24 @@ async function lockedApply(input: McpApplyInput, url: string): Promise<McpApplyR
   };
   if (result.dryRun || (!touched && flowOps.length === 0)) return result;
 
-  await db.transaction(async (tx) => {
+  // 잠금 없이 버전을 만드는 브라우저 쓰기(되돌리기·가정 확인 등)가 검사 뒤에 끼어들 수 있다.
+  // 저장 트랜잭션 안에서 번호를 잠그고 다시 확인해, 바뀌었으면 되감고 stale 로 돌려준다(흐름만 바꾼 호출도 같다).
+  try {
+    await db.transaction((tx) => saveInTx(tx));
+  } catch (err) {
+    if (err instanceof StaleVersionError) return { ok: false, kind: "stale", message: staleMessage(err.latest), latestVersion: err.latest };
+    throw err;
+  }
+  return result;
+
+  async function saveInTx(tx: Tx) {
     if (touched) {
-      const v = await createVersion(diagramId, state, { source: "mcp", via: "mcp", summary: versionSummary(input.summary, checked.changed), tx });
+      // 기본 요약의 "N곳"은 구성·가정·망 종류 명령을 센다(흐름 명령은 빼고). 저장한 호출이 0곳이 되지 않게 한다.
+      const summary = versionSummary(input.summary, checked.changed + checked.assumed);
+      const v = await createVersion(diagramId, state, { source: "mcp", via: "mcp", summary, tx, expectedLatest: input.baseVersion });
       result.version = v.number;
+    } else {
+      await lockLatestNumber(tx, diagramId, input.baseVersion);
     }
     if (splits.length > 0) await rewriteFlows(diagramId, splitRewrite(splits), { tx });
     if (flowOps.length > 0) {
@@ -231,8 +248,7 @@ async function lockedApply(input: McpApplyInput, url: string): Promise<McpApplyR
       // 잠금 안에서 미리 검사했으니 거절이 나오면 안 된다. 나오면 되감는다(전부 아니면 전무).
       if (r.rejected.length > 0) throw new Error(`mcp flow ops rejected after plan: ${JSON.stringify(r.rejected)}`);
     }
-  });
-  return result;
+  }
 }
 
 /**
@@ -249,10 +265,17 @@ export async function restoreMcpVersion(input: {
   const url = diagramUrl(diagram.projectId, diagram.id);
   const locked = await withDiagramLock(input.diagramId, async (): Promise<McpRestoreResult> => {
     const latestVersion = (await getLatestState(input.diagramId))?.number ?? 0;
-    if (latestVersion !== input.baseVersion) return { ok: false, kind: "stale", message: staleMessage(latestVersion) };
+    if (latestVersion !== input.baseVersion) return { ok: false, kind: "stale", message: staleMessage(latestVersion), latestVersion };
     const state = Number.isInteger(input.number) && input.number > 0 ? await getVersion(input.diagramId, input.number) : null;
     if (!state) return { ok: false, kind: "not_found", message: `버전 ${input.number} 이(가) 없어요. list_versions 로 번호를 확인해 주세요.` };
-    const v = await createVersion(input.diagramId, state, { source: "restore", restoredFrom: input.number, via: "mcp" });
+    let v: { number: number };
+    try {
+      // 저장하는 순간 번호를 잠그고 다시 확인한다(잠금 없이 버전을 만드는 브라우저 쓰기가 끼어들 수 있다).
+      v = await createVersion(input.diagramId, state, { source: "restore", restoredFrom: input.number, via: "mcp", expectedLatest: input.baseVersion });
+    } catch (err) {
+      if (err instanceof StaleVersionError) return { ok: false, kind: "stale", message: staleMessage(err.latest), latestVersion: err.latest };
+      throw err;
+    }
     const brokenFlows = (await listFlows(input.userId, input.diagramId))
       .filter((f) => f.problems.length > 0)
       .map((f) => ({ id: f.id, name: f.name }));

@@ -6,6 +6,7 @@ export const REJECT = {
   say: "say not accepted",
   serverOnly: "server only op",
   unknownNetType: "unknown net type",
+  noKnowledge: "network knowledge unavailable",
 } as const;
 
 /** 흐름 거절은 저장소 판정 이유(not_found·exists…·검사 문제 종류) 앞에 이 글을 붙인다. */
@@ -67,6 +68,8 @@ function explainBody(cmd: unknown, error: string): string | null {
       return "say 는 받지 않아요. 바꾼 내용은 summary 에 적어 주세요";
     case REJECT.serverOnly:
       return `${op ?? "set_link_guess"} 는 서버만 쓰는 명령이에요. 망연계를 추정으로 넣으려면 add_node 에 guess: true 를 주세요`;
+    case REJECT.noKnowledge:
+      return "지금 망 지식을 읽지 못해 망 종류를 붙일 수 없어요. 잠시 뒤 다시 시도해 주세요.";
     case REJECT.unknownNetType:
       return `알 수 없는 망 종류 ${field(cmd, "type") ?? "?"} 이에요. get_guide 의 망 종류 key 를 써 주세요`;
   }
