@@ -6,7 +6,8 @@ import { computeMissing, type MissingItem } from "@/domain/missing";
 import type { NetworkKnowledge } from "@/domain/network";
 import { emptyState, type DiagramState, type Warning } from "@/domain/types";
 import { mergeWarnings } from "@/domain/warnings";
-import { COMMAND_EXAMPLES, DRAW_RULES, KIND_BLOCK, networkGuideText, patternBlock } from "@/server/drawing/rules";
+import { COMMAND_EXAMPLES, DRAW_RULES, gradeRuleLines, KIND_BLOCK, networkTypeLines, patternBlock, userRuleLines } from "@/server/drawing/rules";
+import { GRADE_LABELS } from "@/domain/network";
 import { listFlows, type StoredFlow } from "@/server/flows";
 import { getNetworkKnowledge } from "@/server/network";
 import {
@@ -22,6 +23,7 @@ import { diagramUrl } from "./url";
 
 const FIRST_DIAGRAM_NAME = "새 구성도";
 const VERSION_LIST_LIMIT = 50;
+const GUIDE_MAX = 20000;
 
 const INTRO = `# InfraSketch 그리기 안내서
 
@@ -71,12 +73,43 @@ const GLOSSARY = `## 용어 풀이
 - "망 종류 key 또는 null": 망 지식의 key 를 쓰거나, 종류를 지우려면 null 이에요.
 - ... 와 "..." 같은 말줄임과 예시 값(Tomcat 10 등)은 실제 값으로 바꿔 써요.`;
 
+const networkSection = (types: string[], rules: string[]) =>
+  [
+    `망 종류:\n${types.join("\n")}`,
+    `등급 규칙(기관 규칙이 없을 때):\n${gradeRuleLines().join("\n")}`,
+    `기관 규칙:\n${rules.length ? rules.join("\n") : "없음"}`,
+  ].join("\n\n");
+
+/** 별명을 뺀 망 종류 줄. */
+const plainTypeLines = (k: NetworkKnowledge): string[] =>
+  Object.values(k.types)
+    .sort((a, b) => (a.key < b.key ? -1 : a.key > b.key ? 1 : 0))
+    .map((t) => `${t.key} ${JSON.stringify(t.name)} 등급=${GRADE_LABELS[t.grade]}`);
+
 /**
- * get_guide 가 돌려주는 그리기 안내서. 규칙 글은 Qwen 프롬프트와 공용 모듈(drawing/rules)을 쓰고,
- * 거기 쓰인 Qwen 쪽 이름은 용어 풀이 절에서 MCP 말로 바꿔 준다. 망 지식은 사용자 것을 그대로 담는다.
+ * 망 지식 절. 안내서가 한도를 넘을 것 같으면 안내서에서만 줄인다(망 지식 화면은 그대로):
+ * 먼저 다른 이름을 빼고, 그래도 넘으면 뒤쪽 기관 규칙 → 뒤쪽 망 종류 순으로 자른다. 기본 등급 규칙은 늘 남긴다.
+ */
+function networkGuideSection(k: NetworkKnowledge, restLength: number): string {
+  let types = networkTypeLines(k);
+  let rules = userRuleLines(k);
+  const fits = (t: string[], r: string[], note: string) => restLength + networkSection(t, r).length + note.length <= GUIDE_MAX;
+  if (fits(types, rules, "")) return networkSection(types, rules);
+  const totalTypes = types.length;
+  const totalRules = rules.length;
+  types = plainTypeLines(k);
+  const note = `\n\n망 종류 ${totalTypes}개·기관 규칙 ${totalRules}개는 길어서 줄였어요. 구성도의 망 영역 종류는 get_diagram 의 zones 에서 확인하세요.`;
+  while (!fits(types, rules, note) && rules.length > 0) rules = rules.slice(0, -1);
+  while (!fits(types, rules, note) && types.length > 0) types = types.slice(0, -1);
+  return networkSection(types, rules) + note;
+}
+
+/**
+ * get_guide 가 돌려주는 그리기 안내서(2만 자 이하). 규칙 글은 Qwen 프롬프트와 공용 모듈(drawing/rules)을 쓰고,
+ * 거기 쓰인 Qwen 쪽 이름은 용어 풀이 절에서 MCP 말로 바꿔 준다. 망 지식은 사용자 것을 담되 길면 줄인다.
  */
 export function buildGuide(k: NetworkKnowledge): string {
-  return [
+  const head = [
     INTRO,
     HOW_TO_USE,
     GLOSSARY,
@@ -84,8 +117,9 @@ export function buildGuide(k: NetworkKnowledge): string {
     `## 허용값\n\n${KIND_BLOCK}`,
     `## 그리기 규칙\n\n${DRAW_RULES}`,
     `## 자주 쓰는 구성 패턴\n\n${patternBlock()}`,
-    `## 망 지식\n\n${networkGuideText(k)}`,
   ].join("\n\n");
+  const title = "\n\n## 망 지식\n\n";
+  return head + title + networkGuideSection(k, head.length + title.length);
 }
 
 export type McpProject = { id: string; name: string; diagrams: { id: string; name: string; version: number }[] };

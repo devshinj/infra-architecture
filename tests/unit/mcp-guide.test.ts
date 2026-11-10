@@ -25,6 +25,9 @@ describe("buildGuide", () => {
   test("Qwen 전용 문구는 없다", () => {
     expect(guide).not.toContain('"op":"say"');
     expect(guide).not.toContain("JSON Lines");
+    expect(guide).not.toContain("warn 과 report_missing");
+    expect(guide).not.toContain("이어 쓰기");
+    expect(guide).not.toContain("이어서 쓴");
   });
 
   test("Qwen 이름으로 된 규칙 용어를 MCP 말로 풀이한다", () => {
@@ -38,6 +41,28 @@ describe("buildGuide", () => {
     expect(guide).toContain("KIND 허용값");
     expect(guide).toContain("망 종류:");
     expect(guide).toContain("admin-net");
+  });
+
+  test("seed 지식은 줄이지 않는다(다른 이름이 있고 줄임 안내가 없다)", () => {
+    expect(guide).toContain("정부 업무망");
+    expect(guide).not.toContain("길어서 줄였어요");
+  });
+
+  test("아주 큰 지식도 2만 자 이하, 기본 등급 규칙과 줄임 안내는 남는다", () => {
+    const types: Record<string, NetType> = {};
+    for (let i = 0; i < 500; i++) {
+      const key = `big-net-${String(i).padStart(3, "0")}`;
+      types[key] = { key, name: `아주 긴 이름의 망 ${i} `.repeat(3), aliases: Array.from({ length: 5 }, (_, j) => `긴 다른 이름 ${i}-${j}`), description: "d", grade: "boundary" };
+    }
+    const keys = Object.keys(types);
+    const rules: NetRule[] = keys.slice(1).map((b, i) => ({ a: keys[0]!, b, method: "firewall", note: `긴 근거 ${i} `.repeat(10) }));
+    for (let i = 0; i < 500 - rules.length; i++) rules.push({ a: keys[1]!, b: keys[2 + (i % 100)]!, method: "none" });
+    const text = buildGuide({ types, rules });
+    expect(text.length).toBeLessThanOrEqual(20000);
+    expect(text).toContain("등급 규칙(기관 규칙이 없을 때):");
+    expect(text).toContain("길어서 줄였어요");
+    expect(text).toContain("get_diagram 의 zones");
+    expect(text).toContain("망 종류 500개");
   });
 
   test("종류 30개·기관 규칙 30개를 더해도 20000자 이하", () => {

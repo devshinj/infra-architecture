@@ -82,6 +82,14 @@ describe("MCP 읽기 서비스", () => {
     expect(r.url).toBe(diagramUrl(projectId, diagramId));
   });
 
+  test("망연계가 필요한 두 망을 잇고 있으면 경고에 link_expected 가 나온다", async () => {
+    const { userId, diagramId } = await makeOwnedDiagram();
+    await createVersion(diagramId, adminCase(), { source: "import" });
+    const r = await getDiagramForMcp(userId, diagramId);
+    expect(r.zones.find((z) => z.id === "admin-net")).toMatchObject({ type: "admin-net", typeSource: "ai" });
+    expect(r.warnings.map((w) => w.rule)).toContain("link_expected");
+  });
+
   test("버전 목록은 최근 50개, 최신부터", async () => {
     const { userId, diagramId } = await makeOwnedDiagram();
     for (let i = 0; i < 52; i++) {
