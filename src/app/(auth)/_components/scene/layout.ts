@@ -84,3 +84,19 @@ export const SCENE_EDGES: SceneEdge[] = [
   { id: "bus-was-1", points: [[132, 400], [132, 486]], arrow: true, order: 5 },
   { id: "bus-was-2", points: [[380, 400], [380, 486]], arrow: true, order: 5 },
 ];
+
+/**
+ * 흐름 빛(혜성)이 지나는 요청 길: 사용자 → 방화벽 → WEB → WAS. 한 번은 왼쪽(WEB#1 → WAS#1), 다음은 오른쪽(WEB#2 → WAS#2)으로
+ * 번갈아 지난다(이중화). 노드 밑으로 지날 때는 노드 카드에 가려진다(캔버스와 같은 층 순서).
+ */
+export const COMET_PATHS: [number, number][][] = [
+  [[256, 52], [256, 242], [132, 242], [132, 486]],
+  [[256, 52], [256, 242], [380, 242], [380, 486]],
+];
+
+/** 꺾은선 길이(px). */
+export function polylineLength(pts: [number, number][]): number {
+  let n = 0;
+  for (let i = 1; i < pts.length; i++) n += Math.hypot(pts[i]![0] - pts[i - 1]![0], pts[i]![1] - pts[i - 1]![1]);
+  return n;
+}

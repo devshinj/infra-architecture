@@ -90,9 +90,5 @@ export function AuthSubmit({ pending, label, pendingLabel }: { pending: boolean;
  * 로그인·가입·비밀번호 화면 옆 판: 대화 한 줄이 구성도로 그려지는 장면(AuthScene). 좁은 화면에서는 숨긴다(양식 아래로 밀지 않는다).
  */
 export function AuthShowcase() {
-  return (
-    <div className={styles.showcase}>
-      <AuthScene />
-    </div>
-  );
+  return <AuthScene className={styles.showcase} />;
 }
