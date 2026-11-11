@@ -152,7 +152,7 @@ test("listTerms filters", async () => {
   const terms = all.map((r) => r.term.toLowerCase());
   expect(terms).toEqual([...terms].sort((x, y) => (x < y ? -1 : x > y ? 1 : 0)));
   expect(all[0]!.term).toBe("ACL");
-  expect(all.at(-1)!.term).toBe("허브-스포크");
+  expect(all.at(-1)!.term).toBe("호스팅");
 
   expect((await listTerms(userId, { q: "redis" })).map((r) => r.term)).toContain("Redis");
   // definition 부분 일치

@@ -1,10 +1,11 @@
-// 사용자 사전에 넣어 두는 용어 사전 초안. 1차분 50개(§6.7)는 이 파일에, 2차분은 glossary-seed-extra.ts 에 있다.
+// 사용자 사전에 넣어 두는 용어 사전 초안. 1차분 50개(§6.7)는 이 파일에, 2차분은 glossary-seed-extra.ts, 3차분은 glossary-seed-batch3.ts 에 있다.
 // 처음엔 모두 "미검수"로 들어간다. 사용자 사전에 없는 항목만 채우고, 이미 있는 항목은 건드리지 않는다.
 // definition 은 정식 명칭·약어 풀이와 분류를 담은 사전식 한 문장(120자 이내, 비유 없음).
 // why·compare 는 용어·약어 항목(§6.2)만 채우고 제품 이름 항목은 빈 문자열이다.
 // aliases 는 normalizeTerm 한 값이다. 노드 종류 한국어 이름(catalog labelKo)과 흔한 표기를 넣어
 // 노드의 sw·sub·종류 이름 어느 것으로도 찾아지게 한다. key 는 normalizeTerm(term) 이다.
 
+import { GLOSSARY_SEED_BATCH3 } from "./glossary-seed-batch3";
 import { GLOSSARY_SEED_EXTRA } from "./glossary-seed-extra";
 
 export interface GlossarySeedEntry {
@@ -158,7 +159,7 @@ export const GLOSSARY_SEED_CORE: GlossarySeedEntry[] = [
       "쿠버네티스(Kubernetes, K8s)는 여러 서버에 걸쳐 컨테이너의 배포·확장·복구를 자동으로 관리하는 오픈소스 컨테이너 오케스트레이션 플랫폼입니다.",
     why: "",
     compare: "",
-    aliases: ["kubernetes", "k8s", "쿠버네티스클러스터", "k8scluster", "kubernetescluster", "eks", "amazoneks"],
+    aliases: ["kubernetes", "k8s", "쿠버네티스클러스터", "k8scluster", "kubernetescluster"],
   },
   {
     term: "Lambda",
@@ -372,7 +373,7 @@ export const GLOSSARY_SEED_CORE: GlossarySeedEntry[] = [
       "컨테이너(Container)는 애플리케이션과 실행에 필요한 라이브러리·설정을 하나로 묶어 어느 서버에서나 같게 실행되도록 격리한 실행 환경입니다.",
     why: "개발 PC와 운영 서버의 환경 차이 없이 같은 결과로 배포할 수 있습니다.",
     compare: "가상 머신은 운영체제 전체를 따로 올리고, 컨테이너는 서버의 운영체제를 함께 써서 더 가볍습니다.",
-    aliases: ["container", "docker", "도커"],
+    aliases: ["container"],
   },
   {
     term: "서버리스 함수",
@@ -466,7 +467,7 @@ export const GLOSSARY_SEED_CORE: GlossarySeedEntry[] = [
       "Active/Standby(액티브/스탠바이)는 한 장비만 실제로 일하고 다른 장비는 대기하다가 장애가 나면 일을 이어받는 이중화 방식입니다.",
     why: "운영 장비가 고장 나도 대기 장비가 이어받아 서비스가 멈추는 시간을 줄입니다.",
     compare: "Active/Active는 두 장비가 함께 일해 처리량도 늘리고, Active/Standby는 한 대가 대기하는 대신 구성이 단순합니다.",
-    aliases: ["액티브스탠바이", "activepassive", "failover", "페일오버"],
+    aliases: ["액티브스탠바이", "activepassive"],
   },
   {
     term: "DB 중계(Proxy)",
@@ -532,5 +533,5 @@ export const GLOSSARY_SEED_CORE: GlossarySeedEntry[] = [
   },
 ];
 
-/** 사용자 사전에 넣는 초안 전체(1차분 + 2차분). */
-export const GLOSSARY_SEED: GlossarySeedEntry[] = [...GLOSSARY_SEED_CORE, ...GLOSSARY_SEED_EXTRA];
+/** 사용자 사전에 넣는 초안 전체(1차분 + 2차분 + 3차분). */
+export const GLOSSARY_SEED: GlossarySeedEntry[] = [...GLOSSARY_SEED_CORE, ...GLOSSARY_SEED_EXTRA, ...GLOSSARY_SEED_BATCH3];

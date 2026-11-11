@@ -4,6 +4,7 @@ import { db } from "@/db/client";
 import { glossaryTerms } from "@/db/schema";
 import { normalizeTerm, pickTerm } from "@/domain/explain";
 import { GLOSSARY_SEED_CORE } from "@/domain/glossary-seed";
+import { GLOSSARY_SEED_BATCH3 } from "@/domain/glossary-seed-batch3";
 import { GLOSSARY_SEED_EXTRA } from "@/domain/glossary-seed-extra";
 import { NotFoundError, ValidationError } from "@/server/projects";
 
@@ -12,7 +13,7 @@ export type GlossaryRow = typeof glossaryTerms.$inferSelect;
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /** 초안 묶음. 새 묶음을 더하면 쓰던 계정에도 그 묶음이 한 번 들어간다. */
-const SEED_BATCHES = [GLOSSARY_SEED_CORE, GLOSSARY_SEED_EXTRA];
+const SEED_BATCHES = [GLOSSARY_SEED_CORE, GLOSSARY_SEED_EXTRA, GLOSSARY_SEED_BATCH3];
 
 /**
  * 기본 제공 초안을 묶음(1차분, 2차분…)마다 한 번씩 미검수로 넣는다.

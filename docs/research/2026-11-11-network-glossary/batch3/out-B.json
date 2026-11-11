@@ -1,0 +1,1709 @@
+[
+ {
+  "term": "이중화",
+  "fullName": "이중화(Redundancy)",
+  "category": "가용성",
+  "definition": "이중화는 서버·장비·회선을 같은 것으로 둘 이상 두어 하나가 고장 나도 나머지로 서비스를 이어 가게 하는 구성입니다.",
+  "why": "장비 한 대의 고장이 서비스 중단으로 이어지지 않게 합니다.",
+  "compare": "이중화는 고장에 대비해 여분을 두는 것이고, 백업은 데이터가 지워지거나 깨졌을 때 되돌리기 위한 사본입니다.",
+  "aliases": [
+   "redundancy",
+   "다중화",
+   "이중화 구성",
+   "spof 제거",
+   "리던던시"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "What is high availability?",
+    "org": "IBM",
+    "url": "https://www.ibm.com/think/topics/high-availability",
+    "kind": "primary"
+   },
+   {
+    "title": "SP 800-34 Rev.1 Contingency Planning Guide for Federal Information Systems",
+    "org": "NIST",
+    "url": "https://nvlpubs.nist.gov/nistpubs/Legacy/SP/nistspecialpublication800-34r1.pdf",
+    "kind": "primary"
+   }
+  ],
+  "changed": "",
+  "note": ""
+ },
+ {
+  "term": "Active-Active",
+  "fullName": "액티브-액티브(Active-Active) 구성",
+  "category": "가용성",
+  "definition": "Active-Active는 이중화한 장비 두 대 이상이 모두 동시에 요청을 처리하는 구성입니다.",
+  "why": "평소에는 처리 능력을 함께 쓰고, 한 대가 고장 나면 남은 장비가 이어서 처리합니다.",
+  "compare": "Active-Active는 모두 일하고, Active-Standby는 한 대만 일하고 나머지는 대기합니다.",
+  "aliases": [
+   "active/active",
+   "aa",
+   "액티브 액티브",
+   "액티브-액티브"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "Disaster recovery options in the cloud",
+    "org": "AWS",
+    "url": "https://docs.aws.amazon.com/whitepapers/latest/disaster-recovery-workloads-on-aws/disaster-recovery-options-in-the-cloud.html",
+    "kind": "primary"
+   }
+  ],
+  "changed": "뜻이 다른 별칭 '양방향 이중화'를 뺌",
+  "note": "AWS 문서는 사이트(리전) 단위의 active/active·active/passive로 설명함"
+ },
+ {
+  "term": "HA",
+  "fullName": "고가용성(High Availability)",
+  "category": "가용성",
+  "definition": "HA(고가용성)는 장애가 나도 서비스가 멈추는 시간을 아주 짧게 줄이도록 이중화와 페일오버를 갖춘 성질 또는 그런 구성입니다.",
+  "why": "장애로 서비스가 멈추는 시간을 줄여 업무 손실을 막습니다.",
+  "compare": "HA는 주로 장비·부품 고장에 대비하고, DR은 전산센터 전체가 못 쓰게 되는 재해에 대비합니다.",
+  "aliases": [
+   "high availability",
+   "고가용성",
+   "ha 구성",
+   "에이치에이"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "SP 800-34 Rev.1 Contingency Planning Guide for Federal Information Systems",
+    "org": "NIST",
+    "url": "https://nvlpubs.nist.gov/nistpubs/Legacy/SP/nistspecialpublication800-34r1.pdf",
+    "kind": "primary"
+   },
+   {
+    "title": "NIST Glossary: high availability",
+    "org": "NIST",
+    "url": "https://csrc.nist.gov/glossary/term/high_availability",
+    "kind": "primary"
+   },
+   {
+    "title": "What is high availability?",
+    "org": "IBM",
+    "url": "https://www.ibm.com/think/topics/high-availability",
+    "kind": "primary"
+   }
+  ],
+  "changed": "정의를 '~입니다'로 끝나게 고치고 이중화·페일오버를 명시, 비교에서 '같은 전산실 안'이라는 단정을 뺌",
+  "note": ""
+ },
+ {
+  "term": "클러스터링",
+  "fullName": "클러스터링(Clustering)",
+  "category": "가용성 / 확장",
+  "definition": "클러스터링은 서버 여러 대를 묶어 바깥에서는 하나의 시스템처럼 보이고 동작하게 하는 구성입니다.",
+  "why": "한 대가 고장 나도 서비스가 이어지고, 여러 대가 일을 나누어 처리 능력을 높입니다.",
+  "compare": "로드밸런싱은 요청을 나누는 것까지이고, 클러스터링은 서버들이 서로 상태를 알고 함께 움직입니다.",
+  "aliases": [
+   "clustering",
+   "cluster",
+   "클러스터",
+   "클러스터 구성"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "What is high availability?",
+    "org": "IBM",
+    "url": "https://www.ibm.com/think/topics/high-availability",
+    "kind": "primary"
+   }
+  ],
+  "changed": "",
+  "note": ""
+ },
+ {
+  "term": "페일오버",
+  "fullName": "페일오버(Failover, 장애 조치)",
+  "category": "가용성",
+  "definition": "페일오버는 일하던 장비에 장애가 났을 때 대기하던 장비가 그 일을 자동 또는 수동으로 넘겨받는 것입니다.",
+  "why": "장애가 나도 사람이 복구할 때까지 기다리지 않고 서비스를 이어 갑니다.",
+  "compare": "페일오버는 장애 때 대기 쪽으로 넘어가는 것이고, 페일백은 복구 뒤 원래 쪽으로 되돌아오는 것입니다.",
+  "aliases": [
+   "failover",
+   "fail-over",
+   "장애 조치",
+   "절체",
+   "테이크오버",
+   "takeover"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "NIST Glossary: failover",
+    "org": "NIST",
+    "url": "https://csrc.nist.gov/glossary/term/failover",
+    "kind": "primary"
+   },
+   {
+    "title": "Disaster recovery options in the cloud",
+    "org": "AWS",
+    "url": "https://docs.aws.amazon.com/whitepapers/latest/disaster-recovery-workloads-on-aws/disaster-recovery-options-in-the-cloud.html",
+    "kind": "primary"
+   }
+  ],
+  "changed": "",
+  "note": "NIST 정의는 자동 전환을 기준으로 하고, AWS 문서는 자동·수동 개시를 모두 설명함"
+ },
+ {
+  "term": "페일백",
+  "fullName": "페일백(Failback, 원복)",
+  "category": "가용성",
+  "definition": "페일백은 페일오버로 넘어갔던 서비스를 원래 장비가 복구된 뒤 원래 장비로 되돌리는 것입니다.",
+  "why": "임시로 버티던 상태를 끝내고 원래의 이중화 구성으로 돌아갑니다.",
+  "compare": "페일오버는 급하게 일어나지만, 페일백은 보통 사용자가 적은 시간에 계획해서 합니다.",
+  "aliases": [
+   "failback",
+   "fail-back",
+   "원복",
+   "절체 복귀"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "About failover and failback in Azure Site Recovery - Modernized",
+    "org": "Microsoft Learn",
+    "url": "https://learn.microsoft.com/en-us/azure/site-recovery/failover-failback-overview-modernized",
+    "kind": "primary"
+   }
+  ],
+  "changed": "",
+  "note": ""
+ },
+ {
+  "term": "세션 클러스터링",
+  "fullName": "세션 클러스터링(Session Clustering)",
+  "category": "가용성 / WAS",
+  "definition": "세션 클러스터링은 WAS 여러 대가 로그인 상태 같은 세션 정보를 서로 복제하거나 한곳에 함께 저장해 공유하는 구성입니다.",
+  "why": "WAS 한 대가 죽어도 사용자가 다시 로그인하지 않고 다른 WAS에서 이어서 쓰게 합니다.",
+  "compare": "세션 클러스터링은 세션을 여러 대가 공유하고, 스티키 세션은 사용자를 한 대에만 계속 보내 공유 없이 해결합니다.",
+  "aliases": [
+   "session clustering",
+   "세션 공유",
+   "세션 복제",
+   "session replication"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "Clustering/Session Replication How-To",
+    "org": "Apache Tomcat",
+    "url": "https://tomcat.apache.org/tomcat-10.1-doc/cluster-howto.html",
+    "kind": "primary"
+   }
+  ],
+  "changed": "",
+  "note": ""
+ },
+ {
+  "term": "스티키 세션",
+  "fullName": "스티키 세션(Sticky Session, 세션 고정)",
+  "category": "부하 분산",
+  "definition": "스티키 세션은 로드밸런서가 같은 사용자의 요청을 처음 연결된 서버 한 대로만 계속 보내는 설정입니다.",
+  "why": "세션을 서버끼리 공유하지 않아도 로그인 상태가 유지되게 합니다.",
+  "compare": "스티키 세션은 그 서버가 죽으면 세션을 잃고, 세션 클러스터링은 다른 서버가 이어받습니다.",
+  "aliases": [
+   "sticky session",
+   "session affinity",
+   "세션 고정",
+   "세션 어피니티",
+   "퍼시스턴스",
+   "persistence"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "Edit target group attributes for your Application Load Balancer",
+    "org": "AWS",
+    "url": "https://docs.aws.amazon.com/elasticloadbalancing/latest/application/edit-target-group-attributes.html",
+    "kind": "primary"
+   },
+   {
+    "title": "HTTP Load Balancing (NGINX Admin Guide)",
+    "org": "F5 NGINX",
+    "url": "https://docs.nginx.com/nginx/admin-guide/load-balancer/http-load-balancer/",
+    "kind": "primary"
+   }
+  ],
+  "changed": "",
+  "note": ""
+ },
+ {
+  "term": "헬스 체크",
+  "fullName": "헬스 체크(Health Check, 상태 확인)",
+  "category": "부하 분산 / 가용성",
+  "definition": "헬스 체크는 로드밸런서나 관리 시스템이 서버에 주기적으로 신호를 보내 정상인지 확인하는 동작입니다.",
+  "why": "고장 난 서버를 자동으로 찾아 요청을 보내지 않게 합니다.",
+  "compare": "헬스 체크는 \"살아 있나\"만 짧게 묻고, 모니터링은 성능과 상태를 자세히 모아 기록합니다.",
+  "aliases": [
+   "health check",
+   "헬스체크",
+   "상태 검사",
+   "liveness",
+   "readiness",
+   "l4 체크"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "Health checks for Application Load Balancer target groups",
+    "org": "AWS",
+    "url": "https://docs.aws.amazon.com/elasticloadbalancing/latest/application/target-group-health-checks.html",
+    "kind": "primary"
+   },
+   {
+    "title": "HTTP Load Balancing (NGINX Admin Guide)",
+    "org": "F5 NGINX",
+    "url": "https://docs.nginx.com/nginx/admin-guide/load-balancer/http-load-balancer/",
+    "kind": "primary"
+   }
+  ],
+  "changed": "",
+  "note": ""
+ },
+ {
+  "term": "라운드 로빈",
+  "fullName": "라운드 로빈(Round Robin, RR)",
+  "category": "부하 분산 방식",
+  "definition": "라운드 로빈은 들어온 요청을 서버들에 차례대로 한 번씩 돌아가며 나누어 주는 부하 분산 방식입니다.",
+  "why": "가장 단순하고, 서버 성능이 비슷할 때 요청을 고르게 나눕니다.",
+  "compare": "라운드 로빈은 서버가 지금 얼마나 바쁜지 보지 않고, 최소 연결 방식은 덜 바쁜 서버를 골라 보냅니다.",
+  "aliases": [
+   "round robin",
+   "rr",
+   "라운드로빈",
+   "순차 분배"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "Edit target group attributes for your Application Load Balancer",
+    "org": "AWS",
+    "url": "https://docs.aws.amazon.com/elasticloadbalancing/latest/application/edit-target-group-attributes.html",
+    "kind": "primary"
+   },
+   {
+    "title": "HTTP Load Balancing (NGINX Admin Guide)",
+    "org": "F5 NGINX",
+    "url": "https://docs.nginx.com/nginx/admin-guide/load-balancer/http-load-balancer/",
+    "kind": "primary"
+   }
+  ],
+  "changed": "",
+  "note": ""
+ },
+ {
+  "term": "최소 연결",
+  "fullName": "최소 연결(Least Connections, LC)",
+  "category": "부하 분산 방식",
+  "definition": "최소 연결은 지금 처리 중인 연결 수가 가장 적은 서버로 새 요청을 보내는 부하 분산 방식입니다.",
+  "why": "요청마다 처리 시간이 크게 다를 때 특정 서버에만 일이 쌓이는 것을 막습니다.",
+  "compare": "최소 연결은 서버의 현재 연결 수를 보고, 라운드 로빈은 순서만 봅니다.",
+  "aliases": [
+   "least connection",
+   "least connections",
+   "lc",
+   "리스트 커넥션",
+   "최소 접속"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "HTTP Load Balancing (NGINX Admin Guide)",
+    "org": "F5 NGINX",
+    "url": "https://docs.nginx.com/nginx/admin-guide/load-balancer/http-load-balancer/",
+    "kind": "primary"
+   },
+   {
+    "title": "Edit target group attributes for your Application Load Balancer",
+    "org": "AWS",
+    "url": "https://docs.aws.amazon.com/elasticloadbalancing/latest/application/edit-target-group-attributes.html",
+    "kind": "primary"
+   }
+  ],
+  "changed": "",
+  "note": "AWS ALB는 같은 취지의 방식을 '최소 미처리 요청(least outstanding requests)'이라고 부름"
+ },
+ {
+  "term": "해시 분산",
+  "fullName": "해시(Hash) 기반 부하 분산",
+  "category": "부하 분산 방식",
+  "definition": "해시 분산은 접속한 쪽의 IP 주소 같은 값을 계산한 결과로 서버를 정해, 같은 값이면 늘 같은 서버로 보내는 부하 분산 방식입니다.",
+  "why": "같은 사용자를 계속 같은 서버로 보내 세션이나 캐시를 그대로 쓰게 합니다.",
+  "compare": "해시 분산은 값으로 서버가 정해져 고르게 나뉘지 않을 수 있고, 라운드 로빈은 고르게 나누지만 같은 서버로 간다는 보장이 없습니다.",
+  "aliases": [
+   "hash",
+   "source ip hash",
+   "ip hash",
+   "해시",
+   "소스 IP 해시"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "HTTP Load Balancing (NGINX Admin Guide)",
+    "org": "F5 NGINX",
+    "url": "https://docs.nginx.com/nginx/admin-guide/load-balancer/http-load-balancer/",
+    "kind": "primary"
+   }
+  ],
+  "changed": "",
+  "note": ""
+ },
+ {
+  "term": "가용성",
+  "fullName": "가용성(Availability)",
+  "category": "가용성 / 지표",
+  "definition": "가용성은 전체 시간 가운데 서비스를 정상으로 쓸 수 있었던 시간의 비율을 퍼센트로 나타낸 값입니다.",
+  "why": "서비스가 얼마나 멈추지 않아야 하는지를 숫자로 정해 설계와 계약의 기준으로 삼습니다.",
+  "compare": "99.9%는 1년에 약 8시간 45분, 99.99%는 약 52분까지 멈춰도 된다는 뜻입니다.",
+  "aliases": [
+   "availability",
+   "가동률",
+   "업타임",
+   "uptime",
+   "쓰리 나인",
+   "포 나인",
+   "99.9%"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "Reliability Pillar: Availability",
+    "org": "AWS",
+    "url": "https://docs.aws.amazon.com/wellarchitected/latest/reliability-pillar/availability.html",
+    "kind": "primary"
+   },
+   {
+    "title": "NIST Glossary: availability",
+    "org": "NIST",
+    "url": "https://csrc.nist.gov/glossary/term/availability",
+    "kind": "primary"
+   }
+  ],
+  "changed": "정의를 '~입니다'로 끝나게 고치고, 허용 중단 시간을 출처 표의 값(8시간 45분·52분)으로 맞춤",
+  "note": "NIST 용어집은 가용성을 비율이 아니라 '적시에 믿을 수 있게 접근·사용할 수 있음'이라는 보안 속성으로 정의함"
+ },
+ {
+  "term": "SLA",
+  "fullName": "서비스 수준 협약(Service Level Agreement)",
+  "category": "운영 / 계약",
+  "definition": "SLA(서비스 수준 협약)는 서비스를 제공하는 쪽과 쓰는 쪽이 가용성·응답 시간·장애 복구 시간 같은 수준을 숫자로 정해 약속한 문서입니다.",
+  "why": "서비스 품질을 측정할 기준과 제공자·이용자 양쪽의 책임을 미리 정합니다.",
+  "compare": "SLA는 계약상의 약속이고, 가용성은 그 안에 들어가는 지표 가운데 하나입니다.",
+  "aliases": [
+   "service level agreement",
+   "서비스 수준 협약",
+   "서비스 수준 계약",
+   "에스엘에이"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "NIST Glossary: service level agreement",
+    "org": "NIST",
+    "url": "https://csrc.nist.gov/glossary/term/service_level_agreement",
+    "kind": "primary"
+   }
+  ],
+  "changed": "why의 '보상'은 출처에 없어 '양쪽의 책임'으로 고침",
+  "note": ""
+ },
+ {
+  "term": "DR",
+  "fullName": "재해복구(Disaster Recovery)",
+  "category": "재해복구",
+  "definition": "DR(재해복구)은 화재·지진·정전 같은 재해로 주 전산센터를 못 쓰게 됐을 때 떨어진 곳의 다른 센터에서 서비스를 다시 살리는 체계입니다.",
+  "why": "전산센터 한 곳 전체가 멈춰도 업무를 이어 가게 합니다.",
+  "compare": "DR은 센터 전체의 재해에 대비하고, HA는 센터 안의 장비 고장에 대비합니다.",
+  "aliases": [
+   "disaster recovery",
+   "재해복구",
+   "재해 복구",
+   "dr 센터",
+   "drc",
+   "재해복구센터",
+   "디알"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "SP 800-34 Rev.1 Contingency Planning Guide for Federal Information Systems",
+    "org": "NIST",
+    "url": "https://nvlpubs.nist.gov/nistpubs/Legacy/SP/nistspecialpublication800-34r1.pdf",
+    "kind": "primary"
+   },
+   {
+    "title": "NIST Glossary: disaster recovery plan",
+    "org": "NIST",
+    "url": "https://csrc.nist.gov/glossary/term/disaster_recovery_plan",
+    "kind": "primary"
+   }
+  ],
+  "changed": "",
+  "note": ""
+ },
+ {
+  "term": "미러 사이트",
+  "fullName": "미러 사이트(Mirrored Site)",
+  "category": "재해복구 / DR 센터 유형",
+  "definition": "미러 사이트는 주 센터와 기술적으로 똑같이 갖추고 데이터를 실시간으로 자동 복제해 두는 완전 이중화 재해복구 센터입니다.",
+  "why": "재해가 나도 서비스가 거의 끊기지 않게 합니다.",
+  "compare": "미러 사이트는 데이터를 실시간으로 똑같이 맞춰 두어 가장 비싸고, 핫 사이트는 장비를 갖추고 대기하다 재해 때 넘겨받습니다.",
+  "aliases": [
+   "mirror site",
+   "mirrored site",
+   "미러 센터",
+   "미러링 센터"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "SP 800-34 Rev.1 Contingency Planning Guide for Federal Information Systems",
+    "org": "NIST",
+    "url": "https://nvlpubs.nist.gov/nistpubs/Legacy/SP/nistspecialpublication800-34r1.pdf",
+    "kind": "primary"
+   }
+  ],
+  "changed": "'두 곳이 함께 서비스한다'는 내용은 NIST에 없어 정의·비교·별칭에서 뺌",
+  "note": "NIST 용어집에는 항목이 없어(404) SP 800-34 본문 3.4.3으로 확인함, 국내 지침의 'Active-Active 동시 서비스' 설명은 공식 원문을 열지 못함"
+ },
+ {
+  "term": "핫 사이트",
+  "fullName": "핫 사이트(Hot Site)",
+  "category": "재해복구 / DR 센터 유형",
+  "definition": "핫 사이트는 주 센터 수준의 장비와 소프트웨어를 갖추고 가동 상태로 준비해 두어 재해 때 빠르게 넘겨받는 재해복구 센터입니다.",
+  "why": "재해 뒤 빠르게 서비스를 다시 열어야 하는 중요한 업무에 씁니다.",
+  "compare": "핫 사이트는 장비를 모두 갖추고 가동 상태로 대기하고, 웜 사이트는 장비를 일부만 갖춥니다.",
+  "aliases": [
+   "hot site",
+   "핫 센터",
+   "핫사이트"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "NIST Glossary: hot site",
+    "org": "NIST",
+    "url": "https://csrc.nist.gov/glossary/term/hot_site",
+    "kind": "primary"
+   },
+   {
+    "title": "SP 800-34 Rev.1 Contingency Planning Guide for Federal Information Systems",
+    "org": "NIST",
+    "url": "https://nvlpubs.nist.gov/nistpubs/Legacy/SP/nistspecialpublication800-34r1.pdf",
+    "kind": "primary"
+   }
+  ],
+  "changed": "'거의 실시간 데이터 수신'과 '몇 시간 안'이라는 단정을 빼고 NIST 정의(완전 가동·장비·소프트웨어 구비)에 맞춤",
+  "note": ""
+ },
+ {
+  "term": "웜 사이트",
+  "fullName": "웜 사이트(Warm Site)",
+  "category": "재해복구 / DR 센터 유형",
+  "definition": "웜 사이트는 장비와 통신 설비를 일부만 갖춰 두고 재해 때 부족한 것을 채워 서비스를 살리는 재해복구 센터입니다.",
+  "why": "핫 사이트보다 비용을 줄이면서 중요한 업무부터 복구할 수 있게 합니다.",
+  "compare": "웜 사이트는 일부 장비가 준비돼 있고, 콜드 사이트는 장소와 전기·통신만 있습니다.",
+  "aliases": [
+   "warm site",
+   "웜 센터",
+   "웜사이트"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "NIST Glossary: warm site",
+    "org": "NIST",
+    "url": "https://csrc.nist.gov/glossary/term/warm_site",
+    "kind": "primary"
+   },
+   {
+    "title": "SP 800-34 Rev.1 Contingency Planning Guide for Federal Information Systems",
+    "org": "NIST",
+    "url": "https://nvlpubs.nist.gov/nistpubs/Legacy/SP/nistspecialpublication800-34r1.pdf",
+    "kind": "primary"
+   }
+  ],
+  "changed": "정의에서 '며칠 안'이라는 복구 시간과 '주기적 데이터 수신'을 빼고 NIST 정의(부분 구비)에 맞춤",
+  "note": ""
+ },
+ {
+  "term": "콜드 사이트",
+  "fullName": "콜드 사이트(Cold Site)",
+  "category": "재해복구 / DR 센터 유형",
+  "definition": "콜드 사이트는 장소와 전원·냉방·통신 회선만 마련해 두고 재해가 난 뒤에 장비를 들여와 복구하는 재해복구 센터입니다.",
+  "why": "유지 비용이 가장 적게 들어, 오래 멈춰도 되는 업무에 씁니다.",
+  "compare": "콜드 사이트는 유지 비용이 가장 적지만 장비를 들여와 설치하는 시간이 길고, 미러 사이트는 가장 비싸지만 거의 끊기지 않습니다.",
+  "aliases": [
+   "cold site",
+   "콜드 센터",
+   "콜드사이트"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "NIST Glossary: cold site",
+    "org": "NIST",
+    "url": "https://csrc.nist.gov/glossary/term/cold_site",
+    "kind": "primary"
+   },
+   {
+    "title": "SP 800-34 Rev.1 Contingency Planning Guide for Federal Information Systems",
+    "org": "NIST",
+    "url": "https://nvlpubs.nist.gov/nistpubs/Legacy/SP/nistspecialpublication800-34r1.pdf",
+    "kind": "primary"
+   }
+  ],
+  "changed": "비교에서 '몇 주'라는 복구 시간 숫자를 뺌",
+  "note": ""
+ },
+ {
+  "term": "RTO",
+  "fullName": "목표 복구 시간(Recovery Time Objective)",
+  "category": "재해복구 / 지표",
+  "definition": "RTO(목표 복구 시간)는 장애나 재해가 난 뒤 서비스를 다시 쓸 수 있게 되기까지 허용하는 최대 시간입니다.",
+  "why": "업무가 얼마나 오래 멈춰도 되는지를 정해 이중화와 재해복구 수준(비용)을 결정합니다.",
+  "compare": "RTO는 \"얼마나 빨리 되살리나\"이고, RPO는 \"데이터를 어느 시점까지 되살리나\"입니다.",
+  "aliases": [
+   "recovery time objective",
+   "목표 복구 시간",
+   "복구 목표 시간",
+   "알티오"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "SP 800-34 Rev.1 Contingency Planning Guide for Federal Information Systems",
+    "org": "NIST",
+    "url": "https://nvlpubs.nist.gov/nistpubs/Legacy/SP/nistspecialpublication800-34r1.pdf",
+    "kind": "primary"
+   },
+   {
+    "title": "NIST Glossary: recovery time objective",
+    "org": "NIST",
+    "url": "https://csrc.nist.gov/glossary/term/recovery_time_objective",
+    "kind": "primary"
+   }
+  ],
+  "changed": "",
+  "note": ""
+ },
+ {
+  "term": "RPO",
+  "fullName": "목표 복구 시점(Recovery Point Objective)",
+  "category": "재해복구 / 지표",
+  "definition": "RPO(목표 복구 시점)는 장애나 재해 때 데이터를 어느 시점까지 되살려야 하는지를 정한 목표로, 잃어도 되는 데이터 분량을 시간으로 나타낸 값입니다.",
+  "why": "백업과 복제를 얼마나 자주 해야 하는지를 정합니다.",
+  "compare": "RPO가 0이면 데이터를 하나도 잃지 않아야 한다는 뜻이고, RPO가 1시간이면 최근 1시간치는 잃을 수 있다는 뜻입니다.",
+  "aliases": [
+   "recovery point objective",
+   "목표 복구 시점",
+   "복구 목표 시점",
+   "알피오"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "SP 800-34 Rev.1 Contingency Planning Guide for Federal Information Systems",
+    "org": "NIST",
+    "url": "https://nvlpubs.nist.gov/nistpubs/Legacy/SP/nistspecialpublication800-34r1.pdf",
+    "kind": "primary"
+   },
+   {
+    "title": "NIST Glossary: recovery point objective",
+    "org": "NIST",
+    "url": "https://csrc.nist.gov/glossary/term/recovery_point_objective",
+    "kind": "primary"
+   }
+  ],
+  "changed": "NIST 정의(복구해야 하는 시점)를 정의 앞에 넣음",
+  "note": ""
+ },
+ {
+  "term": "풀 백업",
+  "fullName": "전체 백업(Full Backup)",
+  "category": "백업",
+  "definition": "풀 백업은 대상 데이터 전체를 통째로 복사해 두는 백업 방식입니다.",
+  "why": "백업본 하나만 있으면 복구할 수 있어 복구가 가장 간단하고 빠릅니다.",
+  "compare": "풀 백업은 시간과 저장 공간이 가장 많이 들어, 예를 들어 주말에 풀 백업을 하고 평일에는 증분·차등 백업을 합니다.",
+  "aliases": [
+   "full backup",
+   "전체 백업",
+   "풀백업"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "SP 800-34 Rev.1 Contingency Planning Guide for Federal Information Systems",
+    "org": "NIST",
+    "url": "https://nvlpubs.nist.gov/nistpubs/Legacy/SP/nistspecialpublication800-34r1.pdf",
+    "kind": "primary"
+   }
+  ],
+  "changed": "비교의 '보통 주 1회'를 출처의 예시(주말 풀 백업) 표현으로 고침",
+  "note": ""
+ },
+ {
+  "term": "증분 백업",
+  "fullName": "증분 백업(Incremental Backup)",
+  "category": "백업",
+  "definition": "증분 백업은 종류와 상관없이 바로 앞의 백업 뒤로 새로 생기거나 바뀐 데이터만 복사하는 백업 방식입니다.",
+  "why": "백업 시간과 저장 공간을 적게 씁니다.",
+  "compare": "증분 백업은 복구할 때 풀 백업과 그 뒤의 증분 백업을 모두 차례로 써야 하고, 차등 백업은 풀 백업과 마지막 차등 백업 두 개만 있으면 됩니다.",
+  "aliases": [
+   "incremental backup",
+   "증분백업",
+   "인크리멘탈"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "SP 800-34 Rev.1 Contingency Planning Guide for Federal Information Systems",
+    "org": "NIST",
+    "url": "https://nvlpubs.nist.gov/nistpubs/Legacy/SP/nistspecialpublication800-34r1.pdf",
+    "kind": "primary"
+   }
+  ],
+  "changed": "정의의 괄호 표현을 풀어 쓰고 why의 '가장'을 뺌",
+  "note": ""
+ },
+ {
+  "term": "차등 백업",
+  "fullName": "차등 백업(Differential Backup)",
+  "category": "백업",
+  "definition": "차등 백업은 마지막 풀 백업 뒤로 바뀐 데이터를 매번 모두 복사하는 백업 방식입니다.",
+  "why": "증분 백업보다 복구가 간단하고 풀 백업보다 빠르게 끝납니다.",
+  "compare": "차등 백업은 날이 갈수록 백업 크기가 커지고, 증분 백업은 매번 작습니다.",
+  "aliases": [
+   "differential backup",
+   "차등백업",
+   "디퍼렌셜"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "SP 800-34 Rev.1 Contingency Planning Guide for Federal Information Systems",
+    "org": "NIST",
+    "url": "https://nvlpubs.nist.gov/nistpubs/Legacy/SP/nistspecialpublication800-34r1.pdf",
+    "kind": "primary"
+   }
+  ],
+  "changed": "",
+  "note": ""
+ },
+ {
+  "term": "스냅샷",
+  "fullName": "스냅샷(Snapshot)",
+  "category": "백업",
+  "definition": "스냅샷은 디스크나 데이터의 어느 한 순간 상태를 기록해 두어 나중에 그 시점으로 되돌릴 수 있게 하는 기능입니다.",
+  "why": "작업 전에 몇 초 만에 찍어 두고 문제가 생기면 빠르게 되돌립니다.",
+  "compare": "스냅샷은 원본과의 차이만 기록해 원본에 기대는 경우가 많고, 백업은 원본과 따로 보관하는 사본입니다.",
+  "aliases": [
+   "snapshot",
+   "스냅샷",
+   "스냅숏",
+   "시점 복사"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "NIST Glossary: snapshot",
+    "org": "NIST",
+    "url": "https://csrc.nist.gov/glossary/term/snapshot",
+    "kind": "primary"
+   }
+  ],
+  "changed": "'보통 원본과 같은 저장 장치에 있다'는 비교를 출처로 확인하지 못해 '차이만 기록'(NIST)으로 고침",
+  "note": "NIST 정의는 가상 머신 이미지 기준이며, SNIA 사전은 403으로 열지 못함"
+ },
+ {
+  "term": "아카이빙",
+  "fullName": "아카이빙(Archiving, 장기 보관)",
+  "category": "백업 / 보관",
+  "definition": "아카이빙은 더 이상 자주 쓰지 않는 데이터를 주로 기록 보존과 규정 준수를 위해 운영 저장소에서 옮겨 오래 보관하는 것입니다.",
+  "why": "운영 데이터베이스를 가볍게 유지하면서 보존 의무를 지킵니다.",
+  "compare": "백업은 되살리기 위한 사본이고, 아카이빙은 나중에 찾아보려고 원본을 옮겨 보관하는 것입니다.",
+  "aliases": [
+   "archiving",
+   "archive",
+   "아카이브",
+   "장기 보관",
+   "데이터 보관"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "What is Data Archiving?",
+    "org": "AWS",
+    "url": "https://aws.amazon.com/what-is/data-archiving/",
+    "kind": "primary"
+   }
+  ],
+  "changed": "'법이나 규정 때문에'로 한정하고 '값싼 저장소'라 한 부분을 출처 표현(쓰지 않는 데이터의 장기 보관, 주로 기록·규정 준수)으로 고침",
+  "note": ""
+ },
+ {
+  "term": "샤딩",
+  "fullName": "샤딩(Sharding, 수평 분할)",
+  "category": "데이터 / 확장",
+  "definition": "샤딩은 같은 구조의 데이터를 정한 기준(예: 회원 번호)에 따라 여러 데이터베이스 서버에 나누어 저장하는 방식입니다.",
+  "why": "데이터베이스 한 대로 감당할 수 없는 데이터양과 쓰기 요청을 여러 대로 나눕니다.",
+  "compare": "샤딩은 여러 서버로 나누고, 파티셔닝은 한 서버 안에서 표를 나눕니다.",
+  "aliases": [
+   "sharding",
+   "shard",
+   "샤드",
+   "수평 분할",
+   "db 분산"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "What is Database Sharding?",
+    "org": "AWS",
+    "url": "https://aws.amazon.com/what-is/database-sharding/",
+    "kind": "primary"
+   },
+   {
+    "title": "Data partitioning recommendations",
+    "org": "Microsoft Learn",
+    "url": "https://learn.microsoft.com/en-us/azure/architecture/best-practices/data-partitioning",
+    "kind": "primary"
+   }
+  ],
+  "changed": "",
+  "note": ""
+ },
+ {
+  "term": "파티셔닝",
+  "fullName": "파티셔닝(Partitioning)",
+  "category": "데이터 / 성능",
+  "definition": "파티셔닝은 큰 표 하나를 날짜나 범위 같은 기준으로 여러 조각(파티션)으로 나누어 한 데이터베이스 안에 저장하는 방식입니다.",
+  "why": "필요한 조각만 읽어 조회가 빨라지고 오래된 데이터를 조각째 지우거나 옮기기 쉽습니다.",
+  "compare": "파티셔닝은 프로그램에서는 여전히 표 하나로 보이고, 샤딩은 어느 서버로 갈지 따로 정해 줘야 합니다.",
+  "aliases": [
+   "partitioning",
+   "partition",
+   "파티션",
+   "테이블 파티셔닝"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "PostgreSQL Documentation: Table Partitioning",
+    "org": "PostgreSQL",
+    "url": "https://www.postgresql.org/docs/current/ddl-partitioning.html",
+    "kind": "primary"
+   },
+   {
+    "title": "Data partitioning recommendations",
+    "org": "Microsoft Learn",
+    "url": "https://learn.microsoft.com/en-us/azure/architecture/best-practices/data-partitioning",
+    "kind": "primary"
+   }
+  ],
+  "changed": "",
+  "note": "Microsoft 문서는 파티셔닝을 샤딩(수평 분할)까지 포함하는 넓은 뜻으로도 씀, 이 항목은 한 데이터베이스 안의 테이블 파티셔닝 기준"
+ },
+ {
+  "term": "커넥션 풀",
+  "fullName": "커넥션 풀(Connection Pool)",
+  "category": "데이터 / 성능",
+  "definition": "커넥션 풀은 애플리케이션이 데이터베이스 연결을 미리 여러 개 만들어 두고 필요할 때 빌려 쓰고 돌려주는 방식입니다.",
+  "why": "요청마다 연결을 새로 맺는 시간을 없애고 데이터베이스에 붙는 연결 수를 제한합니다.",
+  "compare": "커넥션 풀은 WAS 안에 있는 기능이고, DB 중계(Proxy)는 WAS와 DB 사이에 따로 두는 서버입니다.",
+  "aliases": [
+   "connection pool",
+   "dbcp",
+   "hikaricp",
+   "커넥션풀",
+   "연결 풀"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "SQL Server Connection Pooling (ADO.NET)",
+    "org": "Microsoft Learn",
+    "url": "https://learn.microsoft.com/en-us/dotnet/framework/data/adonet/sql-server-connection-pooling",
+    "kind": "primary"
+   }
+  ],
+  "changed": "풀과 같은 말이 아닌 별칭 '데이터소스'를 뺌",
+  "note": ""
+ },
+ {
+  "term": "읽기 전용 복제본",
+  "fullName": "읽기 전용 복제본(Read Replica)",
+  "category": "데이터 / 확장",
+  "definition": "읽기 전용 복제본은 원본 데이터베이스의 변경을 계속 받아 같은 데이터를 갖고 조회 요청만 처리하는 복제 데이터베이스입니다.",
+  "why": "조회 요청을 복제본으로 돌려 원본 데이터베이스의 부담을 줄입니다.",
+  "compare": "읽기 전용 복제본은 평소에도 조회를 처리하고, Standby는 장애 때 넘겨받으려고 대기합니다.",
+  "aliases": [
+   "read replica",
+   "리드 레플리카",
+   "읽기 복제본",
+   "슬레이브",
+   "replica",
+   "조회용 DB"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "Working with DB instance read replicas",
+    "org": "AWS",
+    "url": "https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_ReadRepl.html",
+    "kind": "primary"
+   }
+  ],
+  "changed": "",
+  "note": ""
+ },
+ {
+  "term": "스케일 업",
+  "fullName": "스케일 업(Scale-up, 수직 확장)",
+  "category": "확장",
+  "definition": "스케일 업은 서버 한 대의 CPU·메모리·디스크를 더 큰 것으로 바꿔 처리 능력을 높이는 방식입니다.",
+  "why": "구조를 바꾸지 않고 서버 한 대의 성능을 올립니다.",
+  "compare": "스케일 업은 한 대를 키우는 것이라 하드웨어 한계가 있고, 스케일 아웃은 대수를 늘려 그 한계를 넘습니다.",
+  "aliases": [
+   "scale up",
+   "scale-up",
+   "수직 확장",
+   "스케일업"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "Scaling out vs. scaling up",
+    "org": "Microsoft Azure",
+    "url": "https://azure.microsoft.com/en-us/resources/cloud-computing-dictionary/scaling-out-vs-scaling-up",
+    "kind": "primary"
+   },
+   {
+    "title": "Data partitioning recommendations",
+    "org": "Microsoft Learn",
+    "url": "https://learn.microsoft.com/en-us/azure/architecture/best-practices/data-partitioning",
+    "kind": "primary"
+   }
+  ],
+  "changed": "why의 '가장 간단하게'를 빼고 비교를 출처 표현(하드웨어 한계)으로 고침, 스케일 아웃과 겹치는 별칭 '증설'을 뺌",
+  "note": ""
+ },
+ {
+  "term": "스케일 아웃",
+  "fullName": "스케일 아웃(Scale-out, 수평 확장)",
+  "category": "확장",
+  "definition": "스케일 아웃은 같은 서버의 대수를 늘려 요청을 나누어 처리함으로써 처리 능력을 높이는 방식입니다.",
+  "why": "서버를 더하는 만큼 처리량이 늘고 한 대가 고장 나도 나머지가 처리합니다.",
+  "compare": "스케일 아웃은 요청이나 데이터를 여러 대에 나누는 장치가 필요하고, 스케일 업은 한 대만 키우면 되지만 하드웨어 한계가 있습니다.",
+  "aliases": [
+   "scale out",
+   "scale-out",
+   "수평 확장",
+   "스케일아웃"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "Scaling out vs. scaling up",
+    "org": "Microsoft Azure",
+    "url": "https://azure.microsoft.com/en-us/resources/cloud-computing-dictionary/scaling-out-vs-scaling-up",
+    "kind": "primary"
+   },
+   {
+    "title": "Data partitioning recommendations",
+    "org": "Microsoft Learn",
+    "url": "https://learn.microsoft.com/en-us/azure/architecture/best-practices/data-partitioning",
+    "kind": "primary"
+   },
+   {
+    "title": "Working with DB instance read replicas",
+    "org": "AWS",
+    "url": "https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_ReadRepl.html",
+    "kind": "primary"
+   }
+  ],
+  "changed": "'서버가 상태를 갖지 않아야 한다'는 비교를 출처로 확인하지 못해 고침, 스케일 업과 겹치는 별칭 '증설'을 뺌",
+  "note": ""
+ },
+ {
+  "term": "용량 산정",
+  "fullName": "용량 산정(Capacity Sizing, 사이징)",
+  "category": "설계 / 규모 산정",
+  "definition": "용량 산정은 예상 사용자 수와 업무량으로부터 필요한 서버의 CPU·메모리·디스크 규모를 계산해 정하는 작업입니다.",
+  "why": "장비를 너무 작게 사서 서비스가 느려지거나 너무 크게 사서 예산을 낭비하는 일을 막습니다.",
+  "compare": "공공 정보화 사업에서는 TTA 표준 \"정보시스템 하드웨어 규모산정 지침\"의 계산식을 기준으로 삼습니다.",
+  "aliases": [
+   "sizing",
+   "사이징",
+   "규모 산정",
+   "capacity planning",
+   "용량 계획",
+   "하드웨어 규모산정"
+  ],
+  "kind": "concept",
+  "verified": false,
+  "sources": [
+   {
+    "title": "정보시스템 용량 산정",
+    "org": "IT위키",
+    "url": "https://itwiki.kr/w/정보시스템_용량_산정",
+    "kind": "aux"
+   }
+  ],
+  "changed": "",
+  "note": "TTA 표준(TTAK.KO-10.0292) 페이지가 열리지 않아(연결 끊김) 보조 출처로만 확인함"
+ },
+ {
+  "term": "tpmC",
+  "fullName": "transactions per minute, TPC-C",
+  "category": "설계 / 성능 지표",
+  "definition": "tpmC는 TPC-C라는 표준 성능 시험에서 1분 동안 처리한 신규 주문 거래 수를 나타내는 온라인 거래 처리 성능 단위입니다.",
+  "why": "제조사가 다른 서버의 처리 능력을 같은 잣대로 비교하고 필요한 서버 규모를 숫자로 계산합니다.",
+  "compare": "TPC-C는 다섯 가지 거래를 섞어 돌리는 시험의 이름이고, tpmC는 그 가운데 신규 주문 거래만 센 결과 값입니다.",
+  "aliases": [
+   "tpmc",
+   "tpc-c",
+   "티피엠씨"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "TPC-C Overview",
+    "org": "TPC",
+    "url": "https://www.tpc.org/tpcc/",
+    "kind": "primary"
+   },
+   {
+    "title": "TPC-C detail: tpm-C metric",
+    "org": "TPC",
+    "url": "https://www.tpc.org/tpcc/detail5.asp",
+    "kind": "primary"
+   }
+  ],
+  "changed": "'주문 거래'를 '신규 주문 거래'로 고치고, 1차 출처로 확인하지 못한 max-jOPS 비교를 TPC-C와의 관계 설명으로 바꿈, 뜻이 넓은 별칭 'tpm'을 뺌",
+  "note": "WAS 규모산정에 max-jOPS를 쓴다는 내용은 TTA 원문을 열지 못해 보조 출처로만 확인함"
+ },
+ {
+  "term": "온프레미스",
+  "fullName": "온프레미스(On-premises)",
+  "category": "인프라 형태",
+  "definition": "온프레미스는 회사가 서버와 장비를 직접 갖추고 자기 전산실이나 데이터센터에 두고 운영하는 방식입니다.",
+  "why": "데이터와 장비를 직접 통제해야 하거나 규제상 외부에 둘 수 없을 때 씁니다.",
+  "compare": "온프레미스는 장비를 사서 직접 운영하고, 클라우드는 사업자의 자원을 빌려 쓴 만큼 냅니다.",
+  "aliases": [
+   "on-premises",
+   "on-premise",
+   "on-prem",
+   "온프렘",
+   "온프레미스",
+   "자체 구축"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "Regions and Zones",
+    "org": "AWS",
+    "url": "https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html",
+    "kind": "primary"
+   },
+   {
+    "title": "About failover and failback in Azure Site Recovery - Modernized",
+    "org": "Microsoft Learn",
+    "url": "https://learn.microsoft.com/en-us/azure/site-recovery/failover-failback-overview-modernized",
+    "kind": "primary"
+   },
+   {
+    "title": "What is hybrid cloud computing?",
+    "org": "Microsoft Azure",
+    "url": "https://azure.microsoft.com/en-us/resources/cloud-computing-dictionary/what-is-hybrid-cloud-computing",
+    "kind": "primary"
+   }
+  ],
+  "changed": "AWS 문서가 코로케이션 공간과 온프레미스 시설을 따로 적고 있어 '임대한 IDC'를 정의에서 빼고, 뜻이 다른 별칭 '레거시 환경'을 뺌",
+  "note": "용어 정의 페이지(HPE·Oracle·Red Hat)는 열리지 않아 AWS·Microsoft 문서에서 쓰인 뜻(고객 자체 데이터센터)으로 확인함"
+ },
+ {
+  "term": "IDC",
+  "fullName": "인터넷 데이터 센터(Internet Data Center)",
+  "category": "인프라 형태 / 시설",
+  "definition": "IDC(인터넷 데이터 센터)는 서버와 네트워크 장비를 모아 두고 전원·냉방·회선·보안을 갖춰 운영하는 전용 건물입니다.",
+  "why": "회사가 직접 갖추기 어려운 안정적인 전원·냉방·통신 회선을 빌려 씁니다.",
+  "compare": "IDC는 장비를 두는 건물이고, 클라우드는 그런 건물 안의 자원을 서비스로 빌려주는 것입니다.",
+  "aliases": [
+   "internet data center",
+   "데이터센터",
+   "데이터 센터",
+   "전산센터",
+   "dc",
+   "아이디씨"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "IDC 센터 소개",
+    "org": "LG U+",
+    "url": "https://www.lguplus.com/biz/all/telecom/idc/center/B000000031",
+    "kind": "primary"
+   },
+   {
+    "title": "What is a data center?",
+    "org": "IBM",
+    "url": "https://www.ibm.com/think/topics/data-centers",
+    "kind": "primary"
+   }
+  ],
+  "changed": "",
+  "note": ""
+ },
+ {
+  "term": "코로케이션",
+  "fullName": "코로케이션(Colocation)",
+  "category": "인프라 형태",
+  "definition": "코로케이션은 회사가 가진 서버를 IDC에 가져다 두고 공간(상면)·전원·회선만 빌려 쓰는 방식입니다.",
+  "why": "전산실을 직접 짓지 않고도 내 장비를 안정적인 시설에서 운영합니다.",
+  "compare": "코로케이션은 장비가 내 것이고, 서버 호스팅은 장비까지 빌립니다.",
+  "aliases": [
+   "colocation",
+   "colo",
+   "코로",
+   "상면 임대",
+   "하우징"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "What is a data center?",
+    "org": "IBM",
+    "url": "https://www.ibm.com/think/topics/data-centers",
+    "kind": "primary"
+   }
+  ],
+  "changed": "",
+  "note": "별칭 '하우징'은 출처에서 확인하지 못함"
+ },
+ {
+  "term": "호스팅",
+  "fullName": "호스팅(Hosting)",
+  "category": "인프라 형태",
+  "definition": "호스팅은 사업자가 가진 서버나 그 일부를 빌려 웹 사이트나 시스템을 올려 운영하는 방식입니다.",
+  "why": "장비를 사지 않고 달마다 요금을 내며 서버를 씁니다.",
+  "compare": "호스팅은 보통 정해진 사양을 월 단위로 빌리고, 클라우드는 필요할 때 바로 늘리고 줄이며 쓴 만큼 냅니다.",
+  "aliases": [
+   "hosting",
+   "서버 호스팅",
+   "웹 호스팅",
+   "임대 서버"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "What is web hosting?",
+    "org": "IBM",
+    "url": "https://www.ibm.com/think/topics/web-hosting",
+    "kind": "primary"
+   }
+  ],
+  "changed": "",
+  "note": ""
+ },
+ {
+  "term": "하이브리드 클라우드",
+  "fullName": "하이브리드 클라우드(Hybrid Cloud)",
+  "category": "클라우드 형태",
+  "definition": "하이브리드 클라우드는 온프레미스(또는 사설 클라우드)와 퍼블릭 클라우드를 연결해 함께 쓰는 구성입니다.",
+  "why": "중요한 데이터는 내부에 두고, 늘었다 줄었다 하는 업무는 클라우드에서 처리합니다.",
+  "compare": "하이브리드 클라우드는 내부와 클라우드를 섞은 것이고, 멀티 클라우드는 클라우드 사업자를 둘 이상 쓰는 것입니다.",
+  "aliases": [
+   "hybrid cloud",
+   "하이브리드",
+   "하이브리드 구성"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "NIST Glossary: hybrid cloud",
+    "org": "NIST",
+    "url": "https://csrc.nist.gov/glossary/term/hybrid_cloud",
+    "kind": "primary"
+   },
+   {
+    "title": "What is hybrid cloud computing?",
+    "org": "Microsoft Azure",
+    "url": "https://azure.microsoft.com/en-us/resources/cloud-computing-dictionary/what-is-hybrid-cloud-computing",
+    "kind": "primary"
+   },
+   {
+    "title": "What is hybrid cloud?",
+    "org": "Red Hat",
+    "url": "https://www.redhat.com/en/topics/cloud-computing/what-is-hybrid-cloud",
+    "kind": "primary"
+   }
+  ],
+  "changed": "",
+  "note": "NIST SP 800-145는 서로 다른 클라우드 인프라 둘 이상의 결합으로 정의하고, Microsoft·Red Hat은 온프레미스와 퍼블릭 클라우드의 결합으로 설명함"
+ },
+ {
+  "term": "멀티 클라우드",
+  "fullName": "멀티 클라우드(Multi-cloud)",
+  "category": "클라우드 형태",
+  "definition": "멀티 클라우드는 둘 이상의 클라우드 사업자가 제공하는 클라우드 서비스를 함께 쓰는 구성입니다.",
+  "why": "한 사업자의 장애나 가격·정책 변화에 묶이지 않게 합니다.",
+  "compare": "멀티 클라우드는 사업자가 여럿이라는 뜻이고, 온프레미스와 섞는지는 따지지 않습니다.",
+  "aliases": [
+   "multi cloud",
+   "multicloud",
+   "멀티클라우드",
+   "복수 클라우드"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "What is multicloud?",
+    "org": "Red Hat",
+    "url": "https://www.redhat.com/en/topics/cloud-computing/what-is-multicloud",
+    "kind": "primary"
+   }
+  ],
+  "changed": "정의에서 특정 사업자 이름 예시를 뺌",
+  "note": ""
+ },
+ {
+  "term": "IaaS",
+  "fullName": "서비스형 인프라(Infrastructure as a Service)",
+  "category": "클라우드 서비스 모델",
+  "definition": "IaaS(서비스형 인프라)는 가상 서버·저장소·네트워크 같은 인프라 자원을 빌려 쓰고 운영체제부터는 사용자가 직접 관리하는 클라우드 서비스 모델입니다.",
+  "why": "장비를 사지 않고도 온프레미스와 같은 자유도로 서버를 구성합니다.",
+  "compare": "IaaS는 서버까지 빌리고, PaaS는 프로그램 실행 환경까지, SaaS는 완성된 프로그램까지 빌립니다.",
+  "aliases": [
+   "infrastructure as a service",
+   "이아스",
+   "아이아스",
+   "서비스형 인프라"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "NIST Glossary: Infrastructure as a Service",
+    "org": "NIST",
+    "url": "https://csrc.nist.gov/glossary/term/infrastructure_as_a_service",
+    "kind": "primary"
+   }
+  ],
+  "changed": "",
+  "note": ""
+ },
+ {
+  "term": "PaaS",
+  "fullName": "서비스형 플랫폼(Platform as a Service)",
+  "category": "클라우드 서비스 모델",
+  "definition": "PaaS(서비스형 플랫폼)는 운영체제·미들웨어·실행 환경을 사업자가 관리하고 사용자는 자기 프로그램만 올려 실행하는 클라우드 서비스 모델입니다.",
+  "why": "서버와 미들웨어 운영을 맡기고 프로그램 개발에 집중합니다.",
+  "compare": "PaaS는 내 프로그램을 올리는 곳이고, SaaS는 남이 만든 프로그램을 그대로 쓰는 것입니다.",
+  "aliases": [
+   "platform as a service",
+   "파스",
+   "서비스형 플랫폼"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "NIST Glossary: Platform as a Service",
+    "org": "NIST",
+    "url": "https://csrc.nist.gov/glossary/term/platform_as_a_service",
+    "kind": "primary"
+   }
+  ],
+  "changed": "",
+  "note": ""
+ },
+ {
+  "term": "SaaS",
+  "fullName": "서비스형 소프트웨어(Software as a Service)",
+  "category": "클라우드 서비스 모델",
+  "definition": "SaaS(서비스형 소프트웨어)는 사업자가 운영하는 완성된 소프트웨어를 설치 없이 인터넷으로 접속해 쓰는 클라우드 서비스 모델입니다.",
+  "why": "설치·업그레이드·운영 없이 필요한 기능을 바로 씁니다.",
+  "compare": "SaaS는 구독해서 쓰고, 설치형(구축형) 소프트웨어는 사서 내 서버에 설치합니다.",
+  "aliases": [
+   "software as a service",
+   "사스",
+   "싸스",
+   "서비스형 소프트웨어",
+   "구독형"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "NIST Glossary: Software as a Service",
+    "org": "NIST",
+    "url": "https://csrc.nist.gov/glossary/term/software_as_a_service",
+    "kind": "primary"
+   }
+  ],
+  "changed": "",
+  "note": ""
+ },
+ {
+  "term": "리전",
+  "fullName": "리전(Region)",
+  "category": "클라우드 / 위치",
+  "definition": "리전은 클라우드 사업자가 데이터센터들을 묶어 운영하는 지리적 구역(예: 서울 리전)입니다.",
+  "why": "사용자와 가까운 곳에 두어 응답을 빠르게 하고, 데이터를 어느 나라에 둘지 정합니다.",
+  "compare": "리전은 서로 격리된 여러 가용 영역(AZ)으로 이루어지고, 리전끼리도 격리돼 있어 다른 리전을 재해복구에 씁니다.",
+  "aliases": [
+   "region",
+   "서울 리전",
+   "리젼",
+   "ap-northeast-2"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "Regions and Zones",
+    "org": "AWS",
+    "url": "https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html",
+    "kind": "primary"
+   },
+   {
+    "title": "Working with DB instance read replicas",
+    "org": "AWS",
+    "url": "https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_ReadRepl.html",
+    "kind": "primary"
+   }
+  ],
+  "changed": "'리전끼리 수백 km 이상 떨어져'라는 거리 숫자는 출처에 없어 '서로 격리'로 고침",
+  "note": ""
+ },
+ {
+  "term": "테넌트",
+  "fullName": "테넌트(Tenant)",
+  "category": "클라우드 / 사용 단위",
+  "definition": "테넌트는 여러 고객이 함께 쓰는 시스템에서 한 고객(조직·회사·그룹)에 속한 사용자들을 묶은 사용 단위입니다.",
+  "why": "같은 시스템을 여러 고객이 나눠 쓰면서도 서로의 데이터를 볼 수 없게 합니다.",
+  "compare": "멀티 테넌트는 여러 고객이 한 시스템을 나눠 쓰고, 싱글 테넌트는 고객마다 시스템을 따로 둡니다.",
+  "aliases": [
+   "tenant",
+   "멀티 테넌트",
+   "multi-tenant",
+   "테넌시",
+   "tenancy"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "Architect multitenant solutions on Azure",
+    "org": "Microsoft Learn",
+    "url": "https://learn.microsoft.com/en-us/azure/architecture/guide/multitenant/overview",
+    "kind": "primary"
+   }
+  ],
+  "changed": "정의를 '~입니다'로 끝나게 고치고 출처 표현(한 조직의 여러 사용자가 한 테넌트)에 맞춤",
+  "note": "NIST 용어집에는 항목이 없음(404)"
+ },
+ {
+  "term": "운영계",
+  "fullName": "운영 환경(Production)",
+  "category": "환경 구분",
+  "definition": "운영계는 실제 사용자가 접속해 실제 데이터로 쓰는 본 서비스 환경입니다.",
+  "why": "실제 업무가 일어나는 곳이라 변경과 접근을 가장 엄격하게 통제합니다.",
+  "compare": "운영계는 실제 서비스이고, 개발계·검증계는 운영에 반영하기 전에 만들고 확인하는 환경입니다.",
+  "aliases": [
+   "production",
+   "prod",
+   "prd",
+   "운영 환경",
+   "운영 서버",
+   "실서버",
+   "리얼",
+   "프로덕션"
+  ],
+  "kind": "concept",
+  "verified": false,
+  "sources": [
+   {
+    "title": "행정·공공기관 응용프로그램 표준운영절차서",
+    "org": "행정안전부",
+    "url": "https://clik.nanet.go.kr/clikr-collection/policyinfo/19/44/2025/CLIKC33578172696768144_attach_3.pdf",
+    "kind": "primary"
+   },
+   {
+    "title": "Manage application development environments in Azure landing zones",
+    "org": "Microsoft Learn",
+    "url": "https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/ready/landing-zone/design-area/management-application-environments",
+    "kind": "primary"
+   }
+  ],
+  "changed": "",
+  "note": "운영 환경(Production)의 뜻은 행정안전부·Microsoft 문서로 확인했으나, '운영계'라는 낱말 자체가 쓰인 공식 문서는 찾지 못함(같은 문서는 '운영환경'으로 적음)"
+ },
+ {
+  "term": "개발계",
+  "fullName": "개발 환경(Development)",
+  "category": "환경 구분",
+  "definition": "개발계는 개발자가 프로그램을 만들고 바로 올려서 동작을 확인하는 환경입니다.",
+  "why": "운영 서비스에 영향을 주지 않고 자유롭게 만들고 고칩니다.",
+  "compare": "개발계는 자주 바뀌고 불안정해도 되고, 검증계는 운영과 비슷하게 맞춰 두고 확인용으로 씁니다.",
+  "aliases": [
+   "development",
+   "dev",
+   "개발 환경",
+   "개발 서버",
+   "데브"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "행정·공공기관 응용프로그램 표준운영절차서",
+    "org": "행정안전부",
+    "url": "https://clik.nanet.go.kr/clikr-collection/policyinfo/19/44/2025/CLIKC33578172696768144_attach_3.pdf",
+    "kind": "primary"
+   },
+   {
+    "title": "Manage application development environments in Azure landing zones",
+    "org": "Microsoft Learn",
+    "url": "https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/ready/landing-zone/design-area/management-application-environments",
+    "kind": "primary"
+   }
+  ],
+  "changed": "",
+  "note": ""
+ },
+ {
+  "term": "검증계",
+  "fullName": "검증 환경(Test / QA)",
+  "category": "환경 구분",
+  "definition": "검증계는 테스트계·QA 환경이라고도 부르며, 개발을 마친 프로그램을 운영에 올리기 전에 기능과 성능을 시험하는 환경입니다.",
+  "why": "운영에 올리기 전에 오류를 찾아 실제 사용자가 겪지 않게 합니다.",
+  "compare": "검증계와 스테이징은 조직마다 같은 뜻으로도 쓰고, 검증계는 기능 시험용·스테이징은 운영 직전 최종 확인용으로 나누어 쓰기도 합니다.",
+  "aliases": [
+   "test",
+   "qa",
+   "테스트계",
+   "검증 환경",
+   "테스트 서버",
+   "품질계"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "행정·공공기관 응용프로그램 표준운영절차서",
+    "org": "행정안전부",
+    "url": "https://clik.nanet.go.kr/clikr-collection/policyinfo/19/44/2025/CLIKC33578172696768144_attach_3.pdf",
+    "kind": "primary"
+   },
+   {
+    "title": "Manage application development environments in Azure landing zones",
+    "org": "Microsoft Learn",
+    "url": "https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/ready/landing-zone/design-area/management-application-environments",
+    "kind": "primary"
+   }
+  ],
+  "changed": "정의를 '~입니다'로 끝나게 어순을 고치고, 스테이징의 약어인 별칭 'stg'를 뺌",
+  "note": "행정안전부 문서는 '테스트환경(검증계)'로 적음, 스테이징과의 구분은 출처로 확인하지 못함"
+ },
+ {
+  "term": "스테이징",
+  "fullName": "스테이징 환경(Staging)",
+  "category": "환경 구분",
+  "definition": "스테이징은 운영 환경과 최대한 비슷하게 구성해 두고 운영에 반영하기 직전에 새 버전을 올려 마지막으로 확인하는 환경입니다.",
+  "why": "운영과 같은 조건에서 미리 돌려 보아 배포 때 생길 문제를 줄입니다.",
+  "compare": "스테이징은 운영과 구성이 같아야 의미가 있고, 개발계는 운영과 달라도 됩니다.",
+  "aliases": [
+   "staging",
+   "stage",
+   "stg",
+   "스테이지",
+   "준운영",
+   "사전 운영"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "Set up staging environments in Azure App Service",
+    "org": "Microsoft Learn",
+    "url": "https://learn.microsoft.com/en-us/azure/app-service/deploy-staging-slots",
+    "kind": "primary"
+   },
+   {
+    "title": "행정·공공기관 응용프로그램 표준운영절차서",
+    "org": "행정안전부",
+    "url": "https://clik.nanet.go.kr/clikr-collection/policyinfo/19/44/2025/CLIKC33578172696768144_attach_3.pdf",
+    "kind": "primary"
+   }
+  ],
+  "changed": "정의를 '운영 반영 전 확인'(Microsoft) 중심으로 고쳐 씀",
+  "note": "'운영과 최대한 비슷하게'는 행정안전부 문서의 테스트환경 구성 기준에서 확인한 내용이며, 스테이징을 직접 정의한 표준 문서는 찾지 못함"
+ },
+ {
+  "term": "무중단 배포",
+  "fullName": "무중단 배포(Zero-downtime Deployment)",
+  "category": "배포",
+  "definition": "무중단 배포는 새 버전을 올리는 동안에도 사용자가 서비스를 끊김 없이 쓸 수 있게 하는 배포 방식을 통틀어 부르는 말입니다.",
+  "why": "배포 때문에 서비스를 멈추거나 야간 점검 시간을 잡지 않아도 됩니다.",
+  "compare": "롤링·블루그린·카나리가 모두 무중단 배포의 구체적인 방법입니다.",
+  "aliases": [
+   "zero downtime deployment",
+   "무정지 배포",
+   "무중단"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "Introduction to DevOps on AWS: Deployment strategies",
+    "org": "AWS",
+    "url": "https://docs.aws.amazon.com/whitepapers/latest/introduction-devops-aws/deployment-strategies.html",
+    "kind": "primary"
+   },
+   {
+    "title": "Set up staging environments in Azure App Service",
+    "org": "Microsoft Learn",
+    "url": "https://learn.microsoft.com/en-us/azure/app-service/deploy-staging-slots",
+    "kind": "primary"
+   }
+  ],
+  "changed": "",
+  "note": "AWS 문서는 '중단 최소화', Microsoft 문서는 '배포 중단 제거'로 표현하며 용어 자체의 표준 정의는 없음"
+ },
+ {
+  "term": "롤링 배포",
+  "fullName": "롤링 배포(Rolling Deployment)",
+  "category": "배포",
+  "definition": "롤링 배포는 서버 여러 대를 한 대(또는 몇 대)씩 차례로 새 버전으로 바꿔 가는 배포 방식입니다.",
+  "why": "서버를 추가로 마련하지 않고도 서비스를 멈추지 않고 배포합니다.",
+  "compare": "롤링 배포는 배포 도중 옛 버전과 새 버전이 함께 돌고, 블루그린 배포는 한 번에 통째로 바꿉니다.",
+  "aliases": [
+   "rolling update",
+   "rolling deployment",
+   "롤링 업데이트",
+   "순차 배포"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "Overview of Deployment Options on AWS: Rolling deployments",
+    "org": "AWS",
+    "url": "https://docs.aws.amazon.com/whitepapers/latest/overview-deployment-options/rolling-deployments.html",
+    "kind": "primary"
+   },
+   {
+    "title": "Introduction to DevOps on AWS: Deployment strategies",
+    "org": "AWS",
+    "url": "https://docs.aws.amazon.com/whitepapers/latest/introduction-devops-aws/deployment-strategies.html",
+    "kind": "primary"
+   }
+  ],
+  "changed": "",
+  "note": ""
+ },
+ {
+  "term": "블루그린 배포",
+  "fullName": "블루그린 배포(Blue-Green Deployment)",
+  "category": "배포",
+  "definition": "블루그린 배포는 지금 버전(블루)과 똑같은 환경을 하나 더 만들어 새 버전(그린)을 올린 뒤 접속을 한 번에 그쪽으로 돌리는 배포 방식입니다.",
+  "why": "문제가 생기면 접속을 이전 환경으로 되돌리기만 하면 되어 복구가 빠릅니다.",
+  "compare": "블루그린 배포는 환경이 두 벌 필요해 비용이 들고, 롤링 배포는 한 벌로 됩니다.",
+  "aliases": [
+   "blue green",
+   "blue/green",
+   "블루 그린",
+   "블루그린"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "Introduction to DevOps on AWS: Deployment strategies",
+    "org": "AWS",
+    "url": "https://docs.aws.amazon.com/whitepapers/latest/introduction-devops-aws/deployment-strategies.html",
+    "kind": "primary"
+   }
+  ],
+  "changed": "",
+  "note": ""
+ },
+ {
+  "term": "카나리 배포",
+  "fullName": "카나리 배포(Canary Deployment)",
+  "category": "배포",
+  "definition": "카나리 배포는 새 버전을 일부 사용자나 일부 서버에만 먼저 내보내 문제가 없는지 본 뒤 점차 전체로 넓히는 배포 방식입니다.",
+  "why": "새 버전의 문제가 전체 사용자에게 퍼지기 전에 적은 범위에서 먼저 드러나게 합니다.",
+  "compare": "카나리 배포는 접속 비율을 조금씩 옮기고, 블루그린 배포는 한 번에 모두 옮깁니다.",
+  "aliases": [
+   "canary",
+   "canary release",
+   "카나리",
+   "카나리아 배포",
+   "점진 배포"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "Introduction to DevOps on AWS: Deployment strategies",
+    "org": "AWS",
+    "url": "https://docs.aws.amazon.com/whitepapers/latest/introduction-devops-aws/deployment-strategies.html",
+    "kind": "primary"
+   }
+  ],
+  "changed": "",
+  "note": ""
+ },
+ {
+  "term": "형상관리",
+  "fullName": "형상관리(Configuration Management)",
+  "category": "운영 / 개발 관리",
+  "definition": "형상관리는 소스 코드·산출물·설정의 변경을 통제하고 변경 이력을 기록·추적해 버전별로 관리하는 활동입니다.",
+  "why": "변경 이력을 추적하고 문제가 생기면 이전 버전으로 되돌립니다.",
+  "compare": "형상관리는 소스의 변경을 기록하고, CI/CD는 그 소스를 빌드해 서버에 올리는 과정을 자동으로 돌립니다.",
+  "aliases": [
+   "scm",
+   "version control",
+   "vcs",
+   "git",
+   "svn",
+   "버전 관리",
+   "소스 관리",
+   "형상 관리"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "행정·공공기관 응용프로그램 표준운영절차서",
+    "org": "행정안전부",
+    "url": "https://clik.nanet.go.kr/clikr-collection/policyinfo/19/44/2025/CLIKC33578172696768144_attach_3.pdf",
+    "kind": "primary"
+   },
+   {
+    "title": "NIST Glossary: configuration management",
+    "org": "NIST",
+    "url": "https://csrc.nist.gov/glossary/term/configuration_management",
+    "kind": "primary"
+   }
+  ],
+  "changed": "정의를 '~입니다'로 끝나게 고치고 도구 이름을 뺌, fullName에서 같은 말이 아닌 '버전 관리'를 뺌",
+  "note": "버전 관리는 형상관리의 일부이며, NIST 정의는 제품·시스템 구성 전반의 무결성 유지로 더 넓음"
+ },
+ {
+  "term": "PM(정기점검)",
+  "fullName": "예방 점검(Preventive Maintenance)",
+  "category": "운영",
+  "definition": "PM(Preventive Maintenance)은 고장이 나기 전에 미리 정한 일정에 따라 시스템과 장비를 점검·정비하는 예방 유지보수 작업입니다.",
+  "why": "고장을 미리 찾아 막아 예기치 않은 서비스 중단을 줄입니다.",
+  "compare": "운영 용어 PM은 정기점검이고, 사업 관리 용어 PM은 프로젝트 관리자(Project Manager)입니다.",
+  "aliases": [
+   "preventive maintenance",
+   "정기점검",
+   "정기 점검",
+   "pm 작업",
+   "예방 점검",
+   "시스템 점검"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "예방 유지보수 체크리스트",
+    "org": "IBM",
+    "url": "https://www.ibm.com/kr-ko/think/topics/preventive-maintenance-checklist",
+    "kind": "primary"
+   },
+   {
+    "title": "행정·공공기관 응용프로그램 표준운영절차서",
+    "org": "행정안전부",
+    "url": "https://clik.nanet.go.kr/clikr-collection/policyinfo/19/44/2025/CLIKC33578172696768144_attach_3.pdf",
+    "kind": "primary"
+   }
+  ],
+  "changed": "정의에서 '패치·부품 교체'를 빼고 출처 표현(정해진 일정의 예방 유지보수)에 맞춤",
+  "note": "IBM 문서는 설비·자산 전반의 예방 유지보수 정의이고, 전산 운영에서 'PM'을 정기점검이라 부르는 용례는 공식 문서에서 따로 확인하지 못함(행정안전부 문서는 '예방점검'으로 적음)"
+ },
+ {
+  "term": "IaC",
+  "fullName": "코드형 인프라(Infrastructure as Code)",
+  "category": "운영 / 자동화",
+  "definition": "IaC(코드형 인프라)는 서버·네트워크 같은 인프라 구성을 손으로 설정하지 않고 코드 파일로 적어 자동으로 만들고 바꾸는 방식입니다.",
+  "why": "같은 환경을 실수 없이 반복해서 만들고 변경 이력을 코드로 남깁니다.",
+  "compare": "IaC는 인프라를 만드는 일을 자동화하고, CI/CD는 프로그램을 빌드·배포하는 일을 자동화합니다.",
+  "aliases": [
+   "infrastructure as code",
+   "코드형 인프라",
+   "인프라 코드",
+   "아이에이씨"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "What is Infrastructure as Code (IaC)?",
+    "org": "Red Hat",
+    "url": "https://www.redhat.com/en/topics/automation/what-is-infrastructure-as-code-iac",
+    "kind": "primary"
+   },
+   {
+    "title": "Disaster recovery options in the cloud",
+    "org": "AWS",
+    "url": "https://docs.aws.amazon.com/whitepapers/latest/disaster-recovery-workloads-on-aws/disaster-recovery-options-in-the-cloud.html",
+    "kind": "primary"
+   }
+  ],
+  "changed": "",
+  "note": ""
+ }
+]

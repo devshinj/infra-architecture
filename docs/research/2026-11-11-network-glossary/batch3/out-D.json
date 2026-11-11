@@ -1,0 +1,1221 @@
+[
+ {
+  "term": "물리적 망분리",
+  "fullName": "물리적 망분리 (Physical Network Separation)",
+  "category": "네트워크 / 보안",
+  "definition": "물리적 망분리는 업무용 PC와 인터넷용 PC를 따로 두는 것처럼 내부망에 쓰는 단말과 장비를 외부망과 물리적으로 나누는 망분리 방식입니다.",
+  "why": "두 망이 단말과 장비를 함께 쓰지 않아 외부망의 침해가 내부망으로 넘어올 경로를 줄일 수 있습니다.",
+  "compare": "물리적 망분리는 PC를 두 대 쓰고, 논리적 망분리는 PC 한 대에서 가상화 기술로 내부망용과 외부망용 영역을 나눕니다.",
+  "aliases": [
+   "물리 망분리",
+   "2PC 망분리",
+   "물리적 분리"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "[보도자료] 금융분야 클라우드 및 망분리 규제 개선방안",
+    "org": "금융위원회",
+    "url": "https://www.fsc.go.kr/no010101/77672",
+    "kind": "primary"
+   },
+   {
+    "title": "개인정보의 기술적·관리적 보호조치 기준 / 개인정보의 안전성 확보조치 기준 (신구 대비)",
+    "org": "개인정보보호위원회(국가법령정보센터)",
+    "url": "https://www.law.go.kr/LSW/lawBodyComparePrint.do?leftSeq=2100000204678&rightSeq=2100000204677&leftEfYd=&rightEfYd=&leftGubun=AdmRul&rightGubun=AdmRul",
+    "kind": "primary"
+   }
+  ],
+  "changed": "정의를 금융위 설명(단말기를 물리적으로 분리, PC 2대)에 맞추고 '경로가 가장 적다'는 단정을 누그러뜨림",
+  "note": "의무라고 단정한 문구는 원래 없었음. 국정원 「국가 사이버보안 기본지침」 원문과 KISA 해설서는 열지 못했고, 통신 회선·네트워크 장비까지 이원화한다는 세부는 출처로 확인하지 못해 뺌"
+ },
+ {
+  "term": "논리적 망분리",
+  "fullName": "논리적 망분리 (Logical Network Separation)",
+  "category": "네트워크 / 보안",
+  "definition": "논리적 망분리는 PC 한 대에서 가상화 기술 등으로 내부망에 접속하는 영역과 외부망에 접속하는 영역을 논리적으로 나누는 망분리 방식입니다.",
+  "why": "PC와 회선을 추가로 들이지 않고도 업무망과 인터넷망을 나눌 수 있습니다.",
+  "compare": "논리적 망분리는 가상화로 PC 한 대를 나눠 쓰고, 물리적 망분리는 업무용 PC와 인터넷용 PC를 따로 둡니다.",
+  "aliases": [
+   "논리 망분리",
+   "가상화 망분리",
+   "논리적 분리"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "[보도자료] 금융분야 클라우드 및 망분리 규제 개선방안",
+    "org": "금융위원회",
+    "url": "https://www.fsc.go.kr/no010101/77672",
+    "kind": "primary"
+   },
+   {
+    "title": "개인정보의 기술적·관리적 보호조치 기준 / 개인정보의 안전성 확보조치 기준 (신구 대비)",
+    "org": "개인정보보호위원회(국가법령정보센터)",
+    "url": "https://www.law.go.kr/LSW/lawBodyComparePrint.do?leftSeq=2100000204678&rightSeq=2100000204677&leftEfYd=&rightEfYd=&leftGubun=AdmRul&rightGubun=AdmRul",
+    "kind": "primary"
+   }
+  ],
+  "changed": "정의를 금융위 설명(가상화 기술 등으로 논리적 분리, PC 1대)에 맞추고, 출처로 확인 못 한 VDI·SBC·CBC 세분을 compare 에서 뺌",
+  "note": "SBC·CBC 방식 구분은 언론·TTA 검색 요약에서만 보여 싣지 않음. 의무 단정 문구는 없었음"
+ },
+ {
+  "term": "VDI",
+  "fullName": "가상 데스크톱 인프라 (Virtual Desktop Infrastructure)",
+  "category": "인프라 / 보안",
+  "definition": "VDI(Virtual Desktop Infrastructure)는 중앙 서버의 가상 머신에서 사용자별 데스크톱을 실행하고 사용자는 네트워크로 접속해 쓰는 방식입니다.",
+  "why": "자료가 사용자 PC가 아니라 서버에 남아 유출 위험이 줄고, 어디서 접속해도 같은 업무 환경을 쓸 수 있습니다.",
+  "compare": "VDI는 사용자마다 가상 PC를 하나씩 주고, SBC는 서버 한 대의 운영체제를 여러 사용자가 세션으로 나눠 씁니다.",
+  "aliases": [
+   "가상 데스크톱",
+   "데스크톱 가상화",
+   "Virtual Desktop Infrastructure"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "What is virtual desktop infrastructure (VDI)?",
+    "org": "Microsoft Azure",
+    "url": "https://azure.microsoft.com/en-us/resources/cloud-computing-dictionary/what-is-virtual-desktop-infrastructure-vdi",
+    "kind": "primary"
+   },
+   {
+    "title": "What is VDI (Virtual Desktop Infrastructure)?",
+    "org": "AWS",
+    "url": "https://aws.amazon.com/what-is/vdi/",
+    "kind": "primary"
+   },
+   {
+    "title": "Remote Desktop Services overview in Windows Server",
+    "org": "Microsoft Learn",
+    "url": "https://learn.microsoft.com/en-us/windows-server/remote/remote-desktop-services/remote-desktop-services-overview",
+    "kind": "primary"
+   }
+  ],
+  "changed": "정의를 120자 안으로 줄임. 별칭 DaaS 삭제(AWS 설명상 DaaS는 VDI를 대신 운영해 주는 제3자 서비스)",
+  "note": ""
+ },
+ {
+  "term": "SBC",
+  "fullName": "서버 기반 컴퓨팅 (Server Based Computing)",
+  "category": "인프라 / 보안",
+  "definition": "SBC(Server Based Computing)는 응용 프로그램 실행과 자료 저장을 중앙 서버에서 처리하고 사용자는 단말로 접속해 화면만 받아 쓰는 방식입니다.",
+  "why": "프로그램과 자료가 서버에만 있어 관리와 유출 통제가 쉽습니다.",
+  "compare": "SBC는 서버 운영체제를 여러 사용자가 세션으로 함께 쓰고, VDI는 사용자마다 독립된 가상 PC를 씁니다.",
+  "aliases": [
+   "서버 기반 컴퓨팅",
+   "Server Based Computing",
+   "터미널 서비스",
+   "세션 기반 데스크톱"
+  ],
+  "kind": "concept",
+  "verified": false,
+  "sources": [
+   {
+    "title": "Remote Desktop Services overview in Windows Server",
+    "org": "Microsoft Learn",
+    "url": "https://learn.microsoft.com/en-us/windows-server/remote/remote-desktop-services/remote-desktop-services-overview",
+    "kind": "primary"
+   },
+   {
+    "title": "서버 기반 컴퓨팅 - TTA정보통신용어사전 (본문 미열람)",
+    "org": "TTA",
+    "url": "https://terms.tta.or.kr/dictionary/dictionaryView.do?subject=%EC%84%9C%EB%B2%84+%EA%B8%B0%EB%B0%98+%EC%BB%B4%ED%93%A8%ED%8C%85",
+    "kind": "aux"
+   }
+  ],
+  "changed": "별칭 RDS 삭제(제품 이름이고 Amazon RDS와 겹침)",
+  "note": "세션 방식(여러 사용자가 서버 운영체제를 함께 씀)과 VDI(사용자별 가상 머신)의 구분은 Microsoft Learn에서 확인했으나 'SBC'라는 이름의 정의는 확인 못 함. TTA 정보통신용어사전(terms.tta.or.kr)은 접속이 끊겨(socket hang up) 본문을 열지 못했고 검색 결과 요약으로만 봄. 검색 요약상 TTA는 SBC를 VDI와 같은 뜻으로도 소개해 구분이 엇갈림"
+ },
+ {
+  "term": "ZTNA",
+  "fullName": "제로 트러스트 네트워크 액세스 (Zero Trust Network Access)",
+  "category": "보안 / 네트워크",
+  "definition": "ZTNA(Zero Trust Network Access)는 사용자 신원과 접속 상황을 확인한 뒤 망 전체가 아니라 허용된 애플리케이션에만 접근시키는 원격 접속 기술입니다.",
+  "why": "원격 근무자나 협력사가 필요한 시스템만 쓰게 하고 나머지 내부 망은 보이지 않게 할 수 있습니다.",
+  "compare": "VPN은 접속하면 내부 망 구간에 들어오게 하고, ZTNA는 애플리케이션 단위로만 접근을 허용합니다.",
+  "aliases": [
+   "Zero Trust Network Access",
+   "제로 트러스트 네트워크 접근",
+   "ZTNA 게이트웨이"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "What Is Zero Trust Network Access (ZTNA)?",
+    "org": "Palo Alto Networks",
+    "url": "https://www.paloaltonetworks.com/cyberpedia/what-is-zero-trust-network-access-ztna",
+    "kind": "primary"
+   },
+   {
+    "title": "zero trust network access - Glossary (용어·약어만 등재)",
+    "org": "NIST CSRC",
+    "url": "https://csrc.nist.gov/glossary/term/zero_trust_network_access",
+    "kind": "primary"
+   }
+  ],
+  "changed": "'제품·서비스'를 '기술'로 바꿈(출처는 기술 범주로 정의)",
+  "note": "Gartner 용어집 원문은 403으로 열지 못함. NIST 용어집은 용어·약어만 싣고 정의 문구는 없음(SP 800-215 참조)"
+ },
+ {
+  "term": "DDoS 방어 장비",
+  "fullName": "분산 서비스 거부 공격 방어 장비 (Anti-DDoS)",
+  "category": "보안",
+  "definition": "DDoS 방어 장비는 여러 호스트를 동원해 서비스를 마비시키는 분산 서비스 거부 공격의 통신을 가려내 걸러 내는 장비 또는 서비스입니다.",
+  "why": "대량의 공격 통신이 몰려도 정상 사용자의 요청은 계속 처리할 수 있습니다.",
+  "compare": "DDoS 방어 장비는 양으로 밀어붙이는 공격을 걸러 내고, WAF는 웹 요청 내용에 담긴 공격을 걸러 냅니다.",
+  "aliases": [
+   "Anti-DDoS",
+   "DDoS 차단 장비",
+   "DDoS 대응 장비",
+   "디도스 방어",
+   "DDoS Protection"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "distributed denial of service (DDoS) - Glossary",
+    "org": "NIST CSRC",
+    "url": "https://csrc.nist.gov/glossary/term/distributed_denial_of_service",
+    "kind": "primary"
+   },
+   {
+    "title": "What Is DDoS Mitigation?",
+    "org": "F5",
+    "url": "https://www.f5.com/glossary/ddos-mitigation",
+    "kind": "primary"
+   }
+  ],
+  "changed": "정의 문장을 다듬음(뜻은 같음)",
+  "note": "'장비'라는 낱말의 표준 정의는 없고, F5는 구축형·클라우드·혼합형 완화 설루션으로 설명함. WAF와의 비교 문구는 이번에 연 출처에 직접 나오지 않음"
+ },
+ {
+  "term": "차세대 방화벽",
+  "fullName": "차세대 방화벽 (Next-Generation Firewall, NGFW)",
+  "category": "네트워크 / 보안",
+  "definition": "차세대 방화벽(NGFW)은 주소·포트뿐 아니라 애플리케이션·사용자·콘텐츠를 식별해 통제하고 침입 방지 기능까지 갖춘 방화벽입니다.",
+  "why": "같은 포트를 쓰는 여러 애플리케이션을 구분해 허용하거나 막을 수 있습니다.",
+  "compare": "차세대 방화벽은 모든 종류의 통신을 대상으로 하고, 웹 방화벽(WAF)은 웹 서버 앞에서 HTTP 요청에 담긴 공격만 전문으로 막습니다.",
+  "aliases": [
+   "NGFW",
+   "Next-Generation Firewall",
+   "차세대방화벽",
+   "L7 방화벽"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "What Is a Next-Generation Firewall (NGFW)?",
+    "org": "Palo Alto Networks",
+    "url": "https://www.paloaltonetworks.com/cyberpedia/what-is-a-next-generation-firewall-ngfw",
+    "kind": "primary"
+   }
+  ],
+  "changed": "정의를 벤더 설명(애플리케이션·사용자·콘텐츠 식별, 내장 IPS)에 맞춤",
+  "note": "Gartner 용어집 원문은 403으로 열지 못함. Cisco 설명 페이지는 404"
+ },
+ {
+  "term": "프록시",
+  "fullName": "프록시 서버 (Proxy Server)",
+  "category": "네트워크 / 보안",
+  "definition": "프록시는 클라이언트와 서버 사이에서 통신과 부가 기능을 대신 중계하는 장치 또는 프로그램입니다.",
+  "why": "사내 PC의 인터넷 접속을 한곳으로 모아 접속 기록을 남기고 위험한 사이트를 막을 수 있습니다.",
+  "compare": "프록시(포워드 프록시)는 내부 사용자를 대신해 밖으로 나가고, 리버스 프록시는 내부 서버를 대신해 밖의 요청을 받습니다.",
+  "aliases": [
+   "Proxy",
+   "포워드 프록시",
+   "Forward Proxy",
+   "웹 프록시",
+   "프록시 서버"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "proxy - Glossary",
+    "org": "NIST CSRC",
+    "url": "https://csrc.nist.gov/glossary/term/proxy",
+    "kind": "primary"
+   },
+   {
+    "title": "Apache Module mod_proxy — Forward Proxies and Reverse Proxies/Gateways",
+    "org": "Apache Software Foundation",
+    "url": "https://httpd.apache.org/docs/2.4/mod/mod_proxy.html",
+    "kind": "primary"
+   }
+  ],
+  "changed": "fullName 의 영문을 Forward Proxy 에서 Proxy Server 로 고침(정의가 프록시 일반이므로). 별칭 SWG 삭제(프록시를 포함한 별도 제품군)",
+  "note": ""
+ },
+ {
+  "term": "리버스 프록시",
+  "fullName": "리버스 프록시 (Reverse Proxy)",
+  "category": "네트워크",
+  "definition": "리버스 프록시는 외부 클라이언트의 요청을 내부 서버 대신 받아 알맞은 서버로 넘기고 응답을 되돌려 주는 중계 서버입니다.",
+  "why": "내부 서버 주소를 감추고 암호화 처리, 캐시, 요청 분산을 한곳에서 맡을 수 있습니다.",
+  "compare": "리버스 프록시는 서버 쪽을 대신하고, 포워드 프록시는 사용자 쪽을 대신합니다.",
+  "aliases": [
+   "Reverse Proxy",
+   "역방향 프록시",
+   "리버스프록시"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "Apache Module mod_proxy — Forward Proxies and Reverse Proxies/Gateways",
+    "org": "Apache Software Foundation",
+    "url": "https://httpd.apache.org/docs/2.4/mod/mod_proxy.html",
+    "kind": "primary"
+   },
+   {
+    "title": "What Is a Reverse Proxy?",
+    "org": "F5",
+    "url": "https://www.f5.com/glossary/reverse-proxy",
+    "kind": "primary"
+   }
+  ],
+  "changed": "",
+  "note": "NIST 용어집에는 reverse proxy 항목이 없음(404)"
+ },
+ {
+  "term": "전용회선",
+  "fullName": "전용회선 (Leased Line)",
+  "category": "네트워크",
+  "definition": "전용회선은 통신 사업자에게 빌려 두 지점 사이를 한 조직만 쓰도록 고정으로 연결한 통신 회선입니다.",
+  "why": "다른 사용자와 회선을 나눠 쓰지 않아 속도가 일정하고 공용 인터넷을 거치지 않습니다.",
+  "compare": "전용회선은 물리적으로 따로 빌린 회선이고, VPN은 공용 망 위에 암호화로 만든 가상의 전용 통로입니다.",
+  "aliases": [
+   "전용선",
+   "임대 회선",
+   "Leased Line",
+   "전용 회선"
+  ],
+  "kind": "concept",
+  "verified": false,
+  "sources": [
+   {
+    "title": "전용 회선 - TTA정보통신용어사전 (본문 미열람)",
+    "org": "TTA",
+    "url": "https://terms.tta.or.kr/dictionary/dictionaryView.do?subject=%EC%A0%84%EC%9A%A9+%ED%9A%8C%EC%84%A0",
+    "kind": "aux"
+   }
+  ],
+  "changed": "",
+  "note": "TTA 정보통신용어사전(terms.tta.or.kr)은 접속이 끊겨(socket hang up) 본문을 열지 못했고 검색 결과 요약으로만 봄. 요약에 따르면 TTA 정의는 '두 지점 간 또는 다지점 간을 연결하여 독점 사용하는 전기 통신 회선, 임대 회선이라고도 함'으로 후보 정의와 어긋나지 않음"
+ },
+ {
+  "term": "MPLS",
+  "fullName": "다중 프로토콜 레이블 스위칭 (Multiprotocol Label Switching)",
+  "category": "네트워크",
+  "definition": "MPLS(Multiprotocol Label Switching)는 패킷이 망에 들어올 때 짧은 레이블을 붙이고 이후에는 그 레이블만 보고 전달하는 기술입니다.",
+  "why": "중간 장비가 패킷의 주소를 다시 분석하지 않고 레이블만으로 다음 경로를 정할 수 있습니다.",
+  "compare": "MPLS는 레이블로 패킷을 전달하는 기술이고, SD-WAN은 MPLS·인터넷 등 여러 회선 위에서 소프트웨어로 경로를 고르는 방식입니다.",
+  "aliases": [
+   "Multiprotocol Label Switching",
+   "MPLS VPN",
+   "엠피엘에스"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "RFC 3031: Multiprotocol Label Switching Architecture",
+    "org": "IETF",
+    "url": "https://www.rfc-editor.org/rfc/rfc3031.txt",
+    "kind": "primary"
+   },
+   {
+    "title": "What Is SD-WAN?",
+    "org": "Palo Alto Networks",
+    "url": "https://www.paloaltonetworks.com/cyberpedia/what-is-sd-wan",
+    "kind": "primary"
+   }
+  ],
+  "changed": "'통신 사업자망 기술'·'통신 사업자가 제공하는 사설 망 서비스'라는 한정을 빼고 RFC 3031 의 동작 설명에 맞춤. 별칭 IP-VPN 삭제",
+  "note": "MPLS가 주로 통신 사업자 서비스로 쓰인다는 점은 RFC에 없어 싣지 않음"
+ },
+ {
+  "term": "SD-WAN",
+  "fullName": "소프트웨어 정의 광역 통신망 (Software-Defined Wide Area Network)",
+  "category": "네트워크",
+  "definition": "SD-WAN(Software-Defined WAN)은 MPLS·인터넷 등 여러 회선을 함께 쓰면서 중앙 정책에 따라 애플리케이션 통신의 경로를 소프트웨어로 정하는 광역 통신망 기술입니다.",
+  "why": "비싼 MPLS 회선에만 기대지 않고 여러 회선을 섞어 쓰면서 망 전체를 중앙에서 관리할 수 있습니다.",
+  "compare": "SD-WAN은 여러 회선 위에서 경로를 고르는 방식이고, MPLS·광대역 인터넷은 그 아래에서 통신을 실어 나르는 수단입니다.",
+  "aliases": [
+   "Software-Defined WAN",
+   "SDWAN",
+   "소프트웨어 정의 WAN"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "What Is SD-WAN?",
+    "org": "Cisco",
+    "url": "https://www.cisco.com/site/us/en/learn/topics/networking/what-is-sd-wan.html",
+    "kind": "primary"
+   },
+   {
+    "title": "What Is SD-WAN?",
+    "org": "Palo Alto Networks",
+    "url": "https://www.paloaltonetworks.com/cyberpedia/what-is-sd-wan",
+    "kind": "primary"
+   }
+  ],
+  "changed": "정의를 120자 안으로 줄이고 '가상 망을 올린다'는 표현을 뺌. '전용회선'을 출처 표현인 MPLS·광대역으로 바꿈",
+  "note": "MEF 표준 본문은 열지 않음"
+ },
+ {
+  "term": "GSLB",
+  "fullName": "글로벌 서버 부하 분산 (Global Server Load Balancing)",
+  "category": "네트워크",
+  "definition": "GSLB(Global Server Load Balancing)는 DNS 응답을 이용해 사용자를 여러 지역의 데이터센터 가운데 상태와 위치가 알맞은 곳으로 보내는 부하 분산 방식입니다.",
+  "why": "한 데이터센터에 장애가 나도 다른 지역으로 사용자를 돌려 서비스를 이어 갈 수 있습니다.",
+  "compare": "일반 로드밸런서는 한 데이터센터 안의 서버들에 요청을 나누고, GSLB는 데이터센터나 리전 사이에서 나눕니다.",
+  "aliases": [
+   "Global Server Load Balancing",
+   "글로벌 로드밸런싱",
+   "DNS 기반 부하 분산"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "What Is Global Server Load Balancing (GSLB)?",
+    "org": "F5",
+    "url": "https://www.f5.com/glossary/global-server-load-balancing",
+    "kind": "primary"
+   },
+   {
+    "title": "What Is GSLB (Global Server Load Balancing)?",
+    "org": "IBM",
+    "url": "https://www.ibm.com/think/topics/global-server-load-balancing",
+    "kind": "primary"
+   }
+  ],
+  "changed": "정의를 120자 안으로 줄임. 별칭 GTM·Traffic Manager 삭제(특정 회사 제품 이름)",
+  "note": "F5 용어집은 DNS 기반이라고 못 박지 않고, DNS 응답으로 고른다는 설명은 IBM 페이지에서 확인함"
+ },
+ {
+  "term": "Anycast",
+  "fullName": "애니캐스트 (Anycast)",
+  "category": "네트워크",
+  "definition": "Anycast는 같은 서비스 주소를 여러 지점에서 함께 쓰고, 그 주소로 보낸 통신이 라우팅에 따라 그 가운데 한 지점으로 전달되게 하는 방식입니다.",
+  "why": "DNS처럼 여러 지점에 흩어 둔 서비스가 주소 하나로 요청을 나눠 받아 가용성을 높일 수 있습니다.",
+  "compare": "Anycast는 라우팅으로 가까운 지점을 고르고, GSLB는 DNS 응답으로 지점을 고릅니다.",
+  "aliases": [
+   "애니캐스트",
+   "Anycast IP",
+   "애니캐스트 라우팅"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "RFC 4786: Operation of Anycast Services",
+    "org": "IETF",
+    "url": "https://www.rfc-editor.org/rfc/rfc4786.txt",
+    "kind": "primary"
+   }
+  ],
+  "changed": "'가까운 지점으로 연결'을 RFC 4786 문구대로 '라우팅에 따라 그 가운데 한 지점으로 전달'로 고침",
+  "note": "Cloudflare 설명 페이지는 403으로 열지 못함"
+ },
+ {
+  "term": "L2 스위치",
+  "fullName": "계층 2 스위치 (Layer 2 Switch)",
+  "category": "네트워크",
+  "definition": "L2 스위치는 MAC 주소 표를 바탕으로 들어온 프레임을 목적지 장비가 연결된 포트로 내보내는 데이터 링크 계층 장비입니다.",
+  "why": "한 네트워크 안의 여러 서버와 PC를 서로 연결할 수 있습니다.",
+  "compare": "L2 스위치는 같은 VLAN 안에서만 전달하고, 서로 다른 VLAN 사이의 통신에는 라우팅 기능이 있는 장비가 필요합니다.",
+  "aliases": [
+   "Layer 2 Switch",
+   "스위치",
+   "스위칭 허브",
+   "액세스 스위치"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "Cisco Nexus 9000 Series NX-OS Layer 2 Switching Configuration Guide — Configuring Layer 2 Switching",
+    "org": "Cisco",
+    "url": "https://www.cisco.com/c/en/us/td/docs/switches/datacenter/nexus9000/sw/6-x/layer2/configuration/guide/b_Cisco_Nexus_9000_Series_NX-OS_Layer_2_Switching_Configuration_Guide/b_Cisco_Nexus_9000_Series_NX-OS_Layer_2_Switching_Configuration_Guide_chapter_010.html",
+    "kind": "primary"
+   },
+   {
+    "title": "Configure Inter VLAN Routing with an External Router",
+    "org": "Cisco",
+    "url": "https://www.cisco.com/c/en/us/support/docs/lan-switching/inter-vlan-routing/14976-50.html",
+    "kind": "primary"
+   },
+   {
+    "title": "switch - Glossary",
+    "org": "NIST CSRC",
+    "url": "https://csrc.nist.gov/glossary/term/switch",
+    "kind": "primary"
+   }
+  ],
+  "changed": "정의에 MAC 주소 표를 명시하고, compare 를 출처로 확인된 내용(L2 전용 스위치는 VLAN 사이를 라우팅하지 못함)으로 바꿈",
+  "note": ""
+ },
+ {
+  "term": "L3 스위치",
+  "fullName": "계층 3 스위치 (Layer 3 Switch)",
+  "category": "네트워크",
+  "definition": "L3 스위치는 스위치 기능에 더해 IP 주소를 기준으로 서로 다른 네트워크(VLAN) 사이의 통신을 전달하는 라우팅 기능을 갖춘 장비입니다.",
+  "why": "사내 여러 VLAN 사이의 통신을 빠르게 이어 줄 수 있습니다.",
+  "compare": "L3 스위치는 주로 사내 망 안의 네트워크끼리 잇고, 라우터는 주로 외부 회선과 사내 망을 잇습니다.",
+  "aliases": [
+   "Layer 3 Switch",
+   "멀티레이어 스위치",
+   "코어 스위치",
+   "분배 스위치"
+  ],
+  "kind": "concept",
+  "verified": false,
+  "sources": [
+   {
+    "title": "Configure Inter VLAN Routing with an External Router",
+    "org": "Cisco",
+    "url": "https://www.cisco.com/c/en/us/support/docs/lan-switching/inter-vlan-routing/14976-50.html",
+    "kind": "primary"
+   },
+   {
+    "title": "How Does a Switch Work?",
+    "org": "Cisco",
+    "url": "https://www.cisco.com/c/en/us/solutions/small-business/resource-center/networking/network-switch-how.html",
+    "kind": "primary"
+   }
+  ],
+  "changed": "",
+  "note": "L3 스위치를 직접 정의한 primary 페이지를 열지 못함(Cisco 문서 404, HPE 페이지 시간 초과, Cloudflare 403). L2 전용 스위치는 VLAN 사이를 라우팅하지 못하고 라우터가 서로 다른 네트워크를 잇는다는 점만 Cisco 문서에서 확인함"
+ },
+ {
+  "term": "백본",
+  "fullName": "백본 네트워크 (Backbone Network)",
+  "category": "네트워크",
+  "definition": "백본(Backbone)은 계층 구조로 이루어진 네트워크에서 여러 하위 네트워크를 서로 이어 주는 중심 구간의 네트워크입니다.",
+  "why": "층별·건물별·지점별 네트워크가 중심 구간 하나를 통해 서로 통신할 수 있습니다.",
+  "compare": "백본은 중심 구간 전체를 가리키고, 백본 스위치는 그 구간에 놓인 중심 장비를 가리킵니다.",
+  "aliases": [
+   "Backbone",
+   "백본망",
+   "기간망",
+   "코어망"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "RFC 1208: A Glossary of Networking Terms",
+    "org": "IETF",
+    "url": "https://www.rfc-editor.org/rfc/rfc1208.txt",
+    "kind": "primary"
+   },
+   {
+    "title": "기간망 - TTA정보통신용어사전 (본문 미열람)",
+    "org": "TTA",
+    "url": "http://word.tta.or.kr/dictionary/dictionaryView.do?subject=%EA%B8%B0%EA%B0%84%EB%A7%9D",
+    "kind": "aux"
+   }
+  ],
+  "changed": "'가장 많은 통신이 지나가는 고속'이라는 확인 못 한 수식을 빼고 RFC 1208 정의(계층형 시스템의 주된 연결 수단)에 맞춤. 별칭 '백본 스위치' 삭제(망이 아니라 장비)",
+  "note": "TTA 정보통신용어사전(terms.tta.or.kr)은 접속이 끊겨(socket hang up) 본문을 열지 못했고 검색 결과 요약으로만 봄. 요약상 TTA는 기간망·백본망을 같은 말로 묶음. 별칭 '코어망'은 TTA가 '핵심망'으로 따로 싣고 있어 완전한 동의어인지 확인 못 함"
+ },
+ {
+  "term": "망 이중화",
+  "fullName": "네트워크 이중화 (Network Redundancy)",
+  "category": "네트워크 / 가용성",
+  "definition": "망 이중화는 회선이나 네트워크 장비를 두 벌 이상 두어 한쪽에 장애가 나도 다른 쪽으로 통신이 이어지게 하는 구성입니다.",
+  "why": "회선 하나나 장비 한 대의 고장이 서비스 전체 중단으로 번지지 않습니다.",
+  "compare": "망 이중화는 통신 경로를 두 벌 두는 것이고, Active/Standby는 두 벌 가운데 하나만 쓰고 하나는 대기시키는 운영 방식입니다.",
+  "aliases": [
+   "네트워크 이중화",
+   "회선 이중화",
+   "장비 이중화",
+   "Redundancy"
+  ],
+  "kind": "concept",
+  "verified": false,
+  "sources": [],
+  "changed": "별칭 '다중화' 삭제(통신에서 multiplexing 을 뜻하는 말로도 쓰여 헷갈림)",
+  "note": "정의를 확인할 primary 페이지를 열지 못함(NIST 용어집 redundancy 404, Cisco 404, IBM은 해당 글 없음). 일반 용례로만 남김"
+ },
+ {
+  "term": "OOB 관리망",
+  "fullName": "대역 외 관리망 (Out-of-Band Management Network)",
+  "category": "네트워크 / 운영",
+  "definition": "OOB 관리망은 서비스 통신이 지나가는 망과 분리된 별도 통신 경로로 서버와 네트워크 장비를 관리하는 전용 망입니다.",
+  "why": "서비스 망에 장애나 공격이 생겨도 장비에 접속해 조치할 수 있습니다.",
+  "compare": "OOB 관리는 별도 망으로 장비에 접속하고, 인밴드 관리는 서비스 통신과 같은 망으로 접속합니다.",
+  "aliases": [
+   "Out-of-Band",
+   "OOB",
+   "대역 외 관리",
+   "관리 전용망",
+   "IPMI망",
+   "iLO망"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "Out of band best practices",
+    "org": "Cisco",
+    "url": "https://www.cisco.com/c/en/us/solutions/collateral/service-provider/out-of-band-best-practices-wp.html",
+    "kind": "primary"
+   },
+   {
+    "title": "out of band - Glossary",
+    "org": "NIST CSRC",
+    "url": "https://csrc.nist.gov/glossary/term/out_of_band",
+    "kind": "primary"
+   }
+  ],
+  "changed": "",
+  "note": "별칭 IPMI망·iLO망은 현업 표현으로 출처에서 확인하지 않음"
+ },
+ {
+  "term": "SAN",
+  "fullName": "스토리지 전용 네트워크 (Storage Area Network)",
+  "category": "스토리지 / 네트워크",
+  "definition": "SAN(Storage Area Network)은 서버와 저장 장치를 잇는 전용 네트워크로서 서버에 저장 공간을 블록 단위로 제공하는 구성입니다.",
+  "why": "여러 서버가 대용량 저장 장치를 빠르고 안정적으로 함께 쓸 수 있습니다.",
+  "compare": "SAN은 여러 장치로 이루어진 전용 망으로 블록 단위 저장 공간을 주고, NAS는 파일 공유 형태의 저장 공간을 줍니다.",
+  "aliases": [
+   "Storage Area Network",
+   "스토리지 에어리어 네트워크",
+   "스토리지망",
+   "FC SAN"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "What is a storage area network (SAN)?",
+    "org": "IBM",
+    "url": "https://www.ibm.com/think/topics/storage-area-network",
+    "kind": "primary"
+   }
+  ],
+  "changed": "SNIA 사전 문구를 옮긴 정의를 실제로 연 IBM 설명(전용 네트워크, 블록 스토리지)에 맞춰 다시 씀. 별칭 iSCSI 삭제(SAN에 쓰는 프로토콜 이름)",
+  "note": "SNIA 온라인 사전은 403으로 열지 못함. NIST 용어집은 용어·약어만 싣고 정의 문구 없음"
+ },
+ {
+  "term": "NAT 게이트웨이",
+  "fullName": "NAT 게이트웨이 (Network Address Translation Gateway)",
+  "category": "클라우드 / 네트워크",
+  "definition": "NAT 게이트웨이는 프라이빗 서브넷의 인스턴스가 VPC 밖으로 접속할 수 있게 주소를 바꿔 주되 밖에서 먼저 접속해 오지는 못하게 하는 서비스입니다.",
+  "why": "인터넷에 노출하지 않은 서버도 업데이트 내려받기나 외부 API 호출을 할 수 있습니다.",
+  "compare": "NAT 게이트웨이는 안에서 밖으로 나가는 통신만 열어 주고, 인터넷 게이트웨이는 양쪽 방향 통신을 모두 열어 줍니다.",
+  "aliases": [
+   "NAT Gateway",
+   "NAT GW",
+   "나트 게이트웨이",
+   "Cloud NAT"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "NAT gateways - Amazon VPC User Guide",
+    "org": "AWS",
+    "url": "https://docs.aws.amazon.com/vpc/latest/userguide/vpc-nat-gateway.html",
+    "kind": "primary"
+   },
+   {
+    "title": "Enable internet access for a VPC using an internet gateway",
+    "org": "AWS",
+    "url": "https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Internet_Gateway.html",
+    "kind": "primary"
+   }
+  ],
+  "changed": "정의를 120자 안으로 줄임",
+  "note": "정의는 AWS 문서 기준. 별칭 Cloud NAT는 Google Cloud의 대응 서비스 이름으로 이번에 확인하지 않음"
+ },
+ {
+  "term": "퍼블릭 서브넷",
+  "fullName": "퍼블릭 서브넷 (Public Subnet)",
+  "category": "클라우드 / 네트워크",
+  "definition": "퍼블릭 서브넷은 인터넷 게이트웨이로 가는 직접 경로가 있어 그 안의 자원이 공용 인터넷과 통신할 수 있는 서브넷입니다.",
+  "why": "로드밸런서, 배스천, NAT 게이트웨이처럼 인터넷과 맞닿아야 하는 자원을 둘 수 있습니다.",
+  "compare": "퍼블릭 서브넷은 인터넷 게이트웨이 경로가 있고, 프라이빗 서브넷은 없습니다.",
+  "aliases": [
+   "Public Subnet",
+   "공개 서브넷",
+   "퍼블릭 영역"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "Subnets for your VPC - Amazon VPC User Guide",
+    "org": "AWS",
+    "url": "https://docs.aws.amazon.com/vpc/latest/userguide/configure-subnets.html",
+    "kind": "primary"
+   },
+   {
+    "title": "Enable internet access for a VPC using an internet gateway",
+    "org": "AWS",
+    "url": "https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Internet_Gateway.html",
+    "kind": "primary"
+   }
+  ],
+  "changed": "",
+  "note": ""
+ },
+ {
+  "term": "프라이빗 서브넷",
+  "fullName": "프라이빗 서브넷 (Private Subnet)",
+  "category": "클라우드 / 네트워크",
+  "definition": "프라이빗 서브넷은 인터넷 게이트웨이로 가는 직접 경로가 없어 그 안의 자원이 인터넷에 나가려면 NAT 장치를 거쳐야 하는 서브넷입니다.",
+  "why": "애플리케이션 서버를 인터넷에서 직접 접속할 수 없는 곳에 둘 수 있습니다.",
+  "compare": "프라이빗 서브넷은 NAT를 거쳐 밖으로 나갈 수 있고, 격리 서브넷은 VPC 밖으로 가는 경로가 전혀 없습니다.",
+  "aliases": [
+   "Private Subnet",
+   "사설 서브넷",
+   "프라이빗 영역"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "Subnets for your VPC - Amazon VPC User Guide",
+    "org": "AWS",
+    "url": "https://docs.aws.amazon.com/vpc/latest/userguide/configure-subnets.html",
+    "kind": "primary"
+   }
+  ],
+  "changed": "",
+  "note": ""
+ },
+ {
+  "term": "랜딩 존",
+  "fullName": "랜딩 존 (Landing Zone)",
+  "category": "클라우드 / 아키텍처",
+  "definition": "랜딩 존은 보안·규정 준수 모범 사례에 따라 여러 계정(구독)과 공통 자원을 미리 갖춰 둔 클라우드 기본 환경입니다.",
+  "why": "새 업무를 올릴 때마다 계정과 망, 보안 설정을 처음부터 만들지 않고 같은 기준으로 시작할 수 있습니다.",
+  "compare": "랜딩 존은 여러 계정과 네트워크를 아우르는 전체 기반이고, VPC는 그 안의 네트워크 한 단위입니다.",
+  "aliases": [
+   "Landing Zone",
+   "랜딩존",
+   "Azure 랜딩 존",
+   "멀티 계정 환경"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "What Is AWS Control Tower?",
+    "org": "AWS",
+    "url": "https://docs.aws.amazon.com/controltower/latest/userguide/what-is-control-tower.html",
+    "kind": "primary"
+   },
+   {
+    "title": "What is an Azure landing zone?",
+    "org": "Microsoft Learn",
+    "url": "https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/ready/landing-zone/",
+    "kind": "primary"
+   }
+  ],
+  "changed": "정의를 AWS(모범 사례 기반의 다중 계정 환경)·Microsoft(다중 구독 환경을 관리·보호·확장하는 아키텍처) 정의에 맞춤. 별칭 Control Tower 삭제(랜딩 존을 만들어 주는 AWS 서비스 이름)",
+  "note": ""
+ },
+ {
+  "term": "인증서",
+  "fullName": "공개 키 인증서 (Public Key Certificate, X.509 Certificate)",
+  "category": "보안 / 암호",
+  "definition": "인증서는 공개 키가 특정 서버나 사용자 것임을 인증 기관이 전자 서명으로 보증한 전자 문서입니다.",
+  "why": "접속한 사이트나 상대 시스템이 가짜가 아님을 확인하고 암호화 통신을 시작할 수 있습니다.",
+  "compare": "인증서는 공개해도 되는 증명서이고, 개인 키는 소유자만 가지고 있어야 하는 비밀 값입니다.",
+  "aliases": [
+   "Certificate",
+   "공개 키 인증서",
+   "SSL 인증서",
+   "TLS 인증서",
+   "X.509"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "public key certificate - Glossary",
+    "org": "NIST CSRC",
+    "url": "https://csrc.nist.gov/glossary/term/public_key_certificate",
+    "kind": "primary"
+   }
+  ],
+  "changed": "",
+  "note": ""
+ },
+ {
+  "term": "mTLS",
+  "fullName": "상호 TLS (Mutual TLS)",
+  "category": "보안 / 네트워크",
+  "definition": "mTLS(Mutual TLS)는 TLS 연결에서 서버뿐 아니라 클라이언트도 인증서를 제시해 양쪽이 서로를 인증하는 방식입니다.",
+  "why": "서비스끼리 통신할 때 허가된 상대인지 양쪽 모두 확인할 수 있습니다.",
+  "compare": "일반 TLS는 서버만 인증서로 확인하고, mTLS는 클라이언트도 인증서로 확인합니다.",
+  "aliases": [
+   "Mutual TLS",
+   "상호 TLS",
+   "양방향 TLS"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "RFC 8705: OAuth 2.0 Mutual-TLS Client Authentication and Certificate-Bound Access Tokens (1.2 Terminology)",
+    "org": "IETF",
+    "url": "https://www.rfc-editor.org/rfc/rfc8705.txt",
+    "kind": "primary"
+   },
+   {
+    "title": "mutual authentication - Glossary",
+    "org": "NIST CSRC",
+    "url": "https://csrc.nist.gov/glossary/term/mutual_authentication",
+    "kind": "primary"
+   }
+  ],
+  "changed": "별칭 '상호 인증' 삭제(TLS에 한정되지 않는 더 넓은 개념)",
+  "note": "Cloudflare 설명 페이지는 403으로 열지 못함"
+ },
+ {
+  "term": "접근제어 솔루션",
+  "fullName": "시스템 접근제어 솔루션 (계정·서버·DB 접근제어, Privileged Access Management)",
+  "category": "보안 / 운영",
+  "definition": "접근제어 솔루션은 관리자와 개발자가 서버나 DB에 접속할 때 반드시 거치게 하여 접속 권한을 확인하고 실행한 명령과 조회 내역을 기록하는 보안 시스템입니다.",
+  "why": "누가 언제 어떤 서버와 DB에서 무엇을 했는지 통제하고 추적할 수 있습니다.",
+  "compare": "접근제어 솔루션은 권한 확인과 작업 기록까지 맡고, 배스천은 내부 서버로 들어가는 경유 서버 역할만 합니다.",
+  "aliases": [
+   "서버 접근제어",
+   "DB 접근제어",
+   "계정 관리 솔루션",
+   "시스템 접근통제",
+   "PAM",
+   "접근통제 게이트웨이"
+  ],
+  "kind": "concept",
+  "verified": false,
+  "sources": [
+   {
+    "title": "What is privileged access management (PAM)?",
+    "org": "Microsoft",
+    "url": "https://www.microsoft.com/en-us/security/business/security-101/what-is-privileged-access-management-pam",
+    "kind": "primary"
+   }
+  ],
+  "changed": "",
+  "note": "국내에서 '접근제어 솔루션'을 이 뜻으로 쓴 KISA·금융보안원 등 공식 문서를 열지 못함(ISMS-P 인증기준 안내서는 PDF 첨부라 본문 미확인). 대응 개념인 PAM이 특권 계정의 접근을 통제하고 세션을 감시·기록한다는 점만 Microsoft 페이지에서 확인함"
+ },
+ {
+  "term": "SOAR",
+  "fullName": "보안 오케스트레이션·자동화·대응 (Security Orchestration, Automation and Response)",
+  "category": "보안 / 운영",
+  "definition": "SOAR는 여러 보안 도구를 연결해 경보가 발생했을 때 미리 정한 대응 절차를 자동으로 실행하고 사건 처리 과정을 관리하는 보안 운영 도구입니다.",
+  "why": "반복되는 경보 확인과 차단 작업을 자동화해 대응 시간을 줄일 수 있습니다.",
+  "compare": "SOAR는 대응을 자동화하고, SIEM은 대응의 출발점이 되는 경보를 만들어 냅니다.",
+  "aliases": [
+   "Security Orchestration Automation and Response",
+   "보안 자동화 대응",
+   "보안 오케스트레이션"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "What Is SOAR?",
+    "org": "Palo Alto Networks",
+    "url": "https://www.paloaltonetworks.com/cyberpedia/what-is-soar",
+    "kind": "primary"
+   },
+   {
+    "title": "What is SOAR?",
+    "org": "Microsoft",
+    "url": "https://www.microsoft.com/en-us/security/business/security-101/what-is-soar",
+    "kind": "primary"
+   }
+  ],
+  "changed": "",
+  "note": "Gartner 용어집 원문은 403으로 열지 못함"
+ },
+ {
+  "term": "EDR",
+  "fullName": "엔드포인트 탐지 및 대응 (Endpoint Detection and Response)",
+  "category": "보안 / 운영",
+  "definition": "EDR(Endpoint Detection and Response)은 PC와 서버 같은 단말의 동작을 계속 수집·분석해 위협을 찾아내고 격리 같은 대응을 하게 해 주는 보안 도구입니다.",
+  "why": "백신이 놓친 공격도 단말에서 일어난 행위 기록으로 찾아내고 조사할 수 있습니다.",
+  "compare": "백신은 알려진 악성 파일을 막는 데 초점이 있고, EDR은 단말의 행위를 기록해 탐지와 사후 조사를 돕습니다.",
+  "aliases": [
+   "Endpoint Detection and Response",
+   "엔드포인트 탐지 대응",
+   "단말 탐지 대응"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "What is EDR? Endpoint detection and response",
+    "org": "Microsoft",
+    "url": "https://www.microsoft.com/en-us/security/business/security-101/what-is-edr-endpoint-detection-response",
+    "kind": "primary"
+   },
+   {
+    "title": "Endpoint Detection and Response - Glossary (용어·약어만 등재)",
+    "org": "NIST CSRC",
+    "url": "https://csrc.nist.gov/glossary/term/endpoint_detection_and_response",
+    "kind": "primary"
+   }
+  ],
+  "changed": "정의를 120자 안으로 줄임. 별칭 XDR 삭제(단말을 넘어 여러 영역을 묶는 다른 제품군)",
+  "note": "NIST 용어집은 용어·약어만 싣고 정의 문구 없음"
+ },
+ {
+  "term": "DLP",
+  "fullName": "데이터 유출 방지 (Data Loss Prevention)",
+  "category": "보안 / 데이터",
+  "definition": "DLP(Data Loss Prevention)는 사용 중인 데이터, 전송 중인 데이터, 저장된 데이터를 중앙에서 식별·감시·보호하는 기능 또는 시스템입니다.",
+  "why": "개인정보나 기밀 문서가 메일, 메신저, USB로 밖에 나가는 것을 찾아내 막을 수 있습니다.",
+  "compare": "DLP는 데이터가 나가는 통로를 감시해 막고, DRM은 문서 자체를 암호화해 나가더라도 못 열게 합니다.",
+  "aliases": [
+   "Data Loss Prevention",
+   "데이터 유출 방지",
+   "정보 유출 방지",
+   "내부정보 유출방지"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "data loss prevention - Glossary (CNSSI 4009-2022)",
+    "org": "NIST CSRC",
+    "url": "https://csrc.nist.gov/glossary/term/data_loss_prevention",
+    "kind": "primary"
+   },
+   {
+    "title": "Fasoo Enterprise DRM 제품 소개",
+    "org": "파수(Fasoo)",
+    "url": "https://www.fasoo.ai/products/fasoo-enterprise-drm",
+    "kind": "primary"
+   }
+  ],
+  "changed": "",
+  "note": "DRM과의 비교는 파수 제품 페이지의 설명(파일이 밖으로 나가도 DRM은 접근을 통제)으로 확인함"
+ },
+ {
+  "term": "DRM",
+  "fullName": "문서 보안 (Digital Rights Management, 기업 문서 암호화)",
+  "category": "보안 / 데이터",
+  "definition": "DRM은 문서 파일을 암호화하고 사용자별로 열람·편집·인쇄 권한을 정해 권한이 있는 사람만 그 문서를 쓸 수 있게 하는 문서 보안 기술입니다.",
+  "why": "문서가 회사 밖으로 나가더라도 권한이 없는 사람은 내용을 볼 수 없습니다.",
+  "compare": "DRM은 파일 자체에 보호를 걸고, DLP는 파일이 나가는 통로를 감시합니다.",
+  "aliases": [
+   "Digital Rights Management",
+   "문서 보안",
+   "문서 암호화",
+   "문서 DRM",
+   "E-DRM"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "Fasoo Enterprise DRM 제품 소개",
+    "org": "파수(Fasoo)",
+    "url": "https://www.fasoo.ai/products/fasoo-enterprise-drm",
+    "kind": "primary"
+   },
+   {
+    "title": "Exchange Online mail encryption with AD RMS (Information Rights Management)",
+    "org": "Microsoft Learn",
+    "url": "https://learn.microsoft.com/en-us/purview/information-rights-management-in-exchange-online",
+    "kind": "primary"
+   }
+  ],
+  "changed": "",
+  "note": "국내 '문서 보안' 뜻의 용례는 파수 공식 제품 페이지로 확인함. KISA 등 기관 문서의 정의는 찾지 못했고, 검색 요약상 TTA 사전은 DRM을 '디지털 저작권 관리'(콘텐츠 불법 사용 제한)로 정의함"
+ },
+ {
+  "term": "EC2",
+  "fullName": "Amazon Elastic Compute Cloud",
+  "category": "클라우드 / 가상 서버",
+  "definition": "EC2(Amazon Elastic Compute Cloud)는 AWS에서 필요한 사양의 가상 서버(인스턴스)를 만들어 쓰고 쓴 만큼 요금을 내는 서비스입니다.",
+  "why": "",
+  "compare": "",
+  "aliases": [
+   "amazon ec2",
+   "ec2 instance",
+   "이씨투"
+  ],
+  "kind": "product",
+  "verified": true,
+  "sources": [
+   {
+    "title": "What is Amazon EC2?",
+    "org": "AWS",
+    "url": "https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/concepts.html",
+    "kind": "primary"
+   }
+  ],
+  "changed": "",
+  "note": ""
+ },
+ {
+  "term": "EBS",
+  "fullName": "Amazon Elastic Block Store",
+  "category": "클라우드 / 블록 스토리지",
+  "definition": "EBS(Amazon Elastic Block Store)는 EC2 가상 서버에 디스크처럼 붙여 쓰는 AWS의 블록 스토리지 서비스입니다.",
+  "why": "",
+  "compare": "",
+  "aliases": [
+   "amazon ebs",
+   "ebs volume",
+   "이비에스"
+  ],
+  "kind": "product",
+  "verified": true,
+  "sources": [
+   {
+    "title": "What is Amazon Elastic Block Store?",
+    "org": "AWS",
+    "url": "https://docs.aws.amazon.com/ebs/latest/userguide/what-is-ebs.html",
+    "kind": "primary"
+   }
+  ],
+  "changed": "",
+  "note": ""
+ },
+ {
+  "term": "EFS",
+  "fullName": "Amazon Elastic File System",
+  "category": "클라우드 / 파일 스토리지",
+  "definition": "EFS(Amazon Elastic File System)는 여러 서버가 NFS로 동시에 붙어 같은 파일을 읽고 쓰는 AWS의 관리형 파일 스토리지 서비스입니다.",
+  "why": "",
+  "compare": "",
+  "aliases": [
+   "amazon efs",
+   "이에프에스"
+  ],
+  "kind": "product",
+  "verified": true,
+  "sources": [
+   {
+    "title": "What is Amazon Elastic File System?",
+    "org": "AWS",
+    "url": "https://docs.aws.amazon.com/efs/latest/ug/whatisefs.html",
+    "kind": "primary"
+   }
+  ],
+  "changed": "",
+  "note": ""
+ },
+ {
+  "term": "EKS",
+  "fullName": "Amazon Elastic Kubernetes Service",
+  "category": "클라우드 / 관리형 쿠버네티스",
+  "definition": "EKS(Amazon Elastic Kubernetes Service)는 쿠버네티스의 관리 영역(컨트롤 플레인)을 AWS가 대신 운영해 주는 관리형 쿠버네티스 서비스입니다.",
+  "why": "",
+  "compare": "",
+  "aliases": [
+   "amazon eks",
+   "이케이에스"
+  ],
+  "kind": "product",
+  "verified": true,
+  "sources": [
+   {
+    "title": "What is Amazon EKS?",
+    "org": "AWS",
+    "url": "https://docs.aws.amazon.com/eks/latest/userguide/what-is-eks.html",
+    "kind": "primary"
+   }
+  ],
+  "changed": "",
+  "note": "EKS Auto Mode 에서는 노드(데이터 플레인)까지 AWS가 관리한다고 문서에 나옴"
+ },
+ {
+  "term": "ECS",
+  "fullName": "Amazon Elastic Container Service",
+  "category": "클라우드 / 컨테이너 실행",
+  "definition": "ECS(Amazon Elastic Container Service)는 컨테이너로 만든 애플리케이션을 배포·관리·확장해 주는 AWS의 완전 관리형 컨테이너 오케스트레이션 서비스입니다.",
+  "why": "",
+  "compare": "",
+  "aliases": [
+   "amazon ecs",
+   "이씨에스"
+  ],
+  "kind": "product",
+  "verified": true,
+  "sources": [
+   {
+    "title": "What is Amazon Elastic Container Service?",
+    "org": "AWS",
+    "url": "https://docs.aws.amazon.com/AmazonECS/latest/developerguide/Welcome.html",
+    "kind": "primary"
+   }
+  ],
+  "changed": "'쿠버네티스 없이 AWS 고유의 방식으로'를 빼고 공식 문서 문구(완전 관리형 컨테이너 오케스트레이션, 배포·관리·확장)에 맞춤",
+  "note": ""
+ },
+ {
+  "term": "Fargate",
+  "fullName": "AWS Fargate",
+  "category": "클라우드 / 서버리스 컨테이너",
+  "definition": "Fargate(AWS Fargate)는 ECS나 EKS의 컨테이너를 사용자가 서버를 관리하지 않고 실행하게 해 주는 AWS의 서버리스 컨테이너 실행 환경입니다.",
+  "why": "",
+  "compare": "",
+  "aliases": [
+   "aws fargate",
+   "파게이트"
+  ],
+  "kind": "product",
+  "verified": true,
+  "sources": [
+   {
+    "title": "Architect for AWS Fargate for Amazon ECS",
+    "org": "AWS",
+    "url": "https://docs.aws.amazon.com/AmazonECS/latest/developerguide/AWS_Fargate.html",
+    "kind": "primary"
+   },
+   {
+    "title": "Simplify compute management with AWS Fargate (Amazon EKS)",
+    "org": "AWS",
+    "url": "https://docs.aws.amazon.com/eks/latest/userguide/fargate.html",
+    "kind": "primary"
+   }
+  ],
+  "changed": "",
+  "note": ""
+ },
+ {
+  "term": "ElastiCache",
+  "fullName": "Amazon ElastiCache",
+  "category": "클라우드 / 관리형 캐시",
+  "definition": "ElastiCache(Amazon ElastiCache)는 Valkey·Memcached·Redis OSS 엔진의 인메모리 캐시를 AWS가 설치·운영해 주는 관리형 캐시 서비스입니다.",
+  "why": "",
+  "compare": "",
+  "aliases": [
+   "amazon elasticache",
+   "엘라스티캐시"
+  ],
+  "kind": "product",
+  "verified": true,
+  "sources": [
+   {
+    "title": "What is Amazon ElastiCache?",
+    "org": "AWS",
+    "url": "https://docs.aws.amazon.com/AmazonElastiCache/latest/dg/WhatIs.html",
+    "kind": "primary"
+   }
+  ],
+  "changed": "엔진 이름을 공식 문서 표기(Valkey, Memcached, Redis OSS)로 고침",
+  "note": ""
+ },
+ {
+  "term": "CloudFront",
+  "fullName": "Amazon CloudFront",
+  "category": "클라우드 / CDN",
+  "definition": "CloudFront(Amazon CloudFront)는 사용자와 가까운 거점에서 콘텐츠를 대신 전달하는 AWS의 콘텐츠 전송 네트워크(CDN) 서비스입니다.",
+  "why": "",
+  "compare": "",
+  "aliases": [
+   "amazon cloudfront",
+   "클라우드프론트"
+  ],
+  "kind": "product",
+  "verified": true,
+  "sources": [
+   {
+    "title": "What is Amazon CloudFront?",
+    "org": "AWS",
+    "url": "https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/Introduction.html",
+    "kind": "primary"
+   }
+  ],
+  "changed": "",
+  "note": ""
+ },
+ {
+  "term": "Route 53",
+  "fullName": "Amazon Route 53",
+  "category": "클라우드 / DNS",
+  "definition": "Route 53(Amazon Route 53)은 도메인 이름을 IP 주소로 바꿔 주고 서버 상태에 따라 접속 경로를 바꿀 수 있는 AWS의 관리형 DNS 서비스입니다.",
+  "why": "",
+  "compare": "",
+  "aliases": [
+   "route53",
+   "amazon route 53",
+   "라우트53",
+   "라우트 53"
+  ],
+  "kind": "product",
+  "verified": true,
+  "sources": [
+   {
+    "title": "What is Amazon Route 53?",
+    "org": "AWS",
+    "url": "https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/Welcome.html",
+    "kind": "primary"
+   }
+  ],
+  "changed": "",
+  "note": "공식 문서는 도메인 등록, DNS 라우팅, 상태 확인 세 기능을 든다. 정의에는 도메인 등록이 빠져 있으나 틀린 내용은 아님"
+ },
+ {
+  "term": "Amazon API Gateway",
+  "fullName": "Amazon API Gateway",
+  "category": "클라우드 / API 게이트웨이",
+  "definition": "Amazon API Gateway는 REST·HTTP·WebSocket API를 만들어 공개하고 인증·트래픽 관리·모니터링을 맡아 주는 AWS의 관리형 서비스입니다.",
+  "why": "",
+  "compare": "",
+  "aliases": [
+   "aws api gateway",
+   "apigw",
+   "API 게이트웨이(AWS)"
+  ],
+  "kind": "product",
+  "verified": true,
+  "sources": [
+   {
+    "title": "What is Amazon API Gateway?",
+    "org": "AWS",
+    "url": "https://docs.aws.amazon.com/apigateway/latest/developerguide/welcome.html",
+    "kind": "primary"
+   }
+  ],
+  "changed": "정의를 공식 문서 문구(REST·HTTP·WebSocket API의 생성·게시·모니터링·보안)에 맞춤",
+  "note": ""
+ },
+ {
+  "term": "CloudWatch",
+  "fullName": "Amazon CloudWatch",
+  "category": "클라우드 / 모니터링·로깅",
+  "definition": "CloudWatch(Amazon CloudWatch)는 AWS 자원의 지표와 로그를 모아 그래프로 보여 주고 조건에 맞으면 알림을 보내는 AWS의 모니터링 서비스입니다.",
+  "why": "",
+  "compare": "",
+  "aliases": [
+   "amazon cloudwatch",
+   "cloudwatch logs",
+   "클라우드워치"
+  ],
+  "kind": "product",
+  "verified": true,
+  "sources": [
+   {
+    "title": "What is Amazon CloudWatch?",
+    "org": "AWS",
+    "url": "https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/WhatIsCloudWatch.html",
+    "kind": "primary"
+   }
+  ],
+  "changed": "",
+  "note": ""
+ }
+]

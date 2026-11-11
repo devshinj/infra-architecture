@@ -1,0 +1,1189 @@
+[
+ {
+  "term": "랙 서버",
+  "fullName": "랙 마운트 서버(Rack-mount Server)",
+  "category": "하드웨어 / 서버",
+  "definition": "랙 서버는 표준 폭 19인치의 장비 선반(랙)에 층층이 끼워 넣도록 납작하게 만든 서버입니다.",
+  "why": "좁은 전산실 공간에 서버를 많이 넣고 전원·케이블을 정리하기 쉽게 합니다.",
+  "compare": "랙 서버는 한 대가 전원과 팬을 따로 갖고, 블레이드 서버는 여러 대가 한 틀의 전원과 팬을 나눠 씁니다.",
+  "aliases": [
+   "rack server",
+   "rackmount",
+   "랙마운트 서버",
+   "1U 서버",
+   "2U 서버"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "Server Rack Sizes Matter: Get These 3 Critical Rack Server Dimensions Right",
+    "org": "Vertiv",
+    "url": "https://www.vertiv.com/en-us/about/news-and-insights/articles/educational-articles/server-rack-sizes-matter-get-these-3-critical-rack-server-dimensions-right/",
+    "kind": "primary"
+   },
+   {
+    "title": "What is a blade server?",
+    "org": "IBM",
+    "url": "https://www.ibm.com/think/topics/blade-server",
+    "kind": "primary"
+   },
+   {
+    "title": "Blade Server vs. Rack Server vs. Tower Server",
+    "org": "Everpure(구 Pure Storage)",
+    "url": "https://www.everpuredata.com/knowledge/blade-server-vs-rack-server-vs-tower-server.html",
+    "kind": "aux"
+   }
+  ],
+  "changed": "",
+  "note": "랙 서버만 정의한 대형 벤더 페이지(HPE·Lenovo)는 열리지 않아, 랙 규격(Vertiv)과 랙 서버·블레이드 비교(IBM) 페이지로 확인했습니다."
+ },
+ {
+  "term": "블레이드 서버",
+  "fullName": "블레이드 서버(Blade Server)",
+  "category": "하드웨어 / 서버",
+  "definition": "블레이드 서버는 얇은 카드 모양의 서버 여러 장을 전원과 냉각 장치를 함께 쓰는 틀(섀시)에 꽂아 쓰는 서버입니다.",
+  "why": "같은 공간에 더 많은 서버를 넣고 케이블 수를 줄입니다.",
+  "compare": "블레이드 서버는 섀시가 있어야 동작하고, 랙 서버는 한 대만으로 동작합니다.",
+  "aliases": [
+   "blade server",
+   "blade",
+   "블레이드",
+   "섀시"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "What is a blade server?",
+    "org": "IBM",
+    "url": "https://www.ibm.com/think/topics/blade-server",
+    "kind": "primary"
+   }
+  ],
+  "changed": "섀시가 함께 쓰는 것에서 '네트워크'를 뺌(출처에는 전원·냉각 공유만 명시).",
+  "note": "별칭 '섀시'는 블레이드를 꽂는 틀 이름이라 동의어는 아닙니다(검색용으로 남김)."
+ },
+ {
+  "term": "타워 서버",
+  "fullName": "타워형 서버(Tower Server)",
+  "category": "하드웨어 / 서버",
+  "definition": "타워 서버는 데스크톱 PC 본체처럼 세워 두는 모양의 서버입니다.",
+  "why": "랙이나 전산실이 없는 작은 사무실에서 서버를 한두 대 둘 때 씁니다.",
+  "compare": "타워 서버는 바닥에 세워 두고, 랙 서버는 랙에 끼워 넣습니다.",
+  "aliases": [
+   "tower server",
+   "타워형 서버"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "What is a blade server?",
+    "org": "IBM",
+    "url": "https://www.ibm.com/think/topics/blade-server",
+    "kind": "primary"
+   },
+   {
+    "title": "Blade Server vs. Rack Server vs. Tower Server",
+    "org": "Everpure(구 Pure Storage)",
+    "url": "https://www.everpuredata.com/knowledge/blade-server-vs-rack-server-vs-tower-server.html",
+    "kind": "aux"
+   }
+  ],
+  "changed": "",
+  "note": ""
+ },
+ {
+  "term": "x86 서버",
+  "fullName": "x86(x86-64) 아키텍처 서버",
+  "category": "하드웨어 / 서버",
+  "definition": "x86 서버는 인텔(Intel)·AMD가 만드는 x86 계열 CPU를 쓰는 서버로, 가장 널리 쓰이는 서버 종류입니다.",
+  "why": "여러 제조사가 만들어 값이 싸고 부품과 소프트웨어 선택 폭이 넓습니다.",
+  "compare": "x86 서버는 제조사가 달라도 같은 운영체제를 쓰고, 유닉스 서버는 제조사마다 전용 CPU와 전용 운영체제를 씁니다.",
+  "aliases": [
+   "x86",
+   "x86-64",
+   "x64",
+   "ia서버",
+   "범용 서버",
+   "엑스팔육 서버"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "ARM vs x86: What's the difference?",
+    "org": "Red Hat",
+    "url": "https://www.redhat.com/en/topics/linux/ARM-vs-x86",
+    "kind": "primary"
+   }
+  ],
+  "changed": "정의에서 출처로 확인하지 못한 '리눅스나 윈도우 서버를 올려 쓰는' 부분을 뺌.",
+  "note": "why(값·선택 폭)와 compare(유닉스 서버와의 차이)는 연 페이지에 직접 나오지 않는 통용 설명입니다."
+ },
+ {
+  "term": "유닉스 서버",
+  "fullName": "유닉스(UNIX) 서버",
+  "category": "하드웨어 / 서버",
+  "definition": "유닉스 서버는 IBM Power·HPE Integrity·Oracle SPARC처럼 제조사 전용 CPU에 AIX·HP-UX·Solaris 같은 유닉스 운영체제를 올린 서버입니다.",
+  "why": "안정성이 중요한 핵심 업무(미션 크리티컬) 시스템에 오래 쓰여 왔습니다.",
+  "compare": "유닉스 서버를 x86 리눅스 서버로 바꾸는 작업을 U2L(Unix to Linux)이라고 부릅니다.",
+  "aliases": [
+   "unix server",
+   "risc 서버",
+   "유닉스",
+   "u2l"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "IBM AIX",
+    "org": "IBM",
+    "url": "https://www.ibm.com/products/aix",
+    "kind": "primary"
+   },
+   {
+    "title": "유닉스 마이그레이션 시장, 한국서도 '개화' 조짐",
+    "org": "아이뉴스24",
+    "url": "https://www.inews24.com/view/668629",
+    "kind": "aux"
+   }
+  ],
+  "changed": "why 의 '은행 계정계 DB' 표현을 출처에 맞게 '핵심 업무 시스템'으로 바꿈.",
+  "note": "IBM AIX·Power 만 공식 페이지로 확인했고, HP-UX·Solaris 예시와 U2L 은 보조 출처(기사)로만 확인했습니다."
+ },
+ {
+  "term": "메인프레임",
+  "fullName": "메인프레임(Mainframe)",
+  "category": "하드웨어 / 서버",
+  "definition": "메인프레임은 아주 많은 거래를 끊김 없이 처리하도록 만든 대형 컴퓨터로, IBM Z 계열이 대표적입니다.",
+  "why": "대량의 거래를 높은 안정성으로 처리해야 하는 은행·보험의 핵심 업무에 쓰입니다.",
+  "compare": "메인프레임은 큰 장비 한 대에 업무를 모으고, 분산 서버(오픈 시스템)는 작은 서버 여러 대에 나눕니다.",
+  "aliases": [
+   "mainframe",
+   "ibm z",
+   "호스트",
+   "메인 프레임"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "What is a mainframe?",
+    "org": "IBM",
+    "url": "https://www.ibm.com/think/topics/mainframe",
+    "kind": "primary"
+   }
+  ],
+  "changed": "",
+  "note": "별칭 '호스트'는 국내 현업 통용어로, 출처에서 확인하지는 못했습니다."
+ },
+ {
+  "term": "CPU 소켓·코어",
+  "fullName": "CPU 소켓(Socket)·코어(Core)",
+  "category": "하드웨어 / 부품",
+  "definition": "소켓은 메인보드에서 CPU 칩 하나를 꽂는 자리이고, 코어는 CPU 칩 안에서 실제로 계산을 하는 처리 단위입니다.",
+  "why": "서버 처리 능력과 소프트웨어 라이선스 비용이 소켓 수·코어 수로 정해지는 경우가 많습니다.",
+  "compare": "\"2소켓 32코어\"는 CPU 칩 2개에 코어가 모두 합쳐 32개라는 뜻입니다.",
+  "aliases": [
+   "cpu",
+   "core",
+   "socket",
+   "코어",
+   "소켓",
+   "2소켓",
+   "씨피유"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "Compute Capacity Limits by Edition of SQL Server",
+    "org": "Microsoft Learn",
+    "url": "https://learn.microsoft.com/en-us/sql/sql-server/compute-capacity-limits-by-edition-of-sql-server",
+    "kind": "primary"
+   }
+  ],
+  "changed": "소켓을 'CPU 칩의 개수'가 아니라 'CPU 칩을 꽂는 자리(=물리 프로세서 하나)'로 바로잡음.",
+  "note": ""
+ },
+ {
+  "term": "vCPU",
+  "fullName": "가상 CPU(Virtual CPU)",
+  "category": "하드웨어 / 가상 자원",
+  "definition": "vCPU(가상 CPU)는 가상 머신이나 클라우드 서버에 나누어 준 CPU 단위로, 보통 물리 CPU의 스레드 하나에 해당합니다.",
+  "why": "클라우드 서버 사양과 요금을 정하는 기본 단위입니다.",
+  "compare": "물리 코어 하나는 하이퍼스레딩을 켜면 vCPU 2개로 계산되는 경우가 많아, vCPU 수와 물리 코어 수는 같지 않습니다.",
+  "aliases": [
+   "vcpu",
+   "virtual cpu",
+   "가상 CPU",
+   "브이씨피유"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "CPU options for Amazon EC2 instances",
+    "org": "AWS",
+    "url": "https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-optimize-cpu.html",
+    "kind": "primary"
+   },
+   {
+    "title": "Compute Capacity Limits by Edition of SQL Server",
+    "org": "Microsoft Learn",
+    "url": "https://learn.microsoft.com/en-us/sql/sql-server/compute-capacity-limits-by-edition-of-sql-server",
+    "kind": "primary"
+   }
+  ],
+  "changed": "",
+  "note": ""
+ },
+ {
+  "term": "메모리(RAM)",
+  "fullName": "주기억장치(Random Access Memory)",
+  "category": "하드웨어 / 부품",
+  "definition": "메모리(RAM)는 실행 중인 프로그램과 데이터를 잠시 올려 두는 기억장치로, 전원이 꺼지면 내용이 사라집니다.",
+  "why": "메모리가 넉넉해야 프로그램이 느린 디스크를 덜 쓰고 빠르게 동작합니다.",
+  "compare": "메모리는 빠르지만 꺼지면 지워지고, 디스크는 느리지만 꺼져도 남습니다.",
+  "aliases": [
+   "ram",
+   "memory",
+   "메모리",
+   "램",
+   "주기억장치"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "What Is Computer and Laptop RAM and Why Does It Matter?",
+    "org": "Intel",
+    "url": "https://www.intel.com/content/www/us/en/tech-tips-and-tricks/computer-ram.html",
+    "kind": "primary"
+   }
+  ],
+  "changed": "",
+  "note": ""
+ },
+ {
+  "term": "GPU 서버",
+  "fullName": "GPU(Graphics Processing Unit) 서버",
+  "category": "하드웨어 / 서버",
+  "definition": "GPU 서버는 그래픽 처리 장치(GPU)를 여러 개 달아 많은 계산을 동시에 처리하는 서버로, AI 학습과 추론에 주로 쓰입니다.",
+  "why": "AI 계산처럼 한꺼번에 많이 하는 계산은 코어가 수백~수천 개인 GPU가 CPU보다 빠르게 처리합니다.",
+  "compare": "GPU 서버는 전력과 발열이 일반 서버보다 훨씬 커서 전산실의 전원·냉각 용량을 따로 확인해야 합니다.",
+  "aliases": [
+   "gpu server",
+   "gpu",
+   "지피유 서버",
+   "AI 서버"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "What is a GPU?",
+    "org": "IBM",
+    "url": "https://www.ibm.com/think/topics/gpu",
+    "kind": "primary"
+   },
+   {
+    "title": "What AI processor architectures mean for data center infrastructure",
+    "org": "Vertiv",
+    "url": "https://www.vertiv.com/en-us/insights/articles/educational-articles/what-ai-processor-architectures-mean-for-data-center-infrastructure/",
+    "kind": "primary"
+   }
+  ],
+  "changed": "why 를 출처 표현(GPU 는 코어가 많아 병렬 처리에 유리)에 맞춰 다듬음.",
+  "note": ""
+ },
+ {
+  "term": "어플라이언스",
+  "fullName": "어플라이언스(Appliance)",
+  "category": "하드웨어 / 일체형 장비",
+  "definition": "어플라이언스는 특정 용도의 소프트웨어를 전용 하드웨어에 미리 설치해 한 덩어리로 파는 일체형 장비입니다.",
+  "why": "소프트웨어를 설치하고 맞추는 시간을 줄여 장비를 켠 뒤 곧바로 쓸 수 있게 합니다.",
+  "compare": "어플라이언스는 장비째로 사고, 소프트웨어 제품은 준비한 서버에 직접 설치합니다.",
+  "aliases": [
+   "appliance",
+   "어플라이언스 장비",
+   "일체형 장비"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "IBM MQ Appliance",
+    "org": "IBM",
+    "url": "https://www.ibm.com/products/mq/appliance",
+    "kind": "primary"
+   },
+   {
+    "title": "What is Oracle Private Cloud Appliance",
+    "org": "Oracle",
+    "url": "https://docs.oracle.com/en/engineered-systems/private-cloud-appliance/2.4/admin-2.4.1/admin-intro-productdescription.html",
+    "kind": "primary"
+   }
+  ],
+  "changed": "why 의 '제조사 한 곳 지원'은 출처에 없어 뺌; 별칭에서 제품 이름 '엑사데이터'를 뺌.",
+  "note": "용어 사전식 정의 페이지는 찾지 못해 IBM·Oracle 의 어플라이언스 제품 설명으로 뜻을 확인했습니다."
+ },
+ {
+  "term": "HCI",
+  "fullName": "하이퍼컨버지드 인프라(Hyper-Converged Infrastructure)",
+  "category": "하드웨어 / 통합 인프라",
+  "definition": "HCI(하이퍼컨버지드 인프라)는 컴퓨팅·저장소·네트워크를 x86 서버 위에서 소프트웨어로 합쳐 한 시스템으로 운영하는 인프라 구성 방식입니다.",
+  "why": "별도 스토리지 장비 없이 서버를 추가하는 것만으로 가상화 환경의 용량을 늘립니다.",
+  "compare": "HCI는 서버 안 디스크를 묶어 저장소로 쓰고, 전통 구성은 서버와 SAN 스토리지를 따로 둡니다.",
+  "aliases": [
+   "hci",
+   "hyperconverged",
+   "하이퍼컨버지드"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "What is hyperconverged infrastructure (HCI)?",
+    "org": "IBM",
+    "url": "https://www.ibm.com/think/topics/hyperconverged-infrastructure",
+    "kind": "primary"
+   },
+   {
+    "title": "Understanding hyperconverged infrastructure",
+    "org": "Red Hat",
+    "url": "https://www.redhat.com/en/topics/hyperconverged-infrastructure",
+    "kind": "primary"
+   }
+  ],
+  "changed": "정의를 출처 표현(compute·storage·networking 을 소프트웨어로 통합)에 맞춤; 별칭에서 제품 이름 '뉴타닉스','vsan'을 뺌.",
+  "note": ""
+ },
+ {
+  "term": "HDD",
+  "fullName": "하드 디스크 드라이브(Hard Disk Drive)",
+  "category": "하드웨어 / 디스크",
+  "definition": "HDD(하드 디스크 드라이브)는 회전하는 자기 원판에 데이터를 기록하는 저장 장치입니다.",
+  "why": "용량당 값이 싸서 백업·보관처럼 큰 용량이 필요한 곳에 씁니다.",
+  "compare": "HDD는 싸고 느리며, SSD는 비싸고 빠릅니다.",
+  "aliases": [
+   "hdd",
+   "hard disk",
+   "하드디스크",
+   "하드"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "Hard disk drive (HDD) vs. solid-state drive (SSD): What's the difference?",
+    "org": "IBM",
+    "url": "https://www.ibm.com/think/topics/hard-disk-drive-vs-solid-state-drive",
+    "kind": "primary"
+   }
+  ],
+  "changed": "별칭에서 'sas 디스크','sata 디스크'를 뺌(SAS·SATA 는 SSD 에도 쓰는 접속 방식).",
+  "note": ""
+ },
+ {
+  "term": "SSD",
+  "fullName": "솔리드 스테이트 드라이브(Solid State Drive)",
+  "category": "하드웨어 / 디스크",
+  "definition": "SSD(솔리드 스테이트 드라이브)는 움직이는 부품 없이 플래시 메모리에 데이터를 기록하는 저장 장치입니다.",
+  "why": "읽고 쓰는 속도가 HDD보다 훨씬 빨라 데이터베이스처럼 디스크를 많이 쓰는 곳의 성능을 높입니다.",
+  "compare": "SSD는 저장 장치의 종류이고, NVMe는 SSD를 연결하는 빠른 접속 규격입니다.",
+  "aliases": [
+   "ssd",
+   "solid state drive",
+   "플래시",
+   "올플래시",
+   "에스에스디"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "Hard disk drive (HDD) vs. solid-state drive (SSD): What's the difference?",
+    "org": "IBM",
+    "url": "https://www.ibm.com/think/topics/hard-disk-drive-vs-solid-state-drive",
+    "kind": "primary"
+   }
+  ],
+  "changed": "",
+  "note": ""
+ },
+ {
+  "term": "NVMe",
+  "fullName": "Non-Volatile Memory Express",
+  "category": "하드웨어 / 디스크 접속 규격",
+  "definition": "NVMe(Non-Volatile Memory Express)는 SSD 같은 플래시 저장 장치를 주로 PCIe로 연결해 빠르게 읽고 쓰도록 만든 접속 규격입니다.",
+  "why": "예전 디스크용 규격(SATA·SAS)의 속도 한계를 넘어 SSD 성능을 제대로 끌어냅니다.",
+  "compare": "같은 SSD라도 NVMe 방식은 SATA·SAS 방식보다 훨씬 많은 명령을 동시에 처리해 더 빠릅니다.",
+  "aliases": [
+   "nvme",
+   "nvme ssd",
+   "엔브이엠이"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "About NVM Express",
+    "org": "NVM Express",
+    "url": "https://nvmexpress.org/about/",
+    "kind": "primary"
+   },
+   {
+    "title": "What is NVMe?",
+    "org": "IBM",
+    "url": "https://www.ibm.com/think/topics/nvme",
+    "kind": "primary"
+   }
+  ],
+  "changed": "compare 의 '몇 배 빠릅니다'는 출처에 수치가 없어 '더 빠릅니다'로 낮춤; 정의를 '주로 PCIe'로 맞춤.",
+  "note": ""
+ },
+ {
+  "term": "RAID",
+  "fullName": "Redundant Array of Independent Disks",
+  "category": "하드웨어 / 디스크 보호",
+  "definition": "RAID(Redundant Array of Independent Disks)는 디스크 여러 개를 하나처럼 묶어 속도를 높이거나 디스크가 고장 나도 데이터를 지키는 기술입니다.",
+  "why": "디스크 한두 개가 고장 나도 서비스가 멈추거나 데이터가 사라지지 않게 합니다.",
+  "compare": "RAID는 디스크 고장에 대비하는 것이고 백업은 삭제·오류·재해에 대비하는 것이어서, RAID가 백업을 대신하지 못합니다.",
+  "aliases": [
+   "raid",
+   "레이드",
+   "디스크 어레이"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "PowerEdge: What are the different RAID levels and their specifications",
+    "org": "Dell",
+    "url": "https://www.dell.com/support/kbdoc/en-us/000128635",
+    "kind": "primary"
+   }
+  ],
+  "changed": "",
+  "note": "SNIA 사전은 접속이 막혀(403) 열지 못해 Dell 기술 문서로 확인했습니다."
+ },
+ {
+  "term": "RAID 0",
+  "fullName": "RAID 0 (스트라이핑, Striping)",
+  "category": "하드웨어 / 디스크 보호",
+  "definition": "RAID 0은 데이터를 여러 디스크에 나누어 기록해 속도와 용량을 얻지만 여분이 없는 RAID 구성입니다.",
+  "why": "잃어도 되는 임시 데이터를 빠르게 읽고 쓸 때 씁니다.",
+  "compare": "RAID 0은 디스크 하나만 고장 나도 전체 데이터를 잃고, RAID 1은 하나가 고장 나도 남습니다.",
+  "aliases": [
+   "raid0",
+   "스트라이핑",
+   "striping",
+   "레이드 0"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "PowerEdge: What are the different RAID levels and their specifications",
+    "org": "Dell",
+    "url": "https://www.dell.com/support/kbdoc/en-us/000128635",
+    "kind": "primary"
+   }
+  ],
+  "changed": "",
+  "note": ""
+ },
+ {
+  "term": "RAID 1",
+  "fullName": "RAID 1 (미러링, Mirroring)",
+  "category": "하드웨어 / 디스크 보호",
+  "definition": "RAID 1은 같은 데이터를 디스크 두 개에 똑같이 기록하는 RAID 구성입니다.",
+  "why": "디스크 하나가 고장 나도 나머지 하나로 계속 동작합니다.",
+  "compare": "RAID 1은 쓸 수 있는 용량이 절반이고, RAID 5는 디스크 한 개 몫만 빠집니다.",
+  "aliases": [
+   "raid1",
+   "미러링",
+   "mirroring",
+   "레이드 1"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "PowerEdge: What are the different RAID levels and their specifications",
+    "org": "Dell",
+    "url": "https://www.dell.com/support/kbdoc/en-us/000128635",
+    "kind": "primary"
+   }
+  ],
+  "changed": "",
+  "note": "compare 의 '용량 절반', 'RAID 5 는 디스크 한 개 몫'은 출처에 문장으로는 없고(출처는 '디스크 부담이 크다'고만 적음) 구조에서 따라 나오는 값입니다."
+ },
+ {
+  "term": "RAID 5",
+  "fullName": "RAID 5 (분산 패리티)",
+  "category": "하드웨어 / 디스크 보호",
+  "definition": "RAID 5는 디스크 3개 이상에 데이터와 복구용 정보(패리티)를 나누어 기록해 디스크 1개 고장까지 견디는 RAID 구성입니다.",
+  "why": "용량 손실을 디스크 한 개 몫으로 줄이면서 디스크 고장에 대비합니다.",
+  "compare": "RAID 5는 디스크 1개 고장까지, RAID 6은 2개 고장까지 견딥니다.",
+  "aliases": [
+   "raid5",
+   "레이드 5",
+   "패리티"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "PowerEdge: What are the different RAID levels and their specifications",
+    "org": "Dell",
+    "url": "https://www.dell.com/support/kbdoc/en-us/000128635",
+    "kind": "primary"
+   }
+  ],
+  "changed": "",
+  "note": ""
+ },
+ {
+  "term": "RAID 6",
+  "fullName": "RAID 6 (이중 분산 패리티)",
+  "category": "하드웨어 / 디스크 보호",
+  "definition": "RAID 6은 디스크 4개 이상에 복구용 정보(패리티)를 이중으로 기록해 디스크 2개가 동시에 고장 나도 견디는 RAID 구성입니다.",
+  "why": "디스크 하나를 복구하는 동안 다른 디스크가 또 고장 나는 경우까지 대비합니다.",
+  "compare": "RAID 6은 RAID 5보다 안전하지만 쓰기가 더 느리고 디스크 두 개 몫의 용량이 빠집니다.",
+  "aliases": [
+   "raid6",
+   "레이드 6",
+   "이중 패리티"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "PowerEdge: What are the different RAID levels and their specifications",
+    "org": "Dell",
+    "url": "https://www.dell.com/support/kbdoc/en-us/000128635",
+    "kind": "primary"
+   }
+  ],
+  "changed": "why 의 '용량이 큰 디스크는 복구 시간이 길어'는 출처에 없어 뺌.",
+  "note": ""
+ },
+ {
+  "term": "RAID 10",
+  "fullName": "RAID 10 (RAID 1+0, 미러링 후 스트라이핑)",
+  "category": "하드웨어 / 디스크 보호",
+  "definition": "RAID 10은 디스크를 둘씩 미러링(RAID 1)한 묶음들을 다시 나누어 기록(RAID 0)하는 RAID 구성입니다.",
+  "why": "높은 처리 속도와 완전한 이중화를 함께 얻어야 하는 저장소에 씁니다.",
+  "compare": "RAID 10은 패리티 계산이 없어 빠르지만 디스크가 가장 많이 들고, RAID 6은 패리티를 이중으로 계산해 쓰기가 느립니다.",
+  "aliases": [
+   "raid10",
+   "raid 1+0",
+   "레이드 10",
+   "레이드 텐"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "PowerEdge: What are the different RAID levels and their specifications",
+    "org": "Dell",
+    "url": "https://www.dell.com/support/kbdoc/en-us/000128635",
+    "kind": "primary"
+   }
+  ],
+  "changed": "why 의 '데이터베이스'와 compare 의 '용량 절반'·'RAID 5 쓰기가 느림'은 출처에 없어 출처 표현으로 바꿈.",
+  "note": ""
+ },
+ {
+  "term": "DAS",
+  "fullName": "직접 연결 스토리지(Direct Attached Storage)",
+  "category": "하드웨어 / 스토리지",
+  "definition": "DAS(Direct Attached Storage)는 서버 한 대에 케이블로 직접 붙여 그 서버만 쓰는 저장 장치입니다.",
+  "why": "구성이 단순하고 값이 싸며 네트워크를 거치지 않아 빠릅니다.",
+  "compare": "DAS는 서버 한 대 전용이고, NAS·SAN은 여러 서버가 함께 씁니다.",
+  "aliases": [
+   "das",
+   "direct attached storage",
+   "다스",
+   "직접 연결 스토리지"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "What is network-attached storage (NAS)?",
+    "org": "IBM",
+    "url": "https://www.ibm.com/think/topics/network-attached-storage",
+    "kind": "primary"
+   },
+   {
+    "title": "What is a storage area network (SAN)?",
+    "org": "IBM",
+    "url": "https://www.ibm.com/think/topics/storage-area-network",
+    "kind": "primary"
+   },
+   {
+    "title": "What Is Direct-attached Storage (DAS)?",
+    "org": "Everpure(구 Pure Storage)",
+    "url": "https://www.everpuredata.com/knowledge/what-is-direct-attached-storage.html",
+    "kind": "aux"
+   }
+  ],
+  "changed": "",
+  "note": ""
+ },
+ {
+  "term": "NAS",
+  "fullName": "네트워크 연결 스토리지(Network Attached Storage)",
+  "category": "하드웨어 / 스토리지",
+  "definition": "NAS(Network Attached Storage)는 네트워크로 연결해 여러 사용자와 서버가 파일 단위로 함께 쓰는 전용 저장 장치입니다.",
+  "why": "여러 서버가 같은 파일(첨부 파일, 이미지 등)을 함께 읽고 써야 할 때 씁니다.",
+  "compare": "NAS는 파일 단위로 주고받고(NFS·SMB), SAN은 디스크 블록 단위로 주고받습니다.",
+  "aliases": [
+   "nas",
+   "network attached storage",
+   "나스",
+   "공유 스토리지"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "What is network-attached storage (NAS)?",
+    "org": "IBM",
+    "url": "https://www.ibm.com/think/topics/network-attached-storage",
+    "kind": "primary"
+   }
+  ],
+  "changed": "정의를 출처 표현(여러 사용자가 파일을 저장·공유하는 전용 장치)에 맞춤; 별칭에서 통신 규격 이름인 'nfs'를 뺌.",
+  "note": ""
+ },
+ {
+  "term": "SAN",
+  "fullName": "스토리지 전용 네트워크(Storage Area Network)",
+  "category": "하드웨어 / 스토리지",
+  "definition": "SAN(Storage Area Network)은 서버와 저장 장치를 전용 고속 네트워크로 연결해 서버가 저장 장치를 자기 디스크처럼 쓰게 하는 구성입니다.",
+  "why": "데이터베이스처럼 빠르고 안정적인 디스크가 필요한 서버 여러 대에 큰 저장 장치를 나누어 줍니다.",
+  "compare": "SAN은 서버에 디스크로 보이고, NAS는 서버에 공유 폴더로 보입니다.",
+  "aliases": [
+   "san",
+   "storage area network",
+   "산",
+   "san 스토리지",
+   "san 스위치"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "What is a storage area network (SAN)?",
+    "org": "IBM",
+    "url": "https://www.ibm.com/think/topics/storage-area-network",
+    "kind": "primary"
+   },
+   {
+    "title": "What is block storage?",
+    "org": "IBM",
+    "url": "https://www.ibm.com/think/topics/block-storage",
+    "kind": "primary"
+   }
+  ],
+  "changed": "",
+  "note": ""
+ },
+ {
+  "term": "블록 스토리지",
+  "fullName": "블록 스토리지(Block Storage)",
+  "category": "하드웨어 / 스토리지 방식",
+  "definition": "블록 스토리지는 데이터를 블록 단위로 저장하고 서버에는 디스크 한 개(볼륨)처럼 붙여 쓰는 저장 방식입니다.",
+  "why": "운영체제와 데이터베이스처럼 디스크를 직접 다루는 프로그램에 빠른 저장소를 줍니다.",
+  "compare": "블록 스토리지는 서버에 디스크(볼륨)로 붙고, 파일 스토리지는 폴더와 파일 구조로 보입니다.",
+  "aliases": [
+   "block storage",
+   "볼륨",
+   "volume",
+   "디스크 볼륨"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "What is block storage?",
+    "org": "IBM",
+    "url": "https://www.ibm.com/think/topics/block-storage",
+    "kind": "primary"
+   }
+  ],
+  "changed": "정의의 '일정한 크기'와 compare 의 '보통 서버 한 대에 붙여 쓴다'는 출처로 확인하지 못해 출처 표현으로 바꿈.",
+  "note": ""
+ },
+ {
+  "term": "파이버 채널",
+  "fullName": "파이버 채널(Fibre Channel, FC)",
+  "category": "하드웨어 / 스토리지 연결",
+  "definition": "파이버 채널(Fibre Channel)은 서버와 저장 장치를 연결하는 SAN 전용 고속 통신 규격으로, 주로 광케이블을 씁니다.",
+  "why": "일반 네트워크와 분리된 전용 통로로 저장 장치를 빠르고 안정적으로 연결합니다.",
+  "compare": "파이버 채널은 전용 장비(HBA·SAN 스위치)가 필요하고, iSCSI는 일반 이더넷 장비를 그대로 씁니다.",
+  "aliases": [
+   "fc",
+   "fibre channel",
+   "fiber channel",
+   "광채널",
+   "파이버채널"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "What is a storage area network (SAN)?",
+    "org": "IBM",
+    "url": "https://www.ibm.com/think/topics/storage-area-network",
+    "kind": "primary"
+   },
+   {
+    "title": "HBA Features and Specifications (Oracle Storage 32 Gb FC PCIe HBA)",
+    "org": "Oracle",
+    "url": "https://docs.oracle.com/en/networking/storage/host-bus-adapters/fc-pcie-host-bus-adapters/32g-fc-emu/installation-guide/hba-features-and-specifications.html",
+    "kind": "primary"
+   }
+  ],
+  "changed": "",
+  "note": "파이버 채널 협회(FCIA) 개요 페이지는 본문이 잘려 읽지 못했습니다."
+ },
+ {
+  "term": "iSCSI",
+  "fullName": "Internet Small Computer System Interface",
+  "category": "하드웨어 / 스토리지 연결",
+  "definition": "iSCSI는 저장 장치 명령(SCSI)을 일반 IP 네트워크(TCP/IP)로 주고받아 서버와 저장 장치를 연결하는 통신 규격입니다.",
+  "why": "전용 SAN 장비 없이 기존 네트워크 장비로 SAN을 값싸게 구성합니다.",
+  "compare": "iSCSI는 일반 이더넷 망을 그대로 쓰고, 파이버 채널은 전용 장비로 꾸민 별도 망을 씁니다.",
+  "aliases": [
+   "iscsi",
+   "아이스카시",
+   "ip san"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "RFC 7143: Internet Small Computer System Interface (iSCSI) Protocol (Consolidated)",
+    "org": "IETF",
+    "url": "https://www.rfc-editor.org/rfc/rfc7143",
+    "kind": "primary"
+   },
+   {
+    "title": "What is a storage area network (SAN)?",
+    "org": "IBM",
+    "url": "https://www.ibm.com/think/topics/storage-area-network",
+    "kind": "primary"
+   }
+  ],
+  "changed": "정식 명칭을 RFC 표기(System, 단수)로 고침; compare 의 '네트워크 상태 영향을 더 받는다'는 출처에 없어 바꿈.",
+  "note": ""
+ },
+ {
+  "term": "HBA",
+  "fullName": "호스트 버스 어댑터(Host Bus Adapter)",
+  "category": "하드웨어 / 부품",
+  "definition": "HBA(Host Bus Adapter)는 서버를 SAN 스토리지나 외부 저장 장치에 연결하기 위해 서버에 꽂는 확장 카드입니다.",
+  "why": "서버가 파이버 채널 같은 저장 장치 전용 통로에 붙을 수 있게 합니다.",
+  "compare": "HBA는 저장 장치용 연결 카드이고, NIC는 일반 네트워크용 연결 카드입니다.",
+  "aliases": [
+   "hba",
+   "host bus adapter",
+   "fc hba",
+   "에이치비에이"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "HBA Features and Specifications (Oracle Storage 32 Gb FC PCIe HBA)",
+    "org": "Oracle",
+    "url": "https://docs.oracle.com/en/networking/storage/host-bus-adapters/fc-pcie-host-bus-adapters/32g-fc-emu/installation-guide/hba-features-and-specifications.html",
+    "kind": "primary"
+   },
+   {
+    "title": "What is a storage area network (SAN)?",
+    "org": "IBM",
+    "url": "https://www.ibm.com/think/topics/storage-area-network",
+    "kind": "primary"
+   }
+  ],
+  "changed": "",
+  "note": ""
+ },
+ {
+  "term": "NIC",
+  "fullName": "네트워크 인터페이스 카드(Network Interface Card)",
+  "category": "하드웨어 / 부품",
+  "definition": "NIC(Network Interface Card)는 서버나 PC를 네트워크에 연결해 주는 내부 회로 기판 또는 카드입니다.",
+  "why": "서버가 다른 장비와 통신하려면 반드시 있어야 하는 부품입니다.",
+  "compare": "NIC는 일반 네트워크에 연결하고, HBA는 저장 장치 전용 통로에 연결합니다.",
+  "aliases": [
+   "nic",
+   "network interface card",
+   "랜카드",
+   "네트워크 카드",
+   "닉"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "network interface card (NIC) - Oracle ILOM User's Guide Glossary",
+    "org": "Oracle",
+    "url": "https://docs.oracle.com/en/servers/management/ilom/5.1.x/user-guide/network-interface-card-nic.html",
+    "kind": "primary"
+   }
+  ],
+  "changed": "정의·why 에서 출처로 확인하지 못한 포트 종류와 속도(1G·10G·25G) 설명을 뺌.",
+  "note": ""
+ },
+ {
+  "term": "본딩·티밍",
+  "fullName": "NIC 본딩(Bonding)·티밍(Teaming), 링크 묶음(Link Aggregation)",
+  "category": "하드웨어 / 네트워크 이중화",
+  "definition": "본딩·티밍은 서버의 네트워크 포트 여러 개를 하나처럼 묶어 고장에 대비하거나 통신 용량을 늘리는 구성입니다.",
+  "why": "랜 케이블이나 포트 하나가 고장 나도 서버 통신이 끊기지 않게 합니다.",
+  "compare": "리눅스에서는 주로 본딩, 윈도우에서는 티밍이라고 부르며 하는 일은 비슷합니다.",
+  "aliases": [
+   "bonding",
+   "teaming",
+   "nic teaming",
+   "lacp",
+   "본딩",
+   "티밍",
+   "링크 애그리게이션"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "Linux Ethernet Bonding Driver HOWTO",
+    "org": "The Linux Kernel (kernel.org)",
+    "url": "https://www.kernel.org/doc/Documentation/networking/bonding.txt",
+    "kind": "primary"
+   },
+   {
+    "title": "NIC Teaming Overview",
+    "org": "Microsoft Learn",
+    "url": "https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2012-r2-and-2012/hh831648(v=ws.11)",
+    "kind": "primary"
+   }
+  ],
+  "changed": "정의에 '통신 용량 늘리기(대역폭 묶음)' 목적을 더하고, compare 의 '뜻은 같습니다'를 '하는 일은 비슷합니다'로 낮춤.",
+  "note": "Red Hat 문서는 접속이 막혀(403) 리눅스 커널 공식 문서로 대신 확인했습니다. 별칭 'lacp'는 묶는 방식 중 하나(802.3ad)의 이름입니다."
+ },
+ {
+  "term": "테이프 라이브러리(PTL)",
+  "fullName": "물리 테이프 라이브러리(Physical Tape Library)",
+  "category": "하드웨어 / 백업 장비",
+  "definition": "테이프 라이브러리(PTL)는 자기 테이프 여러 개와 테이프 드라이브, 테이프를 옮기는 로봇 팔을 한 장비에 담아 백업을 자동으로 기록하는 장치입니다.",
+  "why": "많은 양의 데이터를 오래 보관하고, 네트워크와 떨어진 상태(에어 갭)로 지킬 수 있습니다.",
+  "compare": "PTL은 실제 테이프에 기록하고, VTL은 디스크에 기록하면서 테이프 장비처럼 보이게 합니다.",
+  "aliases": [
+   "ptl",
+   "tape library",
+   "lto",
+   "테이프 백업",
+   "테이프 장비"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "Supported library types (Tivoli Storage Manager)",
+    "org": "IBM",
+    "url": "https://www.ibm.com/support/knowledgecenter/en/SSGSG7_7.1.1/com.ibm.itsm.srv.doc/c_devconcepts_libraries_ulw.html",
+    "kind": "primary"
+   },
+   {
+    "title": "IBM TS4300 Tape Library",
+    "org": "IBM",
+    "url": "https://www.ibm.com/products/ts4300",
+    "kind": "primary"
+   }
+  ],
+  "changed": "why·compare 의 '값싸게', '복구가 느리다'는 연 출처에 없어 출처에 있는 내용(장기 보관·에어 갭, VTL 과의 차이)으로 바꿈.",
+  "note": "'PTL'이라는 약어는 연 출처에 나오지 않습니다(국내에서 VTL 과 구분해 쓰는 말)."
+ },
+ {
+  "term": "VTL",
+  "fullName": "가상 테이프 라이브러리(Virtual Tape Library)",
+  "category": "하드웨어 / 백업 장비",
+  "definition": "VTL(Virtual Tape Library)은 디스크 저장 장치를 백업 소프트웨어에는 테이프 라이브러리처럼 보이게 만든 백업 장비입니다.",
+  "why": "테이프용으로 짜 둔 백업 절차를 바꾸지 않고 디스크를 백업 저장소로 쓰게 합니다.",
+  "compare": "VTL은 실제로는 디스크에 저장하고, PTL은 실제 테이프에 저장합니다.",
+  "aliases": [
+   "vtl",
+   "virtual tape library",
+   "가상 테이프",
+   "브이티엘"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "Supported library types (Tivoli Storage Manager)",
+    "org": "IBM",
+    "url": "https://www.ibm.com/support/knowledgecenter/en/SSGSG7_7.1.1/com.ibm.itsm.srv.doc/c_devconcepts_libraries_ulw.html",
+    "kind": "primary"
+   }
+  ],
+  "changed": "why 의 '빠른 백업·복구 속도'는 1차 출처에서 확인하지 못해 뺌.",
+  "note": ""
+ },
+ {
+  "term": "L2 스위치",
+  "fullName": "2계층(Layer 2) 스위치",
+  "category": "하드웨어 / 네트워크 장비",
+  "definition": "L2 스위치는 같은 네트워크 안의 서버와 장비를 랜 케이블로 연결하고 장비 고유 주소(MAC 주소)를 보고 데이터를 전달하는 네트워크 장비입니다.",
+  "why": "랙 안의 서버 여러 대를 네트워크에 연결하는 기본 장비입니다.",
+  "compare": "L2 스위치는 같은 네트워크 안에서만 전달하고, L3 스위치는 다른 네트워크로도 길을 찾아 전달합니다.",
+  "aliases": [
+   "l2",
+   "layer 2 switch",
+   "스위치",
+   "스위칭 허브",
+   "tor 스위치",
+   "엘투 스위치"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "Layer 3 vs Layer 2 Switching",
+    "org": "Cisco Meraki",
+    "url": "https://documentation.meraki.com/MS/Layer_3_Switching/Layer_3_vs_Layer_2_Switching",
+    "kind": "primary"
+   }
+  ],
+  "changed": "",
+  "note": "별칭 'tor 스위치'는 놓는 위치를 가리키는 말이라 L3 장비일 수도 있습니다."
+ },
+ {
+  "term": "L3 스위치",
+  "fullName": "3계층(Layer 3) 스위치",
+  "category": "하드웨어 / 네트워크 장비",
+  "definition": "L3 스위치는 IP 주소를 보고 서로 다른 네트워크 사이로 데이터의 길을 찾아 전달하는(라우팅) 기능을 가진 스위치입니다.",
+  "why": "여러 네트워크 구역(서브넷·VLAN)을 서로 연결하는 전산실의 중심 장비로 씁니다.",
+  "compare": "L3 스위치는 IP 주소를 보고 길을 찾고, L4 스위치는 전송 계층(TCP·UDP) 정보를 보고 여러 서버로 나누어 보냅니다.",
+  "aliases": [
+   "l3",
+   "layer 3 switch",
+   "백본 스위치",
+   "코어 스위치",
+   "엘쓰리 스위치"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "Layer 3 vs Layer 2 Switching",
+    "org": "Cisco Meraki",
+    "url": "https://documentation.meraki.com/MS/Layer_3_Switching/Layer_3_vs_Layer_2_Switching",
+    "kind": "primary"
+   },
+   {
+    "title": "The OSI Network Model and Types of Load Balancers",
+    "org": "A10 Networks",
+    "url": "https://a10networks.com/glossary/osi-network-model-and-types-of-load-balancers",
+    "kind": "primary"
+   }
+  ],
+  "changed": "compare 의 '포트 번호'를 출처 표현(전송 계층 정보)에 맞춤.",
+  "note": ""
+ },
+ {
+  "term": "L4·L7 스위치(장비)",
+  "fullName": "4계층·7계층 스위치(부하 분산 장비, ADC)",
+  "category": "하드웨어 / 네트워크 장비",
+  "definition": "L4·L7 스위치는 들어온 요청을 여러 서버에 나누어 보내는 부하 분산 장비로, 기능을 더한 장비를 ADC(Application Delivery Controller)라고 부릅니다.",
+  "why": "많은 요청을 전용 장비로 빠르게 나누고 고장 난 서버를 자동으로 빼냅니다.",
+  "compare": "구성도에서 \"L4\"는 대개 이 장비를 가리키며, 클라우드에서는 장비 대신 로드밸런서 서비스(ALB·NLB)를 씁니다.",
+  "aliases": [
+   "l4 스위치",
+   "l7 스위치",
+   "adc",
+   "slb",
+   "엘포 스위치",
+   "부하 분산 장비"
+  ],
+  "kind": "concept",
+  "verified": false,
+  "sources": [
+   {
+    "title": "The OSI Network Model and Types of Load Balancers",
+    "org": "A10 Networks",
+    "url": "https://a10networks.com/glossary/osi-network-model-and-types-of-load-balancers",
+    "kind": "primary"
+   }
+  ],
+  "changed": "ADC 를 같은 말이 아니라 '부하 분산에 기능을 더한 장비'로 고침(출처: ADC 는 부하 분산을 넘어 서버 상태 점검 등을 함).",
+  "note": "L4·L7 부하 분산과 ADC 의 뜻은 확인했지만, 이를 'L4 스위치'라 부르는 국내 용법과 '전용 하드웨어'라는 점은 1차 출처로 확인하지 못했습니다(F5 용어집은 본문이 비어 있었고 Radware 는 차단)."
+ },
+ {
+  "term": "랙",
+  "fullName": "서버 랙(Rack, 19인치 캐비닛)",
+  "category": "하드웨어 / 전산실 설비",
+  "definition": "랙은 서버·스위치·스토리지 같은 장비를 층층이 끼워 넣어 정리하는 폭 19인치 규격의 선반(캐비닛)입니다.",
+  "why": "장비를 좁은 바닥 면적에 높이 쌓고 전원과 케이블을 정리합니다.",
+  "compare": "랙 하나의 높이는 보통 42U이고, 장비 높이를 U 단위로 세어 몇 대가 들어갈지 계산합니다.",
+  "aliases": [
+   "rack",
+   "서버 랙",
+   "캐비닛",
+   "19인치 랙",
+   "42U 랙"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "Server Rack Sizes Matter: Get These 3 Critical Rack Server Dimensions Right",
+    "org": "Vertiv",
+    "url": "https://www.vertiv.com/en-us/about/news-and-insights/articles/educational-articles/server-rack-sizes-matter-get-these-3-critical-rack-server-dimensions-right/",
+    "kind": "primary"
+   }
+  ],
+  "changed": "정의에서 출처에 없는 '철제'를 뺌.",
+  "note": ""
+ },
+ {
+  "term": "U(랙 유닛)",
+  "fullName": "랙 유닛(Rack Unit)",
+  "category": "하드웨어 / 전산실 설비",
+  "definition": "U(랙 유닛)는 랙에 넣는 장비의 높이를 세는 단위로, 1U는 1.75인치(약 44.45mm)입니다.",
+  "why": "장비가 랙에서 차지하는 자리를 세어 랙과 상면이 얼마나 필요한지 계산합니다.",
+  "compare": "\"2U 서버\"는 높이가 2칸인 서버라는 뜻으로, 성능이 아니라 크기를 말합니다.",
+  "aliases": [
+   "rack unit",
+   "ru",
+   "1u",
+   "2u",
+   "유",
+   "랙 유닛"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "Server Rack Sizes Matter: Get These 3 Critical Rack Server Dimensions Right",
+    "org": "Vertiv",
+    "url": "https://www.vertiv.com/en-us/about/news-and-insights/articles/educational-articles/server-rack-sizes-matter-get-these-3-critical-rack-server-dimensions-right/",
+    "kind": "primary"
+   }
+  ],
+  "changed": "",
+  "note": ""
+ },
+ {
+  "term": "상면",
+  "fullName": "상면(전산실 장비 설치 공간)",
+  "category": "하드웨어 / 전산실 설비",
+  "definition": "상면은 전산실(IDC)에서 서버·스위치 같은 장비를 설치하는 자리를 뜻하는 현업 용어로, 보통 랙이나 케이지 단위로 빌립니다.",
+  "why": "IDC 임대 비용과 장비 증설 가능 여부가 상면으로 정해집니다.",
+  "compare": "\"상면이 부족하다\"는 말은 디스크 용량이 아니라 장비를 놓을 자리가 없다는 뜻입니다.",
+  "aliases": [
+   "상면 공간",
+   "랙 상면",
+   "floor space",
+   "상면 임대"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "IDC 코로케이션 서비스 안내",
+    "org": "LG유플러스",
+    "url": "https://www.lguplus.com/biz/all/telecom/idc/colocation/B000000035",
+    "kind": "primary"
+   }
+  ],
+  "changed": "정의를 IDC 사업자 공식 안내의 쓰임(랙·케이지를 빌리는 것)에 맞추고, 확인하지 못한 한자 표기(床面)를 뺌.",
+  "note": "표준 정의는 없고 LG유플러스 IDC 안내에서 '상면 = 장비를 설치할 랙·케이지 임대'로 쓰인 것을 확인했습니다. 한자와 별칭 'floor space'는 확인하지 못했습니다."
+ },
+ {
+  "term": "UPS",
+  "fullName": "무정전 전원 장치(Uninterruptible Power Supply)",
+  "category": "하드웨어 / 전산실 설비",
+  "definition": "UPS(무정전 전원 장치)는 정전이나 전압 이상이 생겼을 때 배터리로 장비에 전기를 잠시 계속 공급하는 장치입니다.",
+  "why": "정전 순간에 서버가 갑자기 꺼져 데이터가 깨지는 것을 막고 비상 발전기가 돌 때까지 시간을 법니다.",
+  "compare": "UPS는 짧은 시간만 버티고, 긴 정전은 비상 발전기처럼 오래가는 전원이 맡습니다.",
+  "aliases": [
+   "ups",
+   "무정전 전원",
+   "무정전 전원 공급 장치",
+   "유피에스"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "What is a UPS?",
+    "org": "Vertiv",
+    "url": "https://www.vertiv.com/en-us/about/news-and-insights/articles/educational-articles/what-is-a-ups/",
+    "kind": "primary"
+   }
+  ],
+  "changed": "compare 의 '몇 분에서 몇십 분'은 출처에 수치가 없어 '짧은 시간'으로 바꿈.",
+  "note": ""
+ },
+ {
+  "term": "항온항습기",
+  "fullName": "항온항습기(전산실 공조 장치, CRAC)",
+  "category": "하드웨어 / 전산실 설비",
+  "definition": "항온항습기는 전산실의 온도와 습도를 일정하게 유지하는 냉방·공조 장치입니다.",
+  "why": "서버가 내는 열을 식히고 습도를 맞춰 장비 고장을 막습니다.",
+  "compare": "일반 냉방기와 달리 바깥 기온과 상관없이 1년 내내 쉬지 않고 돌며 장비 열을 식히는 데 맞춰 만들어졌습니다.",
+  "aliases": [
+   "항온항습",
+   "crac",
+   "공조",
+   "전산실 냉방"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "What does precision air conditioning mean now, and is it still a necessity for IT spaces?",
+    "org": "Vertiv",
+    "url": "https://www.vertiv.com/en-in/about/news-and-insights/articles/educational-articles/what-does-precision-air-conditioning-mean-now-and-is-it-still-a-necessity-for-it-spaces/",
+    "kind": "primary"
+   }
+  ],
+  "changed": "compare 의 '습도까지 조절'을 뺌(출처상 일반 냉방기도 제습을 하며, 차이는 연중무휴 운전과 장비 열 처리 위주 설계).",
+  "note": "'항온항습기'라는 우리말 이름은 출처에 없고, 같은 장치인 CRAC·정밀 공조(precision air conditioning) 설명으로 확인했습니다."
+ },
+ {
+  "term": "KVM 스위치",
+  "fullName": "KVM(Keyboard, Video, Mouse) 스위치",
+  "category": "하드웨어 / 전산실 설비",
+  "definition": "KVM 스위치는 키보드·모니터·마우스 한 벌로 서버 여러 대를 골라 가며 조작하게 해 주는 전환 장치입니다.",
+  "why": "서버마다 모니터와 키보드를 달지 않고도 전산실에서 여러 서버를 직접 조작합니다.",
+  "compare": "KVM 스위치는 조작용 장치이고, 리눅스 가상화 기능인 KVM(Kernel-based Virtual Machine)과는 이름만 같습니다.",
+  "aliases": [
+   "kvm switch",
+   "kvm over ip",
+   "케이브이엠 스위치"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "What is a KVM switch?",
+    "org": "Vertiv",
+    "url": "https://www.vertiv.com/en-us/about/news-and-insights/articles/educational-articles/what-is-a-kvm-switch",
+    "kind": "primary"
+   }
+  ],
+  "changed": "",
+  "note": "compare 의 리눅스 KVM(Kernel-based Virtual Machine) 풀이는 이번에 따로 문서를 열어 확인하지는 않았습니다."
+ }
+]
