@@ -1,0 +1,1884 @@
+[
+ {
+  "term": "WebRTC",
+  "fullName": "Web Real-Time Communication",
+  "category": "WebRTC / 기본",
+  "definition": "WebRTC는 브라우저나 앱끼리 음성·영상·데이터를 실시간으로 주고받게 하는 W3C API와 IETF 프로토콜 묶음입니다.",
+  "why": "플러그인 없이 브라우저만으로 지연이 짧은 통화와 화상회의를 만들 수 있습니다.",
+  "compare": "WebRTC는 UDP 위에서 양방향으로 바로 주고받고, HLS는 HTTP로 잘라 둔 영상 조각을 내려받아 봅니다.",
+  "aliases": [
+   "webrtc",
+   "웹알티씨",
+   "웹rtc",
+   "webrealtimecommunication"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "RFC 8825: Overview: Real-Time Protocols for Browser-Based Applications",
+    "org": "IETF",
+    "url": "https://www.rfc-editor.org/rfc/rfc8825.html",
+    "kind": "primary"
+   },
+   {
+    "title": "WebRTC: Real-Time Communication in Browsers (W3C Recommendation)",
+    "org": "W3C",
+    "url": "https://www.w3.org/TR/webrtc/",
+    "kind": "primary"
+   }
+  ],
+  "note": ""
+ },
+ {
+  "term": "시그널링",
+  "fullName": "시그널링(Signaling)",
+  "category": "WebRTC / 신호",
+  "definition": "시그널링은 미디어 길과 데이터 길을 만들고 관리하고 제어하려고 주고받는 통신입니다.",
+  "why": "두 단말이 서로의 주소·코덱·암호화 정보를 알아야 미디어 연결을 시작할 수 있습니다.",
+  "compare": "시그널링은 서버를 거치는 신호 길이고, 실제 음성·영상은 따로 맺은 미디어 길로 흐릅니다.",
+  "aliases": [
+   "signaling",
+   "signalling",
+   "신호",
+   "신호교환",
+   "시그널링채널"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "RFC 8825: Overview: Real-Time Protocols for Browser-Based Applications",
+    "org": "IETF",
+    "url": "https://www.rfc-editor.org/rfc/rfc8825.html",
+    "kind": "primary"
+   },
+   {
+    "title": "RFC 9429: JavaScript Session Establishment Protocol (JSEP)",
+    "org": "IETF",
+    "url": "https://www.rfc-editor.org/rfc/rfc9429.html",
+    "kind": "primary"
+   }
+  ],
+  "note": "WebRTC 표준은 시그널링 프로토콜을 정하지 않는다(RFC 8825 §3, W3C WebRTC §4.1)."
+ },
+ {
+  "term": "시그널링 서버",
+  "fullName": "시그널링 서버(Signaling Server)",
+  "category": "WebRTC / 신호",
+  "definition": "시그널링 서버는 두 단말이 서로를 찾아 연결을 맺도록 제안·응답과 ICE 후보를 대신 전달해 주는 서버입니다.",
+  "why": "단말끼리는 연결되기 전이라 서로에게 직접 말할 수 없어 중간에서 전달해 줄 서버가 필요합니다.",
+  "compare": "시그널링 서버는 연결 정보만 전달하고 음성·영상은 지나가지 않으며, SFU·TURN은 미디어가 지나갑니다.",
+  "aliases": [
+   "signalingserver",
+   "신호서버",
+   "시그널서버",
+   "시그널링서버"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "Signaling and video calling",
+    "org": "MDN (Mozilla)",
+    "url": "https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Signaling_and_video_calling",
+    "kind": "primary"
+   },
+   {
+    "title": "WebRTC: Real-Time Communication in Browsers (W3C Recommendation)",
+    "org": "W3C",
+    "url": "https://www.w3.org/TR/webrtc/",
+    "kind": "primary"
+   }
+  ],
+  "note": "전송 수단은 정해져 있지 않고 WebSocket 이 흔하다(MDN). 보통 HTTPS/WSS 443."
+ },
+ {
+  "term": "WebSocket",
+  "fullName": "The WebSocket Protocol",
+  "category": "WebRTC / 신호",
+  "definition": "WebSocket은 HTTP 업그레이드로 시작해 TCP 연결 하나 위에서 클라이언트와 서버가 양방향으로 메시지를 주고받는 프로토콜입니다.",
+  "why": "서버가 먼저 단말에 알림을 보낼 수 있어 시그널링 메시지를 바로 전달할 수 있습니다.",
+  "compare": "WebSocket은 TCP 위의 신호·메시지용 연결이고, WebRTC 미디어는 주로 UDP 위의 SRTP로 흐릅니다.",
+  "aliases": [
+   "websocket",
+   "웹소켓",
+   "ws",
+   "wss"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "RFC 6455: The WebSocket Protocol",
+    "org": "IETF",
+    "url": "https://www.rfc-editor.org/rfc/rfc6455.html",
+    "kind": "primary"
+   },
+   {
+    "title": "Signaling and video calling",
+    "org": "MDN (Mozilla)",
+    "url": "https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Signaling_and_video_calling",
+    "kind": "primary"
+   }
+  ],
+  "note": "기본 포트는 ws 80, wss 443(RFC 6455 §3)."
+ },
+ {
+  "term": "SDP(세션 기술)",
+  "fullName": "Session Description Protocol",
+  "category": "WebRTC / 신호",
+  "definition": "SDP(Session Description Protocol)는 코덱·해상도·암호화 같은 멀티미디어 세션의 내용을 적는 표준 서식입니다.",
+  "why": "두 단말이 어떤 코덱과 주소로 미디어를 주고받을지 같은 형식으로 적어 맞춰 볼 수 있습니다.",
+  "compare": "SDP는 미디어를 설명하는 글일 뿐 미디어 자체가 아니며, 보안 용어 SDP(소프트웨어 정의 경계)와는 다른 말입니다.",
+  "aliases": [
+   "sessiondescriptionprotocol",
+   "세션기술프로토콜",
+   "세션디스크립션",
+   "sdp오퍼"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "RFC 8866: SDP: Session Description Protocol",
+    "org": "IETF",
+    "url": "https://www.rfc-editor.org/rfc/rfc8866.html",
+    "kind": "primary"
+   },
+   {
+    "title": "Introduction to WebRTC protocols",
+    "org": "MDN (Mozilla)",
+    "url": "https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Protocols",
+    "kind": "primary"
+   }
+  ],
+  "note": "기존 사전에 'SDP'(Software Defined Perimeter)가 이미 있어 표제어를 달리했다. 약어 충돌 처리 필요."
+ },
+ {
+  "term": "제안·응답(Offer/Answer)",
+  "fullName": "SDP Offer/Answer",
+  "category": "WebRTC / 신호",
+  "definition": "제안·응답은 한쪽이 SDP 제안(offer)을 보내고 상대가 SDP 응답(answer)으로 답해 세션 조건을 맞추는 절차입니다.",
+  "why": "양쪽이 모두 지원하는 코덱과 전송 조건을 한 번의 왕복으로 정할 수 있습니다.",
+  "compare": "제안·응답은 세션 조건을 맞추는 일이고, ICE 후보 교환은 실제로 통하는 주소를 찾는 일입니다.",
+  "aliases": [
+   "offeranswer",
+   "sdpoffer",
+   "sdpanswer",
+   "오퍼앤서",
+   "오퍼",
+   "앤서"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "RFC 9429: JavaScript Session Establishment Protocol (JSEP)",
+    "org": "IETF",
+    "url": "https://www.rfc-editor.org/rfc/rfc9429.html",
+    "kind": "primary"
+   },
+   {
+    "title": "Signaling and video calling",
+    "org": "MDN (Mozilla)",
+    "url": "https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Signaling_and_video_calling",
+    "kind": "primary"
+   }
+  ],
+  "note": ""
+ },
+ {
+  "term": "JSEP",
+  "fullName": "JavaScript Session Establishment Protocol",
+  "category": "WebRTC / 신호",
+  "definition": "JSEP(JavaScript Session Establishment Protocol)는 자바스크립트 앱이 SDP 제안·응답으로 세션을 맺는 방식을 정한 IETF 규격입니다.",
+  "why": "신호를 어떤 통로로 보낼지는 앱에 맡기고 브라우저는 세션 상태와 미디어만 다루게 합니다.",
+  "compare": "JSEP은 브라우저 안의 세션 절차를 정하고, 신호를 실어 나르는 통로(WebSocket 등)는 정하지 않습니다.",
+  "aliases": [
+   "javascriptsessionestablishmentprotocol",
+   "제이셉"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "RFC 9429: JavaScript Session Establishment Protocol (JSEP)",
+    "org": "IETF",
+    "url": "https://www.rfc-editor.org/rfc/rfc9429.html",
+    "kind": "primary"
+   }
+  ],
+  "note": "RFC 9429(2024-04)가 RFC 8829 를 대체."
+ },
+ {
+  "term": "RTCPeerConnection",
+  "fullName": "RTCPeerConnection (WebRTC API)",
+  "category": "WebRTC / API",
+  "definition": "RTCPeerConnection은 브라우저가 다른 브라우저나 단말과 P2P 통신을 맺고 관리하게 하는 WebRTC API 객체입니다.",
+  "why": "앱은 이 객체 하나로 제안·응답, ICE, 미디어 송수신을 다룹니다.",
+  "compare": "RTCPeerConnection은 단말 쪽 연결 객체이고, 연결 상대는 다른 단말일 수도 SFU 같은 서버일 수도 있습니다.",
+  "aliases": [
+   "peerconnection",
+   "피어커넥션",
+   "피어연결",
+   "rtcpeerconnection"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "WebRTC: Real-Time Communication in Browsers (W3C Recommendation)",
+    "org": "W3C",
+    "url": "https://www.w3.org/TR/webrtc/",
+    "kind": "primary"
+   }
+  ],
+  "note": ""
+ },
+ {
+  "term": "ICE",
+  "fullName": "Interactive Connectivity Establishment",
+  "category": "WebRTC / NAT 통과",
+  "definition": "ICE(Interactive Connectivity Establishment)는 여러 주소·포트 후보를 주고받아 실제로 통하는 짝을 찾아내는 NAT 통과 기법입니다.",
+  "why": "NAT나 방화벽 뒤의 단말끼리도 가능한 가장 직접적인 길을 자동으로 고를 수 있습니다.",
+  "compare": "ICE는 길을 찾는 절차 전체이고, STUN과 TURN은 ICE가 그 과정에서 쓰는 도구입니다.",
+  "aliases": [
+   "interactiveconnectivityestablishment",
+   "아이스",
+   "ice협상"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "RFC 8445: Interactive Connectivity Establishment (ICE)",
+    "org": "IETF",
+    "url": "https://www.rfc-editor.org/rfc/rfc8445.html",
+    "kind": "primary"
+   },
+   {
+    "title": "RFC 8835: Transports for WebRTC",
+    "org": "IETF",
+    "url": "https://www.rfc-editor.org/rfc/rfc8835.html",
+    "kind": "primary"
+   }
+  ],
+  "note": "WebRTC 단말은 ICE 를 반드시 지원(RFC 8835 §3.4)."
+ },
+ {
+  "term": "ICE 후보",
+  "fullName": "ICE Candidate",
+  "category": "WebRTC / NAT 통과",
+  "definition": "ICE 후보는 단말이 통신에 쓸 수 있다고 내놓는 IP 주소와 포트로, 호스트·서버 반사·피어 반사·릴레이 네 종류로 나뉘는 연결 후보입니다.",
+  "why": "양쪽이 후보를 맞바꿔 하나씩 연결을 시험해 보고 통하는 짝을 고릅니다.",
+  "compare": "호스트 후보는 단말 자신의 주소, 서버 반사 후보는 NAT 바깥 주소, 릴레이 후보는 TURN 서버의 주소입니다.",
+  "aliases": [
+   "icecandidate",
+   "candidate",
+   "후보",
+   "호스트후보",
+   "hostcandidate"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "RFC 8445: Interactive Connectivity Establishment (ICE)",
+    "org": "IETF",
+    "url": "https://www.rfc-editor.org/rfc/rfc8445.html",
+    "kind": "primary"
+   },
+   {
+    "title": "Signaling and video calling",
+    "org": "MDN (Mozilla)",
+    "url": "https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Signaling_and_video_calling",
+    "kind": "primary"
+   }
+  ],
+  "note": ""
+ },
+ {
+  "term": "서버 반사 후보",
+  "fullName": "Server-Reflexive Candidate (srflx)",
+  "category": "WebRTC / NAT 통과",
+  "definition": "서버 반사 후보는 단말이 STUN 서버에 패킷을 보냈을 때 NAT가 할당한 바깥쪽 IP 주소와 포트로 된 ICE 후보입니다.",
+  "why": "사설 주소를 쓰는 단말이 자신의 공인 주소를 상대에게 알려 직접 연결을 시도할 수 있습니다.",
+  "compare": "서버 반사 후보는 NAT에 뚫린 주소로 직접 통신하고, 릴레이 후보는 TURN 서버가 대신 받아 넘겨줍니다.",
+  "aliases": [
+   "serverreflexive",
+   "srflx",
+   "서버리플렉시브",
+   "반사후보"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "RFC 8445: Interactive Connectivity Establishment (ICE)",
+    "org": "IETF",
+    "url": "https://www.rfc-editor.org/rfc/rfc8445.html",
+    "kind": "primary"
+   },
+   {
+    "title": "RFC 8489: Session Traversal Utilities for NAT (STUN)",
+    "org": "IETF",
+    "url": "https://www.rfc-editor.org/rfc/rfc8489.html",
+    "kind": "primary"
+   }
+  ],
+  "note": ""
+ },
+ {
+  "term": "릴레이 후보",
+  "fullName": "Relayed Candidate (relay)",
+  "category": "WebRTC / NAT 통과",
+  "definition": "릴레이 후보는 TURN 같은 중계 서버에서 얻은 주소로, 미디어가 그 서버를 거쳐 전달되는 ICE 후보입니다.",
+  "why": "직접 연결이 되지 않는 망에서도 통화가 끊기지 않게 마지막 수단이 됩니다.",
+  "compare": "릴레이 후보는 서버 대역폭을 쓰므로 직접 길(호스트·서버 반사)을 찾지 못했을 때만 씁니다.",
+  "aliases": [
+   "relayedcandidate",
+   "relaycandidate",
+   "중계후보",
+   "릴레이"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "RFC 8445: Interactive Connectivity Establishment (ICE)",
+    "org": "IETF",
+    "url": "https://www.rfc-editor.org/rfc/rfc8445.html",
+    "kind": "primary"
+   },
+   {
+    "title": "RFC 8656: Traversal Using Relays around NAT (TURN)",
+    "org": "IETF",
+    "url": "https://www.rfc-editor.org/rfc/rfc8656.html",
+    "kind": "primary"
+   }
+  ],
+  "note": ""
+ },
+ {
+  "term": "Trickle ICE",
+  "fullName": "Trickle ICE (Incremental Provisioning of Candidates)",
+  "category": "WebRTC / NAT 통과",
+  "definition": "Trickle ICE는 후보를 다 모으기 전에 찾는 대로 하나씩 보내며 연결 시험을 먼저 시작하게 하는 ICE 확장입니다.",
+  "why": "후보 수집이 끝나기를 기다리지 않아 통화 연결 시간이 짧아집니다.",
+  "compare": "기본 ICE는 후보를 모두 모아 한 번에 보내고, Trickle ICE는 찾는 대로 시그널링으로 흘려보냅니다.",
+  "aliases": [
+   "trickleice",
+   "트리클ice",
+   "트리클아이스"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "RFC 8838: Trickle ICE",
+    "org": "IETF",
+    "url": "https://www.rfc-editor.org/rfc/rfc8838.html",
+    "kind": "primary"
+   },
+   {
+    "title": "Signaling and video calling",
+    "org": "MDN (Mozilla)",
+    "url": "https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Signaling_and_video_calling",
+    "kind": "primary"
+   }
+  ],
+  "note": ""
+ },
+ {
+  "term": "ICE-Lite",
+  "fullName": "ICE-Lite",
+  "category": "WebRTC / NAT 통과",
+  "definition": "ICE-Lite는 서버가 연결 시험을 먼저 걸지 않고 단말의 시험에 응답만 하는 간소한 ICE 구현 방식입니다.",
+  "why": "공인 주소로 닿을 수 있는 미디어 서버는 응답만 해도 연결되므로 구현이 단순해집니다.",
+  "compare": "브라우저는 완전한 ICE를 써야 하고, mediasoup 같은 서버는 ICE-Lite로 ICE 서버 역할만 합니다.",
+  "aliases": [
+   "icelite",
+   "아이스라이트"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "mediasoup FAQ",
+    "org": "mediasoup",
+    "url": "https://mediasoup.org/faq/",
+    "kind": "primary"
+   },
+   {
+    "title": "RFC 8835: Transports for WebRTC",
+    "org": "IETF",
+    "url": "https://www.rfc-editor.org/rfc/rfc8835.html",
+    "kind": "primary"
+   }
+  ],
+  "note": "ICE-Lite 의 정식 정의(RFC 8445 §2.5)는 직접 열람하지 못했고, mediasoup FAQ 와 RFC 8835 §3.4 문구로 확인."
+ },
+ {
+  "term": "ICE-TCP",
+  "fullName": "ICE-TCP (TCP Candidates with ICE)",
+  "category": "WebRTC / NAT 통과",
+  "definition": "ICE-TCP는 UDP가 막힌 망에서 미디어를 TCP 연결로 주고받도록 TCP 주소를 ICE 후보로 쓰는 방식입니다.",
+  "why": "VPN이나 회사 방화벽처럼 UDP를 막는 환경에서도 미디어 서버에 직접 붙을 수 있습니다.",
+  "compare": "ICE-TCP는 미디어 서버에 TCP로 직접 붙고, TURN/TCP는 TURN 서버까지만 TCP이고 그 뒤는 중계입니다.",
+  "aliases": [
+   "icetcp",
+   "tcp후보",
+   "tcpcandidate",
+   "tcp폴백"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "RFC 8835: Transports for WebRTC",
+    "org": "IETF",
+    "url": "https://www.rfc-editor.org/rfc/rfc8835.html",
+    "kind": "primary"
+   },
+   {
+    "title": "LiveKit self-hosting: Ports and firewall",
+    "org": "LiveKit",
+    "url": "https://docs.livekit.io/home/self-hosting/ports-firewall/",
+    "kind": "primary"
+   }
+  ],
+  "note": "LiveKit 기본 ICE/TCP 포트 7881."
+ },
+ {
+  "term": "STUN",
+  "fullName": "Session Traversal Utilities for NAT",
+  "category": "WebRTC / NAT 통과",
+  "definition": "STUN(Session Traversal Utilities for NAT)은 단말이 NAT 바깥에서 보이는 자신의 주소와 포트를 알아내는 데 쓰는 프로토콜입니다.",
+  "why": "사설 주소 단말이 공인 주소를 알아야 상대에게 직접 연결할 주소를 알려 줄 수 있습니다.",
+  "compare": "STUN은 주소만 알려 주고 미디어는 지나가지 않으며, TURN은 미디어를 대신 받아 넘겨줍니다.",
+  "aliases": [
+   "sessiontraversalutilitiesfornat",
+   "스턴",
+   "stun서버",
+   "stunserver"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "RFC 8489: Session Traversal Utilities for NAT (STUN)",
+    "org": "IETF",
+    "url": "https://www.rfc-editor.org/rfc/rfc8489.html",
+    "kind": "primary"
+   },
+   {
+    "title": "Introduction to WebRTC protocols",
+    "org": "MDN (Mozilla)",
+    "url": "https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Protocols",
+    "kind": "primary"
+   }
+  ],
+  "note": "기본 포트 3478(UDP/TCP), TLS·DTLS 는 5349(RFC 8489 §8.1). STUN 만으로는 NAT 통과 해법이 아니다(초록)."
+ },
+ {
+  "term": "TURN",
+  "fullName": "Traversal Using Relays around NAT",
+  "category": "WebRTC / NAT 통과",
+  "definition": "TURN(Traversal Using Relays around NAT)은 직접 연결이 안 되는 단말을 위해 중계 서버가 패킷을 대신 주고받아 주는 프로토콜입니다.",
+  "why": "양쪽 NAT가 직접 연결을 막아도 중계 서버를 거쳐 통화가 이어집니다.",
+  "compare": "TURN은 미디어를 그대로 중계만 하고, SFU는 여러 참가자의 미디어를 골라 나눠 줍니다.",
+  "aliases": [
+   "traversalusingrelaysaroundnat",
+   "턴",
+   "turn서버",
+   "turnserver",
+   "중계서버",
+   "릴레이서버"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "RFC 8656: Traversal Using Relays around NAT (TURN)",
+    "org": "IETF",
+    "url": "https://www.rfc-editor.org/rfc/rfc8656.html",
+    "kind": "primary"
+   },
+   {
+    "title": "Introduction to WebRTC protocols",
+    "org": "MDN (Mozilla)",
+    "url": "https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Protocols",
+    "kind": "primary"
+   }
+  ],
+  "note": "기본 포트 3478(UDP/TCP), TLS·DTLS 5349(RFC 8656 §4.1). 서버↔상대 구간은 항상 UDP(§3.1). 대역폭 비용이 커 직접 길이 없을 때만 쓴다(§1)."
+ },
+ {
+  "term": "TURN over TLS",
+  "fullName": "TURN over TLS (TURNS)",
+  "category": "WebRTC / NAT 통과",
+  "definition": "TURN over TLS는 단말과 TURN 서버 사이를 TLS로 감싼 TCP 연결로 잇고 turns: 주소로 적는 TURN 방식입니다.",
+  "why": "UDP를 모두 막고 TCP 443만 여는 회사 방화벽에서도 미디어 중계가 가능합니다.",
+  "compare": "TURN/UDP는 3478로 빠르게 중계하고, TURN over TLS는 5349나 443으로 막힌 망을 통과하는 대신 지연이 늘 수 있습니다.",
+  "aliases": [
+   "turns",
+   "turntls",
+   "turnovertls",
+   "443폴백",
+   "tls폴백",
+   "turntcp"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "RFC 8835: Transports for WebRTC",
+    "org": "IETF",
+    "url": "https://www.rfc-editor.org/rfc/rfc8835.html",
+    "kind": "primary"
+   },
+   {
+    "title": "RFC 8656: Traversal Using Relays around NAT (TURN)",
+    "org": "IETF",
+    "url": "https://www.rfc-editor.org/rfc/rfc8656.html",
+    "kind": "primary"
+   },
+   {
+    "title": "Jitsi Handbook: Setting up TURN",
+    "org": "Jitsi",
+    "url": "https://jitsi.github.io/handbook/docs/devops-guide/turn/",
+    "kind": "primary"
+   },
+   {
+    "title": "LiveKit self-hosting: Ports and firewall",
+    "org": "LiveKit",
+    "url": "https://docs.livekit.io/home/self-hosting/ports-firewall/",
+    "kind": "primary"
+   }
+  ],
+  "note": "RFC 8835 §3.4 는 TURN/TCP 와 TURNS 지원을 MUST 로 요구. 443 사용은 Jitsi·LiveKit 문서 근거. '지연이 늘 수 있다'는 일반 지식으로 출처에서 수치 확인 못 함."
+ },
+ {
+  "term": "coturn",
+  "fullName": "coturn TURN server",
+  "category": "WebRTC / 제품",
+  "definition": "coturn은 TURN과 STUN 서버 기능을 제공하는 오픈소스 서버 소프트웨어입니다.",
+  "why": "",
+  "compare": "",
+  "aliases": [
+   "코턴",
+   "turnserver",
+   "coturnserver"
+  ],
+  "kind": "product",
+  "verified": true,
+  "sources": [
+   {
+    "title": "coturn README.turnserver",
+    "org": "coturn project",
+    "url": "https://raw.githubusercontent.com/coturn/coturn/master/README.turnserver",
+    "kind": "primary"
+   },
+   {
+    "title": "Jitsi Handbook: Self-Hosting Guide (Debian/Ubuntu)",
+    "org": "Jitsi",
+    "url": "https://jitsi.github.io/handbook/docs/devops-guide/devops-guide-quickstart/",
+    "kind": "primary"
+   }
+  ],
+  "note": "기본 리스닝 3478(UDP/TCP), TLS/DTLS 5349, 릴레이 UDP 범위 기본 49152~65535(README)."
+ },
+ {
+  "term": "TURN 릴레이 포트 범위",
+  "fullName": "TURN Relay Port Range",
+  "category": "WebRTC / NAT 통과",
+  "definition": "TURN 릴레이 포트 범위는 TURN 서버가 중계용 주소를 할당할 때 쓰는 UDP 포트 구간입니다.",
+  "why": "방화벽에서 이 구간을 열어 두어야 TURN 서버가 상대 단말이나 미디어 서버와 중계 패킷을 주고받습니다.",
+  "compare": "3478·5349는 단말이 TURN 서버에 붙는 포트이고, 릴레이 포트 범위는 서버가 상대 쪽으로 여는 포트입니다.",
+  "aliases": [
+   "relayportrange",
+   "릴레이포트",
+   "minport",
+   "maxport",
+   "중계포트범위"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "coturn README.turnserver",
+    "org": "coturn project",
+    "url": "https://raw.githubusercontent.com/coturn/coturn/master/README.turnserver",
+    "kind": "primary"
+   },
+   {
+    "title": "RFC 8656: Traversal Using Relays around NAT (TURN)",
+    "org": "IETF",
+    "url": "https://www.rfc-editor.org/rfc/rfc8656.html",
+    "kind": "primary"
+   }
+  ],
+  "note": "coturn 기본 49152~65535(min-port/max-port)."
+ },
+ {
+  "term": "NAT 통과",
+  "fullName": "NAT Traversal",
+  "category": "WebRTC / NAT 통과",
+  "definition": "NAT 통과는 NAT 뒤에 있어 바깥에서 먼저 닿을 수 없는 단말끼리 통신 길을 여는 기술을 통틀어 이르는 말입니다.",
+  "why": "대부분의 단말이 사설 주소를 쓰므로 이 과정 없이는 단말끼리 직접 미디어를 주고받기 어렵습니다.",
+  "compare": "NAT 통과는 목표이고, ICE·STUN·TURN은 그 목표를 이루는 구체적인 절차와 프로토콜입니다.",
+  "aliases": [
+   "nattraversal",
+   "nat트래버설",
+   "nat우회",
+   "방화벽통과"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "RFC 8445: Interactive Connectivity Establishment (ICE)",
+    "org": "IETF",
+    "url": "https://www.rfc-editor.org/rfc/rfc8445.html",
+    "kind": "primary"
+   },
+   {
+    "title": "RFC 8489: Session Traversal Utilities for NAT (STUN)",
+    "org": "IETF",
+    "url": "https://www.rfc-editor.org/rfc/rfc8489.html",
+    "kind": "primary"
+   }
+  ],
+  "note": ""
+ },
+ {
+  "term": "UDP 홀 펀칭",
+  "fullName": "UDP Hole Punching",
+  "category": "WebRTC / NAT 통과",
+  "definition": "UDP 홀 펀칭은 양쪽 단말이 서로에게 UDP 패킷을 보내 NAT에 통로를 만들어 직접 통신 길을 찾는 기법입니다.",
+  "why": "중계 서버 없이 단말끼리 직접 연결해 지연과 서버 비용을 줄입니다.",
+  "compare": "홀 펀칭은 양쪽 NAT가 목적지에 따라 매핑을 바꾸는 방식이면 대개 실패하고, 그때는 TURN 중계가 필요합니다.",
+  "aliases": [
+   "holepunching",
+   "홀펀칭",
+   "udpholepunching"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "RFC 8656: Traversal Using Relays around NAT (TURN)",
+    "org": "IETF",
+    "url": "https://www.rfc-editor.org/rfc/rfc8656.html",
+    "kind": "primary"
+   }
+  ],
+  "note": ""
+ },
+ {
+  "term": "대칭 NAT",
+  "fullName": "Symmetric NAT (Address- and Port-Dependent Mapping)",
+  "category": "WebRTC / NAT 통과",
+  "definition": "대칭 NAT은 같은 내부 주소라도 목적지마다 다른 바깥 포트를 배정해 STUN으로 알아낸 주소가 다른 상대에게는 통하지 않는 NAT입니다.",
+  "why": "이런 NAT 뒤의 단말은 직접 연결이 잘 안 되므로 TURN 중계를 준비해야 한다는 판단 근거가 됩니다.",
+  "compare": "IETF는 '대칭 NAT' 대신 '주소·포트 의존 매핑'이라는 말을 쓰며 옛 원뿔형·대칭형 분류는 부정확하다고 봅니다.",
+  "aliases": [
+   "symmetricnat",
+   "시메트릭nat",
+   "주소의존매핑",
+   "addressdependentmapping"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "RFC 4787: NAT Behavioral Requirements for Unicast UDP",
+    "org": "IETF",
+    "url": "https://www.rfc-editor.org/rfc/rfc4787.html",
+    "kind": "primary"
+   },
+   {
+    "title": "RFC 8656: Traversal Using Relays around NAT (TURN)",
+    "org": "IETF",
+    "url": "https://www.rfc-editor.org/rfc/rfc8656.html",
+    "kind": "primary"
+   },
+   {
+    "title": "Introduction to WebRTC protocols",
+    "org": "MDN (Mozilla)",
+    "url": "https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Protocols",
+    "kind": "primary"
+   }
+  ],
+  "note": "'대칭 NAT'은 RFC 3489 의 옛 용어. RFC 4787 §3 이 혼란을 이유로 쓰지 않는다. MDN 은 여전히 'Symmetric NAT' 표현 사용."
+ },
+ {
+  "term": "공인 IP 알림",
+  "fullName": "Announced IP / 1:1 NAT Mapping",
+  "category": "WebRTC / 배치",
+  "definition": "공인 IP 알림은 사설 IP로 동작하는 미디어 서버가 ICE 후보에 자신의 공인 IP를 적어 내보내도록 하는 설정입니다.",
+  "why": "클라우드 서버는 공인 IP가 사설 IP에 1:1로 매핑돼 있어 이 설정이 없으면 단말이 서버에 닿지 못합니다.",
+  "compare": "단말은 STUN으로 바깥 주소를 스스로 알아내지만, 미디어 서버는 보통 설정값으로 공인 주소를 알려 줍니다.",
+  "aliases": [
+   "announcedip",
+   "announcedaddress",
+   "externalip",
+   "nat11",
+   "useexternalip",
+   "공인ip매핑"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "mediasoup FAQ",
+    "org": "mediasoup",
+    "url": "https://mediasoup.org/faq/",
+    "kind": "primary"
+   },
+   {
+    "title": "Janus README",
+    "org": "Meetecho",
+    "url": "https://raw.githubusercontent.com/meetecho/janus-gateway/master/README.md",
+    "kind": "primary"
+   },
+   {
+    "title": "LiveKit self-hosting: Deployment",
+    "org": "LiveKit",
+    "url": "https://docs.livekit.io/home/self-hosting/deployment/",
+    "kind": "primary"
+   },
+   {
+    "title": "coturn README.turnserver",
+    "org": "coturn project",
+    "url": "https://raw.githubusercontent.com/coturn/coturn/master/README.turnserver",
+    "kind": "primary"
+   }
+  ],
+  "note": "이름은 제품마다 다름: mediasoup announcedAddress, Janus --nat-1-1, LiveKit use_external_ip, coturn external-ip."
+ },
+ {
+  "term": "UDP 포트 다중화",
+  "fullName": "UDP Mux (Single-Port Media)",
+  "category": "WebRTC / 배치",
+  "definition": "UDP 포트 다중화는 미디어 서버가 모든 참가자의 미디어를 넓은 포트 범위 대신 UDP 포트 하나로 받는 방식입니다.",
+  "why": "방화벽에서 수만 개의 UDP 포트 대신 포트 하나만 열면 됩니다.",
+  "compare": "포트 범위 방식은 참가자마다 포트를 따로 쓰고, 다중화 방식은 포트 하나에서 연결을 구분합니다.",
+  "aliases": [
+   "udpmux",
+   "단일포트",
+   "webrtcserver",
+   "싱글포트"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "LiveKit self-hosting: Ports and firewall",
+    "org": "LiveKit",
+    "url": "https://docs.livekit.io/home/self-hosting/ports-firewall/",
+    "kind": "primary"
+   },
+   {
+    "title": "mediasoup v3 API",
+    "org": "mediasoup",
+    "url": "https://mediasoup.org/documentation/v3/mediasoup/api/",
+    "kind": "primary"
+   },
+   {
+    "title": "Jitsi Handbook: Self-Hosting Guide (Debian/Ubuntu)",
+    "org": "Jitsi",
+    "url": "https://jitsi.github.io/handbook/docs/devops-guide/devops-guide-quickstart/",
+    "kind": "primary"
+   }
+  ],
+  "note": "LiveKit 7882(설정 시 50000~60000 범위 미사용), mediasoup WebRtcServer, Jitsi JVB 10000/udp."
+ },
+ {
+  "term": "미디어 경로",
+  "fullName": "Media Path",
+  "category": "WebRTC / 미디어",
+  "definition": "미디어 경로는 음성·영상 패킷이 실제로 흐르는 길로, 시그널링이 지나는 길과 따로 맺어지는 통신 경로입니다.",
+  "why": "신호와 미디어를 나눠야 미디어는 가장 짧은 길로, 신호는 서버를 거쳐 보낼 수 있습니다.",
+  "compare": "신호 길은 HTTPS·WebSocket(TCP 443)이고, 미디어 길은 주로 UDP 위의 SRTP라 여는 포트와 지나는 장비가 다릅니다.",
+  "aliases": [
+   "mediapath",
+   "미디어길",
+   "미디어플레인",
+   "mediaplane",
+   "미디어채널"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "RFC 8825: Overview: Real-Time Protocols for Browser-Based Applications",
+    "org": "IETF",
+    "url": "https://www.rfc-editor.org/rfc/rfc8825.html",
+    "kind": "primary"
+   },
+   {
+    "title": "RFC 9429: JavaScript Session Establishment Protocol (JSEP)",
+    "org": "IETF",
+    "url": "https://www.rfc-editor.org/rfc/rfc9429.html",
+    "kind": "primary"
+   }
+  ],
+  "note": ""
+ },
+ {
+  "term": "RTP",
+  "fullName": "Real-time Transport Protocol",
+  "category": "WebRTC / 미디어",
+  "definition": "RTP(Real-time Transport Protocol)는 음성·영상 같은 실시간 데이터를 패킷으로 실어 나르는 전송 프로토콜입니다.",
+  "why": "패킷마다 순서와 시간 정보를 담아 받는 쪽이 끊김 없이 재생 순서를 맞출 수 있습니다.",
+  "compare": "RTP는 미디어를 나르고, RTCP는 그 전달 상태를 살피는 제어 정보를 나릅니다.",
+  "aliases": [
+   "realtimetransportprotocol",
+   "알티피",
+   "rtp스트림"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "RFC 3550: RTP: A Transport Protocol for Real-Time Applications",
+    "org": "IETF",
+    "url": "https://www.rfc-editor.org/rfc/rfc3550.html",
+    "kind": "primary"
+   },
+   {
+    "title": "RFC 8834: Media Transport and Use of RTP in WebRTC",
+    "org": "IETF",
+    "url": "https://www.rfc-editor.org/rfc/rfc8834.html",
+    "kind": "primary"
+   }
+  ],
+  "note": "WebRTC 는 RTP 를 미디어 전송 프로토콜로 반드시 구현(RFC 8834 §4.1)."
+ },
+ {
+  "term": "RTCP",
+  "fullName": "RTP Control Protocol",
+  "category": "WebRTC / 미디어",
+  "definition": "RTCP(RTP Control Protocol)는 RTP 전달 상태를 살피고 손실 재전송·키프레임 요청 같은 피드백을 주고받는 제어 프로토콜입니다.",
+  "why": "받는 쪽의 손실과 품질을 보내는 쪽에 알려 화질과 전송량을 조절하게 합니다.",
+  "compare": "RTCP는 RTP와 같은 포트에 섞어 보낼 수 있어 구성도에서는 보통 미디어 선 하나로 함께 그립니다.",
+  "aliases": [
+   "rtpcontrolprotocol",
+   "알티씨피",
+   "rtcp피드백"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "RFC 3550: RTP: A Transport Protocol for Real-Time Applications",
+    "org": "IETF",
+    "url": "https://www.rfc-editor.org/rfc/rfc3550.html",
+    "kind": "primary"
+   },
+   {
+    "title": "RFC 8834: Media Transport and Use of RTP in WebRTC",
+    "org": "IETF",
+    "url": "https://www.rfc-editor.org/rfc/rfc8834.html",
+    "kind": "primary"
+   }
+  ],
+  "note": ""
+ },
+ {
+  "term": "SRTP",
+  "fullName": "Secure Real-time Transport Protocol",
+  "category": "WebRTC / 미디어 보안",
+  "definition": "SRTP(Secure Real-time Transport Protocol)는 RTP 패킷에 암호화·메시지 인증·재전송 공격 방지를 더한 RTP 프로필입니다.",
+  "why": "통화 내용을 중간에서 엿듣거나 바꾸지 못하게 합니다.",
+  "compare": "SRTP는 미디어를 암호화할 뿐 키를 정하지는 않으며, WebRTC에서는 DTLS-SRTP가 키를 정해 줍니다.",
+  "aliases": [
+   "securertp",
+   "securerealtimetransportprotocol",
+   "에스알티피",
+   "srtcp"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "RFC 3711: The Secure Real-time Transport Protocol (SRTP)",
+    "org": "IETF",
+    "url": "https://www.rfc-editor.org/rfc/rfc3711.html",
+    "kind": "primary"
+   },
+   {
+    "title": "RFC 8827: WebRTC Security Architecture",
+    "org": "IETF",
+    "url": "https://www.rfc-editor.org/rfc/rfc8827.html",
+    "kind": "primary"
+   }
+  ],
+  "note": "WebRTC 의 모든 미디어는 SRTP 필수, 평문 RTP 금지(RFC 8827 §6.5)."
+ },
+ {
+  "term": "DTLS",
+  "fullName": "Datagram Transport Layer Security",
+  "category": "WebRTC / 미디어 보안",
+  "definition": "DTLS(Datagram Transport Layer Security)는 UDP 같은 데이터그램 전송 위에서 TLS와 같은 보호를 제공하는 보안 프로토콜입니다.",
+  "why": "WebRTC에서 SRTP 키를 정하고 데이터 채널을 암호화하는 데 씁니다.",
+  "compare": "TLS는 TCP 위에서, DTLS는 UDP 위에서 동작합니다.",
+  "aliases": [
+   "datagramtransportlayersecurity",
+   "디티엘에스",
+   "dtls핸드셰이크"
+  ],
+  "kind": "concept",
+  "verified": false,
+  "sources": [
+   {
+    "title": "RFC 5764: DTLS Extension to Establish Keys for SRTP",
+    "org": "IETF",
+    "url": "https://www.rfc-editor.org/rfc/rfc5764.html",
+    "kind": "primary"
+   },
+   {
+    "title": "RFC 8827: WebRTC Security Architecture",
+    "org": "IETF",
+    "url": "https://www.rfc-editor.org/rfc/rfc8827.html",
+    "kind": "primary"
+   }
+  ],
+  "note": "DTLS 본 규격(RFC 9147/6347)은 열람하지 않았다. 이름과 WebRTC 내 용도만 RFC 5764·8827 에서 확인."
+ },
+ {
+  "term": "DTLS-SRTP",
+  "fullName": "DTLS Extension to Establish Keys for SRTP",
+  "category": "WebRTC / 미디어 보안",
+  "definition": "DTLS-SRTP는 미디어 길 위에서 DTLS 핸드셰이크로 SRTP 암호화 키를 정하는 방식입니다.",
+  "why": "키가 시그널링 서버를 거치지 않아 신호 서버가 미디어 키를 알 수 없습니다.",
+  "compare": "DTLS-SRTP는 단말과 미디어 서버 구간을 암호화하므로 SFU는 미디어를 풀 수 있고, 종단간 암호화는 따로 필요합니다.",
+  "aliases": [
+   "dtlssrtp",
+   "디티엘에스srtp"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "RFC 5764: DTLS Extension to Establish Keys for SRTP",
+    "org": "IETF",
+    "url": "https://www.rfc-editor.org/rfc/rfc5764.html",
+    "kind": "primary"
+   },
+   {
+    "title": "RFC 8827: WebRTC Security Architecture",
+    "org": "IETF",
+    "url": "https://www.rfc-editor.org/rfc/rfc8827.html",
+    "kind": "primary"
+   },
+   {
+    "title": "RFC 8835: Transports for WebRTC",
+    "org": "IETF",
+    "url": "https://www.rfc-editor.org/rfc/rfc8835.html",
+    "kind": "primary"
+   }
+  ],
+  "note": "WebRTC 는 모든 미디어 채널에 DTLS-SRTP 제안 필수(RFC 8827 §6.5)."
+ },
+ {
+  "term": "데이터 채널",
+  "fullName": "WebRTC Data Channel",
+  "category": "WebRTC / 데이터",
+  "definition": "데이터 채널은 WebRTC 연결에서 음성·영상이 아닌 임의의 앱 데이터를 DTLS 위의 SCTP로 주고받는 통로입니다.",
+  "why": "채팅·파일·게임 상태 같은 데이터를 미디어와 같은 연결로 지연 없이 보낼 수 있습니다.",
+  "compare": "데이터 채널은 순서와 재전송 여부를 채널마다 고를 수 있고, WebSocket은 항상 순서대로 다 전달합니다.",
+  "aliases": [
+   "datachannel",
+   "rtcdatachannel",
+   "데이터채널"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "RFC 8831: WebRTC Data Channels",
+    "org": "IETF",
+    "url": "https://www.rfc-editor.org/rfc/rfc8831.html",
+    "kind": "primary"
+   },
+   {
+    "title": "RFC 8827: WebRTC Security Architecture",
+    "org": "IETF",
+    "url": "https://www.rfc-editor.org/rfc/rfc8827.html",
+    "kind": "primary"
+   }
+  ],
+  "note": ""
+ },
+ {
+  "term": "SCTP",
+  "fullName": "Stream Control Transmission Protocol",
+  "category": "WebRTC / 데이터",
+  "definition": "SCTP(Stream Control Transmission Protocol)는 WebRTC 데이터 채널이 DTLS 위에서 메시지를 나르는 데 쓰는 전송 프로토콜입니다.",
+  "why": "메시지마다 순서 보장과 재전송 여부를 달리해 보낼 수 있습니다.",
+  "compare": "WebRTC의 SCTP는 IP 위에 바로 놓이지 않고 UDP·ICE·DTLS 위에 얹혀 방화벽에는 UDP로 보입니다.",
+  "aliases": [
+   "streamcontroltransmissionprotocol",
+   "에스씨티피",
+   "sctpoverdtls"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "RFC 8831: WebRTC Data Channels",
+    "org": "IETF",
+    "url": "https://www.rfc-editor.org/rfc/rfc8831.html",
+    "kind": "primary"
+   },
+   {
+    "title": "RFC 8835: Transports for WebRTC",
+    "org": "IETF",
+    "url": "https://www.rfc-editor.org/rfc/rfc8835.html",
+    "kind": "primary"
+   }
+  ],
+  "note": "SCTP 본 규격(RFC 9260)은 열람하지 않았고 WebRTC 내 쓰임만 확인."
+ },
+ {
+  "term": "BUNDLE",
+  "fullName": "BUNDLE (Multiplexing on a Single 5-Tuple)",
+  "category": "WebRTC / 미디어",
+  "definition": "BUNDLE은 음성·영상·데이터 채널을 모두 같은 주소·포트 쌍 하나에 실어 보내는 WebRTC 다중화 방식입니다.",
+  "why": "단말마다 여는 포트와 ICE 연결 수가 줄어 방화벽 통과와 연결 시간이 유리해집니다.",
+  "compare": "BUNDLE을 쓰면 단말과 서버 사이 미디어 선은 종류별 여러 줄이 아니라 한 줄로 그리면 됩니다.",
+  "aliases": [
+   "번들",
+   "sdpbundle",
+   "포트묶기"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "RFC 8835: Transports for WebRTC",
+    "org": "IETF",
+    "url": "https://www.rfc-editor.org/rfc/rfc8835.html",
+    "kind": "primary"
+   },
+   {
+    "title": "RFC 8831: WebRTC Data Channels",
+    "org": "IETF",
+    "url": "https://www.rfc-editor.org/rfc/rfc8831.html",
+    "kind": "primary"
+   }
+  ],
+  "note": "BUNDLE 본 규격(RFC 9143)은 열람하지 않았다. RFC 8835 §4.2 '단일 5-tuple 다중화 지원 필수' 근거."
+ },
+ {
+  "term": "종단간 암호화(SFrame)",
+  "fullName": "Secure Frame (SFrame) End-to-End Encryption",
+  "category": "WebRTC / 미디어 보안",
+  "definition": "SFrame은 미디어 프레임을 단말끼리 암호화해 SFU 같은 중앙 미디어 서버가 내용을 볼 수 없게 하는 종단간 암호화 방식입니다.",
+  "why": "서버를 믿을 수 없어도 통화 내용이 서버에서 노출되지 않습니다.",
+  "compare": "DTLS-SRTP는 단말과 서버 구간만 지키고, SFrame은 서버가 전달에 필요한 정보만 보게 하고 내용은 가립니다.",
+  "aliases": [
+   "sframe",
+   "e2ee",
+   "종단간암호화",
+   "endtoendencryption",
+   "secureframe"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "RFC 9605: Secure Frame (SFrame)",
+    "org": "IETF",
+    "url": "https://www.rfc-editor.org/rfc/rfc9605.html",
+    "kind": "primary"
+   }
+  ],
+  "note": "종단간 암호화를 켜면 서버 쪽 녹화·자막·AI 처리는 키 없이는 할 수 없다는 점은 추론이며 출처 미확인."
+ },
+ {
+  "term": "P2P 메시",
+  "fullName": "Peer-to-Peer Mesh",
+  "category": "WebRTC / 구성 방식",
+  "definition": "P2P 메시는 중앙 서버 없이 참가자마다 다른 모든 참가자와 직접 미디어 연결을 맺는 다자 통화 구성입니다.",
+  "why": "미디어 서버가 필요 없어 1:1이나 아주 작은 통화를 싸고 지연 없이 만들 수 있습니다.",
+  "compare": "메시는 인원이 늘수록 각 단말의 올리기 부담이 커지고, SFU는 단말이 한 번만 올리면 서버가 나눠 줍니다.",
+  "aliases": [
+   "mesh",
+   "p2p",
+   "peertopeer",
+   "메시",
+   "풀메시",
+   "피어투피어",
+   "p2pmesh"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "RFC 7667: RTP Topologies",
+    "org": "IETF",
+    "url": "https://www.rfc-editor.org/rfc/rfc7667.html",
+    "kind": "primary"
+   },
+   {
+    "title": "LiveKit SFU internals",
+    "org": "LiveKit",
+    "url": "https://docs.livekit.io/reference/internals/livekit-sfu/",
+    "kind": "primary"
+   }
+  ],
+  "note": "LiveKit 문서는 P2P 가 2~3명까지 잘 동작한다고 적는다. 표준 문서에 인원 기준은 없다."
+ },
+ {
+  "term": "SFU",
+  "fullName": "Selective Forwarding Unit",
+  "category": "WebRTC / 구성 방식",
+  "definition": "SFU(Selective Forwarding Unit)는 참가자가 보낸 음성·영상 스트림을 디코딩하지 않고 골라서 다른 참가자에게 전달하는 미디어 서버입니다.",
+  "why": "섞거나 다시 인코딩하지 않아 지연과 서버 부하가 작아서 많은 참가자를 감당합니다.",
+  "compare": "SFU는 스트림을 그대로 여러 개 내려보내고, MCU는 하나로 섞어 내려보냅니다.",
+  "aliases": [
+   "selectiveforwardingunit",
+   "sfm",
+   "selectiveforwardingmiddlebox",
+   "에스에프유",
+   "sfu서버"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "RFC 7667: RTP Topologies",
+    "org": "IETF",
+    "url": "https://www.rfc-editor.org/rfc/rfc7667.html",
+    "kind": "primary"
+   },
+   {
+    "title": "mediasoup Overview",
+    "org": "mediasoup",
+    "url": "https://mediasoup.org/documentation/overview/",
+    "kind": "primary"
+   },
+   {
+    "title": "LiveKit SFU internals",
+    "org": "LiveKit",
+    "url": "https://docs.livekit.io/reference/internals/livekit-sfu/",
+    "kind": "primary"
+   }
+  ],
+  "note": "IETF 문서의 정식 이름은 Selective Forwarding Middlebox(SFM, RFC 7667 §3.7)."
+ },
+ {
+  "term": "MCU",
+  "fullName": "Multipoint Control Unit",
+  "category": "WebRTC / 구성 방식",
+  "definition": "MCU(Multipoint Control Unit)는 여러 참가자의 미디어를 디코딩해 하나로 섞고 다시 인코딩해 내려보내는 미디어 서버입니다.",
+  "why": "단말은 스트림 하나만 받으면 되어 단말 성능과 내려받기 대역폭이 적게 듭니다.",
+  "compare": "MCU는 서버에서 섞느라 연산과 지연이 크고, SFU는 전달만 해서 가볍지만 단말이 여러 스트림을 디코딩합니다.",
+  "aliases": [
+   "multipointcontrolunit",
+   "엠씨유",
+   "믹서",
+   "mixer",
+   "mediamixer"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "RFC 7667: RTP Topologies",
+    "org": "IETF",
+    "url": "https://www.rfc-editor.org/rfc/rfc7667.html",
+    "kind": "primary"
+   },
+   {
+    "title": "LiveKit SFU internals",
+    "org": "LiveKit",
+    "url": "https://docs.livekit.io/reference/internals/livekit-sfu/",
+    "kind": "primary"
+   }
+  ],
+  "note": "RFC 7667 §3.6.1 은 Media-Mixing Mixer 로 설명. 섞기에 연산 자원과 지연이 크다고 명시."
+ },
+ {
+  "term": "미디어 서버",
+  "fullName": "Media Server",
+  "category": "WebRTC / 구성 방식",
+  "definition": "미디어 서버는 단말과 미디어 세션을 맺어 음성·영상을 받고 전달·혼합·녹화·변환하는 서버를 통틀어 이르는 말입니다.",
+  "why": "3명 이상 통화, 녹화, 방송 송출처럼 단말끼리만으로는 어려운 일을 서버가 맡습니다.",
+  "compare": "미디어 서버는 미디어가 지나가는 서버이고, 시그널링 서버는 연결 정보만 전달합니다.",
+  "aliases": [
+   "mediaserver",
+   "미디어서버",
+   "webrtc서버",
+   "미디어게이트웨이"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "RFC 9725: WebRTC-HTTP Ingestion Protocol (WHIP)",
+    "org": "IETF",
+    "url": "https://www.rfc-editor.org/rfc/rfc9725.html",
+    "kind": "primary"
+   },
+   {
+    "title": "RFC 9605: Secure Frame (SFrame)",
+    "org": "IETF",
+    "url": "https://www.rfc-editor.org/rfc/rfc9605.html",
+    "kind": "primary"
+   },
+   {
+    "title": "Janus README",
+    "org": "Meetecho",
+    "url": "https://raw.githubusercontent.com/meetecho/janus-gateway/master/README.md",
+    "kind": "primary"
+   }
+  ],
+  "note": ""
+ },
+ {
+  "term": "시뮬캐스트",
+  "fullName": "Simulcast",
+  "category": "WebRTC / 미디어",
+  "definition": "시뮬캐스트는 같은 영상 원본을 화질이 다른 여러 인코딩으로 동시에 보내는 방식입니다.",
+  "why": "SFU가 받는 사람의 회선 상태에 맞는 화질을 골라 전달할 수 있습니다.",
+  "compare": "시뮬캐스트는 화질별로 따로 인코딩한 스트림 여러 개이고, SVC는 한 스트림 안에 화질 계층을 쌓습니다.",
+  "aliases": [
+   "simulcast",
+   "사이멀캐스트",
+   "동시송출",
+   "다중화질"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "RFC 8853: Using Simulcast in SDP and RTP Sessions",
+    "org": "IETF",
+    "url": "https://www.rfc-editor.org/rfc/rfc8853.html",
+    "kind": "primary"
+   },
+   {
+    "title": "LiveKit SFU internals",
+    "org": "LiveKit",
+    "url": "https://docs.livekit.io/reference/internals/livekit-sfu/",
+    "kind": "primary"
+   }
+  ],
+  "note": ""
+ },
+ {
+  "term": "SVC",
+  "fullName": "Scalable Video Coding",
+  "category": "WebRTC / 미디어",
+  "definition": "SVC(Scalable Video Coding)는 영상 한 스트림을 해상도·프레임 수 계층으로 나눠 인코딩해 일부 계층만 골라 전달할 수 있게 하는 방식입니다.",
+  "why": "SFU가 재인코딩 없이 받는 사람의 기기와 대역폭에 맞는 계층만 전달합니다.",
+  "compare": "SVC는 한 스트림 안의 계층이고, 시뮬캐스트는 화질별로 따로 보낸 스트림 여러 개입니다.",
+  "aliases": [
+   "scalablevideocoding",
+   "스케일러블비디오코딩",
+   "공간계층",
+   "시간계층",
+   "scalabilitymode"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "Scalable Video Coding (SVC) Extension for WebRTC (W3C Working Draft)",
+    "org": "W3C",
+    "url": "https://www.w3.org/TR/webrtc-svc/",
+    "kind": "primary"
+   }
+  ],
+  "note": "근거는 W3C Working Draft(권고 아님)."
+ },
+ {
+  "term": "트랜스코딩",
+  "fullName": "Transcoding",
+  "category": "WebRTC / 미디어",
+  "definition": "트랜스코딩은 미디어를 디코딩한 뒤 다른 코덱·해상도·비트레이트로 다시 인코딩하는 처리입니다.",
+  "why": "RTMP로 들어온 영상을 WebRTC 단말이 볼 수 있는 형식으로 바꾸거나 화질을 여러 단계로 만들 때 필요합니다.",
+  "compare": "트랜스코딩은 CPU를 많이 쓰는 변환이고, SFU의 전달은 변환 없이 패킷을 넘기기만 합니다.",
+  "aliases": [
+   "transcoding",
+   "트랜스코더",
+   "transcoder",
+   "재인코딩",
+   "인코딩변환"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "LiveKit Ingress overview",
+    "org": "LiveKit",
+    "url": "https://docs.livekit.io/home/ingress/overview/",
+    "kind": "primary"
+   },
+   {
+    "title": "LiveKit self-hosting: Ingress",
+    "org": "LiveKit",
+    "url": "https://docs.livekit.io/home/self-hosting/ingress/",
+    "kind": "primary"
+   },
+   {
+    "title": "RFC 7667: RTP Topologies",
+    "org": "IETF",
+    "url": "https://www.rfc-editor.org/rfc/rfc7667.html",
+    "kind": "primary"
+   }
+  ],
+  "note": "LiveKit 은 트랜스코딩 인그레스에 2~6 CPU 코어를 쓴다고 적는다."
+ },
+ {
+  "term": "Opus",
+  "fullName": "Opus Audio Codec",
+  "category": "WebRTC / 코덱",
+  "definition": "Opus는 WebRTC 단말이 반드시 구현해야 하는 음성 코덱입니다.",
+  "why": "모든 WebRTC 단말이 지원하므로 변환 없이 서로 음성을 주고받을 수 있습니다.",
+  "compare": "Opus는 음성 코덱이고, 영상은 VP8과 H.264 Constrained Baseline이 WebRTC 브라우저의 필수 코덱입니다.",
+  "aliases": [
+   "오퍼스",
+   "opuscodec"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "RFC 7874: WebRTC Audio Codec and Processing Requirements",
+    "org": "IETF",
+    "url": "https://www.rfc-editor.org/rfc/rfc7874.html",
+    "kind": "primary"
+   },
+   {
+    "title": "RFC 7742: WebRTC Video Processing and Codec Requirements",
+    "org": "IETF",
+    "url": "https://www.rfc-editor.org/rfc/rfc7742.html",
+    "kind": "primary"
+   }
+  ],
+  "note": ""
+ },
+ {
+  "term": "WHIP",
+  "fullName": "WebRTC-HTTP Ingestion Protocol",
+  "category": "WebRTC / 방송",
+  "definition": "WHIP(WebRTC-HTTP Ingestion Protocol)은 HTTP POST로 SDP 제안·응답을 한 번 주고받아 WebRTC 영상을 송출 서버로 보내는 프로토콜입니다.",
+  "why": "인코더나 방송 도구가 별도 시그널링 없이 표준 방식으로 WebRTC 송출을 시작할 수 있습니다.",
+  "compare": "WHIP은 서버로 올리는 송출용이고, WHEP은 서버에서 받아 보는 시청용입니다.",
+  "aliases": [
+   "webrtchttpingestionprotocol",
+   "윕",
+   "whip인제스트"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "RFC 9725: WebRTC-HTTP Ingestion Protocol (WHIP)",
+    "org": "IETF",
+    "url": "https://www.rfc-editor.org/rfc/rfc9725.html",
+    "kind": "primary"
+   }
+  ],
+  "note": "RFC 9725(2025-03). 신호는 HTTPS, 미디어는 ICE/DTLS/SRTP 로 미디어 서버에 단방향."
+ },
+ {
+  "term": "WHEP",
+  "fullName": "WebRTC-HTTP Egress Protocol",
+  "category": "WebRTC / 방송",
+  "definition": "WHEP(WebRTC-HTTP Egress Protocol)은 시청자가 HTTP로 SDP를 주고받아 WebRTC로 영상을 받아 보게 하는 프로토콜 초안입니다.",
+  "why": "플레이어가 표준 방식으로 지연이 짧은 WebRTC 시청을 시작할 수 있습니다.",
+  "compare": "WHEP은 WebRTC로 바로 받아 지연이 짧고, HLS는 HTTP 조각을 내려받아 지연이 더 깁니다.",
+  "aliases": [
+   "webrtchttpegressprotocol",
+   "whep시청",
+   "whep플레이어"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "draft-ietf-wish-whep: WebRTC-HTTP Egress Protocol (WHEP)",
+    "org": "IETF",
+    "url": "https://datatracker.ietf.org/doc/draft-ietf-wish-whep/",
+    "kind": "primary"
+   }
+  ],
+  "note": "아직 RFC 가 아니다(draft-ietf-wish-whep-05, 2026-10 기준 Internet-Draft). 'HLS 보다 지연이 짧다'의 수치는 출처에서 확인 못 함."
+ },
+ {
+  "term": "RTMP",
+  "fullName": "Real Time Messaging Protocol",
+  "category": "WebRTC / 방송",
+  "definition": "RTMP(Real Time Messaging Protocol)는 TCP 같은 전송 위에서 음성·영상·데이터 메시지를 묶어 나르는 어도비의 스트리밍 프로토콜입니다.",
+  "why": "OBS 같은 방송 도구와 하드웨어 인코더가 송출 서버로 영상을 올릴 때 널리 씁니다.",
+  "compare": "RTMP는 TCP로 서버에 올리는 송출용으로 주로 쓰이고, WebRTC는 UDP로 양방향 통화에 씁니다.",
+  "aliases": [
+   "realtimemessagingprotocol",
+   "알티엠피",
+   "rtmps",
+   "rtmp인제스트"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "Adobe's Real Time Messaging Protocol (RTMP 1.0 specification, 2012)",
+    "org": "Adobe",
+    "url": "https://veovera.org/docs/legacy/rtmp-v1-0-spec.pdf",
+    "kind": "primary"
+   },
+   {
+    "title": "LiveKit self-hosting: Ingress",
+    "org": "LiveKit",
+    "url": "https://docs.livekit.io/home/self-hosting/ingress/",
+    "kind": "primary"
+   }
+  ],
+  "note": "1935 포트는 Adobe 규격에 예시 URL 로만 나오고 '기본 포트'라는 문장은 못 찾음. LiveKit Ingress 기본 rtmp_port 가 1935."
+ },
+ {
+  "term": "SRT",
+  "fullName": "Secure Reliable Transport",
+  "category": "WebRTC / 방송",
+  "definition": "SRT(Secure Reliable Transport)는 UDP 위에서 재전송과 암호화를 더해 지연이 짧은 생방송 영상 전송에 맞춘 프로토콜입니다.",
+  "why": "인터넷처럼 손실이 있는 회선으로도 방송 영상을 안정적으로 보낼 수 있습니다.",
+  "compare": "SRT는 UDP 기반이라 방화벽에서 UDP 포트를 열어야 하고, RTMP는 TCP 기반입니다.",
+  "aliases": [
+   "securereliabletransport",
+   "에스알티",
+   "srt프로토콜"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "draft-sharabayko-srt-01: The SRT Protocol (expired Internet-Draft)",
+    "org": "Haivision / IETF individual draft",
+    "url": "https://datatracker.ietf.org/doc/html/draft-sharabayko-srt",
+    "kind": "primary"
+   },
+   {
+    "title": "LiveKit Ingress overview",
+    "org": "LiveKit",
+    "url": "https://docs.livekit.io/home/ingress/overview/",
+    "kind": "primary"
+   }
+  ],
+  "note": "근거는 만료된 개인 Internet-Draft(draft-sharabayko-srt-01, Haivision). IETF 표준 아님. 기본 포트는 확인 못 함."
+ },
+ {
+  "term": "HLS",
+  "fullName": "HTTP Live Streaming",
+  "category": "WebRTC / 방송",
+  "definition": "HLS(HTTP Live Streaming)는 영상을 짧은 조각으로 나누고 재생목록과 함께 HTTP로 내려받게 하는 스트리밍 프로토콜입니다.",
+  "why": "일반 웹 서버와 CDN으로 많은 시청자에게 영상을 나눠 줄 수 있습니다.",
+  "compare": "HLS는 HTTP(TCP 443)로 CDN을 거쳐 한 방향으로 내려가고, WebRTC는 UDP로 서버와 직접 양방향입니다.",
+  "aliases": [
+   "httplivestreaming",
+   "에이치엘에스",
+   "m3u8",
+   "hls배포"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "RFC 8216: HTTP Live Streaming",
+    "org": "IETF (Informational)",
+    "url": "https://www.rfc-editor.org/rfc/rfc8216.html",
+    "kind": "primary"
+   }
+  ],
+  "note": "RFC 8216 은 Informational. 지연 수치는 문서에 없음."
+ },
+ {
+  "term": "LL-HLS",
+  "fullName": "Low-Latency HTTP Live Streaming",
+  "category": "WebRTC / 방송",
+  "definition": "LL-HLS(Low-Latency HLS)는 영상 조각을 더 작은 부분으로 나눠 먼저 내보내 지연을 줄인 HLS 확장입니다.",
+  "why": "CDN 배포 구조를 유지하면서 생방송 지연을 줄입니다.",
+  "compare": "LL-HLS도 HTTP 내려받기 방식이라 WebRTC 같은 양방향 통화에는 쓰지 않습니다.",
+  "aliases": [
+   "lowlatencyhls",
+   "저지연hls",
+   "llhls"
+  ],
+  "kind": "concept",
+  "verified": false,
+  "sources": [],
+  "note": "Apple 개발자 문서 본문을 열지 못했다(페이지 제목만 수신). 정의는 일반 지식이며 미확인."
+ },
+ {
+  "term": "인제스트",
+  "fullName": "Ingest",
+  "category": "WebRTC / 방송",
+  "definition": "인제스트는 방송 도구나 인코더가 보낸 영상을 서버가 RTMP·SRT·WHIP 같은 프로토콜로 받아들이는 입구 단계입니다.",
+  "why": "WebRTC가 아닌 송출 장비의 영상도 방이나 방송 시스템 안으로 들여올 수 있습니다.",
+  "compare": "인제스트는 서버로 들어오는 방향이고, 이그레스는 서버에서 녹화·송출로 나가는 방향입니다.",
+  "aliases": [
+   "ingest",
+   "ingress",
+   "인그레스",
+   "인제스트서버",
+   "송출수신"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "LiveKit Ingress overview",
+    "org": "LiveKit",
+    "url": "https://docs.livekit.io/home/ingress/overview/",
+    "kind": "primary"
+   },
+   {
+    "title": "LiveKit self-hosting: Ingress",
+    "org": "LiveKit",
+    "url": "https://docs.livekit.io/home/self-hosting/ingress/",
+    "kind": "primary"
+   },
+   {
+    "title": "RFC 9725: WebRTC-HTTP Ingestion Protocol (WHIP)",
+    "org": "IETF",
+    "url": "https://www.rfc-editor.org/rfc/rfc9725.html",
+    "kind": "primary"
+   }
+  ],
+  "note": "쿠버네티스 '인그레스'가 기존 사전에 있어 alias 'ingress/인그레스' 충돌 가능. LiveKit Ingress 기본 포트: RTMP 1935/TCP, WHIP 8080/TCP, ICE 7885/UDP."
+ },
+ {
+  "term": "미디어 이그레스",
+  "fullName": "Media Egress (Recording / Restreaming)",
+  "category": "WebRTC / 녹화",
+  "definition": "미디어 이그레스는 방의 음성·영상을 서버가 꺼내 파일로 녹화하거나 HLS·RTMP로 내보내는 단계입니다.",
+  "why": "회의를 저장하거나 유튜브 같은 방송 서비스로 동시에 송출할 수 있습니다.",
+  "compare": "이그레스는 방에 참가자처럼 들어와 받기만 하는 서버 쪽 구성요소이고, 일반 참가자와 달리 저장소·방송 서버로 내보냅니다.",
+  "aliases": [
+   "egress",
+   "이그레스",
+   "녹화서버",
+   "레코더",
+   "recorder",
+   "녹화",
+   "recording"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "LiveKit Egress overview",
+    "org": "LiveKit",
+    "url": "https://docs.livekit.io/home/egress/overview/",
+    "kind": "primary"
+   },
+   {
+    "title": "LiveKit self-hosting: Egress",
+    "org": "LiveKit",
+    "url": "https://docs.livekit.io/home/self-hosting/egress/",
+    "kind": "primary"
+   },
+   {
+    "title": "Jibri README",
+    "org": "Jitsi",
+    "url": "https://github.com/jitsi/jibri/blob/master/README.md",
+    "kind": "primary"
+   }
+  ],
+  "note": "'이그레스 VPC'가 기존 사전에 있어 표제어를 '미디어 이그레스'로 했다. LiveKit: MP4·HLS 조각·RTMP 출력, S3·Azure·GCP 업로드, 방 합성 녹화에 2~6 CPU."
+ },
+ {
+  "term": "음성 AI 에이전트",
+  "fullName": "Voice AI Agent (Realtime Participant)",
+  "category": "WebRTC / AI 참가자",
+  "definition": "음성 AI 에이전트는 서버에서 도는 프로그램이 방에 참가자로 들어와 음성을 듣고 AI로 답을 만들어 말하는 구성요소입니다.",
+  "why": "사람 참가자와 같은 WebRTC 길로 붙으므로 단말 쪽을 바꾸지 않고 AI 상담·통역·회의 보조를 넣을 수 있습니다.",
+  "compare": "AI 에이전트는 단말이 아니라 서버 쪽 참가자라서 구성도에서는 서버 구역에 두고 SFU와 미디어 선으로 잇습니다.",
+  "aliases": [
+   "voiceagent",
+   "ai에이전트참가자",
+   "봇참가자",
+   "ai봇",
+   "음성봇",
+   "agentparticipant"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "LiveKit Agents",
+    "org": "LiveKit",
+    "url": "https://docs.livekit.io/agents/",
+    "kind": "primary"
+   }
+  ],
+  "note": "LiveKit Agents 문서 근거. 다른 제품의 구조는 확인하지 않았다."
+ },
+ {
+  "term": "STT-LLM-TTS 파이프라인",
+  "fullName": "STT-LLM-TTS Pipeline",
+  "category": "WebRTC / AI 참가자",
+  "definition": "STT-LLM-TTS 파이프라인은 음성을 글로 바꾸고 언어 모델로 답을 만든 뒤 다시 음성으로 합성하는 음성 AI 처리 순서입니다.",
+  "why": "글만 다루는 언어 모델로도 실시간 음성 대화를 만들 수 있습니다.",
+  "compare": "이 파이프라인은 에이전트 안의 처리 순서이고, 에이전트와 방 사이는 WebRTC 미디어로 이어집니다.",
+  "aliases": [
+   "sttllmtts",
+   "음성파이프라인",
+   "stt",
+   "tts",
+   "음성인식",
+   "음성합성"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "LiveKit Agents",
+    "org": "LiveKit",
+    "url": "https://docs.livekit.io/agents/",
+    "kind": "primary"
+   }
+  ],
+  "note": "LLM 서빙 분야(D) 용어와 겹칠 수 있다. STT·TTS 개별 정의는 출처에서 확인하지 않았다."
+ },
+ {
+  "term": "실시간 자막",
+  "fullName": "Real-time Captions / Live Transcription",
+  "category": "WebRTC / AI 참가자",
+  "definition": "실시간 자막은 통화 중 음성을 음성 인식으로 글로 바꿔 참가자 화면에 바로 보여 주는 기능입니다.",
+  "why": "청각 지원, 회의록 작성, 다국어 통역 자막에 씁니다.",
+  "compare": "실시간 자막은 통화 중에 바로 나오고, 녹화 후 전사는 저장된 파일을 나중에 글로 바꿉니다.",
+  "aliases": [
+   "livecaptions",
+   "livetranscription",
+   "자막",
+   "실시간전사",
+   "stt자막"
+  ],
+  "kind": "concept",
+  "verified": false,
+  "sources": [],
+  "note": "자막 구성요소의 구조를 설명한 1차 출처를 열람하지 못했다. 일반 지식 수준."
+ },
+ {
+  "term": "mediasoup",
+  "fullName": "mediasoup",
+  "category": "WebRTC / 제품",
+  "definition": "mediasoup은 Node.js 모듈로 서버 앱에 넣어 쓰는 오픈소스 WebRTC SFU 라이브러리입니다.",
+  "why": "",
+  "compare": "",
+  "aliases": [
+   "미디어수프",
+   "미디어숩"
+  ],
+  "kind": "product",
+  "verified": true,
+  "sources": [
+   {
+    "title": "mediasoup Overview",
+    "org": "mediasoup",
+    "url": "https://mediasoup.org/documentation/overview/",
+    "kind": "primary"
+   },
+   {
+    "title": "mediasoup v3 API",
+    "org": "mediasoup",
+    "url": "https://mediasoup.org/documentation/v3/mediasoup/api/",
+    "kind": "primary"
+   },
+   {
+    "title": "mediasoup FAQ",
+    "org": "mediasoup",
+    "url": "https://mediasoup.org/faq/",
+    "kind": "primary"
+   }
+  ],
+  "note": "시그널링은 직접 만들어야 한다. 워커 하나가 CPU 코어 하나를 쓴다. 옛 기본 포트 범위 10000~59999."
+ },
+ {
+  "term": "Janus",
+  "fullName": "Janus WebRTC Server",
+  "category": "WebRTC / 제품",
+  "definition": "Janus는 Meetecho가 만든 오픈소스 범용 WebRTC 서버로, SFU·음성 혼합·스트리밍 같은 기능을 플러그인으로 붙여 쓰는 소프트웨어입니다.",
+  "why": "",
+  "compare": "",
+  "aliases": [
+   "야누스",
+   "janusgateway",
+   "januswebrtc"
+  ],
+  "kind": "product",
+  "verified": true,
+  "sources": [
+   {
+    "title": "Janus README",
+    "org": "Meetecho",
+    "url": "https://raw.githubusercontent.com/meetecho/janus-gateway/master/README.md",
+    "kind": "primary"
+   },
+   {
+    "title": "Janus VideoRoom plugin documentation",
+    "org": "Meetecho",
+    "url": "https://janus.conf.meetecho.com/docs/videoroom.html",
+    "kind": "primary"
+   },
+   {
+    "title": "Janus AudioBridge plugin documentation",
+    "org": "Meetecho",
+    "url": "https://janus.conf.meetecho.com/docs/audiobridge.html",
+    "kind": "primary"
+   }
+  ],
+  "note": "VideoRoom 플러그인이 SFU, AudioBridge 가 Opus 음성 혼합. API 전송은 REST·WebSocket·RabbitMQ·MQTT·Nanomsg."
+ },
+ {
+  "term": "LiveKit",
+  "fullName": "LiveKit",
+  "category": "WebRTC / 제품",
+  "definition": "LiveKit은 SFU 서버와 녹화(Egress)·인제스트(Ingress)·AI 에이전트 구성요소를 함께 제공하는 오픈소스 WebRTC 플랫폼입니다.",
+  "why": "",
+  "compare": "",
+  "aliases": [
+   "라이브킷",
+   "livekitserver",
+   "livekitcloud"
+  ],
+  "kind": "product",
+  "verified": true,
+  "sources": [
+   {
+    "title": "LiveKit SFU internals",
+    "org": "LiveKit",
+    "url": "https://docs.livekit.io/reference/internals/livekit-sfu/",
+    "kind": "primary"
+   },
+   {
+    "title": "LiveKit self-hosting: Ports and firewall",
+    "org": "LiveKit",
+    "url": "https://docs.livekit.io/home/self-hosting/ports-firewall/",
+    "kind": "primary"
+   },
+   {
+    "title": "LiveKit Egress overview",
+    "org": "LiveKit",
+    "url": "https://docs.livekit.io/home/egress/overview/",
+    "kind": "primary"
+   },
+   {
+    "title": "LiveKit Ingress overview",
+    "org": "LiveKit",
+    "url": "https://docs.livekit.io/home/ingress/overview/",
+    "kind": "primary"
+   },
+   {
+    "title": "LiveKit Agents",
+    "org": "LiveKit",
+    "url": "https://docs.livekit.io/agents/",
+    "kind": "primary"
+   }
+  ],
+  "note": "기본 포트: 7880(신호, LB 뒤), 50000~60000/UDP, 7881/TCP, 7882/UDP mux, 3478/UDP TURN, 5349 TURN/TLS. 다중 노드는 Redis 필요."
+ },
+ {
+  "term": "Jitsi Meet",
+  "fullName": "Jitsi Meet",
+  "category": "WebRTC / 제품",
+  "definition": "Jitsi Meet은 Jitsi Videobridge를 써서 화상회의를 제공하는 오픈소스 WebRTC 웹 애플리케이션입니다.",
+  "why": "",
+  "compare": "",
+  "aliases": [
+   "지치",
+   "짓시",
+   "jitsi",
+   "지치미트"
+  ],
+  "kind": "product",
+  "verified": true,
+  "sources": [
+   {
+    "title": "Jitsi Handbook: Architecture",
+    "org": "Jitsi",
+    "url": "https://jitsi.github.io/handbook/docs/architecture/",
+    "kind": "primary"
+   },
+   {
+    "title": "Jitsi Handbook: Self-Hosting Guide (Debian/Ubuntu)",
+    "org": "Jitsi",
+    "url": "https://jitsi.github.io/handbook/docs/devops-guide/devops-guide-quickstart/",
+    "kind": "primary"
+   }
+  ],
+  "note": "구성: Jitsi Meet(웹), JVB(SFU), Jicofo(회의 관리), Prosody(XMPP 신호), Jibri(녹화), Jigasi(SIP)."
+ },
+ {
+  "term": "Jitsi Videobridge",
+  "fullName": "Jitsi Videobridge (JVB)",
+  "category": "WebRTC / 제품",
+  "definition": "Jitsi Videobridge(JVB)는 회의 참가자들 사이에 영상 스트림을 전달하는 Jitsi의 WebRTC 미디어 서버입니다.",
+  "why": "",
+  "compare": "",
+  "aliases": [
+   "jvb",
+   "비디오브리지",
+   "지치비디오브리지"
+  ],
+  "kind": "product",
+  "verified": true,
+  "sources": [
+   {
+    "title": "Jitsi Handbook: Architecture",
+    "org": "Jitsi",
+    "url": "https://jitsi.github.io/handbook/docs/architecture/",
+    "kind": "primary"
+   },
+   {
+    "title": "Jitsi Handbook: Self-Hosting Guide (Debian/Ubuntu)",
+    "org": "Jitsi",
+    "url": "https://jitsi.github.io/handbook/docs/devops-guide/devops-guide-quickstart/",
+    "kind": "primary"
+   },
+   {
+    "title": "Jitsi Handbook: Scalable setup",
+    "org": "Jitsi",
+    "url": "https://jitsi.github.io/handbook/docs/devops-guide/devops-guide-scalable/",
+    "kind": "primary"
+   }
+  ],
+  "note": "미디어 10000/UDP 를 인터넷에 연다. JVB→Prosody 5222/TCP. 문서의 권장 사양 4~8 CPU, 8GB."
+ },
+ {
+  "term": "Jibri",
+  "fullName": "Jibri (Jitsi Broadcasting Infrastructure)",
+  "category": "WebRTC / 제품",
+  "definition": "Jibri는 가상 화면에 크롬을 띄워 Jitsi 회의에 들어간 뒤 화면을 ffmpeg으로 인코딩해 녹화하거나 송출하는 도구입니다.",
+  "why": "",
+  "compare": "",
+  "aliases": [
+   "지브리",
+   "jitsi녹화"
+  ],
+  "kind": "product",
+  "verified": true,
+  "sources": [
+   {
+    "title": "Jibri README",
+    "org": "Jitsi",
+    "url": "https://github.com/jitsi/jibri/blob/master/README.md",
+    "kind": "primary"
+   },
+   {
+    "title": "Jitsi Handbook: Architecture",
+    "org": "Jitsi",
+    "url": "https://jitsi.github.io/handbook/docs/architecture/",
+    "kind": "primary"
+   }
+  ],
+  "note": "Jibri 한 대는 동시에 녹화 하나만 지원. 풀네임 'Jitsi Broadcasting Infrastructure'는 출처에서 확인 못 함."
+ }
+]

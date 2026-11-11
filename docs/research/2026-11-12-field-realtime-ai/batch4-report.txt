@@ -1,0 +1,38 @@
+A 별칭 뺌(bonding ↔ 본딩·티밍): BLE 본딩
+A 별칭 뺌(outofband ↔ OOB 관리망): 대역 외 페어링
+A 뺌(미확인): NB-IoT
+A 별칭 뺌(메시지브로커 ↔ 큐): MQTT 브로커
+A 별칭 뺌(bridge ↔ Matter 브리지): MQTT 브리지
+A 뺌(미확인): 세대별 망분리
+B 뺌(미확인): DVR
+B 뺌(미확인): NVR
+B 뺌(미확인): 비디오 인코더
+B 뺌(미확인): 함체
+B 뺌(미확인): 영상 반출
+B 뺌(미확인): 코덱
+B 뺌(미확인): 서브 스트림
+B 뺌(미확인): 비디오 월
+B 뺌(미확인): 월 컨트롤러
+B 뺌(미확인): 영상망
+B 뺌(미확인): 스마트시티 통합플랫폼
+B 뺌(미확인): TTA CCTV 보안 인증
+C 별칭 뺌(wss ↔ MQTT over WebSocket): WebSocket
+C 별칭 뺌(turnserver ↔ TURN): coturn
+C 뺌(key 겹침 rtp ↔ RTP): RTP
+C 뺌(key 겹침 srtp ↔ SRTP): SRTP
+C 뺌(미확인): DTLS
+C 별칭 뺌(미디어게이트웨이 ↔ 미디어 게이트웨이): 미디어 서버
+C 뺌(key 겹침 srt ↔ SRT): SRT
+C 뺌(key 겹침 hls ↔ HLS): HLS
+C 뺌(미확인): LL-HLS
+C 별칭 뺌(ingress ↔ 인그레스): 인제스트
+C 별칭 뺌(인그레스 ↔ 인그레스): 인제스트
+C 별칭 뺌(녹화서버 ↔ 녹화 서버): 미디어 이그레스
+C 뺌(미확인): 실시간 자막
+D 별칭 뺌(eventstream ↔ 스트림): SSE
+D 별칭 뺌(스트리밍 ↔ 스트림): 스트리밍 응답
+D 별칭 뺌(stream ↔ 스트림): 스트리밍 응답
+D 별칭 뺌(tpm ↔ TP 모니터): TPM·RPM
+D 뺌(미확인): NVIDIA NIM
+노드 종류 이름으로 못 찾는 것: 없음
+총 218개
