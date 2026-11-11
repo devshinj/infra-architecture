@@ -1,7 +1,7 @@
 /* Hallmark · part of the InfraSketch Vantage redesign, stamped in src/styles/globals.css · shape: app screen · posture: restrained */
 /*
- * 로그인·가입·비밀번호 화면. 왼쪽은 맨 바탕(paper) 위의 양식, 오른쪽은 앱 캔버스(점 격자) 위에서 대화 한 줄이 구성도로 그려지는 장면.
- * 좁은 화면(60rem 미만)에서는 양식만 보인다.
+ * 로그인·가입·비밀번호 화면. 화면 전체에 배경 그림을 깔고, 가운데 반투명 상자 안에 양식을 둔다.
+ * 배경 그림을 바꾸려면 .page 의 url() 한 곳만 바꾼다(public/brand/). 그림이 없거나 늦게 와도 바탕색 위에 양식은 그대로 보인다.
  */
 .page {
   /* 다크 단일 테마 — 자동완성·스크롤바 같은 브라우저 기본 컨트롤도 어둡게 그린다. */
@@ -11,20 +11,25 @@
   min-height: 100dvh;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  background: var(--bg-canvas);
+  padding: 40px 16px;
+  background: var(--bg-canvas) url("/brand/auth-bg.webp") center / cover no-repeat;
   color: var(--text-primary);
 }
 .form {
   /* 좁은 화면에서는 좌우 여백(16px) 안으로 줄어든다. */
   box-sizing: border-box;
   width: 100%;
-  max-width: 352px;
+  max-width: 400px;
   align-self: center;
   justify-self: center;
   display: flex;
   flex-direction: column;
   gap: 16px;
-  padding: 40px 16px;
+  padding: 32px 24px;
+  /* 반투명 상자: 배경 그림 위에서도 글자 대비를 지킨다(바탕 82% + 머리카락 선). */
+  background: color-mix(in srgb, var(--bg-canvas) 82%, transparent);
+  border: 1px solid var(--line-node);
+  border-radius: 10px;
 }
 .title {
   font-size: var(--text-hero);
@@ -228,27 +233,8 @@
   margin-bottom: 24px;
 }
 
-/* 옆 판: 앱 캔버스(바탕 + 점 격자) 위에 대화 한 줄과 그것이 그린 구성도(AuthScene). */
-.showcase {
-  display: none;
-}
-
-@media (min-width: 60rem) {
-  .page {
-    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
-  }
+@media (min-width: 40rem) {
   .form {
-    max-width: 400px;
-    padding: 64px 40px;
-  }
-  .showcase {
-    display: grid;
-    place-items: center;
-    min-width: 0;
     padding: 40px;
-    background-color: var(--bg-canvas);
-    background-image: radial-gradient(circle at 1px 1px, var(--dot-grid) 0.6px, transparent 1px);
-    background-size: 20px 20px;
-    border-left: 1px solid var(--line-shell);
   }
 }

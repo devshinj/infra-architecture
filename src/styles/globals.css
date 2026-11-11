@@ -1,15 +1,8 @@
 /* Hallmark · shape: app screen · genre: modern-minimal · theme: Vantage (deal 2/3, seed infrastructure-diagram-tool-workspace-9920·6bb47c15·2026-11-10·r0) · redesign: full
- * nav: kept, the floating sidebar and right panel now flat paper-2 with hairlines · signature: the diagram canvas leads, the chrome steps back; sign-in beside a constellation: the request typed as the pane hero, then points ignite and contours and curves draw once (about 3s, user-chosen over the 0.8s reveal cap), then a pausable comet, sweep and background drift · states: loading, empty, error, kept as the app draws them · vantage: no cloud (app scope)/steel
+ * nav: kept, the floating sidebar and right panel now flat paper-2 with hairlines · signature: the diagram canvas leads, the chrome steps back; sign-in: one still background picture under the whole page, the form in a centred translucent box, no motion · states: loading, empty, error, kept as the app draws them · vantage: no cloud (app scope)/steel
  * axes: dark/grotesk-sans/chromatic-lime · posture: restrained · contrast: pass · type: SUIT only (Geologica has no Hangul) · v2.0.0 */
-/* Hallmark · pre-emit critique: P4 H4 E4 S4 R5 V3 · weakest: V, an app shell kept by request reads like other tools; the canvas carries the identity and sign-in shows the real diagram instead of a stock panel */
+/* Hallmark · pre-emit critique: P4 H4 E4 S4 R5 V3 · weakest: V, an app shell kept by request reads like other tools; the canvas carries the identity and sign-in keeps to one quiet picture behind the form */
 @import "./tokens.css";
-:root {
-  /* 로그인 옆 별자리 장면 전용 색: 점(노드)·흐린 점(연결 곡선)·등고선(영역). 글자는 ink·ink-2, 연두는 흐름 빛과 입력 커서만.
-     캔버스 이미지 내보내기(밝은 바탕)에는 쓰이지 않아 tokens.css 밖에 두고 LIGHT_TOKENS(exportImage.ts) 짝도 없다. */
-  --scene-point: #DCE3EE;
-  --scene-point-dim: #6F7E88;
-  --scene-contour: #2A3A44;
-}
 /* No --space-* scale is declared on purpose: canvas.css spacing must stay raw px for the layout tests, and the chrome keeps to 4px steps by hand. */
 
 /* 기본 여백(8px)이 있으면 문서가 넘쳐, 카드 안 포커스·스크롤이 화면 전체를 밀어 올린다. 앱 셸은 화면에 고정(position: fixed)이다. */

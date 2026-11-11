@@ -7,7 +7,7 @@ import { resetPasswordAction } from "@/server/auth/actions";
 import { checkNewPassword, HINTS, MESSAGES } from "@/server/auth/rules";
 import { Logo } from "@/ui/brand/Logo";
 
-import { AuthField, AuthShowcase, AuthSubmit } from "../../_components/AuthField";
+import { AuthField, AuthSubmit } from "../../_components/AuthField";
 import { useAuthForm, type FieldErrors } from "../../_components/useAuthForm";
 import styles from "../../auth.module.css";
 
@@ -60,7 +60,6 @@ export function ResetPasswordForm({ token, usable }: { token: string; usable: bo
           <Link href="/login">로그인</Link>
         </p>
       </form>
-      <AuthShowcase />
     </main>
   );
 }

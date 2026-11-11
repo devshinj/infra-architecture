@@ -7,7 +7,7 @@ import { requestResetAction } from "@/server/auth/actions";
 import { checkEmail, RESET_TTL_HOURS } from "@/server/auth/rules";
 import { Logo } from "@/ui/brand/Logo";
 
-import { AuthField, AuthShowcase, AuthSubmit } from "../_components/AuthField";
+import { AuthField, AuthSubmit } from "../_components/AuthField";
 import { useAuthForm, type FieldErrors } from "../_components/useAuthForm";
 import styles from "../auth.module.css";
 
@@ -67,7 +67,6 @@ export default function ResetRequestPage() {
           비밀번호가 생각났나요? <Link href="/login">로그인</Link>
         </p>
       </form>
-      <AuthShowcase />
     </main>
   );
 }
