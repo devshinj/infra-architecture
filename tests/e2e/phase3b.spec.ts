@@ -24,8 +24,9 @@ const send = async (page: Page, text: string) => {
 };
 const pubDb = (page: Page) => page.locator(".react-flow__node-infra").filter({ has: page.getByTitle("공개 DB") });
 const warnBadge = (page: Page) => pubDb(page).getByRole("button", { name: /^경고 \d+개$/ });
-// 대화에는 답변마다 `주의 N` 칩 하나만, 자세한 목록은 캔버스 구성 정보 카드의 주의 절에 있다.
-const cautionChips = (page: Page) => page.getByRole("button", { name: /^주의 \d+$/ });
+// 대화에는 답변마다 주의 칩 하나만(`새 주의 N · 주의 M 해결 · 지금 모두 K`, 옛 메시지는 `주의 N`),
+// 자세한 목록은 캔버스 구성 정보 카드의 주의 절에 있다. 경고가 그대로인 차례에는 칩이 없다.
+const cautionChips = (page: Page) => page.getByRole("button", { name: /^(?:(?:새 주의 \d+|주의 \d+ 해결)(?: · 주의 \d+ 해결)? · 지금 모두 \d+|주의 \d+)$/ });
 const cardToggle = (page: Page) => page.getByRole("button", { name: /^구성 정보 (펼치기|접기)$/ });
 const cardWarnings = (page: Page) => page.getByRole("region", { name: "주의" });
 const versionRows = (page: Page) => page.getByRole("listitem").filter({ has: page.getByRole("button", { name: /^v\d+/ }) });
