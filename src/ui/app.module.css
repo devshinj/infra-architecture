@@ -9,6 +9,9 @@
   --safe-b: max(0px, calc(env(safe-area-inset-bottom) - var(--panel-gap)));
 }
 .main { position: absolute; inset: 0; min-width: 0; min-height: 0; }
+/* 다른 구성도로 넘어가는 중(ShellMain): 지금 화면은 감추고(자리는 그대로) 그 위에 작업 화면 뼈대를 깐다. 사이드바는 main 밖이라 그대로 보인다. */
+.main[data-navigating] > :not(.navSkeleton) { visibility: hidden; }
+.navSkeleton { position: absolute; inset: 0; }
 /* 캔버스가 아닌 화면은 떠 있는 사이드바 오른쪽에서 시작한다(--shell-inset-left 는 Shell.tsx 가 준다). */
 /* 빈 홈: 빈 구성도(작업 화면 캔버스가 비었을 때)와 한 가족. 점 격자 캔버스 가운데에 모서리 눈금을 두른 안내 한 덩이. */
 .emptyState {
@@ -107,6 +110,18 @@
 .sideLink { font-size: 13px; color: var(--text-secondary); text-decoration: none; padding: 4px; border-radius: var(--radius-control); }
 .sideLinkActive { position: relative; color: var(--text-primary); background: var(--bg-panel-raised); font-weight: 600; }
 .accountLink { flex: 1 0 100%; }
+/* 누른 화면 링크가 새 화면을 기다리는 중(LinkPending): 링크 밑에 점선 한 줄이 그려진다(스켈레톤과 같은 말씨, 연두 아님). 빠른 이동에서는 안 보이게 100ms 뒤에. */
+.sideLink, .railBtn { position: relative; }
+.linkPending {
+  position: absolute; left: 4px; right: 4px; bottom: 2px; height: 0; pointer-events: none; opacity: 0;
+  border-top: 1px dashed var(--text-secondary);
+}
+.linkPending[data-pending] { animation: link-pending-in 0s linear 100ms both; }
+@media (prefers-reduced-motion: no-preference) {
+  .linkPending[data-pending] { animation: link-pending-in 0s linear 100ms both, link-pending-draw 1200ms var(--ease-out) 100ms infinite backwards; }
+}
+@keyframes link-pending-in { to { opacity: 1; } }
+@keyframes link-pending-draw { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
 .sideLink:hover { color: var(--text-primary); }
 .sideLink:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
 .sidebar button:focus-visible, .panel button:focus-visible, .dialog button:focus-visible, .dialog input:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }

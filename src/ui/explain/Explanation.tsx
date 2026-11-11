@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { normalizeTerm, type EdgeExplanation, type NodeExplanation } from "@/domain/explain";
 import { Button } from "@/ui/Button";
+import { SkeletonLines } from "@/ui/skeleton/Skeleton";
 
 import { AI_BADGE, AI_BADGE_SR, isUnreviewedAi } from "../glossary/aiBadge";
 import styles from "../panel.module.css";
@@ -23,6 +24,26 @@ export interface ExplanationProps {
 }
 
 const LOADING = "설명을 만드는 중…";
+/** 설명은 AI 가 쓰므로 길어질 수 있다. 이만큼 지나면 멈춘 게 아니라고 한 줄 알린다. */
+export const SLOW_MS = 10_000;
+const SLOW = "조금 오래 걸리고 있어요. 다 만들면 바로 보여 드릴게요.";
+/** 칸마다 줄 자리(정의는 길고, 나머지는 두 줄쯤). */
+const SLOT_LINES: Record<string, string[]> = { 정의: ["100%", "94%", "52%"] };
+const DEFAULT_LINES = ["100%", "68%"];
+
+/** active 가 SLOW_MS 넘게 이어지면 true. 꺼지면 다시 처음부터 잰다. */
+function useSlow(active: boolean): boolean {
+  const [slow, setSlow] = useState(false);
+  useEffect(() => {
+    if (!active) return;
+    const t = setTimeout(() => setSlow(true), SLOW_MS);
+    return () => {
+      clearTimeout(t);
+      setSlow(false);
+    };
+  }, [active]);
+  return active && slow;
+}
 const DEFAULT_INSTRUCTION = "더 쉽고 짧게";
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
@@ -160,6 +181,7 @@ function EdgeBody({ d, terms }: { d: EdgeExplanation; terms: GlossaryTerm[] }) {
 
 /** 설명 패널 본문. 데이터는 props 로만 받는다(요청·큐는 호출한 쪽 몫). */
 export function Explanation({ status, data, partial, message, terms, onRewrite, onRetry, busy, target }: ExplanationProps) {
+  const slow = useSlow(status === "loading");
   if (status === "idle") return null;
 
   const isEdge = (data?.kind ?? target) === "edge";
@@ -171,11 +193,15 @@ export function Explanation({ status, data, partial, message, terms, onRewrite, 
     return (
       <div className={styles.explain} aria-busy="true">
         {known && <DefinitionPart d={known} terms={terms} />}
-        {slots.map((s) => (
+        {slots.map((s, i) => (
           <Section key={s} title={s}>
-            <p className={styles.missing}>{LOADING}</p>
+            <SkeletonLines widths={SLOT_LINES[s] ?? DEFAULT_LINES} start={i * 2} />
           </Section>
         ))}
+        {/* 알림 한 자리: 평소에는 보조기기에만 "만드는 중", 오래 걸리면 화면에도 보이는 안내로 바뀐다. */}
+        <p role="status" className={slow ? styles.slowNote : styles.srOnly}>
+          {slow ? SLOW : LOADING}
+        </p>
       </div>
     );
   }

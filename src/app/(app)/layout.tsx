@@ -3,9 +3,8 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { listProjects } from "@/server/projects";
 import { ShellProvider } from "@/ui/Shell";
+import { ShellMain } from "@/ui/ShellMain";
 import { Sidebar } from "@/ui/Sidebar";
-
-import styles from "@/ui/app.module.css";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
@@ -14,7 +13,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   return (
     <ShellProvider>
       <Sidebar projects={projects} userName={session.user.name ?? ""} />
-      <main className={styles.main}>{children}</main>
+      <ShellMain>{children}</ShellMain>
     </ShellProvider>
   );
 }

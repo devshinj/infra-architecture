@@ -19,6 +19,7 @@ import { LogoMark } from "@/ui/brand/Logo";
 import styles from "./app.module.css";
 import { Button } from "./Button";
 import { type Dialog, DialogView, GENERIC_ERROR, type NameDialog, RowMenu, type RowMenuItem } from "./dialogs";
+import { LinkPending } from "./LinkPending";
 import { useShell } from "./Shell";
 
 const ACCOUNT_POP_ID = "sidebar-account";
@@ -211,10 +212,18 @@ export function Sidebar({ projects, userName }: { projects: SidebarProject[]; us
       else n.add(id);
       return n;
     });
+  // 다른 구성도로 넘어가는 동안(서버가 구성도·대화를 다 읽을 때까지) 작업 화면 자리에 뼈대를 덮는다(ShellMain).
+  const [navPending, startNav] = useTransition();
+  const { setNavigating } = shell;
+  useEffect(() => setNavigating(navPending), [navPending, setNavigating]);
   const goDiagram = (projectId: string, diagramId: string) => {
-    // 지금 연 구성도를 다시 눌러도 주소가 그대로라 닫히지 않으므로 직접 닫는다.
-    if (diagramId === params.diagramId) setDrawer(false);
-    router.push(diagramPath(projectId, diagramId));
+    // 지금 연 구성도를 다시 눌러도 주소가 그대로라 닫히지 않으므로 직접 닫는다(뼈대도 덮지 않는다).
+    if (diagramId === params.diagramId) {
+      setDrawer(false);
+      router.push(diagramPath(projectId, diagramId));
+      return;
+    }
+    startNav(() => router.push(diagramPath(projectId, diagramId)));
   };
 
   const newProjectDialog = (): NameDialog => ({
@@ -358,6 +367,7 @@ export function Sidebar({ projects, userName }: { projects: SidebarProject[]; us
       {...(rail ? { "aria-label": "용어 사전", title: "용어 사전" } : {})}
     >
       {rail ? <IconBook /> : "용어 사전"}
+      <LinkPending />
     </Link>
   );
   const networkLink = (rail: boolean) => (
@@ -369,6 +379,7 @@ export function Sidebar({ projects, userName }: { projects: SidebarProject[]; us
       {...(rail ? { "aria-label": "망 지식", title: "망 지식" } : {})}
     >
       {rail ? <IconNetwork /> : "망 지식"}
+      <LinkPending />
     </Link>
   );
   // inAccount: 접힌 레일의 계정 팝오버 안(한 줄 전체를 차지한다). 펼친 사이드바에서는 용어 사전·망 지식과 한 묶음이다.
@@ -383,6 +394,7 @@ export function Sidebar({ projects, userName }: { projects: SidebarProject[]; us
       }}
     >
       Claude Code 연결
+      <LinkPending />
     </Link>
   );
   const userRow = (

@@ -10,9 +10,9 @@ import { ChatPanel, type ChatPanelProps } from "./chat/ChatPanel";
 import { FlowPanel, type FlowPanelProps } from "./flows/FlowPanel";
 import { HistoryPanel, type HistoryPanelProps } from "./HistoryPanel";
 import { NodeInfo, type NodeInfoProps } from "./NodeInfo";
+import { TABS, type Tab } from "./panelTabs";
 
-export type Tab = "대화" | "설명" | "이력" | "흐름";
-export const TABS: Tab[] = ["대화", "설명", "이력", "흐름"];
+export { TABS, type Tab };
 export const RIGHT_PANEL_BODY_ID = "right-panel-body";
 
 export interface RightPanelProps {
