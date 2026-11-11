@@ -41,6 +41,9 @@ export interface ChatLine {
   at?: number;
   /** kind "card" */
   card?: ProgressCard;
+  /** kind "summary": 이 차례가 만든 버전과 바꾼 곳 수. 가장 최근 차례면 `바뀐 곳 보기`·`되돌리기`를 붙인다(ChatPanel turnActions). */
+  version?: number | null;
+  changed?: number;
 }
 
 type DoneEvent = Extract<ChatEvent, { t: "done" }>;
@@ -212,7 +215,7 @@ export function useChatTurn(args: UseChatTurnArgs) {
               patchCard((c) => ({ ...c, end, nodes: ev.nodes, edges: ev.edges }));
             } else removeCard();
             const s = summaryText(ev, answerId !== null || said, intent);
-            if (s) pushT({ kind: "summary", text: s });
+            if (s) pushT({ kind: "summary", text: s, version: ev.version, changed: ev.changed ?? ev.applied });
             pushWarnings();
             a.onDone(ev);
             break;

@@ -49,6 +49,8 @@ export interface CanvasProps {
   autoArrangeDisabled?: boolean;
   /** 바뀔 때마다 새 배치가 나온 뒤 화면 전체를 한 번 맞춘다(자동 정렬·대화 재정렬). */
   fitRequest?: number;
+  /** 바뀔 때마다 도구 모음의 `전체 보기`를 누른 것과 같다(단축키 F). */
+  fitAllSignal?: number;
   motion: boolean;
   /** Toolbar toggles; the parent owns editMode / motion. */
   onEditModeChange(v: boolean): void;
@@ -254,7 +256,7 @@ export function Canvas(props: CanvasProps) {
         </div>
         <span className="canvas__sep" role="separator" aria-orientation="vertical" />
         <div className="canvas__group" role="group" aria-label="화면">
-          <button type="button" className="canvas__tool" onClick={() => setFitTick((n) => n + 1)}>
+          <button type="button" className="canvas__tool" title="전체 보기 (F)" aria-keyshortcuts="F" onClick={() => setFitTick((n) => n + 1)}>
             <IconFit />
             <span>전체 보기</span>
           </button>
@@ -280,7 +282,7 @@ export function Canvas(props: CanvasProps) {
       ) : (
         view.layout && (
           <ReactFlowProvider>
-            <Flow {...props} cameraInsets={insets} fitAllRequest={fitTick} layout={view.layout} settled={view.settled} layoutFailed={view.layoutFailed} display={view.display} appearing={view.appearing} updated={view.updated} />
+            <Flow {...props} cameraInsets={insets} fitAllRequest={fitTick + (props.fitAllSignal ?? 0)}layout={view.layout} settled={view.settled} layoutFailed={view.layoutFailed} display={view.display} appearing={view.appearing} updated={view.updated} />
           </ReactFlowProvider>
         )
       )}

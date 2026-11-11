@@ -41,6 +41,11 @@ button.result { cursor: pointer; }
 button.result:hover { border-color: var(--text-secondary); }
 button.result:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
 .chipSummary { border-color: transparent; padding-left: 0; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+/* 구성도는 있고 대화가 빈 때: 안내 한 줄과 고치기 예시. */
+.editStart { display: flex; flex-direction: column; gap: 12px; }
+/* 가장 최근 차례 요약: 요약 글 한 줄, 그 아래 바뀐 곳 보기·되돌리기 한 줄. */
+.turnResult { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
+.turnActions { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
 /* 주의 N: 테두리만 --state-warn. */
 .chipWarning { border-color: var(--state-warn); font-variant-numeric: tabular-nums; }
 .ref { color: var(--text-primary); background: var(--line-node); border-radius: var(--radius-control); padding: 0 4px; font-size: 12px; }
