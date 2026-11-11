@@ -1,12 +1,24 @@
 import type { MessageRole } from "@/db/schema";
 import type { Warning } from "@/domain/types";
+import type { WarningCounts } from "@/domain/warnings";
 import type { MessageMeta } from "@/server/chat/events";
 
 import type { ChatLine } from "./useChatTurn";
 
-/** 한 차례의 새 경고를 칩 하나(`주의 N`)로 알린다. 자세한 목록은 캔버스 구성 정보 카드에 있다. 없으면 null. */
-export function warningsChip(ws: readonly Warning[]): Omit<ChatLine, "id"> | null {
-  return ws.length > 0 ? { kind: "warning", text: `주의 ${ws.length}` } : null;
+/**
+ * 한 차례의 경고 변화를 칩 하나로 알린다(`새 주의 2 · 주의 4 해결 · 지금 모두 6`, 0 인 항목은 뺀다).
+ * 새로 생기거나 해결된 경고가 없으면 null. 수가 없는 옛 메시지는 예전처럼 새 경고 수(`주의 N`)만.
+ * 자세한 목록은 캔버스 구성 정보 카드에 있다.
+ */
+export function warningsChip(ws: readonly Warning[], counts?: WarningCounts): Omit<ChatLine, "id"> | null {
+  if (!counts) return ws.length > 0 ? { kind: "warning", text: `주의 ${ws.length}` } : null;
+  if (counts.fresh === 0 && counts.resolved === 0) return null;
+  const parts = [
+    ...(counts.fresh > 0 ? [`새 주의 ${counts.fresh}`] : []),
+    ...(counts.resolved > 0 ? [`주의 ${counts.resolved} 해결`] : []),
+    `지금 모두 ${counts.now}`,
+  ];
+  return { kind: "warning", text: parts.join(" · ") };
 }
 
 export const NOT_APPLIED_MESSAGE = "요청을 반영하지 못했어요. 다시 말해 주세요.";
@@ -127,7 +139,7 @@ export function messagesToLines(rows: Row[]): ChatLine[] {
     const s = summaryText(r, wrote, meta.intent);
     if (s) out.push({ id: `${m.id}-summary`, kind: "summary", text: s, ...t });
     // 빠진 정보(meta.missing)는 대화에 줄을 두지 않는다: 캔버스 카드가 지금 상태로 보여 준다.
-    const chip = warningsChip(meta.warnings ?? []);
+    const chip = warningsChip(meta.warnings ?? [], meta.warningCounts);
     if (chip) out.push({ id: `${m.id}-warn`, ...chip, ...t });
   }
   return out;

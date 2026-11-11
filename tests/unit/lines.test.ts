@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 
-import { keepsCard, messagesToLines, summaryText } from "@/ui/chat/lines";
+import { keepsCard, messagesToLines, summaryText, warningsChip } from "@/ui/chat/lines";
 
 test("reload has no missing-info line (the canvas card shows it)", () => {
   const lines = messagesToLines([
@@ -217,4 +217,25 @@ test("summary mentions 흐름 1개 바꿨어요", () => {
     { id: "a1", role: "assistant", content: "", meta: { intent: "structure_change", applied: 1, changed: 0, flows: 1, skipped: 0, version: null, status: "complete", says: [], nodes: 3, edges: 2 } },
   ]);
   expect(lines.map((l) => [l.kind, l.text])).toEqual([["summary", "노드 3 · 연결 2 · 흐름 1개 바꿨어요"]]);
+});
+
+test("warning chip shows new, resolved and all-now counts; nothing when warnings did not change", () => {
+  const text = (fresh: number, resolved: number, now: number) => warningsChip([], { fresh, resolved, now })?.text ?? null;
+  expect(text(2, 0, 6)).toBe("새 주의 2 · 지금 모두 6");
+  expect(text(0, 4, 2)).toBe("주의 4 해결 · 지금 모두 2");
+  expect(text(0, 2, 0)).toBe("주의 2 해결 · 지금 모두 0");
+  expect(text(1, 2, 5)).toBe("새 주의 1 · 주의 2 해결 · 지금 모두 5");
+  expect(text(0, 0, 3)).toBeNull();
+  expect(warningsChip([], { fresh: 2, resolved: 0, now: 6 })?.kind).toBe("warning");
+  // 옛 메시지(수 없음)는 예전처럼 새 경고 수만.
+  const w = { id: "spof:w", rule: "spof", nodeId: "w", level: "warn" as const, text: "t", guide: "g" };
+  expect(warningsChip([w])?.text).toBe("주의 1");
+});
+
+test("reloaded messages use saved warning counts for the chip", () => {
+  const lines = messagesToLines([
+    { id: "u1", role: "user", content: "방화벽 거치게 해 줘", meta: {} },
+    { id: "a1", role: "assistant", content: "", meta: { intent: "structure_change", applied: 8, changed: 8, skipped: 0, version: 4, status: "complete", warnings: [], warningCounts: { fresh: 0, resolved: 4, now: 2 } } },
+  ]);
+  expect(lines.find((l) => l.kind === "warning")?.text).toBe("주의 4 해결 · 지금 모두 2");
 });

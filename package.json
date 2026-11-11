@@ -13,7 +13,8 @@
     "smoke:llm": "tsx --env-file=.env scripts/smoke-llm.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "node --env-file=.env node_modules/drizzle-kit/bin.cjs migrate",
-    "eval:intent": "tsx --env-file=.env scripts/eval-intent.ts"
+    "eval:intent": "tsx --env-file=.env scripts/eval-intent.ts",
+    "backfill:commands": "tsx --env-file=.env scripts/backfill-message-commands.ts"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "1.32.2",

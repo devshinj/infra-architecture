@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest";
 
 import { EDGE_KINDS, GROUP_KINDS, NODE_KINDS, categoryOf } from "@/domain/catalog";
 import { applyCommand } from "@/domain/apply";
-import { COMMAND_OPS, FLOW_OPS, SERVER_ONLY_OPS, isFlowCommand, isStructural, parseCommand, type Command, type FlowCommand } from "@/domain/commands";
+import { COMMAND_OPS, FLOW_OPS, SERVER_ONLY_OPS, createFlowRetarget, isFlowCommand, isStructural, parseCommand, type Command, type FlowCommand } from "@/domain/commands";
 import type { FlowOp } from "@/domain/flows";
 import { emptyState } from "@/domain/types";
 
@@ -119,5 +119,36 @@ describe("망 종류·망연계 추정 명령", () => {
   });
   test("add_node 는 guess 를 받는다", () => {
     expect(parseCommand({ op: "add_node", id: "l", kind: "network_link", label: "L", parent: null, guess: true }).ok).toBe(true);
+  });
+});
+
+describe("createFlowRetarget", () => {
+  const steps = [{ edge: "e-a-b", from: "a", short: "요청", text: "보낸다" }];
+  const add = (id: string): FlowCommand => ({ op: "add_flow", id, name: "회원가입", origin: "user", summary: "요약", result: "결과", steps });
+
+  test("add_flow on an existing flow id becomes update_flow (origin dropped, the rest replaced)", () => {
+    const retarget = createFlowRetarget(["signup"]);
+    expect(retarget(add("signup"))).toEqual({ op: "update_flow", id: "signup", name: "회원가입", summary: "요약", result: "결과", steps });
+  });
+
+  test("new ids stay add_flow, and a second add_flow with the same id in the turn becomes update_flow", () => {
+    const retarget = createFlowRetarget([]);
+    expect(retarget(add("login"))).toEqual(add("login"));
+    expect(retarget(add("login")).op).toBe("update_flow");
+  });
+
+  test("after remove_flow the id is free again; update_flow and remove_flow pass through", () => {
+    const retarget = createFlowRetarget(["signup"]);
+    const rm: FlowCommand = { op: "remove_flow", id: "signup" };
+    const up: FlowCommand = { op: "update_flow", id: "pay", name: "결제" };
+    expect(retarget(rm)).toEqual(rm);
+    expect(retarget(add("signup"))).toEqual(add("signup"));
+    expect(retarget(up)).toEqual(up);
+  });
+
+  test("optional fields left out of add_flow are not invented on update_flow", () => {
+    const retarget = createFlowRetarget(["signup"]);
+    const bare: FlowCommand = { op: "add_flow", id: "signup", name: "회원가입", origin: "user", steps };
+    expect(retarget(bare)).toEqual({ op: "update_flow", id: "signup", name: "회원가입", steps });
   });
 });

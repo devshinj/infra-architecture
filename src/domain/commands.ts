@@ -55,6 +55,34 @@ export type FlowCommand = Extract<Command, { op: "add_flow" | "update_flow" | "r
 export const FLOW_OPS: ReadonlySet<Command["op"]> = new Set<Command["op"]>(["add_flow", "update_flow", "remove_flow"]);
 export const isFlowCommand = (c: Command): c is FlowCommand => FLOW_OPS.has(c.op);
 
+/**
+ * AI 대화 차례용: 이미 있는 흐름 id 로 온 add_flow 를 그 흐름을 통째로 고치는 update_flow 로 바꾼다.
+ * 모델이 흐름을 고치라는 요청에 add_flow 로 다시 쓰는 일이 있어("exists" 로 거절됐다) 받는 순서대로 id 를 따라간다.
+ * 출발(origin)은 기존 흐름 것을 둔다(update_flow 에는 칸이 없다). MCP 경로는 쓰지 않는다(거절 그대로).
+ */
+export function createFlowRetarget(existingIds: Iterable<string>): (c: FlowCommand) => FlowCommand {
+  const ids = new Set(existingIds);
+  return (c) => {
+    if (c.op === "remove_flow") {
+      ids.delete(c.id);
+      return c;
+    }
+    if (c.op !== "add_flow") return c;
+    if (!ids.has(c.id)) {
+      ids.add(c.id);
+      return c;
+    }
+    return {
+      op: "update_flow",
+      id: c.id,
+      name: c.name,
+      ...(c.summary !== undefined ? { summary: c.summary } : {}),
+      ...(c.result !== undefined ? { result: c.result } : {}),
+      steps: c.steps,
+    };
+  };
+}
+
 /** AI 가 낼 수 없는 명령(서버가 판정 결과로만 만든다). */
 export const SERVER_ONLY_OPS: ReadonlySet<Command["op"]> = new Set<Command["op"]>(["set_link_guess"]);
 

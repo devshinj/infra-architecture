@@ -258,6 +258,20 @@ test("a continuation status keeps counting changes and shows the part on the car
   expect(cardOf(h.result.current.lines)).toMatchObject({ end: "done", changes: 2 });
 });
 
+test("a retry status marks the card as retrying", async () => {
+  const s = controlled();
+  vi.stubGlobal("fetch", vi.fn(async () => s.res));
+  const h = setup();
+  let p!: Promise<void>;
+  act(() => { p = h.result.current.send("x"); });
+  await act(async () => { s.emit({ t: "start", messageId: "m", intent: "structure_change" }, { t: "status", phase: "thinking" }, { t: "say", text: "추가합니다." }); });
+  await act(async () => { s.emit({ t: "status", phase: "drawing", retry: true }); });
+  await waitFor(() => expect(cardOf(h.result.current.lines)).toMatchObject({ step: "drawing", retry: true }));
+  await act(async () => { s.emit({ t: "cmd", cmd: add("a") }, done({ nodes: 1, edges: 0, applied: 1 })); s.close(); });
+  await act(() => p);
+  expect(cardOf(h.result.current.lines)).toMatchObject({ end: "done", changes: 1 });
+});
+
 test("structure change: a say-only turn says nothing changed; an assumption-only turn shows the notice and drops the card", async () => {
   const notice = "요청을 반영하지 못했어요. 다시 말해 주세요.";
   const run = async (evs: ChatEvent[]) => {
