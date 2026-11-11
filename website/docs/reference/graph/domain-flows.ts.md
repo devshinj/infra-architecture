@@ -1,76 +1,65 @@
 ---
 title: "domain/flows.ts"
-sidebar_position: 3
+sidebar_position: 36
 ---
 # domain/flows.ts
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 64 nodes · cohesion 0.06
+> 23 nodes · cohesion 0.18
 
 ## Key Concepts
 
-- **domain/warnings.ts** (40 connections) — `src/domain/warnings.ts`
-- **chat/warnings.ts** (37 connections) — `src/server/chat/warnings.ts`
-- **networkRules.ts** (30 connections) — `src/domain/networkRules.ts`
-- **checkWarnings()** (17 connections) — `src/server/chat/warnings.ts`
-- **evaluateRules()** (15 connections) — `src/domain/warnings.ts`
-- **createJsonlParser()** (15 connections) — `src/server/llm/jsonl.ts`
-- **mergeWarnings()** (13 connections) — `src/domain/warnings.ts`
-- **checkCodeWarnings()** (13 connections) — `src/server/chat/warnings.ts`
-- **DNode** (12 connections) — `src/domain/types.ts`
-- **jsonl.ts** (11 connections) — `src/server/llm/jsonl.ts`
-- **Task 2: 서버 점검 — Clef 판정과 Qwen 문구** (10 connections) — `docs/superpowers/plans/2026-10-30-infrasketch-phase3b-warnings.md`
-- **파일 구조** (8 connections) — `docs/superpowers/plans/2026-10-30-infrasketch-phase3b-warnings.md`
-- **Edge** (8 connections) — `src/domain/types.ts`
-- **Task 3: 판정 — 통신 길, 연결 방식 예상 경고, 빠진 정보** (7 connections) — `docs/superpowers/plans/2026-11-06-network-knowledge-link-guess.md`
-- **categoryOf()** (7 connections) — `src/domain/catalog.ts`
-- **evaluateNetworkRules()** (7 connections) — `src/domain/networkRules.ts`
-- **judgeExposed()** (7 connections) — `src/server/chat/warnings.ts`
-- **writeTexts()** (6 connections) — `src/server/chat/warnings.ts`
-- **InfraSketch 3B단계: 경고·구성 패턴 구현 계획** (5 connections) — `docs/superpowers/plans/2026-10-30-infrasketch-phase3b-warnings.md`
-- **noulProbability()** (5 connections) — `src/server/llm/clef.ts`
-- **Task 1: 망 영역·망연계 노드·연결 전달물/방향** (4 connections) — `docs/superpowers/plans/2026-11-05-flows-and-network-boundaries.md`
+- **domain/flows.ts** (43 connections) — `src/domain/flows.ts`
+- **boundary.ts** (15 connections) — `src/domain/boundary.ts`
+- **checkFlow()** (13 connections) — `src/domain/flows.ts`
+- **linkVerdicts()** (12 connections) — `src/domain/networkRules.ts`
+- **Review Focus** (10 connections) — `docs/superpowers/plans/2026-11-05-flows-and-network-boundaries.md`
+- **crossesBoundary()** (10 connections) — `src/domain/boundary.ts`
+- **networkZoneOf()** (10 connections) — `src/domain/boundary.ts`
+- **crossingNote()** (8 connections) — `src/domain/flows.ts`
+- **Task 8: "흐름" 탭·지나는 흐름·연동** (7 connections) — `docs/superpowers/plans/2026-11-05-flows-and-network-boundaries.md`
+- **judgeFlowOps()** (7 connections) — `src/domain/flows.ts`
+- **Task 7: 캔버스 흐름 강조·단계 글자·경계 표시** (5 connections) — `docs/superpowers/plans/2026-11-05-flows-and-network-boundaries.md`
+- **crossingBase()** (5 connections) — `src/domain/flows.ts`
+- **flowsThrough()** (5 connections) — `src/domain/flows.ts`
+- **shortLabel()** (5 connections) — `src/domain/flows.ts`
+- **Task 3: 흐름 도메인(모양·검사·끊김)** (4 connections) — `docs/superpowers/plans/2026-11-05-flows-and-network-boundaries.md`
 - **isDirectCrossing()** (4 connections) — `src/domain/boundary.ts`
-- **NodeKind** (4 connections) — `src/domain/catalog.ts`
-- **linkWarningId()** (4 connections) — `src/domain/networkRules.ts`
-- **WarningLevel** (4 connections) — `src/domain/types.ts`
-- *... and 39 more nodes in this community*
+- **stepEnd()** (4 connections) — `src/domain/flows.ts`
+- **BOUNDARY_NODE_KINDS** (3 connections) — `src/domain/boundary.ts`
+- **toSteps()** (3 connections) — `src/domain/flows.ts`
+- **problemReason()** (2 connections) — `src/domain/flows.ts`
+- **Task 9: E2E·화면 확인·문서** (1 connections) — `docs/superpowers/plans/2026-11-05-flows-and-network-boundaries.md`
+- **FlowOpOutcome** (1 connections) — `src/domain/flows.ts`
+- **FlowStepInput** (1 connections) — `src/domain/flows.ts`
 
 ## Relationships
 
-- [pipeline.ts](pipeline.ts.md) (14 shared connections)
-- [domain/flows.ts](domain-flows.ts.md) (13 shared connections)
-- [getOwnedDiagram](getOwnedDiagram.md) (12 shared connections)
-- [server/network.ts](server-network.ts.md) (8 shared connections)
-- [Canvas.tsx](Canvas.tsx.md) (7 shared connections)
-- [QwenClient](QwenClient.md) (6 shared connections)
-- [ask/route.ts](ask-route.ts.md) (6 shared connections)
-- [prompt.ts](prompt.ts.md) (6 shared connections)
-- [NodeInfo.tsx](NodeInfo.tsx.md) (6 shared connections)
-- [mcp/apply.ts](mcp-apply.ts.md) (5 shared connections)
-- [InfoCard.tsx](InfoCard.tsx.md) (5 shared connections)
-- [domain/linkGuess.ts](domain-linkGuess.ts.md) (5 shared connections)
+- [mcp/apply.ts](mcp-apply.ts.md) (14 shared connections)
+- [schema.ts](schema.ts.md) (9 shared connections)
+- [types.ts](types.ts.md) (7 shared connections)
+- [networkRules.ts](networkRules.ts.md) (7 shared connections)
+- [getOwnedDiagram](getOwnedDiagram.md) (6 shared connections)
+- [FlowPanel.tsx](FlowPanel.tsx.md) (6 shared connections)
+- [domain/network.ts](domain-network.ts.md) (4 shared connections)
+- [pipeline.ts](pipeline.ts.md) (3 shared connections)
+- [Canvas.tsx](Canvas.tsx.md) (3 shared connections)
+- [domain/warnings.ts](domain-warnings.ts.md) (3 shared connections)
+- [EdgeLayer.tsx](EdgeLayer.tsx.md) (3 shared connections)
+- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (3 shared connections)
 
 ## Source Files
 
-- `docs/superpowers/plans/2026-10-30-infrasketch-phase3b-warnings.md`
 - `docs/superpowers/plans/2026-11-05-flows-and-network-boundaries.md`
-- `docs/superpowers/plans/2026-11-06-network-knowledge-link-guess.md`
 - `src/domain/boundary.ts`
-- `src/domain/catalog.ts`
+- `src/domain/flows.ts`
 - `src/domain/networkRules.ts`
-- `src/domain/types.ts`
-- `src/domain/warnings.ts`
-- `src/server/chat/prompt.ts`
-- `src/server/chat/warnings.ts`
-- `src/server/llm/clef.ts`
-- `src/server/llm/jsonl.ts`
 
 ## Audit Trail
 
-- EXTRACTED: 223 (87%)
-- INFERRED: 32 (13%)
+- EXTRACTED: 114 (86%)
+- INFERRED: 18 (14%)
 - AMBIGUOUS: 0 (0%)
 
 ---

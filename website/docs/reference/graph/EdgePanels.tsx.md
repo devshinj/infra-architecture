@@ -1,60 +1,67 @@
 ---
 title: "EdgePanels.tsx"
-sidebar_position: 61
+sidebar_position: 26
 ---
 # EdgePanels.tsx
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 17 nodes · cohesion 0.17
+> 26 nodes · cohesion 0.13
 
 ## Key Concepts
 
 - **EdgePanels.tsx** (22 connections) — `src/app/dev/edges/EdgePanels.tsx`
-- **DisplayEdge** (12 connections) — `src/canvas/display.ts`
+- **NodeCard.tsx** (18 connections) — `src/canvas/NodeCard.tsx`
+- **NodeCard()** (8 connections) — `src/canvas/NodeCard.tsx`
+- **ref_xyflow_react** (7 connections)
+- **NameTooltip.tsx** (7 connections) — `src/canvas/NameTooltip.tsx`
+- **nodeTypes.ts** (6 connections) — `src/canvas/nodeTypes.ts`
+- **Category** (6 connections) — `src/domain/catalog.ts`
 - **NodeCardData** (5 connections) — `src/canvas/NodeCard.tsx`
 - **EdgePanels()** (4 connections) — `src/app/dev/edges/EdgePanels.tsx`
 - **PanelView()** (4 connections) — `src/app/dev/edges/EdgePanels.tsx`
 - **edges/page.tsx** (4 connections) — `src/app/dev/edges/page.tsx`
 - **n()** (3 connections) — `src/app/dev/edges/EdgePanels.tsx`
-- **ExportRequest** (3 connections) — `src/canvas/exportImage.ts`
+- **isKeyboardFocus()** (3 connections) — `src/canvas/NameTooltip.tsx`
+- **NameTooltip()** (3 connections) — `src/canvas/NameTooltip.tsx`
+- **useNameTooltip()** (3 connections) — `src/canvas/NameTooltip.tsx`
 - **PanelEdge** (2 connections) — `src/app/dev/edges/EdgePanels.tsx`
 - **PanelNode** (2 connections) — `src/app/dev/edges/EdgePanels.tsx`
 - **WAS1()** (2 connections) — `src/app/dev/edges/EdgePanels.tsx`
 - **WAS2()** (2 connections) — `src/app/dev/edges/EdgePanels.tsx`
 - **DevEdgesPage()** (2 connections) — `src/app/dev/edges/page.tsx`
+- **nodeTypes** (2 connections) — `src/canvas/nodeTypes.ts`
 - **ALB** (1 connections) — `src/app/dev/edges/EdgePanels.tsx`
 - **Panel** (1 connections) — `src/app/dev/edges/EdgePanels.tsx`
 - **PANELS** (1 connections) — `src/app/dev/edges/EdgePanels.tsx`
 - **Pt** (1 connections) — `src/app/dev/edges/EdgePanels.tsx`
+- *... and 1 more nodes in this community*
 
 ## Relationships
 
-- [ZoneNameLayer.tsx](ZoneNameLayer.tsx.md) (5 shared connections)
-- [EdgeLayer.tsx](EdgeLayer.tsx.md) (4 shared connections)
-- [useDiagramView.ts](useDiagramView.ts.md) (3 shared connections)
-- [display.ts](display.ts.md) (2 shared connections)
-- [getOwnedDiagram](getOwnedDiagram.md) (2 shared connections)
-- [Canvas.tsx](Canvas.tsx.md) (2 shared connections)
-- [exportImage.ts](exportImage.ts.md) (2 shared connections)
-- [AskNode.tsx](AskNode.tsx.md) (1 shared connections)
+- [Canvas.tsx](Canvas.tsx.md) (6 shared connections)
+- [ZoneNameLayer.tsx](ZoneNameLayer.tsx.md) (6 shared connections)
+- [EdgeLayer.tsx](EdgeLayer.tsx.md) (5 shared connections)
+- [ref_react](ref_react.md) (5 shared connections)
+- [display.ts](display.ts.md) (4 shared connections)
+- [NodeInfo.tsx](NodeInfo.tsx.md) (4 shared connections)
+- [Explanation.tsx](Explanation.tsx.md) (2 shared connections)
 - [layout.ts](layout.ts.md) (1 shared connections)
-- [ResetPasswordForm.tsx](ResetPasswordForm.tsx.md) (1 shared connections)
-- [segments.ts](segments.ts.md) (1 shared connections)
-- [domain/flows.ts](domain-flows.ts.md) (1 shared connections)
+- [MissingChecklist.tsx](MissingChecklist.tsx.md) (1 shared connections)
 
 ## Source Files
 
 - `src/app/dev/edges/EdgePanels.tsx`
 - `src/app/dev/edges/page.tsx`
+- `src/canvas/NameTooltip.tsx`
 - `src/canvas/NodeCard.tsx`
-- `src/canvas/display.ts`
-- `src/canvas/exportImage.ts`
+- `src/canvas/nodeTypes.ts`
+- `src/domain/catalog.ts`
 
 ## Audit Trail
 
-- EXTRACTED: 47 (98%)
-- INFERRED: 1 (2%)
+- EXTRACTED: 75 (97%)
+- INFERRED: 2 (3%)
 - AMBIGUOUS: 0 (0%)
 
 ---

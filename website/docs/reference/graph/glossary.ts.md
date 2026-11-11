@@ -1,6 +1,6 @@
 ---
 title: "glossary.ts"
-sidebar_position: 65
+sidebar_position: 56
 ---
 # glossary.ts
 
@@ -14,10 +14,10 @@ sidebar_position: 65
 - **glossary-seed.ts** (8 connections) — `src/domain/glossary-seed.ts`
 - **glossary-seed-batch3.ts** (4 connections) — `src/domain/glossary-seed-batch3.ts`
 - **glossary-seed-extra.ts** (4 connections) — `src/domain/glossary-seed-extra.ts`
+- **addAiTerm()** (4 connections) — `src/server/glossary.ts`
 - **GLOSSARY_SEED_BATCH3** (3 connections) — `src/domain/glossary-seed-batch3.ts`
 - **GLOSSARY_SEED_EXTRA** (3 connections) — `src/domain/glossary-seed-extra.ts`
 - **GlossarySeedEntry** (3 connections) — `src/domain/glossary-seed.ts`
-- **AiTermInput** (3 connections) — `src/server/glossary.ts`
 - **glossaryTerms** (2 connections) — `src/db/schema.ts`
 - **GLOSSARY_SEED_CORE** (2 connections) — `src/domain/glossary-seed.ts`
 - **escapeLike()** (2 connections) — `src/server/glossary.ts`
@@ -33,9 +33,10 @@ sidebar_position: 65
 - [domain/explain.ts](domain-explain.ts.md) (5 shared connections)
 - [GlossaryPage.tsx](GlossaryPage.tsx.md) (5 shared connections)
 - [설명 생성과 품질 검사](설명_생성과_품질_검사.md) (4 shared connections)
-- [projects.ts](projects.ts.md) (2 shared connections)
+- [getOwnedDiagram](getOwnedDiagram.md) (2 shared connections)
 - [(app)/actions.ts](app-actions.ts.md) (2 shared connections)
-- [auth](auth.md) (1 shared connections)
+- [server/network.ts](server-network.ts.md) (1 shared connections)
+- [projects.ts](projects.ts.md) (1 shared connections)
 
 ## Source Files
 
@@ -47,7 +48,7 @@ sidebar_position: 65
 
 ## Audit Trail
 
-- EXTRACTED: 48 (100%)
+- EXTRACTED: 49 (100%)
 - INFERRED: 0 (0%)
 - AMBIGUOUS: 0 (0%)
 

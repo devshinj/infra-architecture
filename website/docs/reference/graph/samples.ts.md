@@ -1,6 +1,6 @@
 ---
 title: "samples.ts"
-sidebar_position: 56
+sidebar_position: 48
 ---
 # samples.ts
 
@@ -31,17 +31,16 @@ sidebar_position: 56
 
 ## Relationships
 
-- [getOwnedDiagram](getOwnedDiagram.md) (5 shared connections)
+- [getOwnedDiagram](getOwnedDiagram.md) (4 shared connections)
 - [(app)/actions.ts](app-actions.ts.md) (4 shared connections)
 - [domain/apply.ts](domain-apply.ts.md) (3 shared connections)
+- [mcp/apply.ts](mcp-apply.ts.md) (2 shared connections)
+- [schema.ts](schema.ts.md) (2 shared connections)
 - [\[sessionId\]/route.ts]([sessionId]-route.ts.md) (2 shared connections)
 - [Legend.tsx](Legend.tsx.md) (1 shared connections)
-- [MissingChecklist.tsx](MissingChecklist.tsx.md) (1 shared connections)
-- [Task 5: MCP 고치기·되돌리기 서비스](Task_5-_MCP_고치기·되돌리기_서비스.md) (1 shared connections)
-- [Command](Command.md) (1 shared connections)
+- [NODE_KINDS](NODE_KINDS.md) (1 shared connections)
 - [ZoneNameLayer.tsx](ZoneNameLayer.tsx.md) (1 shared connections)
-- [commands.ts](commands.ts.md) (1 shared connections)
-- [schema.ts](schema.ts.md) (1 shared connections)
+- [types.ts](types.ts.md) (1 shared connections)
 - [projects.ts](projects.ts.md) (1 shared connections)
 
 ## Source Files

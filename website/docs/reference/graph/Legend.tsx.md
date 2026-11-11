@@ -1,6 +1,6 @@
 ---
 title: "Legend.tsx"
-sidebar_position: 67
+sidebar_position: 59
 ---
 # Legend.tsx
 
@@ -28,17 +28,15 @@ sidebar_position: 67
 
 ## Relationships
 
-- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (3 shared connections)
-- [EdgeLayer.tsx](EdgeLayer.tsx.md) (2 shared connections)
+- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (5 shared connections)
+- [EdgeLayer.tsx](EdgeLayer.tsx.md) (3 shared connections)
 - [ZoneNameLayer.tsx](ZoneNameLayer.tsx.md) (2 shared connections)
-- [(app)/actions.ts](app-actions.ts.md) (2 shared connections)
-- [motion.ts](motion.ts.md) (1 shared connections)
 - [segments.ts](segments.ts.md) (1 shared connections)
-- [commands.ts](commands.ts.md) (1 shared connections)
-- [drawing/rules.ts](drawing-rules.ts.md) (1 shared connections)
+- [mcp/apply.ts](mcp-apply.ts.md) (1 shared connections)
+- [prompt.ts](prompt.ts.md) (1 shared connections)
 - [samples.ts](samples.ts.md) (1 shared connections)
 - [NodeInfo.tsx](NodeInfo.tsx.md) (1 shared connections)
-- [AskNode.tsx](AskNode.tsx.md) (1 shared connections)
+- [ref_react](ref_react.md) (1 shared connections)
 
 ## Source Files
 

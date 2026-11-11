@@ -1,6 +1,6 @@
 ---
 title: "Command"
-sidebar_position: 85
+sidebar_position: 76
 ---
 # Command
 
@@ -10,9 +10,9 @@ sidebar_position: 85
 
 ## Key Concepts
 
-- **DiagramState** (61 connections) — `src/domain/types.ts`
 - **diff.ts** (12 connections) — `src/domain/diff.ts`
 - **backfill.ts** (11 connections) — `src/server/chat/backfill.ts`
+- **diffStates()** (7 connections) — `src/domain/diff.ts`
 - **commandsBetween()** (5 connections) — `src/domain/diff.ts`
 - **equal()** (5 connections) — `src/domain/diff.ts`
 - **planCommandBackfill()** (3 connections) — `src/server/chat/backfill.ts`
@@ -22,30 +22,29 @@ sidebar_position: 85
 
 ## Relationships
 
-- [getOwnedDiagram](getOwnedDiagram.md) (10 shared connections)
-- [domain/flows.ts](domain-flows.ts.md) (6 shared connections)
-- [Task 5: MCP 고치기·되돌리기 서비스](Task_5-_MCP_고치기·되돌리기_서비스.md) (4 shared connections)
-- [pipeline.ts](pipeline.ts.md) (4 shared connections)
 - [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (3 shared connections)
-- [MissingChecklist.tsx](MissingChecklist.tsx.md) (3 shared connections)
-- [domain/explain.ts](domain-explain.ts.md) (3 shared connections)
-- [DiagramState](DiagramState.md) (3 shared connections)
-- [schema.ts](schema.ts.md) (3 shared connections)
-- [prompt.ts](prompt.ts.md) (3 shared connections)
-- [useDiagramView.ts](useDiagramView.ts.md) (2 shared connections)
-- [InfraSketch 설계 문서](InfraSketch_설계_문서.md) (2 shared connections)
+- [mcp/apply.ts](mcp-apply.ts.md) (2 shared connections)
+- [schema.ts](schema.ts.md) (2 shared connections)
+- [display.ts](display.ts.md) (2 shared connections)
+- [types.ts](types.ts.md) (2 shared connections)
+- [getOwnedDiagram](getOwnedDiagram.md) (2 shared connections)
+- [pipeline.ts](pipeline.ts.md) (2 shared connections)
+- [prompt.ts](prompt.ts.md) (2 shared connections)
+- [AssumptionChips.tsx](AssumptionChips.tsx.md) (1 shared connections)
+- [layout.ts](layout.ts.md) (1 shared connections)
+- [NODE_KINDS](NODE_KINDS.md) (1 shared connections)
+- [lines.ts](lines.ts.md) (1 shared connections)
 
 ## Source Files
 
 - `src/domain/diff.ts`
-- `src/domain/types.ts`
 - `src/server/chat/backfill.ts`
 - `src/server/chat/prompt.ts`
 
 ## Audit Trail
 
-- EXTRACTED: 88 (99%)
-- INFERRED: 1 (1%)
+- EXTRACTED: 35 (100%)
+- INFERRED: 0 (0%)
 - AMBIGUOUS: 0 (0%)
 
 ---

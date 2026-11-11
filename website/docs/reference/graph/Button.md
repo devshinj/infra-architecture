@@ -1,6 +1,6 @@
 ---
 title: "Button()"
-sidebar_position: 104
+sidebar_position: 103
 sidebar_label: "핵심 노드: Button()"
 ---
 # Button()
@@ -9,23 +9,23 @@ sidebar_label: "핵심 노드: Button()"
 
 > God node · 42 connections · `src/ui/Button.tsx`
 
-**Community:** [ResetPasswordForm.tsx](ResetPasswordForm.tsx.md)
+**Community:** [ref_react](ref_react.md)
 
 ## Connections by Relation
 
 ### calls
 - [DiagramWorkspace()](DiagramWorkspace.md) `EXTRACTED`
 - Sidebar() `EXTRACTED`
+- NetworkKnowledgePage() `EXTRACTED`
 - MissingChecklist() `EXTRACTED`
 - ChatPanel() `EXTRACTED`
 - FlowPanel() `EXTRACTED`
-- NetworkKnowledgePage() `EXTRACTED`
 - SessionPicker() `EXTRACTED`
 - DialogView() `EXTRACTED`
+- GlossaryPage() `EXTRACTED`
 - AuthSubmit() `EXTRACTED`
 - ZoneTypePicker() `EXTRACTED`
 - ResetRequestPage() `EXTRACTED`
-- GlossaryPage() `EXTRACTED`
 - HistoryPanel() `EXTRACTED`
 - McpKeysPage() `EXTRACTED`
 - LinkGuessPart() `EXTRACTED`
@@ -33,7 +33,7 @@ sidebar_label: "핵심 노드: Button()"
 - expandedNav() `EXTRACTED`
 - buttonClassName() `EXTRACTED`
 - Rewrite() `EXTRACTED`
-- Cautions() `EXTRACTED`
+- RuleForm() `EXTRACTED`
 - *…and 4 more `calls` connection(s) not listed (lowest-degree first to go)*
 
 ### contains
@@ -42,17 +42,17 @@ sidebar_label: "핵심 노드: Button()"
 ### imports
 - [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) `EXTRACTED`
 - [NodeInfo.tsx](NodeInfo.tsx.md) `EXTRACTED`
+- [NetworkKnowledgePage.tsx](NetworkKnowledgePage.tsx.md) `EXTRACTED`
 - [ChatPanel.tsx](ChatPanel.tsx.md) `EXTRACTED`
 - [Sidebar.tsx](Sidebar.tsx.md) `EXTRACTED`
-- [NetworkKnowledgePage.tsx](NetworkKnowledgePage.tsx.md) `EXTRACTED`
 - [MissingChecklist.tsx](MissingChecklist.tsx.md) `EXTRACTED`
 - [Explanation.tsx](Explanation.tsx.md) `EXTRACTED`
-- [SessionPicker.tsx](SessionPicker.tsx.md) `EXTRACTED`
+- SessionPicker.tsx `EXTRACTED`
 - [FlowPanel.tsx](FlowPanel.tsx.md) `EXTRACTED`
 - [Shell.tsx](Shell.tsx.md) `EXTRACTED`
-- reset/page.tsx `EXTRACTED`
-- [ZoneTypePicker.tsx](ZoneTypePicker.tsx.md) `EXTRACTED`
 - [GlossaryPage.tsx](GlossaryPage.tsx.md) `EXTRACTED`
+- reset/page.tsx `EXTRACTED`
+- ZoneTypePicker.tsx `EXTRACTED`
 - dialogs.tsx `EXTRACTED`
 - McpKeysPage.tsx `EXTRACTED`
 - AuthField.tsx `EXTRACTED`

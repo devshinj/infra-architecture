@@ -1,6 +1,6 @@
 ---
 title: "PageSkeleton.tsx"
-sidebar_position: 49
+sidebar_position: 45
 ---
 # PageSkeleton.tsx
 
@@ -33,11 +33,12 @@ sidebar_position: 49
 
 ## Relationships
 
-- [Shell.tsx](Shell.tsx.md) (4 shared connections)
 - [ChatPanel.tsx](ChatPanel.tsx.md) (3 shared connections)
 - [Explanation.tsx](Explanation.tsx.md) (3 shared connections)
-- [AskNode.tsx](AskNode.tsx.md) (2 shared connections)
+- [Shell.tsx](Shell.tsx.md) (3 shared connections)
+- [ref_react](ref_react.md) (2 shared connections)
 - [RightPanel.tsx](RightPanel.tsx.md) (2 shared connections)
+- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (1 shared connections)
 
 ## Source Files
 

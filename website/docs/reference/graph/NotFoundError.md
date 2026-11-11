@@ -1,53 +1,63 @@
 ---
 title: "NotFoundError"
-sidebar_position: 76
+sidebar_position: 105
 sidebar_label: "핵심 노드: NotFoundError"
 ---
 # NotFoundError
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 12 nodes · cohesion 0.27
+> God node · 36 connections · `src/server/projects.ts`
 
-## Key Concepts
+**Community:** [server/network.ts](server-network.ts.md)
 
-- **McpKeysPage.tsx** (17 connections) — `src/ui/mcp/McpKeysPage.tsx`
-- **McpKeysPage()** (9 connections) — `src/ui/mcp/McpKeysPage.tsx`
-- **claude-code/page.tsx** (8 connections) — `src/app/(app)/claude-code/page.tsx`
-- **deleteMcpKeyAction()** (6 connections) — `src/app/(app)/actions.ts`
-- **createMcpKeyAction()** (5 connections) — `src/app/(app)/actions.ts`
-- **listMcpKeys()** (5 connections) — `src/server/mcpKeys.ts`
-- **ClaudeCodeConnection()** (4 connections) — `src/app/(app)/claude-code/page.tsx`
-- **McpKeyRow** (2 connections) — `src/app/(app)/actions.ts`
-- **commandFor()** (2 connections) — `src/ui/mcp/McpKeysPage.tsx`
-- **day()** (2 connections) — `src/ui/mcp/McpKeysPage.tsx`
-- **Fresh** (1 connections) — `src/ui/mcp/McpKeysPage.tsx`
-- **src_ui_mcp_mcpkeyspage_module** (1 connections)
+## Connections by Relation
 
-## Relationships
+### calls
+- [getOwnedDiagram()](getOwnedDiagram_2.md) `EXTRACTED`
+- runAskTurn() `EXTRACTED`
+- runChatTurn() `EXTRACTED`
+- updateNetworkType() `EXTRACTED`
+- withOwnedFlow() `EXTRACTED`
+- countNetworkTypeUsageAction() `EXTRACTED`
+- assertOwnedProject() `EXTRACTED`
+- updateTerm() `EXTRACTED`
+- getOwnedType() `EXTRACTED`
+- deleteMcpKey() `EXTRACTED`
+- deleteNetworkRule() `EXTRACTED`
+- assertUuid() `EXTRACTED`
 
-- [(app)/actions.ts](app-actions.ts.md) (5 shared connections)
-- [useFlows](useFlows.md) (4 shared connections)
-- [ResetPasswordForm.tsx](ResetPasswordForm.tsx.md) (4 shared connections)
-- [FlowPanel.tsx](FlowPanel.tsx.md) (4 shared connections)
-- [schema.ts](schema.ts.md) (3 shared connections)
-- [auth](auth.md) (3 shared connections)
-- [NetworkKnowledgePage.tsx](NetworkKnowledgePage.tsx.md) (1 shared connections)
-- [auth.ts](auth.ts.md) (1 shared connections)
-- [AskNode.tsx](AskNode.tsx.md) (1 shared connections)
+### contains
+- [projects.ts](projects.ts.md) `EXTRACTED`
 
-## Source Files
+### imports
+- [(app)/actions.ts](app-actions.ts.md) `EXTRACTED`
+- [pipeline.ts](pipeline.ts.md) `EXTRACTED`
+- [server/network.ts](server-network.ts.md) `EXTRACTED`
+- ask.ts `EXTRACTED`
+- server/flows.ts `EXTRACTED`
+- [\[sessionId\]/route.ts]([sessionId]-route.ts.md) `EXTRACTED`
+- [glossary.ts](glossary.ts.md) `EXTRACTED`
+- ask/route.ts `EXTRACTED`
+- server.ts `EXTRACTED`
+- chat/route.ts `EXTRACTED`
+- \[diagramId\]/page.tsx `EXTRACTED`
+- explain/route.ts `EXTRACTED`
+- sessions/route.ts `EXTRACTED`
+- mcpKeys.ts `EXTRACTED`
+- [suggest/route.ts](suggest-route.ts.md) `EXTRACTED`
+- flows/route.ts `EXTRACTED`
+- [head/route.ts](head-route.ts.md) `EXTRACTED`
 
-- `src/app/(app)/actions.ts`
-- `src/app/(app)/claude-code/page.tsx`
-- `src/server/mcpKeys.ts`
-- `src/ui/mcp/McpKeysPage.tsx`
+### method
+- .constructor() `EXTRACTED`
 
-## Audit Trail
-
-- EXTRACTED: 44 (100%)
-- INFERRED: 0 (0%)
-- AMBIGUOUS: 0 (0%)
+### references
+- Task 6: 읽기 서비스와 안내서 `INFERRED`
+- Task 4: 서버 설명 생성 `INFERRED`
+- Task 2: 용어 사전 시드와 서버 함수 `INFERRED`
+- Task 5: DB와 서버 — 망 지식 테이블, 기본 제공 채우기, 읽기·고치기 `INFERRED`
+- Task 3: 키 만들기·확인 `INFERRED`
 
 ---
 
