@@ -2,7 +2,7 @@ import { expect, test } from "vitest";
 
 import type { GroupKind, NodeKind } from "@/domain/catalog";
 import { emptyState, type DiagramState, type DNode, type Warning } from "@/domain/types";
-import { evaluateRules, mergeWarnings, RULES, warningsByNode } from "@/domain/warnings";
+import { evaluateRules, mergeWarnings, RULES, warningDelta, warningsByNode } from "@/domain/warnings";
 
 const node = (id: string, kind: NodeKind, label: string, parent: string | null = null): DNode => ({ id, kind, label, parent, attrs: {} });
 const build = (
@@ -149,4 +149,54 @@ test("network_direct warns on WAS(업무망) → API(인터넷망) direct edge",
 test("no warning through network_link", () => {
   const s = zoned([["a", "was", "link", "request"], ["b", "link", "api", "request"]]);
   expect(ids(s).some((i) => i.startsWith("network_direct"))).toBe(false);
+});
+
+test("pass-through node with no edge at all warns (unused_passthrough)", () => {
+  const kinds: NodeKind[] = ["firewall", "waf", "lb_l4", "lb_l7", "api_gateway", "nat", "vpn", "network_link", "cdn"];
+  for (const k of kinds) expect(ids(build([node("p", k, "경계 방화벽")]))).toContain("unused_passthrough:p");
+  const s = build([node("fw", "firewall", "경계 방화벽")]);
+  expect(evaluateRules(s).find((w) => w.rule === "unused_passthrough")?.text).toContain("경계 방화벽");
+});
+
+test("pass-through node with any edge, or a non pass-through node alone, does not warn unused_passthrough", () => {
+  const inOnly = build([node("web", "web_server", "웹"), node("fw", "firewall", "FW")], [], [["e1", "web", "fw", "request"]]);
+  expect(ids(inOnly)).not.toContain("unused_passthrough:fw");
+  const outOnly = build([node("fw", "firewall", "FW"), node("was", "was", "WAS")], [], [["e1", "fw", "was", "request"]]);
+  expect(ids(outOnly)).not.toContain("unused_passthrough:fw");
+  for (const k of ["web_server", "was", "monitoring", "dns", "batch_server"] as NodeKind[]) {
+    expect(ids(build([node("n", k, "N")]))).not.toContain("unused_passthrough:n");
+  }
+});
+
+test("spof text says 1대뿐 only when it is the only node of its kind; otherwise it is outside the redundancy group", () => {
+  const text = (s: DiagramState, id: string) => evaluateRules(s).find((w) => w.id === `spof:${id}`)?.text;
+  expect(text(build([node("w", "was", "WAS")]), "w")).toBe("WAS이(가) 1대뿐이라 멈추면 서비스도 멈춰요.");
+  const two = build([node("w1", "was", "WAS #1"), node("w2", "was", "WAS #2")]);
+  expect(text(two, "w1")).toBe("WAS #1이(가) 이중화 묶음(VIP)에 들어 있지 않아 멈춰도 대신할 서버로 넘어가지 않아요.");
+  // 같은 종류가 묶음 안에 있어도, 밖에 있는 노드는 묶음에 없다고 알린다.
+  const mixed = build([node("w1", "was", "WAS #1", "r"), node("w2", "was", "WAS #2")], [["r", "redundancy_group", null]]);
+  expect(text(mixed, "w2")).toContain("이중화 묶음(VIP)에 들어 있지 않아");
+  // 다른 종류는 세지 않는다.
+  expect(text(build([node("w", "was", "WAS"), node("d", "db_rdb", "DB")]), "w")).toContain("1대뿐");
+});
+
+test("warningDelta counts new, resolved and all active warnings (ignored ones are left out)", () => {
+  const web = node("web", "web_server", "웹", "dmz");
+  const was = node("was", "was", "WAS", "biz");
+  const fw = node("fw", "firewall", "방화벽");
+  const zones: [string, GroupKind, string | null][] = [["dmz", "network_zone", null], ["biz", "network_zone", null]];
+  const direct = build([web, was, fw], zones, [["e1", "web", "was", "request"]]);
+  const routed = build([web, was, fw], zones, [["e2", "web", "fw", "request"], ["e3", "fw", "was", "request"]]);
+  const before = mergeWarnings(direct).active.map((w) => w.id);
+  expect(before).toEqual(expect.arrayContaining(["network_direct:e1", "unused_passthrough:fw"]));
+  const d = warningDelta(direct, routed);
+  expect(d.resolved).toBe(2);
+  expect(d.fresh).toBe(0);
+  expect(d.now).toBe(mergeWarnings(routed).active.length);
+  // 거꾸로 가면 둘 다 새 경고다.
+  expect(warningDelta(routed, direct)).toMatchObject({ fresh: 2, resolved: 0 });
+  // 무시한 경고는 어느 쪽에서도 세지 않는다.
+  const ignored = { ...direct, ignoredWarnings: ["network_direct:e1"] };
+  expect(warningDelta(ignored, routed).resolved).toBe(1);
+  expect(warningDelta(direct, direct)).toEqual({ fresh: 0, resolved: 0, now: before.length });
 });

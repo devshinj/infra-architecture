@@ -58,7 +58,7 @@ async function main(): Promise<number> {
   const { clefOpenItems, resolveIntent } = await import("../src/server/chat/intent");
   const { buildMessages, parseMentions } = await import("../src/server/chat/prompt");
   const { normalizeAiCommand } = await import("../src/server/chat/normalize");
-  const { isFlowCommand, parseCommand } = await import("../src/domain/commands");
+  const { createFlowRetarget, isFlowCommand, parseCommand } = await import("../src/domain/commands");
   const { asksStepText, keepStepText } = await import("../src/domain/flows");
   const { createEdgeCoalescer } = await import("../src/domain/edgeCoalesce");
   type Command = import("../src/domain/commands").Command;
@@ -148,6 +148,8 @@ async function main(): Promise<number> {
           let st = state;
           // 파이프라인과 같이, 같은 두 노드 사이 연결을 지웠다 다시 만들면 짝을 지운다. 판정은 바꾼 명령으로 한다.
           const edges = createEdgeCoalescer();
+          // 파이프라인처럼, 이미 있는 흐름 id 의 add_flow 는 update_flow 로 받는다.
+          const retargetFlow = createFlowRetarget(flows.map((f) => f.id));
           // 흐름 명령은 파이프라인처럼 끝에 마지막 짝 정보로 연결 id 를 바꾼 뒤 단계 글 지키기를 한다.
           const flowAt: { at: number; cmd: FlowCommand }[] = [];
           const toSeen = (c: Command): SeenCommand => {
@@ -162,7 +164,7 @@ async function main(): Promise<number> {
           const take = (c: Command) => {
             seen.push(toSeen(c));
             if (isFlowCommand(c)) {
-              flowAt.push({ at: seen.length - 1, cmd: c });
+              flowAt.push({ at: seen.length - 1, cmd: retargetFlow(c) });
               return;
             }
             const r = applyCommand(st, c);

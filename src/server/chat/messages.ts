@@ -21,11 +21,15 @@ export async function createMessage(
   return row;
 }
 
-/** 가장 최근 `limit` 개를 오래된 순으로 돌려준다. `sessionId` 가 null 이면 구성도 대화만, 아니면 그 세션 것만. */
+/**
+ * 가장 최근 `limit` 개를 오래된 순으로 돌려준다. `sessionId` 가 null 이면 구성도 대화만, 아니면 그 세션 것만.
+ * 메타의 commands(차례에 적용한 명령, 기록 재생용)는 크고 화면에 쓰지 않아 withCommands 일 때만 남긴다.
+ */
 export async function listMessages(
   diagramId: string,
   limit = 100,
   sessionId: string | null = null,
+  opts: { withCommands?: boolean } = {},
 ): Promise<{ id: string; role: MessageRole; content: string; meta: MessageMeta; createdAt: Date }[]> {
   const rows = await db
     .select({
@@ -44,5 +48,13 @@ export async function listMessages(
     )
     .orderBy(desc(messages.createdAt), desc(messages.id))
     .limit(limit);
-  return rows.reverse();
+  const out = opts.withCommands ? rows : rows.map(({ meta, ...r }) => ({ ...r, meta: withoutCommands(meta) }));
+  return out.reverse();
+}
+
+function withoutCommands(meta: MessageMeta): MessageMeta {
+  if (!meta || !("commands" in meta)) return meta;
+  const { commands: _drop, ...rest } = meta;
+  void _drop;
+  return rest;
 }

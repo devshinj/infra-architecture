@@ -1,11 +1,12 @@
 import { computeMissing } from "@/domain/missing";
 import { applyCommand } from "@/domain/apply";
-import { COMMAND_OPS, isFlowCommand, isStructural, parseCommand, SERVER_ONLY_OPS, toFlowOp, type Command, type FlowCommand } from "@/domain/commands";
+import { COMMAND_OPS, createFlowRetarget, isFlowCommand, isStructural, parseCommand, SERVER_ONLY_OPS, toFlowOp, type Command, type FlowCommand } from "@/domain/commands";
 import { createEdgeCoalescer } from "@/domain/edgeCoalesce";
 import { asksStepText, FLOW_LIMITS, keepStepText, type FlowOp } from "@/domain/flows";
 import { splitFlowSteps, type StepSplit } from "@/domain/linkGuess";
 import type { NetworkKnowledge } from "@/domain/network";
 import { emptyState, type DiagramState, type Warning } from "@/domain/types";
+import { warningDelta, type WarningCounts } from "@/domain/warnings";
 import type { ClefClient, Intent } from "@/server/llm/clef";
 import { createJsonlParser } from "@/server/llm/jsonl";
 import { createThinkStripper } from "@/server/llm/think";
@@ -24,7 +25,7 @@ import { normalizeAiCommand } from "./normalize";
 import { checkWarnings } from "./warnings";
 import { settleTurn } from "./settle";
 import { createSkipTally, skipKey } from "./skips";
-import { buildMessages, parseMentions } from "./prompt";
+import { buildMessages, parseMentions, REPLAY_COMMANDS_MAX, type HistoryItem } from "./prompt";
 import { createSession, getSession, touchSession } from "./sessions";
 
 export interface ChatDeps {
@@ -179,9 +180,16 @@ async function lockedTurn(args: TurnArgs, sessionId: string | null, followUp: bo
   // 이 대화 줄기만 본다(다른 구성도 대화 세션·질문 세션 글은 섞지 않는다).
   const history =
     sessionId === null || followUp
-      ? (await listMessages(diagramId, HISTORY_FETCH, sessionId))
+      ? (await listMessages(diagramId, HISTORY_FETCH, sessionId, { withCommands: true }))
           .filter((m) => m.role === "user" || m.role === "assistant")
-          .map((m) => ({ role: m.role as "user" | "assistant", content: m.content }))
+          .map(
+            (m): HistoryItem => ({
+              role: m.role as "user" | "assistant",
+              content: m.content,
+              intent: m.meta?.intent ?? null,
+              ...(Array.isArray(m.meta?.commands) ? { commands: m.meta.commands } : {}),
+            }),
+          )
       : [];
   const lastAssistant = history.findLast((m) => m.role === "assistant")?.content;
   const { clean, mentions } = parseMentions(args.text, state);
@@ -222,6 +230,8 @@ async function lockedTurn(args: TurnArgs, sessionId: string | null, followUp: bo
   const pendingFlowOps: FlowOp[] = [];
   let flowsSaved = 0;
   let plainLines = 0; // 명령 모드에서 일반 글이라 say 로 보여 준 줄 수(서버 로그용)
+  // 명령 경로 차례에 실제로 적용한 명령. 다음 차례 기록에 JSON 줄로 다시 보낸다(명령 경로가 아니면 undefined).
+  let turnCommands: Command[] | undefined;
   const tally = createSkipTally();
   let status: "complete" | "aborted" | "error" = "complete";
   const skip = (reason: string, key: string) => {
@@ -259,14 +269,20 @@ async function lockedTurn(args: TurnArgs, sessionId: string | null, followUp: bo
       const mapped = edges.mapFlow(c);
       return keepText ? keepStepText(mapped, flows) : mapped;
     };
-    const applyOne = (cmd: Command) => {
-      if (isFlowCommand(cmd)) {
+    // 이미 있는 흐름 id 의 add_flow 는 그 흐름을 고치는 update_flow 로 받는다(모델이 고치기를 add_flow 로 쓰는 일이 있다).
+    const retargetFlow = createFlowRetarget(flows.map((f) => f.id));
+    const appliedCmds: Command[] = [];
+    if (!answerMode) turnCommands = appliedCmds;
+    const applyOne = (raw: Command) => {
+      if (isFlowCommand(raw)) {
+        const cmd = retargetFlow(raw);
         flowCmds.push(cmd);
         if (applied === 0) emit({ t: "status", phase: "drawing" });
         applied++;
         emit({ t: "cmd", cmd: prepareFlow(cmd) });
         return;
       }
+      const cmd = raw;
       // 지식에 없는 종류(지운·숨긴 것)가 붙은 망은 종류 없음으로 보고 AI 가 다시 붙이게 한다.
       const r = applyCommand(state, cmd, knowledge ? { netTypes: knowledge.types } : {});
       if (!r.ok) return skip(`적용할 수 없는 명령(${cmd.op}) ${r.error}`, skipKey("apply", cmd.op, r.error));
@@ -275,6 +291,7 @@ async function lockedTurn(args: TurnArgs, sessionId: string | null, followUp: bo
       applied++;
       if (isStructural(cmd)) changed++;
       else assumed++;
+      appliedCmds.push(cmd);
       emit({ t: "cmd", cmd });
     };
 
@@ -340,28 +357,38 @@ async function lockedTurn(args: TurnArgs, sessionId: string | null, followUp: bo
       } else {
         // 명령 경로: 출력 한도로 끊기면(finish_reason "length") 지금까지 반영한 상태를 다시 보내 이어 쓰게 한다.
         // 같은 차례라 cmd 는 계속 같은 스트림으로 가고, 버전은 차례 끝에 한 번만 만든다.
-        let msgs = messages;
-        for (let part = 1; ; part++) {
-          const appliedBefore = applied;
-          const parser = createJsonlParser(onLine, onBad, onText);
-          const r = await deps.qwen.streamCompletion(msgs, {
-            signal,
-            onDelta(delta) {
-              if (!signal.aborted) parser.push(delta);
-            },
-          });
-          if (signal.aborted) throw abortError();
-          // 이번 호출이 아무것도 반영하지 못했으면(같은 걸 되풀이하는 등) 더 이어 쓰지 않는다. 미뤄 둔 연결 지우기도 반영으로 센다.
-          const more = r.finishReason === "length" && part <= MAX_CONTINUATIONS && (applied > appliedBefore || edges.pending() > 0);
-          // 이어 쓸 때만 끊긴 마지막 줄을 조용히 버린다(마지막 시도까지 끊기면 지금처럼 건너뜀으로 센다).
-          parser.end({ dropPartial: more });
-          if (!more) break;
-          // 이어 쓰기는 지금 상태를 보고 쓰므로, 미뤄 둔 지우기를 먼저 적용한다.
-          flushEdges();
-          const n = part + 1;
-          console.info("[chat] output cut by length, continuing", { diagramId, part: n });
-          emit({ t: "status", phase: "drawing", part: { n, of: MAX_CONTINUATIONS + 1 } });
-          msgs = buildMessages({ intent, text: clean, state, mentions, history, missing: openMissing, continuation: true, flows, ...network });
+        const qwen = deps.qwen;
+        const draw = async (first: typeof messages) => {
+          let msgs = first;
+          for (let part = 1; ; part++) {
+            const appliedBefore = applied;
+            const parser = createJsonlParser(onLine, onBad, onText);
+            const r = await qwen.streamCompletion(msgs, {
+              signal,
+              onDelta(delta) {
+                if (!signal.aborted) parser.push(delta);
+              },
+            });
+            if (signal.aborted) throw abortError();
+            // 이번 호출이 아무것도 반영하지 못했으면(같은 걸 되풀이하는 등) 더 이어 쓰지 않는다. 미뤄 둔 연결 지우기도 반영으로 센다.
+            const more = r.finishReason === "length" && part <= MAX_CONTINUATIONS && (applied > appliedBefore || edges.pending() > 0);
+            // 이어 쓸 때만 끊긴 마지막 줄을 조용히 버린다(마지막 시도까지 끊기면 지금처럼 건너뜀으로 센다).
+            parser.end({ dropPartial: more });
+            if (!more) break;
+            // 이어 쓰기는 지금 상태를 보고 쓰므로, 미뤄 둔 지우기를 먼저 적용한다.
+            flushEdges();
+            const n = part + 1;
+            console.info("[chat] output cut by length, continuing", { diagramId, part: n });
+            emit({ t: "status", phase: "drawing", part: { n, of: MAX_CONTINUATIONS + 1 } });
+            msgs = buildMessages({ intent, text: clean, state, mentions, history, missing: openMissing, continuation: true, flows, ...network });
+          }
+        };
+        await draw(messages);
+        // 구성 변경 요청인데 아무것도 반영하지 못했으면(say 만 쓰고 멈추는 흔들림) 다그치는 한 줄을 붙여 한 번만 다시 부른다.
+        if (intent === "structure_change" && applied === 0 && edges.pending() === 0) {
+          console.info("[chat] no change on a structure request, retrying once", { diagramId });
+          emit({ t: "status", phase: "drawing", retry: true });
+          await draw(buildMessages({ intent, text: clean, state, mentions, history, missing: openMissing, retry: true, flows, ...network }));
         }
       }
     } catch (err) {
@@ -369,12 +396,15 @@ async function lockedTurn(args: TurnArgs, sessionId: string | null, followUp: bo
     }
     // 중단·오류여도 미뤄 둔 지우기는 적용한다(바로 적용했을 때와 같은 결과). 그다음 흐름 명령을 마지막 짝 정보로 바꾼다.
     flushEdges();
-    pendingFlowOps.push(...flowCmds.map((c) => toFlowOp(prepareFlow(c))));
+    const preparedFlows = flowCmds.map((c) => prepareFlow(c));
+    appliedCmds.push(...preparedFlows);
+    pendingFlowOps.push(...preparedFlows.map((c) => toFlowOp(c)));
     answer = shown.trim();
   }
 
   let version: number | null = null;
   let fresh: Warning[] = [];
+  let warningCounts: WarningCounts | undefined;
   // 이번 차례에 망연계(guess)가 끼어든 연결. 흐름 단계를 나누는 데 쓴다.
   let splits: StepSplit[] = [];
   // 구성도를 바꾼 명령(구성·가정)이 있을 때만 정리·점검·버전을 한다. 흐름만 바꾼 차례는 버전을 만들지 않는다.
@@ -395,6 +425,9 @@ async function lockedTurn(args: TurnArgs, sessionId: string | null, followUp: bo
     }
     state = { ...state, warnings: checked.warnings };
     fresh = checked.fresh;
+    // 주의 칩: 새 경고만 세면 그대로 남은 경고·해결한 경고가 안 보인다. 화면 경고(무시 제외) 전후로 센다.
+    const delta = warningDelta(turnStartState, state, knowledge ?? undefined);
+    if (delta.fresh > 0 || delta.resolved > 0) warningCounts = delta;
     const v = await createVersion(diagramId, state, {
       source: "ai",
       status: status === "complete" ? "complete" : "aborted",
@@ -443,6 +476,8 @@ async function lockedTurn(args: TurnArgs, sessionId: string | null, followUp: bo
     ...(flowsSaved > 0 ? { flows: flowsSaved } : {}),
     ...(changed + assumed > 0 && missing > 0 ? { missing } : {}),
     ...(fresh.length > 0 ? { warnings: fresh } : {}),
+    ...(warningCounts ? { warningCounts } : {}),
+    ...(turnCommands ? { commands: turnCommands.slice(0, REPLAY_COMMANDS_MAX) } : {}),
     ...counts(),
   };
   const assistant = await createMessage(diagramId, "assistant", content, meta, sessionId);
@@ -457,6 +492,7 @@ async function lockedTurn(args: TurnArgs, sessionId: string | null, followUp: bo
     skipped,
     missing,
     ...counts(),
+    ...(warningCounts ? { warningCounts } : {}),
     assistantMessageId: assistant.id,
   });
 }

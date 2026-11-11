@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import type { Command } from "@/domain/commands";
 import type { Warning } from "@/domain/types";
+import type { WarningCounts } from "@/domain/warnings";
 import type { ChatEvent, MessageMeta } from "@/server/chat/events";
 
 import { keepsCard, summaryText, warningsChip } from "./lines";
@@ -22,6 +23,8 @@ export interface ProgressCard {
   edges?: number;
   /** 출력 한도로 끊겨 이어 그리는 중이면 몇 번째 요청인지(`이어서 그리는 중 (n/of)`). */
   part?: { n: number; of: number };
+  /** 구성 변경 요청에 아무것도 반영하지 못해 한 번 다시 그리는 중이면 true(`다시 그리는 중`). */
+  retry?: boolean;
 }
 
 export interface ChatLine {
@@ -145,8 +148,8 @@ export function useChatTurn(args: UseChatTurnArgs) {
       /** done 없이 끝남: 그린 게 있으면 중단됨으로 남기고, 없으면 카드를 치운다. */
       const endWithoutDone = (aborted: boolean) => (aborted || cmds > 0 ? patchCard((c) => ({ ...c, end: "aborted" })) : removeCard());
       let warnings: Warning[] = []; // done 앞에 오지만 요약 칩 다음에 둔다
-      const pushWarnings = () => {
-        const chip = warningsChip(warnings);
+      const pushWarnings = (counts?: WarningCounts) => {
+        const chip = warningsChip(warnings, counts);
         if (chip) pushT(chip);
         warnings = [];
       };
@@ -171,7 +174,9 @@ export function useChatTurn(args: UseChatTurnArgs) {
             const p = ev.phase;
             const part = ev.part;
             patchCard((c) =>
-              p === "answering" ? { ...c, mode: "answer" } : { ...c, step: p === "thinking" ? "review" : p, ...(part ? { part } : {}) },
+              p === "answering"
+                ? { ...c, mode: "answer" }
+                : { ...c, step: p === "thinking" ? "review" : p, ...(part ? { part } : {}), ...(ev.retry ? { retry: true } : {}) },
             );
             break;
           }
@@ -216,7 +221,7 @@ export function useChatTurn(args: UseChatTurnArgs) {
             } else removeCard();
             const s = summaryText(ev, answerId !== null || said, intent);
             if (s) pushT({ kind: "summary", text: s, version: ev.version, changed: ev.changed ?? ev.applied });
-            pushWarnings();
+            pushWarnings(ev.warningCounts);
             a.onDone(ev);
             break;
           }

@@ -15,6 +15,7 @@ import {
   explainContext,
   networkBlock,
   HISTORY_LIMIT,
+  REPLAY_COMMANDS_MAX,
   parseMentions,
   summarizeState,
   ATTR_LIST,
@@ -238,6 +239,93 @@ describe("buildMessages", () => {
     }
   });
 
+  describe("command-mode replay of saved commands", () => {
+    const say = (text: string) => JSON.stringify({ op: "say", text });
+    const cmd = (id: string) => ({ op: "add_node", id, kind: "was", label: id, parent: null });
+    const past = (msgs: ReturnType<typeof buildMessages>) => msgs.slice(1, -1);
+    const build = (intent: "structure_change" | "question" | null, history: Parameters<typeof buildMessages>[0]["history"]) =>
+      past(buildMessages({ intent, text: "x", state: sample(), mentions: [], history }));
+
+    test("a turn that applied commands replays its says and its commands as JSON lines", () => {
+      const history = [
+        { role: "user" as const, content: "WAS 추가" },
+        { role: "assistant" as const, content: "WAS 를 추가합니다.\n연결합니다.", intent: "structure_change", commands: [cmd("w1"), cmd("w2")] },
+      ];
+      for (const intent of ["structure_change", null] as const) {
+        expect(build(intent, history)).toEqual([
+          { role: "user", content: "WAS 추가" },
+          { role: "assistant", content: [say("WAS 를 추가합니다."), say("연결합니다."), JSON.stringify(cmd("w1")), JSON.stringify(cmd("w2"))].join("\n") },
+        ]);
+      }
+    });
+
+    test("a command turn that applied nothing (said only) is dropped with its user message", () => {
+      const history = [
+        { role: "user" as const, content: "그려 줘" },
+        { role: "assistant" as const, content: "경로를 추가합니다.", intent: "structure_change", commands: [] },
+        { role: "user" as const, content: "u2" },
+        { role: "assistant" as const, content: "a2", intent: "structure_change", commands: [cmd("a")] },
+      ];
+      expect(build("structure_change", history).map((m) => m.content)).toEqual(["u2", [say("a2"), JSON.stringify(cmd("a"))].join("\n")]);
+    });
+
+    test("answer turns replay as say lines in command mode; old turns without saved commands stay plain", () => {
+      const history = [
+        { role: "user" as const, content: "망연계가 뭐야?" },
+        { role: "assistant" as const, content: "망을 잇는 장비예요.\n파일을 넘겨요.", intent: "question" },
+        { role: "user" as const, content: "옛 요청" },
+        { role: "assistant" as const, content: "옛 답이에요.", intent: "structure_change" },
+      ];
+      expect(build("structure_change", history).map((m) => m.content)).toEqual([
+        "망연계가 뭐야?",
+        [say("망을 잇는 장비예요."), say("파일을 넘겨요.")].join("\n"),
+        "옛 요청",
+        "옛 답이에요.",
+      ]);
+    });
+
+    test("answer mode replays plain text and ignores saved commands", () => {
+      const history = [
+        { role: "user" as const, content: "WAS 추가" },
+        { role: "assistant" as const, content: "WAS 를 추가합니다.", intent: "structure_change", commands: [cmd("w1")] },
+      ];
+      expect(build("question", history)).toEqual([
+        { role: "user", content: "WAS 추가" },
+        { role: "assistant", content: "WAS 를 추가합니다." },
+      ]);
+    });
+
+    test("saved commands (key order scrambled by storage) are replayed in the example key order", () => {
+      const history = [
+        { role: "user" as const, content: "u" },
+        {
+          role: "assistant" as const,
+          content: "a",
+          intent: "structure_change",
+          commands: [
+            { id: "e-a-b", to: "b", from: "a", op: "add_edge", edge_kind: "request" },
+            { id: "f", op: "add_flow", name: "흐름", steps: [{ text: "보낸다", edge: "e-a-b", from: "a", short: "요청" }], origin: "user" },
+          ],
+        },
+      ];
+      expect(build("structure_change", history)[1]!.content.split("\n").slice(1)).toEqual([
+        '{"op":"add_edge","id":"e-a-b","from":"a","to":"b","edge_kind":"request"}',
+        '{"op":"add_flow","id":"f","name":"흐름","origin":"user","steps":[{"edge":"e-a-b","from":"a","short":"요청","text":"보낸다"}]}',
+      ]);
+    });
+
+    test("long turns replay only the first REPLAY_COMMANDS_MAX commands", () => {
+      const many = Array.from({ length: REPLAY_COMMANDS_MAX + 15 }, (_, i) => cmd(`n${i}`));
+      const history = [
+        { role: "user" as const, content: "크게 그려 줘" },
+        { role: "assistant" as const, content: "그립니다.", intent: "structure_change", commands: many },
+      ];
+      const lines = build("structure_change", history)[1]!.content.split("\n");
+      expect(lines).toHaveLength(1 + REPLAY_COMMANDS_MAX);
+      expect(lines.at(-1)).toBe(JSON.stringify(cmd(`n${REPLAY_COMMANDS_MAX - 1}`)));
+    });
+  });
+
   test("drops failed turns (empty assistant reply) together with their user message", () => {
     const history = [
       { role: "user" as const, content: "u1" },
@@ -266,6 +354,34 @@ describe("buildMessages", () => {
     const msgs = buildMessages({ intent: "question", text: "x", state: sample(), mentions: [], history });
     expect(msgs).toHaveLength(HISTORY_LIMIT + 2);
     expect(msgs[1]!.content).toBe("m0");
+  });
+
+  test("lists current (not ignored) warnings in every mode, after the state summary", () => {
+    const s: DiagramState = {
+      ...sample(),
+      nodes: { ...sample().nodes, fw: { id: "fw", kind: "firewall", label: "경계 방화벽", parent: null, attrs: {} } },
+    };
+    for (const intent of ["structure_change", "question", null] as const) {
+      const user = buildMessages({ intent, text: "x", state: s, mentions: [], history: [] }).at(-1)!.content;
+      expect(user).toContain("현재 경고:\n- ");
+      expect(user.split("\n")).toContain(`- fw ${JSON.stringify("경계 방화벽을(를) 지나는 연결이 없어 아무 통신도 거치지 않아요.")}`);
+      expect(user.indexOf("현재 경고:")).toBeGreaterThan(user.indexOf("현재 구성:"));
+      expect(user.indexOf("현재 경고:")).toBeLessThan(user.indexOf("참조 노드:"));
+    }
+    const ignored = { ...s, ignoredWarnings: ["unused_passthrough:fw"] };
+    const user = buildMessages({ intent: null, text: "x", state: ignored, mentions: [], history: [] }).at(-1)!.content;
+    expect(user).not.toContain("unused_passthrough");
+    expect(user).not.toContain("경계 방화벽을(를) 지나는");
+  });
+
+  test("warning lines name the edge when the warning is about an edge", () => {
+    const s: DiagramState = {
+      ...sample(),
+      nodes: { ...sample().nodes, user: { id: "user", kind: "client_web", label: "사용자", parent: null, attrs: {} } },
+      edges: { ...sample().edges, "e-u": { id: "e-u", from: "user", to: "was-1", edgeKind: "request" } },
+    };
+    const user = buildMessages({ intent: null, text: "x", state: s, mentions: [], history: [] }).at(-1)!.content;
+    expect(user).toMatch(/- was-1 연결 e-u "/);
   });
 
   test("lists mentions", () => {
@@ -428,7 +544,9 @@ describe("flow commands in the prompt", () => {
     ];
     const user = buildMessages({ intent: null, text: "흐름 고쳐줘", state: sample(), mentions: [], history: [], flows }).at(-1)!.content;
     // 사용자 글(흐름 이름)은 JSON 으로 감싸 줄바꿈이 새 줄을 만들지 못하게 한다.
-    expect(user).toContain('흐름:\n흐름 order [user] "주문": e-was-1-db-1 > e-x\n흐름 batch [system] "정산\\n배치": e-was-1-db-1\n\n참조 노드:');
+    // 흐름 블록 뒤에는 (경고가 있으면) 현재 경고, 그다음 참조 노드가 온다.
+    expect(user).toContain('흐름:\n흐름 order [user] "주문": e-was-1-db-1 > e-x\n흐름 batch [system] "정산\\n배치": e-was-1-db-1\n\n');
+    expect(user.indexOf("흐름:\n")).toBeLessThan(user.indexOf("참조 노드:"));
     expect(user.indexOf("현재 구성:")).toBeLessThan(user.indexOf("흐름:\n"));
     const none = buildMessages({ intent: null, text: "x", state: sample(), mentions: [], history: [] }).at(-1)!.content;
     expect(none).not.toContain("흐름:\n");

@@ -23,6 +23,16 @@ describe("chat messages", () => {
     expect(last.map((m) => m.content)).toEqual(["m4", "m5"]);
   });
 
+  test("saved commands are left out of listed messages unless asked for (only the chat pipeline needs them)", async () => {
+    const d = await makeDiagram();
+    const commands = [{ op: "add_node", id: "a", kind: "was", label: "a", parent: null }];
+    await createMessage(d, "assistant", "추가합니다.", { intent: "structure_change", applied: 1, commands });
+    const [plain] = await listMessages(d);
+    expect(plain!.meta).toEqual({ intent: "structure_change", applied: 1 });
+    const [full] = await listMessages(d, 100, null, { withCommands: true });
+    expect(full!.meta.commands).toEqual(commands);
+  });
+
   test("version can link to the message that produced it; deleting the message keeps the version", async () => {
     const d = await makeDiagram();
     const msg = await createMessage(d, "user", "서버 추가");

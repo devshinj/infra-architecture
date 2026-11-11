@@ -336,6 +336,12 @@ test("continuing a cut-off drawing shows which request it is on", () => {
   expect(steps()[1]).toHaveTextContent("이어서 그리는 중 (3/3) · 변경 200개");
 });
 
+test("retrying a structure change that changed nothing shows 다시 그리는 중", () => {
+  render(<ChatPanel {...base({ busy: true, lines: [card({ mode: "build", step: "drawing", changes: 0, retry: true })] })} />);
+  expect(steps()[1]).toHaveTextContent("다시 그리는 중 · 변경 0개");
+  expect(screen.getByRole("status")).toHaveTextContent(/^다시 그리는 중$/);
+});
+
 test("handoff goes to the given diagram chat (the last one used)", async () => {
   const onSelect = vi.fn();
   render(
