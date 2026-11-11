@@ -1,21 +1,18 @@
 ---
 title: "Sidebar.tsx"
-sidebar_position: 30
+sidebar_position: 35
 ---
 # Sidebar.tsx
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 27 nodes · cohesion 0.15
+> 24 nodes · cohesion 0.17
 
 ## Key Concepts
 
 - **Sidebar.tsx** (42 connections) — `src/ui/Sidebar.tsx`
 - **Sidebar()** (28 connections) — `src/ui/Sidebar.tsx`
 - **Svg()** (9 connections) — `src/ui/Sidebar.tsx`
-- **RowMenu()** (8 connections) — `src/ui/dialogs.tsx`
-- **useShell()** (8 connections) — `src/ui/Shell.tsx`
-- **duplicateDiagramAction()** (7 connections) — `src/app/(app)/actions.ts`
 - **LogoMark()** (5 connections) — `src/ui/brand/Logo.tsx`
 - **expandedNav()** (4 connections) — `src/ui/Sidebar.tsx`
 - **ShellValue** (3 connections) — `src/ui/Shell.tsx`
@@ -35,35 +32,30 @@ sidebar_position: 30
 - **RailButton()** (2 connections) — `src/ui/Sidebar.tsx`
 - **MenuAction** (1 connections) — `src/ui/Sidebar.tsx`
 - **MenuItem** (1 connections) — `src/ui/Sidebar.tsx`
-- *... and 2 more nodes in this community*
+- **MenuTarget** (1 connections) — `src/ui/Sidebar.tsx`
+- **SidebarProject** (1 connections) — `src/ui/Sidebar.tsx`
 
 ## Relationships
 
-- [(app)/actions.ts](app-actions.ts.md) (17 shared connections)
-- [dialogs.tsx](dialogs.tsx.md) (7 shared connections)
-- [Shell.tsx](Shell.tsx.md) (7 shared connections)
-- [ref_react](ref_react.md) (5 shared connections)
-- [useFlows](useFlows.md) (2 shared connections)
-- [getOwnedDiagram](getOwnedDiagram.md) (2 shared connections)
+- [(app)/actions.ts](app-actions.ts.md) (18 shared connections)
+- [Shell.tsx](Shell.tsx.md) (6 shared connections)
+- [dialogs.tsx](dialogs.tsx.md) (6 shared connections)
+- [ref_react](ref_react.md) (4 shared connections)
 - [SessionPicker.tsx](SessionPicker.tsx.md) (2 shared connections)
-- [ChatPanel.tsx](ChatPanel.tsx.md) (2 shared connections)
-- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (2 shared connections)
-- [RightPanel.tsx](RightPanel.tsx.md) (1 shared connections)
-- [FlowPanel.tsx](FlowPanel.tsx.md) (1 shared connections)
-- [domain/flows.ts](domain-flows.ts.md) (1 shared connections)
+- [useFlows](useFlows.md) (1 shared connections)
+- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (1 shared connections)
+- [Review Focus](Review_Focus.md) (1 shared connections)
 
 ## Source Files
 
-- `src/app/(app)/actions.ts`
 - `src/ui/Shell.tsx`
 - `src/ui/Sidebar.tsx`
 - `src/ui/brand/Logo.tsx`
-- `src/ui/dialogs.tsx`
 
 ## Audit Trail
 
-- EXTRACTED: 100 (98%)
-- INFERRED: 2 (2%)
+- EXTRACTED: 84 (99%)
+- INFERRED: 1 (1%)
 - AMBIGUOUS: 0 (0%)
 
 ---

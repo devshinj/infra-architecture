@@ -1,6 +1,6 @@
 ---
 title: "health.ts"
-sidebar_position: 81
+sidebar_position: 86
 ---
 # health.ts
 
@@ -21,9 +21,8 @@ sidebar_position: 81
 ## Relationships
 
 - [deps.ts](deps.ts.md) (3 shared connections)
-- [Shell.tsx](Shell.tsx.md) (2 shared connections)
-- [ref_react](ref_react.md) (1 shared connections)
-- [auth.ts](auth.ts.md) (1 shared connections)
+- [explain/route.ts](explain-route.ts.md) (2 shared connections)
+- [ref_react](ref_react.md) (2 shared connections)
 
 ## Source Files
 

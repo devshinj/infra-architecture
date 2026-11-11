@@ -1,6 +1,6 @@
 ---
 title: "QwenClient"
-sidebar_position: 82
+sidebar_position: 88
 ---
 # QwenClient
 
@@ -19,13 +19,15 @@ sidebar_position: 82
 
 ## Relationships
 
-- [chat/warnings.ts](chat-warnings.ts.md) (4 shared connections)
 - [pipeline.ts](pipeline.ts.md) (3 shared connections)
 - [설명 생성과 품질 검사](설명_생성과_품질_검사.md) (3 shared connections)
 - [deps.ts](deps.ts.md) (2 shared connections)
 - [flowSuggest.ts](flowSuggest.ts.md) (2 shared connections)
+- [chat/warnings.ts](chat-warnings.ts.md) (2 shared connections)
 - [ask.ts](ask.ts.md) (1 shared connections)
 - [clef.ts](clef.ts.md) (1 shared connections)
+- [Task 2: 서버 점검 — Clef 판정과 Qwen 문구](Task_2-_서버_점검_—_Clef_판정과_Qwen_문구.md) (1 shared connections)
+- [3C-1 계획 작업 목록](3C-1_계획_작업_목록.md) (1 shared connections)
 
 ## Source Files
 

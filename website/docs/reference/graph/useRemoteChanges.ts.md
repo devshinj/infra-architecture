@@ -1,6 +1,6 @@
 ---
 title: "useRemoteChanges.ts"
-sidebar_position: 64
+sidebar_position: 66
 ---
 # useRemoteChanges.ts
 
@@ -27,10 +27,10 @@ sidebar_position: 64
 ## Relationships
 
 - [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (4 shared connections)
-- [read.ts](read.ts.md) (1 shared connections)
+- [getOwnedDiagram](getOwnedDiagram.md) (1 shared connections)
 - [GhostLayer.tsx](GhostLayer.tsx.md) (1 shared connections)
-- [edgeCoalesce.ts](edgeCoalesce.ts.md) (1 shared connections)
-- [ref_react](ref_react.md) (1 shared connections)
+- [Command](Command.md) (1 shared connections)
+- [Shell.tsx](Shell.tsx.md) (1 shared connections)
 - [(app)/actions.ts](app-actions.ts.md) (1 shared connections)
 
 ## Source Files

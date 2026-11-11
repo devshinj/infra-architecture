@@ -1,12 +1,12 @@
 ---
 title: "NetworkKnowledgePage.tsx"
-sidebar_position: 17
+sidebar_position: 18
 ---
 # NetworkKnowledgePage.tsx
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 33 nodes · cohesion 0.14
+> 31 nodes · cohesion 0.15
 
 ## Key Concepts
 
@@ -25,32 +25,31 @@ sidebar_position: 17
 - **setNetworkTypeHiddenAction()** (8 connections) — `src/app/(app)/actions.ts`
 - **bad()** (7 connections) — `src/app/(app)/actions.ts`
 - **resetNetworkTypeAction()** (7 connections) — `src/app/(app)/actions.ts`
-- **listNetworkTypes()** (7 connections) — `src/server/network.ts`
 - **NetworkKnowledge()** (5 connections) — `src/app/(app)/network/page.tsx`
 - **ActionResult** (4 connections) — `src/app/(app)/actions.ts`
 - **reqGrade()** (4 connections) — `src/app/(app)/actions.ts`
 - **reqStrings()** (4 connections) — `src/app/(app)/actions.ts`
 - **countZonesUsingType()** (4 connections) — `src/server/network.ts`
 - **reqMethod()** (3 connections) — `src/app/(app)/actions.ts`
-- **NetworkRuleRow** (2 connections) — `src/app/(app)/actions.ts`
 - **gradeLabel()** (2 connections) — `src/ui/network/NetworkKnowledgePage.tsx`
 - **RuleForm()** (2 connections) — `src/ui/network/NetworkKnowledgePage.tsx`
-- *... and 8 more nodes in this community*
+- **sourceLabel()** (2 connections) — `src/ui/network/NetworkKnowledgePage.tsx`
+- **splitAliases()** (2 connections) — `src/ui/network/NetworkKnowledgePage.tsx`
+- *... and 6 more nodes in this community*
 
 ## Relationships
 
-- [(app)/actions.ts](app-actions.ts.md) (21 shared connections)
-- [server/network.ts](server-network.ts.md) (14 shared connections)
-- [useFlows](useFlows.md) (9 shared connections)
+- [(app)/actions.ts](app-actions.ts.md) (26 shared connections)
+- [server/network.ts](server-network.ts.md) (23 shared connections)
 - [dialogs.tsx](dialogs.tsx.md) (5 shared connections)
-- [prompt.ts](prompt.ts.md) (5 shared connections)
 - [GlossaryPage.tsx](GlossaryPage.tsx.md) (2 shared connections)
-- [projects.ts](projects.ts.md) (2 shared connections)
-- [Shell.tsx](Shell.tsx.md) (2 shared connections)
+- [explain/route.ts](explain-route.ts.md) (2 shared connections)
 - [ref_react](ref_react.md) (2 shared connections)
 - [Review Focus](Review_Focus.md) (1 shared connections)
-- [auth.ts](auth.ts.md) (1 shared connections)
-- [mcp/apply.ts](mcp-apply.ts.md) (1 shared connections)
+- [projects.ts](projects.ts.md) (1 shared connections)
+- [read.ts](read.ts.md) (1 shared connections)
+- [useFlows](useFlows.md) (1 shared connections)
+- [Shell.tsx](Shell.tsx.md) (1 shared connections)
 
 ## Source Files
 
@@ -62,8 +61,8 @@ sidebar_position: 17
 
 ## Audit Trail
 
-- EXTRACTED: 129 (92%)
-- INFERRED: 11 (8%)
+- EXTRACTED: 125 (93%)
+- INFERRED: 10 (7%)
 - AMBIGUOUS: 0 (0%)
 
 ---

@@ -1,70 +1,56 @@
 ---
 title: "samples.ts"
-sidebar_position: 6
+sidebar_position: 53
 ---
 # samples.ts
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 50 nodes · cohesion 0.06
+> 17 nodes · cohesion 0.12
 
 ## Key Concepts
 
 - **samples.ts** (34 connections) — `src/server/samples.ts`
-- **segments.ts** (23 connections) — `src/canvas/segments.ts`
-- **motion.ts** (16 connections) — `src/canvas/motion.ts`
-- **buildSegmentBundles()** (11 connections) — `src/canvas/segments.ts`
-- **EdgeKind** (10 connections) — `src/domain/catalog.ts`
-- **startBundleMotion()** (9 connections) — `src/canvas/motion.ts`
-- **EDGE_KINDS** (9 connections) — `src/domain/catalog.ts`
-- **buildSegs()** (5 connections) — `src/canvas/segments.ts`
-- **normalize()** (5 connections) — `src/canvas/segments.ts`
-- **rp()** (5 connections) — `src/canvas/segments.ts`
-- **Task 2: 평소 화면 평행선 16px** (4 connections) — `docs/superpowers/plans/2026-11-04-layout-harmony-stage1.md`
-- **piecesOf()** (4 connections) — `src/canvas/segments.ts`
-- **pk()** (4 connections) — `src/canvas/segments.ts`
 - **convertSpikeScenario()** (4 connections) — `src/server/samples.ts`
-- **연결선 모양과 움직임** (3 connections) — `docs/superpowers/specs/2026-10-29-infra-architecture-visualizer-design.md`
-- **bundleSpeed()** (3 connections) — `src/canvas/motion.ts`
-- **def()** (3 connections) — `src/canvas/motion.ts`
-- **Bundle** (3 connections) — `src/canvas/segments.ts`
-- **Segment** (3 connections) — `src/canvas/segments.ts`
-- **speedOf()** (3 connections) — `src/canvas/segments.ts`
 - **sampleState()** (3 connections) — `src/server/samples.ts`
-- **dashAlong()** (2 connections) — `src/canvas/motion.ts`
-- **hostOf()** (2 connections) — `src/canvas/motion.ts`
-- **make()** (2 connections) — `src/canvas/motion.ts`
-- **MotionKind** (2 connections) — `src/canvas/motion.ts`
-- *... and 25 more nodes in this community*
+- **docs_superpowers_spike_spike_results** (1 connections)
+- **AddEdge** (1 connections) — `src/server/samples.ts`
+- **AddGroup** (1 connections) — `src/server/samples.ts`
+- **AddNode** (1 connections) — `src/server/samples.ts`
+- **AUX_NODE_KINDS** (1 connections) — `src/server/samples.ts`
+- **EDGE_KIND_MAP** (1 connections) — `src/server/samples.ts`
+- **EDGE_KIND_SET** (1 connections) — `src/server/samples.ts`
+- **NODE_KIND_SET** (1 connections) — `src/server/samples.ts`
+- **scenarios** (1 connections) — `src/server/samples.ts`
+- **SpikeEdge** (1 connections) — `src/server/samples.ts`
+- **SpikeGroup** (1 connections) — `src/server/samples.ts`
+- **SpikeNode** (1 connections) — `src/server/samples.ts`
+- **SpikeScenario** (1 connections) — `src/server/samples.ts`
+- **SpikeState** (1 connections) — `src/server/samples.ts`
 
 ## Relationships
 
-- [EdgeLayer.tsx](EdgeLayer.tsx.md) (10 shared connections)
-- [NodeCard.tsx](NodeCard.tsx.md) (5 shared connections)
-- [getOwnedDiagram](getOwnedDiagram.md) (4 shared connections)
+- [getOwnedDiagram](getOwnedDiagram.md) (5 shared connections)
 - [domain/apply.ts](domain-apply.ts.md) (3 shared connections)
 - [(app)/actions.ts](app-actions.ts.md) (3 shared connections)
-- [exportImage.ts](exportImage.ts.md) (2 shared connections)
-- [layoutMetrics.ts](layoutMetrics.ts.md) (2 shared connections)
-- [mcp/apply.ts](mcp-apply.ts.md) (2 shared connections)
-- [display.ts](display.ts.md) (2 shared connections)
-- [types.ts](types.ts.md) (2 shared connections)
-- [edgeCoalesce.ts](edgeCoalesce.ts.md) (2 shared connections)
 - [\[diagramId\]/page.tsx]([diagramId]-page.tsx.md) (2 shared connections)
+- [Legend.tsx](Legend.tsx.md) (1 shared connections)
+- [NODE_KINDS](NODE_KINDS.md) (1 shared connections)
+- [Command](Command.md) (1 shared connections)
+- [flowSuggest.ts](flowSuggest.ts.md) (1 shared connections)
+- [ZoneNameLayer.tsx](ZoneNameLayer.tsx.md) (1 shared connections)
+- [commands.ts](commands.ts.md) (1 shared connections)
+- [schema.ts](schema.ts.md) (1 shared connections)
+- [projects.ts](projects.ts.md) (1 shared connections)
 
 ## Source Files
 
-- `docs/superpowers/plans/2026-11-04-layout-harmony-stage1.md`
-- `docs/superpowers/specs/2026-10-29-infra-architecture-visualizer-design.md`
-- `src/canvas/motion.ts`
-- `src/canvas/segments.ts`
-- `src/domain/catalog.ts`
 - `src/server/samples.ts`
 
 ## Audit Trail
 
-- EXTRACTED: 121 (96%)
-- INFERRED: 5 (4%)
+- EXTRACTED: 38 (100%)
+- INFERRED: 0 (0%)
 - AMBIGUOUS: 0 (0%)
 
 ---

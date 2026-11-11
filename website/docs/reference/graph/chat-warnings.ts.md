@@ -1,75 +1,55 @@
 ---
 title: "chat/warnings.ts"
-sidebar_position: 5
+sidebar_position: 59
 ---
 # chat/warnings.ts
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 53 nodes · cohesion 0.08
+> 15 nodes · cohesion 0.32
 
 ## Key Concepts
 
 - **chat/warnings.ts** (37 connections) — `src/server/chat/warnings.ts`
-- **domain/warnings.ts** (32 connections) — `src/domain/warnings.ts`
-- **networkRules.ts** (30 connections) — `src/domain/networkRules.ts`
-- **NetworkKnowledge** (17 connections) — `src/domain/network.ts`
 - **checkWarnings()** (17 connections) — `src/server/chat/warnings.ts`
-- **evaluateRules()** (15 connections) — `src/domain/warnings.ts`
-- **Warning** (14 connections) — `src/domain/types.ts`
 - **checkCodeWarnings()** (13 connections) — `src/server/chat/warnings.ts`
-- **DNode** (12 connections) — `src/domain/types.ts`
-- **Task 2: 서버 점검 — Clef 판정과 Qwen 문구** (10 connections) — `docs/superpowers/plans/2026-10-30-infrasketch-phase3b-warnings.md`
-- **mergeWarnings()** (10 connections) — `src/domain/warnings.ts`
-- **파일 구조** (8 connections) — `docs/superpowers/plans/2026-10-30-infrasketch-phase3b-warnings.md`
-- **GRADE_LABELS** (8 connections) — `src/domain/network.ts`
-- **Edge** (8 connections) — `src/domain/types.ts`
-- **Task 3: 판정 — 통신 길, 연결 방식 예상 경고, 빠진 정보** (7 connections) — `docs/superpowers/plans/2026-11-06-network-knowledge-link-guess.md`
-- **categoryOf()** (7 connections) — `src/domain/catalog.ts`
-- **evaluateNetworkRules()** (7 connections) — `src/domain/networkRules.ts`
 - **judgeExposed()** (7 connections) — `src/server/chat/warnings.ts`
 - **writeTexts()** (6 connections) — `src/server/chat/warnings.ts`
-- **.streamCompletion()** (6 connections) — `src/server/llm/qwen.ts`
-- **noulProbability()** (5 connections) — `src/server/llm/clef.ts`
-- **Task 3: 대화 차례에 점검 단계 넣기** (4 connections) — `docs/superpowers/plans/2026-10-30-infrasketch-phase3b-warnings.md`
-- **linkWarningId()** (4 connections) — `src/domain/networkRules.ts`
-- **WarningLevel** (4 connections) — `src/domain/types.ts`
 - **buildWarningMessages()** (4 connections) — `src/server/chat/prompt.ts`
-- *... and 28 more nodes in this community*
+- **carryExposed()** (4 connections) — `src/server/chat/warnings.ts`
+- **mergeWarnings()** (4 connections) — `src/server/chat/warnings.ts`
+- **describeTarget()** (3 connections) — `src/server/chat/warnings.ts`
+- **flaggedPublic()** (3 connections) — `src/server/chat/warnings.ts`
+- **isLinkRule()** (3 connections) — `src/server/chat/warnings.ts`
+- **unjudged()** (3 connections) — `src/server/chat/warnings.ts`
+- **withFresh()** (3 connections) — `src/server/chat/warnings.ts`
+- **levelOf()** (2 connections) — `src/server/chat/warnings.ts`
+- **LINK_RULE_SET** (1 connections) — `src/server/chat/warnings.ts`
 
 ## Relationships
 
-- [prompt.ts](prompt.ts.md) (14 shared connections)
-- [domain/flows.ts](domain-flows.ts.md) (12 shared connections)
-- [Canvas.tsx](Canvas.tsx.md) (9 shared connections)
-- [types.ts](types.ts.md) (9 shared connections)
-- [read.ts](read.ts.md) (8 shared connections)
-- [ref_react](ref_react.md) (8 shared connections)
-- [NodeInfo.tsx](NodeInfo.tsx.md) (7 shared connections)
-- [mcp/apply.ts](mcp-apply.ts.md) (7 shared connections)
-- [pipeline.ts](pipeline.ts.md) (6 shared connections)
-- [getOwnedDiagram](getOwnedDiagram.md) (5 shared connections)
-- [edgeCoalesce.ts](edgeCoalesce.ts.md) (5 shared connections)
-- [domain/linkGuess.ts](domain-linkGuess.ts.md) (5 shared connections)
+- [domain/warnings.ts](domain-warnings.ts.md) (8 shared connections)
+- [Task 2: 서버 점검 — Clef 판정과 Qwen 문구](Task_2-_서버_점검_—_Clef_판정과_Qwen_문구.md) (5 shared connections)
+- [createJsonlParser](createJsonlParser.md) (3 shared connections)
+- [pipeline.ts](pipeline.ts.md) (3 shared connections)
+- [getOwnedDiagram](getOwnedDiagram.md) (3 shared connections)
+- [mcp/apply.ts](mcp-apply.ts.md) (3 shared connections)
+- [prompt.ts](prompt.ts.md) (2 shared connections)
+- [networkRules.ts](networkRules.ts.md) (2 shared connections)
+- [QwenClient](QwenClient.md) (2 shared connections)
+- [settle.ts](settle.ts.md) (2 shared connections)
+- [Review Focus](Review_Focus.md) (2 shared connections)
+- [flowSuggest.ts](flowSuggest.ts.md) (1 shared connections)
 
 ## Source Files
 
-- `docs/superpowers/plans/2026-10-30-infrasketch-phase3b-warnings.md`
-- `docs/superpowers/plans/2026-11-06-network-knowledge-link-guess.md`
-- `src/domain/catalog.ts`
-- `src/domain/network.ts`
-- `src/domain/networkRules.ts`
-- `src/domain/types.ts`
-- `src/domain/warnings.ts`
 - `src/server/chat/prompt.ts`
 - `src/server/chat/warnings.ts`
-- `src/server/llm/clef.ts`
-- `src/server/llm/qwen.ts`
 
 ## Audit Trail
 
-- EXTRACTED: 212 (86%)
-- INFERRED: 34 (14%)
+- EXTRACTED: 66 (87%)
+- INFERRED: 10 (13%)
 - AMBIGUOUS: 0 (0%)
 
 ---
