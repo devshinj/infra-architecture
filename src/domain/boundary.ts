@@ -23,6 +23,8 @@ export function networkZoneOf(state: DiagramState, nodeId: string): string | nul
 export function crossesBoundary(state: DiagramState, edge: Edge): boolean {
   if (!Object.values(state.groups).some((g) => g.groupKind === "network_zone")) return false;
   if (!state.nodes[edge.from] || !state.nodes[edge.to]) return false;
+  // 근거리 무선(BLE·NFC 등)은 기기끼리 바로 붙는 연결이라 망을 넘는 통신으로 보지 않는다.
+  if (edge.medium === "wireless") return false;
   return networkZoneOf(state, edge.from) !== networkZoneOf(state, edge.to);
 }
 

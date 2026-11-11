@@ -1,4 +1,4 @@
-// 사용자 사전에 넣어 두는 용어 사전 초안. 1차분 50개(§6.7)는 이 파일에, 2차분은 glossary-seed-extra.ts, 3차분은 glossary-seed-batch3.ts 에 있다.
+// 사용자 사전에 넣어 두는 용어 사전 초안. 1차분 50개(§6.7)는 이 파일에, 2차분은 glossary-seed-extra.ts, 3차분은 glossary-seed-batch3.ts, 4차분은 glossary-seed-batch4.ts 에 있다.
 // 처음엔 모두 "미검수"로 들어간다. 사용자 사전에 없는 항목만 채우고, 이미 있는 항목은 건드리지 않는다.
 // definition 은 정식 명칭·약어 풀이와 분류를 담은 사전식 한 문장(120자 이내, 비유 없음).
 // why·compare 는 용어·약어 항목(§6.2)만 채우고 제품 이름 항목은 빈 문자열이다.
@@ -6,6 +6,7 @@
 // 노드의 sw·sub·종류 이름 어느 것으로도 찾아지게 한다. key 는 normalizeTerm(term) 이다.
 
 import { GLOSSARY_SEED_BATCH3 } from "./glossary-seed-batch3";
+import { GLOSSARY_SEED_BATCH4 } from "./glossary-seed-batch4";
 import { GLOSSARY_SEED_EXTRA } from "./glossary-seed-extra";
 
 export interface GlossarySeedEntry {
@@ -533,5 +534,5 @@ export const GLOSSARY_SEED_CORE: GlossarySeedEntry[] = [
   },
 ];
 
-/** 사용자 사전에 넣는 초안 전체(1차분 + 2차분 + 3차분). */
-export const GLOSSARY_SEED: GlossarySeedEntry[] = [...GLOSSARY_SEED_CORE, ...GLOSSARY_SEED_EXTRA, ...GLOSSARY_SEED_BATCH3];
+/** 사용자 사전에 넣는 초안 전체(1차분 ~ 4차분). */
+export const GLOSSARY_SEED: GlossarySeedEntry[] = [...GLOSSARY_SEED_CORE, ...GLOSSARY_SEED_EXTRA, ...GLOSSARY_SEED_BATCH3, ...GLOSSARY_SEED_BATCH4];

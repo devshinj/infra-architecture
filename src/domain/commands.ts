@@ -2,6 +2,7 @@ import { z } from "zod";
 
 import { EDGE_KINDS, GROUP_KINDS, NODE_KINDS } from "./catalog";
 import type { FlowOp } from "./flows";
+import { EDGE_MEDIA } from "./types";
 
 const tuple = <T extends readonly { kind: string }[]>(defs: T) =>
   defs.map((d) => d.kind) as [T[number]["kind"], ...T[number]["kind"][]];
@@ -13,6 +14,7 @@ const edgeKind = z.enum(tuple(EDGE_KINDS));
 const parent = id.nullable();
 const payload = z.enum(["api", "file"]);
 const direction = z.enum(["one_way", "two_way"]);
+const medium = z.enum(EDGE_MEDIA);
 const replacedEdge = z.object({
   from: id,
   to: id,
@@ -20,6 +22,7 @@ const replacedEdge = z.object({
   label: z.string().optional(),
   payload: payload.optional(),
   direction: direction.optional(),
+  medium: medium.optional(),
   id: id.optional(),
 });
 const linkGuess = z.object({ replaced: z.array(replacedEdge), bridge: replacedEdge.optional() });
@@ -34,9 +37,9 @@ const flowSteps = z.array(flowStep).min(1).max(20);
 export const commandSchema = z.discriminatedUnion("op", [
   z.object({ op: z.literal("add_group"), id, group_kind: groupKind, label: z.string().min(1), parent }),
   z.object({ op: z.literal("add_node"), id, kind: nodeKind, label: z.string().min(1), sub: z.string().optional(), parent, attrs: attrs.optional(), guess: z.boolean().optional() }),
-  z.object({ op: z.literal("add_edge"), id: id.optional(), from: id, to: id, edge_kind: edgeKind, label: z.string().optional(), payload: payload.optional(), direction: direction.optional() }),
+  z.object({ op: z.literal("add_edge"), id: id.optional(), from: id, to: id, edge_kind: edgeKind, label: z.string().optional(), payload: payload.optional(), direction: direction.optional(), medium: medium.optional() }),
   z.object({ op: z.literal("update_node"), id, label: z.string().min(1).optional(), sub: z.string().optional(), parent: parent.optional(), attrs: attrs.optional() }),
-  z.object({ op: z.literal("update_edge"), id, label: z.string().optional(), edge_kind: edgeKind.optional(), payload: payload.optional(), direction: direction.optional() }),
+  z.object({ op: z.literal("update_edge"), id, label: z.string().optional(), edge_kind: edgeKind.optional(), payload: payload.optional(), direction: direction.optional(), medium: medium.optional() }),
   z.object({ op: z.literal("remove_node"), id }),
   z.object({ op: z.literal("remove_edge"), id }),
   z.object({ op: z.literal("remove_group"), id }),

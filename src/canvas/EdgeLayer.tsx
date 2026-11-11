@@ -9,6 +9,7 @@ import type { DisplayEdge } from "./display";
 import { boundaryDotAt, labelBox, mergedLabels, stepLabels, tagSpots, type Box } from "./edgeLabels";
 import { emphasisOf, type Emphasis } from "./emphasis";
 import type { Layout, Rect } from "./layout";
+import { MediumMark, pointAlong } from "./mediumMark";
 import { textWidth } from "./text";
 import { startBundleMotion, type MotionKind } from "./motion";
 import { buildSegmentBundles, type Bundle } from "./segments";
@@ -42,6 +43,8 @@ export interface EdgeLayerProps {
 }
 
 const MANY_NODES = 40;
+/** 통신 수단 표지 자리: 선의 처음에서 전체 길이의 이만큼(가운데의 이름·망 경계 점과 겹치지 않게 출발 쪽에 둔다). */
+const MEDIUM_AT = 0.25;
 /** 망 경계 점 반지름. */
 const DOT_R = 3;
 /** 망 경계 표시: 글자 크기, 알약 안쪽 좌우 여백, 높이, 알약과 전달물 글자 사이, 글자 둘레 테두리 몫. */
@@ -354,6 +357,7 @@ export function EdgeLayer({ layout, edges, selectedId, selectedRect, hoverId, on
         // 흐름을 보는 동안 단계 연결은 제 이름 대신 단계 글자를 단다.
         const showLabel = !!e.label && !!l.labelAt && !mergedIds.has(e.id) && !stepIds.has(e.id) && shown;
         const dot = dots.get(e.id);
+        const mark = e.medium ? pointAlong(l.points, MEDIUM_AT) : null;
         return (
           <g key={e.id} className={`edge${dim ? " edge--dim" : ""}${faded ? " edge--faded" : ""}${isSelectedEdge(e) ? " edge--selected" : ""}`} data-edge-id={e.id} data-edge-kind={e.edgeKind}>
             {d && <path className={`edge-arrow edge-arrow--${e.edgeKind}${arrowUnder ? " edge--under" : ""}`} d={d} />}
@@ -380,6 +384,8 @@ export function EdgeLayer({ layout, edges, selectedId, selectedRect, hoverId, on
             )}
             {/* 망 경계 점: 평소 모습이라 내보낸 그림에도 남는다. 이름 글자보다 위에 그린다. */}
             {dot && <circle className="edge-boundary-dot" cx={dot.x} cy={dot.y} r={DOT_R} />}
+            {/* 통신 수단 표지: 평소 모습이라 내보낸 그림에도 남는다. */}
+            {e.medium && mark && <MediumMark medium={e.medium} x={mark.x} y={mark.y} />}
           </g>
         );
       })}

@@ -1,5 +1,7 @@
 import type { EdgeKind } from "@/domain/catalog";
-import type { DiagramState, DNode, EdgeDirection, EdgePayload, Group } from "@/domain/types";
+import type { DiagramState, DNode, EdgeDirection, EdgeMedium, EdgePayload, Group } from "@/domain/types";
+
+import type { MarkedMedium } from "./mediumMark";
 
 export interface DisplayOptions {
   hideAux: boolean;
@@ -18,6 +20,8 @@ export interface DisplayEdge {
   edgeKind: EdgeKind;
   label?: string;
   payload?: EdgePayload;
+  /** 표지를 다는 통신 수단. 보통의 IP 통신("ip")은 싣지 않는다. */
+  medium?: MarkedMedium;
   direction?: EdgeDirection;
   sourceEdgeIds: string[];
 }
@@ -93,7 +97,7 @@ export function buildDisplayGraph(state: DiagramState, opts: DisplayOptions): Di
   const resolve = (id: string): string => collapsedAncestor(id) ?? id;
 
   // (1) re-target, (2) aux hiding
-  interface Work { id: string; from: string; to: string; edgeKind: EdgeKind; label?: string; payload?: EdgePayload; direction?: EdgeDirection; ids: string[] }
+  interface Work { id: string; from: string; to: string; edgeKind: EdgeKind; label?: string; payload?: EdgePayload; direction?: EdgeDirection; medium?: EdgeMedium; ids: string[] }
   let work: Work[] = [];
   for (const e of Object.values(state.edges)) {
     const from = resolve(e.from);
@@ -103,7 +107,7 @@ export function buildDisplayGraph(state: DiagramState, opts: DisplayOptions): Di
       const touched = sel !== null && (e.from === sel || e.to === sel || from === sel || to === sel);
       if (!touched && !opts.keepEdges?.has(e.id)) continue;
     }
-    work.push({ id: e.id, from, to, edgeKind: e.edgeKind, label: e.label, payload: e.payload, direction: e.direction, ids: [e.id] });
+    work.push({ id: e.id, from, to, edgeKind: e.edgeKind, label: e.label, payload: e.payload, direction: e.direction, medium: e.medium, ids: [e.id] });
   }
 
   // (3) bus simplification (aux edges are left alone)
@@ -147,6 +151,7 @@ export function buildDisplayGraph(state: DiagramState, opts: DisplayOptions): Di
           existing.label = w.label;
           existing.payload = w.payload;
           existing.direction = w.direction;
+          existing.medium = w.medium;
         }
       } else {
         const copy = { ...w, ids: [...w.ids] };
@@ -165,6 +170,7 @@ export function buildDisplayGraph(state: DiagramState, opts: DisplayOptions): Di
       if (w.label !== undefined) d.label = w.label;
       if (w.payload !== undefined) d.payload = w.payload;
       if (w.direction !== undefined) d.direction = w.direction;
+      if (w.medium !== undefined && w.medium !== "ip") d.medium = w.medium;
       return d;
     });
 

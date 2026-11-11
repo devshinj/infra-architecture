@@ -65,6 +65,7 @@ export function createEdgeCoalescer(): EdgeCoalescer {
     if (cmd.edge_kind !== old.edgeKind) diff.edge_kind = cmd.edge_kind;
     if (cmd.payload !== undefined && cmd.payload !== old.payload) diff.payload = cmd.payload;
     if (cmd.direction !== undefined && cmd.direction !== old.direction) diff.direction = cmd.direction;
+    if (cmd.medium !== undefined && cmd.medium !== old.medium) diff.medium = cmd.medium;
     return Object.keys(diff).length === 0 ? [] : [{ op: "update_edge", id: kept.id, ...diff }];
   };
 

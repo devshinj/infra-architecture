@@ -137,6 +137,7 @@ export const LIGHT_TOKENS: Readonly<Record<string, string>> = {
   "--accent": "#526F10",
   "--boundary-mark": "#526F10",
   "--cat-client": "#56657A",
+  "--cat-device": "#6A5A9C",
   "--cat-network": "#2F6AA3",
   "--cat-compute": "#4F5C70",
   "--cat-data": "#2D7A4C",

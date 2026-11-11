@@ -16,6 +16,7 @@ function toReplaced(e: Edge, id?: string): ReplacedEdge {
     ...(e.label !== undefined ? { label: e.label } : {}),
     ...(e.payload !== undefined ? { payload: e.payload } : {}),
     ...(e.direction !== undefined ? { direction: e.direction } : {}),
+    ...(e.medium !== undefined ? { medium: e.medium } : {}),
     ...(id !== undefined ? { id } : {}),
   };
 }
@@ -96,6 +97,7 @@ export function revertLinkGuess(
       ...(r.label !== undefined ? { label: r.label } : {}),
       ...(r.payload !== undefined ? { payload: r.payload } : {}),
       ...(r.direction !== undefined ? { direction: r.direction } : {}),
+      ...(r.medium !== undefined ? { medium: r.medium } : {}),
     };
     next = { ...next, edges: { ...next.edges, [id]: restored } };
     const inE = ins.find((e) => e.from === r.from);

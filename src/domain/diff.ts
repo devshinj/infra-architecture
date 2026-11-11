@@ -84,6 +84,7 @@ export function commandsBetween(a: DiagramState, b: DiagramState): Command[] {
         ...(e.label !== undefined ? { label: e.label } : {}),
         ...(e.payload ? { payload: e.payload } : {}),
         ...(e.direction ? { direction: e.direction } : {}),
+        ...(e.medium ? { medium: e.medium } : {}),
       });
       continue;
     }
@@ -92,6 +93,8 @@ export function commandsBetween(a: DiagramState, b: DiagramState): Command[] {
       ...(o.edgeKind !== e.edgeKind ? { edge_kind: e.edgeKind } : {}),
       ...(o.payload !== e.payload && e.payload ? { payload: e.payload } : {}),
       ...(o.direction !== e.direction && e.direction ? { direction: e.direction } : {}),
+      // 수단이 없어졌으면 보통의 IP 통신("ip")으로 되돌린다.
+      ...(o.medium !== e.medium ? { medium: e.medium ?? ("ip" as const) } : {}),
     };
     if (Object.keys(ch).length) out.push({ op: "update_edge", id: e.id, ...ch });
   }

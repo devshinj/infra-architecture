@@ -151,7 +151,7 @@ test("listTerms filters", async () => {
   // 대소문자 무시 코드 포인트 순: 영문 → 한글
   const terms = all.map((r) => r.term.toLowerCase());
   expect(terms).toEqual([...terms].sort((x, y) => (x < y ? -1 : x > y ? 1 : 0)));
-  expect(all[0]!.term).toBe("ACL");
+  expect(all[0]!.term).toBe("A2A");
   expect(all.at(-1)!.term).toBe("호스팅");
 
   expect((await listTerms(userId, { q: "redis" })).map((r) => r.term)).toContain("Redis");

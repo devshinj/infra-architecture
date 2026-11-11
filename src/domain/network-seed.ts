@@ -1,7 +1,7 @@
 import { pairKey, type LinkMethod, type NetGrade, type NetRule, type NetType } from "./network";
 
 // 기본 제공 망 종류와 짝 규칙. 일반 지식 수준이며 기관마다 다를 수 있다(화면과 경고는 늘 "예상"이라고 말한다).
-// 근거와 출처는 docs/research/2026-11-11-network-glossary/ 에 있다. 규정은 자주 바뀌므로 설명에 날짜를 적지 않는다.
+// 근거와 출처는 docs/research/2026-11-11-network-glossary/ 와 docs/research/2026-11-12-field-realtime-ai/(영상·기기) 에 있다. 규정은 자주 바뀌므로 설명에 날짜를 적지 않는다.
 //
 // separated(망분리 대상): 규정이나 기관 방침으로 바깥 망과 떼어 놓는 망. 이 값이 참인 내부 망만 외부 망과 "망연계"가 기본이고,
 // 나머지 내부 망(사무망, 서버팜, 클라우드 서브넷 등)은 방화벽이 기본이다.
@@ -42,7 +42,9 @@ export const NETWORK_TYPE_SEED: readonly NetType[] = [
   t("edu-admin-net", "교육 업무망", "internal", true, ["교육행정망", "교사망", "나이스망", "스쿨넷 업무망"], "학교와 교육청에서 행정 업무에 쓰는 망이에요. 나이스·K-에듀파인 같은 시스템에 들어갈 수 있어요."),
   t("edu-class-net", "교육망", "boundary", false, ["수업망", "학생망", "학교 무선망", "스쿨넷 교육망"], "학교에서 수업에 쓰는 망이에요. 학생 기기도 붙지만 행정 시스템에는 들어갈 수 없어요."),
   t("defense-net", "국방망", "internal", true, ["국방 인트라넷", "군 내부망", "국방 업무망"], "군에서 행정·군수·인사 업무에 쓰는 내부망이에요. 인터넷과는 나뉘어 있어요."),
-  t("iot-net", "사물인터넷망", "closed", true, ["IoT망", "센서망", "설비망"], "센서나 카메라 같은 기기들이 붙는 망이에요. 사무용 망과 따로 떼어 놓아요."),
+  t("iot-net", "사물인터넷망", "closed", true, ["IoT망", "센서망", "설비망"], "센서나 계측기 같은 기기들이 붙는 망이에요. 사무용 망과 따로 떼어 놓아요."),
+  t("video-net", "영상망", "internal", false, ["카메라망", "CCTV망", "영상감시망", "영상 전용망"], "카메라와 녹화 장비만 붙여 영상을 나르는 망이에요. 사무용 망과 나눠 두고 인터넷에 직접 내놓지 않아요."),
+  t("control-center-net", "통합관제망", "closed", true, ["관제망", "관제센터망", "영상 단독망", "통합관제센터망"], "지자체 통합관제센터처럼 여러 곳의 카메라 영상을 모아 보는 센터의 망이에요. 인터넷·업무망·행정망과 떨어진 단독망이 원칙이에요."),
 
   // ── 금융 ─────────────────────────────────────────
   t("finance-net", "금융 전산망", "closed", true, ["금융 폐쇄망", "전산 폐쇄망", "전산센터 내부망", "계정계·정보계 망", "코어뱅킹 망"], "계좌와 거래를 처리하는 핵심 서버가 모인 망이에요. 인터넷과는 물리적으로 떨어져 있고, 정해진 구간과만 필요한 포트로 이어요."),
@@ -100,6 +102,15 @@ export const NETWORK_RULE_SEED: readonly NetRule[] = [
   r("business-net", "agency-internet", "network_link", "업무 자료를 다루는 망과 인터넷 구역 사이는 자료 전송 통제(망연계)를 거쳐요."),
   r("classified-net", "business-net", "network_link", "등급이 다른 영역 사이는 막거나, 잇는다면 통제 장비를 거쳐요. 기관 규정 확인이 꼭 필요해요."),
   r("iot-net", "business-net", "network_link", "기기 망은 사무용 망과 나누는 게 원칙이고, 통신이 필요하면 통제 장비를 거쳐요."),
+  r("iot-net", "internet", "firewall", "기기나 게이트웨이가 클라우드 쪽으로 먼저 거는 연결만 열어요. 밖에서 기기로 들어오는 연결은 열지 않아요."),
+  r("iot-net", "private-cloud", "firewall", "기기나 게이트웨이가 클라우드 쪽으로 먼저 거는 연결만 열어요. 밖에서 기기로 들어오는 연결은 열지 않아요."),
+
+  // 영상: 통합관제센터는 고시가 단독망을 원칙으로 정하고, 그 밖의 영상망은 인터넷에 직접 내놓지 않는 것이 통례다.
+  r("video-net", "internet", "none", "카메라와 녹화 장비는 인터넷에 직접 내놓지 않아요. 밖에서 볼 때는 경계 구역의 중계 서버를 거쳐요."),
+  r("control-center-net", "video-net", "firewall", "현장 카메라 영상을 관제센터로 모으는 통상 경로예요. 필요한 통신만 열어요."),
+  r("control-center-net", "admin-net", "network_link", "통합관제센터는 행정망과 떨어진 단독망이 원칙이에요. 연계가 필요하면 보안 지침에 따른 통제를 거쳐요."),
+  r("control-center-net", "local-gov-net", "network_link", "통합관제센터는 행정망과 떨어진 단독망이 원칙이에요. 연계가 필요하면 보안 지침에 따른 통제를 거쳐요."),
+  r("control-center-net", "business-net", "network_link", "통합관제센터는 업무망과 떨어진 단독망이 원칙이에요. 연계가 필요하면 보안 지침에 따른 통제를 거쳐요."),
   r("edu-class-net", "edu-admin-net", "none", "수업용 망에서는 나이스 같은 행정 시스템에 들어가지 못하게 막아요."),
   r("guest-wlan", "business-net", "none", "개인 기기와 방문자 기기는 업무용 망에 붙이지 않아요."),
   r("guest-wlan", "office-wlan", "none", "업무용 무선망과 방문자용 무선망은 나눠 설치하고 섞어 쓰지 않아요."),

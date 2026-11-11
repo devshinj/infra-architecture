@@ -106,7 +106,7 @@ export function summarizeState(state: DiagramState, k?: NetworkKnowledge): strin
     );
   }
   for (const e of Object.values(state.edges)) {
-    lines.push(`연결 ${e.id}: ${e.from} -> ${e.to} [${e.edgeKind}] ${JSON.stringify(e.label ?? "")}${e.payload ? ` payload=${e.payload}` : ""}${e.direction ? ` direction=${e.direction}` : ""}`);
+    lines.push(`연결 ${e.id}: ${e.from} -> ${e.to} [${e.edgeKind}] ${JSON.stringify(e.label ?? "")}${e.payload ? ` payload=${e.payload}` : ""}${e.direction ? ` direction=${e.direction}` : ""}${e.medium && e.medium !== "ip" ? ` medium=${e.medium}` : ""}`);
   }
   // 사용자가 쓴 글(연결 이름·가정 값)은 노드 이름처럼 JSON 으로 감싸 줄바꿈이 새 줄을 만들지 못하게 한다.
   for (const a of Object.values(state.assumptions)) {
@@ -256,7 +256,7 @@ export const REPLAY_COMMANDS_MAX = 60;
 const REPLAY_AS_SAY = new Set(["question", "other", "layout", "history"]);
 
 // 저장(JSONB)하면 키 순서가 바뀐다. 모델이 따라 할 모양이므로 명령 예시와 같은 순서로 다시 쓴다.
-const KEY_ORDER = ["op", "id", "kind", "group_kind", "name", "origin", "label", "sub", "from", "to", "edge_kind", "parent", "key", "value", "type", "payload", "direction", "attrs", "summary", "result", "steps"];
+const KEY_ORDER = ["op", "id", "kind", "group_kind", "name", "origin", "label", "sub", "from", "to", "edge_kind", "parent", "key", "value", "type", "payload", "direction", "medium", "attrs", "summary", "result", "steps"];
 const STEP_KEY_ORDER = ["edge", "from", "short", "text"];
 
 function ordered(o: Record<string, unknown>, order: string[]): Record<string, unknown> {

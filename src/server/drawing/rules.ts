@@ -1,5 +1,6 @@
 import { EDGE_KINDS, GROUP_KINDS, NODE_KINDS } from "@/domain/catalog";
 import { FIELD_LABELS } from "@/domain/missing";
+import { EDGE_MEDIA } from "@/domain/types";
 import { GRADE_LABELS, GRADE_RULES, METHOD_LABELS, pairKey, type NetworkKnowledge } from "@/domain/network";
 import { patternPromptBlock } from "@/domain/patterns";
 
@@ -35,6 +36,7 @@ export const COMMAND_EXAMPLES = `{"op":"set_assumption","key":"environment|scale
 {"op":"update_node","id":"was-1","parent":"새 영역 id"}
 {"op":"update_edge","id":"e-web-1-was-1","label":"HTTP 8080"}
 {"op":"update_edge","id":"e-web-1-was-1","payload":"file","direction":"one_way"}
+{"op":"add_edge","from":"app","to":"band-1","edge_kind":"request","label":"BLE(GATT)","medium":"wireless"}
 {"op":"remove_node","id":"기존 노드 id"}
 {"op":"remove_edge","id":"기존 연결 id"}
 {"op":"remove_group","id":"기존 영역 id"}
@@ -48,6 +50,7 @@ export const COMMAND_EXAMPLES = `{"op":"set_assumption","key":"environment|scale
 export const KIND_BLOCK = `KIND 허용값: ${KIND_LIST}
 GROUP_KIND 허용값: ${GROUP_KIND_LIST}
 EDGE_KIND 허용값: ${EDGE_KIND_LIST}
+MEDIUM 허용값(연결의 통신 수단, 생략하면 보통의 IP 통신): ${EDGE_MEDIA.join(", ")}
 
 노드 attrs 칸(종류별). 이 칸 이름만 쓴다. os 는 운영체제(예: Rocky Linux 9), sw 는 설치한 소프트웨어(예: Tomcat 10)다.
 ${ATTR_LIST}`;
@@ -85,8 +88,16 @@ export const DRAW_RULE_GROUPS = [
   `- external_service 그룹은 우리 회사가 운영하지 않는 타사 서비스(PG사, 카카오, 택배사, 문자 발송 등)에만 쓴다. AWS 관리형 서비스(RDS, MSK, ElastiCache, S3, SQS)는 우리 인프라이므로 해당 위치(VPC/서브넷/리전)에 둔다.
 - Kafka/MSK/Kinesis 는 stream, SQS/RabbitMQ 는 queue.
 - CDN, WAF, DNS 처럼 VPC 밖 전역 서비스는 VPC 밖(리전 그룹 또는 최상위)에 둔다.
-- 사용자(client_*)에서 시작하는 진입 연결을 반드시 그린다.`,
-  `- 사용자가 채워야 할 정보의 값을 알려 주면 update_node(attrs) 또는 update_edge(label·payload·direction) 로 그 값만 반영한다. 노드·연결을 새로 만들지 않는다.
+- 사용자(client_*)에서 시작하는 진입 연결을 반드시 그린다.
+- medium(통신 수단)은 보통의 IP 통신이 아닐 때만 쓴다: 근거리 무선(BLE·NFC·Zigbee 등)은 wireless, 카메라 영상 스트림(RTSP 등)은 video, 실시간 영상·음성(WebRTC)은 media. 프로토콜 이름은 label 에 적는다(예: "BLE(GATT)", "RTSP", "SRTP/UDP"). video·media 연결은 영상·음성이 흐르는 방향으로 그린다.
+- wireless 연결은 망·방화벽을 거치지 않고 두 기기를 바로 잇는다. BLE·Zigbee·NFC 만 쓰는 기기(iot_device)는 서버에 바로 잇지 않고 휴대폰 앱(client_mobile)이나 iot_gateway 를 거친다.
+- 기기·게이트웨이는 mqtt_broker 로 먼저 건다(기기 → 브로커, 예: "MQTT/TLS 8883"). 브로커에서 기기로 내려가는 연결은 따로 그리지 않는다. 브로커에서 뒤쪽 처리로 가는 연결은 async 다.
+- 카메라(camera)는 video_recorder(NVR·VMS)에 video 로 잇고, 관제 화면(control_display)은 video_recorder 에서 영상을 받는다. 카메라를 관제 화면이나 인터넷에 바로 잇지 않는다. 밖에서 볼 때는 경계 구역의 media_server 를 거친다.
+- 영상 분석·LLM·임베딩 서빙은 model_server 로 그리고 attrs 의 model·gpu 에 값을 쓴다. GPU 를 따로 노드로 만들지 않는다.
+- WebRTC 는 연결 두 개로 그린다: 단말 → signaling_server(request, 예: "WSS 443"), 단말 → media_server(medium media). media 연결은 L7 로드밸런서·WAF·API 게이트웨이·CDN 을 거치지 않는다. 단말끼리 직접 잇는 media 는 1:1 통화일 때만 그린다.
+- 외부 LLM API 는 external_service 안의 external_api 로 그리고 앱(또는 llm_gateway)에서 밖으로 나가는 request 로 잇는다. 사내 서빙은 앱 → llm_gateway → model_server 순으로 잇는다. 검색 증강(RAG)의 임베딩 저장소는 vector_db 다.
+- AI 에이전트(ai_agent)는 모델(model_server 또는 외부 LLM)과 tool_server(MCP 서버)에 각각 잇는다. 모델에서 tool_server 나 사내 시스템으로 바로 잇지 않는다. tool_server 에서 사내 시스템으로는 그 시스템의 원래 연결로 잇는다.`,
+  `- 사용자가 채워야 할 정보의 값을 알려 주면 update_node(attrs) 또는 update_edge(label·payload·direction·medium) 로 그 값만 반영한다. 노드·연결을 새로 만들지 않는다.
 - "모든 서버", "WAS 전부"처럼 여러 대상을 말하면 현재 구성에서 그 조건에 맞는 노드를 하나도 빠뜨리지 말고 노드마다 update_node 를 낸다. 그 값의 칸이 없는 종류에는 쓰지 않는다.
 - 흐름은 요청 하나가 구성도의 연결을 차례로 지나는 길이다. 흐름을 바꾸라는 요청이면 구성 명령과 함께 흐름 명령을 쓴다. 단계 edge 는 현재 구성(또는 이번에 만든) 연결 id 만 쓴다.
 - 요청에 흐름 이야기가 없으면 흐름 명령을 쓰지 않는다. 구성을 바꿔 흐름이 끊겨도 도구가 사용자에게 알리므로 흐름을 고치지 않는다.
