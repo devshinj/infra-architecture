@@ -62,16 +62,20 @@ function abortError() {
   return new DOMException("The operation was aborted.", "AbortError");
 }
 
-/** 텍스트를 일정 크기로 잘라 onDelta 에 흘리는 가짜 Qwen. 신호를 존중한다. */
+/**
+ * 텍스트를 일정 크기로 잘라 onDelta 에 흘리는 가짜 Qwen. 신호를 존중한다.
+ * once 면 첫 호출만 text 를 내고 그 뒤 호출(반영 0 차례의 다시 그리기 등)은 빈 응답을 낸다.
+ */
 function fakeQwen(
-  text: string,
-  opts: { chunk?: number; gate?: Promise<void>; failAfter?: number; hang?: boolean } = {},
+  first: string,
+  opts: { chunk?: number; gate?: Promise<void>; failAfter?: number; hang?: boolean; once?: boolean } = {},
 ): QwenClient & { calls: ChatMessage[][] } {
   const calls: ChatMessage[][] = [];
   return {
     calls,
     async streamCompletion(messages, { signal, onDelta }) {
       calls.push(messages);
+      const text = opts.once && calls.length > 1 ? "" : first;
       if (opts.gate) await opts.gate;
       if (opts.hang) {
         await new Promise((_r, reject) => signal.addEventListener("abort", () => reject(abortError()), { once: true }));
@@ -260,12 +264,80 @@ describe("runChatTurn", () => {
   test("zero applied commands creates no version", async () => {
     const ids = await makeOwnedDiagram();
     await createVersion(ids.diagramId, emptyState(), { source: "import" });
-    const lines = [JSON.stringify({ op: "say", text: "바꿀 게 없어요" }), "garbage"];
+    const lines = [JSON.stringify({ op: "say", text: "바꿀 게 없어요" }), '{"op":"garbage'];
     const { events } = await turn(ids, "그대로 둬", { qwen: fakeQwen(lines.join("\n")), clef: fakeClef(null) });
     expect(events.at(-1)).toMatchObject({ t: "done", version: null, status: "complete", applied: 0, skipped: 1 });
     expect(await versions(ids.diagramId)).toHaveLength(1);
     const msgs = await listMessages(ids.diagramId);
     expect(msgs[1]).toMatchObject({ role: "assistant", content: "바꿀 게 없어요", meta: { version: null, applied: 0 } });
+  });
+
+  test("done and saved meta carry warning counts (new · resolved · now) when warnings changed", async () => {
+    const ids = await makeOwnedDiagram();
+    const start = applyCommands(emptyState(), [
+      { op: "add_group", id: "r", group_kind: "redundancy_group", label: "WAS VIP", parent: null },
+      { op: "add_node", id: "w1", kind: "was", label: "WAS #1", parent: "r" },
+      { op: "add_node", id: "w2", kind: "was", label: "WAS #2", parent: "r" },
+      { op: "add_node", id: "fw", kind: "firewall", label: "방화벽", parent: null },
+    ]).state;
+    await createVersion(ids.diagramId, start, { source: "import" });
+    const j = (o: unknown) => JSON.stringify(o);
+    // 방화벽을 이어 고립 경고 하나를 풀고, 묶음 밖 배치 서버를 하나 더해 이중화 경고와는 별개로 새 노드를 만든다.
+    const lines = [
+      j({ op: "add_edge", id: "e-fw-w1", from: "fw", to: "w1", edge_kind: "request" }),
+      j({ op: "add_node", id: "lb", kind: "lb_l7", label: "L7", parent: null }),
+    ];
+    const { events } = await turn(ids, "방화벽 이어 줘", { qwen: fakeQwen(lines.join("\n")), clef: fakeClef({ intent: "structure_change", confidence: 0.9 }) });
+    const done = events.at(-1) as Extract<ChatEvent, { t: "done" }>;
+    // 풀린 것: unused_passthrough:fw. 새로 생긴 것: L7 의 이중화(spof)와 고립(unused_passthrough).
+    expect(done.warningCounts).toEqual({ fresh: 2, resolved: 1, now: 2 });
+    expect((await listMessages(ids.diagramId))[1]!.meta.warningCounts).toEqual({ fresh: 2, resolved: 1, now: 2 });
+    // 경고가 그대로인 차례는 수를 싣지 않는다.
+    const again = await turn(ids, "이름 바꿔 줘", { qwen: fakeQwen(j({ op: "update_node", id: "w1", label: "WAS 1호" })), clef: fakeClef({ intent: "structure_change", confidence: 0.9 }) });
+    expect((again.events.at(-1) as Extract<ChatEvent, { t: "done" }>).warningCounts).toBeUndefined();
+  });
+
+  test("plain sentences in command mode are shown as say lines, not skipped", async () => {
+    const ids = await makeOwnedDiagram();
+    await createVersion(ids.diagramId, emptyState(), { source: "import" });
+    const long = "사용자 브라우저 단 노드는 트래픽의 시작점을 명확히 하기 위해 권장됩니다. ".repeat(5).trim();
+    const prose = [long, "", "현재 구성에는 외부 사용자에서 SLB로 진입하는 연결이 없어요."];
+    const info = vi.spyOn(console, "info").mockImplementation(() => {});
+    try {
+      const { events } = await turn(ids, "브라우저 노드는 필요 없을까?", {
+        qwen: fakeQwen(prose.join("\n"), { once: true }),
+        clef: fakeClef({ intent: "structure_change", confidence: 0.93 }),
+      });
+      expect(of(events, "say").map((e) => e.text)).toEqual([long, prose[2]]);
+      expect(of(events, "skip")).toEqual([]);
+      expect(events.at(-1)).toMatchObject({ t: "done", version: null, status: "complete", applied: 0, skipped: 0 });
+      const msgs = await listMessages(ids.diagramId);
+      expect(msgs[1]).toMatchObject({ role: "assistant", content: `${long}\n${prose[2]}`, meta: { says: [long, prose[2]], skipped: 0 } });
+      // 일반 글로 답한 차례는 서버 로그에 줄 수만 남긴다(글은 넣지 않는다).
+      const calls = info.mock.calls.filter((c) => c[0] === "[chat] plain text shown as say");
+      expect(calls).toEqual([["[chat] plain text shown as say", { diagramId: ids.diagramId, lines: 2 }]]);
+    } finally {
+      info.mockRestore();
+    }
+  });
+
+  test("the next command turn replays what a turn applied (says + commands) and drops turns that applied nothing", async () => {
+    const ids = await makeOwnedDiagram();
+    await createVersion(ids.diagramId, emptyState(), { source: "import" });
+    const deps = { clef: fakeClef({ intent: "structure_change", confidence: 0.9 }) };
+    const say = (t: string) => JSON.stringify({ op: "say", text: t });
+    const add = { op: "add_node", id: "was-1", kind: "was", label: "WAS", parent: null };
+    await turn(ids, "실패할 요청", { ...deps, qwen: fakeQwen('{"op":"broken', { once: true }) });
+    await turn(ids, "말만 한 요청", { ...deps, qwen: fakeQwen("경로를 추가합니다.", { once: true }) });
+    await turn(ids, "WAS 넣어 줘", { ...deps, qwen: fakeQwen([say("WAS 를 넣습니다."), JSON.stringify(add)].join("\n")) });
+    // 저장된 명령은 화면용 목록에는 없다.
+    expect((await listMessages(ids.diagramId)).every((m) => !("commands" in m.meta))).toBe(true);
+    const qwen = fakeQwen(say("좋아요"));
+    await turn(ids, "다음", { ...deps, qwen });
+    expect(qwen.calls[0]!.slice(1, -1)).toEqual([
+      { role: "user", content: "WAS 넣어 줘" },
+      { role: "assistant", content: [say("WAS 를 넣습니다."), JSON.stringify(add)].join("\n") },
+    ]);
   });
 
   test("abort mid-stream saves aborted version and releases lock", async () => {
@@ -421,7 +493,8 @@ describe("runChatTurn", () => {
     const clef = fakeClef({ intent: "layout", confidence: 0.99 });
     const { events } = await turn(ids, assumptionChangeMessage("environment", "사내 IDC"), { qwen, clef });
     expect(clef.calls).toHaveLength(0);
-    expect(qwen.calls).toHaveLength(1);
+    // 구성 변경인데 반영 0(say 만)이라 한 번 다시 부른다.
+    expect(qwen.calls).toHaveLength(2);
     expect(of(events, "start")[0]).toMatchObject({ intent: "structure_change" });
     expect(events.some((e) => e.t === "relayout")).toBe(false);
   });
@@ -487,16 +560,18 @@ describe("runChatTurn", () => {
   test("history passed to the model excludes system messages and the current message", async () => {
     const ids = await makeOwnedDiagram();
     const say = (t: string) => JSON.stringify({ op: "say", text: t });
-    await turn(ids, "첫 요청", { qwen: fakeQwen(say("첫 답")), clef: fakeClef(null) });
+    const add = JSON.stringify({ op: "add_node", id: "a", kind: "was", label: "a", parent: null });
+    await turn(ids, "첫 요청", { qwen: fakeQwen([say("첫 답"), add].join("\n")), clef: fakeClef(null) });
     const { createMessage } = await import("@/server/chat/messages");
     await createMessage(ids.diagramId, "system", "v1로 되돌림 (새 버전 v2)");
     const qwen = fakeQwen(say("둘째 답"));
     const clef = fakeClef(null);
     await turn(ids, "둘째 요청", { qwen, clef });
     const msgs = qwen.calls[0]!;
+    // 명령 경로(의도 없음)라 지난 답은 say 줄 + 그 차례에 적용한 명령 줄로 보낸다.
     expect(msgs.slice(1, -1)).toEqual([
       { role: "user", content: "첫 요청" },
-      { role: "assistant", content: "첫 답" },
+      { role: "assistant", content: [say("첫 답"), add].join("\n") },
     ]);
     expect(msgs.at(-1)!.content).toContain("요청: 둘째 요청");
     expect(clef.calls[0]).toEqual({ input: "둘째 요청", context: { lastAssistant: "첫 답", openItems: [] } });
@@ -926,6 +1001,20 @@ describe("flow commands in a chat turn", () => {
     expect((await listMessages(ids.diagramId))[1]!.meta).toMatchObject({ applied: 3, changed: 2, flows: 1, version: 2 });
   });
 
+  test("add_flow with an existing flow id updates that flow instead of being rejected", async () => {
+    const ids = await base();
+    await turn(ids, "주문 흐름 그려줘", { qwen: fakeQwen(flowLine("order", "e-a-b", "a")), clef: clef() });
+    const again = j({ op: "add_flow", id: "order", name: "주문 다시", origin: "system", summary: "고친 요약", steps: [{ edge: "e-a-b", from: "a", short: "새 단계", text: "새 글" }] });
+    const { events } = await turn(ids, "주문 흐름 고쳐 줘", { qwen: fakeQwen(again), clef: clef() });
+    expect(of(events, "skip")).toEqual([]);
+    expect(of(events, "cmd").map((e) => e.cmd.op)).toEqual(["update_flow"]);
+    expect(events.at(-1)).toMatchObject({ t: "done", flows: 1, skipped: 0 });
+    const flows = await listFlows(ids.userId, ids.diagramId);
+    expect(flows).toHaveLength(1);
+    // 출발(origin)은 기존 흐름 것을 둔다. 단계 글은 단계 글 지키기로 원래 흐름 것이 남는다.
+    expect(flows[0]).toMatchObject({ id: "order", name: "주문 다시", origin: "user", summary: "고친 요약", steps: [{ edge: "e-a-b", from: "a", short: "주문 요청" }] });
+  });
+
   test("flow-only turn creates no version but saves the flow and done.flows === 1", async () => {
     const ids = await base();
     const { events } = await turn(ids, "주문 흐름 그려줘", { qwen: fakeQwen(flowLine("order", "e-a-b", "a")), clef: clef() });
@@ -1027,7 +1116,10 @@ describe("flow commands in a chat turn", () => {
     await turn(ids, "주문 흐름", { qwen: fakeQwen(flowLine("order", "e-a-b", "a")), clef: clef() });
     const qwen = fakeQwen(j({ op: "say", text: "네" }));
     await turn(ids, "흐름 이름 바꿔줘", { qwen, clef: clef() });
-    expect(qwen.calls[0]!.at(-1)!.content).toContain('흐름:\n흐름 order [user] "주문": e-a-b\n\n참조 노드:');
+    // 흐름 블록 뒤에는 (경고가 있으면) 현재 경고, 그다음 참조 노드가 온다.
+    const user = qwen.calls[0]!.at(-1)!.content;
+    expect(user).toContain('흐름:\n흐름 order [user] "주문": e-a-b\n\n');
+    expect(user.indexOf("흐름:\n")).toBeLessThan(user.indexOf("참조 노드:"));
   });
 });
 
@@ -1126,7 +1218,7 @@ describe("network knowledge in a chat turn", () => {
 
   test("모르는 망 종류 key 의 set_zone_type 은 건너뜀, 상태 그대로", async () => {
     const { ids, state } = await govBase();
-    const { events } = await turn(ids, "망 종류 붙여 줘", { qwen: fakeQwen(j({ op: "set_zone_type", id: "gov", type: "no-such-net" })), clef: clef() });
+    const { events } = await turn(ids, "망 종류 붙여 줘", { qwen: fakeQwen(j({ op: "set_zone_type", id: "gov", type: "no-such-net" }), { once: true }), clef: clef() });
     expect(of(events, "skip").map((e) => e.reason)).toEqual(["건너뜀: 알 수 없는 망 종류(no-such-net)"]);
     expect(of(events, "cmd")).toEqual([]);
     expect(events.at(-1)).toMatchObject({ t: "done", version: null, applied: 0, skipped: 1 });
@@ -1136,14 +1228,14 @@ describe("network knowledge in a chat turn", () => {
   test("AI 가 set_link_guess 를 쓰면 건너뜀", async () => {
     const { ids, state } = await govBase();
     const line = j({ op: "set_link_guess", id: "fw", guess: { replaced: [] } });
-    const { events } = await turn(ids, "x", { qwen: fakeQwen(line), clef: clef() });
+    const { events } = await turn(ids, "x", { qwen: fakeQwen(line, { once: true }), clef: clef() });
     expect(of(events, "skip").map((e) => e.reason)).toEqual(["건너뜀: 지원하지 않는 명령(set_link_guess)"]);
     expect((await getLatestState(ids.diagramId))!.state).toEqual(state);
   });
 
   test("사용자 확정 종류에 대한 set_zone_type 은 건너뜀", async () => {
     const { ids, state } = await govBase({ gov: { key: "admin-net", source: "user", confirmed: true } });
-    const { events } = await turn(ids, "x", { qwen: fakeQwen(j({ op: "set_zone_type", id: "gov", type: "internet" })), clef: clef() });
+    const { events } = await turn(ids, "x", { qwen: fakeQwen(j({ op: "set_zone_type", id: "gov", type: "internet" }), { once: true }), clef: clef() });
     expect(of(events, "skip")).toHaveLength(1);
     expect(of(events, "skip")[0]!.reason).toContain("적용할 수 없는 명령(set_zone_type)");
     expect((await getLatestState(ids.diagramId))!.state.groups.gov!.netType).toEqual(state.groups.gov!.netType);

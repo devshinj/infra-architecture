@@ -218,3 +218,46 @@ describe("createJsonlParser", () => {
     expect(bad).toEqual([]);
   });
 });
+
+describe("createJsonlParser onText", () => {
+  function runText(chunks: string[], opts?: { dropPartial?: boolean }) {
+    const values: unknown[] = [];
+    const bad: string[] = [];
+    const text: string[] = [];
+    const p = createJsonlParser(
+      (v) => values.push(v),
+      (t) => bad.push(t),
+      (t) => text.push(t),
+    );
+    for (const c of chunks) p.push(c);
+    p.end(opts);
+    return { values, bad, text };
+  }
+
+  test("plain sentences go to onText in full, not onBadLine", () => {
+    const long = "사용자 브라우저 단 노드는 트래픽의 시작점을 명확히 하기 위해 권장됩니다. ".repeat(6).trim();
+    const { values, bad, text } = runText(pieces(`${long}\n\n{"op":"say","text":"a"}\n현재 구성에는 연결이 없어요.`));
+    expect(values).toEqual([{ op: "say", text: "a" }]);
+    expect(text).toEqual([long, "현재 구성에는 연결이 없어요."]);
+    expect(long.length).toBeGreaterThan(160);
+    expect(bad).toEqual([]);
+  });
+
+  test("text after an object on the same line goes to onText", () => {
+    const { values, text, bad } = runText(['{"op":"say","text":"a"} 그리고 설명\n']);
+    expect(values).toEqual([{ op: "say", text: "a" }]);
+    expect(text).toEqual(["그리고 설명"]);
+    expect(bad).toEqual([]);
+  });
+
+  test("broken JSON and brace debris stay bad lines", () => {
+    const { text, bad } = runText(['x":"y"}\n', "a } b\n", "{not json\n"]);
+    expect(text).toEqual([]);
+    expect(bad).toHaveLength(3);
+  });
+
+  test("without onText, plain sentences are still bad lines", () => {
+    const { bad } = run(["그냥 글\n"]);
+    expect(bad).toEqual(["그냥 글"]);
+  });
+});

@@ -46,10 +46,13 @@ function isCommandLine(t: string): boolean {
  * `[` `]` 로 감싼 배열, 코드 펜스 줄(건너뜀). 객체가 닫히는 줄에서 바로 onLine 을 부른다.
  * 깨진 글은 onBadLine 으로 알린다. `end({ dropPartial: true })` 면 끝에서 덜 닫힌 객체를 알리지 않고 버린다
  * (출력 한도로 끊긴 꼬리).
+ * onText 를 주면 객체 밖의 일반 글(중괄호가 없는 글)은 깨진 글 대신 onText 로 자르지 않고 넘긴다.
+ * 중괄호가 있는 글은 부서진 JSON 조각으로 보고 그대로 onBadLine 으로 보낸다.
  */
 export function createJsonlParser(
   onLine: (value: unknown) => void,
   onBadLine: (text: string) => void,
+  onText?: (text: string) => void,
 ): { push(chunk: string): void; end(opts?: { dropPartial?: boolean }): void } {
   let line = ""; // current line, think-stripped
   let ended = false;
@@ -89,7 +92,10 @@ export function createJsonlParser(
           continue;
         }
         if (ch !== "{") {
-          bad(t.slice(i)); // 객체 밖의 다른 글: 그 줄의 나머지를 깨진 글로
+          // 객체 밖의 다른 글: 그 줄의 나머지를 일반 글(onText 가 있고 중괄호가 없을 때) 또는 깨진 글로
+          const rest = t.slice(i).trim();
+          if (onText && !/[{}]/.test(rest)) onText(rest);
+          else bad(rest);
           return;
         }
         pending = "";

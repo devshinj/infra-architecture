@@ -35,7 +35,7 @@ vi.mock("@/server/chat/warnings", () => ({
 
 import type { ChatEvent } from "@/server/chat/events";
 import { MAX_CONTINUATIONS, runChatTurn } from "@/server/chat/pipeline";
-import { CONTINUE_NOTE } from "@/server/chat/prompt";
+import { CONTINUE_NOTE, RETRY_NOTE } from "@/server/chat/prompt";
 import type { ClefClient, Intent } from "@/server/llm/clef";
 import type { ChatMessage, QwenClient } from "@/server/llm/qwen";
 
@@ -241,4 +241,53 @@ test("applyFlowOps failure reports one skip and still saves the assistant messag
   expect(store.created.at(-1)?.role).toBe("assistant");
   expect(err).toHaveBeenCalled();
   err.mockRestore();
+});
+
+test("a structure change that applied nothing is retried once with the nudge line, and the retry's commands count", async () => {
+  const q = fakeQwen([
+    { text: `${j({ op: "say", text: "경로를 추가합니다." })}\n`, finish: "stop" },
+    { text: `${node("a")}\n${node("b")}\n${edge("a", "b")}\n`, finish: "stop" },
+  ]);
+  const info = vi.spyOn(console, "info").mockImplementation(() => {});
+  const events = await turn(q);
+  expect(q.calls).toHaveLength(2);
+  expect(lastUser(q.calls[0]!)).not.toContain(RETRY_NOTE);
+  expect(lastUser(q.calls[1]!)).toContain(RETRY_NOTE);
+  expect(events.filter((e) => e.t === "status" && e.retry)).toEqual([{ t: "status", phase: "drawing", retry: true }]);
+  expect(store.versions).toEqual([{ status: "complete", nodes: 2, edges: 1 }]);
+  expect(events.at(-1)).toMatchObject({ t: "done", status: "complete", applied: 3, changed: 3, version: 1 });
+  expect(info.mock.calls.some((c) => c[0] === "[chat] no change on a structure request, retrying once")).toBe(true);
+  info.mockRestore();
+});
+
+test("the retry happens at most once; a retry that also changes nothing ends the turn", async () => {
+  const say = { text: `${j({ op: "say", text: "추가합니다." })}\n`, finish: "stop" as const };
+  const q = fakeQwen([say, say, say]);
+  const events = await turn(q);
+  expect(q.calls).toHaveLength(2);
+  expect(store.versions).toEqual([]);
+  expect(events.at(-1)).toMatchObject({ t: "done", version: null, applied: 0, changed: 0 });
+});
+
+test("a retry cut by length continues like any drawing", async () => {
+  const q = fakeQwen([
+    { text: `${j({ op: "say", text: "추가합니다." })}\n`, finish: "stop" },
+    { text: `${node("a")}\n{"op":"add_node","id":"b`, finish: "length" },
+    { text: `${node("b")}\n`, finish: "stop" },
+  ]);
+  const events = await turn(q);
+  expect(q.calls).toHaveLength(3);
+  expect(lastUser(q.calls[2]!)).toContain(CONTINUE_NOTE);
+  expect(events.at(-1)).toMatchObject({ t: "done", applied: 2, skipped: 0 });
+});
+
+test("no retry when something was applied, or when the intent is not a structure change", async () => {
+  const one = fakeQwen([{ text: `${j({ op: "set_assumption", key: "scale", value: "작게" })}\n`, finish: "stop" }]);
+  await turn(one);
+  expect(one.calls).toHaveLength(1);
+  for (const intent of ["missing_info_answer", "other"] as const) {
+    const q = fakeQwen([{ text: `${j({ op: "say", text: "네" })}\n`, finish: "stop" }]);
+    await turn(q, intent);
+    expect(q.calls).toHaveLength(1);
+  }
 });

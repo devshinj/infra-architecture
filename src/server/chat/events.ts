@@ -1,6 +1,7 @@
 /** 대화 이벤트·메시지 메타. 클라이언트도 쓰므로 서버 모듈을 import 하지 않는다. */
 import type { Command } from "@/domain/commands";
 import type { Warning } from "@/domain/types";
+import type { WarningCounts } from "@/domain/warnings";
 
 /** 세션 행을 session 이벤트 모양으로. */
 export function sessionPayload(s: {
@@ -40,6 +41,13 @@ export interface MessageMeta {
   missing?: number;
   /** 이번 차례에 새로 생긴(무시하지 않은) 경고. 있을 때만. */
   warnings?: Warning[];
+  /** 차례 전후 경고 변화(새로·해결·지금 모두). 새로 생기거나 해결된 경고가 있을 때만. 주의 칩이 쓴다. */
+  warningCounts?: WarningCounts;
+  /**
+   * 명령 경로 차례에 실제로 적용한 명령(앞부분만). 다음 차례의 대화 기록에 JSON 줄로 다시 보낸다.
+   * 서버 전용: listMessages 가 기본으로 빼서 화면에는 가지 않는다.
+   */
+  commands?: unknown[];
   /** 차례 끝 구성도의 노드·연결 수(다시 불러올 때 요약 칩·완료 카드에 쓴다). */
   nodes?: number;
   edges?: number;
@@ -59,7 +67,8 @@ export type ChatEvent =
   | { t: "session"; session: SessionEventPayload }
   | { t: "start"; messageId: string; intent: string | null }
   // part: 출력 한도로 끊겨 이어 그리는 중일 때만(n 번째 요청 / 최대 of 번). 진행 카드에 `이어서 그리는 중 (n/of)`.
-  | { t: "status"; phase: "thinking" | "drawing" | "answering" | "checking"; part?: { n: number; of: number } }
+  // retry: 구성 변경 요청에 아무것도 반영하지 못해 한 번 다시 그리는 중일 때만. 진행 카드에 `다시 그리는 중`.
+  | { t: "status"; phase: "thinking" | "drawing" | "answering" | "checking"; part?: { n: number; of: number }; retry?: true }
   | { t: "say"; text: string }
   | { t: "cmd"; cmd: Command } // 서버에서 적용 성공한 명령만
   | { t: "skip"; reason: string } // 깨진 줄·거부된 명령
@@ -81,6 +90,8 @@ export type ChatEvent =
       missing: number;
       nodes: number;
       edges: number;
+      /** MessageMeta.warningCounts 와 같다(있을 때만). */
+      warningCounts?: WarningCounts;
       assistantMessageId: string;
     }
   | { t: "error"; message: string };

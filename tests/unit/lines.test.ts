@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 
-import { keepsCard, messagesToLines, summaryText } from "@/ui/chat/lines";
+import { keepsCard, messagesToLines, summaryText, warningsChip } from "@/ui/chat/lines";
 
 test("reload has no missing-info line (the canvas card shows it)", () => {
   const lines = messagesToLines([
@@ -145,9 +145,12 @@ test("summary: a structure change that changed nothing and wrote nothing says it
   const msg = "요청을 반영하지 못했어요. 다시 말해 주세요.";
   const none = { version: null, status: "complete" as const, applied: 0, changed: 0, skipped: 0 };
   expect(summaryText(none, false, "structure_change")).toBe(msg);
-  // AI 가 글(안내·답)을 냈으면 알리지 않는다.
-  expect(summaryText(none, true, "structure_change")).toBeNull();
+  // 구성 변경 차례에 AI 가 글만 내고(예: "경로를 추가합니다.") 아무것도 안 바꿨으면 바꾼 곳이 없다고 알린다.
+  expect(summaryText(none, true, "structure_change")).toBe("바꾼 곳이 없어요");
+  expect(summaryText({ ...none, skipped: 2 }, true, "structure_change")).toBe("바꾼 곳이 없어요");
+  // 다른 의도에서 글을 냈으면 알리지 않는다.
   expect(summaryText({ ...none, skipped: 2 }, true, "missing_info_answer")).toBeNull();
+  expect(summaryText(none, true, null)).toBeNull();
   // 질문·답변, 빠진 정보 답, 재정렬 차례는 그대로다.
   expect(summaryText(none, true, "question")).toBeNull();
   expect(summaryText(none, false, "other")).toBe("변경 사항이 없어요.");
@@ -177,10 +180,11 @@ test("summary: assumptions are applied and versioned but are not counted as chan
       { id: "a1", role: "assistant", content, meta: { intent: "structure_change", skipped: 0, status: "complete", nodes: 50, edges: 60, ...meta } },
     ]).map((l) => [l.kind, l.text]);
   expect(reload({ applied: 1, changed: 0, version: 4 })).toEqual([["user", "모든 DB 를 이중화해 줘"], ["summary", msg]]);
-  // 안내 한 줄만 내고 멈춘 차례는 알리지 않는다(사용자 결정).
+  // 안내 한 줄만 내고 멈춘 차례는 바꾼 곳이 없다고 알린다(2026-11-11 사용자 결정, 11-03 결정을 바꿈).
   expect(reload({ applied: 0, changed: 0, version: null, says: ["DB 를 이중화합니다."] }, "DB 를 이중화합니다.")).toEqual([
     ["user", "모든 DB 를 이중화해 줘"],
     ["progress", "DB 를 이중화합니다."],
+    ["summary", "바꾼 곳이 없어요"],
   ]);
 });
 
@@ -213,4 +217,25 @@ test("summary mentions 흐름 1개 바꿨어요", () => {
     { id: "a1", role: "assistant", content: "", meta: { intent: "structure_change", applied: 1, changed: 0, flows: 1, skipped: 0, version: null, status: "complete", says: [], nodes: 3, edges: 2 } },
   ]);
   expect(lines.map((l) => [l.kind, l.text])).toEqual([["summary", "노드 3 · 연결 2 · 흐름 1개 바꿨어요"]]);
+});
+
+test("warning chip shows new, resolved and all-now counts; nothing when warnings did not change", () => {
+  const text = (fresh: number, resolved: number, now: number) => warningsChip([], { fresh, resolved, now })?.text ?? null;
+  expect(text(2, 0, 6)).toBe("새 주의 2 · 지금 모두 6");
+  expect(text(0, 4, 2)).toBe("주의 4 해결 · 지금 모두 2");
+  expect(text(0, 2, 0)).toBe("주의 2 해결 · 지금 모두 0");
+  expect(text(1, 2, 5)).toBe("새 주의 1 · 주의 2 해결 · 지금 모두 5");
+  expect(text(0, 0, 3)).toBeNull();
+  expect(warningsChip([], { fresh: 2, resolved: 0, now: 6 })?.kind).toBe("warning");
+  // 옛 메시지(수 없음)는 예전처럼 새 경고 수만.
+  const w = { id: "spof:w", rule: "spof", nodeId: "w", level: "warn" as const, text: "t", guide: "g" };
+  expect(warningsChip([w])?.text).toBe("주의 1");
+});
+
+test("reloaded messages use saved warning counts for the chip", () => {
+  const lines = messagesToLines([
+    { id: "u1", role: "user", content: "방화벽 거치게 해 줘", meta: {} },
+    { id: "a1", role: "assistant", content: "", meta: { intent: "structure_change", applied: 8, changed: 8, skipped: 0, version: 4, status: "complete", warnings: [], warningCounts: { fresh: 0, resolved: 4, now: 2 } } },
+  ]);
+  expect(lines.find((l) => l.kind === "warning")?.text).toBe("주의 4 해결 · 지금 모두 2");
 });

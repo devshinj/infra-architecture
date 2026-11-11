@@ -128,7 +128,11 @@ type StepState = "done" | "current" | "todo";
 function stepRows(card: ProgressCard): { key: string; label: string; state: StepState }[] {
   if (card.mode === "answer") return [{ key: "answer", label: "답변 작성 중", state: "current" }];
   const at = BUILD_STEPS.indexOf(card.step);
-  const drawing = card.part ? `이어서 그리는 중 (${card.part.n}/${card.part.of}) · 변경 ${card.changes}개` : `그리는 중 (변경 ${card.changes}개)`;
+  const drawing = card.part
+    ? `이어서 그리는 중 (${card.part.n}/${card.part.of}) · 변경 ${card.changes}개`
+    : card.retry
+      ? `다시 그리는 중 · 변경 ${card.changes}개`
+      : `그리는 중 (변경 ${card.changes}개)`;
   const label = { review: "구성 검토", drawing, checking: "위험 요소 점검" };
   return [
     ...BUILD_STEPS.map((s, i) => ({ key: s, label: label[s], state: (i < at ? "done" : i === at ? "current" : "todo") as StepState })),
@@ -140,7 +144,7 @@ function stepRows(card: ProgressCard): { key: string; label: string; state: Step
 function stepName(card: ProgressCard): string {
   if (card.end) return card.end === "done" ? "완료" : "중단됨";
   if (card.mode === "answer") return "답변 작성 중";
-  const drawing = card.part ? `이어서 그리는 중 (${card.part.n}/${card.part.of})` : "그리는 중";
+  const drawing = card.part ? `이어서 그리는 중 (${card.part.n}/${card.part.of})` : card.retry ? "다시 그리는 중" : "그리는 중";
   return { review: "구성 검토", drawing, checking: "위험 요소 점검" }[card.step];
 }
 
