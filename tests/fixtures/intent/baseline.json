@@ -1,130 +1,130 @@
 {
-  "savedAt": "2026-11-09",
+  "savedAt": "2026-11-11",
   "results": [
     {
       "id": "flow-create-signup",
       "intent": "structure_change",
-      "confidence": 0.9149600839664599,
+      "confidence": 0.9223172237378083,
       "routed": "structure_change",
       "intentOk": true,
       "qwenOk": true,
-      "qwenPasses": 3,
-      "qwenRuns": 3
+      "qwenPasses": 1,
+      "qwenRuns": 1
     },
     {
       "id": "flow-draw-login",
       "intent": "structure_change",
-      "confidence": 0.8307398506105738,
+      "confidence": 0.8685923613810941,
       "routed": "structure_change",
       "intentOk": true,
       "qwenOk": true,
-      "qwenPasses": 3,
-      "qwenRuns": 3
+      "qwenPasses": 1,
+      "qwenRuns": 1
     },
     {
       "id": "flow-add-pwreset",
       "intent": "structure_change",
-      "confidence": 0.944862668256642,
+      "confidence": 0.9535992888660078,
       "routed": "structure_change",
       "intentOk": true,
       "qwenOk": true,
-      "qwenPasses": 3,
-      "qwenRuns": 3
+      "qwenPasses": 1,
+      "qwenRuns": 1
     },
     {
       "id": "flow-edit-sms",
       "intent": "structure_change",
-      "confidence": 0.9368814698151053,
+      "confidence": 0.9324416566658563,
       "routed": "structure_change",
       "intentOk": true,
       "qwenOk": true,
-      "qwenPasses": 3,
-      "qwenRuns": 3
+      "qwenPasses": 1,
+      "qwenRuns": 1
     },
     {
       "id": "flow-resync",
       "intent": "structure_change",
-      "confidence": 0.961194548041845,
+      "confidence": 0.9584496229219976,
       "routed": "structure_change",
       "intentOk": true,
       "qwenOk": true,
-      "qwenPasses": 3,
-      "qwenRuns": 3
+      "qwenPasses": 1,
+      "qwenRuns": 1
     },
     {
       "id": "flow-remove-pay",
       "intent": "structure_change",
-      "confidence": 0.9814383734103285,
+      "confidence": 0.9807326654562543,
       "routed": "structure_change",
       "intentOk": true,
       "qwenOk": true,
-      "qwenPasses": 3,
-      "qwenRuns": 3
+      "qwenPasses": 1,
+      "qwenRuns": 1
     },
     {
       "id": "flow-show-was",
       "intent": "structure_change",
-      "confidence": 0.7403061615200457,
+      "confidence": 0.7847976199182884,
       "routed": "structure_change",
       "intentOk": true,
       "qwenOk": null,
-      "qwenPasses": 3,
-      "qwenRuns": 3
+      "qwenPasses": 1,
+      "qwenRuns": 1
     },
     {
       "id": "flow-add-batch",
       "intent": "structure_change",
-      "confidence": 0.9496192513296668,
+      "confidence": 0.9441449852354378,
       "routed": "structure_change",
       "intentOk": true,
       "qwenOk": true,
-      "qwenPasses": 3,
-      "qwenRuns": 3
+      "qwenPasses": 1,
+      "qwenRuns": 1
     },
     {
       "id": "flow-add-cross",
       "intent": "structure_change",
-      "confidence": 0.8971875748485623,
+      "confidence": 0.8970953282559844,
       "routed": "structure_change",
       "intentOk": true,
       "qwenOk": true,
-      "qwenPasses": 3,
-      "qwenRuns": 3
+      "qwenPasses": 1,
+      "qwenRuns": 1
     },
     {
       "id": "flow-rename",
       "intent": "structure_change",
-      "confidence": 0.9586802540086724,
+      "confidence": 0.9507912336749189,
       "routed": "structure_change",
       "intentOk": true,
       "qwenOk": true,
-      "qwenPasses": 3,
-      "qwenRuns": 3
+      "qwenPasses": 1,
+      "qwenRuns": 1
     },
     {
       "id": "flow-draw-browse",
       "intent": "structure_change",
-      "confidence": 0.7498736724162048,
+      "confidence": 0.8494378330422242,
       "routed": "structure_change",
       "intentOk": true,
       "qwenOk": true,
-      "qwenPasses": 3,
-      "qwenRuns": 3
+      "qwenPasses": 1,
+      "qwenRuns": 1
     },
     {
       "id": "flow-add-cache",
       "intent": "structure_change",
-      "confidence": 0.9666229015652308,
+      "confidence": 0.9635061948298033,
       "routed": "structure_change",
       "intentOk": true,
       "qwenOk": true,
-      "qwenPasses": 3,
-      "qwenRuns": 3
+      "qwenPasses": 1,
+      "qwenRuns": 1
     },
     {
       "id": "q-flow-why-db",
       "intent": "question",
-      "confidence": 0.9117354016417462,
+      "confidence": 0.8811397699254299,
       "routed": "question",
       "intentOk": true,
       "qwenOk": true
@@ -132,17 +132,17 @@
     {
       "id": "q-flow-what",
       "intent": "question",
-      "confidence": 0.5354215390018013,
+      "confidence": 0.4104526943702231,
       "routed": "null",
       "intentOk": false,
       "qwenOk": true,
-      "qwenPasses": 3,
-      "qwenRuns": 3
+      "qwenPasses": 1,
+      "qwenRuns": 1
     },
     {
       "id": "q-link-why",
       "intent": "question",
-      "confidence": 0.9368480162837105,
+      "confidence": 0.9015620437996944,
       "routed": "question",
       "intentOk": true,
       "qwenOk": true
@@ -150,7 +150,7 @@
     {
       "id": "q-flow-fw",
       "intent": "question",
-      "confidence": 0.9300036468486658,
+      "confidence": 0.9035770125526416,
       "routed": "question",
       "intentOk": true,
       "qwenOk": true
@@ -158,7 +158,7 @@
     {
       "id": "q-flow-broken",
       "intent": "question",
-      "confidence": 0.9045994864309952,
+      "confidence": 0.8562802776846994,
       "routed": "question",
       "intentOk": true,
       "qwenOk": true
@@ -166,7 +166,7 @@
     {
       "id": "q-zone-diff",
       "intent": "question",
-      "confidence": 0.9631172218563082,
+      "confidence": 0.9444519774217366,
       "routed": "question",
       "intentOk": true,
       "qwenOk": true
@@ -174,165 +174,229 @@
     {
       "id": "q-oneway-safe",
       "intent": "question",
-      "confidence": 0.8073299846068235,
+      "confidence": 0.7575938428633446,
       "routed": "question",
       "intentOk": true,
       "qwenOk": true
     },
     {
-      "id": "s-zone-split",
+      "id": "q-need-browser",
+      "intent": "question",
+      "confidence": 0.6898490700404638,
+      "routed": "question",
+      "intentOk": true,
+      "qwenOk": true
+    },
+    {
+      "id": "q-need-cache",
+      "intent": "question",
+      "confidence": 0.8958210366122634,
+      "routed": "question",
+      "intentOk": true,
+      "qwenOk": true
+    },
+    {
+      "id": "q-need-ha",
+      "intent": "question",
+      "confidence": 0.8630825243021707,
+      "routed": "question",
+      "intentOk": true,
+      "qwenOk": true
+    },
+    {
+      "id": "q-how-was",
+      "intent": "missing_info_answer",
+      "confidence": 0.33024436383351025,
+      "routed": "null",
+      "intentOk": false,
+      "qwenOk": true,
+      "qwenPasses": 1,
+      "qwenRuns": 1
+    },
+    {
+      "id": "s-add-browser",
       "intent": "structure_change",
-      "confidence": 0.8969211566641299,
+      "confidence": 0.9823103469425977,
       "routed": "structure_change",
       "intentOk": true,
       "qwenOk": true,
-      "qwenPasses": 3,
-      "qwenRuns": 3
+      "qwenPasses": 1,
+      "qwenRuns": 1
+    },
+    {
+      "id": "s-can-draw",
+      "intent": "structure_change",
+      "confidence": 0.9149520464893005,
+      "routed": "structure_change",
+      "intentOk": true,
+      "qwenOk": true,
+      "qwenPasses": 1,
+      "qwenRuns": 1
+    },
+    {
+      "id": "s-need-add",
+      "intent": "structure_change",
+      "confidence": 0.972113895034132,
+      "routed": "structure_change",
+      "intentOk": true,
+      "qwenOk": true,
+      "qwenPasses": 1,
+      "qwenRuns": 1
+    },
+    {
+      "id": "s-zone-split",
+      "intent": "structure_change",
+      "confidence": 0.8887394770792085,
+      "routed": "structure_change",
+      "intentOk": true,
+      "qwenOk": true,
+      "qwenPasses": 1,
+      "qwenRuns": 1
     },
     {
       "id": "s-add-was",
       "intent": "structure_change",
-      "confidence": 0.9753429328712391,
+      "confidence": 0.9724306321887719,
       "routed": "structure_change",
       "intentOk": true,
       "qwenOk": true,
-      "qwenPasses": 3,
-      "qwenRuns": 3
+      "qwenPasses": 1,
+      "qwenRuns": 1
     },
     {
       "id": "s-add-web",
       "intent": "structure_change",
-      "confidence": 0.967887794000258,
+      "confidence": 0.9593297479573739,
       "routed": "structure_change",
       "intentOk": true,
       "qwenOk": true,
-      "qwenPasses": 3,
-      "qwenRuns": 3
+      "qwenPasses": 1,
+      "qwenRuns": 1
     },
     {
       "id": "s-db-ha",
       "intent": "structure_change",
-      "confidence": 0.818473467802033,
+      "confidence": 0.720992088453057,
       "routed": "structure_change",
       "intentOk": true,
       "qwenOk": true,
-      "qwenPasses": 3,
-      "qwenRuns": 3
+      "qwenPasses": 1,
+      "qwenRuns": 1
     },
     {
       "id": "s-edge-info",
       "intent": "structure_change",
-      "confidence": 0.8010824780257696,
+      "confidence": 0.7495801893208256,
       "routed": "structure_change",
       "intentOk": true,
       "qwenOk": true,
-      "qwenPasses": 3,
-      "qwenRuns": 3
+      "qwenPasses": 1,
+      "qwenRuns": 1
     },
     {
       "id": "s-add-link",
       "intent": "structure_change",
-      "confidence": 0.9825120937579257,
+      "confidence": 0.9799399084517273,
       "routed": "structure_change",
       "intentOk": true,
       "qwenOk": true,
-      "qwenPasses": 3,
-      "qwenRuns": 3
+      "qwenPasses": 1,
+      "qwenRuns": 1
     },
     {
       "id": "m-edge-file-oneway",
       "intent": "missing_info_answer",
-      "confidence": 0.6486344329596022,
+      "confidence": 0.655264493394337,
       "routed": "missing_info_answer",
       "intentOk": true,
       "qwenOk": true,
-      "qwenPasses": 3,
-      "qwenRuns": 3
+      "qwenPasses": 1,
+      "qwenRuns": 1
     },
     {
       "id": "m-edge-api-two",
       "intent": "missing_info_answer",
-      "confidence": 0.72715769144177,
+      "confidence": 0.7241066921397351,
       "routed": "missing_info_answer",
       "intentOk": true,
       "qwenOk": true,
-      "qwenPasses": 3,
-      "qwenRuns": 3
+      "qwenPasses": 1,
+      "qwenRuns": 1
     },
     {
       "id": "m-edge-file-short",
       "intent": "missing_info_answer",
-      "confidence": 0.7265911016575881,
+      "confidence": 0.719433727811792,
       "routed": "missing_info_answer",
       "intentOk": true,
       "qwenOk": true,
-      "qwenPasses": 3,
-      "qwenRuns": 3
+      "qwenPasses": 1,
+      "qwenRuns": 1
     },
     {
       "id": "m-node-spec",
       "intent": "missing_info_answer",
-      "confidence": 0.5641532431290086,
+      "confidence": 0.5342702961815665,
       "routed": "null",
       "intentOk": false,
       "qwenOk": true,
-      "qwenPasses": 3,
-      "qwenRuns": 3
+      "qwenPasses": 1,
+      "qwenRuns": 1
     },
     {
       "id": "b-all-os",
       "intent": "structure_change",
-      "confidence": 0.7330958060753943,
+      "confidence": 0.7011681472906378,
       "routed": "structure_change",
       "intentOk": true,
       "qwenOk": true,
-      "qwenPasses": 3,
-      "qwenRuns": 3
+      "qwenPasses": 1,
+      "qwenRuns": 1
     },
     {
       "id": "b-was-ram",
       "intent": "structure_change",
-      "confidence": 0.7763943746788555,
+      "confidence": 0.7547802451026108,
       "routed": "structure_change",
       "intentOk": true,
       "qwenOk": true,
-      "qwenPasses": 3,
-      "qwenRuns": 3
+      "qwenPasses": 1,
+      "qwenRuns": 1
     },
     {
       "id": "b-biz-cpu",
       "intent": "structure_change",
-      "confidence": 0.9130485971485772,
+      "confidence": 0.889365352388395,
       "routed": "structure_change",
       "intentOk": true,
       "qwenOk": true,
-      "qwenPasses": 3,
-      "qwenRuns": 3
+      "qwenPasses": 1,
+      "qwenRuns": 1
     },
     {
       "id": "b-web-sw",
       "intent": "structure_change",
-      "confidence": 0.9086014639308025,
+      "confidence": 0.8944382994269964,
       "routed": "structure_change",
       "intentOk": true,
       "qwenOk": true,
-      "qwenPasses": 3,
-      "qwenRuns": 3
+      "qwenPasses": 1,
+      "qwenRuns": 1
     },
     {
       "id": "b-db-ha",
       "intent": "structure_change",
-      "confidence": 0.9156439673911321,
+      "confidence": 0.885401866581349,
       "routed": "structure_change",
       "intentOk": true,
       "qwenOk": null,
-      "qwenPasses": 3,
-      "qwenRuns": 3
+      "qwenPasses": 1,
+      "qwenRuns": 1
     },
     {
       "id": "l-relayout",
       "intent": "layout",
-      "confidence": 0.9816901517963423,
+      "confidence": 0.9797659249616693,
       "routed": "layout",
       "intentOk": true,
       "qwenOk": null

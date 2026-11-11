@@ -21,6 +21,13 @@
     { "id": "q-flow-broken", "text": "흐름이 끊겼다는데 무슨 뜻이야?", "want": "question", "qwen": { "expect": "none" } },
     { "id": "q-zone-diff", "text": "업무망이랑 인터넷망 차이가 뭐야", "want": "question", "qwen": { "expect": "none" } },
     { "id": "q-oneway-safe", "text": "단방향 파일 전송이 왜 더 안전해?", "want": "question", "qwen": { "expect": "none" } },
+    { "id": "q-need-browser", "text": "인터넷망의 사용자 브라우저 단의 노드는 필요 없을까?", "want": "question", "qwen": { "expect": "none" } },
+    { "id": "q-need-cache", "text": "WAS 앞에 캐시 서버를 두는 게 좋을까?", "want": "question", "qwen": { "expect": "none" } },
+    { "id": "q-need-ha", "text": "회원 DB 도 이중화해야 해?", "want": "question", "qwen": { "expect": "none" } },
+    { "id": "q-how-was", "text": "@WAS 여기서 로그인 요청을 회원 DB 로 보내는 거야?", "want": "question", "qwen": { "expect": "none" } },
+    { "id": "s-add-browser", "text": "인터넷망에 사용자 브라우저 노드 추가해 줘", "want": "structure_change", "qwen": { "expect": "structure" } },
+    { "id": "s-can-draw", "text": "외부 인증 결과가 사용자에게 돌아가는 경로도 노드로 표현할 수 있을까?", "want": "structure_change", "qwen": { "expect": "structure" } },
+    { "id": "s-need-add", "text": "캐시 서버가 필요할 것 같은데 WAS 앞에 넣어 줘", "want": "structure_change", "qwen": { "expect": "structure" } },
 
     { "id": "s-zone-split", "text": "업무망이랑 인터넷망 사이 직접 연결은 망연계를 거치게 바꿔 줘", "want": "structure_change", "qwen": { "expect": "structure" } },
     { "id": "s-add-was", "text": "WAS 한 대 더 추가해 줘", "want": "structure_change", "qwen": { "expect": "structure", "forbid": ["remove_edge", "remove_node", "update_flow", "remove_flow"] } },
