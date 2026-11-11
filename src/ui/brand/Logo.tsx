@@ -1,21 +1,19 @@
 import styles from "./logo.module.css";
 
-// V2 마크: 겹친 두 구역 + 둥근 연결선 + 사각 노드 둘 + 겹친 자리의 금색 점. 48 격자, 선 굵기 1.4 하나.
+// S 흐름 마크: 꺾인 연결선 하나가 S(Sketch)를 그리며 노드를 지나고, 출발점의 연두 점이 흐름 점이다.
+// 캔버스 문법(둥근 꺾임 연결선, 6px 노드)과 연두 신호 하나로만 그린다. 32 격자, 선 굵기 2.
 export function LogoMark({ size }: { size: number }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 48 48" aria-hidden="true" focusable="false" className={styles.mark}>
-      <rect x="6" y="6" width="24" height="24" rx="6" fill="none" stroke="var(--edge-aux)" strokeWidth="1.4" />
-      <rect x="18" y="18" width="24" height="24" rx="6" fill="none" stroke="var(--text-secondary)" strokeWidth="1.4" />
+    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" aria-hidden="true" focusable="false" className={styles.mark}>
       <path
-        d="M12 15 V20 a4 4 0 0 0 4 4 H32 a4 4 0 0 1 4 4 V33"
-        fill="none"
-        stroke="var(--cat-compute)"
-        strokeWidth="1.4"
+        d="M25 6.5H11A4.5 4.5 0 0 0 6.5 11V11.5A4.5 4.5 0 0 0 11 16H21A4.5 4.5 0 0 1 25.5 20.5V21A4.5 4.5 0 0 1 21 25.5H8"
+        stroke="var(--text-secondary)"
+        strokeWidth="2"
         strokeLinecap="round"
       />
-      <rect x="9" y="9" width="6" height="6" rx="1.6" fill="var(--text-primary)" />
-      <rect x="33" y="33" width="6" height="6" rx="1.6" fill="var(--text-primary)" />
-      <circle cx="24" cy="24" r="2.6" fill="var(--accent)" />
+      <rect x="13" y="13" width="6" height="6" rx="1.6" fill="var(--text-primary)" />
+      <rect x="3" y="22.5" width="6" height="6" rx="1.6" fill="var(--text-primary)" />
+      <circle cx="25.5" cy="6.5" r="3.2" fill="var(--accent)" />
     </svg>
   );
 }
