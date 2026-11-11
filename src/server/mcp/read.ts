@@ -6,7 +6,7 @@ import { computeMissing, type MissingItem } from "@/domain/missing";
 import type { NetworkKnowledge } from "@/domain/network";
 import { emptyState, type DiagramState, type Warning } from "@/domain/types";
 import { mergeWarnings } from "@/domain/warnings";
-import { COMMAND_EXAMPLES, DRAW_RULES, gradeRuleLines, KIND_BLOCK, networkTypeLines, patternBlock, userRuleLines } from "@/server/drawing/rules";
+import { baseRuleBlock, COMMAND_EXAMPLES, DRAW_RULES, gradeRuleLines, KIND_BLOCK, networkTypeLines, patternBlock, userRuleLines } from "@/server/drawing/rules";
 import { GRADE_LABELS } from "@/domain/network";
 import { listFlows, type StoredFlow } from "@/server/flows";
 import { getNetworkKnowledge } from "@/server/network";
@@ -73,10 +73,11 @@ const GLOSSARY = `## 용어 풀이
 - "망 종류 key 또는 null": 망 지식의 key 를 쓰거나, 종류를 지우려면 null 이에요.
 - ... 와 "..." 같은 말줄임과 예시 값(Tomcat 10 등)은 실제 값으로 바꿔 써요.`;
 
-const networkSection = (types: string[], rules: string[]) =>
+const networkSection = (types: string[], rules: string[], base: string[]) =>
   [
     `망 종류:\n${types.join("\n")}`,
-    `등급 규칙(기관 규칙이 없을 때):\n${gradeRuleLines().join("\n")}`,
+    `등급 규칙(기관 규칙·기본 짝 규칙이 없을 때):\n${gradeRuleLines().join("\n")}`,
+    ...base,
     `기관 규칙:\n${rules.length ? rules.join("\n") : "없음"}`,
   ].join("\n\n");
 
@@ -84,7 +85,7 @@ const networkSection = (types: string[], rules: string[]) =>
 const plainTypeLines = (k: NetworkKnowledge): string[] =>
   Object.values(k.types)
     .sort((a, b) => (a.key < b.key ? -1 : a.key > b.key ? 1 : 0))
-    .map((t) => `${t.key} ${JSON.stringify(t.name)} 등급=${GRADE_LABELS[t.grade]}`);
+    .map((t) => `${t.key} ${JSON.stringify(t.name)} 등급=${GRADE_LABELS[t.grade]}${t.separated ? " 망분리 대상" : ""}`);
 
 /**
  * 망 지식 절. 안내서가 한도를 넘을 것 같으면 안내서에서만 줄인다(망 지식 화면은 그대로):
@@ -93,15 +94,16 @@ const plainTypeLines = (k: NetworkKnowledge): string[] =>
 function networkGuideSection(k: NetworkKnowledge, restLength: number): string {
   let types = networkTypeLines(k);
   let rules = userRuleLines(k);
-  const fits = (t: string[], r: string[], note: string) => restLength + networkSection(t, r).length + note.length <= GUIDE_MAX;
-  if (fits(types, rules, "")) return networkSection(types, rules);
+  const base = baseRuleBlock(k);
+  const fits = (t: string[], r: string[], note: string) => restLength + networkSection(t, r, base).length + note.length <= GUIDE_MAX;
+  if (fits(types, rules, "")) return networkSection(types, rules, base);
   const totalTypes = types.length;
   const totalRules = rules.length;
   types = plainTypeLines(k);
   const note = `\n\n망 종류 ${totalTypes}개·기관 규칙 ${totalRules}개는 길어서 줄였어요. 구성도의 망 영역 종류는 get_diagram 의 zones 에서 확인하세요.`;
   while (!fits(types, rules, note) && rules.length > 0) rules = rules.slice(0, -1);
   while (!fits(types, rules, note) && types.length > 0) types = types.slice(0, -1);
-  return networkSection(types, rules) + note;
+  return networkSection(types, rules, base) + note;
 }
 
 /**

@@ -1,10 +1,10 @@
 import "@testing-library/jest-dom/vitest";
-import { cleanup, render, screen } from "@testing-library/react";
+import { act, cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, expect, test, vi } from "vitest";
 
 import type { EdgeExplanation, NodeExplanation } from "@/domain/explain";
-import { Explanation } from "@/ui/explain/Explanation";
+import { Explanation, SLOW_MS } from "@/ui/explain/Explanation";
 
 afterEach(cleanup);
 
@@ -57,9 +57,32 @@ test("no why/compare headings without glossary entry", () => {
   expect(screen.queryByText("비교")).not.toBeInTheDocument();
 });
 
-test("loading text", () => {
-  render(<Explanation status="loading" terms={[]} />);
-  expect(screen.getAllByText("설명을 만드는 중…").length).toBeGreaterThanOrEqual(3);
+test("loading draws skeleton lines under each heading and announces once", () => {
+  const { container } = render(<Explanation status="loading" terms={[]} />);
+  const heads = screen.getAllByRole("heading", { level: 3 }).map((h) => h.textContent);
+  expect(heads).toEqual(["정의", "이 구성에서의 역할", "왜 이렇게 짰나요"]);
+  // 글자 대신 칸마다 줄 자리(스켈레톤). "만드는 중"은 알림 한 자리에만.
+  expect(container.querySelectorAll("section").length).toBe(3);
+  container.querySelectorAll("section").forEach((sec) => expect(sec.querySelector("h3 + span")).not.toBeNull());
+  expect(screen.getByRole("status")).toHaveTextContent("설명을 만드는 중…");
+  expect(screen.getAllByText("설명을 만드는 중…")).toHaveLength(1);
+});
+
+test("a slow explanation says so after SLOW_MS, and the timer restarts on the next load", () => {
+  vi.useFakeTimers();
+  try {
+    const { rerender } = render(<Explanation status="loading" terms={[]} />);
+    act(() => vi.advanceTimersByTime(SLOW_MS - 1));
+    expect(screen.getByRole("status")).toHaveTextContent("설명을 만드는 중…");
+    act(() => vi.advanceTimersByTime(1));
+    expect(screen.getByRole("status")).toHaveTextContent("조금 오래 걸리고 있어요");
+    rerender(<Explanation status="ready" data={node} terms={[]} />);
+    expect(screen.queryByText(/조금 오래 걸리고 있어요/)).not.toBeInTheDocument();
+    rerender(<Explanation status="loading" terms={[]} />);
+    expect(screen.getByRole("status")).toHaveTextContent("설명을 만드는 중…");
+  } finally {
+    vi.useRealTimers();
+  }
 });
 
 test("loading shows the glossary definition at once; role and ADR wait", () => {
@@ -75,7 +98,7 @@ test("loading shows the glossary definition at once; role and ADR wait", () => {
   expect(screen.getByText("메모리 저장소입니다.")).toBeInTheDocument();
   expect(screen.getByText("AI 설명")).toBeInTheDocument();
   expect(screen.getByText("빠르게 읽으려고")).toBeInTheDocument();
-  expect(screen.getAllByText("설명을 만드는 중…")).toHaveLength(2);
+  expect(screen.getAllByText("설명을 만드는 중…")).toHaveLength(1);
 });
 
 test("error shows the AI 설명 badge with an unreviewed AI-made partial definition", () => {

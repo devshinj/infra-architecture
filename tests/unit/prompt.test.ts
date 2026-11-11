@@ -566,10 +566,10 @@ describe("attrs 칸 목록", () => {
 describe("망 지식 프롬프트", () => {
   const knowledge: NetworkKnowledge = {
     types: {
-      internet: { key: "internet", name: "인터넷망", aliases: ["외부망"], description: "설명은 넣지 않는다", grade: "external" },
-      "admin-net": { key: "admin-net", name: "행정망", aliases: ["정부 업무망", "행정 내부망"], description: "행정 기관 업무망 설명", grade: "internal" },
-      dmz: { key: "dmz", name: "DMZ", aliases: [], description: "경계 설명", grade: "boundary" },
-      "control-net": { key: "control-net", name: "제어망", aliases: [], description: "폐쇄 설명", grade: "closed" },
+      internet: { key: "internet", name: "인터넷망", aliases: ["외부망"], description: "설명은 넣지 않는다", grade: "external", separated: false },
+      "admin-net": { key: "admin-net", name: "행정망", aliases: ["정부 업무망", "행정 내부망"], description: "행정 기관 업무망 설명", grade: "internal", separated: true },
+      dmz: { key: "dmz", name: "DMZ", aliases: [], description: "경계 설명", grade: "boundary", separated: false },
+      "control-net": { key: "control-net", name: "제어망", aliases: [], description: "폐쇄 설명", grade: "closed", separated: true },
     },
     rules: [],
   };
@@ -587,14 +587,15 @@ describe("망 지식 프롬프트", () => {
     expect(block).toBe(
       [
         "망 종류:",
-        'admin-net "행정망" 다른 이름=["정부 업무망","행정 내부망"] 등급=내부',
-        'control-net "제어망" 다른 이름=[] 등급=폐쇄',
+        'admin-net "행정망" 다른 이름=["정부 업무망","행정 내부망"] 등급=내부 망분리 대상',
+        'control-net "제어망" 다른 이름=[] 등급=폐쇄 망분리 대상',
         'dmz "DMZ" 다른 이름=[] 등급=경계',
         'internet "인터넷망" 다른 이름=["외부망"] 등급=외부',
         "",
-        "등급 규칙(기관 규칙이 없을 때):",
+        "등급 규칙(기관 규칙·기본 짝 규칙이 없을 때):",
         "폐쇄 -- 모든 등급: 보통 잇지 않음(예외 확인)",
-        "내부 -- 외부: 망연계 필요",
+        "내부 -- 외부(둘 중 하나가 망분리 대상): 망연계 필요",
+        "내부 -- 외부: 방화벽(또는 VPN)으로 됨",
         "내부 -- 경계: 방화벽(또는 VPN)으로 됨",
         "경계 -- 외부: 방화벽(또는 VPN)으로 됨",
         "내부 -- 내부: 방화벽(또는 VPN)으로 됨",
@@ -615,10 +616,24 @@ describe("망 지식 프롬프트", () => {
     expect(networkBlock(one, knowledge)).toContain("망 짝 규칙:\n없음");
   });
 
+  test("networkBlock 은 기본 짝 규칙이 있으면 등급 규칙 뒤에 넣고, 숨긴 종류가 낀 규칙은 뺀다", () => {
+    const k: NetworkKnowledge = {
+      ...knowledge,
+      baseRules: [
+        { a: "dmz", b: "internet", method: "direct", note: "까닭은 싣지 않는다" },
+        { a: "admin-net", b: "hidden-net", method: "none" },
+      ],
+    };
+    const block = networkBlock(emptyState(), k);
+    expect(block).toContain("기본 짝 규칙(등급 규칙보다 먼저):\ndmz -- internet: 직접 연결(사이에 통제 장비 없음)\n\n기관 규칙:");
+    expect(block).not.toContain("hidden-net");
+    expect(block).not.toContain("까닭은 싣지 않는다");
+  });
+
   test("networkBlock 은 망이 아직 없어도(처음 그리는 차례) 등급 규칙과 기관 규칙을 넣는다", () => {
     const k = { ...knowledge, rules: [{ a: "admin-net", b: "internet", method: "none" as const, note: "○○ 지침 3조" }] };
     const block = networkBlock(emptyState(), k);
-    expect(block).toContain("등급 규칙(기관 규칙이 없을 때):\n폐쇄 -- 모든 등급: 보통 잇지 않음(예외 확인)\n내부 -- 외부: 망연계 필요\n");
+    expect(block).toContain("등급 규칙(기관 규칙·기본 짝 규칙이 없을 때):\n폐쇄 -- 모든 등급: 보통 잇지 않음(예외 확인)\n내부 -- 외부(둘 중 하나가 망분리 대상): 망연계 필요\n");
     expect(block).toContain('기관 규칙:\nadmin-net -- internet: 보통 잇지 않음(예외 확인) 근거="○○ 지침 3조"\n');
     expect(block).toContain("망 짝 규칙:\n없음");
     expect(block).not.toContain("설명");

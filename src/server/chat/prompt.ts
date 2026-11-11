@@ -6,7 +6,7 @@ import { METHOD_LABELS, pairKey, requiredMethod, type NetworkKnowledge } from "@
 import type { DiagramState } from "@/domain/types";
 import { mergeWarnings } from "@/domain/warnings";
 import type { Intent } from "@/server/llm/clef";
-import { COMMAND_EXAMPLES, DRAW_RULE_GROUPS, KIND_BLOCK, patternBlock, gradeRuleLines, networkTypeLines, userRuleLines } from "@/server/drawing/rules";
+import { baseRuleBlock, COMMAND_EXAMPLES, DRAW_RULE_GROUPS, KIND_BLOCK, patternBlock, gradeRuleLines, networkTypeLines, userRuleLines } from "@/server/drawing/rules";
 import type { ChatMessage } from "@/server/llm/qwen";
 
 export const HISTORY_LIMIT = 20;
@@ -141,7 +141,8 @@ export function networkBlock(state: DiagramState, k: NetworkKnowledge): string {
   }
   return [
     `망 종류:\n${types.join("\n")}`,
-    `등급 규칙(기관 규칙이 없을 때):\n${grades.join("\n")}`,
+    `등급 규칙(기관 규칙·기본 짝 규칙이 없을 때):\n${grades.join("\n")}`,
+    ...baseRuleBlock(k),
     `기관 규칙:\n${userRules.length ? userRules.join("\n") : "없음"}`,
     `망 짝 규칙:\n${pairs.length ? pairs.join("\n") : "없음"}`,
   ].join("\n\n");

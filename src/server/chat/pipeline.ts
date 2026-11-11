@@ -18,7 +18,7 @@ import { getNetworkKnowledge } from "@/server/network";
 
 import { SESSION_GONE_MESSAGE, sessionPayload, type ChatEvent, type MessageMeta } from "./events";
 import { BUSY_MESSAGE } from "./busy";
-import { withDiagramLock } from "./lock";
+import { USER_TURN_LOCK_WAIT_MS, withDiagramLock } from "./lock";
 import { clefOpenItems, resolveIntent } from "./intent";
 import { createMessage, listMessages } from "./messages";
 import { normalizeAiCommand } from "./normalize";
@@ -84,7 +84,7 @@ export async function runChatTurn(args: TurnArgs, deps: ChatDeps): Promise<ChatT
   }
   const emit = guardEmit(args.emit);
   const turnArgs = { ...args, emit };
-  const locked = await withDiagramLock(args.diagramId, () => sessionTurn(turnArgs, deps));
+  const locked = await withDiagramLock(args.diagramId, () => sessionTurn(turnArgs, deps), { waitMs: USER_TURN_LOCK_WAIT_MS });
   if (!locked.ok) {
     emit({ t: "error", message: BUSY_MESSAGE });
     return { status: "busy" };

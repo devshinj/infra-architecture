@@ -1,6 +1,6 @@
 /* Hallmark · part of the InfraSketch Vantage redesign, stamped in src/styles/globals.css · shape: app screen · posture: restrained */
 /*
- * 로그인·가입·비밀번호 화면(DESIGN.md · The Living Blueprint): 넓으면 왼쪽에 캔버스 문법으로 그린 작은 구성도(AuthStage),
+ * 로그인·가입·비밀번호 화면(DESIGN.md · The Living Blueprint): 넓으면 화면 가운데 판 하나의 왼쪽 반에 작은 구성도(AuthStage),
  * 오른쪽에 양식 판. 좁으면 양식만, 캔버스와 같은 점 격자 위 가운데 판으로.
  */
 .page {
@@ -33,33 +33,67 @@
   border-radius: var(--radius-surface);
 }
 
-/* ---- 왼쪽 무대: 작은 구성도. 좁으면 감춘다. ---- */
+/*
+ * ---- 넓은 화면: 도면 한 장 ----
+ * 화면 가운데에 판 하나를 두고 왼쪽 반은 점 격자 위 작은 구성도(도면), 오른쪽 반은 양식이다.
+ * 두 반쪽이 위·아래 선과 높이를 함께 써서 한 물건으로 읽힌다(화면 끝까지 늘어나 따로 노는 무대를 두지 않는다).
+ * 좁으면 무대를 감추고 양식 판만 남는다.
+ */
 .stage { display: none; }
-@media (min-width: 960px) {
-  .page { grid-template-columns: minmax(0, 1fr) minmax(400px, 480px); padding: 0; }
+@media (min-width: 1080px) {
+  .page {
+    grid-template-columns: 560px 440px; justify-content: center; align-content: center;
+    padding: 32px; background-image: none;
+  }
   .form {
     grid-column: 2; grid-row: 1; max-width: none; align-self: stretch; justify-content: center;
-    padding: 40px 56px; border: 0; border-left: 1px solid var(--line-shell); border-radius: 0;
+    padding: 40px 48px; border-left: 0; border-radius: 0 var(--radius-surface) var(--radius-surface) 0;
   }
   .stage {
-    grid-column: 1; grid-row: 1; position: relative; display: flex; flex-direction: column; justify-content: center; gap: 40px;
-    min-width: 0; overflow: hidden; padding: 56px 64px;
+    grid-column: 1; grid-row: 1; position: relative; display: flex; flex-direction: column; justify-content: center; gap: 24px;
+    min-width: 0; overflow: hidden; padding: 32px 40px 36px;
+    border: 1px solid var(--line-node); border-right-color: var(--line-shell);
+    border-radius: var(--radius-surface) 0 0 var(--radius-surface);
+    background-color: var(--bg-canvas);
+    background-image: radial-gradient(circle at 1px 1px, var(--dot-grid) 0.6px, transparent 1px);
+    background-size: 20px 20px;
+    background-position: 10px 10px;
   }
 }
-.stageSay { max-width: 560px; }
-.stageTitle { margin: 0; font-size: var(--text-hero); font-weight: var(--weight-display); letter-spacing: var(--tracking-display); line-height: 1.15; }
-.stageText { margin: 12px 0 0; font-size: 15px; line-height: 1.65; color: var(--text-secondary); word-break: keep-all; }
-.stageDiagram { position: relative; flex: none; width: 640px; height: 440px; }
+.stageTitle { margin: 0; font-size: var(--text-page); font-weight: var(--weight-display); letter-spacing: var(--tracking-display); line-height: 1.3; }
+/*
+ * 장면: 구성도 위에 대화 카드가 아래 가운데로 살짝 떠 있다. 구성도는 한 번 그리고 지우지 않는다.
+ * 움직임은 두 곡선으로만 만든다: --stage-ease(부드럽게 출발해 부드럽게 멈춤)와 --stage-arrive(등장 감속).
+ */
+.stageScene {
+  --stage-ease: cubic-bezier(0.65, 0, 0.35, 1);
+  --stage-arrive: cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative; align-self: center; width: 480px; padding-bottom: 104px;
+}
+.stageDiagram { position: relative; width: 480px; height: 364px; }
 .stageEdges { position: absolute; inset: 0; overflow: visible; }
-.stageEdges path { fill: none; stroke: var(--edge-request); stroke-width: 1.4; }
-.stageEdges path[data-kind="lit"] { stroke: var(--edge-request-lit); }
+.stageEdges path { fill: none; stroke: var(--edge-request); stroke-width: 1.4; stroke-dasharray: 1 1; stroke-dashoffset: 1; }
+.stageEdges path[data-on] { stroke-dashoffset: 0; }
+.stageEdges path[data-kind="async"], .stageEdges path[data-kind="replication"] { stroke-dashoffset: 0; opacity: 0; }
 .stageEdges path[data-kind="async"] { stroke: var(--edge-async); stroke-dasharray: 5 4; }
-.stageEdges path[data-kind="replication"] { stroke: var(--edge-replication); }
+.stageEdges path[data-kind="replication"] { stroke: var(--edge-replication); stroke-dasharray: none; }
+.stageEdges path[data-kind][data-on] { opacity: 1; }
+/* 흐름이 지나는 동안 나머지 선과 라벨은 한 단 물러선다. */
+.stageEdges path[data-on][data-dim] { opacity: 0.4; }
+/* 흐름 길: 지나간 만큼만 연두로 덧그린다(dashoffset 은 장면이 정한다). 꺼지면 천천히 흐려진다. */
+.stageEdges .stageFlowLine { stroke: var(--accent); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; opacity: 0; }
+.stageEdges .stageFlowLine[data-on] { opacity: 1; }
+/* 흐름 점: 연두 점과 그 둘레의 옅은 연두 고리(흐림 없는 칠 한 겹). */
+.stageFlowDot {
+  position: absolute; left: 0; top: 0; width: 10px; height: 10px; margin: -5px 0 0 -5px; border-radius: 50%;
+  background: var(--accent); outline: 5px solid color-mix(in srgb, var(--accent) 22%, transparent);
+  offset-rotate: 0deg; opacity: 0;
+}
+.stageFlowDot[data-on] { opacity: 1; }
 .stageZone {
   position: absolute; box-sizing: border-box; border-radius: var(--radius-zone);
-  background: color-mix(in srgb, var(--tint) 7%, transparent); border: 1px solid color-mix(in srgb, var(--tint) 45%, var(--line-node));
+  background: color-mix(in srgb, var(--tint) 7%, transparent); border: 1px dashed color-mix(in srgb, var(--tint) 45%, var(--line-node));
 }
-.stageZone[data-dashed] { border-style: dashed; }
 .stageZoneName {
   position: absolute; top: -10px; left: 12px; padding: 0 9px; border-radius: var(--radius-pill); white-space: nowrap;
   font-size: 12px; font-weight: 600; line-height: 1.5;
@@ -69,18 +103,88 @@
   position: absolute; box-sizing: border-box; width: 110px; height: 40px; display: flex; align-items: center; gap: 8px; padding: 0 10px 0 8px;
   background: var(--bg-node); border: 1px solid var(--line-node); border-radius: var(--radius-node); white-space: nowrap;
 }
-.stageNode[data-selected] { border-color: var(--accent); }
 .stageNode b { display: block; font-size: 13px; font-weight: 600; line-height: 1.2; }
 .stageNode small { display: block; font-size: 12px; line-height: 1.2; color: var(--color-ink-2); }
+/* 흐름 밖 노드는 흐려지고(앱의 node--dimmed 와 같은 뜻), 지금 지나는 노드는 연두 테두리. */
+.stageNode[data-on][data-flow="dim"] { opacity: 0.35; }
+.stageNode[data-flow="now"] { border-color: var(--accent); }
+/* 점이 닿으면 노드 바깥으로 잔물결이 한 번 퍼진다. */
+.stageNode::after {
+  content: ""; position: absolute; inset: -1px; border: 1px solid var(--accent); border-radius: inherit; opacity: 0; pointer-events: none;
+}
 .stageCoin {
   flex: none; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; color: var(--cat);
   background: color-mix(in srgb, var(--cat) 26%, var(--bg-node)); border: 1px solid color-mix(in srgb, var(--cat) 38%, var(--line-node));
 }
 .stageCoin svg { width: 13px; height: 13px; }
 .stageLabel { position: absolute; padding: 0 4px; font-size: 12px; color: var(--text-secondary); background: var(--bg-canvas); white-space: nowrap; }
-/* 대화에서 고치는 한 줄(말풍선): 노드 참조는 연두. */
-.stageAsk { align-self: flex-start; margin: 0; padding: 10px 14px; font-size: 14px; background: var(--bg-panel-raised); border-radius: var(--radius-surface) var(--radius-surface) var(--radius-surface) 2px; }
-.stageAsk span { color: var(--accent); }
+.stageLabel[data-on][data-dim] { opacity: 0.4; }
+/* 나타나기 전: 영역·노드·라벨은 비어 있고 노드는 조금 작다(캔버스 node-appear 와 같은 움직임). */
+.stageZone, .stageNode, .stageLabel { opacity: 0; }
+.stageNode { transform: scale(0.94); }
+.stageZone[data-on], .stageNode[data-on], .stageLabel[data-on] { opacity: 1; transform: none; }
+
+/* 대화 카드: 구성도 영역 아래 가장자리에 걸쳐 떠 있다. 그림자 대신 바탕색 띠(outline)로 그림에서 떼어 낸다. */
+.stageChat {
+  position: absolute; left: 50%; bottom: 0; width: 400px; height: 124px; transform: translateX(-50%); box-sizing: border-box;
+  padding: 12px 14px; background: var(--color-paper-2); border: 1px solid var(--line-node); border-radius: var(--radius-surface);
+  outline: 6px solid var(--bg-canvas);
+}
+.stageChatBody { display: flex; flex-direction: column; gap: 8px; }
+.stageChat[data-out] .stageChatBody { opacity: 0; transform: translateY(-4px); }
+.stageAsk {
+  align-self: flex-end; max-width: 85%; margin: 0; padding: 8px 12px; font-size: 13px; line-height: 1.5;
+  background: var(--bg-panel-raised); border-radius: var(--radius-surface); word-break: keep-all;
+}
+.stageReply { min-height: 19.5px; margin: 0; font-size: 13px; line-height: 1.5; color: var(--text-secondary); opacity: 0; }
+.stageReply[data-on] { opacity: 1; }
+.stageFlow { display: flex; align-items: center; gap: 10px; opacity: 0; }
+.stageFlow[data-on] { opacity: 1; }
+.stageFlowName { flex: none; font-size: 12px; font-weight: 600; color: var(--text-primary); }
+.stageSteps { display: flex; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.stageSteps li {
+  display: flex; align-items: center; gap: 4px; padding: 1px 8px 1px 3px; font-size: 12px; line-height: 1.5;
+  color: var(--text-secondary); border: 1px solid var(--line-node); border-radius: var(--radius-pill);
+}
+.stageSteps li span {
+  display: grid; place-items: center; width: 16px; height: 16px; border-radius: 50%; font-size: 12px; line-height: 1;
+  font-variant-numeric: tabular-nums; background: var(--bg-panel-raised);
+}
+.stageSteps li[data-state="done"] { color: var(--text-primary); }
+.stageSteps li[data-state="now"] { color: var(--accent); border-color: var(--accent); }
+.stageSteps li[data-state="now"] span { background: var(--accent); color: var(--bg-canvas); }
+
+@media (prefers-reduced-motion: no-preference) {
+  /* 그리기: 노드는 500ms 감속 등장, 선은 노드가 자리 잡은 뒤(150ms) 700ms 에 걸쳐 그어진다. */
+  .stageZone, .stageNode, .stageLabel {
+    transition: opacity 500ms var(--stage-arrive), transform 500ms var(--stage-arrive), border-color 400ms var(--stage-ease);
+  }
+  .stageEdges path { transition: stroke-dashoffset 700ms var(--stage-ease) 150ms, opacity 500ms var(--stage-ease); }
+  .stageEdges path[data-kind] { transition: opacity 600ms var(--stage-ease); }
+  /* 흐름: 점과 연두 길은 단계마다 같은 곡선으로 1100ms 움직인다. 꺼질 때 점은 400ms, 길은 900ms 에 흐려진다.
+     다음 흐름을 위해 출발점으로 돌아가는 일은 다 흐려진 다음(1s 뒤)에 순간으로 한다. */
+  .stageEdges .stageFlowLine { transition: opacity 900ms var(--stage-ease), stroke-dashoffset 0s 1s; }
+  .stageEdges .stageFlowLine[data-on] { transition: opacity 300ms var(--stage-ease), stroke-dashoffset 1100ms var(--stage-ease); }
+  .stageFlowDot { transition: opacity 400ms var(--stage-ease), offset-distance 0s 1s; }
+  .stageFlowDot[data-on] { transition: opacity 300ms var(--stage-ease), offset-distance 1100ms var(--stage-ease); }
+  /* 흐름이 켜지고 꺼질 때 나머지는 600ms 에 걸쳐 물러섰다 돌아온다. */
+  .stageNode[data-on] { transition: opacity 600ms var(--stage-ease), transform 500ms var(--stage-arrive), border-color 400ms var(--stage-ease); }
+  .stageLabel[data-on] { transition: opacity 600ms var(--stage-ease); }
+  .stageNode[data-flow="now"]::after { animation: stage-ripple 1000ms var(--stage-arrive) 1; }
+  /* 대화: 바뀔 때 220ms 에 위로 흐려지고, 새 글은 450ms 에 아래에서 떠오른다. */
+  .stageChatBody { transition: opacity 220ms var(--stage-ease), transform 220ms var(--stage-ease); }
+  .stageAsk, .stageReply[data-on] { animation: stage-rise 450ms var(--stage-arrive) both; }
+  .stageFlow { transition: opacity 400ms var(--stage-ease); }
+  .stageSteps li, .stageSteps li span { transition: color 300ms var(--stage-ease), border-color 300ms var(--stage-ease), background-color 300ms var(--stage-ease); }
+}
+@keyframes stage-ripple {
+  0% { opacity: 0.9; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.18, 1.5); }
+}
+@keyframes stage-rise {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: none; }
+}
 .title {
   font-size: var(--text-hero);
   font-weight: var(--weight-display);

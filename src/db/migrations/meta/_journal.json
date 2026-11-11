@@ -64,6 +64,13 @@
       "when": 1794215156028,
       "tag": "0008_bored_madame_hydra",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1794386784936,
+      "tag": "0009_network_separated",
+      "breakpoints": true
     }
   ]
 }

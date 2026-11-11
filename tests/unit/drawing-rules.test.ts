@@ -97,11 +97,16 @@ describe("그리기 규칙 공용 모듈", () => {
       expect(text).toContain(`등급=${GRADE_LABELS[t.grade]}`);
       expect(text).not.toContain(t.description);
     }
-    expect(GRADE_RULES).toHaveLength(7);
+    expect(GRADE_RULES).toHaveLength(8);
     for (const r of GRADE_RULES) {
-      const line = `${GRADE_LABELS[r.a]} -- ${r.b === "*" ? "모든 등급" : GRADE_LABELS[r.b]}: ${METHOD_LABELS[r.method]}`;
+      const when = r.when === "separated" ? "(둘 중 하나가 망분리 대상)" : "";
+      const line = `${GRADE_LABELS[r.a]} -- ${r.b === "*" ? "모든 등급" : GRADE_LABELS[r.b]}${when}: ${METHOD_LABELS[r.method]}`;
       expect(text).toContain(line);
     }
+    // 망분리 대상은 종류 줄 끝에 적는다.
+    expect(text).toContain('등급=내부 망분리 대상');
+    // 기본 짝 규칙이 없는 지식에는 그 블록을 넣지 않는다.
+    expect(text).not.toContain("기본 짝 규칙(등급 규칙보다 먼저)");
     expect(text).toContain("기관 규칙:\n없음");
   });
 });

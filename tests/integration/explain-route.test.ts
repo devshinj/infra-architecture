@@ -17,7 +17,7 @@ const authMock = vi.mocked(auth) as unknown as ReturnType<typeof vi.fn>;
 function sample(): DiagramState {
   const s = emptyState();
   s.nodes.lb = { id: "lb", kind: "lb_l4", label: "L4", parent: null, attrs: {} };
-  s.nodes.app = { id: "app", kind: "batch_server", label: "배치", sub: "Varnishy 3", parent: null, attrs: {} };
+  s.nodes.app = { id: "app", kind: "generic", label: "배치", sub: "Varnishy 3", parent: null, attrs: {} };
   s.edges.e1 = { id: "e1", from: "lb", to: "app", edgeKind: "request", label: "HTTP 8080" };
   return s;
 }

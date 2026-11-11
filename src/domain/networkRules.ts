@@ -115,17 +115,20 @@ function textOf(state: DiagramState, k: NetworkKnowledge, v: LinkVerdict): strin
   const named = v.rule === "link_unusual" && gradeOf(first) === "closed" ? `${nameA}(${GRADE_LABELS.closed})와(과) ${nameB}` : `${nameA}와(과) ${nameB}`;
   const basis = v.note ? `등록한 기관 규칙(${v.note})에 따르면` : "등록한 기관 규칙에 따르면";
 
+  // 기본 제공 짝 규칙에 달린 까닭 한 줄(기관 규칙의 근거는 basis 로 따로 말한다).
+  const hint = v.source === "default" && v.note ? `${v.note} ` : "";
+
   let body: string;
   if (v.rule === "link_expected") {
     body =
       v.source === "user"
         ? `${basis} ${named} 사이는 망연계가 필요해요.`
-        : `보통 ${named} 사이는 방화벽 허용만으로는 통신할 수 없고 망연계가 필요해요. ${CHECK_TAIL}`;
+        : `보통 ${named} 사이는 방화벽 허용만으로는 통신할 수 없고 망연계가 필요해요. ${hint}${CHECK_TAIL}`;
   } else {
     body =
       v.source === "user"
         ? `${basis} ${named} 사이는 보통 잇지 않는 구간이에요.`
-        : `${named} 사이는 보통 잇지 않는 구간이에요. 예외로 허용되는지 ${CHECK_TAIL}`;
+        : `${named} 사이는 보통 잇지 않는 구간이에요. ${hint}예외로 허용되는지 ${CHECK_TAIL}`;
   }
   return prefix + body;
 }

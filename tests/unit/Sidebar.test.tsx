@@ -171,5 +171,7 @@ test("the sidebar logo is not a heading (pages own their h1)", () => {
 test("app layout wraps page content in a main landmark (resizer and glossary tools sit inside it)", async () => {
   const { readFileSync } = await import("node:fs");
   const src = readFileSync(`${process.cwd()}/src/app/(app)/layout.tsx`, "utf8");
-  expect(src).toContain("<main className={styles.main}>{children}</main>");
+  expect(src).toContain("<ShellMain>{children}</ShellMain>");
+  const main = readFileSync(`${process.cwd()}/src/ui/ShellMain.tsx`, "utf8");
+  expect(main).toContain("<main className={styles.main}");
 });

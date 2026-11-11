@@ -40,6 +40,9 @@
   border: 1px solid var(--line-input); border-radius: var(--radius-control); padding: 8px 8px;
 }
 .form textarea { resize: vertical; min-height: 56px; }
+/* 체크 한 줄(망분리 대상): 상자와 글을 옆으로 놓는다. */
+.form label.check { flex-direction: row; align-items: flex-start; gap: 8px; font-size: 13px; color: var(--text-primary); }
+.form label.check input { flex: none; min-height: 0; width: 16px; height: 16px; margin: 2px 0 0; padding: 0; accent-color: var(--accent); }
 .actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .page button:focus-visible, .page input:focus-visible, .page textarea:focus-visible, .page select:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
 .error { margin: 0; font-size: 12px; color: var(--text-primary); border: 1px solid var(--state-missing); border-radius: var(--radius-surface); padding: 4px 8px; }

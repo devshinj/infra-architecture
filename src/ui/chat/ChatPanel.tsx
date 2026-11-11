@@ -4,6 +4,7 @@ import { type ReactNode, type RefObject, useEffect, useLayoutEffect, useRef, use
 
 import { NODE_GONE_MESSAGE } from "@/server/chat/events";
 import { Button } from "@/ui/Button";
+import { ChatSkeleton } from "@/ui/skeleton/Skeleton";
 
 import { FLY_ORIGIN_ATTR } from "../FlyLayer";
 import { useShell } from "../Shell";
@@ -419,6 +420,7 @@ export function ChatPanel({
         role="log"
         aria-live="polite"
         aria-label="대화 내용"
+        aria-busy={loading || undefined}
         tabIndex={0}
         onScroll={(e) => {
           const el = e.currentTarget;
@@ -432,6 +434,7 @@ export function ChatPanel({
           </p>
         )}
         {!ask && !emptyDiagram && !loading && lines.length === 0 && !emptyHint && renderEditStart()}
+        {loading && lines.length === 0 && <ChatSkeleton />}
         {toBlocks(lines).map((b) => (b.kind === "line" ? renderLine(b.line, false) : renderTurn(b.id, b.lines)))}
         {footer}
       </div>

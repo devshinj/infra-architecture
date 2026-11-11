@@ -3,24 +3,37 @@ import { and, asc, eq, ilike, or, sql } from "drizzle-orm";
 import { db } from "@/db/client";
 import { glossaryTerms } from "@/db/schema";
 import { normalizeTerm, pickTerm } from "@/domain/explain";
-import { GLOSSARY_SEED } from "@/domain/glossary-seed";
+import { GLOSSARY_SEED_CORE } from "@/domain/glossary-seed";
+import { GLOSSARY_SEED_EXTRA } from "@/domain/glossary-seed-extra";
 import { NotFoundError, ValidationError } from "@/server/projects";
 
 export type GlossaryRow = typeof glossaryTerms.$inferSelect;
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-/** 그 사용자 사전이 비어 있으면 시드 50개를 미검수로 복사한다. 동시에 불려도 unique(userId,key) 로 한 벌만 남는다. */
+/** 초안 묶음. 새 묶음을 더하면 쓰던 계정에도 그 묶음이 한 번 들어간다. */
+const SEED_BATCHES = [GLOSSARY_SEED_CORE, GLOSSARY_SEED_EXTRA];
+
+/**
+ * 기본 제공 초안을 묶음(1차분, 2차분…)마다 한 번씩 미검수로 넣는다.
+ * 그 묶음의 항목이 사용자 사전에 하나도 없을 때만 넣으므로, 넣은 뒤 사용자가 지운 항목은 다시 생기지 않는다.
+ * 같은 key 가 이미 있으면(AI 가 먼저 넣은 말 등) 그 항목은 그대로 둔다. 동시에 불려도 unique(userId,key) 로 한 벌만 남는다.
+ */
 export async function ensureSeeded(userId: string): Promise<void> {
-  const [{ n }] = await db
-    .select({ n: sql<number>`count(*)::int` })
-    .from(glossaryTerms)
-    .where(eq(glossaryTerms.userId, userId));
-  if (n > 0) return;
+  const have = new Set(
+    (
+      await db
+        .select({ key: glossaryTerms.key })
+        .from(glossaryTerms)
+        .where(and(eq(glossaryTerms.userId, userId), eq(glossaryTerms.source, "seed")))
+    ).map((r) => r.key),
+  );
+  const todo = SEED_BATCHES.filter((batch) => !batch.some((e) => have.has(normalizeTerm(e.term)))).flat();
+  if (!todo.length) return;
   await db
     .insert(glossaryTerms)
     .values(
-      GLOSSARY_SEED.map((e) => ({
+      todo.map((e) => ({
         userId,
         key: normalizeTerm(e.term),
         term: e.term,

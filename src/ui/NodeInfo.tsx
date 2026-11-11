@@ -249,7 +249,7 @@ export function NodeInfo({ state, selectedId, onSelect, onMention, mentionDisabl
           {edge.payload && <div className={styles.field}><dt>전달물</dt><dd>{PAYLOAD_NAME[edge.payload]}</dd></div>}
           {edge.direction && <div className={styles.field}><dt>방향</dt><dd>{DIRECTION_NAME[edge.direction]}</dd></div>}
         </dl>
-        {explain && <Explanation target="edge" {...explain} />}
+        {explain && <Explanation key={edge.id} target="edge" {...explain} />}
         <Cautions {...pick((w) => w.edgeId === edge.id)} {...caution} />
         <FlowChips state={state} id={edge.id} title="이 연결이 들어간 흐름" flows={flows} />
       </div>
@@ -297,7 +297,7 @@ export function NodeInfo({ state, selectedId, onSelect, onMention, mentionDisabl
       </header>
       <LinkButton id={node.id} onMention={onMention} disabled={mentionDisabled} />
       {node.guess && <LinkGuessPart nodeId={node.id} {...(linkGuess ? { save: linkGuess } : {})} />}
-      {explain && <Explanation {...explain} />}
+      {explain && <Explanation key={node.id} {...explain} />}
       <Cautions {...pick((w) => w.nodeId === node.id)} {...caution} />
       <Fields title="스펙 · SW" fields={SPEC_FIELDS} attrs={node.attrs} unknown={node.unknown ?? []} />
       <Fields title="서버 정보" fields={SERVER_FIELDS} attrs={node.attrs} unknown={node.unknown ?? []} />

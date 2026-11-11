@@ -232,7 +232,7 @@ describe("auth stage (DESIGN.md: the canvas grammar outside the canvas)", () => 
     ["new password", () => <ResetPasswordForm token="t" usable />],
   ])("%s shows the product line and a decorative diagram, keeping one h1 (the form's)", (_, ui) => {
     render(ui());
-    expect(screen.getByText("말하면 구성도가 그려져요")).toBeInTheDocument();
+    expect(screen.getByText("말로 그리는 인프라 구성도")).toBeInTheDocument();
     const diagram = document.querySelector("[data-auth-diagram]");
     expect(diagram).toHaveAttribute("aria-hidden", "true");
     expect(screen.getAllByRole("heading", { level: 1 })).toHaveLength(1);

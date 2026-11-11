@@ -2,7 +2,8 @@ import { expect, test } from "vitest";
 
 import { NODE_KINDS } from "@/domain/catalog";
 import { normalizeTerm } from "@/domain/explain";
-import { GLOSSARY_SEED } from "@/domain/glossary-seed";
+import { GLOSSARY_SEED, GLOSSARY_SEED_CORE } from "@/domain/glossary-seed";
+import { GLOSSARY_SEED_EXTRA } from "@/domain/glossary-seed-extra";
 
 const REQUIRED = [
   "Redis", "Nginx", "Apache", "Tomcat", "MySQL", "PostgreSQL", "Oracle", "MongoDB", "Elasticsearch", "Kafka",
@@ -14,8 +15,10 @@ const REQUIRED = [
 
 const cp = (s: string) => [...s].length;
 
-test("fifty entries with required terms", () => {
-  expect(GLOSSARY_SEED).toHaveLength(50);
+test("core has fifty entries with required terms, and the full seed adds the second batch", () => {
+  expect(GLOSSARY_SEED_CORE).toHaveLength(50);
+  expect(GLOSSARY_SEED).toHaveLength(GLOSSARY_SEED_CORE.length + GLOSSARY_SEED_EXTRA.length);
+  expect(GLOSSARY_SEED_EXTRA.length).toBeGreaterThan(0);
   const terms = GLOSSARY_SEED.map((e) => e.term);
   for (const t of REQUIRED) expect(terms).toContain(t);
 });
@@ -73,4 +76,19 @@ test("PG(결제대행) does not take the bare pg alias; DB 중계 makes no read/
   expect(pg.aliases).toContain(normalizeTerm("외부결제(PG)"));
   const proxy = GLOSSARY_SEED.find((e) => e.term === "DB 중계(Proxy)")!;
   expect(proxy.definition).not.toMatch(/읽기|쓰기|나눠/);
+});
+
+test("every node kind has a dictionary entry reachable by its Korean name", () => {
+  const reachable = new Set(GLOSSARY_SEED.flatMap((e) => [normalizeTerm(e.term), ...e.aliases]));
+  // generic(기타)은 설명할 말이 없다.
+  const missing = NODE_KINDS.filter((k) => k.kind !== "generic" && !reachable.has(normalizeTerm(k.labelKo))).map((k) => k.labelKo);
+  expect(missing).toEqual([]);
+});
+
+test("product entries in the second batch leave why and compare empty; concept entries fill both", () => {
+  for (const e of GLOSSARY_SEED_EXTRA) {
+    expect((e.why === "") === (e.compare === ""), e.term).toBe(true);
+  }
+  expect(GLOSSARY_SEED_EXTRA.some((e) => e.why !== "")).toBe(true);
+  expect(GLOSSARY_SEED_EXTRA.some((e) => e.why === "")).toBe(true);
 });

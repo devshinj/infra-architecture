@@ -54,14 +54,14 @@ describe("buildGuide", () => {
     const types: Record<string, NetType> = {};
     for (let i = 0; i < 500; i++) {
       const key = `big-net-${String(i).padStart(3, "0")}`;
-      types[key] = { key, name: `아주 긴 이름의 망 ${i} `.repeat(3), aliases: Array.from({ length: 5 }, (_, j) => `긴 다른 이름 ${i}-${j}`), description: "d", grade: "boundary" };
+      types[key] = { key, name: `아주 긴 이름의 망 ${i} `.repeat(3), aliases: Array.from({ length: 5 }, (_, j) => `긴 다른 이름 ${i}-${j}`), description: "d", grade: "boundary", separated: false };
     }
     const keys = Object.keys(types);
     const rules: NetRule[] = keys.slice(1).map((b, i) => ({ a: keys[0]!, b, method: "firewall", note: `긴 근거 ${i} `.repeat(10) }));
     for (let i = 0; i < 500 - rules.length; i++) rules.push({ a: keys[1]!, b: keys[2 + (i % 100)]!, method: "none" });
     const text = buildGuide({ types, rules });
     expect(text.length).toBeLessThanOrEqual(20000);
-    expect(text).toContain("등급 규칙(기관 규칙이 없을 때):");
+    expect(text).toContain("등급 규칙(기관 규칙·기본 짝 규칙이 없을 때):");
     expect(text).toContain("길어서 줄였어요");
     expect(text).toContain("get_diagram 의 zones");
     expect(text).toContain("망 종류 500개");
@@ -71,7 +71,7 @@ describe("buildGuide", () => {
     const types: Record<string, NetType> = { ...KNOWLEDGE.types };
     for (let i = 0; i < 30; i++) {
       const key = `extra-net-${i}`;
-      types[key] = { key, name: `추가 망 ${i}`, aliases: [`별칭 ${i}`, `다른 이름 ${i}`], description: "x".repeat(200), grade: "internal" };
+      types[key] = { key, name: `추가 망 ${i}`, aliases: [`별칭 ${i}`, `다른 이름 ${i}`], description: "x".repeat(200), grade: "internal", separated: false };
     }
     const rules: NetRule[] = [];
     for (let i = 0; i < 30; i++) {

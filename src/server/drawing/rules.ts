@@ -72,7 +72,8 @@ export const DRAW_RULE_GROUPS = [
 - 서로 다른 망을 잇는 통신은 방화벽(firewall)·망연계 솔루션(network_link)·VPN 노드를 거치게 그리고, 망을 넘는 연결에는 payload(api 또는 file)와 direction(one_way 또는 two_way)을 쓴다. 같은 망 안의 연결에는 사용자가 말하지 않은 payload·direction 을 쓰지 않는다.
 - 방화벽·WAF·로드밸런서·API 게이트웨이·망연계·VPN 처럼 통신이 거쳐 가는 노드를 넣으면, 그 노드가 지킬 기존 연결을 remove_edge 하고 앞 노드 → 새 노드 → 뒤 노드로 다시 잇는다(예: 웹 서버 → WAS 를 웹 서버 → 방화벽 → WAS 로). 연결 없이 노드만 놓지 않는다.
 - network_zone 영역에는 set_zone_type 으로 망 종류를 붙인다. type 은 "망 종류:" 목록의 key 만 쓰고, 맞는 것이 없거나 근거가 없으면 쓰지 않는다. 요약에 type=…(확정) 이 붙은 망은 바꾸지 않는다. 종류가 없는 기존 망도 이번 요청에 근거가 있으면 붙인다.
-- 이번 요청에서 새로 그리거나 종류를 붙인 망처럼 "망 짝 규칙"에 없는 짝은 두 망 종류로 따져 "기관 규칙"을 먼저, 없으면 "등급 규칙"을 망 짝 규칙으로 쓴다.
+- 이번 요청에서 새로 그리거나 종류를 붙인 망처럼 "망 짝 규칙"에 없는 짝은 두 망 종류로 따져 "기관 규칙"을 먼저, 없으면 "기본 짝 규칙", 그것도 없으면 "등급 규칙"을 망 짝 규칙으로 쓴다.
+- "망 짝 규칙"이 직접 연결인 두 망(서버와 스토리지망 등)은 사이에 방화벽·망연계 노드를 넣지 않고 바로 잇는다.
 - "망 짝 규칙"이 망연계 필요인 두 망을 잇게 되면 사이에 network_link 노드를 넣고 그 add_node 에 "guess":true 를 쓴다. 사용자가 망연계를 넣어 달라고 했으면 guess 를 쓰지 않는다.`,
   `- 사용자가 "방화벽으로 바로"처럼 망연계 없이 이으라고 하면 그대로 따르고, set_assumption 의 key 를 no_link:<망 id>--<망 id>(두 망 id 를 사전순으로), value 를 "망연계 없이 통신" 으로 쓴다. 가정에 no_link:<a>--<b> 가 있는 두 망 사이에는 망연계를 넣지 않는다.
 - 종류가 붙은 망이 있으면 인터넷·클라우드 쪽 서버(클라우드 WAS 등)도 알맞은 network_zone 안에 그린다. 외부 사용자와 외부 SaaS 는 망 밖에 그대로 둔다.
@@ -126,12 +127,32 @@ const byStr = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
 export function networkTypeLines(k: NetworkKnowledge): string[] {
   return Object.values(k.types)
     .sort((a, b) => byStr(a.key, b.key))
-    .map((t) => `${t.key} ${JSON.stringify(t.name)} 다른 이름=${JSON.stringify(t.aliases)} 등급=${GRADE_LABELS[t.grade]}`);
+    .map((t) => `${t.key} ${JSON.stringify(t.name)} 다른 이름=${JSON.stringify(t.aliases)} 등급=${GRADE_LABELS[t.grade]}${t.separated ? " 망분리 대상" : ""}`);
 }
 
-/** 기본 등급 규칙 줄(GRADE_RULES). */
+/** 기본 등급 규칙 줄(GRADE_RULES). 망분리 대상일 때만 맞는 줄은 그렇게 적는다. */
 export function gradeRuleLines(): string[] {
-  return GRADE_RULES.map((r) => `${GRADE_LABELS[r.a]} -- ${r.b === "*" ? "모든 등급" : GRADE_LABELS[r.b]}: ${METHOD_LABELS[r.method]}`);
+  return GRADE_RULES.map(
+    (r) =>
+      `${GRADE_LABELS[r.a]} -- ${r.b === "*" ? "모든 등급" : GRADE_LABELS[r.b]}${r.when === "separated" ? "(둘 중 하나가 망분리 대상)" : ""}: ${METHOD_LABELS[r.method]}`,
+  );
+}
+
+/** 기본 제공 짝 규칙 줄(등급 규칙보다 먼저 쓴다). 지식에 없는(숨긴) 종류가 낀 규칙은 뺀다. 근거는 싣지 않는다. */
+export function baseRuleLines(k: NetworkKnowledge): string[] {
+  return (k.baseRules ?? [])
+    .filter((r) => Object.hasOwn(k.types, r.a) && Object.hasOwn(k.types, r.b))
+    .map((r) => {
+      const [a, b] = pairKey(r.a, r.b);
+      return `${a} -- ${b}: ${METHOD_LABELS[r.method]}`;
+    })
+    .sort(byStr);
+}
+
+/** 기본 짝 규칙 블록. 규칙이 없으면 아무것도 넣지 않는다. */
+export function baseRuleBlock(k: NetworkKnowledge): string[] {
+  const lines = baseRuleLines(k);
+  return lines.length ? [`기본 짝 규칙(등급 규칙보다 먼저):\n${lines.join("\n")}`] : [];
 }
 
 /** 기관 규칙 줄. 지식에 없는 종류가 낀 규칙은 뺀다. 근거(사용자 글)는 JSON 으로 감싼다. */
@@ -150,7 +171,8 @@ export function networkGuideText(k: NetworkKnowledge): string {
   const rules = userRuleLines(k);
   return [
     `망 종류:\n${networkTypeLines(k).join("\n")}`,
-    `등급 규칙(기관 규칙이 없을 때):\n${gradeRuleLines().join("\n")}`,
+    `등급 규칙(기관 규칙·기본 짝 규칙이 없을 때):\n${gradeRuleLines().join("\n")}`,
+    ...baseRuleBlock(k),
     `기관 규칙:\n${rules.length ? rules.join("\n") : "없음"}`,
   ].join("\n\n");
 }

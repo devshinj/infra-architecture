@@ -32,6 +32,9 @@ interface ShellValue {
   requestCreate: CreateRequest;
   /** 사이드바가 대화상자를 여는 함수를 등록한다(null 이면 해제). */
   setCreateHandler(fn: CreateRequest | null): void;
+  /** 사이드바에서 고른 구성도로 넘어가는 중(새 화면이 올 때까지). ShellMain 이 작업 화면 뼈대를 덮는다. */
+  navigating: boolean;
+  setNavigating(v: boolean): void;
 }
 
 const extentOf = (collapsed: boolean) => PANEL_GAP + (collapsed ? RAIL_WIDTH : SIDEBAR_WIDTH);
@@ -43,6 +46,8 @@ const ShellContext = createContext<ShellValue>({
   sidebarExtent: extentOf(false),
   requestCreate: () => {},
   setCreateHandler: () => {},
+  navigating: false,
+  setNavigating: () => {},
 });
 
 export const useShell = () => useContext(ShellContext);
@@ -72,9 +77,10 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
   const setCreateHandler = useCallback((fn: CreateRequest | null) => {
     createHandler.current = fn;
   }, []);
+  const [navigating, setNavigating] = useState(false);
   const value = useMemo(
-    () => ({ narrow, collapsed, setCollapsed, sidebarExtent: narrow ? 0 : extentOf(collapsed), requestCreate, setCreateHandler }),
-    [narrow, collapsed, setCollapsed, requestCreate, setCreateHandler],
+    () => ({ narrow, collapsed, setCollapsed, sidebarExtent: narrow ? 0 : extentOf(collapsed), requestCreate, setCreateHandler, navigating, setNavigating }),
+    [narrow, collapsed, setCollapsed, requestCreate, setCreateHandler, navigating],
   );
   return (
     <ShellContext.Provider value={value}>

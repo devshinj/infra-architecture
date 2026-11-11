@@ -231,6 +231,8 @@ export const networkTypes = pgTable(
     aliases: jsonb("aliases").$type<string[]>().notNull().default(sql`'[]'::jsonb`),
     description: text("description").notNull().default(""),
     grade: text("grade").$type<NetGrade>().notNull(),
+    // 망분리 대상(바깥 망과 떼어 놓는 망). 참인 내부 망만 외부 망과 "망연계"가 기본이다.
+    separated: boolean("separated").notNull().default(false),
     source: text("source").$type<NetworkTypeSource>().notNull(),
     edited: boolean("edited").notNull().default(false),
     hidden: boolean("hidden").notNull().default(false),

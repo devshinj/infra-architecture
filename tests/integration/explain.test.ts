@@ -17,7 +17,8 @@ import { makeOwnedDiagram } from "./helpers";
 function sample(): DiagramState {
   const s = emptyState();
   s.nodes.lb = { id: "lb", kind: "lb_l4", label: "L4", parent: null, attrs: {} };
-  s.nodes.app = { id: "app", kind: "batch_server", label: "배치", parent: null, attrs: { sw: "Varnishy 3" } };
+  // 종류 이름으로 사전에 걸리지 않는 종류(기타)를 쓴다. 종류 항목이 있으면 모르는 SW 대신 그 항목이 먼저 잡힌다.
+  s.nodes.app = { id: "app", kind: "generic", label: "배치", parent: null, attrs: { sw: "Varnishy 3" } };
   s.edges.e1 = { id: "e1", from: "lb", to: "app", edgeKind: "request", label: "HTTP 8080" };
   return s;
 }
@@ -74,7 +75,7 @@ test("explainTarget round-trips through the cache table", async () => {
     .select()
     .from(glossaryTerms)
     .where(and(eq(glossaryTerms.userId, ids.userId), eq(glossaryTerms.key, normalizeTerm("Varnishy 3"))));
-  expect(term).toMatchObject({ term: "Varnishy 3", definition: DEF, source: "ai", reviewed: false, category: "배치 서버" });
+  expect(term).toMatchObject({ term: "Varnishy 3", definition: DEF, source: "ai", reviewed: false, category: "기타" });
 
   const edge = await explainTarget(ids.userId, ids.diagramId, "edge", "e1", {}, deps);
   expect(edge.ok && edge.explanation).toMatchObject({ kind: "edge", firewall: "8080 허용" });
@@ -144,7 +145,7 @@ test("listSignatures", async () => {
 test("sub-derived AI definition is not added to the glossary", async () => {
   const ids = await makeOwnedDiagram();
   const s = emptyState();
-  s.nodes.adm = { id: "adm", kind: "batch_server", label: "관리", sub: "Varnishy Admin", parent: null, attrs: {} };
+  s.nodes.adm = { id: "adm", kind: "generic", label: "관리", sub: "Varnishy Admin", parent: null, attrs: {} };
   await createVersion(ids.diagramId, s, { source: "import" });
   const { qwen, calls } = fakeQwen();
   const r = await explainTarget(ids.userId, ids.diagramId, "node", "adm", {}, { qwen, clef });

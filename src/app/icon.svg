@@ -1,10 +1,12 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none">
-  <!-- 정적 파일이라 CSS 변수를 못 쓴다: tokens.css 의 bg-sidebar · edge-aux · text-secondary · cat-compute · text-primary · accent 값 -->
-  <rect width="48" height="48" rx="11" fill="#121A27"/>
-  <rect x="6" y="6" width="24" height="24" rx="6" stroke="#56657C" stroke-width="2.6"/>
-  <rect x="18" y="18" width="24" height="24" rx="6" stroke="#9AA7BA" stroke-width="2.6"/>
-  <path d="M12 15 V20 a4 4 0 0 0 4 4 H32 a4 4 0 0 1 4 4 V33" stroke="#C6CEDA" stroke-width="2.6" stroke-linecap="round"/>
-  <rect x="8.5" y="8.5" width="7" height="7" rx="1.8" fill="#E8EBEE"/>
-  <rect x="32.5" y="32.5" width="7" height="7" rx="1.8" fill="#E8EBEE"/>
-  <circle cx="24" cy="24" r="3.6" fill="#D4AE6C"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
+  <!-- 정적 파일이라 CSS 변수를 못 쓴다: tokens.css 의 bg-canvas · line-node · text-secondary · text-primary · accent 값.
+       S 흐름 마크(src/ui/brand/Logo.tsx)를 어두운 판 위에 조금 줄여 올리고, 16px 탭에서 읽히도록 선을 굵게 한다. -->
+  <rect width="32" height="32" rx="7" fill="#04090C"/>
+  <rect x="0.5" y="0.5" width="31" height="31" rx="6.5" stroke="#30393F"/>
+  <g transform="translate(3.2 3.2) scale(0.8)">
+    <path d="M25 6.5H11A4.5 4.5 0 0 0 6.5 11V11.5A4.5 4.5 0 0 0 11 16H21A4.5 4.5 0 0 1 25.5 20.5V21A4.5 4.5 0 0 1 21 25.5H8" stroke="#8F9AA0" stroke-width="2.8" stroke-linecap="round"/>
+    <rect x="12.5" y="12.5" width="7" height="7" rx="1.8" fill="#EBEFF2"/>
+    <rect x="2.5" y="22" width="7" height="7" rx="1.8" fill="#EBEFF2"/>
+    <circle cx="25.5" cy="6.5" r="3.8" fill="#BCF053"/>
+  </g>
 </svg>
