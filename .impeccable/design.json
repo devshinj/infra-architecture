@@ -1,48 +1,194 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-11-11T03:20:00Z",
+  "generatedAt": "2026-11-11T07:03:24Z",
   "title": "Design System: InfraSketch",
   "extensions": {
     "colorMeta": {
-      "signal-lime": { "role": "primary", "displayName": "Signal Lime", "canonical": "oklch(89% 0.19 126)", "tonalRamp": ["oklch(19% 0.04 126)", "oklch(32% 0.08 126)", "oklch(45% 0.12 126)", "oklch(58% 0.15 126)", "oklch(70% 0.17 126)", "oklch(80% 0.18 126)", "oklch(89% 0.19 126)", "oklch(95% 0.09 126)"] },
-      "night-paper": { "role": "neutral", "displayName": "Night Paper", "canonical": "oklch(13.5% 0.012 235)", "tonalRamp": ["oklch(13.5% 0.012 235)", "oklch(17% 0.014 235)", "oklch(24% 0.016 235)", "oklch(26% 0.016 235)", "oklch(34% 0.016 235)", "oklch(68% 0.016 230)", "oklch(82% 0.012 230)", "oklch(95% 0.006 230)"] },
-      "drafting-well": { "role": "neutral", "displayName": "Drafting Well" },
-      "raised-slate": { "role": "neutral", "displayName": "Raised Slate", "canonical": "oklch(24% 0.016 235)" },
-      "node-slate": { "role": "neutral", "displayName": "Node Slate", "canonical": "oklch(26% 0.016 235)" },
-      "hairline": { "role": "neutral", "displayName": "Hairline", "canonical": "oklch(27% 0.014 235)" },
-      "hairline-strong": { "role": "neutral", "displayName": "Hairline Strong", "canonical": "oklch(34% 0.016 235)" },
-      "ink": { "role": "neutral", "displayName": "Ink", "canonical": "oklch(95% 0.006 230)" },
-      "ink-soft": { "role": "neutral", "displayName": "Ink Soft" },
-      "muted-steel": { "role": "neutral", "displayName": "Muted Steel", "canonical": "oklch(68% 0.016 230)" },
-      "missing-red": { "role": "neutral", "displayName": "Missing Red" },
-      "missing-red-text": { "role": "neutral", "displayName": "Missing Red Text" },
-      "warn-amber": { "role": "neutral", "displayName": "Warn Amber" },
-      "edge-request": { "role": "secondary", "displayName": "Request Steel" },
-      "edge-async": { "role": "secondary", "displayName": "Async Sand" },
-      "edge-replication": { "role": "secondary", "displayName": "Replication Moss" },
-      "edge-aux": { "role": "secondary", "displayName": "Aux Graphite" },
-      "zone-dmz-brass": { "role": "tertiary", "displayName": "DMZ Brass" },
-      "zone-private-navy": { "role": "tertiary", "displayName": "Private Navy" },
-      "zone-public-teal": { "role": "tertiary", "displayName": "Public Teal" },
-      "zone-external-copper": { "role": "tertiary", "displayName": "External Copper" }
+      "signal-lime": {
+        "role": "primary",
+        "displayName": "Signal Lime",
+        "canonical": "oklch(89% 0.19 126)",
+        "tonalRamp": [
+          "oklch(19% 0.04 126)",
+          "oklch(32% 0.08 126)",
+          "oklch(45% 0.12 126)",
+          "oklch(58% 0.15 126)",
+          "oklch(70% 0.17 126)",
+          "oklch(80% 0.18 126)",
+          "oklch(89% 0.19 126)",
+          "oklch(95% 0.09 126)"
+        ]
+      },
+      "night-paper": {
+        "role": "neutral",
+        "displayName": "Night Paper",
+        "canonical": "oklch(13.5% 0.012 235)",
+        "tonalRamp": [
+          "oklch(13.5% 0.012 235)",
+          "oklch(17% 0.014 235)",
+          "oklch(24% 0.016 235)",
+          "oklch(26% 0.016 235)",
+          "oklch(34% 0.016 235)",
+          "oklch(68% 0.016 230)",
+          "oklch(82% 0.012 230)",
+          "oklch(95% 0.006 230)"
+        ]
+      },
+      "drafting-well": {
+        "role": "neutral",
+        "displayName": "Drafting Well"
+      },
+      "raised-slate": {
+        "role": "neutral",
+        "displayName": "Raised Slate",
+        "canonical": "oklch(24% 0.016 235)"
+      },
+      "node-slate": {
+        "role": "neutral",
+        "displayName": "Node Slate",
+        "canonical": "oklch(26% 0.016 235)"
+      },
+      "hairline": {
+        "role": "neutral",
+        "displayName": "Hairline",
+        "canonical": "oklch(27% 0.014 235)"
+      },
+      "hairline-strong": {
+        "role": "neutral",
+        "displayName": "Hairline Strong",
+        "canonical": "oklch(34% 0.016 235)"
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "canonical": "oklch(95% 0.006 230)"
+      },
+      "ink-soft": {
+        "role": "neutral",
+        "displayName": "Ink Soft"
+      },
+      "muted-steel": {
+        "role": "neutral",
+        "displayName": "Muted Steel",
+        "canonical": "oklch(68% 0.016 230)"
+      },
+      "missing-red": {
+        "role": "neutral",
+        "displayName": "Missing Red"
+      },
+      "missing-red-text": {
+        "role": "neutral",
+        "displayName": "Missing Red Text"
+      },
+      "warn-amber": {
+        "role": "neutral",
+        "displayName": "Warn Amber"
+      },
+      "edge-request": {
+        "role": "secondary",
+        "displayName": "Request Steel"
+      },
+      "edge-async": {
+        "role": "secondary",
+        "displayName": "Async Sand"
+      },
+      "edge-replication": {
+        "role": "secondary",
+        "displayName": "Replication Moss"
+      },
+      "edge-aux": {
+        "role": "secondary",
+        "displayName": "Aux Graphite"
+      },
+      "zone-dmz-brass": {
+        "role": "tertiary",
+        "displayName": "DMZ Brass"
+      },
+      "zone-private-navy": {
+        "role": "tertiary",
+        "displayName": "Private Navy"
+      },
+      "zone-public-teal": {
+        "role": "tertiary",
+        "displayName": "Public Teal"
+      },
+      "zone-external-copper": {
+        "role": "tertiary",
+        "displayName": "External Copper"
+      },
+      "signal-lime-hi": {
+        "role": "primary",
+        "displayName": "Signal Lime Hi",
+        "canonical": "oklch(93% 0.17 126)"
+      },
+      "signal-lime-ink": {
+        "role": "primary",
+        "displayName": "Signal Lime Ink",
+        "canonical": "oklch(19% 0.04 126)"
+      },
+      "dot-grid": {
+        "role": "neutral",
+        "displayName": "Dot Grid",
+        "canonical": "oklch(64% 0.012 285)"
+      }
     },
     "typographyMeta": {
-      "hero": { "displayName": "Hero", "purpose": "빈 홈과 로그인 제목." },
-      "page": { "displayName": "Page", "purpose": "보조 화면 제목." },
-      "title": { "displayName": "Title", "purpose": "패널·대화상자·노드 설명 제목." },
-      "body-lg": { "displayName": "Body Large", "purpose": "소개 글, 로그인 양식, 좁은 화면의 누르는 글자." },
-      "body": { "displayName": "Body", "purpose": "본문, 버튼, 목록 줄." },
-      "label": { "displayName": "Label", "purpose": "섹션 머리, 보조 라벨, 시각. 화면 틀 12px 하한(캔버스 안 노드 부제·연결선 라벨은 11px)." },
-      "mono": { "displayName": "Mono", "purpose": "키, 명령, IP·포트 값." }
+      "hero": {
+        "displayName": "Hero",
+        "purpose": "빈 홈과 로그인 제목."
+      },
+      "page": {
+        "displayName": "Page",
+        "purpose": "보조 화면 제목."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "패널·대화상자·노드 설명 제목."
+      },
+      "body-lg": {
+        "displayName": "Body Large",
+        "purpose": "소개 글, 로그인 양식, 좁은 화면의 누르는 글자."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "본문, 버튼, 목록 줄."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "섹션 머리, 보조 라벨, 시각. 화면 틀 12px 하한(캔버스 안 노드 부제·연결선 라벨은 11px)."
+      },
+      "mono": {
+        "displayName": "Mono",
+        "purpose": "키, 명령, IP·포트 값."
+      }
     },
     "shadows": [],
     "motion": [
-      { "name": "ease-out", "value": "cubic-bezier(0.16, 1, 0.3, 1)", "purpose": "상태 전환 기본 곡선." },
-      { "name": "dur-micro", "value": "120ms", "purpose": "버튼 올림·누름." },
-      { "name": "dur-short", "value": "220ms", "purpose": "패널·메뉴 열림." }
+      {
+        "name": "ease-out",
+        "value": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "상태 전환 기본 곡선."
+      },
+      {
+        "name": "dur-micro",
+        "value": "120ms",
+        "purpose": "버튼 올림·누름."
+      },
+      {
+        "name": "dur-short",
+        "value": "220ms",
+        "purpose": "패널·메뉴 열림."
+      }
     ],
     "breakpoints": [
-      { "name": "mobile", "value": "640px" }
+      {
+        "name": "mobile",
+        "value": "640px"
+      },
+      {
+        "name": "auth-sheet",
+        "value": "1080px"
+      }
     ]
   },
   "components": [
@@ -109,11 +255,19 @@
       "description": "구성도 노드. 분류색 아이콘 원, 이름, 부제.",
       "html": "<div class=\"ds-node\"><span class=\"ds-node-icon\"></span><span><b>WAS#1</b><small>Tomcat</small></span></div>",
       "css": ".ds-node { display: inline-flex; align-items: center; gap: 8px; background: var(--bg-node, #1D252B); border: 1px solid var(--line-node, #30393F); border-radius: 6px; padding: 8px 12px; color: var(--text-primary, #EBEFF2); } .ds-node-icon { width: 20px; height: 20px; border-radius: 50%; background: color-mix(in srgb, var(--cat-compute, #C3CCD1) 18%, transparent); } .ds-node b { display: block; font-size: 13px; font-weight: 600; } .ds-node small { display: block; font-size: 12px; color: oklch(82% 0.012 230); }"
+    },
+    {
+      "name": "Auth Sheet",
+      "kind": "custom",
+      "refersTo": "card",
+      "description": "로그인·가입·비밀번호 화면의 판 하나(1080px 이상). 왼쪽 반은 정의 한 줄과 장면(처음 한 번 구성도를 그리고, 이후 접속·결제 흐름이 번갈아 연두 점·길로 지나감), 오른쪽 반은 양식.",
+      "html": "<div class=\"ds-auth\"><div class=\"ds-auth-stage\"><p class=\"ds-auth-say\">말로 그리는 인프라 구성도</p><div class=\"ds-auth-node\"><span class=\"ds-auth-coin\"></span><span><b>WAS#1</b><small>Tomcat</small></span></div></div><div class=\"ds-auth-form\"><p class=\"ds-auth-title\">로그인</p><span class=\"ds-auth-input\"></span><button class=\"ds-auth-btn\">로그인</button></div></div>",
+      "css": ".ds-auth { display: grid; grid-template-columns: 1.27fr 1fr; max-width: 560px; border: 1px solid var(--line-node, #30393F); border-radius: 8px; overflow: hidden; color: var(--text-primary, #EBEFF2); } .ds-auth-stage { display: flex; flex-direction: column; gap: 16px; justify-content: center; padding: 20px; background-color: var(--bg-canvas, #04090C); background-image: radial-gradient(circle at 1px 1px, var(--dot-grid, oklch(64% 0.012 285)) 0.6px, transparent 1px); background-size: 20px 20px; border-right: 1px solid var(--line-shell, #20282C); } .ds-auth-say { margin: 0; font-size: 18px; font-weight: 300; letter-spacing: -0.02em; } .ds-auth-node { align-self: center; display: inline-flex; align-items: center; gap: 8px; padding: 0 10px 0 8px; height: 40px; background: var(--bg-node, #1D252B); border: 1px solid var(--accent, #BCF053); border-radius: 6px; } .ds-auth-coin { width: 24px; height: 24px; border-radius: 50%; background: color-mix(in srgb, var(--cat-compute, #C3CCD1) 26%, #1D252B); } .ds-auth-node b { display: block; font-size: 13px; font-weight: 600; } .ds-auth-node small { display: block; font-size: 12px; color: oklch(82% 0.012 230); } .ds-auth-form { display: flex; flex-direction: column; gap: 12px; justify-content: center; padding: 20px; background: var(--color-paper-2, oklch(17% 0.014 235)); } .ds-auth-title { margin: 0; font-size: 24px; font-weight: 300; letter-spacing: -0.02em; } .ds-auth-input { height: 36px; border: 1px solid var(--line-input, #4A555C); border-radius: 6px; } .ds-auth-btn { height: 36px; border: 0; border-radius: 6px; background: var(--accent, #BCF053); color: #04090C; font: inherit; font-weight: 600; cursor: pointer; } .ds-auth-btn:hover { filter: brightness(1.06); } .ds-auth-btn:focus-visible { outline: 2px solid var(--focus-ring, #BCF053); outline-offset: 2px; }"
     }
   ],
   "narrative": {
     "northStar": "The Living Blueprint",
-    "overview": "InfraSketch 는 대화로 고쳐 쓰는 설계도다. 구성도 캔버스가 이미 이 제품만의 문법을 갖고 있다: 겹겹이 들어앉은 영역, 종류마다 다른 선 모양, 선 위에 붙은 프로토콜 라벨, 잰 것에만 두르는 모서리 눈금, 점 격자 바탕. 이 체계의 일은 그 문법을 캔버스 밖으로 넓히는 것이다.",
+    "overview": "InfraSketch 는 대화로 고쳐 쓰는 설계도다. 구성도 캔버스가 이미 이 제품만의 문법을 갖고 있다: 겹겹이 들어앉은 영역, 종류마다 다른 선 모양, 선 위에 붙은 프로토콜 라벨, 잰 것에만 두르는 모서리 눈금, 점 격자 바탕. 이 체계의 일은 그 문법을 캔버스 밖으로 넓히는 것이다. 사이드바, 패널, 목록, 대화상자, 로그인까지 같은 선과 같은 모서리와 같은 라벨 말씨로 그린다. 화면이 설계도의 연장으로 읽혀야 하고, 범용 다크 모드 도구처럼 읽히면 실패다.\n\n설계도는 도면보다 부드럽고 관제실보다 조용하다. 바탕은 푸른 검정 한 장이고, 판은 그림자 없이 머리카락 선 하나로만 갈린다. 색은 구성도가 쓴다(영역 색조, 노드 분류, 연결선 종류). 화면 틀은 무채색 강철로 물러서고, 연두 신호 하나만 \"지금 할 일, 지금 고른 것, 방금 바뀐 것\"을 가리킨다. 밀도는 작업 도구답게 높지만 글자는 회의 화면 공유와 내보낸 그림에서도 읽혀야 한다.\n\n이 체계는 2026-11-10 Hallmark \"Vantage · steel\" 재설계(`src/styles/tokens.css`)를 이어받는다. 이번 정리에서 바뀌는 것은 둘이다. 모서리는 캔버스 값(6px·8px)을 따르고, 글자는 12px 아래로 내려가지 않는다.",
     "keyCharacteristics": [
       "캔버스가 앞에 서고 화면 틀은 물러선다.",
       "그림자 없음. 깊이는 칠 한 단과 머리카락 선으로 만든다.",
@@ -122,29 +276,61 @@
       "라벨은 선 위의 프로토콜 라벨처럼 짧고 사실만 말한다."
     ],
     "rules": [
-      { "name": "The One Signal Rule", "body": "연두는 \"지금\"만 가리킨다: 지금 누를 것, 지금 고른 것, 방금 바뀐 것. 칠한 연두 버튼은 한 화면에 하나다.", "section": "colors" },
-      { "name": "The Diagram Owns Color Rule", "body": "색조는 구성도의 것이다. 화면 틀은 무채색 강철로만 그린다.", "section": "colors" },
-      { "name": "The Token-Only Rule", "body": "컴포넌트에 색 값을 직접 쓰지 않는다. placeholder 를 포함한 모든 글자 색은 토큰에서 온다.", "section": "colors" },
-      { "name": "The 12px Floor Rule", "body": "화면 틀에는 12px 아래 글자가 없다. 크기를 줄이는 대신 색으로 위계를 만든다. 캔버스 안 글자(확대·축소, 배치 상수와 묶임)는 예외.", "section": "typography" },
-      { "name": "The Label Voice Rule", "body": "라벨은 연결선 위의 TCP 1521 처럼 짧고 사실만 말한다.", "section": "typography" },
-      { "name": "The Canvas Leads Rule", "body": "화면 틀은 캔버스를 가리지 않는다. 떠 있는 것은 서로 겹치지 않고 노드를 덮지 않는다.", "section": "layout" },
-      { "name": "The Flat Sheet Rule", "body": "그림자, 흐림, 그라데이션으로 높이를 만들지 않는다.", "section": "elevation" },
-      { "name": "The Same Corners Rule", "body": "화면의 모서리는 6px, 8px, 알약 셋뿐이다.", "section": "shapes" }
+      {
+        "name": "The One Signal Rule",
+        "body": "연두는 \"지금\"만 가리킨다: 지금 누를 것, 지금 고른 것, 방금 바뀐 것. 칠한 연두 버튼은 한 화면에 하나다. 장식으로 연두를 쓰지 않는다.",
+        "section": "colors"
+      },
+      {
+        "name": "The Diagram Owns Color Rule",
+        "body": "색조는 구성도의 것이다. 화면 틀(사이드바, 패널, 목록, 대화상자)은 무채색 강철로만 그리고, 화면 틀에서 영역·분류 색을 쓸 때는 그것이 구성도의 무언가를 가리킬 때뿐이다(예: 망 지식 목록의 망 색 점).",
+        "section": "colors"
+      },
+      {
+        "name": "The Token-Only Rule",
+        "body": "컴포넌트에 색 값을 직접 쓰지 않는다. placeholder 를 포함한 모든 글자 색은 토큰에서 온다.",
+        "section": "colors"
+      },
+      {
+        "name": "The 12px Floor Rule",
+        "body": "화면 틀(패널, 카드, 대화, 목록, 배지, 캔버스 위에 뜨는 팝오버·툴팁)에는 12px 아래 글자가 없다. 크기를 줄이는 대신 색(Ink Soft, Muted Steel)으로 위계를 만든다. 캔버스 안 글자(노드 부제·AZ 칩·배지 11px, 연결선 라벨 11px, 영역 이름 11–20px)는 확대·축소로 크기가 바뀌고 자동 배치 상수(`SUB_PX`, `GROUP_NAME_PX`)와 묶여 있어 이 규칙 밖에 둔다. 대화 아바타의 IS 모노그램(장식)도 예외다. 자동 검출기(impeccable detect)가 캔버스 안 11px 를 권고로 짚는 것은 이 예외 때문이다.",
+        "section": "typography"
+      },
+      {
+        "name": "The Label Voice Rule",
+        "body": "라벨은 연결선 위의 `TCP 1521` 처럼 짧고 사실만 말한다. 명사로 끝내고, 버튼은 동사와 목적어로 쓴다.",
+        "section": "typography"
+      },
+      {
+        "name": "The Canvas Leads Rule",
+        "body": "화면 틀은 캔버스를 가리지 않는다. 떠 있는 것(구성 정보, 범례, 도구 모음)은 서로 겹치지 않고 노드를 덮지 않는다.",
+        "section": "layout"
+      },
+      {
+        "name": "The Flat Sheet Rule",
+        "body": "그림자, 흐림, 그라데이션으로 높이를 만들지 않는다. 높이가 필요하면 칠을 한 단 올리고 선을 하나 긋는다.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Same Corners Rule",
+        "body": "화면의 모서리는 6px, 8px, 알약 셋뿐이다. 1px·2px·3px·4px·12px 같은 다른 값을 만들지 않는다.",
+        "section": "shapes"
+      }
     ],
     "dos": [
-      "Do 버튼은 공용 버튼 하나의 변형(Primary·Secondary·Danger·Quiet)으로만 그린다.",
-      "Do 모서리는 6px(조작), 8px(판), 알약(탭·배지) 셋만 쓴다.",
-      "Do 위계는 크기보다 색(Ink → Ink Soft → Muted Steel)으로 만든다. 화면 틀 글자는 12px 아래로 내려가지 않는다.",
-      "Do 바뀐 것, 고른 것, 지금 할 일에만 연두를 쓴다.",
-      "Do 화면 틀의 구분선·목록·카드에 캔버스와 같은 1px 선과 같은 모서리를 쓴다.",
-      "Do 확실하지 않은 것(미확정 가정, AI 추정 망연계)은 점선이나 \"추정\" 표시로 구분한다."
+      "**Do** 버튼은 공용 버튼 하나의 변형(Primary·Secondary·Danger·Quiet)으로만 그린다.",
+      "**Do** 모서리는 6px(조작), 8px(판), 알약(탭·배지) 셋만 쓴다.",
+      "**Do** 위계는 크기보다 색(Ink → Ink Soft → Muted Steel)으로 만든다. 화면 틀 글자는 12px 아래로 내려가지 않는다.",
+      "**Do** 바뀐 것, 고른 것, 지금 할 일에만 연두를 쓴다.",
+      "**Do** 화면 틀의 구분선·목록·카드에 캔버스와 같은 1px 선과 같은 모서리를 쓴다.",
+      "**Do** 확실하지 않은 것(미확정 가정, AI 추정 망연계)은 점선이나 \"추정\" 표시로 구분한다."
     ],
     "donts": [
-      "Don't 그림자, 흐림, 그라데이션으로 높이를 만든다.",
-      "Don't 화면마다 .btn 을 새로 정의한다.",
-      "Don't 칠한 연두 버튼을 한 화면에 둘 이상 둔다.",
-      "Don't 화면 틀에 영역·분류 색조를 장식으로 칠한다.",
-      "Don't 별자리·네온·유리 같은 범용 \"테크\" 장식을 쓴다. 바탕 그림이 필요하면 설계도의 재료(점 격자, 선, 영역)로 만든다."
+      "**Don't** 그림자, 흐림, 그라데이션으로 높이를 만든다.",
+      "**Don't** 화면마다 `.btn` 을 새로 정의한다.",
+      "**Don't** 칠한 연두 버튼을 한 화면에 둘 이상 둔다.",
+      "**Don't** 화면 틀에 영역·분류 색조를 장식으로 칠한다.",
+      "**Don't** 별자리·네온·유리 같은 범용 \"테크\" 장식을 쓴다. 바탕 그림이 필요하면 설계도의 재료(점 격자, 선, 영역)로 만든다."
     ]
   }
 }
