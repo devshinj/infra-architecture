@@ -145,9 +145,12 @@ test("summary: a structure change that changed nothing and wrote nothing says it
   const msg = "요청을 반영하지 못했어요. 다시 말해 주세요.";
   const none = { version: null, status: "complete" as const, applied: 0, changed: 0, skipped: 0 };
   expect(summaryText(none, false, "structure_change")).toBe(msg);
-  // AI 가 글(안내·답)을 냈으면 알리지 않는다.
-  expect(summaryText(none, true, "structure_change")).toBeNull();
+  // 구성 변경 차례에 AI 가 글만 내고(예: "경로를 추가합니다.") 아무것도 안 바꿨으면 바꾼 곳이 없다고 알린다.
+  expect(summaryText(none, true, "structure_change")).toBe("바꾼 곳이 없어요");
+  expect(summaryText({ ...none, skipped: 2 }, true, "structure_change")).toBe("바꾼 곳이 없어요");
+  // 다른 의도에서 글을 냈으면 알리지 않는다.
   expect(summaryText({ ...none, skipped: 2 }, true, "missing_info_answer")).toBeNull();
+  expect(summaryText(none, true, null)).toBeNull();
   // 질문·답변, 빠진 정보 답, 재정렬 차례는 그대로다.
   expect(summaryText(none, true, "question")).toBeNull();
   expect(summaryText(none, false, "other")).toBe("변경 사항이 없어요.");
@@ -177,10 +180,11 @@ test("summary: assumptions are applied and versioned but are not counted as chan
       { id: "a1", role: "assistant", content, meta: { intent: "structure_change", skipped: 0, status: "complete", nodes: 50, edges: 60, ...meta } },
     ]).map((l) => [l.kind, l.text]);
   expect(reload({ applied: 1, changed: 0, version: 4 })).toEqual([["user", "모든 DB 를 이중화해 줘"], ["summary", msg]]);
-  // 안내 한 줄만 내고 멈춘 차례는 알리지 않는다(사용자 결정).
+  // 안내 한 줄만 내고 멈춘 차례는 바꾼 곳이 없다고 알린다(2026-11-11 사용자 결정, 11-03 결정을 바꿈).
   expect(reload({ applied: 0, changed: 0, version: null, says: ["DB 를 이중화합니다."] }, "DB 를 이중화합니다.")).toEqual([
     ["user", "모든 DB 를 이중화해 줘"],
     ["progress", "DB 를 이중화합니다."],
+    ["summary", "바꾼 곳이 없어요"],
   ]);
 });
 

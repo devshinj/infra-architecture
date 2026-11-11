@@ -203,8 +203,7 @@ export function buildMessages(input: {
   /** 망 지식. 있으면 "현재 구성" 바로 뒤에 망 종류·망 짝 규칙을 넣는다. */
   network?: NetworkKnowledge;
 }): ChatMessage[] {
-  const answerMode = input.intent === "question" || input.intent === "other";
-  const system = answerMode ? ANSWER_PROMPT : SYSTEM_PROMPT;
+  const system = input.intent === "question" || input.intent === "other" ? ANSWER_PROMPT : SYSTEM_PROMPT;
   const labelOf = (id: string, fallback: string) => input.state.nodes[id]?.label ?? input.state.groups[id]?.label ?? fallback;
   const refs = input.mentions.length ? input.mentions.map((m) => `${m.id} ${labelOf(m.id, m.label).replace(/\s+/g, " ")}`).join("\n") : "없음";
   const open = input.intent === "missing_info_answer" ? (input.missing ?? []).filter((m) => !m.unknown).slice(0, MISSING_LINES_MAX) : [];
@@ -215,34 +214,26 @@ export function buildMessages(input: {
   const user = `현재 구성:\n${summarizeState(input.state, input.network)}\n\n${netBlock}${flowBlock}참조 노드:\n${refs}\n\n${missingBlock}요청: ${input.text}${cont}`;
   return [
     { role: "system", content: system },
-    ...replayHistory(input.history, answerMode).slice(-HISTORY_LIMIT),
+    ...replayHistory(input.history).slice(-HISTORY_LIMIT),
     { role: "user", content: user },
   ];
 }
 
 /**
- * 지난 대화를 모델에 다시 보낼 모양으로 바꾼다.
- * - 빈 AI 답(반영하지 못한 차례)은 바로 앞 사용자 글과 함께 뺀다. 같은 요청을 되풀이한 기록이 모델을 흔들지 않게 한다.
- * - 명령 모드면 AI 답을 줄마다 `{"op":"say"}` JSON 줄로 바꾼다. 저장된 답은 say 글을 이어 붙인 일반 글이라,
- *   그대로 넣으면 모델이 일반 글로 답하는 버릇을 따라 한다(JSON 아닌 줄은 건너뛰어 반영 0이 된다).
+ * 지난 대화를 모델에 다시 보낼 모양으로 바꾼다. 빈 AI 답(반영하지 못한 차례)은 바로 앞 사용자 글과 함께 뺀다.
+ * 같은 요청을 되풀이한 기록이 모델을 흔들지 않게 한다.
+ * AI 답은 일반 글 그대로 둔다. 저장된 답은 say 글뿐이고 낸 명령은 없어서, `{"op":"say"}` JSON 줄로 바꿔 넣으면
+ * 모델이 "say 한 줄만 쓰고 끝"을 따라 해 그리기 요청에 아무것도 그리지 않는다(실측 0/3, 일반 글 3/3).
+ * 명령 모드에서 일반 글로 새는 답은 파이프라인이 say 로 보여 준다.
  */
-function replayHistory(history: { role: "user" | "assistant"; content: string }[], answerMode: boolean): ChatMessage[] {
+function replayHistory(history: { role: "user" | "assistant"; content: string }[]): ChatMessage[] {
   const out: ChatMessage[] = [];
   for (const h of history) {
     if (h.role === "assistant" && h.content.trim() === "") {
       if (out.at(-1)?.role === "user") out.pop();
       continue;
     }
-    const content =
-      h.role === "assistant" && !answerMode
-        ? h.content
-            .split("\n")
-            .map((l) => l.trim())
-            .filter(Boolean)
-            .map((text) => JSON.stringify({ op: "say", text }))
-            .join("\n")
-        : h.content;
-    out.push({ role: h.role, content });
+    out.push({ role: h.role, content: h.content });
   }
   return out;
 }

@@ -227,30 +227,14 @@ describe("buildMessages", () => {
     expect(last.content).toContain("요청: 추가해줘");
   });
 
-  test("command mode replays past assistant replies as say JSON lines", () => {
+  test("past assistant replies stay plain text in every mode (no say JSON replay)", () => {
     const history = [
       { role: "user" as const, content: "질문" },
-      { role: "assistant" as const, content: "첫 줄이에요.\n\n둘째 줄 \"따옴표\"." },
+      { role: "assistant" as const, content: "첫 줄이에요.\n둘째 줄이에요." },
     ];
-    for (const intent of ["structure_change", "missing_info_answer", null] as const) {
+    for (const intent of ["structure_change", "missing_info_answer", null, "question", "other"] as const) {
       const msgs = buildMessages({ intent, text: "x", state: sample(), mentions: [], history });
-      expect(msgs[1]).toEqual({ role: "user", content: "질문" });
-      expect(msgs[2]!.role).toBe("assistant");
-      expect(msgs[2]!.content.split("\n").map((l) => JSON.parse(l))).toEqual([
-        { op: "say", text: "첫 줄이에요." },
-        { op: "say", text: "둘째 줄 \"따옴표\"." },
-      ]);
-    }
-  });
-
-  test("answer mode keeps past assistant replies as plain text", () => {
-    const history = [
-      { role: "user" as const, content: "질문" },
-      { role: "assistant" as const, content: "그냥 답이에요." },
-    ];
-    for (const intent of ["question", "other"] as const) {
-      const msgs = buildMessages({ intent, text: "x", state: sample(), mentions: [], history });
-      expect(msgs[2]).toEqual({ role: "assistant", content: "그냥 답이에요." });
+      expect(msgs.slice(1, -1)).toEqual(history);
     }
   });
 

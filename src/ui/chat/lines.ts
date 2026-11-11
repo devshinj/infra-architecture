@@ -31,6 +31,7 @@ const changedOf = (r: Pick<TurnResult, "applied" | "changed">) => r.changed ?? r
  * 차례 끝 요약 칩 글. 바꾼 곳 수(가정 변경은 세지 않는다)만 쉬운 말로 보이고 건너뛴 수는 보이지 않는다.
  * 바꾼 곳이 없고 AI 가 낸 글(안내·답)도 없으면 반영하지 못했다고 알린다: 구성 변경 요청(structure_change)이면
  * 언제나(가정만 바꿨어도), 그 밖에는 버전 없이 건너뛴 명령이 있을 때. AI 가 글을 냈으면 알리지 않는다.
+ * 구성 변경 차례에 글만 내고 바뀐 것이 없으면 "바꾼 곳이 없어요".
  * 그 밖에 바뀐 것이 없으면 "변경 사항이 없어요.", 답만 한 차례면 없음.
  * 재정렬(layout) 차례는 "다시 정렬했어요" 안내와 어긋나므로 칩을 두지 않는다.
  * 흐름을 저장했으면 `흐름 N개 바꿨어요`를 덧붙인다. 흐름만 바꾼 차례(버전 없음)도 반영한 것으로 본다.
@@ -42,6 +43,8 @@ export function summaryText(r: TurnResult, hadAnswer: boolean, intent?: string |
   const flows = r.flows ?? 0;
   if (changed === 0 && flows === 0 && r.status === "complete") {
     if (!hadAnswer && intent !== "layout" && (intent === "structure_change" || (r.version === null && r.skipped > 0))) return NOT_APPLIED_MESSAGE;
+    // 구성 변경 차례인데 AI 가 "~추가합니다" 같은 글만 내고 아무것도 안 바꿨으면, 글만 보고 바뀐 줄 알지 않게 알린다.
+    if (r.version === null && hadAnswer && intent === "structure_change") return "바꾼 곳이 없어요";
     if (r.version === null) return hadAnswer || intent === "layout" ? null : "변경 사항이 없어요.";
   }
   const flowText = flows > 0 ? `흐름 ${flows}개 바꿨어요` : null;

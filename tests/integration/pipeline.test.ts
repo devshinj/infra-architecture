@@ -292,7 +292,7 @@ describe("runChatTurn", () => {
     }
   });
 
-  test("next command turn replays the saved reply as say JSON and drops failed turns", async () => {
+  test("next command turn replays the saved reply as plain text and drops failed turns", async () => {
     const ids = await makeOwnedDiagram();
     await createVersion(ids.diagramId, emptyState(), { source: "import" });
     const deps = { clef: fakeClef({ intent: "structure_change", confidence: 0.9 }) };
@@ -303,7 +303,7 @@ describe("runChatTurn", () => {
     const past = qwen.calls[0]!.slice(1, -1);
     expect(past).toEqual([
       { role: "user", content: "질문" },
-      { role: "assistant", content: JSON.stringify({ op: "say", text: "일반 글 답이에요." }) },
+      { role: "assistant", content: "일반 글 답이에요." },
     ]);
   });
 
@@ -535,8 +535,7 @@ describe("runChatTurn", () => {
     const msgs = qwen.calls[0]!;
     expect(msgs.slice(1, -1)).toEqual([
       { role: "user", content: "첫 요청" },
-      // 명령 모드(의도 없음)라 지난 답은 say JSON 줄로 다시 보낸다.
-      { role: "assistant", content: say("첫 답") },
+      { role: "assistant", content: "첫 답" },
     ]);
     expect(msgs.at(-1)!.content).toContain("요청: 둘째 요청");
     expect(clef.calls[0]).toEqual({ input: "둘째 요청", context: { lastAssistant: "첫 답", openItems: [] } });

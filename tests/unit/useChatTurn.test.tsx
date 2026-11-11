@@ -258,7 +258,7 @@ test("a continuation status keeps counting changes and shows the part on the car
   expect(cardOf(h.result.current.lines)).toMatchObject({ end: "done", changes: 2 });
 });
 
-test("structure change: a say-only turn shows no notice; an assumption-only turn shows the notice and drops the card", async () => {
+test("structure change: a say-only turn says nothing changed; an assumption-only turn shows the notice and drops the card", async () => {
   const notice = "요청을 반영하지 못했어요. 다시 말해 주세요.";
   const run = async (evs: ChatEvent[]) => {
     vi.stubGlobal("fetch", vi.fn(async () => streamOf([nd(evs)])));
@@ -268,7 +268,7 @@ test("structure change: a say-only turn shows no notice; an assumption-only turn
   };
   const start: ChatEvent = { t: "start", messageId: "m", intent: "structure_change" };
   const sayOnly = await run([start, { t: "say", text: "DB 를 이중화합니다." }, done({ version: null, applied: 0, skipped: 0 })]);
-  expect(sayOnly.some((l) => l.kind === "summary")).toBe(false);
+  expect(sayOnly.find((l) => l.kind === "summary")?.text).toBe("바꾼 곳이 없어요");
   const assumption = await run([start, { t: "cmd", cmd: { op: "set_assumption", key: "redundancy", value: "이중화" } as Command }, done({ version: 3, applied: 1, changed: 0, skipped: 0 })]);
   expect(assumption.find((l) => l.kind === "summary")?.text).toBe(notice);
   expect(assumption.some((l) => l.kind === "card")).toBe(false);
