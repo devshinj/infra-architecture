@@ -1,6 +1,6 @@
 ---
 title: "Command"
-sidebar_position: 76
+sidebar_position: 85
 ---
 # Command
 
@@ -22,18 +22,17 @@ sidebar_position: 76
 
 ## Relationships
 
-- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (3 shared connections)
-- [mcp/apply.ts](mcp-apply.ts.md) (2 shared connections)
-- [schema.ts](schema.ts.md) (2 shared connections)
-- [display.ts](display.ts.md) (2 shared connections)
-- [types.ts](types.ts.md) (2 shared connections)
-- [getOwnedDiagram](getOwnedDiagram.md) (2 shared connections)
-- [pipeline.ts](pipeline.ts.md) (2 shared connections)
+- [getOwnedDiagram](getOwnedDiagram.md) (4 shared connections)
+- [DiagramState](DiagramState.md) (3 shared connections)
+- [layout.ts](layout.ts.md) (3 shared connections)
+- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (2 shared connections)
+- [useChatTurn.ts](useChatTurn.ts.md) (2 shared connections)
 - [prompt.ts](prompt.ts.md) (2 shared connections)
 - [AssumptionChips.tsx](AssumptionChips.tsx.md) (1 shared connections)
-- [layout.ts](layout.ts.md) (1 shared connections)
-- [NODE_KINDS](NODE_KINDS.md) (1 shared connections)
-- [lines.ts](lines.ts.md) (1 shared connections)
+- [commands.ts](commands.ts.md) (1 shared connections)
+- [(app)/actions.ts](app-actions.ts.md) (1 shared connections)
+- [InfraSketch 설계 문서](InfraSketch_설계_문서.md) (1 shared connections)
+- [pipeline.ts](pipeline.ts.md) (1 shared connections)
 
 ## Source Files
 

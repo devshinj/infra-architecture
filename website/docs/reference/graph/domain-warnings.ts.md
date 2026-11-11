@@ -1,22 +1,28 @@
 ---
 title: "domain/warnings.ts"
-sidebar_position: 58
+sidebar_position: 46
 ---
 # domain/warnings.ts
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 15 nodes · cohesion 0.20
+> 21 nodes · cohesion 0.14
 
 ## Key Concepts
 
 - **domain/warnings.ts** (40 connections) — `src/domain/warnings.ts`
 - **evaluateRules()** (15 connections) — `src/domain/warnings.ts`
 - **mergeWarnings()** (13 connections) — `src/domain/warnings.ts`
+- **DNode** (12 connections) — `src/domain/types.ts`
+- **Edge** (8 connections) — `src/domain/types.ts`
 - **categoryOf()** (7 connections) — `src/domain/catalog.ts`
+- **Task 1: 망 영역·망연계 노드·연결 전달물/방향** (4 connections) — `docs/superpowers/plans/2026-11-05-flows-and-network-boundaries.md`
+- **NodeKind** (4 connections) — `src/domain/catalog.ts`
 - **WarningLevel** (4 connections) — `src/domain/types.ts`
 - **warningDelta()** (4 connections) — `src/domain/warnings.ts`
 - **Rule** (3 connections) — `src/domain/warnings.ts`
+- **Target** (3 connections) — `src/domain/warnings.ts`
+- **warningBlock()** (3 connections) — `src/server/chat/prompt.ts`
 - **ancestorKinds()** (2 connections) — `src/domain/warnings.ts`
 - **DATA_KINDS** (2 connections) — `src/domain/warnings.ts`
 - **make()** (2 connections) — `src/domain/warnings.ts`
@@ -29,28 +35,30 @@ sidebar_position: 58
 ## Relationships
 
 - [chat/warnings.ts](chat-warnings.ts.md) (10 shared connections)
-- [Canvas.tsx](Canvas.tsx.md) (5 shared connections)
-- [NodeInfo.tsx](NodeInfo.tsx.md) (5 shared connections)
-- [types.ts](types.ts.md) (5 shared connections)
-- [networkRules.ts](networkRules.ts.md) (5 shared connections)
-- [pipeline.ts](pipeline.ts.md) (4 shared connections)
-- [domain/flows.ts](domain-flows.ts.md) (3 shared connections)
-- [prompt.ts](prompt.ts.md) (3 shared connections)
-- [MissingChecklist.tsx](MissingChecklist.tsx.md) (3 shared connections)
-- [lines.ts](lines.ts.md) (3 shared connections)
-- [ZoneNameLayer.tsx](ZoneNameLayer.tsx.md) (2 shared connections)
-- [domain/network.ts](domain-network.ts.md) (2 shared connections)
+- [domain/network.ts](domain-network.ts.md) (7 shared connections)
+- [Canvas.tsx](Canvas.tsx.md) (6 shared connections)
+- [NodeInfo.tsx](NodeInfo.tsx.md) (6 shared connections)
+- [getOwnedDiagram](getOwnedDiagram.md) (6 shared connections)
+- [prompt.ts](prompt.ts.md) (5 shared connections)
+- [domain/flows.ts](domain-flows.ts.md) (5 shared connections)
+- [useChatTurn.ts](useChatTurn.ts.md) (5 shared connections)
+- [DiagramState](DiagramState.md) (3 shared connections)
+- [ZoneNameLayer.tsx](ZoneNameLayer.tsx.md) (3 shared connections)
+- [missing.ts](missing.ts.md) (3 shared connections)
+- [pipeline.ts](pipeline.ts.md) (3 shared connections)
 
 ## Source Files
 
+- `docs/superpowers/plans/2026-11-05-flows-and-network-boundaries.md`
 - `src/domain/catalog.ts`
 - `src/domain/types.ts`
 - `src/domain/warnings.ts`
+- `src/server/chat/prompt.ts`
 
 ## Audit Trail
 
-- EXTRACTED: 74 (95%)
-- INFERRED: 4 (5%)
+- EXTRACTED: 97 (93%)
+- INFERRED: 7 (7%)
 - AMBIGUOUS: 0 (0%)
 
 ---

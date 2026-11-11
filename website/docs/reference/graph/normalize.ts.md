@@ -1,16 +1,16 @@
 ---
 title: "normalize.ts"
-sidebar_position: 67
+sidebar_position: 71
 ---
 # normalize.ts
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 13 nodes · cohesion 0.19
+> 14 nodes · cohesion 0.18
 
 ## Key Concepts
 
-- **normalize.ts** (14 connections) — `src/server/chat/normalize.ts`
+- **normalize.ts** (17 connections) — `src/server/chat/normalize.ts`
 - **normalizeAiCommand()** (9 connections) — `src/server/chat/normalize.ts`
 - **flattenAttr()** (2 connections) — `src/server/chat/normalize.ts`
 - **isPlainObject()** (2 connections) — `src/server/chat/normalize.ts`
@@ -20,6 +20,7 @@ sidebar_position: 67
 - **HAS_ATTRS** (1 connections) — `src/server/chat/normalize.ts`
 - **HAS_STEPS** (1 connections) — `src/server/chat/normalize.ts`
 - **ID_FIELDS** (1 connections) — `src/server/chat/normalize.ts`
+- **MEDIA** (1 connections) — `src/server/chat/normalize.ts`
 - **NEEDS_PARENT** (1 connections) — `src/server/chat/normalize.ts`
 - **PAYLOADS** (1 connections) — `src/server/chat/normalize.ts`
 - **STEP_ID_FIELDS** (1 connections) — `src/server/chat/normalize.ts`
@@ -27,8 +28,10 @@ sidebar_position: 67
 ## Relationships
 
 - [pipeline.ts](pipeline.ts.md) (3 shared connections)
-- [schema.ts](schema.ts.md) (2 shared connections)
-- [mcp/apply.ts](mcp-apply.ts.md) (2 shared connections)
+- [flowSuggest.ts](flowSuggest.ts.md) (3 shared connections)
+- [Legend.tsx](Legend.tsx.md) (1 shared connections)
+- [getOwnedDiagram](getOwnedDiagram.md) (1 shared connections)
+- [missing.ts](missing.ts.md) (1 shared connections)
 
 ## Source Files
 
@@ -36,8 +39,8 @@ sidebar_position: 67
 
 ## Audit Trail
 
-- EXTRACTED: 21 (95%)
-- INFERRED: 1 (5%)
+- EXTRACTED: 24 (96%)
+- INFERRED: 1 (4%)
 - AMBIGUOUS: 0 (0%)
 
 ---

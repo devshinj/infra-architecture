@@ -1,6 +1,6 @@
 ---
 title: "NetworkKnowledgePage.tsx"
-sidebar_position: 10
+sidebar_position: 8
 ---
 # NetworkKnowledgePage.tsx
 
@@ -28,44 +28,44 @@ sidebar_position: 10
 - **listNetworkTypes()** (7 connections) — `src/server/network.ts`
 - **closeOnEscape()** (6 connections) — `src/ui/useNotesPanel.ts`
 - **NetworkKnowledge()** (5 connections) — `src/app/(app)/network/page.tsx`
-- **GENERIC_ERROR** (5 connections) — `src/ui/dialogs.tsx`
 - **reqBool()** (4 connections) — `src/app/(app)/actions.ts`
 - **reqGrade()** (4 connections) — `src/app/(app)/actions.ts`
 - **reqStrings()** (4 connections) — `src/app/(app)/actions.ts`
 - **countZonesUsingType()** (4 connections) — `src/server/network.ts`
 - **RuleForm()** (4 connections) — `src/ui/network/NetworkKnowledgePage.tsx`
 - **TypeForm()** (4 connections) — `src/ui/network/NetworkKnowledgePage.tsx`
+- **reqMethod()** (3 connections) — `src/app/(app)/actions.ts`
 - *... and 16 more nodes in this community*
 
 ## Relationships
 
 - [(app)/actions.ts](app-actions.ts.md) (27 shared connections)
-- [server/network.ts](server-network.ts.md) (16 shared connections)
-- [domain/network.ts](domain-network.ts.md) (10 shared connections)
+- [server/network.ts](server-network.ts.md) (19 shared connections)
 - [ref_react](ref_react.md) (7 shared connections)
-- [Sidebar.tsx](Sidebar.tsx.md) (7 shared connections)
+- [domain/network.ts](domain-network.ts.md) (6 shared connections)
 - [GlossaryPage.tsx](GlossaryPage.tsx.md) (5 shared connections)
+- [mcpKeys.ts](mcpKeys.ts.md) (5 shared connections)
 - [Shell.tsx](Shell.tsx.md) (4 shared connections)
 - [auth](auth.md) (2 shared connections)
-- [Review Focus](Review_Focus.md) (1 shared connections)
-- [getOwnedDiagram](getOwnedDiagram.md) (1 shared connections)
+- [read.ts](read.ts.md) (2 shared connections)
+- [missing.ts](missing.ts.md) (1 shared connections)
 - [auth.ts](auth.ts.md) (1 shared connections)
-- [\[sessionId\]/route.ts]([sessionId]-route.ts.md) (1 shared connections)
+- [pipeline.ts](pipeline.ts.md) (1 shared connections)
 
 ## Source Files
 
 - `docs/superpowers/plans/2026-11-06-network-knowledge-link-guess.md`
 - `src/app/(app)/actions.ts`
 - `src/app/(app)/network/page.tsx`
+- `src/domain/network-seed.ts`
 - `src/server/network.ts`
-- `src/ui/dialogs.tsx`
 - `src/ui/network/NetworkKnowledgePage.tsx`
 - `src/ui/useNotesPanel.ts`
 
 ## Audit Trail
 
-- EXTRACTED: 160 (94%)
-- INFERRED: 11 (6%)
+- EXTRACTED: 158 (93%)
+- INFERRED: 11 (7%)
 - AMBIGUOUS: 0 (0%)
 
 ---

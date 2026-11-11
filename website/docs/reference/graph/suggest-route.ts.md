@@ -1,6 +1,6 @@
 ---
 title: "suggest/route.ts"
-sidebar_position: 79
+sidebar_position: 88
 ---
 # suggest/route.ts
 
@@ -21,11 +21,10 @@ sidebar_position: 79
 
 ## Relationships
 
+- [flowSuggest.ts](flowSuggest.ts.md) (4 shared connections)
 - [auth](auth.md) (3 shared connections)
-- [schema.ts](schema.ts.md) (3 shared connections)
-- [suggestFlows](suggestFlows.md) (2 shared connections)
-- [server/network.ts](server-network.ts.md) (1 shared connections)
-- [getOwnedDiagram](getOwnedDiagram.md) (1 shared connections)
+- [server/network.ts](server-network.ts.md) (2 shared connections)
+- [schema.ts](schema.ts.md) (1 shared connections)
 - [ref_react](ref_react.md) (1 shared connections)
 - [auth.ts](auth.ts.md) (1 shared connections)
 - [projects.ts](projects.ts.md) (1 shared connections)

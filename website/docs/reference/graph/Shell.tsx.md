@@ -1,6 +1,6 @@
 ---
 title: "Shell.tsx"
-sidebar_position: 41
+sidebar_position: 47
 ---
 # Shell.tsx
 
@@ -36,8 +36,8 @@ sidebar_position: 41
 
 - [Sidebar.tsx](Sidebar.tsx.md) (7 shared connections)
 - [ref_react](ref_react.md) (6 shared connections)
-- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (6 shared connections)
 - [(app)/page.tsx](app-page.tsx.md) (5 shared connections)
+- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (5 shared connections)
 - [NetworkKnowledgePage.tsx](NetworkKnowledgePage.tsx.md) (4 shared connections)
 - [ChatPanel.tsx](ChatPanel.tsx.md) (3 shared connections)
 - [PageSkeleton.tsx](PageSkeleton.tsx.md) (3 shared connections)
@@ -45,6 +45,7 @@ sidebar_position: 41
 - [auth](auth.md) (2 shared connections)
 - [auth.ts](auth.ts.md) (1 shared connections)
 - [projects.ts](projects.ts.md) (1 shared connections)
+- [(app)/actions.ts](app-actions.ts.md) (1 shared connections)
 
 ## Source Files
 

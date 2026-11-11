@@ -1,16 +1,16 @@
 ---
 title: "getOwnedDiagram"
-sidebar_position: 20
+sidebar_position: 16
 ---
 # getOwnedDiagram
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 33 nodes · cohesion 0.23
+> 38 nodes · cohesion 0.18
 
 ## Key Concepts
 
-- **ValidationError** (57 connections) — `src/server/projects.ts`
+- **types.ts** (77 connections) — `src/domain/types.ts`
 - **getOwnedDiagram()** (53 connections) — `src/server/projects.ts`
 - **withDiagramLock()** (31 connections) — `src/server/chat/lock.ts`
 - **createVersion()** (31 connections) — `src/server/versions.ts`
@@ -35,22 +35,22 @@ sidebar_position: 20
 - **confirmLinkGuessFor()** (9 connections) — `src/server/linkGuess.ts`
 - **duplicateDiagram()** (9 connections) — `src/server/projects.ts`
 - **noLinkKey()** (8 connections) — `src/domain/assumptions.ts`
-- *... and 8 more nodes in this community*
+- *... and 13 more nodes in this community*
 
 ## Relationships
 
-- [pipeline.ts](pipeline.ts.md) (41 shared connections)
-- [(app)/actions.ts](app-actions.ts.md) (30 shared connections)
-- [schema.ts](schema.ts.md) (28 shared connections)
-- [projects.ts](projects.ts.md) (24 shared connections)
-- [mcp/apply.ts](mcp-apply.ts.md) (21 shared connections)
-- [read.ts](read.ts.md) (18 shared connections)
-- [\[sessionId\]/route.ts]([sessionId]-route.ts.md) (14 shared connections)
-- [server/network.ts](server-network.ts.md) (13 shared connections)
-- [types.ts](types.ts.md) (11 shared connections)
-- [AssumptionChips.tsx](AssumptionChips.tsx.md) (7 shared connections)
-- [domain/flows.ts](domain-flows.ts.md) (6 shared connections)
-- [domain/linkGuess.ts](domain-linkGuess.ts.md) (5 shared connections)
+- [(app)/actions.ts](app-actions.ts.md) (32 shared connections)
+- [pipeline.ts](pipeline.ts.md) (30 shared connections)
+- [mcp/apply.ts](mcp-apply.ts.md) (24 shared connections)
+- [schema.ts](schema.ts.md) (20 shared connections)
+- [projects.ts](projects.ts.md) (18 shared connections)
+- [server/network.ts](server-network.ts.md) (15 shared connections)
+- [read.ts](read.ts.md) (13 shared connections)
+- [AssumptionChips.tsx](AssumptionChips.tsx.md) (11 shared connections)
+- [domain/apply.ts](domain-apply.ts.md) (10 shared connections)
+- [DiagramState](DiagramState.md) (10 shared connections)
+- [\[sessionId\]/route.ts]([sessionId]-route.ts.md) (10 shared connections)
+- [domain/flows.ts](domain-flows.ts.md) (8 shared connections)
 
 ## Source Files
 
@@ -70,13 +70,14 @@ sidebar_position: 20
 - `src/server/mcp/apply.ts`
 - `src/server/mcp/read.ts`
 - `src/server/projects.ts`
+- `src/server/samples.ts`
 - `src/server/versions.ts`
 - `src/server/zoneType.ts`
 
 ## Audit Trail
 
-- EXTRACTED: 363 (94%)
-- INFERRED: 25 (6%)
+- EXTRACTED: 401 (95%)
+- INFERRED: 22 (5%)
 - AMBIGUOUS: 0 (0%)
 
 ---

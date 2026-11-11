@@ -1,33 +1,19 @@
 ---
 title: "MissingChecklist.tsx"
-sidebar_position: 15
+sidebar_position: 53
 ---
 # MissingChecklist.tsx
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 38 nodes · cohesion 0.09
+> 20 nodes · cohesion 0.14
 
 ## Key Concepts
 
 - **MissingChecklist.tsx** (36 connections) — `src/ui/chat/MissingChecklist.tsx`
-- **InfoCard.tsx** (29 connections) — `src/ui/canvas/InfoCard.tsx`
 - **MissingChecklist()** (20 connections) — `src/ui/chat/MissingChecklist.tsx`
-- **InfoCard()** (14 connections) — `src/ui/canvas/InfoCard.tsx`
-- **useNetworkKnowledge()** (11 connections) — `src/ui/network/NetworkKnowledgeContext.tsx`
-- **InfoCardProps** (10 connections) — `src/ui/canvas/InfoCard.tsx`
-- **ZoneTypePicker()** (10 connections) — `src/ui/network/ZoneTypePicker.tsx`
 - **MissingChecklistProps** (8 connections) — `src/ui/chat/MissingChecklist.tsx`
-- **GuessedZones()** (4 connections) — `src/ui/canvas/InfoCard.tsx`
-- **ZoneTypeSave** (4 connections) — `src/ui/chat/MissingChecklist.tsx`
-- **parseLinkWarningId()** (3 connections) — `src/domain/networkRules.ts`
-- **CardMeasure** (2 connections) — `src/ui/canvas/InfoCard.tsx`
-- **Chevron()** (2 connections) — `src/ui/canvas/InfoCard.tsx`
-- **Count()** (2 connections) — `src/ui/canvas/InfoCard.tsx`
-- **.onChooseAssumption()** (2 connections) — `src/ui/canvas/InfoCard.tsx`
-- **.onMeasure()** (2 connections) — `src/ui/canvas/InfoCard.tsx`
-- **.onOpenChange()** (2 connections) — `src/ui/canvas/InfoCard.tsx`
-- **.onRemoveNoLink()** (2 connections) — `src/ui/canvas/InfoCard.tsx`
+- **MissingItem** (6 connections) — `src/domain/missing.ts`
 - **blocksOf()** (2 connections) — `src/ui/chat/MissingChecklist.tsx`
 - **ChecklistDrafts** (2 connections) — `src/ui/chat/MissingChecklist.tsx`
 - **ChecklistExpanded** (2 connections) — `src/ui/chat/MissingChecklist.tsx`
@@ -35,35 +21,40 @@ sidebar_position: 15
 - **EdgeIcon()** (2 connections) — `src/ui/chat/MissingChecklist.tsx`
 - **.onFocusHandled()** (2 connections) — `src/ui/chat/MissingChecklist.tsx`
 - **.onLocate()** (2 connections) — `src/ui/chat/MissingChecklist.tsx`
-- *... and 13 more nodes in this community*
+- **.onSave()** (2 connections) — `src/ui/chat/MissingChecklist.tsx`
+- **without()** (2 connections) — `src/ui/chat/MissingChecklist.tsx`
+- **ZoneIcon()** (2 connections) — `src/ui/chat/MissingChecklist.tsx`
+- **Block** (1 connections) — `src/ui/chat/MissingChecklist.tsx`
+- **ChecklistDraft** (1 connections) — `src/ui/chat/MissingChecklist.tsx`
+- **CHOICES** (1 connections) — `src/ui/chat/MissingChecklist.tsx`
+- **Draft** (1 connections) — `src/ui/chat/MissingChecklist.tsx`
+- **EMPTY** (1 connections) — `src/ui/chat/MissingChecklist.tsx`
+- **SaveFieldsDraft** (1 connections) — `src/ui/chat/MissingChecklist.tsx`
 
 ## Relationships
 
-- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (10 shared connections)
-- [domain/network.ts](domain-network.ts.md) (8 shared connections)
-- [ref_react](ref_react.md) (6 shared connections)
-- [pipeline.ts](pipeline.ts.md) (5 shared connections)
-- [NodeInfo.tsx](NodeInfo.tsx.md) (5 shared connections)
-- [schema.ts](schema.ts.md) (4 shared connections)
-- [types.ts](types.ts.md) (4 shared connections)
-- [Review Focus](Review_Focus.md) (4 shared connections)
-- [AssumptionChips.tsx](AssumptionChips.tsx.md) (3 shared connections)
-- [domain/warnings.ts](domain-warnings.ts.md) (3 shared connections)
-- [networkRules.ts](networkRules.ts.md) (2 shared connections)
-- [NODE_KINDS](NODE_KINDS.md) (2 shared connections)
+- [InfoCard.tsx](InfoCard.tsx.md) (7 shared connections)
+- [ZoneTypePicker.tsx](ZoneTypePicker.tsx.md) (5 shared connections)
+- [missing.ts](missing.ts.md) (4 shared connections)
+- [EdgePanels.tsx](EdgePanels.tsx.md) (4 shared connections)
+- [ref_react](ref_react.md) (4 shared connections)
+- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (4 shared connections)
+- [DiagramState](DiagramState.md) (2 shared connections)
+- [pipeline.ts](pipeline.ts.md) (1 shared connections)
+- [prompt.ts](prompt.ts.md) (1 shared connections)
+- [mcp/apply.ts](mcp-apply.ts.md) (1 shared connections)
+- [read.ts](read.ts.md) (1 shared connections)
+- [domain/explain.ts](domain-explain.ts.md) (1 shared connections)
 
 ## Source Files
 
-- `src/domain/networkRules.ts`
-- `src/ui/canvas/InfoCard.tsx`
+- `src/domain/missing.ts`
 - `src/ui/chat/MissingChecklist.tsx`
-- `src/ui/network/NetworkKnowledgeContext.tsx`
-- `src/ui/network/ZoneTypePicker.tsx`
 
 ## Audit Trail
 
-- EXTRACTED: 126 (98%)
-- INFERRED: 3 (2%)
+- EXTRACTED: 67 (97%)
+- INFERRED: 2 (3%)
 - AMBIGUOUS: 0 (0%)
 
 ---

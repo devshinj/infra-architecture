@@ -1,71 +1,73 @@
 ---
 title: "read.ts"
-sidebar_position: 24
+sidebar_position: 13
 ---
 # read.ts
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 32 nodes · cohesion 0.11
+> 39 nodes · cohesion 0.09
 
 ## Key Concepts
 
 - **read.ts** (56 connections) — `src/server/mcp/read.ts`
-- **server.ts** (30 connections) — `src/server/mcp/server.ts`
-- **File Structure** (18 connections) — `docs/superpowers/plans/2026-11-09-mcp-server.md`
-- **createMcpServer()** (18 connections) — `src/server/mcp/server.ts`
-- **applyMcpCommands()** (8 connections) — `src/server/mcp/apply.ts`
-- **Task 6: 읽기 서비스와 안내서** (7 connections) — `docs/superpowers/plans/2026-11-09-mcp-server.md`
-- **diagramUrl()** (7 connections) — `src/server/mcp/url.ts`
-- **buildGuide()** (6 connections) — `src/server/mcp/read.ts`
-- **createProjectForMcp()** (5 connections) — `src/server/mcp/read.ts`
-- **url.ts** (5 connections) — `src/server/mcp/url.ts`
-- **listVersions()** (5 connections) — `src/server/versions.ts`
-- **Task 2: 키 테이블과 버전 칸** (4 connections) — `docs/superpowers/plans/2026-11-09-mcp-server.md`
-- **createDiagramForMcp()** (4 connections) — `src/server/mcp/read.ts`
-- **listDiagramsForMcp()** (4 connections) — `src/server/mcp/read.ts`
+- **drawing/rules.ts** (35 connections) — `src/server/drawing/rules.ts`
+- **networkBlock()** (10 connections) — `src/server/chat/prompt.ts`
+- **userRuleLines()** (8 connections) — `src/server/drawing/rules.ts`
+- **baseRuleBlock()** (7 connections) — `src/server/drawing/rules.ts`
+- **networkGuideText()** (7 connections) — `src/server/drawing/rules.ts`
+- **networkTypeLines()** (7 connections) — `src/server/drawing/rules.ts`
+- **patternBlock()** (7 connections) — `src/server/drawing/rules.ts`
+- **networkGuideSection()** (7 connections) — `src/server/mcp/read.ts`
+- **Task 1: 그리기 규칙 공용 모듈** (6 connections) — `docs/superpowers/plans/2026-11-09-mcp-server.md`
+- **METHOD_LABELS** (6 connections) — `src/domain/network.ts`
+- **patternPromptBlock()** (6 connections) — `src/domain/patterns.ts`
+- **gradeRuleLines()** (6 connections) — `src/server/drawing/rules.ts`
+- **patterns.ts** (4 connections) — `src/domain/patterns.ts`
+- **baseRuleLines()** (4 connections) — `src/server/drawing/rules.ts`
+- **byStr()** (4 connections) — `src/server/drawing/rules.ts`
 - **listProjectsForMcp()** (4 connections) — `src/server/mcp/read.ts`
-- **listVersionsForMcp()** (4 connections) — `src/server/mcp/read.ts`
-- **fail()** (3 connections) — `src/server/mcp/server.ts`
-- **guarded()** (3 connections) — `src/server/mcp/server.ts`
+- **FIELD_LABELS** (3 connections) — `src/domain/missing.ts`
+- **GRADE_RULES** (3 connections) — `src/domain/network.ts`
+- **EDGE_MEDIA** (3 connections) — `src/domain/types.ts`
+- **COMMAND_EXAMPLES** (3 connections) — `src/server/drawing/rules.ts`
+- **KIND_BLOCK** (3 connections) — `src/server/drawing/rules.ts`
+- **networkSection()** (3 connections) — `src/server/mcp/read.ts`
 - **listProjectsWithVersions()** (3 connections) — `src/server/projects.ts`
-- **NOT_ARRAY_MESSAGE** (2 connections) — `src/server/mcp/apply.ts`
-- **body()** (2 connections) — `src/server/mcp/server.ts`
-- **describe()** (2 connections) — `src/server/mcp/server.ts`
-- **ok()** (2 connections) — `src/server/mcp/server.ts`
-- **Task 10: E2E와 문서** (1 connections) — `docs/superpowers/plans/2026-11-09-mcp-server.md`
-- **McpDiagram** (1 connections) — `src/server/mcp/read.ts`
-- *... and 7 more nodes in this community*
+- **byStr()** (2 connections) — `src/server/chat/prompt.ts`
+- *... and 14 more nodes in this community*
 
 ## Relationships
 
-- [getOwnedDiagram](getOwnedDiagram.md) (18 shared connections)
-- [prompt.ts](prompt.ts.md) (17 shared connections)
-- [schema.ts](schema.ts.md) (10 shared connections)
-- [projects.ts](projects.ts.md) (9 shared connections)
-- [mcp/apply.ts](mcp-apply.ts.md) (8 shared connections)
-- [server/network.ts](server-network.ts.md) (5 shared connections)
-- [mcp/route.ts](mcp-route.ts.md) (5 shared connections)
-- [(app)/actions.ts](app-actions.ts.md) (3 shared connections)
-- [domain/network.ts](domain-network.ts.md) (3 shared connections)
-- [\[sessionId\]/route.ts]([sessionId]-route.ts.md) (3 shared connections)
-- [chat/warnings.ts](chat-warnings.ts.md) (2 shared connections)
-- [pipeline.ts](pipeline.ts.md) (2 shared connections)
+- [prompt.ts](prompt.ts.md) (14 shared connections)
+- [domain/network.ts](domain-network.ts.md) (13 shared connections)
+- [read.ts](read.ts.md) (10 shared connections)
+- [getOwnedDiagram](getOwnedDiagram.md) (8 shared connections)
+- [schema.ts](schema.ts.md) (8 shared connections)
+- [mcp/apply.ts](mcp-apply.ts.md) (5 shared connections)
+- [projects.ts](projects.ts.md) (5 shared connections)
+- [missing.ts](missing.ts.md) (4 shared connections)
+- [ZoneNameLayer.tsx](ZoneNameLayer.tsx.md) (3 shared connections)
+- [NetworkKnowledgePage.tsx](NetworkKnowledgePage.tsx.md) (2 shared connections)
+- [server/network.ts](server-network.ts.md) (2 shared connections)
+- [domain/warnings.ts](domain-warnings.ts.md) (2 shared connections)
 
 ## Source Files
 
 - `docs/superpowers/plans/2026-11-09-mcp-server.md`
-- `src/server/mcp/apply.ts`
+- `src/domain/missing.ts`
+- `src/domain/network.ts`
+- `src/domain/patterns.ts`
+- `src/domain/types.ts`
+- `src/server/chat/prompt.ts`
+- `src/server/drawing/rules.ts`
 - `src/server/mcp/read.ts`
-- `src/server/mcp/server.ts`
-- `src/server/mcp/url.ts`
 - `src/server/projects.ts`
-- `src/server/versions.ts`
 
 ## Audit Trail
 
-- EXTRACTED: 138 (90%)
-- INFERRED: 16 (10%)
+- EXTRACTED: 145 (93%)
+- INFERRED: 11 (7%)
 - AMBIGUOUS: 0 (0%)
 
 ---

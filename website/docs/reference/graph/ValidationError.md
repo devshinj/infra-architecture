@@ -1,6 +1,6 @@
 ---
 title: "ValidationError"
-sidebar_position: 100
+sidebar_position: 105
 sidebar_label: "핵심 노드: ValidationError"
 ---
 # ValidationError
@@ -9,7 +9,7 @@ sidebar_label: "핵심 노드: ValidationError"
 
 > God node · 57 connections · `src/server/projects.ts`
 
-**Community:** [getOwnedDiagram](getOwnedDiagram.md)
+**Community:** [server/network.ts](server-network.ts.md)
 
 ## Connections by Relation
 
@@ -47,13 +47,13 @@ sidebar_label: "핵심 노드: ValidationError"
 - ask.ts `EXTRACTED`
 - server/flows.ts `EXTRACTED`
 - [glossary.ts](glossary.ts.md) `EXTRACTED`
-- ask/route.ts `EXTRACTED`
+- [ask/route.ts](ask-route.ts.md) `EXTRACTED`
 - server.ts `EXTRACTED`
 - server/linkGuess.ts `EXTRACTED`
 - chat/route.ts `EXTRACTED`
 - fields.ts `EXTRACTED`
 - explain/route.ts `EXTRACTED`
-- mcpKeys.ts `EXTRACTED`
+- [mcpKeys.ts](mcpKeys.ts.md) `EXTRACTED`
 - [suggest/route.ts](suggest-route.ts.md) `EXTRACTED`
 - zoneType.ts `EXTRACTED`
 - ignore.ts `EXTRACTED`

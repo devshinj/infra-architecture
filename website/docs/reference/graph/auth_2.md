@@ -1,6 +1,6 @@
 ---
 title: "auth"
-sidebar_position: 109
+sidebar_position: 114
 ---
 # auth
 
@@ -37,7 +37,7 @@ sidebar_position: 109
 ### imports
 - [(app)/actions.ts](app-actions.ts.md) `EXTRACTED`
 - [\[sessionId\]/route.ts]([sessionId]-route.ts.md) `EXTRACTED`
-- ask/route.ts `EXTRACTED`
+- [ask/route.ts](ask-route.ts.md) `EXTRACTED`
 - chat/route.ts `EXTRACTED`
 - \[diagramId\]/page.tsx `EXTRACTED`
 - explain/route.ts `EXTRACTED`

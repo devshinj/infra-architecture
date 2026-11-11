@@ -1,6 +1,6 @@
 ---
 title: "Button()"
-sidebar_position: 103
+sidebar_position: 108
 sidebar_label: "핵심 노드: Button()"
 ---
 # Button()
@@ -47,12 +47,12 @@ sidebar_label: "핵심 노드: Button()"
 - [Sidebar.tsx](Sidebar.tsx.md) `EXTRACTED`
 - [MissingChecklist.tsx](MissingChecklist.tsx.md) `EXTRACTED`
 - [Explanation.tsx](Explanation.tsx.md) `EXTRACTED`
-- SessionPicker.tsx `EXTRACTED`
+- [SessionPicker.tsx](SessionPicker.tsx.md) `EXTRACTED`
 - [FlowPanel.tsx](FlowPanel.tsx.md) `EXTRACTED`
 - [Shell.tsx](Shell.tsx.md) `EXTRACTED`
 - [GlossaryPage.tsx](GlossaryPage.tsx.md) `EXTRACTED`
 - reset/page.tsx `EXTRACTED`
-- ZoneTypePicker.tsx `EXTRACTED`
+- [ZoneTypePicker.tsx](ZoneTypePicker.tsx.md) `EXTRACTED`
 - dialogs.tsx `EXTRACTED`
 - McpKeysPage.tsx `EXTRACTED`
 - AuthField.tsx `EXTRACTED`

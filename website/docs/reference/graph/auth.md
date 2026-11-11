@@ -1,6 +1,6 @@
 ---
 title: "auth"
-sidebar_position: 55
+sidebar_position: 69
 sidebar_label: "핵심 노드: auth"
 ---
 # auth
@@ -31,16 +31,16 @@ sidebar_label: "핵심 노드: auth"
 ## Relationships
 
 - [\[sessionId\]/route.ts]([sessionId]-route.ts.md) (7 shared connections)
-- [pipeline.ts](pipeline.ts.md) (6 shared connections)
+- [ask/route.ts](ask-route.ts.md) (6 shared connections)
 - [설명 생성과 품질 검사](설명_생성과_품질_검사.md) (5 shared connections)
-- [getOwnedDiagram](getOwnedDiagram.md) (4 shared connections)
+- [server/network.ts](server-network.ts.md) (4 shared connections)
 - [suggest/route.ts](suggest-route.ts.md) (3 shared connections)
-- [ref_react](ref_react.md) (3 shared connections)
+- [deps.ts](deps.ts.md) (3 shared connections)
 - [projects.ts](projects.ts.md) (3 shared connections)
 - [auth.ts](auth.ts.md) (3 shared connections)
-- [server/network.ts](server-network.ts.md) (2 shared connections)
+- [ref_react](ref_react.md) (2 shared connections)
+- [getOwnedDiagram](getOwnedDiagram.md) (2 shared connections)
 - [head/route.ts](head-route.ts.md) (2 shared connections)
-- [deps.ts](deps.ts.md) (2 shared connections)
 - [(app)/actions.ts](app-actions.ts.md) (2 shared connections)
 
 ## Source Files

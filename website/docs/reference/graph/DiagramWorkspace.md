@@ -1,6 +1,6 @@
 ---
 title: "DiagramWorkspace()"
-sidebar_position: 102
+sidebar_position: 107
 sidebar_label: "핵심 노드: DiagramWorkspace()"
 ---
 # DiagramWorkspace()
@@ -9,7 +9,7 @@ sidebar_label: "핵심 노드: DiagramWorkspace()"
 
 > God node · 49 connections · `src/ui/DiagramWorkspace.tsx`
 
-**Community:** [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md)
+**Community:** [(app)/actions.ts](app-actions.ts.md)
 
 ## Connections by Relation
 
@@ -29,8 +29,8 @@ sidebar_label: "핵심 노드: DiagramWorkspace()"
 - DiagramPage() `EXTRACTED`
 - isFlowCommand() `EXTRACTED`
 - restoreVersionAction() `EXTRACTED`
-- GhostLayer `EXTRACTED`
 - Legend() `EXTRACTED`
+- GhostLayer `EXTRACTED`
 - diffStates() `EXTRACTED`
 - useRemoteChanges() `EXTRACTED`
 - saveFieldsAction() `EXTRACTED`

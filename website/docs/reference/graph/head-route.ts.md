@@ -1,6 +1,6 @@
 ---
 title: "head/route.ts"
-sidebar_position: 91
+sidebar_position: 99
 ---
 # head/route.ts
 
@@ -20,12 +20,12 @@ sidebar_position: 91
 ## Relationships
 
 - [auth](auth.md) (2 shared connections)
-- [getOwnedDiagram](getOwnedDiagram.md) (2 shared connections)
+- [server/network.ts](server-network.ts.md) (2 shared connections)
 - [schema.ts](schema.ts.md) (2 shared connections)
-- [server/network.ts](server-network.ts.md) (1 shared connections)
 - [ref_react](ref_react.md) (1 shared connections)
 - [auth.ts](auth.ts.md) (1 shared connections)
 - [projects.ts](projects.ts.md) (1 shared connections)
+- [getOwnedDiagram](getOwnedDiagram.md) (1 shared connections)
 
 ## Source Files
 
