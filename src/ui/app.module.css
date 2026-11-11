@@ -198,7 +198,7 @@
   /* 빈 홈 화면: 한국어는 어절 단위로 줄을 바꾸고, 시작 버튼은 손가락 크기로. */
   .emptyState { padding: 16px; }
   .emptySheet { padding: 24px; }
-  .emptySheet h1 { font-size: 24px; }
+  .emptySheet h1 { font-size: var(--text-page); }
   /* 떠 있는 사이드바·레일은 서랍(.drawerNav)으로 바뀐다. */
   .sidebar:not(.drawerNav) { display: none; }
 

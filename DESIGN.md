@@ -41,6 +41,11 @@ typography:
     fontFamily: "SUIT, ui-sans-serif, system-ui, sans-serif"
     fontSize: "15px"
     fontWeight: 600
+  body-lg:
+    fontFamily: "SUIT, ui-sans-serif, system-ui, sans-serif"
+    fontSize: "14px"
+    fontWeight: 400
+    lineHeight: 1.6
   body:
     fontFamily: "SUIT, ui-sans-serif, system-ui, sans-serif"
     fontSize: "13px"
@@ -170,11 +175,12 @@ InfraSketch 는 대화로 고쳐 쓰는 설계도다. 구성도 캔버스가 이
 - **Hero** (300, 32px, -0.02em): 빈 홈과 로그인 제목.
 - **Page** (300, 22px, -0.02em): 화면 제목(용어 사전, 망 지식, Claude Code 연결).
 - **Title** (600, 15px): 패널·대화상자·노드 설명의 제목.
+- **Body Large** (400, 14px, 1.6): 화면 소개 글(lead), 로그인 양식, 좁은 화면에서 손가락으로 누르는 글자·입력칸.
 - **Body** (400, 13px, 1.5): 본문, 버튼, 목록 줄.
 - **Label** (500, 12px): 섹션 머리, 보조 라벨, 노드 아래 줄, 연결선 라벨, 시각.
 
 ### Named Rules
-**The 12px Floor Rule.** 화면 틀(패널, 카드, 대화, 목록, 배지, 캔버스 위에 뜨는 팝오버·툴팁)에는 12px 아래 글자가 없다. 크기를 줄이는 대신 색(Ink Soft, Muted Steel)으로 위계를 만든다. 캔버스 안 글자(노드 부제·AZ 칩·배지 11px, 연결선 라벨 11px, 영역 이름 11–20px)는 확대·축소로 크기가 바뀌고 자동 배치 상수(`SUB_PX`, `GROUP_NAME_PX`)와 묶여 있어 이 규칙 밖에 둔다. 대화 아바타의 IS 모노그램(장식)도 예외다.
+**The 12px Floor Rule.** 화면 틀(패널, 카드, 대화, 목록, 배지, 캔버스 위에 뜨는 팝오버·툴팁)에는 12px 아래 글자가 없다. 크기를 줄이는 대신 색(Ink Soft, Muted Steel)으로 위계를 만든다. 캔버스 안 글자(노드 부제·AZ 칩·배지 11px, 연결선 라벨 11px, 영역 이름 11–20px)는 확대·축소로 크기가 바뀌고 자동 배치 상수(`SUB_PX`, `GROUP_NAME_PX`)와 묶여 있어 이 규칙 밖에 둔다. 대화 아바타의 IS 모노그램(장식)도 예외다. 자동 검출기(impeccable detect)가 캔버스 안 11px 를 권고로 짚는 것은 이 예외 때문이다.
 
 **The Label Voice Rule.** 라벨은 연결선 위의 `TCP 1521` 처럼 짧고 사실만 말한다. 명사로 끝내고, 버튼은 동사와 목적어로 쓴다.
 

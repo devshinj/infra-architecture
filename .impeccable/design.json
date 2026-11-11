@@ -30,6 +30,7 @@
       "hero": { "displayName": "Hero", "purpose": "빈 홈과 로그인 제목." },
       "page": { "displayName": "Page", "purpose": "보조 화면 제목." },
       "title": { "displayName": "Title", "purpose": "패널·대화상자·노드 설명 제목." },
+      "body-lg": { "displayName": "Body Large", "purpose": "소개 글, 로그인 양식, 좁은 화면의 누르는 글자." },
       "body": { "displayName": "Body", "purpose": "본문, 버튼, 목록 줄." },
       "label": { "displayName": "Label", "purpose": "섹션 머리, 보조 라벨, 시각. 화면 틀 12px 하한(캔버스 안 노드 부제·연결선 라벨은 11px)." },
       "mono": { "displayName": "Mono", "purpose": "키, 명령, IP·포트 값." }
