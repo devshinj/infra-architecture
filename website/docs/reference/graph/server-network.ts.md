@@ -1,6 +1,6 @@
 ---
 title: "server/network.ts"
-sidebar_position: 10
+sidebar_position: 14
 ---
 # server/network.ts
 
@@ -11,53 +11,52 @@ sidebar_position: 10
 ## Key Concepts
 
 - **server/network.ts** (56 connections) — `src/server/network.ts`
+- **schema.ts** (53 connections) — `src/db/schema.ts`
 - **NotFoundError** (36 connections) — `src/server/projects.ts`
-- **domain/network.ts** (31 connections) — `src/domain/network.ts`
-- **pairKey()** (14 connections) — `src/domain/network.ts`
+- **mcpKeys.ts** (18 connections) — `src/server/mcpKeys.ts`
 - **addNetworkType()** (11 connections) — `src/server/network.ts`
 - **updateNetworkType()** (10 connections) — `src/server/network.ts`
-- **requiredMethod()** (9 connections) — `src/domain/network.ts`
-- **GRADE_LABELS** (8 connections) — `src/domain/network.ts`
 - **NetGrade** (7 connections) — `src/domain/network.ts`
 - **listNetworkTypes()** (7 connections) — `src/server/network.ts`
-- **METHOD_LABELS** (6 connections) — `src/domain/network.ts`
+- **deleteMcpKeyAction()** (6 connections) — `src/app/(app)/actions.ts`
 - **ensureNetworkSeeded()** (6 connections) — `src/server/network.ts`
 - **getOwnedType()** (6 connections) — `src/server/network.ts`
 - **resetNetworkType()** (6 connections) — `src/server/network.ts`
 - **setNetworkTypeHidden()** (6 connections) — `src/server/network.ts`
 - **toRow()** (6 connections) — `src/server/network.ts`
 - **upsertNetworkRule()** (6 connections) — `src/server/network.ts`
-- **Task 5: DB와 서버 — 망 지식 테이블, 기본 제공 채우기, 읽기·고치기** (5 connections) — `docs/superpowers/plans/2026-11-06-network-knowledge-link-guess.md`
 - **LinkMethod** (5 connections) — `src/domain/network.ts`
 - **deleteMcpKey()** (5 connections) — `src/server/mcpKeys.ts`
 - **deleteNetworkType()** (5 connections) — `src/server/network.ts`
-- **network-seed.ts** (4 connections) — `src/domain/network-seed.ts`
 - **checkAliases()** (4 connections) — `src/server/network.ts`
 - **checkDescription()** (4 connections) — `src/server/network.ts`
 - **checkGrade()** (4 connections) — `src/server/network.ts`
+- **checkName()** (4 connections) — `src/server/network.ts`
+- **deleteNetworkRule()** (4 connections) — `src/server/network.ts`
+- **NetTypeRow** (4 connections) — `src/server/network.ts`
+- **Task 3: 키 만들기·확인** (3 connections) — `docs/superpowers/plans/2026-11-09-mcp-server.md`
 - *... and 14 more nodes in this community*
 
 ## Relationships
 
-- [NetworkKnowledgePage.tsx](NetworkKnowledgePage.tsx.md) (23 shared connections)
-- [(app)/actions.ts](app-actions.ts.md) (19 shared connections)
-- [projects.ts](projects.ts.md) (16 shared connections)
-- [schema.ts](schema.ts.md) (14 shared connections)
-- [read.ts](read.ts.md) (8 shared connections)
-- [getOwnedDiagram](getOwnedDiagram.md) (7 shared connections)
-- [networkRules.ts](networkRules.ts.md) (6 shared connections)
-- [drawing/rules.ts](drawing-rules.ts.md) (6 shared connections)
-- [ref_react](ref_react.md) (5 shared connections)
-- [domain/flows.ts](domain-flows.ts.md) (4 shared connections)
-- [prompt.ts](prompt.ts.md) (4 shared connections)
-- [pipeline.ts](pipeline.ts.md) (3 shared connections)
+- [NetworkKnowledgePage.tsx](NetworkKnowledgePage.tsx.md) (19 shared connections)
+- [(app)/actions.ts](app-actions.ts.md) (18 shared connections)
+- [getOwnedDiagram](getOwnedDiagram.md) (15 shared connections)
+- [domain/network.ts](domain-network.ts.md) (13 shared connections)
+- [ref_react](ref_react.md) (12 shared connections)
+- [DiagramState](DiagramState.md) (12 shared connections)
+- [projects.ts](projects.ts.md) (7 shared connections)
+- [\[diagramId\]/page.tsx]([diagramId]-page.tsx.md) (6 shared connections)
+- [read.ts](read.ts.md) (6 shared connections)
+- [pipeline.ts](pipeline.ts.md) (6 shared connections)
+- [versions.ts](versions.ts.md) (5 shared connections)
+- [dialogs.tsx](dialogs.tsx.md) (4 shared connections)
 
 ## Source Files
 
-- `docs/superpowers/plans/2026-11-06-network-knowledge-link-guess.md`
 - `docs/superpowers/plans/2026-11-09-mcp-server.md`
+- `src/app/(app)/actions.ts`
 - `src/db/schema.ts`
-- `src/domain/network-seed.ts`
 - `src/domain/network.ts`
 - `src/server/mcpKeys.ts`
 - `src/server/network.ts`
@@ -65,8 +64,8 @@ sidebar_position: 10
 
 ## Audit Trail
 
-- EXTRACTED: 213 (95%)
-- INFERRED: 12 (5%)
+- EXTRACTED: 224 (96%)
+- INFERRED: 9 (4%)
 - AMBIGUOUS: 0 (0%)
 
 ---

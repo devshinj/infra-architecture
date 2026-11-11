@@ -1,57 +1,59 @@
 ---
 title: "auth"
-sidebar_position: 107
+sidebar_position: 63
 sidebar_label: "핵심 노드: auth"
 ---
 # auth
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> God node · 34 connections · `src/auth.ts`
+> 14 nodes · cohesion 0.19
 
-**Community:** [explain/route.ts](explain-route.ts.md)
+## Key Concepts
 
-## Connections by Relation
+- **auth** (34 connections) — `src/auth.ts`
+- **flows/route.ts** (12 connections) — `src/app/api/diagrams/[id]/flows/route.ts`
+- **head/route.ts** (12 connections) — `src/app/api/diagrams/[id]/head/route.ts`
+- **health/route.ts** (6 connections) — `src/app/api/llm/health/route.ts`
+- **getDiagramHead()** (4 connections) — `src/server/flows.ts`
+- **GET()** (3 connections) — `src/app/api/diagrams/[id]/flows/route.ts`
+- **GET()** (3 connections) — `src/app/api/diagrams/[id]/head/route.ts`
+- **GET()** (3 connections) — `src/app/api/llm/health/route.ts`
+- **Ctx** (1 connections) — `src/app/api/diagrams/[id]/flows/route.ts`
+- **dynamic** (1 connections) — `src/app/api/diagrams/[id]/flows/route.ts`
+- **runtime** (1 connections) — `src/app/api/diagrams/[id]/flows/route.ts`
+- **Ctx** (1 connections) — `src/app/api/diagrams/[id]/head/route.ts`
+- **dynamic** (1 connections) — `src/app/api/diagrams/[id]/head/route.ts`
+- **runtime** (1 connections) — `src/app/api/diagrams/[id]/head/route.ts`
 
-### calls
-- DiagramPage() `EXTRACTED`
-- POST() `EXTRACTED`
-- GET() `EXTRACTED`
-- POST() `EXTRACTED`
-- guard() `EXTRACTED`
-- Glossary() `EXTRACTED`
-- AppLayout() `EXTRACTED`
-- NetworkKnowledge() `EXTRACTED`
-- Home() `EXTRACTED`
-- GET() `EXTRACTED`
-- POST() `EXTRACTED`
-- userId() `EXTRACTED`
-- ClaudeCodeConnection() `EXTRACTED`
-- GET() `EXTRACTED`
-- POST() `EXTRACTED`
-- GET() `EXTRACTED`
-- GET() `EXTRACTED`
+## Relationships
 
-### contains
-- auth.ts `EXTRACTED`
+- [getOwnedDiagram](getOwnedDiagram.md) (5 shared connections)
+- [auth.ts](auth.ts.md) (4 shared connections)
+- [ask/route.ts](ask-route.ts.md) (4 shared connections)
+- [\[diagramId\]/page.tsx]([diagramId]-page.tsx.md) (4 shared connections)
+- [Sidebar.tsx](Sidebar.tsx.md) (4 shared connections)
+- [ref_react](ref_react.md) (3 shared connections)
+- [DiagramState](DiagramState.md) (3 shared connections)
+- [env.ts](env.ts.md) (3 shared connections)
+- [explain/route.ts](explain-route.ts.md) (3 shared connections)
+- [server/network.ts](server-network.ts.md) (2 shared connections)
+- [projects.ts](projects.ts.md) (2 shared connections)
+- [flowSuggest.ts](flowSuggest.ts.md) (2 shared connections)
 
-### imports
-- [(app)/actions.ts](app-actions.ts.md) `EXTRACTED`
-- [\[sessionId\]/route.ts]([sessionId]-route.ts.md) `EXTRACTED`
-- [ask/route.ts](ask-route.ts.md) `EXTRACTED`
-- chat/route.ts `EXTRACTED`
-- [\[diagramId\]/page.tsx]([diagramId]-page.tsx.md) `EXTRACTED`
-- [explain/route.ts](explain-route.ts.md) `EXTRACTED`
-- sessions/route.ts `EXTRACTED`
-- suggest/route.ts `EXTRACTED`
-- flows/route.ts `EXTRACTED`
-- head/route.ts `EXTRACTED`
-- glossary/page.tsx `EXTRACTED`
-- (app)/layout.tsx `EXTRACTED`
-- (app)/page.tsx `EXTRACTED`
-- network/page.tsx `EXTRACTED`
-- claude-code/page.tsx `EXTRACTED`
-- health/route.ts `EXTRACTED`
+## Source Files
+
+- `src/app/api/diagrams/[id]/flows/route.ts`
+- `src/app/api/diagrams/[id]/head/route.ts`
+- `src/app/api/llm/health/route.ts`
+- `src/auth.ts`
+- `src/server/flows.ts`
+
+## Audit Trail
+
+- EXTRACTED: 66 (100%)
+- INFERRED: 0 (0%)
+- AMBIGUOUS: 0 (0%)
 
 ---
 

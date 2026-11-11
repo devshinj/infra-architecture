@@ -1,6 +1,6 @@
 ---
 title: "layout.ts"
-sidebar_position: 8
+sidebar_position: 10
 ---
 # layout.ts
 
@@ -39,18 +39,18 @@ sidebar_position: 8
 
 ## Relationships
 
-- [useDiagramView.ts](useDiagramView.ts.md) (8 shared connections)
-- [EdgeLayer.tsx](EdgeLayer.tsx.md) (7 shared connections)
-- [ZoneNameLayer.tsx](ZoneNameLayer.tsx.md) (7 shared connections)
 - [layoutMetrics.ts](layoutMetrics.ts.md) (7 shared connections)
-- [exportImage.ts](exportImage.ts.md) (5 shared connections)
+- [display.ts](display.ts.md) (7 shared connections)
+- [ZoneNameLayer.tsx](ZoneNameLayer.tsx.md) (7 shared connections)
+- [EdgeLayer.tsx](EdgeLayer.tsx.md) (6 shared connections)
 - [useCamera.ts](useCamera.ts.md) (5 shared connections)
 - [Canvas.tsx](Canvas.tsx.md) (4 shared connections)
+- [exportImage.ts](exportImage.ts.md) (4 shared connections)
 - [edgeLabels.ts](edgeLabels.ts.md) (3 shared connections)
-- [domain/warnings.ts](domain-warnings.ts.md) (1 shared connections)
+- [overlap.ts](overlap.ts.md) (2 shared connections)
+- [domain/flows.ts](domain-flows.ts.md) (1 shared connections)
 - [EdgePanels.tsx](EdgePanels.tsx.md) (1 shared connections)
 - [getOwnedDiagram](getOwnedDiagram.md) (1 shared connections)
-- [InfraSketch 설계 문서](InfraSketch_설계_문서.md) (1 shared connections)
 
 ## Source Files
 

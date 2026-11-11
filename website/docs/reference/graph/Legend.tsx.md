@@ -1,6 +1,6 @@
 ---
 title: "Legend.tsx"
-sidebar_position: 60
+sidebar_position: 58
 ---
 # Legend.tsx
 
@@ -34,11 +34,11 @@ sidebar_position: 60
 - [(app)/actions.ts](app-actions.ts.md) (2 shared connections)
 - [motion.ts](motion.ts.md) (1 shared connections)
 - [segments.ts](segments.ts.md) (1 shared connections)
-- [commands.ts](commands.ts.md) (1 shared connections)
+- [mcp/apply.ts](mcp-apply.ts.md) (1 shared connections)
 - [drawing/rules.ts](drawing-rules.ts.md) (1 shared connections)
 - [samples.ts](samples.ts.md) (1 shared connections)
 - [NodeInfo.tsx](NodeInfo.tsx.md) (1 shared connections)
-- [Shell.tsx](Shell.tsx.md) (1 shared connections)
+- [ref_react](ref_react.md) (1 shared connections)
 
 ## Source Files
 

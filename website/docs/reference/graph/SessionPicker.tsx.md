@@ -1,22 +1,25 @@
 ---
 title: "SessionPicker.tsx"
-sidebar_position: 33
+sidebar_position: 24
 ---
 # SessionPicker.tsx
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 25 nodes · cohesion 0.14
+> 29 nodes · cohesion 0.12
 
 ## Key Concepts
 
-- **SessionPicker.tsx** (29 connections) — `src/ui/chat/SessionPicker.tsx`
-- **SessionPicker()** (16 connections) — `src/ui/chat/SessionPicker.tsx`
+- **SessionPicker.tsx** (31 connections) — `src/ui/chat/SessionPicker.tsx`
+- **dialogs.tsx** (18 connections) — `src/ui/dialogs.tsx`
+- **SessionPicker()** (17 connections) — `src/ui/chat/SessionPicker.tsx`
 - **SessionPickerProps** (14 connections) — `src/ui/chat/SessionPicker.tsx`
 - **RowMenu()** (8 connections) — `src/ui/dialogs.tsx`
 - **SessionKey** (7 connections) — `src/ui/chat/useSessions.ts`
 - **SessionSummary** (7 connections) — `src/ui/chat/useSessions.ts`
+- **Dialog** (6 connections) — `src/ui/dialogs.tsx`
 - **SessionKind** (4 connections) — `src/ui/chat/useSessions.ts`
+- **RowMenuItem** (4 connections) — `src/ui/dialogs.tsx`
 - **sessionName()** (3 connections) — `src/ui/chat/SessionPicker.tsx`
 - **.onMore()** (3 connections) — `src/ui/chat/SessionPicker.tsx`
 - **.onSelect()** (3 connections) — `src/ui/chat/SessionPicker.tsx`
@@ -29,27 +32,25 @@ sidebar_position: 33
 - **Plus()** (2 connections) — `src/ui/chat/SessionPicker.tsx`
 - **.fallbackFocus()** (2 connections) — `src/ui/chat/SessionPicker.tsx`
 - **.labelOf()** (2 connections) — `src/ui/chat/SessionPicker.tsx`
+- **NameDialog** (2 connections) — `src/ui/dialogs.tsx`
 - **Action** (1 connections) — `src/ui/chat/SessionPicker.tsx`
 - **MAIN_LABEL** (1 connections) — `src/ui/chat/SessionPicker.tsx`
-- **MORE_LABEL** (1 connections) — `src/ui/chat/SessionPicker.tsx`
-- **.onDelete()** (1 connections) — `src/ui/chat/SessionPicker.tsx`
-- **.onNew()** (1 connections) — `src/ui/chat/SessionPicker.tsx`
-- **.onRename()** (1 connections) — `src/ui/chat/SessionPicker.tsx`
+- *... and 4 more nodes in this community*
 
 ## Relationships
 
+- [useChatTurn.ts](useChatTurn.ts.md) (10 shared connections)
+- [ref_react](ref_react.md) (7 shared connections)
+- [FlowPanel.tsx](FlowPanel.tsx.md) (7 shared connections)
 - [dialogs.tsx](dialogs.tsx.md) (6 shared connections)
-- [ChatPanel.tsx](ChatPanel.tsx.md) (5 shared connections)
-- [useSessions.ts](useSessions.ts.md) (5 shared connections)
-- [useChatTurn.ts](useChatTurn.ts.md) (3 shared connections)
-- [Canvas.tsx](Canvas.tsx.md) (3 shared connections)
-- [FlowPanel.tsx](FlowPanel.tsx.md) (3 shared connections)
-- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (3 shared connections)
-- [MentionInput](MentionInput.md) (2 shared connections)
-- [useChatTurn](useChatTurn.md) (2 shared connections)
-- [Sidebar.tsx](Sidebar.tsx.md) (2 shared connections)
-- [Shell.tsx](Shell.tsx.md) (1 shared connections)
-- [domain/flows.ts](domain-flows.ts.md) (1 shared connections)
+- [ChatPanel.tsx](ChatPanel.tsx.md) (6 shared connections)
+- [Sidebar.tsx](Sidebar.tsx.md) (6 shared connections)
+- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (4 shared connections)
+- [ExportMenu.tsx](ExportMenu.tsx.md) (3 shared connections)
+- [useFlows](useFlows.md) (2 shared connections)
+- [NetworkKnowledgePage.tsx](NetworkKnowledgePage.tsx.md) (2 shared connections)
+- [RightPanel.tsx](RightPanel.tsx.md) (1 shared connections)
+- [(app)/actions.ts](app-actions.ts.md) (1 shared connections)
 
 ## Source Files
 
@@ -59,8 +60,8 @@ sidebar_position: 33
 
 ## Audit Trail
 
-- EXTRACTED: 75 (96%)
-- INFERRED: 3 (4%)
+- EXTRACTED: 101 (97%)
+- INFERRED: 3 (3%)
 - AMBIGUOUS: 0 (0%)
 
 ---

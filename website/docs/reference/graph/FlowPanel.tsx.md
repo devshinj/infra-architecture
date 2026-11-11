@@ -1,18 +1,21 @@
 ---
 title: "FlowPanel.tsx"
-sidebar_position: 50
+sidebar_position: 37
 ---
 # FlowPanel.tsx
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 18 nodes · cohesion 0.17
+> 22 nodes · cohesion 0.13
 
 ## Key Concepts
 
-- **FlowPanel.tsx** (29 connections) — `src/ui/flows/FlowPanel.tsx`
-- **FlowPanel()** (17 connections) — `src/ui/flows/FlowPanel.tsx`
+- **FlowPanel.tsx** (31 connections) — `src/ui/flows/FlowPanel.tsx`
+- **FlowPanel()** (18 connections) — `src/ui/flows/FlowPanel.tsx`
 - **FlowPanelProps** (14 connections) — `src/ui/flows/FlowPanel.tsx`
+- **crossingNote()** (8 connections) — `src/domain/flows.ts`
+- **Task 8: "흐름" 탭·지나는 흐름·연동** (7 connections) — `docs/superpowers/plans/2026-11-05-flows-and-network-boundaries.md`
+- **Tab** (4 connections) — `src/ui/RightPanel.tsx`
 - **ref_react_dom** (2 connections)
 - **FlowOrigin** (2 connections) — `src/domain/flows.ts`
 - **.onActivate()** (2 connections) — `src/ui/flows/FlowPanel.tsx`
@@ -24,6 +27,7 @@ sidebar_position: 50
 - **.onRepair()** (2 connections) — `src/ui/flows/FlowPanel.tsx`
 - **menuRootId()** (2 connections) — `src/ui/flows/FlowPanel.tsx`
 - **stepMark()** (2 connections) — `src/ui/flows/FlowPanel.tsx`
+- **AI_SUGGEST_BADGE** (2 connections) — `src/ui/glossary/aiBadge.ts`
 - **Action** (1 connections) — `src/ui/flows/FlowPanel.tsx`
 - **.onSuggest()** (1 connections) — `src/ui/flows/FlowPanel.tsx`
 - **GROUPS** (1 connections) — `src/ui/flows/FlowPanel.tsx`
@@ -31,27 +35,31 @@ sidebar_position: 50
 
 ## Relationships
 
-- [dialogs.tsx](dialogs.tsx.md) (5 shared connections)
-- [Explanation.tsx](Explanation.tsx.md) (5 shared connections)
-- [RightPanel.tsx](RightPanel.tsx.md) (5 shared connections)
-- [domain/flows.ts](domain-flows.ts.md) (4 shared connections)
-- [SessionPicker.tsx](SessionPicker.tsx.md) (3 shared connections)
-- [ref_react](ref_react.md) (3 shared connections)
-- [schema.ts](schema.ts.md) (3 shared connections)
-- [flowSuggest.ts](flowSuggest.ts.md) (2 shared connections)
-- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (2 shared connections)
-- [Shell.tsx](Shell.tsx.md) (1 shared connections)
-- [getOwnedDiagram](getOwnedDiagram.md) (1 shared connections)
+- [SessionPicker.tsx](SessionPicker.tsx.md) (7 shared connections)
+- [ref_react](ref_react.md) (6 shared connections)
+- [RightPanel.tsx](RightPanel.tsx.md) (6 shared connections)
+- [domain/flows.ts](domain-flows.ts.md) (5 shared connections)
+- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (5 shared connections)
+- [DiagramState](DiagramState.md) (4 shared connections)
+- [dialogs.tsx](dialogs.tsx.md) (3 shared connections)
+- [ZoneTypePicker.tsx](ZoneTypePicker.tsx.md) (3 shared connections)
+- [missing.ts](missing.ts.md) (2 shared connections)
+- [getOwnedDiagram](getOwnedDiagram.md) (2 shared connections)
+- [Explanation.tsx](Explanation.tsx.md) (2 shared connections)
+- [useFlows](useFlows.md) (2 shared connections)
 
 ## Source Files
 
+- `docs/superpowers/plans/2026-11-05-flows-and-network-boundaries.md`
 - `src/domain/flows.ts`
+- `src/ui/RightPanel.tsx`
 - `src/ui/flows/FlowPanel.tsx`
+- `src/ui/glossary/aiBadge.ts`
 
 ## Audit Trail
 
-- EXTRACTED: 60 (100%)
-- INFERRED: 0 (0%)
+- EXTRACTED: 71 (90%)
+- INFERRED: 8 (10%)
 - AMBIGUOUS: 0 (0%)
 
 ---

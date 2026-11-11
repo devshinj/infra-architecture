@@ -1,6 +1,6 @@
 ---
 title: "ZoneNameLayer.tsx"
-sidebar_position: 25
+sidebar_position: 29
 ---
 # ZoneNameLayer.tsx
 
@@ -10,7 +10,7 @@ sidebar_position: 25
 
 ## Key Concepts
 
-- **catalog.ts** (35 connections) — `src/domain/catalog.ts`
+- **catalog.ts** (36 connections) — `src/domain/catalog.ts`
 - **ZoneNameLayer.tsx** (15 connections) — `src/canvas/ZoneNameLayer.tsx`
 - **GroupBox.tsx** (10 connections) — `src/canvas/GroupBox.tsx`
 - **stacking.ts** (9 connections) — `src/canvas/stacking.ts`
@@ -40,17 +40,17 @@ sidebar_position: 25
 ## Relationships
 
 - [Canvas.tsx](Canvas.tsx.md) (13 shared connections)
-- [EdgePanels.tsx](EdgePanels.tsx.md) (7 shared connections)
 - [layout.ts](layout.ts.md) (7 shared connections)
-- [domain/warnings.ts](domain-warnings.ts.md) (3 shared connections)
+- [EdgePanels.tsx](EdgePanels.tsx.md) (5 shared connections)
+- [ref_react](ref_react.md) (4 shared connections)
+- [domain/flows.ts](domain-flows.ts.md) (4 shared connections)
+- [display.ts](display.ts.md) (3 shared connections)
 - [segments.ts](segments.ts.md) (2 shared connections)
-- [domain/flows.ts](domain-flows.ts.md) (2 shared connections)
-- [commands.ts](commands.ts.md) (2 shared connections)
+- [mcp/apply.ts](mcp-apply.ts.md) (2 shared connections)
 - [getOwnedDiagram](getOwnedDiagram.md) (2 shared connections)
 - [drawing/rules.ts](drawing-rules.ts.md) (2 shared connections)
 - [Legend.tsx](Legend.tsx.md) (2 shared connections)
 - [NodeInfo.tsx](NodeInfo.tsx.md) (2 shared connections)
-- [useDiagramView.ts](useDiagramView.ts.md) (1 shared connections)
 
 ## Source Files
 
@@ -63,7 +63,7 @@ sidebar_position: 25
 
 ## Audit Trail
 
-- EXTRACTED: 94 (98%)
+- EXTRACTED: 95 (98%)
 - INFERRED: 2 (2%)
 - AMBIGUOUS: 0 (0%)
 

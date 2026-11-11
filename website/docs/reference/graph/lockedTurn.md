@@ -1,6 +1,6 @@
 ---
 title: "lockedTurn()"
-sidebar_position: 103
+sidebar_position: 89
 sidebar_label: "핵심 노드: lockedTurn()"
 ---
 # lockedTurn()

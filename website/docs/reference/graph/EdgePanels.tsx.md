@@ -1,12 +1,12 @@
 ---
 title: "EdgePanels.tsx"
-sidebar_position: 31
+sidebar_position: 35
 ---
 # EdgePanels.tsx
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 27 nodes · cohesion 0.13
+> 23 nodes · cohesion 0.15
 
 ## Key Concepts
 
@@ -14,11 +14,8 @@ sidebar_position: 31
 - **NodeCard.tsx** (18 connections) — `src/canvas/NodeCard.tsx`
 - **NodeCard()** (8 connections) — `src/canvas/NodeCard.tsx`
 - **ref_xyflow_react** (7 connections)
-- **icons.tsx** (7 connections) — `src/canvas/icons.tsx`
-- **CategoryIcon()** (7 connections) — `src/canvas/icons.tsx`
 - **NameTooltip.tsx** (7 connections) — `src/canvas/NameTooltip.tsx`
 - **NodeCardData** (5 connections) — `src/canvas/NodeCard.tsx`
-- **Category** (5 connections) — `src/domain/catalog.ts`
 - **EdgePanels()** (4 connections) — `src/app/dev/edges/EdgePanels.tsx`
 - **PanelView()** (4 connections) — `src/app/dev/edges/EdgePanels.tsx`
 - **edges/page.tsx** (4 connections) — `src/app/dev/edges/page.tsx`
@@ -35,21 +32,17 @@ sidebar_position: 31
 - **Panel** (1 connections) — `src/app/dev/edges/EdgePanels.tsx`
 - **PANELS** (1 connections) — `src/app/dev/edges/EdgePanels.tsx`
 - **Pt** (1 connections) — `src/app/dev/edges/EdgePanels.tsx`
-- *... and 2 more nodes in this community*
+- **watchInput()** (1 connections) — `src/canvas/NameTooltip.tsx`
 
 ## Relationships
 
-- [ZoneNameLayer.tsx](ZoneNameLayer.tsx.md) (7 shared connections)
-- [ref_react](ref_react.md) (5 shared connections)
+- [ref_react](ref_react.md) (9 shared connections)
+- [ZoneNameLayer.tsx](ZoneNameLayer.tsx.md) (5 shared connections)
+- [display.ts](display.ts.md) (5 shared connections)
 - [Canvas.tsx](Canvas.tsx.md) (4 shared connections)
 - [EdgeLayer.tsx](EdgeLayer.tsx.md) (4 shared connections)
-- [layoutMetrics.ts](layoutMetrics.ts.md) (3 shared connections)
-- [Shell.tsx](Shell.tsx.md) (3 shared connections)
-- [NodeInfo.tsx](NodeInfo.tsx.md) (3 shared connections)
-- [Explanation.tsx](Explanation.tsx.md) (2 shared connections)
-- [useDiagramView.ts](useDiagramView.ts.md) (1 shared connections)
+- [ZoneTypePicker.tsx](ZoneTypePicker.tsx.md) (2 shared connections)
 - [layout.ts](layout.ts.md) (1 shared connections)
-- [Review Focus](Review_Focus.md) (1 shared connections)
 
 ## Source Files
 
@@ -57,12 +50,10 @@ sidebar_position: 31
 - `src/app/dev/edges/page.tsx`
 - `src/canvas/NameTooltip.tsx`
 - `src/canvas/NodeCard.tsx`
-- `src/canvas/icons.tsx`
-- `src/domain/catalog.ts`
 
 ## Audit Trail
 
-- EXTRACTED: 79 (99%)
+- EXTRACTED: 67 (99%)
 - INFERRED: 1 (1%)
 - AMBIGUOUS: 0 (0%)
 

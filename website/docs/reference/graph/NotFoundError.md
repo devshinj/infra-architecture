@@ -1,6 +1,6 @@
 ---
 title: "NotFoundError"
-sidebar_position: 104
+sidebar_position: 90
 sidebar_label: "핵심 노드: NotFoundError"
 ---
 # NotFoundError
@@ -33,7 +33,7 @@ sidebar_label: "핵심 노드: NotFoundError"
 ### imports
 - [(app)/actions.ts](app-actions.ts.md) `EXTRACTED`
 - [pipeline.ts](pipeline.ts.md) `EXTRACTED`
-- [ask.ts](ask.ts.md) `EXTRACTED`
+- ask.ts `EXTRACTED`
 - [server/network.ts](server-network.ts.md) `EXTRACTED`
 - server/flows.ts `EXTRACTED`
 - [\[sessionId\]/route.ts]([sessionId]-route.ts.md) `EXTRACTED`

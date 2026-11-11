@@ -1,12 +1,12 @@
 ---
 title: "edgeLabels.ts"
-sidebar_position: 15
+sidebar_position: 19
 ---
 # edgeLabels.ts
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 33 nodes · cohesion 0.09
+> 32 nodes · cohesion 0.09
 
 ## Key Concepts
 
@@ -19,7 +19,6 @@ sidebar_position: 15
 - **runs()** (3 connections) — `src/canvas/edgeLabels.ts`
 - **slides()** (3 connections) — `src/canvas/edgeLabels.ts`
 - **totalLength()** (3 connections) — `src/canvas/edgeLabels.ts`
-- **Box** (2 connections) — `src/canvas/edgeLabels.ts`
 - **commonPrefix()** (2 connections) — `src/canvas/edgeLabels.ts`
 - **fromSelected()** (2 connections) — `src/canvas/edgeLabels.ts`
 - **rows()** (2 connections) — `src/canvas/edgeLabels.ts`
@@ -35,11 +34,13 @@ sidebar_position: 15
 - **NODE_RING** (1 connections) — `src/canvas/edgeLabels.ts`
 - **PlacedLabel** (1 connections) — `src/canvas/edgeLabels.ts`
 - **Plan** (1 connections) — `src/canvas/edgeLabels.ts`
-- *... and 8 more nodes in this community*
+- **Pt** (1 connections) — `src/canvas/edgeLabels.ts`
+- *... and 7 more nodes in this community*
 
 ## Relationships
 
-- [EdgeLayer.tsx](EdgeLayer.tsx.md) (17 shared connections)
+- [labelBox](labelBox.md) (13 shared connections)
+- [EdgeLayer.tsx](EdgeLayer.tsx.md) (4 shared connections)
 - [layout.ts](layout.ts.md) (3 shared connections)
 - [useCamera.ts](useCamera.ts.md) (1 shared connections)
 - [exportImage.ts](exportImage.ts.md) (1 shared connections)
@@ -50,7 +51,7 @@ sidebar_position: 15
 
 ## Audit Trail
 
-- EXTRACTED: 69 (99%)
+- EXTRACTED: 68 (99%)
 - INFERRED: 1 (1%)
 - AMBIGUOUS: 0 (0%)
 

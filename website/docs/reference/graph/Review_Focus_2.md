@@ -1,6 +1,6 @@
 ---
 title: "Review Focus"
-sidebar_position: 113
+sidebar_position: 99
 ---
 # Review Focus
 
@@ -20,8 +20,8 @@ sidebar_position: 113
 
 ## Relationships
 
-- [ask.ts](ask.ts.md) (2 shared connections)
-- [MentionInput](MentionInput.md) (1 shared connections)
+- [pipeline.ts](pipeline.ts.md) (2 shared connections)
+- [ChatPanel.tsx](ChatPanel.tsx.md) (1 shared connections)
 - [NodeInfo.tsx](NodeInfo.tsx.md) (1 shared connections)
 - [\[diagramId\]/page.tsx]([diagramId]-page.tsx.md) (1 shared connections)
 

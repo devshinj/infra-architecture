@@ -1,6 +1,6 @@
 ---
 title: "motion.ts"
-sidebar_position: 75
+sidebar_position: 73
 ---
 # motion.ts
 
@@ -17,7 +17,7 @@ sidebar_position: 75
 - **dashAlong()** (2 connections) — `src/canvas/motion.ts`
 - **hostOf()** (2 connections) — `src/canvas/motion.ts`
 - **make()** (2 connections) — `src/canvas/motion.ts`
-- **MotionKind** (2 connections) — `src/canvas/motion.ts`
+- **BASE_SPEED** (2 connections) — `src/canvas/segments.ts`
 - **CAPSULE** (1 connections) — `src/canvas/motion.ts`
 - **COMET_LAYERS** (1 connections) — `src/canvas/motion.ts`
 
@@ -32,6 +32,7 @@ sidebar_position: 75
 ## Source Files
 
 - `src/canvas/motion.ts`
+- `src/canvas/segments.ts`
 
 ## Audit Trail
 

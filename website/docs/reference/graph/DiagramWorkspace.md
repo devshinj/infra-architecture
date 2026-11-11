@@ -1,19 +1,20 @@
 ---
 title: "DiagramWorkspace()"
-sidebar_position: 102
+sidebar_position: 87
 sidebar_label: "핵심 노드: DiagramWorkspace()"
 ---
 # DiagramWorkspace()
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> God node · 48 connections · `src/ui/DiagramWorkspace.tsx`
+> God node · 49 connections · `src/ui/DiagramWorkspace.tsx`
 
 **Community:** [(app)/actions.ts](app-actions.ts.md)
 
 ## Connections by Relation
 
 ### calls
+- [Button()](Button.md) `EXTRACTED`
 - applyCommand() `EXTRACTED`
 - Canvas() `EXTRACTED`
 - useChatTurn() `EXTRACTED`
@@ -29,12 +30,11 @@ sidebar_label: "핵심 노드: DiagramWorkspace()"
 - restoreVersionAction() `EXTRACTED`
 - GhostLayer `EXTRACTED`
 - useShell() `EXTRACTED`
+- Legend() `EXTRACTED`
 - diffStates() `EXTRACTED`
 - useRemoteChanges() `EXTRACTED`
 - saveFieldsAction() `EXTRACTED`
-- setWarningIgnoredAction() `EXTRACTED`
-- getVersionAction() `EXTRACTED`
-- *…and 24 more `calls` connection(s) not listed (lowest-degree first to go)*
+- *…and 25 more `calls` connection(s) not listed (lowest-degree first to go)*
 
 ### contains
 - [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) `EXTRACTED`

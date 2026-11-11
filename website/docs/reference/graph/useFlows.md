@@ -1,24 +1,25 @@
 ---
 title: "useFlows"
-sidebar_position: 43
+sidebar_position: 39
 ---
 # useFlows
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 19 nodes · cohesion 0.15
+> 20 nodes · cohesion 0.14
 
 ## Key Concepts
 
 - **useFlows** (17 connections) — `src/ui/flows/useFlows.ts`
 - **useFlows.ts** (14 connections) — `src/ui/flows/useFlows.ts`
-- **Task 4: 흐름 저장소·조회·이름 바꾸기·삭제·확인** (9 connections) — `docs/superpowers/plans/2026-11-05-flows-and-network-boundaries.md`
+- **StoredFlow** (10 connections) — `src/server/flows.ts`
 - **confirmFlowAction()** (6 connections) — `src/app/(app)/actions.ts`
 - **deleteFlowAction()** (6 connections) — `src/app/(app)/actions.ts`
 - **renameFlowAction()** (6 connections) — `src/app/(app)/actions.ts`
 - **removeFlowStepAction()** (5 connections) — `src/app/(app)/actions.ts`
 - **GENERIC_ERROR** (5 connections) — `src/ui/dialogs.tsx`
-- **createdAt()** (2 connections) — `src/db/schema.ts`
+- **FlowSource** (3 connections) — `src/db/schema.ts`
+- **FlowProblem** (3 connections) — `src/domain/flows.ts`
 - **message()** (2 connections) — `src/ui/flows/useFlows.ts`
 - **.refresh()** (2 connections) — `src/ui/flows/useFlows.ts`
 - **.afterTurn()** (1 connections) — `src/ui/flows/useFlows.ts`
@@ -32,29 +33,32 @@ sidebar_position: 43
 
 ## Relationships
 
-- [schema.ts](schema.ts.md) (10 shared connections)
+- [DiagramState](DiagramState.md) (11 shared connections)
 - [(app)/actions.ts](app-actions.ts.md) (10 shared connections)
-- [dialogs.tsx](dialogs.tsx.md) (3 shared connections)
-- [domain/flows.ts](domain-flows.ts.md) (2 shared connections)
+- [FlowPanel.tsx](FlowPanel.tsx.md) (2 shared connections)
+- [SessionPicker.tsx](SessionPicker.tsx.md) (2 shared connections)
 - [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (2 shared connections)
-- [commands.ts](commands.ts.md) (1 shared connections)
-- [getOwnedDiagram](getOwnedDiagram.md) (1 shared connections)
+- [server/network.ts](server-network.ts.md) (1 shared connections)
+- [domain/flows.ts](domain-flows.ts.md) (1 shared connections)
+- [read.ts](read.ts.md) (1 shared connections)
+- [NodeInfo.tsx](NodeInfo.tsx.md) (1 shared connections)
+- [dialogs.tsx](dialogs.tsx.md) (1 shared connections)
 - [NetworkKnowledgePage.tsx](NetworkKnowledgePage.tsx.md) (1 shared connections)
 - [Sidebar.tsx](Sidebar.tsx.md) (1 shared connections)
-- [Shell.tsx](Shell.tsx.md) (1 shared connections)
 
 ## Source Files
 
-- `docs/superpowers/plans/2026-11-05-flows-and-network-boundaries.md`
 - `src/app/(app)/actions.ts`
 - `src/db/schema.ts`
+- `src/domain/flows.ts`
+- `src/server/flows.ts`
 - `src/ui/dialogs.tsx`
 - `src/ui/flows/useFlows.ts`
 
 ## Audit Trail
 
-- EXTRACTED: 49 (86%)
-- INFERRED: 8 (14%)
+- EXTRACTED: 58 (95%)
+- INFERRED: 3 (5%)
 - AMBIGUOUS: 0 (0%)
 
 ---
