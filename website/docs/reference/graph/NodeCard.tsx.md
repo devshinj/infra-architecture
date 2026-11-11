@@ -1,72 +1,60 @@
 ---
 title: "NodeCard.tsx"
-sidebar_position: 14
+sidebar_position: 49
 ---
 # NodeCard.tsx
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 34 nodes · cohesion 0.11
+> 18 nodes · cohesion 0.19
 
 ## Key Concepts
 
 - **catalog.ts** (35 connections) — `src/domain/catalog.ts`
 - **NodeCard.tsx** (18 connections) — `src/canvas/NodeCard.tsx`
-- **ZoneNameLayer.tsx** (15 connections) — `src/canvas/ZoneNameLayer.tsx`
-- **GroupBox.tsx** (10 connections) — `src/canvas/GroupBox.tsx`
 - **NodeCard()** (8 connections) — `src/canvas/NodeCard.tsx`
 - **ref_xyflow_react** (7 connections)
 - **icons.tsx** (7 connections) — `src/canvas/icons.tsx`
 - **CategoryIcon()** (7 connections) — `src/canvas/icons.tsx`
 - **NameTooltip.tsx** (7 connections) — `src/canvas/NameTooltip.tsx`
-- **GroupKind** (7 connections) — `src/domain/catalog.ts`
-- **groupToggleWidth()** (6 connections) — `src/canvas/layout.ts`
-- **nodeTypes.ts** (6 connections) — `src/canvas/nodeTypes.ts`
-- **GROUP_KINDS** (6 connections) — `src/domain/catalog.ts`
 - **Category** (5 connections) — `src/domain/catalog.ts`
-- **groupToggleLabel()** (4 connections) — `src/canvas/layout.ts`
-- **ZoneNameLayer()** (4 connections) — `src/canvas/ZoneNameLayer.tsx`
-- **ZoneNameLayerPortal()** (4 connections) — `src/canvas/ZoneNameLayer.tsx`
-- **GroupBox()** (3 connections) — `src/canvas/GroupBox.tsx`
-- **GroupBoxData** (3 connections) — `src/canvas/GroupBox.tsx`
 - **isKeyboardFocus()** (3 connections) — `src/canvas/NameTooltip.tsx`
 - **NameTooltip()** (3 connections) — `src/canvas/NameTooltip.tsx`
 - **useNameTooltip()** (3 connections) — `src/canvas/NameTooltip.tsx`
-- **ZoneName** (3 connections) — `src/canvas/ZoneNameLayer.tsx`
-- **zoneNameMaxWidth()** (3 connections) — `src/canvas/ZoneNameLayer.tsx`
-- **nodeTypes** (2 connections) — `src/canvas/nodeTypes.ts`
-- *... and 9 more nodes in this community*
+- **PATHS** (1 connections) — `src/canvas/icons.tsx`
+- **watchInput()** (1 connections) — `src/canvas/NameTooltip.tsx`
+- **DATA** (1 connections) — `src/domain/catalog.ts`
+- **GUARD** (1 connections) — `src/domain/catalog.ts`
+- **nk()** (1 connections) — `src/domain/catalog.ts`
+- **NodeKindDef** (1 connections) — `src/domain/catalog.ts`
+- **SERVER** (1 connections) — `src/domain/catalog.ts`
 
 ## Relationships
 
-- [Canvas.tsx](Canvas.tsx.md) (14 shared connections)
-- [layout.ts](layout.ts.md) (6 shared connections)
+- [ZoneNameLayer.tsx](ZoneNameLayer.tsx.md) (8 shared connections)
 - [MissingChecklist.tsx](MissingChecklist.tsx.md) (5 shared connections)
-- [NodeInfo.tsx](NodeInfo.tsx.md) (5 shared connections)
 - [EdgePanels.tsx](EdgePanels.tsx.md) (5 shared connections)
-- [domain/warnings.ts](domain-warnings.ts.md) (4 shared connections)
-- [prompt.ts](prompt.ts.md) (3 shared connections)
-- [EdgeLayer.tsx](EdgeLayer.tsx.md) (2 shared connections)
-- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (2 shared connections)
-- [Explanation.tsx](Explanation.tsx.md) (2 shared connections)
-- [segments.ts](segments.ts.md) (2 shared connections)
-- [commands.ts](commands.ts.md) (2 shared connections)
+- [samples.ts](samples.ts.md) (5 shared connections)
+- [Canvas.tsx](Canvas.tsx.md) (4 shared connections)
+- [NodeInfo.tsx](NodeInfo.tsx.md) (4 shared connections)
+- [EdgeLayer.tsx](EdgeLayer.tsx.md) (3 shared connections)
+- [ref_react](ref_react.md) (2 shared connections)
+- [FlowPanel.tsx](FlowPanel.tsx.md) (2 shared connections)
+- [missing.ts](missing.ts.md) (2 shared connections)
+- [types.ts](types.ts.md) (2 shared connections)
+- [chat/warnings.ts](chat-warnings.ts.md) (2 shared connections)
 
 ## Source Files
 
-- `src/canvas/GroupBox.tsx`
 - `src/canvas/NameTooltip.tsx`
 - `src/canvas/NodeCard.tsx`
-- `src/canvas/ZoneNameLayer.tsx`
 - `src/canvas/icons.tsx`
-- `src/canvas/layout.ts`
-- `src/canvas/nodeTypes.ts`
 - `src/domain/catalog.ts`
 
 ## Audit Trail
 
-- EXTRACTED: 125 (98%)
-- INFERRED: 2 (2%)
+- EXTRACTED: 80 (99%)
+- INFERRED: 1 (1%)
 - AMBIGUOUS: 0 (0%)
 
 ---

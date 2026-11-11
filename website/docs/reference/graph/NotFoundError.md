@@ -1,6 +1,6 @@
 ---
 title: "NotFoundError"
-sidebar_position: 91
+sidebar_position: 89
 sidebar_label: "핵심 노드: NotFoundError"
 ---
 # NotFoundError
@@ -9,7 +9,7 @@ sidebar_label: "핵심 노드: NotFoundError"
 
 > God node · 36 connections · `src/server/projects.ts`
 
-**Community:** [ask/route.ts](ask-route.ts.md)
+**Community:** [projects.ts](projects.ts.md)
 
 ## Connections by Relation
 
@@ -40,9 +40,9 @@ sidebar_label: "핵심 노드: NotFoundError"
 - [ask/route.ts](ask-route.ts.md) `EXTRACTED`
 - server.ts `EXTRACTED`
 - chat/route.ts `EXTRACTED`
-- glossary.ts `EXTRACTED`
-- \[diagramId\]/page.tsx `EXTRACTED`
-- explain/route.ts `EXTRACTED`
+- [glossary.ts](glossary.ts.md) `EXTRACTED`
+- [\[diagramId\]/page.tsx]([diagramId]-page.tsx.md) `EXTRACTED`
+- [explain/route.ts](explain-route.ts.md) `EXTRACTED`
 - sessions/route.ts `EXTRACTED`
 - mcpKeys.ts `EXTRACTED`
 - suggest/route.ts `EXTRACTED`

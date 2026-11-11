@@ -1,6 +1,6 @@
 ---
 title: "getOwnedDiagram()"
-sidebar_position: 88
+sidebar_position: 86
 sidebar_label: "핵심 노드: getOwnedDiagram()"
 ---
 # getOwnedDiagram()

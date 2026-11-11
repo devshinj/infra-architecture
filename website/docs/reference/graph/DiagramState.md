@@ -1,6 +1,6 @@
 ---
 title: "DiagramState"
-sidebar_position: 86
+sidebar_position: 84
 sidebar_label: "핵심 노드: DiagramState"
 ---
 # DiagramState
@@ -9,7 +9,7 @@ sidebar_label: "핵심 노드: DiagramState"
 
 > God node · 60 connections · `src/domain/types.ts`
 
-**Community:** [getOwnedDiagram](getOwnedDiagram.md)
+**Community:** [edgeCoalesce.ts](edgeCoalesce.ts.md)
 
 ## Connections by Relation
 
@@ -29,12 +29,12 @@ sidebar_label: "핵심 노드: DiagramState"
 - [ask.ts](ask.ts.md) `EXTRACTED`
 - [server/network.ts](server-network.ts.md) `EXTRACTED`
 - [read.ts](read.ts.md) `EXTRACTED`
-- [schema.ts](schema.ts.md) `EXTRACTED`
+- schema.ts `EXTRACTED`
 - [flowSuggest.ts](flowSuggest.ts.md) `EXTRACTED`
 - [server/flows.ts](server-flows.ts.md) `EXTRACTED`
 - [domain/flows.ts](domain-flows.ts.md) `EXTRACTED`
 - [chat/warnings.ts](chat-warnings.ts.md) `EXTRACTED`
-- versions.ts `EXTRACTED`
+- [versions.ts](versions.ts.md) `EXTRACTED`
 - [samples.ts](samples.ts.md) `EXTRACTED`
 - [MissingChecklist.tsx](MissingChecklist.tsx.md) `EXTRACTED`
 - *…and 23 more `imports` connection(s) not listed (lowest-degree first to go)*
@@ -48,7 +48,7 @@ sidebar_label: "핵심 노드: DiagramState"
 - MissingChecklistProps `EXTRACTED`
 - DiagramWorkspaceProps `EXTRACTED`
 - .applyFlowOps() `EXTRACTED`
-- [흐름 보기와 망 경계 표시 Implementation Plan](흐름_보기와_망_경계_표시_Implementation_Plan.md) `INFERRED`
+- 흐름 보기와 망 경계 표시 Implementation Plan `INFERRED`
 - .getLatestState() `EXTRACTED`
 - .getLatestState() `EXTRACTED`
 - .flush() `EXTRACTED`

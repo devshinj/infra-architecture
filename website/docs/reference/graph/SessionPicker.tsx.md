@@ -1,6 +1,6 @@
 ---
 title: "SessionPicker.tsx"
-sidebar_position: 37
+sidebar_position: 36
 ---
 # SessionPicker.tsx
 
@@ -13,7 +13,6 @@ sidebar_position: 37
 - **SessionPicker.tsx** (29 connections) — `src/ui/chat/SessionPicker.tsx`
 - **SessionPicker()** (16 connections) — `src/ui/chat/SessionPicker.tsx`
 - **SessionPickerProps** (14 connections) — `src/ui/chat/SessionPicker.tsx`
-- **RowMenu()** (8 connections) — `src/ui/dialogs.tsx`
 - **SessionKey** (7 connections) — `src/ui/chat/useSessions.ts`
 - **SessionKind** (4 connections) — `src/ui/chat/useSessions.ts`
 - **sessionName()** (3 connections) — `src/ui/chat/SessionPicker.tsx`
@@ -21,6 +20,7 @@ sidebar_position: 37
 - **.onSelect()** (3 connections) — `src/ui/chat/SessionPicker.tsx`
 - **when()** (3 connections) — `src/ui/chat/SessionPicker.tsx`
 - **MoreState** (3 connections) — `src/ui/chat/useSessions.ts`
+- **ref_react_dom** (2 connections)
 - **byRecent()** (2 connections) — `src/ui/chat/SessionPicker.tsx`
 - **Chevron()** (2 connections) — `src/ui/chat/SessionPicker.tsx`
 - **menuRootId()** (2 connections) — `src/ui/chat/SessionPicker.tsx`
@@ -38,23 +38,24 @@ sidebar_position: 37
 ## Relationships
 
 - [useChatTurn.ts](useChatTurn.ts.md) (9 shared connections)
-- [FlowPanel.tsx](FlowPanel.tsx.md) (9 shared connections)
-- [ChatPanel.tsx](ChatPanel.tsx.md) (7 shared connections)
-- [Canvas.tsx](Canvas.tsx.md) (3 shared connections)
-- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (2 shared connections)
+- [ChatPanel.tsx](ChatPanel.tsx.md) (6 shared connections)
+- [dialogs.tsx](dialogs.tsx.md) (5 shared connections)
+- [ExportMenu.tsx](ExportMenu.tsx.md) (3 shared connections)
 - [Sidebar.tsx](Sidebar.tsx.md) (2 shared connections)
-- [domain/flows.ts](domain-flows.ts.md) (1 shared connections)
+- [FlowPanel.tsx](FlowPanel.tsx.md) (1 shared connections)
+- [ref_react](ref_react.md) (1 shared connections)
+- [RightPanel.tsx](RightPanel.tsx.md) (1 shared connections)
+- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (1 shared connections)
 
 ## Source Files
 
 - `src/ui/chat/SessionPicker.tsx`
 - `src/ui/chat/useSessions.ts`
-- `src/ui/dialogs.tsx`
 
 ## Audit Trail
 
-- EXTRACTED: 70 (96%)
-- INFERRED: 3 (4%)
+- EXTRACTED: 66 (97%)
+- INFERRED: 2 (3%)
 - AMBIGUOUS: 0 (0%)
 
 ---
