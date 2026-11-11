@@ -72,6 +72,9 @@ const GREETING = "안녕하세요, InfraSketch예요. 만들고 싶은 서비스
 const GUIDE_TITLE = "이렇게 말하면 더 정확해요";
 const GUIDE_ITEMS = ["무엇을 만드는지 (예: 쇼핑몰, 예약 서비스)", "어디에 올리는지 (클라우드, 사내 IDC)", "대략 사용자 수 (예: 하루 1만 명)", "붙일 외부 서비스 (결제, 소셜 로그인, 문자)"];
 const EXAMPLES = ["결제와 카카오 로그인이 붙는 쇼핑몰", "사내 IDC에 WEB-WAS-DB 이중화", "AWS EKS 위 MSA와 Kafka", "하루 10만 명이 쓰는 예약 서비스"];
+/** 구성도는 있는데(샘플·가져오기·다른 대화) 이 대화가 비었을 때: 고치기 쪽 예시. */
+const EDIT_HINT = "구성도가 준비돼 있어요. 바꾸고 싶은 점을 말해 주세요.";
+const EDIT_EXAMPLES = ["WAS를 3대로 늘려줘", "앞단에 CDN을 붙여줘", "DB에 읽기 전용 복제본을 추가해줘", "한 대만 멈춰도 서비스가 서는 곳을 짚어줘"];
 
 const TOKEN = /@\[([^\]]*)\]\(node:([^)]+)\)/g;
 
@@ -370,16 +373,31 @@ export function ChatPanel({
             <li key={t}>{t}</li>
           ))}
         </ul>
-        <ul className={styles.examples} aria-label="예시 질문">
-          {EXAMPLES.map((t) => (
-            <li key={t}>
-              <button type="button" className={`${styles.result} ${styles.example}`} disabled={blocked} onClick={() => mentionRef.current?.setText(t)}>
-                {t}
-              </button>
-            </li>
-          ))}
-        </ul>
+        {renderExamples(EXAMPLES, "예시 질문")}
       </div>
+    </div>
+  );
+  /** 예시 칩: 입력칸만 채우고 보내지 않는다. */
+  function renderExamples(items: readonly string[], label: string) {
+    return (
+      <ul className={styles.examples} aria-label={label}>
+        {items.map((t) => (
+          <li key={t}>
+            <button type="button" className={`${styles.result} ${styles.example}`} disabled={blocked} onClick={() => mentionRef.current?.setText(t)}>
+              {t}
+            </button>
+          </li>
+        ))}
+      </ul>
+    );
+  }
+  /** 구성도는 있고 이 대화는 빈 때: 빈 기록 대신 고치기 안내와 예시. */
+  const renderEditStart = () => (
+    <div className={styles.editStart}>
+      <p className={`${styles.line} ${styles.system}`} data-kind="system">
+        {EDIT_HINT}
+      </p>
+      {renderExamples(EDIT_EXAMPLES, "바꿔 볼 예시")}
     </div>
   );
 
@@ -409,6 +427,7 @@ export function ChatPanel({
             {emptyHint}
           </p>
         )}
+        {!ask && !emptyDiagram && !loading && lines.length === 0 && !emptyHint && renderEditStart()}
         {toBlocks(lines).map((b) => (b.kind === "line" ? renderLine(b.line, false) : renderTurn(b.id, b.lines)))}
         {footer}
       </div>

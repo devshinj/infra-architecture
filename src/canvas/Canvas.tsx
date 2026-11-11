@@ -104,7 +104,7 @@ const NO_INSETS: Insets = { left: 0, right: 0 };
 /** 도구 모음 아래 숨 쉴 틈(화면 px). 맞춤은 도구 모음 아래 끝 + 이만큼부터 쓴다. */
 const TOOLBAR_GAP = 8;
 const LAYOUT_FAILED_MESSAGE = "구성도를 배치하지 못했어요. 새로고침하거나 구성을 다시 확인해 주세요.";
-const EMPTY_MESSAGE = "아직 구성도가 비어 있어요. 오른쪽 대화에서 만들고 싶은 서비스를 설명해 보세요.";
+const EMPTY_MESSAGE = "아직 구성도가 비어 있어요. 대화에서 만들고 싶은 서비스를 설명해 보세요.";
 const EXPORT_LAYOUT_FAILED_REASON = "구성도를 배치하지 못해 저장할 그림이 없어요.";
 const EXPORT_LAYOUT_PENDING_REASON = "구성도를 그리는 중이에요. 잠시 뒤 다시 해 보세요.";
 

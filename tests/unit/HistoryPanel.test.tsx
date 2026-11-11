@@ -1,5 +1,5 @@
 import "@testing-library/jest-dom/vitest";
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, expect, test, vi } from "vitest";
 
@@ -53,4 +53,23 @@ test("Claude Code 에서 되돌린 버전은 '되돌리기 · Claude Code에서'
   render(<HistoryPanel versions={rows} {...mk()} />);
   expect(screen.getByText("되돌리기 · Claude Code에서")).toBeInTheDocument();
   expect(screen.getByText("v3에서")).toBeInTheDocument();
+});
+
+test("the latest version is marked 지금, times are relative with the full stamp kept for hover", () => {
+  const now = Date.now();
+  const rows = [
+    { number: 3, source: "ai" as const, status: "complete" as const, restoredFrom: null, createdAt: new Date(now - 30_000) },
+    { number: 2, source: "ai" as const, status: "complete" as const, restoredFrom: null, createdAt: new Date(now - 5 * 60_000) },
+    { number: 1, source: "import" as const, status: "complete" as const, restoredFrom: null, createdAt: new Date(now - 3 * 86_400_000) },
+  ];
+  render(<HistoryPanel versions={rows} {...mk()} />);
+  const [v3, v2, v1] = screen.getAllByRole("listitem");
+  expect(within(v3!).getByText("지금")).toBeInTheDocument();
+  expect(within(v2!).queryByText("지금")).toBeNull();
+  expect(within(v3!).getByText("방금")).toBeInTheDocument();
+  expect(within(v2!).getByText("5분 전")).toBeInTheDocument();
+  expect(within(v1!).getByText("3일 전")).toBeInTheDocument();
+  const t = within(v2!).getByText("5분 전");
+  expect(t.tagName).toBe("TIME");
+  expect(t).toHaveAttribute("title", new Date(now - 5 * 60_000).toLocaleString("ko-KR"));
 });

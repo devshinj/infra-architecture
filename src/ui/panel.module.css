@@ -36,8 +36,10 @@
 }
 .versionRow:hover { background: var(--bg-panel-raised); }
 .versionNo { font-weight: 600; min-width: 28px; }
-.time { margin-left: auto; font-size: 11px; color: var(--text-secondary); }
-.badge { font-size: 11px; color: var(--text-primary); border: 1px solid var(--state-missing); border-radius: 4px; padding: 0 4px; }
+/* 지금 버전: 연두는 "지금"을 가리킨다(DESIGN.md · One Signal). 글자만 연두, 칠은 없다. */
+.now { flex: none; font-size: 12px; font-weight: 600; color: var(--accent); border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent); border-radius: var(--radius-pill); padding: 0 8px; }
+.time { margin-left: auto; font-size: 12px; color: var(--text-secondary); }
+.badge { font-size: 12px; color: var(--text-primary); border: 1px solid var(--state-missing); border-radius: var(--radius-pill); padding: 0 4px; }
 .actions { display: flex; flex-wrap: wrap; gap: 8px; padding: 0 8px 12px; }
 /* 세로로 쌓이는 판 안의 도구 버튼(공용 Button)은 글자 폭만 차지한다. */
 .start { align-self: flex-start; }

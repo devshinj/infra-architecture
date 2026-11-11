@@ -351,3 +351,21 @@ test("handoff goes to the given diagram chat (the last one used)", async () => {
   await userEvent.click(screen.getByRole("button", { name: "구성도 대화로 보내기" }));
   expect(onSelect).toHaveBeenCalledWith("c9");
 });
+
+test("a diagram with no conversation yet offers edit examples instead of a blank log", async () => {
+  const ref = createRef<MentionInputHandle>();
+  render(<ChatPanel {...base({ emptyDiagram: false, mentionRef: ref })} />);
+  expect(screen.getByText("구성도가 준비돼 있어요. 바꾸고 싶은 점을 말해 주세요.")).toBeInTheDocument();
+  const list = screen.getByRole("list", { name: "바꿔 볼 예시" });
+  const chips = within(list).getAllByRole("button");
+  expect(chips.length).toBeGreaterThanOrEqual(3);
+  await userEvent.click(chips[0]!);
+  expect(screen.getByRole("textbox")).toHaveValue(chips[0]!.textContent);
+});
+
+test("the edit examples stay away when a new-chat hint, the node-question view or lines are shown", () => {
+  const { rerender } = render(<ChatPanel {...base({ emptyDiagram: false, emptyHint: "새 대화예요." })} />);
+  expect(screen.queryByRole("list", { name: "바꿔 볼 예시" })).toBeNull();
+  rerender(<ChatPanel {...base({ emptyDiagram: false, lines: [{ id: "u", kind: "user", text: "안녕" }] })} />);
+  expect(screen.queryByRole("list", { name: "바꿔 볼 예시" })).toBeNull();
+});

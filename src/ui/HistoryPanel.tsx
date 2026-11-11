@@ -28,6 +28,16 @@ export interface HistoryPanelProps {
 
 const SOURCE_LABEL: Record<VersionRow["source"], string> = { import: "가져오기", restore: "되돌리기", ai: "AI", form: "직접 입력", mcp: "Claude Code에서" };
 
+/** 이력 시각: 가까운 것은 상대 시각(방금 · N분 전 · N시간 전 · N일 전), 30일이 넘으면 날짜. 전체 시각은 title 로. */
+export function relativeTime(at: Date, now: number = Date.now()): string {
+  const s = Math.max(0, Math.round((now - at.getTime()) / 1000));
+  if (s < 60) return "방금";
+  if (s < 3600) return `${Math.floor(s / 60)}분 전`;
+  if (s < 86_400) return `${Math.floor(s / 3600)}시간 전`;
+  if (s < 30 * 86_400) return `${Math.floor(s / 86_400)}일 전`;
+  return at.toLocaleDateString("ko-KR");
+}
+
 export function HistoryPanel({ versions, onView, onRestore, onCompare, viewing = null, disabled = false }: HistoryPanelProps) {
   const [selected, setSelected] = useState<number | null>(null);
   const latest = versions.reduce((m, v) => Math.max(m, v.number), 0);
@@ -45,8 +55,9 @@ export function HistoryPanel({ versions, onView, onRestore, onCompare, viewing =
               {v.source === "restore" && v.restoredFrom !== null && <span className={styles.relText}>v{v.restoredFrom}에서</span>}
               {v.summary && <span className={styles.relText}>{v.summary}</span>}
               {v.status === "aborted" && <span className={styles.badge}>중단됨</span>}
-              <time className={styles.time} dateTime={new Date(v.createdAt).toISOString()}>
-                {new Date(v.createdAt).toLocaleString("ko-KR")}
+              {v.number === latest && <span className={styles.now}>지금</span>}
+              <time className={styles.time} dateTime={new Date(v.createdAt).toISOString()} title={new Date(v.createdAt).toLocaleString("ko-KR")}>
+                {relativeTime(new Date(v.createdAt))}
               </time>
             </button>
             {open && (

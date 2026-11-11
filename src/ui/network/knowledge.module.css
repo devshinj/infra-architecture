@@ -41,6 +41,8 @@
 
 @media (max-width: 640px) {
   .page { padding: 16px; }
+  /* 위 막대가 같은 제목을 보인다: 화면에서만 감추고 보조기기에는 제목으로 남긴다. */
+  .title { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
   .body { grid-template-columns: minmax(0, 1fr); }
   .sectionHead { width: auto; }
   .item, .form input, .form select { min-height: 44px; }

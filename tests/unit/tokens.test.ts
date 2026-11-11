@@ -225,6 +225,37 @@ test("no css font-size below 11px", () => {
   expect(bad).toEqual([]);
 });
 
+test("screen chrome text never goes below 12px (DESIGN.md · The 12px Floor Rule)", () => {
+  // 캔버스 안(src/canvas, 확대·축소로 크기가 바뀌고 배치 상수와 묶인 글자)은 제외한다. 캔버스 위에 뜨는 팝오버·툴팁은 화면 틀이다.
+  const chromeInCanvas = [".canvas__opt-desc", ".canvas__export-foot", ".name-tooltip__sub"];
+  const allowed = [{ file: "chat.module.css", selector: ".mono" }]; // 대화 아바타 IS 모노그램(장식)
+  const bad: string[] = [];
+  for (const f of cssFiles(join(process.cwd(), "src"))) {
+    const inCanvas = /[\\/]src[\\/]canvas[\\/]/.test(f);
+    const css = readFileSync(f, "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
+    for (const m of css.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+      const sel = m[1].trim().split(/\r?\n/).pop()!.trim();
+      if (inCanvas && !chromeInCanvas.includes(sel)) continue;
+      if (allowed.some((a) => f.endsWith(a.file) && sel === a.selector)) continue;
+      for (const d of m[2].matchAll(/font-size:\s*([\d.]+)px/g)) if (parseFloat(d[1]) < 12) bad.push(`${f} ${sel} ${d[0]}`);
+    }
+  }
+  expect(bad).toEqual([]);
+});
+
+test("narrow canvas toolbar: icon-only 44px tools on one row, labels kept for screen readers", () => {
+  const css = read("src/canvas/canvas.css");
+  const narrow = css.slice(css.lastIndexOf("@media (max-width: 640px)"));
+  expect(narrow).toMatch(/\.canvas__tool \{[^}]*min-width: 44px;[^}]*min-height: 44px;/);
+  // 글자는 지우지 않고 화면에서만 감춘다(버튼 이름으로 읽힌다).
+  expect(narrow).toMatch(/\.canvas__tool > span \{[^}]*position: absolute;[^}]*clip-path: inset\(50%\);/);
+  expect(narrow).not.toMatch(/\.canvas__tool > span \{[^}]*display: none/);
+});
+
+test("placeholders use text-secondary everywhere, not the browser grey", () => {
+  expect(read("src/styles/globals.css")).toMatch(/::placeholder \{[^}]*color: var\(--text-secondary\);[^}]*opacity: 1;/);
+});
+
 // rgba 색을 불투명 배경 위에 합성한다.
 function over(rgba: string, bg: string): string {
   const m = rgba.match(/rgba\((\d+),\s*(\d+),\s*(\d+),\s*([\d.]+)\)/)!;

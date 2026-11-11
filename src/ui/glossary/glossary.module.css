@@ -34,6 +34,8 @@
 /* 좁은 화면(Shell.tsx NARROW_QUERY): 목록과 편집 칸을 한 줄씩 쌓고, 검색칸은 남은 폭을 채운다. */
 @media (max-width: 640px) {
   .page { padding: 16px; }
+  /* 위 막대가 같은 제목을 보인다: 화면에서만 감추고 보조기기에는 제목으로 남긴다. */
+  .title { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
   .tools { flex-wrap: wrap; gap: 8px 16px; }
   .search { flex: 1 1 200px; width: auto; min-width: 0; }
   .tools label { min-height: 44px; }
