@@ -132,3 +132,39 @@ test("legend table: a column header for the eye only, and a notes panel that gui
   expect(screen.queryByText("용어를 고르면 여기서 설명을 고치고 검수할 수 있어요.")).toBeNull();
   expect(screen.getByRole("form", { name: "Redis 편집" })).toHaveClass("ticks");
 });
+
+test("주기 판: 닫기·Esc 로 닫아도 입력은 남고, 초점은 고른 줄로 돌아간다", async () => {
+  render(<GlossaryPage initial={items} />);
+  await userEvent.click(screen.getByRole("button", { name: /Redis/ }));
+  await userEvent.type(screen.getByLabelText("정의"), " 추가");
+  await userEvent.click(screen.getByRole("button", { name: "닫기" }));
+  expect(screen.queryByRole("form")).toBeNull();
+  expect(screen.getByRole("button", { name: /Redis/ })).toHaveFocus();
+  expect(screen.getByText("수정 중")).toBeInTheDocument();
+
+  await userEvent.click(screen.getByRole("button", { name: /Nginx/ }));
+  await userEvent.click(screen.getByLabelText("용어"));
+  await userEvent.keyboard("{Escape}");
+  expect(screen.queryByRole("form")).toBeNull();
+  expect(screen.getByRole("button", { name: /Nginx/ })).toHaveFocus();
+
+  await userEvent.click(screen.getByRole("button", { name: /Redis/ }));
+  expect(screen.getByLabelText("정의")).toHaveValue("메모리에 데이터를 두는 저장소입니다. 추가");
+});
+
+test("저장하면 버튼 옆에 결과 한 줄, 다시 고치면 사라진다", async () => {
+  updateTermAction.mockResolvedValueOnce({ ok: true, term: { ...items[0]!, definition: "새 정의" } });
+  render(<GlossaryPage initial={items} />);
+  await userEvent.click(screen.getByRole("button", { name: /Redis/ }));
+  await userEvent.click(screen.getByRole("button", { name: "저장" }));
+  expect(await screen.findByRole("status")).toHaveTextContent("저장했어요.");
+  await userEvent.type(screen.getByLabelText("비교"), "x");
+  expect(screen.getByRole("status")).toBeEmptyDOMElement();
+});
+
+test("개수: 거르지 않으면 전체, 거르면 「전체 중 보이는 수」", async () => {
+  render(<GlossaryPage initial={items} />);
+  expect(screen.getByText("3개")).toBeInTheDocument();
+  await userEvent.click(screen.getByRole("checkbox", { name: "AI 설명만" }));
+  expect(screen.getByText("3개 중 1개")).toBeInTheDocument();
+});

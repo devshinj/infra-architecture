@@ -206,3 +206,74 @@ test("기본 제공 짝 규칙: 쓰는 종류끼리의 규칙만 표로 보이�
   const overridden = within(screen.getByRole("table", { name: "기본 제공 짝 규칙" })).getByRole("row", { name: /서버팜 ↔ 스토리지망/ });
   expect(within(overridden).getByText(/기관 규칙이 먼저/)).toBeInTheDocument();
 });
+
+test("종류 편집: 다른 종류를 골라도 입력이 남고 「수정 중」이 붙는다, 닫기·Esc 도 같다", async () => {
+  const user = userEvent.setup();
+  render(<NetworkKnowledgePage initialTypes={types} initialRules={[]} />);
+  await user.click(screen.getByRole("button", { name: /업무망/ }));
+  await user.type(within(screen.getByRole("form", { name: "업무망 편집" })).getByLabelText("설명"), "사내 업무용");
+  await user.click(screen.getByRole("button", { name: /DMZ/ }));
+  expect(within(screen.getByRole("button", { name: /업무망/ })).getByText("수정 중")).toBeInTheDocument();
+  expect(within(screen.getByRole("form", { name: "DMZ 편집" })).getByLabelText("설명")).toHaveValue("");
+
+  await user.click(within(screen.getByRole("form", { name: "DMZ 편집" })).getByLabelText("이름"));
+  await user.keyboard("{Escape}");
+  expect(screen.queryByRole("form")).toBeNull();
+  expect(screen.getByRole("button", { name: /DMZ/ })).toHaveFocus();
+
+  await user.click(screen.getByRole("button", { name: /업무망/ }));
+  expect(within(screen.getByRole("form", { name: "업무망 편집" })).getByLabelText("설명")).toHaveValue("사내 업무용");
+  await user.click(screen.getByRole("button", { name: "닫기" }));
+  expect(screen.getByRole("button", { name: /업무망/ })).toHaveFocus();
+});
+
+test("저장 결과와 오류는 편집 판 안에 보인다(페이지 맨 위가 아니라)", async () => {
+  const user = userEvent.setup();
+  fns.updateNetworkTypeAction
+    .mockResolvedValueOnce({ ok: false, error: "이름을 입력해 주세요" })
+    .mockResolvedValueOnce({ ok: true, type: row({ id: "t2", key: "dmz", name: "DMZ2", grade: "boundary", edited: true }) });
+  render(<NetworkKnowledgePage initialTypes={types} initialRules={[]} />);
+  await user.click(screen.getByRole("button", { name: /DMZ/ }));
+  const form = screen.getByRole("form", { name: "DMZ 편집" });
+  await user.click(within(form).getByRole("button", { name: "저장" }));
+  expect(await within(form).findByRole("alert")).toHaveTextContent("이름을 입력해 주세요");
+  await user.click(within(form).getByRole("button", { name: "저장" }));
+  const saved = screen.getByRole("form", { name: "DMZ2 편집" });
+  expect(await within(saved).findByText("저장했어요.")).toBeInTheDocument();
+  expect(within(saved).queryByRole("alert")).toBeNull();
+  expect(within(screen.getByRole("button", { name: /DMZ2/ })).queryByText("수정 중")).toBeNull();
+});
+
+test("망 종류 검색: 이름·다른 이름으로 거르고, 맞는 게 없는 등급은 접는다", async () => {
+  const user = userEvent.setup();
+  render(<NetworkKnowledgePage initialTypes={[...types.slice(0, 3), row({ id: "t5", key: "lab", name: "실험망", aliases: ["테스트망"] })]} initialRules={[]} />);
+  await user.type(screen.getByRole("searchbox", { name: "망 종류 검색" }), "테스트");
+  expect(screen.getByRole("button", { name: /실험망/ })).toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: /업무망/ })).toBeNull();
+  expect(screen.queryByRole("heading", { name: "경계" })).toBeNull();
+  await user.clear(screen.getByRole("searchbox", { name: "망 종류 검색" }));
+  await user.type(screen.getByRole("searchbox", { name: "망 종류 검색" }), "없는이름");
+  expect(screen.getByText("맞는 종류가 없어요.")).toBeInTheDocument();
+});
+
+test("기관 규칙 고치기 판은 그 줄 바로 아래에 열리고, Esc 로 닫으면 고치기 버튼으로 초점이 돌아간다", async () => {
+  const user = userEvent.setup();
+  render(
+    <NetworkKnowledgePage
+      initialTypes={types}
+      initialRules={[
+        { id: "r1", a: "dmz", b: "internal-net", method: "firewall", note: "" },
+        { id: "r2", a: "dmz", b: "partner", method: "firewall", note: "" },
+      ]}
+    />,
+  );
+  const edit = screen.getByRole("button", { name: "DMZ ↔ 업무망 규칙 고치기" });
+  await user.click(edit);
+  const form = screen.getByRole("form", { name: "기관 규칙 고치기" });
+  const items = within(form.closest("ul")!).getAllByRole("listitem");
+  expect(items[1]).toContainElement(form);
+  expect(within(form).getByLabelText("연결 방식")).toHaveFocus();
+  await user.keyboard("{Escape}");
+  expect(screen.queryByRole("form", { name: "기관 규칙 고치기" })).toBeNull();
+  expect(edit).toHaveFocus();
+});
