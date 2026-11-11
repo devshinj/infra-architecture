@@ -260,12 +260,51 @@ describe("runChatTurn", () => {
   test("zero applied commands creates no version", async () => {
     const ids = await makeOwnedDiagram();
     await createVersion(ids.diagramId, emptyState(), { source: "import" });
-    const lines = [JSON.stringify({ op: "say", text: "바꿀 게 없어요" }), "garbage"];
+    const lines = [JSON.stringify({ op: "say", text: "바꿀 게 없어요" }), '{"op":"garbage'];
     const { events } = await turn(ids, "그대로 둬", { qwen: fakeQwen(lines.join("\n")), clef: fakeClef(null) });
     expect(events.at(-1)).toMatchObject({ t: "done", version: null, status: "complete", applied: 0, skipped: 1 });
     expect(await versions(ids.diagramId)).toHaveLength(1);
     const msgs = await listMessages(ids.diagramId);
     expect(msgs[1]).toMatchObject({ role: "assistant", content: "바꿀 게 없어요", meta: { version: null, applied: 0 } });
+  });
+
+  test("plain sentences in command mode are shown as say lines, not skipped", async () => {
+    const ids = await makeOwnedDiagram();
+    await createVersion(ids.diagramId, emptyState(), { source: "import" });
+    const long = "사용자 브라우저 단 노드는 트래픽의 시작점을 명확히 하기 위해 권장됩니다. ".repeat(5).trim();
+    const prose = [long, "", "현재 구성에는 외부 사용자에서 SLB로 진입하는 연결이 없어요."];
+    const info = vi.spyOn(console, "info").mockImplementation(() => {});
+    try {
+      const { events } = await turn(ids, "브라우저 노드는 필요 없을까?", {
+        qwen: fakeQwen(prose.join("\n")),
+        clef: fakeClef({ intent: "structure_change", confidence: 0.93 }),
+      });
+      expect(of(events, "say").map((e) => e.text)).toEqual([long, prose[2]]);
+      expect(of(events, "skip")).toEqual([]);
+      expect(events.at(-1)).toMatchObject({ t: "done", version: null, status: "complete", applied: 0, skipped: 0 });
+      const msgs = await listMessages(ids.diagramId);
+      expect(msgs[1]).toMatchObject({ role: "assistant", content: `${long}\n${prose[2]}`, meta: { says: [long, prose[2]], skipped: 0 } });
+      // 일반 글로 답한 차례는 서버 로그에 줄 수만 남긴다(글은 넣지 않는다).
+      const calls = info.mock.calls.filter((c) => c[0] === "[chat] plain text shown as say");
+      expect(calls).toEqual([["[chat] plain text shown as say", { diagramId: ids.diagramId, lines: 2 }]]);
+    } finally {
+      info.mockRestore();
+    }
+  });
+
+  test("next command turn replays the saved reply as say JSON and drops failed turns", async () => {
+    const ids = await makeOwnedDiagram();
+    await createVersion(ids.diagramId, emptyState(), { source: "import" });
+    const deps = { clef: fakeClef({ intent: "structure_change", confidence: 0.9 }) };
+    await turn(ids, "실패할 요청", { ...deps, qwen: fakeQwen('{"op":"broken') });
+    await turn(ids, "질문", { ...deps, qwen: fakeQwen("일반 글 답이에요.") });
+    const qwen = fakeQwen(JSON.stringify({ op: "say", text: "좋아요" }));
+    await turn(ids, "다음", { ...deps, qwen });
+    const past = qwen.calls[0]!.slice(1, -1);
+    expect(past).toEqual([
+      { role: "user", content: "질문" },
+      { role: "assistant", content: JSON.stringify({ op: "say", text: "일반 글 답이에요." }) },
+    ]);
   });
 
   test("abort mid-stream saves aborted version and releases lock", async () => {
@@ -496,7 +535,8 @@ describe("runChatTurn", () => {
     const msgs = qwen.calls[0]!;
     expect(msgs.slice(1, -1)).toEqual([
       { role: "user", content: "첫 요청" },
-      { role: "assistant", content: "첫 답" },
+      // 명령 모드(의도 없음)라 지난 답은 say JSON 줄로 다시 보낸다.
+      { role: "assistant", content: say("첫 답") },
     ]);
     expect(msgs.at(-1)!.content).toContain("요청: 둘째 요청");
     expect(clef.calls[0]).toEqual({ input: "둘째 요청", context: { lastAssistant: "첫 답", openItems: [] } });

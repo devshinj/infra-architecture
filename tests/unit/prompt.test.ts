@@ -227,6 +227,63 @@ describe("buildMessages", () => {
     expect(last.content).toContain("요청: 추가해줘");
   });
 
+  test("command mode replays past assistant replies as say JSON lines", () => {
+    const history = [
+      { role: "user" as const, content: "질문" },
+      { role: "assistant" as const, content: "첫 줄이에요.\n\n둘째 줄 \"따옴표\"." },
+    ];
+    for (const intent of ["structure_change", "missing_info_answer", null] as const) {
+      const msgs = buildMessages({ intent, text: "x", state: sample(), mentions: [], history });
+      expect(msgs[1]).toEqual({ role: "user", content: "질문" });
+      expect(msgs[2]!.role).toBe("assistant");
+      expect(msgs[2]!.content.split("\n").map((l) => JSON.parse(l))).toEqual([
+        { op: "say", text: "첫 줄이에요." },
+        { op: "say", text: "둘째 줄 \"따옴표\"." },
+      ]);
+    }
+  });
+
+  test("answer mode keeps past assistant replies as plain text", () => {
+    const history = [
+      { role: "user" as const, content: "질문" },
+      { role: "assistant" as const, content: "그냥 답이에요." },
+    ];
+    for (const intent of ["question", "other"] as const) {
+      const msgs = buildMessages({ intent, text: "x", state: sample(), mentions: [], history });
+      expect(msgs[2]).toEqual({ role: "assistant", content: "그냥 답이에요." });
+    }
+  });
+
+  test("drops failed turns (empty assistant reply) together with their user message", () => {
+    const history = [
+      { role: "user" as const, content: "u1" },
+      { role: "assistant" as const, content: "a1" },
+      { role: "user" as const, content: "실패한 요청" },
+      { role: "assistant" as const, content: "" },
+      { role: "user" as const, content: "다시 실패" },
+      { role: "assistant" as const, content: "  \n" },
+      { role: "user" as const, content: "u3" },
+      { role: "assistant" as const, content: "a3" },
+    ];
+    for (const intent of ["question", "structure_change"] as const) {
+      const msgs = buildMessages({ intent, text: "x", state: sample(), mentions: [], history });
+      const past = msgs.slice(1, -1);
+      expect(past.map((m) => m.role)).toEqual(["user", "assistant", "user", "assistant"]);
+      expect(past.filter((m) => m.role === "user").map((m) => m.content)).toEqual(["u1", "u3"]);
+    }
+  });
+
+  test("history limit counts turns left after dropping failed ones", () => {
+    const history = [
+      ...hist(HISTORY_LIMIT),
+      { role: "user" as const, content: "실패" },
+      { role: "assistant" as const, content: "" },
+    ];
+    const msgs = buildMessages({ intent: "question", text: "x", state: sample(), mentions: [], history });
+    expect(msgs).toHaveLength(HISTORY_LIMIT + 2);
+    expect(msgs[1]!.content).toBe("m0");
+  });
+
   test("lists mentions", () => {
     const msgs = buildMessages({ intent: null, text: "x", state: sample(), mentions: [{ id: "was-1", label: "WAS#1" }], history: [] });
     expect(msgs[1].content).toContain("참조 노드:\nwas-1 WAS#1");

@@ -221,6 +221,7 @@ async function lockedTurn(args: TurnArgs, sessionId: string | null, followUp: bo
   // 흐름 명령은 구성도 상태에 적용하지 않고 모았다가 차례 끝 상태로 흐름 저장소에 적용한다(이어 쓰기 사이에도 모은다).
   const pendingFlowOps: FlowOp[] = [];
   let flowsSaved = 0;
+  let plainLines = 0; // 명령 모드에서 일반 글이라 say 로 보여 준 줄 수(서버 로그용)
   const tally = createSkipTally();
   let status: "complete" | "aborted" | "error" = "complete";
   const skip = (reason: string, key: string) => {
@@ -306,6 +307,13 @@ async function lockedTurn(args: TurnArgs, sessionId: string | null, followUp: bo
     const onBad = () => {
       if (!signal.aborted) skip("읽을 수 없는 줄", skipKey("bad_json"));
     };
+    // 명령 모드인데 모델이 JSON 대신 일반 글로 답하면(질문으로 읽은 경우가 많다) 버리지 않고 say 처럼 보여 준다.
+    const onText = (text: string) => {
+      if (signal.aborted) return;
+      plainLines++;
+      says.push(text);
+      emit({ t: "say", text });
+    };
 
     // 답변 경로: <think> 를 지운 글만 보내고, 보낸 글 그대로 모아 저장한다(중단·오류여도).
     let answering = false;
@@ -335,7 +343,7 @@ async function lockedTurn(args: TurnArgs, sessionId: string | null, followUp: bo
         let msgs = messages;
         for (let part = 1; ; part++) {
           const appliedBefore = applied;
-          const parser = createJsonlParser(onLine, onBad);
+          const parser = createJsonlParser(onLine, onBad, onText);
           const r = await deps.qwen.streamCompletion(msgs, {
             signal,
             onDelta(delta) {
@@ -421,6 +429,7 @@ async function lockedTurn(args: TurnArgs, sessionId: string | null, followUp: bo
   const skipped = tally.total();
   // 왜 건너뛰었는지 서버 로그에 한 줄로 남긴다(사용자 글·키는 넣지 않는다).
   if (skipped > 0) console.info("[chat] skipped", { diagramId, counts: tally.counts() });
+  if (plainLines > 0) console.info("[chat] plain text shown as say", { diagramId, lines: plainLines });
   const missing = computeMissing(state, knowledge ?? undefined).count;
   const content = [...says, ...(answer ? [answer] : [])].join("\n");
   const meta: MessageMeta = {
