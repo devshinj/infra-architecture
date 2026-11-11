@@ -14,7 +14,7 @@ vi.mock("@/server/projects", async (orig) => ({
   getOwnedDiagram: vi.fn(async () => ({})),
 }));
 vi.mock("@/server/versions", () => ({ getLatestState: vi.fn(async () => null), createVersion: vi.fn() }));
-vi.mock("@/server/chat/lock", () => ({ withDiagramLock: async (_id: string, fn: () => Promise<unknown>) => ({ ok: true, value: await fn() }) }));
+vi.mock("@/server/chat/lock", () => ({ USER_TURN_LOCK_WAIT_MS: 0, withDiagramLock: async (_id: string, fn: () => Promise<unknown>) => ({ ok: true, value: await fn() }) }));
 vi.mock("@/server/chat/messages", () => ({
   listMessages: vi.fn(async (_d: string, _limit: number, sessionId: string | null) => {
     store.listCalls.push(sessionId);

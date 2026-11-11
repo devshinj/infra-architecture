@@ -9,6 +9,7 @@ import { computeMissing } from "@/domain/missing";
 import { emptyState, type DiagramState } from "@/domain/types";
 import { HANDOFF_REPLY, NODE_GONE_MESSAGE, runAskTurn } from "@/server/chat/ask";
 import type { ChatEvent } from "@/server/chat/events";
+import { USER_TURN_LOCK_WAIT_MS, withDiagramLock } from "@/server/chat/lock";
 import { listMessages } from "@/server/chat/messages";
 import { runChatTurn, TIMEOUT_MESSAGE, type ChatDeps } from "@/server/chat/pipeline";
 import { ASK_PROMPT } from "@/server/chat/prompt";
@@ -248,6 +249,8 @@ describe("runAskTurn", () => {
     const ids = await seeded();
     const hang: QwenClient = {
       async streamCompletion(_m, { signal }) {
+        // 진짜 클라이언트처럼, 부르기 전에 이미 끊긴 신호도 바로 실패로 돌려준다(첫 차례의 준비가 제한보다 길 수 있다).
+        if (signal.aborted) throw abortError();
         return new Promise((_r, reject) => signal.addEventListener("abort", () => reject(abortError()), { once: true }));
       },
     };
@@ -377,6 +380,38 @@ describe("runAskTurn", () => {
     const again = await ask(ids, { sessionId, text: "또" }, { qwen: neverQwen, clef: question });
     expect(again.result).toEqual({ status: "gone" });
     expect(await listMessages(ids.diagramId, 100, sessionId)).toHaveLength(2);
+  });
+
+  test("잠깐 쥔 잠금(자동 흐름 제안 등)은 기다렸다가 답하고, 오래 쥔 잠금만 바쁨으로 돌려준다", async () => {
+    const ids = await seeded();
+    // 다른 요청이 잠금을 80ms 쥐었다 놓는다(흐름 제안이 쥐는 시간보다 넉넉히 길게).
+    let held = false;
+    const brief = withDiagramLock(ids.diagramId, async () => {
+      held = true;
+      await new Promise((r) => setTimeout(r, 80));
+    });
+    await vi.waitFor(() => expect(held).toBe(true));
+    const { events, result } = await ask(ids, { text: "뭐야?" }, { qwen: fakeQwen("답"), clef: question });
+    await brief;
+    expect(result.status).not.toBe("busy");
+    expect(events.some((e) => e.t === "error")).toBe(false);
+    expect(events.at(-1)).toMatchObject({ t: "done", status: "complete" });
+
+    // 기다리는 시간보다 오래 쥐고 있으면 그대로 바쁨이다.
+    let release!: () => void;
+    const gate = new Promise<void>((r) => (release = r));
+    let holding = false;
+    const long = withDiagramLock(ids.diagramId, async () => {
+      holding = true;
+      await gate;
+    });
+    await vi.waitFor(() => expect(holding).toBe(true));
+    const started = Date.now();
+    const second = await ask(ids, { text: "또 뭐야?" }, { qwen: neverQwen, clef: question });
+    expect(second.result).toEqual({ status: "busy" });
+    expect(Date.now() - started).toBeGreaterThanOrEqual(USER_TURN_LOCK_WAIT_MS - 50);
+    release();
+    await long;
   });
 
   test("busy while a main turn holds the lock", async () => {

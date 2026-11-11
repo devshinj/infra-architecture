@@ -17,7 +17,7 @@ vi.mock("@/server/versions", () => ({
     return { number: store.versions.length };
   }),
 }));
-vi.mock("@/server/chat/lock", () => ({ withDiagramLock: async (_id: string, fn: () => Promise<unknown>) => ({ ok: true, value: await fn() }) }));
+vi.mock("@/server/chat/lock", () => ({ USER_TURN_LOCK_WAIT_MS: 0, withDiagramLock: async (_id: string, fn: () => Promise<unknown>) => ({ ok: true, value: await fn() }) }));
 vi.mock("@/server/chat/messages", () => ({
   listMessages: vi.fn(async () => []),
   createMessage: vi.fn(async (_d: string, role: string, content: string, meta: Record<string, unknown>) => {

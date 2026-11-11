@@ -78,6 +78,8 @@ function fakeQwen(
       const text = opts.once && calls.length > 1 ? "" : first;
       if (opts.gate) await opts.gate;
       if (opts.hang) {
+        // 진짜 클라이언트처럼, 부르기 전에 이미 끊긴 신호도 바로 실패로 돌려준다(첫 차례의 준비가 제한보다 길 수 있다).
+        if (signal.aborted) throw abortError();
         await new Promise((_r, reject) => signal.addEventListener("abort", () => reject(abortError()), { once: true }));
       }
       const size = opts.chunk ?? 37;
