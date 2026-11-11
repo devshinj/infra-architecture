@@ -4,6 +4,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 // 견본 선이 실제 연결선 클래스를 쓰므로 그 스타일을 직접 가져온다(캔버스가 먼저 불러 주는 데 기대지 않는다).
 import "@/canvas/edges.css";
+import { MEDIUM_LABELS, MediumMark, type MarkedMedium } from "@/canvas/mediumMark";
 import { EDGE_KINDS } from "@/domain/catalog";
 
 import styles from "./legend.module.css";
@@ -161,6 +162,15 @@ export function Legend({ hideAux, empty = false, bottom, onMeasure }: LegendProp
                 <EdgeSample kind={k.kind} />
                 <span className={styles.text}>{k.label}</span>
                 {k.kind === "aux" && hideAux && <span className={styles.tag}>숨김</span>}
+              </li>
+            ))}
+            {(Object.keys(MEDIUM_LABELS) as MarkedMedium[]).map((m) => (
+              <li key={m} className={styles.row}>
+                <svg className={styles.sample} width={40} height={14} viewBox="0 0 40 14" aria-hidden="true">
+                  <path className="edge-line edge-line--request" d="M3 7H37" />
+                  <MediumMark medium={m} x={20} y={7} />
+                </svg>
+                <span className={styles.text}>{MEDIUM_LABELS[m]}</span>
               </li>
             ))}
             <li className={styles.row}>

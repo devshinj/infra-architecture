@@ -8,6 +8,13 @@ const PATHS: Record<Category, React.ReactNode> = {
       <path d="M2.5 15c.6-3.2 2.8-5 5.5-5s4.9 1.8 5.5 5" />
     </>
   ),
+  // 기기 몸체와 위로 퍼지는 신호 두 줄.
+  device: (
+    <>
+      <rect x="4" y="8.5" width="8" height="5.5" rx="1" />
+      <path d="M8 8.5V6.5M5.6 5.2a3.4 3.4 0 0 1 4.8 0M3.9 3.4a5.8 5.8 0 0 1 8.2 0" />
+    </>
+  ),
   network: <path d="M2 8h12M10 4l4 4-4 4M6 4 2 8l4 4" />,
   compute: (
     <>

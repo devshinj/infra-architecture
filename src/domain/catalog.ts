@@ -1,4 +1,5 @@
-export type Category = "client" | "network" | "compute" | "data" | "external";
+// device: 현장에 놓이는 기기(센서·카메라 등). 사람이 쓰는 단말(client)과 달리 방화벽 없는 진입 경고의 출발점으로 보지 않는다.
+export type Category = "client" | "device" | "network" | "compute" | "data" | "external";
 
 const SERVER = ["hostname", "cpu", "ram", "disk", "os", "ip", "sw"];
 const GUARD = ["port", "rules", "vip"];
@@ -22,6 +23,9 @@ export const NODE_KINDS = [
   nk("client_web", "웹 클라이언트", "client"),
   nk("client_mobile", "모바일 클라이언트", "client"),
   nk("admin_user", "관리자", "client"),
+  nk("control_display", "관제 화면", "client"),
+  nk("iot_device", "IoT 기기", "device", ["count", "comm"]),
+  nk("camera", "카메라", "device", ["count", "resolution"]),
   nk("dns", "DNS", "network"),
   nk("cdn", "CDN", "network"),
   nk("waf", "WAF", "network"),
@@ -32,6 +36,8 @@ export const NODE_KINDS = [
   nk("nat", "NAT", "network"),
   nk("vpn", "VPN", "network"),
   nk("network_link", "망연계 솔루션", "network", ["sw"]),
+  nk("iot_gateway", "기기 게이트웨이", "network", ["ip", "comm"]),
+  nk("llm_gateway", "LLM 게이트웨이", "network", ["sw", "version"]),
   nk("web_server", "웹 서버", "compute", SERVER),
   nk("was", "WAS", "compute", SERVER),
   nk("app_server", "앱 서버", "compute", SERVER),
@@ -43,6 +49,12 @@ export const NODE_KINDS = [
   nk("k8s_pod", "파드", "compute", ["replicas"]),
   nk("function", "함수", "compute", ["runtime", "service"]),
   nk("managed_service", "관리형 서비스", "compute", ["runtime", "service"]),
+  nk("video_recorder", "영상 저장·관리", "compute", ["channels", "retention", "disk", "sw"]),
+  nk("model_server", "AI 모델 서버", "compute", ["model", "gpu", "sw"]),
+  nk("ai_agent", "AI 에이전트", "compute", ["model", "sw"]),
+  nk("tool_server", "도구 서버(MCP)", "compute", ["transport"]),
+  nk("signaling_server", "시그널링 서버", "compute", ["ip", "port", "sw"]),
+  nk("media_server", "미디어 서버", "compute", ["ip", "port", "sw"]),
   nk("db_rdb", "관계형 DB", "data", DATA),
   nk("db_nosql", "NoSQL DB", "data", DATA),
   nk("cache", "캐시", "data", DATA),
@@ -50,8 +62,10 @@ export const NODE_KINDS = [
   nk("object_storage", "오브젝트 스토리지", "data", DATA),
   nk("file_storage", "파일 스토리지", "data", DATA),
   nk("db_proxy", "DB 중계", "data", DATA),
+  nk("vector_db", "벡터 DB", "data", ["sw", "version"]),
   nk("queue", "큐", "compute", ["brokers", "version"]),
   nk("stream", "스트림", "compute", ["brokers", "version"]),
+  nk("mqtt_broker", "MQTT 브로커", "compute", ["sw", "port"]),
   nk("monitoring", "모니터링", "compute", ["sw", "version"]),
   nk("logging", "로깅", "compute", ["sw", "version"]),
   nk("ci_cd", "CI/CD", "compute", ["sw", "version"]),

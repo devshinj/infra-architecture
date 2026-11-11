@@ -54,6 +54,7 @@
 
   /* 노드 분류 (아이콘 + 옅은 색조 원). 강철 바탕에 맞춰 채도를 낮췄다. */
   --cat-client: #A7B3BB; /* 사용자 */
+  --cat-device: #B9AED6; /* 현장 기기 */
   --cat-network: #8FB7D4; /* 네트워크·진입 */
   --cat-compute: #C3CCD1; /* 서버 */
   --cat-data: #90C5AD; /* 데이터 */

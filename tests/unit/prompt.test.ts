@@ -206,7 +206,7 @@ describe("missing block", () => {
 
   test("system prompt has the fill-only rule", () => {
     expect(SYSTEM_PROMPT).toContain(
-      "- 사용자가 채워야 할 정보의 값을 알려 주면 update_node(attrs) 또는 update_edge(label·payload·direction) 로 그 값만 반영한다. 노드·연결을 새로 만들지 않는다.",
+      "- 사용자가 채워야 할 정보의 값을 알려 주면 update_node(attrs) 또는 update_edge(label·payload·direction·medium) 로 그 값만 반영한다. 노드·연결을 새로 만들지 않는다.",
     );
   });
 });
@@ -504,9 +504,12 @@ describe("summarizeState payload/direction", () => {
   });
   test("일반 연결 예시에는 전달물·방향이 없고, 망을 넘는 예시에만 있다", () => {
     const edgeLines = SYSTEM_PROMPT.split("\n").filter((l) => l.startsWith('{"op":"add_edge"'));
-    expect(edgeLines).toHaveLength(2);
+    expect(edgeLines).toHaveLength(3);
     expect(edgeLines[0]).not.toContain('"payload"');
     expect(edgeLines[1]).toContain('"payload":"api","direction":"two_way"');
+    // 통신 수단 예시: 근거리 무선은 전달물·방향 없이 medium 만 쓴다.
+    expect(edgeLines[2]).toContain('"medium":"wireless"');
+    expect(edgeLines[2]).not.toContain('"payload"');
     expect(SYSTEM_PROMPT).toContain("같은 망 안의 연결에는 사용자가 말하지 않은 payload·direction 을 쓰지 않는다.");
   });
   test("있는 것을 지웠다 다시 만들지 않고, 흐름 단계 글을 지키라고 적는다", () => {

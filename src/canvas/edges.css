@@ -81,6 +81,11 @@
 
 /* 망 경계: 평소엔 작은 금색 점(내보낸 그림에도 남는다), 자세히 볼 때는 "망 넘음" 알약 + 전달물·방향. */
 .edge-boundary-dot { fill: var(--boundary-mark); stroke: var(--bg-canvas); stroke-width: 1; pointer-events: none; }
+/* 통신 수단 표지: 바탕색 원 위에 기호(무선·영상·미디어). */
+.edge-medium { pointer-events: none; }
+.edge-medium__bg { fill: var(--bg-canvas); stroke: var(--text-secondary); stroke-width: 1; }
+.edge-medium__stroke { fill: none; stroke: var(--text-primary); stroke-width: 1.2; stroke-linecap: round; }
+.edge-medium__fill { fill: var(--text-primary); stroke: none; }
 .edge-boundary-tag { pointer-events: none; }
 .edge-boundary-tag__pill { fill: color-mix(in srgb, var(--boundary-mark) 22%, var(--bg-canvas)); stroke: var(--boundary-mark); stroke-width: 1; }
 .edge-boundary-tag__pill-text, .edge-boundary-tag__detail { font-size: 11px; dominant-baseline: central; }

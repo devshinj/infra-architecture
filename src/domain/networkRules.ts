@@ -39,6 +39,8 @@ export function crossingPaths(state: DiagramState): CrossingPath[] {
   const outgoing = new Map<string, string[]>();
   for (const e of Object.values(state.edges)) {
     if (!state.nodes[e.from] || !state.nodes[e.to]) continue;
+    // 근거리 무선은 망을 거치지 않으므로 망 사이 통신 길로 따라가지 않는다.
+    if (e.medium === "wireless") continue;
     outgoing.set(e.from, [...(outgoing.get(e.from) ?? []), e.id]);
   }
 

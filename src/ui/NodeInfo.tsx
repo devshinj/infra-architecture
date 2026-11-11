@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 
 import { confirmLinkGuessAction, rejectLinkGuessAction } from "@/app/(app)/actions";
 import { CategoryIcon } from "@/canvas/icons";
+import { MEDIUM_LABELS } from "@/canvas/mediumMark";
 import { categoryOf, EDGE_KINDS, GROUP_KINDS, NODE_KINDS } from "@/domain/catalog";
 import { flowsThrough, type Flow } from "@/domain/flows";
 import { FIELD_LABELS, isEmpty } from "@/domain/missing";
@@ -228,6 +229,7 @@ function LinkGuessPart({ nodeId, save }: { nodeId: string; save?: LinkGuessSave 
 
 const PAYLOAD_NAME = { api: "API", file: "파일" } as const;
 const DIRECTION_NAME = { one_way: "단방향", two_way: "양방향" } as const;
+const MEDIUM_NAME = { wireless: "근거리 무선", video: "영상 스트림", media: "실시간 미디어" } as const;
 
 export function NodeInfo({ state, selectedId, onSelect, onMention, mentionDisabled, warningState, explain, ask, flows, linkGuess, ...caution }: NodeInfoProps) {
   const knowledge = useNetworkKnowledge();
@@ -248,6 +250,7 @@ export function NodeInfo({ state, selectedId, onSelect, onMention, mentionDisabl
           <div className={styles.field}><dt>라벨</dt><dd className={isEmpty(edge.label) ? styles.missing : undefined}>{isEmpty(edge.label) ? (edge.unknown?.includes("label") ? UNKNOWN : MISSING) : edge.label}</dd></div>
           {edge.payload && <div className={styles.field}><dt>전달물</dt><dd>{PAYLOAD_NAME[edge.payload]}</dd></div>}
           {edge.direction && <div className={styles.field}><dt>방향</dt><dd>{DIRECTION_NAME[edge.direction]}</dd></div>}
+          {edge.medium && edge.medium !== "ip" && <div className={styles.field}><dt>통신 수단</dt><dd>{MEDIUM_LABELS[edge.medium]}</dd></div>}
         </dl>
         {explain && <Explanation key={edge.id} target="edge" {...explain} />}
         <Cautions {...pick((w) => w.edgeId === edge.id)} {...caution} />

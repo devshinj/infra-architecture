@@ -61,7 +61,7 @@ export function applyCommand(state: DiagramState, cmd: Command, opts: ApplyOptio
       } else if (idTaken(state, id)) {
         return fail(state, `id ${id} already exists`);
       }
-      const edge = { id, from: cmd.from, to: cmd.to, edgeKind: cmd.edge_kind, ...(cmd.label !== undefined ? { label: cmd.label } : {}), ...(cmd.payload !== undefined ? { payload: cmd.payload } : {}), ...(cmd.direction !== undefined ? { direction: cmd.direction } : {}) };
+      const edge = { id, from: cmd.from, to: cmd.to, edgeKind: cmd.edge_kind, ...(cmd.label !== undefined ? { label: cmd.label } : {}), ...(cmd.payload !== undefined ? { payload: cmd.payload } : {}), ...(cmd.direction !== undefined ? { direction: cmd.direction } : {}), ...(cmd.medium !== undefined ? { medium: cmd.medium } : {}) };
       return { ok: true, state: { ...state, edges: { ...state.edges, [id]: edge } } };
     }
     case "update_node": {
@@ -86,6 +86,7 @@ export function applyCommand(state: DiagramState, cmd: Command, opts: ApplyOptio
         ...(cmd.edge_kind !== undefined ? { edgeKind: cmd.edge_kind } : {}),
         ...(cmd.payload !== undefined ? { payload: cmd.payload } : {}),
         ...(cmd.direction !== undefined ? { direction: cmd.direction } : {}),
+        ...(cmd.medium !== undefined ? { medium: cmd.medium } : {}),
       };
       return { ok: true, state: { ...state, edges: { ...state.edges, [cmd.id]: next } } };
     }
