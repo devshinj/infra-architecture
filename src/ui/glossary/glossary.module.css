@@ -7,13 +7,13 @@
 .tools label { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-secondary); }
 .search, .form input, .form textarea {
   font: inherit; font-size: 13px; color: var(--text-primary); background: var(--bg-panel-raised);
-  border: 1px solid var(--line-input); border-radius: var(--radius-card); padding: 8px 8px;
+  border: 1px solid var(--line-input); border-radius: var(--radius-control); padding: 8px 8px;
 }
 .search { width: 260px; }
 .search::placeholder { color: var(--text-secondary); }
 .body { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; align-items: start; }
 /* 목록: 옅은 paper-2 우물 안에서 머리카락 선으로 줄을 가른다(무리마다 한 우물). */
-.list { margin: 0; padding: 0; list-style: none; background: var(--color-paper-2); border-radius: var(--radius-card); }
+.list { margin: 0; padding: 0; list-style: none; background: var(--color-paper-2); border-radius: var(--radius-surface); }
 .list li + li { border-top: 1px solid var(--line-shell); }
 .item { display: block; width: 100%; text-align: left; font: inherit; color: var(--text-primary); background: transparent; border: 0; padding: 12px 12px; cursor: pointer; }
 .item:hover, .item[aria-current="true"] { background: var(--bg-panel-raised); }
@@ -24,17 +24,10 @@
 .badge { font-size: 11px; color: var(--text-secondary); border: 1px solid var(--line-node); border-radius: 4px; padding: 0 4px; white-space: nowrap; }
 .srOnly { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 .empty { margin: 0; padding: 16px; font-size: 13px; color: var(--text-secondary); }
-.form { display: flex; flex-direction: column; gap: 12px; padding: 16px; background: var(--color-paper-2); border: 0; border-radius: var(--radius-card); }
+.form { display: flex; flex-direction: column; gap: 12px; padding: 16px; background: var(--color-paper-2); border: 0; border-radius: var(--radius-surface); }
 .form label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--text-secondary); }
 .form textarea { font-family: inherit; resize: vertical; min-height: 56px; }
 .actions { display: flex; gap: 8px; }
-.actions button {
-  font: inherit; font-size: 13px; color: var(--text-primary); background: transparent; border: 1px solid var(--line-node);
-  border-radius: var(--radius-pill); padding: 8px 12px; cursor: pointer;
-}
-.actions button:hover:not(:disabled) { border-color: var(--text-secondary); }
-.actions button:active:not(:disabled) { background: var(--bg-panel-raised); }
-.actions button:disabled { opacity: 0.55; cursor: not-allowed; color: var(--text-secondary); }
 .page button:focus-visible, .page input:focus-visible, .page textarea:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
 .error { margin: 0; font-size: 12px; color: var(--state-missing-text); }
 
@@ -47,13 +40,7 @@
   .body { grid-template-columns: minmax(0, 1fr); }
   .head { flex-wrap: wrap; row-gap: 2px; }
   .item { padding: 12px; }
-  .actions button { min-height: 44px; padding: 8px 16px; }
 }
-/* 양식의 저장·만들기 = 이 화면의 주 동작: 연두 칠 알약 하나. */
-.form button[type="submit"] { color: var(--on-accent); background: var(--accent-fill); border-color: var(--accent-fill); font-weight: 600; }
-.form button[type="submit"]:hover:not(:disabled) { background: var(--accent-fill-hover); border-color: var(--accent-fill-hover); }
-.form button[type="submit"]:active:not(:disabled) { background: var(--accent-fill-active); border-color: var(--accent-fill-active); }
-.form button[type="submit"]:disabled { background: var(--bg-panel-raised); border-color: var(--line-node); color: var(--text-secondary); }
 /* 지금 연 항목 = 고른 것: 왼쪽 안쪽 연두 한 줄. */
 .item { position: relative; }
 .item[aria-current="true"]::before { content: ""; position: absolute; left: 0; top: 8px; bottom: 8px; width: 2px; border-radius: 1px; background: var(--accent); }

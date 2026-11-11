@@ -26,6 +26,7 @@ import type { NetworkKnowledge } from "@/domain/network";
 import type { DiagramState } from "@/domain/types";
 
 import styles from "./app.module.css";
+import { Button } from "./Button";
 import type { VersionRow } from "./HistoryPanel";
 import { ELSEWHERE_BUSY, type LlmHealth } from "./chat/ChatPanel";
 import type { MentionInputHandle } from "./chat/MentionInput";
@@ -915,7 +916,7 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
           {banner && (
             <div className={styles.banner} role="status">
               <span>{banner}</span>
-              <button type="button" onClick={backToLive}>현재로 돌아가기</button>
+              <Button size="sm" onClick={backToLive}>현재로 돌아가기</Button>
               {mode.kind === "compare" && (
                 <div className={styles.legend} aria-label="범례">
                   <span><i className={`${styles.swatch} ${styles.swAdded}`} />추가 {mode.marks.added.size}</span>
@@ -929,7 +930,7 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
           {remote.pending && (
             <div className={`${styles.banner} ${styles.alertBanner}`} role="status">
               <span>{REMOTE_CHANGED}</span>
-              <button type="button" onClick={remote.load}>{REMOTE_LOAD}</button>
+              <Button size="sm" onClick={remote.load}>{REMOTE_LOAD}</Button>
             </div>
           )}
           {/* 좁은 화면은 어느 탭에서든 보이게 위 막대 바로 밑에 띄운다(app.module.css .alertBanner). */}

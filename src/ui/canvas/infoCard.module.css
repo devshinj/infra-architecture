@@ -19,7 +19,7 @@
   color: var(--text-primary);
   background: var(--glass-bg);
   border: 1px solid var(--glass-line);
-  border-radius: var(--radius-panel);
+  border-radius: var(--radius-surface);
 }
 /* 범례와 같은 한 가지 판: paper 칠 + 머리카락 선 상자(모서리 눈금은 빈 도면·로그인 그림에만). */
 
@@ -43,7 +43,7 @@
 }
 .card[data-open] .toggle { border-top: 1px solid var(--glass-line); }
 .toggle:hover { color: var(--text-primary); }
-.toggle:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: -3px; border-radius: var(--radius-card); }
+.toggle:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: -3px; border-radius: var(--radius-control); }
 .line { flex: 1; min-width: 0; line-height: 1.5; font-variant-numeric: tabular-nums; }
 /* 한 항목(이름 수)은 끊지 않고, 항목 사이에서만 줄을 바꾼다. */
 .seg { white-space: nowrap; display: inline-block; margin-left: 4px; padding-left: 4px; border-left: 1px solid var(--line-node); line-height: 1.2; }
@@ -73,7 +73,7 @@
   color: var(--text-primary);
   background: transparent;
   border: 0;
-  border-radius: var(--radius-card);
+  border-radius: var(--radius-surface);
   cursor: pointer;
 }
 .warning:hover { background: var(--bg-panel-raised); }

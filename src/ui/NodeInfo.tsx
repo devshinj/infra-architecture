@@ -10,6 +10,7 @@ import { FIELD_LABELS, isEmpty } from "@/domain/missing";
 import type { DiagramState, DNode, Warning } from "@/domain/types";
 import { mergeWarnings } from "@/domain/warnings";
 
+import { Button } from "./Button";
 import { AskNode, type AskNodeProps } from "./explain/AskNode";
 import { Explanation, type ExplanationProps } from "./explain/Explanation";
 import { AI_BADGE_SR, AI_GUESS_BADGE } from "./glossary/aiBadge";
@@ -84,9 +85,9 @@ function Fields({ title, fields, attrs, unknown }: { title: string; fields: [str
 function LinkButton({ id, onMention, disabled }: { id: string; onMention?: (id: string) => void; disabled?: boolean }) {
   if (!onMention) return null;
   return (
-    <button type="button" className={styles.linkBtn} disabled={disabled} onClick={() => onMention(id)}>
+    <Button size="sm" className={styles.start} disabled={disabled} onClick={() => onMention(id)}>
       노드 링크 복사
-    </button>
+    </Button>
   );
 }
 
@@ -113,9 +114,9 @@ function Cautions({ active, ignored, onIgnoreWarning, ignoreDisabled, ignoreErro
               <p className={styles.cautionText}>{w.text}</p>
               <p className={styles.cautionGuide}>{w.guide}</p>
               {onIgnoreWarning && (
-                <button type="button" className={styles.linkBtn} disabled={ignoreDisabled} onClick={() => onIgnoreWarning(w.id, true)}>
+                <Button size="sm" className={styles.start} disabled={ignoreDisabled} onClick={() => onIgnoreWarning(w.id, true)}>
                   의도된 구성
-                </button>
+                </Button>
               )}
             </li>
           ))}
@@ -129,9 +130,9 @@ function Cautions({ active, ignored, onIgnoreWarning, ignoreDisabled, ignoreErro
               <li key={w.id} className={`${styles.caution} ${styles.cautionIgnored}`}>
                 <p className={styles.cautionText}>{w.text}</p>
                 {onIgnoreWarning && (
-                  <button type="button" className={styles.linkBtn} disabled={ignoreDisabled} onClick={() => onIgnoreWarning(w.id, false)}>
+                  <Button size="sm" className={styles.start} disabled={ignoreDisabled} onClick={() => onIgnoreWarning(w.id, false)}>
                     다시 경고
-                  </button>
+                  </Button>
                 )}
               </li>
             ))}
@@ -203,12 +204,12 @@ function LinkGuessPart({ nodeId, save }: { nodeId: string; save?: LinkGuessSave 
       </p>
       {save && (
         <div className={netStyles.row}>
-          <button type="button" className={netStyles.btn} disabled={off} onClick={() => void run(false)}>
+          <Button size="sm" disabled={off} onClick={() => void run(false)}>
             맞아요
-          </button>
-          <button type="button" className={netStyles.btn} disabled={off} onClick={() => void run(true)}>
+          </Button>
+          <Button size="sm" disabled={off} onClick={() => void run(true)}>
             아니에요
-          </button>
+          </Button>
         </div>
       )}
       {partial && (

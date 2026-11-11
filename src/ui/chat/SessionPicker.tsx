@@ -4,6 +4,7 @@ import { type KeyboardEvent as ReactKeyboardEvent, useEffect, useRef, useState }
 import { createPortal } from "react-dom";
 
 import { usePopover } from "@/canvas/usePopover";
+import { Button } from "@/ui/Button";
 
 import { type Dialog, DialogView, RowMenu, type RowMenuItem } from "../dialogs";
 
@@ -296,10 +297,10 @@ export function SessionPicker({
         {canOpen && <Chevron />}
       </button>
       {onNew && (
-        <button ref={newBtn} type="button" className={styles.newChatBtn} disabled={newDisabled} onClick={onNew}>
+        <Button ref={newBtn} size="sm" disabled={newDisabled} onClick={onNew}>
           <Plus />
           {NEW_LABEL}
-        </button>
+        </Button>
       )}
       {open && (
         <div ref={list} className={styles.sessionList} role="dialog" aria-label="대화 고르기" data-scroll-root="" onKeyDown={move}>

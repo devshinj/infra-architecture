@@ -6,6 +6,7 @@ import { createPortal } from "react-dom";
 import { crossingNote, type FlowOrigin } from "@/domain/flows";
 import type { DiagramState } from "@/domain/types";
 import type { StoredFlow } from "@/server/flows";
+import { Button } from "@/ui/Button";
 
 import { type Dialog, DialogView, RowMenu, type RowMenuItem } from "../dialogs";
 import { AI_BADGE_SR, AI_SUGGEST_BADGE, isUnreviewedAi } from "../glossary/aiBadge";
@@ -159,9 +160,9 @@ export function FlowPanel({ flows, state, activeKey, onActivate, onFocusStep, on
           />
         </div>
         {broken && (
-          <button type="button" className={styles.repair} aria-label={`${f.name} 흐름 다시 맞추기`} disabled={disabled} onClick={() => onRepair(f.name)}>
+          <Button size="sm" className={styles.repair} aria-label={`${f.name} 흐름 다시 맞추기`} disabled={disabled} onClick={() => onRepair(f.name)}>
             흐름 다시 맞추기
-          </button>
+          </Button>
         )}
         {active && (
           <div className={styles.detail}>
@@ -215,9 +216,9 @@ export function FlowPanel({ flows, state, activeKey, onActivate, onFocusStep, on
   return (
     <div className={styles.panel} data-scroll-root="">
       <div className={styles.top}>
-        <button type="button" className={styles.suggest} data-flow-suggest="" disabled={disabled || suggesting} onClick={onSuggest}>
+        <Button size="sm" className={styles.suggest} data-flow-suggest="" disabled={disabled || suggesting} onClick={onSuggest}>
           {suggesting ? "만드는 중…" : "흐름 제안받기"}
-        </button>
+        </Button>
         {error && (
           <p className={styles.error} role="alert">
             {error}

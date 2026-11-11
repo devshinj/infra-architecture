@@ -6,6 +6,7 @@ import { useEffect, useRef } from "react";
 import { resetPasswordAction } from "@/server/auth/actions";
 import { checkNewPassword, HINTS, MESSAGES } from "@/server/auth/rules";
 import { Logo } from "@/ui/brand/Logo";
+import { buttonClassName } from "@/ui/Button";
 
 import { AuthField, AuthSubmit } from "../../_components/AuthField";
 import { useAuthForm, type FieldErrors } from "../../_components/useAuthForm";
@@ -37,7 +38,7 @@ export function ResetPasswordForm({ token, usable }: { token: string; usable: bo
             <p className={styles.alert} role="alert">
               {errors.form ?? MESSAGES.resetLinkExpired}
             </p>
-            <Link href="/reset" ref={renewRef} className={`${styles.linkButton} ${styles.primary}`}>
+            <Link href="/reset" ref={renewRef} {...buttonClassName({ variant: "primary", size: "lg", block: true, className: styles.submit })}>
               재설정 링크 다시 받기
             </Link>
           </>

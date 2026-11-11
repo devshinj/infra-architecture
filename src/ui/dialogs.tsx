@@ -3,6 +3,7 @@
 import { useEffect, useLayoutEffect, useRef, useState, useTransition } from "react";
 
 import styles from "./app.module.css";
+import { Button } from "./Button";
 
 /**
  * 행의 ⋯ 메뉴와 이름·삭제 확인 대화상자. 사이드바(프로젝트·구성도)와 대화 세션 고르기가 함께 쓴다.
@@ -255,11 +256,11 @@ export function DialogView({ dialog, onClose }: { dialog: Dialog; onClose(): voi
         )}
         {error && <p id={DIALOG_ERROR_ID} className={styles.error} role="alert">{error}</p>}
         <div className={styles.dialogActions}>
-          <button ref={cancel} type="button" className={styles.btn} disabled={pending} onClick={close}>취소</button>
-          {/* 이름 확인 버튼은 보내기와 같이 누를 수 있을 때만 금색, 비었거나 그대로이거나 진행 중이면 무채색 비활성. 삭제는 늘 빠진 정보 색. */}
-          <button type="submit" className={!isName ? styles.dangerBtn : submitDisabled ? styles.btn : styles.primaryBtn} disabled={submitDisabled}>
+          <Button ref={cancel} disabled={pending} onClick={close}>취소</Button>
+          {/* 이름 확인은 주 동작(비었거나 그대로이거나 진행 중이면 무채색 비활성). 삭제는 늘 빠진 정보 색. */}
+          <Button type="submit" variant={isName ? "primary" : "danger"} disabled={submitDisabled}>
             {submitLabel}
-          </button>
+          </Button>
         </div>
       </form>
     </div>

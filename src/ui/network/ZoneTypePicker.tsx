@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { setZoneTypeAction } from "@/app/(app)/actions";
 import { GRADE_LABELS, type NetGrade } from "@/domain/network";
 import type { ZoneType } from "@/domain/types";
+import { Button } from "@/ui/Button";
 
 import { AI_BADGE_SR, AI_GUESS_BADGE } from "../glossary/aiBadge";
 import { useNetworkKnowledge } from "./NetworkKnowledgeContext";
@@ -92,13 +93,13 @@ export function ZoneTypePicker({ diagramId, groupId, value, readOnly = false, di
       {!readOnly && (
         <div className={styles.row}>
           {guessed && (
-            <button type="button" className={styles.btn} disabled={off} onClick={() => void save(current)}>
+            <Button size="sm" disabled={off} onClick={() => void save(current)}>
               맞아요
-            </button>
+            </Button>
           )}
-          <button type="button" className={styles.btn} disabled={off || draft === current} onClick={() => void save(draft || null)}>
+          <Button size="sm" disabled={off || draft === current} onClick={() => void save(draft || null)}>
             {current ? "바꾸기" : "정하기"}
-          </button>
+          </Button>
         </div>
       )}
       {error && (

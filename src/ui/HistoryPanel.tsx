@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 
+import { Button } from "./Button";
 import styles from "./panel.module.css";
 
 export type VersionRow = {
@@ -50,9 +51,9 @@ export function HistoryPanel({ versions, onView, onRestore, onCompare, viewing =
             </button>
             {open && (
               <div className={styles.actions}>
-                <button type="button" disabled={disabled} onClick={() => onView(v.number)}>이 버전 보기</button>
-                <button type="button" disabled={disabled || v.number === latest} onClick={() => onRestore(v.number)}>이 버전으로 되돌리기</button>
-                <button type="button" disabled={disabled || v.number === latest} onClick={() => onCompare(v.number)}>현재와 비교</button>
+                <Button size="sm" disabled={disabled} onClick={() => onView(v.number)}>이 버전 보기</Button>
+                <Button size="sm" disabled={disabled || v.number === latest} onClick={() => onRestore(v.number)}>이 버전으로 되돌리기</Button>
+                <Button size="sm" disabled={disabled || v.number === latest} onClick={() => onCompare(v.number)}>현재와 비교</Button>
               </div>
             )}
           </li>

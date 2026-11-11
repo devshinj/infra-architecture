@@ -6,6 +6,7 @@ import { CategoryIcon } from "@/canvas/icons";
 import { type Category, NODE_KINDS } from "@/domain/catalog";
 import { computeMissing, type MissingItem } from "@/domain/missing";
 import type { DiagramState } from "@/domain/types";
+import { Button } from "@/ui/Button";
 
 import { useNetworkKnowledge } from "../network/NetworkKnowledgeContext";
 import { ZoneTypePicker } from "../network/ZoneTypePicker";
@@ -306,9 +307,9 @@ export function MissingChecklist({ state, busy, readOnly = false, focusId, focus
                 })}
                 {!readOnly && (
                   <div className={styles.actions}>
-                    <button type="button" className={styles.btn} disabled={busy || saving} onClick={() => void save(b)}>
+                    <Button size="sm" disabled={busy || saving} onClick={() => void save(b)}>
                       저장
-                    </button>
+                    </Button>
                   </div>
                 )}
                 {err && (

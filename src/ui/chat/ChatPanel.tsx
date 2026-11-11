@@ -3,6 +3,7 @@
 import { type ReactNode, type RefObject, useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import { NODE_GONE_MESSAGE } from "@/server/chat/events";
+import { Button } from "@/ui/Button";
 
 import { FLY_ORIGIN_ATTR } from "../FlyLayer";
 import { useShell } from "../Shell";
@@ -403,13 +404,13 @@ export function ChatPanel({
           />
           <div className={styles.actions}>
             {busy && (
-              <button ref={stopBtn} type="button" className={styles.btn} onClick={onStop}>
+              <Button ref={stopBtn} onClick={onStop}>
                 중단
-              </button>
+              </Button>
             )}
-            <button type="button" className={canSubmit ? styles.primaryBtn : styles.btn} disabled={!canSubmit} onClick={() => mentionRef.current?.submit()}>
+            <Button variant="primary" disabled={!canSubmit} onClick={() => mentionRef.current?.submit()}>
               보내기
-            </button>
+            </Button>
           </div>
         </div>
       )}

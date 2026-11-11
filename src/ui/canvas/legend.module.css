@@ -18,7 +18,7 @@
   color: var(--text-primary);
   background: var(--glass-bg);
   border: 1px solid var(--glass-line);
-  border-radius: var(--radius-panel);
+  border-radius: var(--radius-surface);
 }
 
 .toggle {
@@ -39,7 +39,7 @@
 .legend[data-open] .toggle { border-top: 1px solid var(--glass-line); }
 .toggle:hover { color: var(--text-primary); }
 .toggle:active { background: var(--bg-panel-raised); }
-.toggle:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: -3px; border-radius: var(--radius-card); }
+.toggle:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: -3px; border-radius: var(--radius-control); }
 .chevron { flex: none; color: var(--text-secondary); }
 .chevron[data-open] { transform: rotate(180deg); }
 

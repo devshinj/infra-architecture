@@ -16,6 +16,7 @@ import {
 } from "@/app/(app)/actions";
 import { GRADE_LABELS, GRADE_RULES, METHOD_LABELS, type LinkMethod, type NetGrade } from "@/domain/network";
 import type { NetTypeRow } from "@/server/network";
+import { Button } from "@/ui/Button";
 
 import { type Dialog, DialogView, GENERIC_ERROR } from "../dialogs";
 import styles from "./knowledge.module.css";
@@ -108,7 +109,7 @@ export function NetworkKnowledgePage({ initialTypes, initialRules }: { initialTy
       <section className={styles.section} aria-labelledby="net-types">
         <div className={styles.sectionHead}>
           <h2 id="net-types">망 종류</h2>
-          <button type="button" className={styles.btn} onClick={() => { setSelected("new"); setError(null); }}>종류 추가</button>
+          <Button onClick={() => { setSelected("new"); setError(null); }}>종류 추가</Button>
         </div>
         <div className={styles.body}>
           <div className={styles.groups}>
@@ -178,24 +179,22 @@ export function NetworkKnowledgePage({ initialTypes, initialRules }: { initialTy
               extra={
                 <>
                   {current.source === "seed" && current.edited && (
-                    <button type="button" className={styles.btn} disabled={pending} onClick={() => attempt(() => resetNetworkTypeAction(current.id), (r) => replaceType(r.type))}>
+                    <Button disabled={pending} onClick={() => attempt(() => resetNetworkTypeAction(current.id), (r) => replaceType(r.type))}>
                       기본값으로 되돌리기
-                    </button>
+                    </Button>
                   )}
                   {current.source === "seed" && (
-                    <button
-                      type="button"
-                      className={styles.btn}
+                    <Button
                       disabled={pending}
                       onClick={() => attempt(() => setNetworkTypeHiddenAction(current.id, !current.hidden), (r) => replaceType(r.type))}
                     >
                       {current.hidden ? "다시 쓰기" : "쓰지 않음"}
-                    </button>
+                    </Button>
                   )}
                   {current.source === "user" && (
-                    <button type="button" className={`${styles.btn} ${styles.danger}`} disabled={pending} onClick={() => askDeleteType(current)}>
+                    <Button variant="danger" disabled={pending} onClick={() => askDeleteType(current)}>
                       지우기
-                    </button>
+                    </Button>
                   )}
                 </>
               }
@@ -225,14 +224,12 @@ export function NetworkKnowledgePage({ initialTypes, initialRules }: { initialTy
 
         <div className={styles.sectionHead}>
           <h3 className={styles.grade}>기관 규칙</h3>
-          <button
-            type="button"
-            className={styles.btn}
+          <Button
             disabled={usable.length < 2}
             onClick={() => { setRuleDraft({ a: usable[0]?.key ?? "", b: usable[1]?.key ?? "", method: "firewall", note: "" }); setError(null); }}
           >
             기관 규칙 추가
-          </button>
+          </Button>
         </div>
         {rules.length === 0 ? (
           <p className={styles.empty}>등록한 기관 규칙이 없어요. 기본 등급 규칙을 따라요.</p>
@@ -244,12 +241,12 @@ export function NetworkKnowledgePage({ initialTypes, initialRules }: { initialTy
                   <strong>{nameOf(r.a)} ↔ {nameOf(r.b)}</strong>
                   <span className={styles.meta}>{METHOD_LABELS[r.method]}{r.note ? ` · 근거: ${r.note}` : ""}</span>
                 </span>
-                <button type="button" className={styles.btn} aria-label={`${nameOf(r.a)} ↔ ${nameOf(r.b)} 규칙 고치기`} onClick={() => setRuleDraft({ id: r.id, a: r.a, b: r.b, method: r.method, note: r.note ?? "" })}>
+                <Button aria-label={`${nameOf(r.a)} ↔ ${nameOf(r.b)} 규칙 고치기`} onClick={() => setRuleDraft({ id: r.id, a: r.a, b: r.b, method: r.method, note: r.note ?? "" })}>
                   고치기
-                </button>
-                <button type="button" className={`${styles.btn} ${styles.danger}`} aria-label={`${nameOf(r.a)} ↔ ${nameOf(r.b)} 규칙 지우기`} onClick={() => askDeleteRule(r)}>
+                </Button>
+                <Button variant="danger" aria-label={`${nameOf(r.a)} ↔ ${nameOf(r.b)} 규칙 지우기`} onClick={() => askDeleteRule(r)}>
                   지우기
-                </button>
+                </Button>
               </li>
             ))}
           </ul>
@@ -300,8 +297,8 @@ function TypeForm({ label, initial, pending, onSave, onCancel, extra }: {
         </select>
       </label>
       <div className={styles.actions}>
-        <button type="submit" className={styles.btn} disabled={pending}>저장</button>
-        {onCancel && <button type="button" className={styles.btn} disabled={pending} onClick={onCancel}>닫기</button>}
+        <Button type="submit" variant="primary" disabled={pending}>저장</Button>
+        {onCancel && <Button disabled={pending} onClick={onCancel}>닫기</Button>}
         {extra}
       </div>
     </form>
@@ -342,8 +339,8 @@ function RuleForm({ draft, options, pending, onSave, onCancel }: {
       </label>
       <label>근거<input value={d.note} maxLength={100} placeholder="예: 정보보안 지침 3조" onChange={(e) => set("note", e.target.value)} /></label>
       <div className={styles.actions}>
-        <button type="submit" className={styles.btn} disabled={pending || d.a === d.b}>저장</button>
-        <button type="button" className={styles.btn} disabled={pending} onClick={onCancel}>닫기</button>
+        <Button type="submit" variant="primary" disabled={pending || d.a === d.b}>저장</Button>
+        <Button disabled={pending} onClick={onCancel}>닫기</Button>
       </div>
       {d.a === d.b && <p className={styles.meta}>서로 다른 두 종류를 골라 주세요.</p>}
     </form>

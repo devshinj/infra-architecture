@@ -5,6 +5,7 @@ import { useState, useTransition } from "react";
 import { setTermReviewedAction, updateTermAction, type ActionResult } from "@/app/(app)/actions";
 
 import type { GlossaryItem } from "@/domain/glossary-types";
+import { Button } from "@/ui/Button";
 
 import { AI_BADGE, AI_BADGE_SR, isUnreviewedAi } from "./aiBadge";
 import styles from "./glossary.module.css";
@@ -155,10 +156,10 @@ export function GlossaryPage({ initial }: { initial: GlossaryItem[] }) {
             ))}
             {error && <p className={styles.error} role="alert">{error}</p>}
             <div className={styles.actions}>
-              <button type="submit" disabled={pending}>저장</button>
-              <button type="button" disabled={pending} onClick={toggleReviewed}>
+              <Button type="submit" variant="primary" disabled={pending}>저장</Button>
+              <Button disabled={pending} onClick={toggleReviewed}>
                 {selected.reviewed ? "검수 취소" : "검수 완료"}
-              </button>
+              </Button>
             </div>
           </form>
         )}

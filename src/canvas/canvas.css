@@ -45,7 +45,7 @@
   width: max-content; max-width: 320px; box-sizing: border-box; padding: 8px 12px;
   display: flex; flex-direction: column; gap: 2px;
   background: var(--glass-bg); border: 1px solid var(--glass-line);
-  border-radius: var(--radius-panel);
+  border-radius: var(--radius-surface);
   color: var(--text-primary); pointer-events: none; z-index: 30;
 }
 .name-tooltip__label { font-size: 14px; line-height: 1.35; overflow-wrap: anywhere; }
@@ -175,7 +175,7 @@ button.node__badge--pair-end::before { left: -1px; transform: none; }
   color: var(--text-secondary);
   background: transparent;
   border: 1px solid var(--zone);
-  border-radius: 4px;
+  border-radius: var(--radius-control);
   padding: 1px 6px;
   cursor: pointer;
 }
@@ -211,13 +211,13 @@ button.node__badge--pair-end::before { left: -1px; transform: none; }
   display: flex; flex-wrap: wrap; align-items: center; gap: 2px; padding: 4px; justify-content: flex-end;
   max-width: min(70%, calc(100% - max(12px, var(--canvas-inset-left, 0px)) - max(12px, var(--canvas-inset-right, 0px)) - var(--safe-l, 0px) - var(--safe-r, 0px)));
   background: var(--glass-bg);
-  border: 1px solid var(--glass-line); border-radius: var(--radius-panel);
+  border: 1px solid var(--glass-line); border-radius: var(--radius-surface);
 }
 .canvas__group { display: flex; align-items: center; gap: 2px; }
 .canvas__sep { flex: none; align-self: stretch; width: 1px; margin: 4px 4px; background: var(--glass-line); }
 .canvas__tool {
   display: inline-flex; align-items: center; gap: 6px; font: inherit; font-size: 12px; color: var(--text-secondary);
-  background: transparent; border: 0; border-radius: var(--radius-card); padding: 6px 10px; cursor: pointer; white-space: nowrap;
+  background: transparent; border: 0; border-radius: var(--radius-control); padding: 6px 10px; cursor: pointer; white-space: nowrap;
 }
 .canvas__tool:hover:not(:disabled) { color: var(--text-primary); background: var(--bg-panel-raised); }
 .canvas__tool[aria-pressed="true"], .canvas__tool[aria-expanded="true"] { color: var(--text-primary); background: var(--bg-panel-raised); }
@@ -232,9 +232,9 @@ button.node__badge--pair-end::before { left: -1px; transform: none; }
   position: absolute; z-index: 30; top: calc(100% + 10px); left: 0; width: 300px; padding: 6px;
   display: flex; flex-direction: column; gap: 2px;
   background: var(--glass-bg);
-  border: 1px solid var(--glass-line); border-radius: var(--radius-panel);
+  border: 1px solid var(--glass-line); border-radius: var(--radius-surface);
 }
-.canvas__opt { display: flex; align-items: flex-start; gap: 10px; padding: 8px 10px; border-radius: var(--radius-card); cursor: pointer; }
+.canvas__opt { display: flex; align-items: flex-start; gap: 10px; padding: 8px 10px; border-radius: var(--radius-control); cursor: pointer; }
 .canvas__opt:hover { background: var(--bg-panel-raised); }
 .canvas__opt input { flex: none; width: 14px; height: 14px; margin: 2px 0 0; accent-color: var(--accent); cursor: pointer; }
 .canvas__opt input:focus-visible { outline: 1.5px solid var(--focus-ring); outline-offset: 2px; }
@@ -258,11 +258,11 @@ button.node__badge--pair-end::before { left: -1px; transform: none; }
 .react-flow__viewport-portal { z-index: 9; }
 .node-menu {
   position: absolute; z-index: 40; /* 정보 카드·범례(30) 위에 뜬다 */ min-width: 140px; padding: 4px;
-  background: var(--color-paper-2); border: 1px solid var(--line-node); border-radius: var(--radius-card);
+  background: var(--color-paper-2); border: 1px solid var(--line-node); border-radius: var(--radius-surface);
 }
 .node-menu__item {
   display: block; width: 100%; text-align: left; font: inherit; font-size: 13px;
-  color: var(--text-primary); background: transparent; border: 0; border-radius: var(--radius-card); padding: 6px 10px; cursor: pointer;
+  color: var(--text-primary); background: transparent; border: 0; border-radius: var(--radius-control); padding: 6px 10px; cursor: pointer;
 }
 .node-menu__item:hover:not([aria-disabled="true"]) { background: var(--bg-panel-raised); }
 .node-menu__item[aria-disabled="true"] { opacity: 0.5; cursor: not-allowed; color: var(--text-secondary); }
@@ -294,7 +294,7 @@ button.node__badge--pair-end::before { left: -1px; transform: none; }
 .canvas__sample-btn:focus-visible { outline: 1.5px solid var(--focus-ring); outline-offset: 2px; }
 .canvas__sample-list {
   position: absolute; z-index: 30; top: 100%; left: 50%; transform: translateX(-50%); margin: 6px 0 0; padding: 4px; list-style: none; min-width: 200px; text-align: left;
-  background: var(--color-paper-2); border: 1px solid var(--line-node); border-radius: var(--radius-card);
+  background: var(--color-paper-2); border: 1px solid var(--line-node); border-radius: var(--radius-surface);
 }
 
 /* 이미지 내보내기 무대(exportImage.ts): 화면 밖에 붙인 복제본은 움직이지 않는 한 장면이어야 한다. */
@@ -308,7 +308,7 @@ button.node__badge--pair-end::before { left: -1px; transform: none; }
 .canvas__export-head { display: flex; align-items: baseline; gap: 8px; padding: 6px 10px 2px; }
 .canvas__export-item {
   display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; font: inherit; font-size: 13px;
-  color: var(--text-primary); background: transparent; border: 0; border-radius: var(--radius-card); padding: 7px 10px; cursor: pointer;
+  color: var(--text-primary); background: transparent; border: 0; border-radius: var(--radius-control); padding: 7px 10px; cursor: pointer;
 }
 .canvas__export-item:hover { background: var(--bg-panel-raised); }
 .canvas__export-item:focus-visible { outline: 1.5px solid var(--focus-ring); outline-offset: -1px; }
@@ -319,7 +319,7 @@ button.node__badge--pair-end::before { left: -1px; transform: none; }
   position: absolute; z-index: 30; top: calc(100% + 10px); right: 0; margin: 0; padding: 7px 12px; white-space: nowrap;
   font-size: 12px; color: var(--text-primary);
   background: var(--glass-bg);
-  border: 1px solid var(--glass-line); border-radius: var(--radius-panel);
+  border: 1px solid var(--glass-line); border-radius: var(--radius-surface);
 }
 /* 알림은 클릭을 받지 않는다. 비어 있으면 화면에서만 숨기고 알림 자리(role=status)는 남긴다. */
 .canvas__export-note { pointer-events: none; }

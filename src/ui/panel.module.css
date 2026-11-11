@@ -20,15 +20,15 @@
 .relations { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 8px; font-size: 13px; color: var(--text-primary); }
 .relText { color: var(--text-secondary); font-size: 12px; }
 .chips { display: flex; flex-wrap: wrap; gap: 8px; }
-.chip, .actions button {
+.chip {
   font: inherit; font-size: 12px; color: var(--text-primary); background: var(--bg-panel-raised);
-  border: 1px solid var(--line-node); border-radius: 999px; padding: 4px 12px; cursor: pointer;
+  border: 1px solid var(--line-node); border-radius: var(--radius-control); padding: 4px 12px; cursor: pointer;
 }
-.chip:hover, .actions button:hover:not(:disabled) { border-color: var(--text-secondary); }
-.chip:focus-visible, .actions button:focus-visible, .versionRow:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+.chip:hover { border-color: var(--text-secondary); }
+.chip:focus-visible, .versionRow:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
 
 .versions { margin: 0; padding: 8px; list-style: none; display: flex; flex-direction: column; gap: 4px; }
-.version { border: 1px solid transparent; border-radius: var(--radius-card); }
+.version { border: 1px solid transparent; border-radius: var(--radius-control); }
 .version[data-viewing] { border-color: var(--text-secondary); }
 .versionRow {
   width: 100%; display: flex; align-items: center; gap: 8px; font: inherit; font-size: 13px;
@@ -39,19 +39,12 @@
 .time { margin-left: auto; font-size: 11px; color: var(--text-secondary); }
 .badge { font-size: 11px; color: var(--text-primary); border: 1px solid var(--state-missing); border-radius: 4px; padding: 0 4px; }
 .actions { display: flex; flex-wrap: wrap; gap: 8px; padding: 0 8px 12px; }
-.actions button { border-radius: var(--radius-card); }
-.actions button:disabled { opacity: 0.55; cursor: not-allowed; }
-.linkBtn {
-  align-self: flex-start; font: inherit; font-size: 12px; color: var(--text-primary); background: var(--bg-panel-raised);
-  border: 1px solid var(--line-node); border-radius: var(--radius-card); padding: 4px 12px; cursor: pointer;
-}
-.linkBtn:hover:not(:disabled) { border-color: var(--text-secondary); }
-.linkBtn:disabled { opacity: 0.55; cursor: not-allowed; }
-.linkBtn:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+/* 세로로 쌓이는 판 안의 도구 버튼(공용 Button)은 글자 폭만 차지한다. */
+.start { align-self: flex-start; }
 /* 주의할 점: 등급 표시만 --state-warn 으로 강조한다. */
 .subheading { margin: 4px 0 0; font-size: 11px; font-weight: 500; color: var(--text-secondary); }
 .cautions { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 12px; }
-.caution { display: flex; flex-direction: column; gap: 4px; padding: 8px 12px; border: 1px solid var(--line-node); border-radius: var(--radius-card); }
+.caution { display: flex; flex-direction: column; gap: 4px; padding: 8px 12px; border: 1px solid var(--line-node); border-radius: var(--radius-surface); }
 .cautionIgnored { opacity: 0.75; }
 .level { align-self: flex-start; font-size: 11px; font-weight: 600; color: var(--text-primary); border: 1px solid var(--state-warn); border-radius: 4px; padding: 0 4px; }
 .level[data-level="check"] { border-color: var(--line-node); color: var(--text-secondary); }
@@ -70,7 +63,7 @@
 .rewrite { display: flex; gap: 8px; align-items: center; }
 .rewriteInput {
   flex: 1; min-width: 0; font: inherit; font-size: 12px; color: var(--text-primary); background: var(--bg-panel-raised);
-  border: 1px solid var(--line-node); border-radius: var(--radius-card); padding: 4px 8px;
+  border: 1px solid var(--line-node); border-radius: var(--radius-control); padding: 4px 8px;
 }
 .rewriteInput:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 1px; }
 .rewriteInput:disabled { opacity: 0.55; cursor: not-allowed; color: var(--text-secondary); }
@@ -88,13 +81,13 @@
 .ask { display: flex; gap: 8px; align-items: center; }
 .askInput {
   flex: 1; min-width: 0; font: inherit; font-size: 12px; color: var(--text-primary); background: var(--bg-panel-raised);
-  border: 1px solid var(--line-node); border-radius: var(--radius-card); padding: 8px 8px;
+  border: 1px solid var(--line-node); border-radius: var(--radius-control); padding: 8px 8px;
 }
 .askInput:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 1px; }
 .askInput:disabled { opacity: 0.55; cursor: not-allowed; color: var(--text-secondary); }
 .askSend {
   flex: none; display: grid; place-items: center; width: 28px; height: 28px; color: var(--text-primary);
-  background: var(--bg-panel-raised); border: 1px solid var(--line-node); border-radius: var(--radius-card); cursor: pointer;
+  background: var(--bg-panel-raised); border: 1px solid var(--line-node); border-radius: var(--radius-control); cursor: pointer;
 }
 .askSend:hover:not(:disabled) { border-color: var(--text-secondary); }
 .askSend:disabled { opacity: 0.55; cursor: not-allowed; }

@@ -2,6 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 
+import { Button } from "./Button";
 import styles from "./app.module.css";
 import { useMediaQuery } from "./useMediaQuery";
 
@@ -88,8 +89,8 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
 export function CreateButton({ projectId, children }: { projectId?: string; children: React.ReactNode }) {
   const { requestCreate } = useShell();
   return (
-    <button type="button" className={styles.primaryBtn} onClick={() => requestCreate(projectId)}>
+    <Button variant="primary" size="lg" onClick={() => requestCreate(projectId)}>
       {children}
-    </button>
+    </Button>
   );
 }

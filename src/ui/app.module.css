@@ -24,19 +24,18 @@
 }
 .emptySheet p { margin: 0; font-size: 14px; line-height: 1.6; color: var(--text-secondary); max-width: 46ch; word-break: keep-all; text-wrap: pretty; }
 .emptyActions { margin-top: 8px; display: flex; justify-content: center; }
-.emptyActions .primaryBtn { min-height: 44px; padding: 0 24px; font-size: 14px; }
 
 .sidebar {
   position: absolute; top: var(--panel-gap); bottom: calc(var(--panel-gap) + var(--safe-b, 0px)); left: calc(var(--panel-gap) + var(--safe-l, 0px)); z-index: 40; width: 240px;
   display: flex; flex-direction: column; min-height: 0;
   background: var(--glass-bg);
-  border: 1px solid var(--glass-line); border-radius: var(--radius-panel);
+  border: 1px solid var(--glass-line); border-radius: var(--radius-surface);
 }
 .sideHead { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 8px 8px 16px; }
 .brand { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 14px; font-weight: 600; letter-spacing: -0.01em; }
 .iconBtn, .railBtn {
   flex: none; display: grid; place-items: center; width: 32px; height: 32px; padding: 0;
-  color: var(--text-secondary); background: transparent; border: 0; border-radius: var(--radius-card); cursor: pointer; text-decoration: none;
+  color: var(--text-secondary); background: transparent; border: 0; border-radius: var(--radius-control); cursor: pointer; text-decoration: none;
 }
 .iconBtn:hover, .railBtn:hover { color: var(--text-primary); background: var(--bg-panel-raised); }
 .railBtn { width: 36px; height: 36px; }
@@ -48,12 +47,12 @@
 .accountPop {
   position: absolute; left: calc(100% + 10px); bottom: 0; z-index: 30; min-width: 160px;
   display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 8px 8px 12px; font-size: 13px;
-  background: var(--bg-panel-raised); border: 1px solid var(--line-node); border-radius: var(--radius-card);
+  background: var(--bg-panel-raised); border: 1px solid var(--line-node); border-radius: var(--radius-surface);
 }
 .accountPop span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .tree { flex: 1; min-height: 0; overflow-y: auto; margin: 0; padding: 0 8px; list-style: none; }
 .subtree { margin: 0; padding: 0; list-style: none; }
-.row { display: flex; align-items: center; gap: 2px; border-radius: var(--radius-card); position: relative; }
+.row { display: flex; align-items: center; gap: 2px; border-radius: var(--radius-control); position: relative; }
 .row:hover { background: var(--bg-panel-raised); }
 /* 지금 연 구성도를 품은 프로젝트: 접혀 있어도 어디에 있는지 보이게. */
 .currentProject .rowMain { font-weight: 600; }
@@ -69,7 +68,7 @@
 .diagramRow { margin-left: 12px; }
 .addRow {
   display: block; width: calc(100% - 12px); margin-left: 12px; text-align: left; font: inherit; font-size: 12px;
-  color: var(--text-secondary); background: transparent; border: 0; border-radius: var(--radius-card); padding: 4px 8px; cursor: pointer;
+  color: var(--text-secondary); background: transparent; border: 0; border-radius: var(--radius-control); padding: 4px 8px; cursor: pointer;
 }
 .addRow:hover { color: var(--text-primary); background: var(--bg-panel-raised); }
 .treeEmpty { margin: 0; padding: 4px 16px 8px; font-size: 12px; line-height: 1.5; color: var(--text-secondary); }
@@ -81,18 +80,18 @@
 .current::before, .sideLinkActive::before { content: ""; position: absolute; left: 0; top: 4px; bottom: 4px; width: 2px; border-radius: 1px; background: var(--accent); }
 .menuBtn {
   flex: none; font: inherit; font-size: 14px; line-height: 1; color: var(--text-secondary); background: transparent;
-  border: 0; border-radius: var(--radius-card); padding: 4px 8px; cursor: pointer;
+  border: 0; border-radius: var(--radius-control); padding: 4px 8px; cursor: pointer;
 }
 .menuBtn:hover, .menuBtn[aria-expanded="true"] { color: var(--text-primary); }
-.menuBtn:active, .addRow:active, .rowMain:active, .iconBtn:active, .railBtn:active, .linkBtn:active, .sideLink:active { color: var(--text-primary); background: var(--line-shell); }
+.menuBtn:active, .addRow:active, .rowMain:active, .iconBtn:active, .railBtn:active, .sideLink:active { color: var(--text-primary); background: var(--line-shell); }
 .menuBtn:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: -2px; }
 .menuRoot { flex: none; display: contents; }
 .menu {
   position: absolute; right: 4px; top: 100%; z-index: 30; min-width: 120px; display: flex; flex-direction: column;
-  background: var(--bg-panel-raised); border: 1px solid var(--line-node); border-radius: var(--radius-card); padding: 4px;
+  background: var(--bg-panel-raised); border: 1px solid var(--line-node); border-radius: var(--radius-surface); padding: 4px;
 }
 .menuUp { top: auto; bottom: 100%; }
-.menu button { font: inherit; font-size: 13px; color: var(--text-primary); background: transparent; border: 0; text-align: left; padding: 8px; border-radius: var(--radius-card); cursor: pointer; }
+.menu button { font: inherit; font-size: 13px; color: var(--text-primary); background: transparent; border: 0; text-align: left; padding: 8px; border-radius: var(--radius-control); cursor: pointer; }
 .menu button:hover:not(:disabled) { background: var(--bg-node); }
 .menu button:active:not(:disabled) { background: var(--bg-canvas); }
 .menu button:focus-visible { background: var(--bg-node); outline: 2px solid var(--focus-ring); outline-offset: -2px; }
@@ -104,50 +103,22 @@
 /* 펼친 사이드바 바닥: 새 프로젝트, 그 아래 화면 링크 셋(용어 사전·망 지식·Claude Code 연결)을 한 묶음으로, 계정 줄은 제 이음매 아래. */
 .pageLinks { display: flex; flex-direction: column; gap: 4px; }
 .userSeam { flex: none; padding: 8px 12px; border-top: 1px solid var(--glass-line); }
-/* 둘째 버튼: 머리카락 선 알약, 칠 없음. */
-.btn {
-  font: inherit; font-size: 13px; color: var(--text-primary); background: transparent;
-  border: 1px solid var(--line-node); border-radius: var(--radius-pill); padding: 8px 12px; cursor: pointer;
-}
-.btn:hover:not(:disabled) { border-color: var(--text-secondary); }
-.btn:active:not(:disabled) { background: var(--bg-panel-raised); }
-.btn:disabled { opacity: 0.55; cursor: not-allowed; color: var(--text-secondary); }
-/* 대화상자의 주 동작·빈 화면 시작 버튼(연두 칠 알약 — 화면마다 하나), 삭제(빠진 정보 색, 연두 아님). */
-.primaryBtn, .dangerBtn {
-  font: inherit; font-size: 13px; font-weight: 600; background: transparent;
-  border: 1px solid; border-radius: var(--radius-pill); padding: 8px 16px; cursor: pointer; white-space: nowrap;
-}
-.primaryBtn { color: var(--on-accent); background: var(--accent-fill); border-color: var(--accent-fill); }
-.primaryBtn:hover:not(:disabled) { background: var(--accent-fill-hover); border-color: var(--accent-fill-hover); }
-.primaryBtn:active:not(:disabled) { background: var(--accent-fill-active); border-color: var(--accent-fill-active); }
-.dangerBtn { color: var(--state-missing-text); border-color: var(--state-missing); }
-.dangerBtn:hover:not(:disabled) { background: var(--bg-panel-raised); }
-.dangerBtn:active:not(:disabled) { background: var(--line-shell); }
-.primaryBtn:disabled, .dangerBtn:disabled { opacity: 0.55; cursor: not-allowed; }
-.primaryBtn:disabled { background: var(--bg-panel-raised); border-color: var(--line-node); color: var(--text-secondary); }
-.dangerBtn:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
-.linkBtn { font: inherit; font-size: 12px; color: var(--text-secondary); background: transparent; border: 0; cursor: pointer; padding: 2px 4px; }
-.linkBtn:hover { color: var(--text-primary); }
-.sideLink { font-size: 13px; color: var(--text-secondary); text-decoration: none; padding: 4px; border-radius: var(--radius-card); }
+/* 버튼 모양은 공용 Button(button.module.css)이 정한다. */
+.sideLink { font-size: 13px; color: var(--text-secondary); text-decoration: none; padding: 4px; border-radius: var(--radius-control); }
 .sideLinkActive { position: relative; color: var(--text-primary); background: var(--bg-panel-raised); font-weight: 600; }
 .accountLink { flex: 1 0 100%; }
 .sideLink:hover { color: var(--text-primary); }
 .sideLink:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
-.sidebar button:focus-visible, .panel button:focus-visible, .banner button:focus-visible, .dialog button:focus-visible, .dialog input:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
-/* 연두 칠 버튼의 포커스: 연두 링을 바탕 한 줄(2px) 띄워 두른다(붙이면 칠과 묻힌다, 띄우면 바탕과 15:1). */
-.primaryBtn:focus-visible, .dialog .primaryBtn:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
-@media (prefers-reduced-motion: no-preference) {
-  .primaryBtn { transition: background-color var(--dur-micro) var(--ease-out), border-color var(--dur-micro) var(--ease-out), opacity var(--dur-micro) var(--ease-out); }
-}
+.sidebar button:focus-visible, .panel button:focus-visible, .dialog button:focus-visible, .dialog input:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
 
 .backdrop { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; background: color-mix(in srgb, var(--bg-canvas) 70%, transparent); }
-.dialog { width: min(320px, calc(100% - 32px)); box-sizing: border-box; display: flex; flex-direction: column; gap: 12px; padding: 16px; background: var(--color-paper-2); border: 1px solid var(--line-node); border-radius: var(--radius-card); }
+.dialog { width: min(320px, calc(100% - 32px)); box-sizing: border-box; display: flex; flex-direction: column; gap: 12px; padding: 16px; background: var(--color-paper-2); border: 1px solid var(--line-node); border-radius: var(--radius-surface); }
 .dialog h2 { margin: 0; font-size: var(--text-title); font-weight: 600; }
 .dialog p { margin: 0; font-size: 13px; line-height: 1.5; }
 .dialog .dialogHint { font-size: 12px; color: var(--text-secondary); }
 .dialog input::placeholder { color: var(--text-secondary); opacity: 0.7; }
 .dialog label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--text-secondary); }
-.dialog input { font: inherit; font-size: 13px; min-height: 36px; box-sizing: border-box; color: var(--text-primary); background: var(--bg-panel-raised); border: 1px solid var(--line-input); border-radius: var(--radius-card); padding: 8px; }
+.dialog input { font: inherit; font-size: 13px; min-height: 36px; box-sizing: border-box; color: var(--text-primary); background: var(--bg-panel-raised); border: 1px solid var(--line-input); border-radius: var(--radius-control); padding: 8px; }
 .dialog input:hover { border-color: var(--text-secondary); }
 .dialog input:focus-visible { outline-offset: -2px; }
 .dialogActions { display: flex; justify-content: flex-end; gap: 8px; }
@@ -158,7 +129,7 @@
 .skipLink {
   position: absolute; z-index: 60; top: var(--panel-gap); left: calc(max(var(--panel-gap), var(--canvas-inset-left, 0px)) + var(--safe-l, 0px));
   font: inherit; font-size: 13px; font-weight: 600; color: var(--text-primary); white-space: nowrap; cursor: pointer;
-  padding: 8px 16px; min-height: 36px; border-radius: var(--radius-panel);
+  padding: 8px 16px; min-height: 36px; border-radius: var(--radius-control);
   background: var(--glass-bg); border: 1px solid var(--glass-line);
 }
 .skipLink:not(:focus) { width: 1px; height: 1px; min-height: 0; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); border: 0; }
@@ -178,7 +149,7 @@
 .banner {
   display: flex; align-items: center; gap: 12px; padding: 8px 16px; font-size: 13px;
   margin: var(--panel-gap) calc(var(--canvas-inset-right, 0px) + var(--safe-r, 0px)) 0 calc(var(--canvas-inset-left, 0px) + var(--safe-l, 0px));
-  background: var(--color-paper-2); border: 1px solid var(--line-node); border-radius: var(--radius-card); color: var(--text-primary);
+  background: var(--color-paper-2); border: 1px solid var(--line-node); border-radius: var(--radius-surface); color: var(--text-primary);
 }
 .banner button { font: inherit; font-size: 12px; color: var(--text-primary); background: transparent; border: 1px solid var(--line-node); border-radius: var(--radius-pill); padding: 4px 12px; cursor: pointer; }
 .banner button:hover { border-color: var(--text-secondary); }
@@ -193,13 +164,13 @@
 .panel {
   flex: 1; display: flex; flex-direction: column; min-width: 0; min-height: 0; overflow: hidden;
   background: var(--glass-bg);
-  border: 1px solid var(--glass-line); border-radius: var(--radius-panel);
+  border: 1px solid var(--glass-line); border-radius: var(--radius-surface);
 }
 /* 알약 탭 */
 .tabs { display: flex; gap: 4px; padding: 8px; border-bottom: 1px solid var(--glass-line); }
 .tab {
   flex: 1; font: inherit; font-size: 13px; color: var(--text-secondary); background: transparent; border: 0;
-  border-radius: 999px; padding: 8px 0; cursor: pointer;
+  border-radius: var(--radius-pill); padding: 8px 0; cursor: pointer;
 }
 .tab:hover { color: var(--text-primary); }
 .tab:active { background: var(--line-shell); }
@@ -244,7 +215,7 @@
   .resizer { display: none; }
   .panelDock { top: 0; right: 0; left: 0; bottom: var(--tabbar-h); width: auto; }
   /* 화면을 다 채우는 패널: 유리 판 대신 사이드바 바탕, 모서리·테두리 없이. 탭은 아래 막대가 맡는다. */
-  .panel { border: 0; border-radius: 0; background: var(--bg-sidebar); }
+  .panel { border: 0; border-radius: var(--radius-surface); background: var(--bg-sidebar); }
   .panel > .tabs { display: none; }
   /* 한 번에 한 화면. 숨긴 쪽도 크기를 지켜(visibility) 캔버스 카메라·대화 스크롤이 돌아왔을 때 그대로다. */
   .workspace[data-mview="canvas"] .panelDock,
@@ -263,7 +234,7 @@
 }
 .topbarBtn {
   flex: none; display: grid; place-items: center; width: 44px; height: 44px; padding: 0;
-  color: var(--text-secondary); background: transparent; border: 0; border-radius: var(--radius-card); cursor: pointer;
+  color: var(--text-secondary); background: transparent; border: 0; border-radius: var(--radius-control); cursor: pointer;
 }
 .topbarBtn:hover, .topbarBtn[aria-expanded="true"] { color: var(--text-primary); background: var(--bg-panel-raised); }
 .topbarBtn:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: -2px; }
@@ -285,13 +256,11 @@
 }
 /* 손가락으로 누르는 서랍: 줄·버튼을 44px 높이로. */
 .drawerNav .sideHead { padding: 4px 4px 4px 16px; }
-.drawerNav .iconBtn { width: 44px; height: 44px; border-radius: var(--radius-card); }
+.drawerNav .iconBtn { width: 44px; height: 44px; border-radius: var(--radius-control); }
 .drawerNav .rowMain { min-height: 44px; padding: 8px; font-size: 14px; }
 .drawerNav .menuBtn { min-width: 44px; min-height: 44px; }
 .drawerNav .addRow { min-height: 44px; font-size: 13px; }
-.drawerNav .sideLink, .drawerNav .btn { min-height: 44px; box-sizing: border-box; display: flex; align-items: center; font-size: 14px; }
-.drawerNav .btn { justify-content: center; }
-.drawerNav .linkBtn { min-height: 44px; padding: 0 8px; font-size: 13px; }
+.drawerNav .sideLink { min-height: 44px; box-sizing: border-box; display: flex; align-items: center; font-size: 14px; }
 @media (prefers-reduced-motion: no-preference) {
   .drawer { animation: drawer-in var(--dur-short) var(--ease-out); }
   .drawerBackdrop { animation: backdrop-in var(--dur-short) var(--ease-out); }

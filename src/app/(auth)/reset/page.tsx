@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { requestResetAction } from "@/server/auth/actions";
 import { checkEmail, RESET_TTL_HOURS } from "@/server/auth/rules";
 import { Logo } from "@/ui/brand/Logo";
+import { Button } from "@/ui/Button";
 
 import { AuthField, AuthSubmit } from "../_components/AuthField";
 import { useAuthForm, type FieldErrors } from "../_components/useAuthForm";
@@ -43,9 +44,9 @@ export default function ResetRequestPage() {
             <p className={styles.hint}>
               메일이 오지 않으면 스팸함을 확인하거나, 주소가 맞는지 확인한 뒤 다시 보내 주세요.
             </p>
-            <button type="button" className={styles.button} onClick={() => setRetryFor(state)}>
+            <Button size="lg" onClick={() => setRetryFor(state)}>
               다시 보내기
-            </button>
+            </Button>
           </div>
         ) : (
           <>
