@@ -1,16 +1,38 @@
 /* Hallmark · part of the InfraSketch Vantage redesign, stamped in src/styles/globals.css · shape: app screen · posture: restrained */
 /* 망 지식 화면. Tokens only (LIGHT_TOKENS 쌍). */
-.page { box-sizing: border-box; height: 100%; overflow-y: auto; background: var(--bg-canvas); color: var(--text-primary); padding: 32px 32px 40px; padding-left: calc(var(--shell-inset-left, 0px) + var(--safe-l, 0px) + 40px); display: flex; flex-direction: column; gap: 24px; }
+.page { box-sizing: border-box; height: 100%; overflow-y: auto; background: var(--bg-canvas); color: var(--text-primary); padding: 0 32px 40px; padding-left: calc(var(--shell-inset-left, 0px) + var(--safe-l, 0px) + 40px); display: flex; flex-direction: column; gap: 24px; }
 /* 화면 제목: 가는 굵기의 큰 글자 하나(작업 화면 1.2 비율 단계의 맨 위). */
-.title { margin: 0; font-size: var(--text-page); font-weight: var(--weight-display); letter-spacing: var(--tracking-display); line-height: 1.15; overflow-wrap: break-word; min-width: 0; }
+/* 위 여백은 .page 의 padding 이 아니라 제목 margin 으로 둔다: 스크롤 상자의 padding 만큼 sticky 기준선이 안쪽으로 밀려
+   붙은 머리 줄·주기 판 위로 줄이 비쳐 지나간다. 좁은 화면은 제목을 감추고 .page padding 16px 로 돌아간다. */
+.title { margin: 32px 0 0; font-size: var(--text-page); font-weight: var(--weight-display); letter-spacing: var(--tracking-display); line-height: 1.15; overflow-wrap: break-word; min-width: 0; }
 .lead { margin: 0; font-size: 14px; line-height: 1.6; color: var(--text-secondary); max-width: 64ch; word-break: keep-all; }
+/* 화면 안 바로 가기: 망 종류 목록이 길어 연결 규칙까지 한참 내려가야 한다. */
+.jump { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 13px; }
+.jump a { color: var(--text-secondary); text-decoration: underline; text-underline-offset: 3px; }
+.jump a:hover { color: var(--text-primary); }
 .section { display: flex; flex-direction: column; gap: 12px; }
-/* 머리 줄은 아래 목록 열(두 칸 가운데 왼쪽) 폭에 맞춰 「종류 추가」가 목록 오른쪽 끝에 붙는다. */
-.sectionHead { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: calc(100% - 400px - 24px); }
-.sectionHead h2 { margin: 0; font-size: var(--text-title); font-weight: 600; text-wrap: balance; }
+/* 머리 줄: 망 종류는 목록 열 안에 있어 「종류 추가」가 목록 오른쪽 끝에 붙는다. 연결 규칙은 표와 같은 전체 폭. */
+.sectionHead { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; }
+.sectionHead h2 { margin: 0; font-size: var(--text-title); font-weight: 600; text-wrap: balance; scroll-margin-top: 16px; }
+.headTools { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.search {
+  width: 200px; font: inherit; font-size: 13px; color: var(--text-primary); background: var(--bg-panel-raised);
+  border: 1px solid var(--line-input); border-radius: var(--radius-control); padding: 8px 8px;
+}
+.search::placeholder { color: var(--text-secondary); }
 /* 범례(왼쪽, 남은 폭 전부) + 주기 판(오른쪽 400px). 보조 페이지는 좁은 열 하나로 두지 않는다(DESIGN.md). */
 .body { display: grid; grid-template-columns: minmax(0, 1fr) 400px; gap: 24px; align-items: start; }
+.listCol { min-width: 0; display: flex; flex-direction: column; gap: 12px; }
 .groups { display: flex; flex-direction: column; gap: 24px; }
+/* 주기 판 자리: 화면 위에서 16px 띄워 붙는다(.page 가 스크롤 상자). 화면보다 길면 판 안에서 스크롤한다.
+   눈금(.ticks)은 판(.form)에 두르고, 스크롤은 이 바깥 칸이 맡는다(같은 요소면 눈금이 내용과 함께 밀려 올라간다). */
+.notesCol { position: sticky; top: 16px; min-width: 0; max-height: calc(100dvh - 32px); overflow-y: auto; overscroll-behavior: contain; }
+.panelHead { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+/* 제목 초점은 좁은 화면에서 판으로 옮겨 올 때만(tabIndex=-1, 탭으로는 오지 않는다). */
+.panelTitle:focus { outline: none; }
+.panelTitle { margin: 0; min-width: 0; font-size: var(--text-title); font-weight: 600; overflow-wrap: anywhere; }
+/* 저장 등 결과 한 줄: 누른 버튼 옆. */
+.notice { align-self: center; font-size: 12px; color: var(--text-secondary); }
 /* 무리 이름: 본문 글자색·굵게, 목록과 붙여 한 무리로 읽힌다. */
 .grade { margin: 0 0 8px; font-size: 13px; font-weight: 700; color: var(--text-primary); }
 /* 목록: 옅은 paper-2 우물 안에서 머리카락 선으로 줄을 가른다(무리마다 한 우물). */
@@ -22,7 +44,7 @@
 .dim { opacity: 0.6; }
 .head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 13px; }
 .head strong { font-weight: 600; }
-.meta { font-size: 12px; line-height: 1.4; color: var(--text-secondary); }
+.meta { margin: 0; font-size: 12px; line-height: 1.4; color: var(--text-secondary); }
 .badge { flex: none; font-size: 12px; color: var(--text-secondary); border: 1px solid var(--line-node); border-radius: var(--radius-pill); padding: 0 4px; white-space: nowrap; }
 .empty { margin: 0; padding: 8px 12px; font-size: 13px; color: var(--text-secondary); }
 .table { border-collapse: collapse; font-size: 13px; width: 100%; border: 1px solid var(--line-node); }
@@ -32,6 +54,8 @@
 .notes { background: var(--bg-canvas); border: 1px solid var(--line-node); border-radius: 0; padding: 20px; max-width: none; }
 .notesEmpty { margin: 0; padding: 20px; font-size: 13px; line-height: 1.6; color: var(--text-secondary); border: 1px dashed var(--line-node); border-radius: var(--radius-surface); }
 .ruleRow { display: flex; align-items: center; gap: 8px; padding: 8px 12px; }
+/* 고치기 판: 그 규칙 줄 바로 아래에 열린다. */
+.ruleEdit { padding: 0 12px 12px; }
 .ruleText { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; font-size: 13px; }
 .form { display: flex; flex-direction: column; gap: 12px; padding: 16px; background: var(--color-paper-2); border: 0; border-radius: var(--radius-surface); max-width: 560px; }
 .form label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--text-secondary); }
@@ -44,7 +68,7 @@
 .form label.check { flex-direction: row; align-items: flex-start; gap: 8px; font-size: 13px; color: var(--text-primary); }
 .form label.check input { flex: none; min-height: 0; width: 16px; height: 16px; margin: 2px 0 0; padding: 0; accent-color: var(--accent); }
 .actions { display: flex; flex-wrap: wrap; gap: 8px; }
-.page button:focus-visible, .page input:focus-visible, .page textarea:focus-visible, .page select:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+.page a:focus-visible, .page button:focus-visible, .page input:focus-visible, .page textarea:focus-visible, .page select:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
 .error { margin: 0; font-size: 12px; color: var(--text-primary); border: 1px solid var(--state-missing); border-radius: var(--radius-surface); padding: 4px 8px; }
 
 @media (max-width: 640px) {
@@ -52,13 +76,18 @@
   /* 위 막대가 같은 제목을 보인다: 화면에서만 감추고 보조기기에는 제목으로 남긴다. */
   .title { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
   .body { grid-template-columns: minmax(0, 1fr); }
-  .sectionHead { width: auto; }
+  /* 좁은 화면: 판은 목록 아래에 쌓인다. 고르면 useNotesPanel 이 여기로 스크롤한다. */
+  .notesCol { position: static; max-height: none; overflow: visible; scroll-margin-top: 16px; }
+  .headTools { flex: 1 1 100%; }
+  .search { flex: 1 1 160px; width: auto; min-width: 0; min-height: 44px; }
+  .jump a { display: inline-flex; align-items: center; min-height: 44px; }
   .item { grid-template-columns: minmax(0, 1fr); row-gap: 4px; }
   .notesEmpty { display: none; }
   .item, .form input, .form select { min-height: 44px; }
   .ruleRow { flex-wrap: wrap; }
 }
 @media (prefers-reduced-motion: no-preference) {
+  .page { scroll-behavior: smooth; }
   .item { transition: border-color var(--dur-micro) var(--ease-out), background-color var(--dur-micro) var(--ease-out); }
 }
 /* 지금 연 항목 = 고른 것: 왼쪽 안쪽 연두 한 줄. */
