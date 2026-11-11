@@ -1,7 +1,7 @@
 /* Hallmark · shape: app screen · genre: modern-minimal · theme: Vantage (deal 2/3, seed infrastructure-diagram-tool-workspace-9920·6bb47c15·2026-11-10·r0) · redesign: full
- * nav: kept, the floating sidebar and right panel now flat paper-2 with hairlines · signature: the diagram canvas leads, the chrome steps back; sign-in beside a real sample diagram capture · states: loading, empty, error, kept as the app draws them · vantage: no cloud (app scope)/steel
+ * nav: kept, the floating sidebar and right panel now flat paper-2 with hairlines · signature: the diagram canvas leads, the chrome steps back; sign-in: one still background picture under the whole page, the form in a centred translucent box, no motion · states: loading, empty, error, kept as the app draws them · vantage: no cloud (app scope)/steel
  * axes: dark/grotesk-sans/chromatic-lime · posture: restrained · contrast: pass · type: SUIT only (Geologica has no Hangul) · v2.0.0 */
-/* Hallmark · pre-emit critique: P4 H4 E4 S4 R5 V3 · weakest: V, an app shell kept by request reads like other tools; the canvas carries the identity and sign-in shows the real diagram instead of a stock panel */
+/* Hallmark · pre-emit critique: P4 H4 E4 S4 R5 V3 · weakest: V, an app shell kept by request reads like other tools; the canvas carries the identity and sign-in keeps to one quiet picture behind the form */
 @import "./tokens.css";
 /* No --space-* scale is declared on purpose: canvas.css spacing must stay raw px for the layout tests, and the chrome keeps to 4px steps by hand. */
 
