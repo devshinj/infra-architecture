@@ -1,7 +1,7 @@
 /* Hallmark · part of the InfraSketch Vantage redesign, stamped in src/styles/globals.css · shape: app screen · posture: restrained */
 /*
- * 로그인·가입·비밀번호 화면. 화면 전체에 배경 그림을 깔고, 가운데 반투명 상자 안에 양식을 둔다.
- * 배경 그림을 바꾸려면 .page 의 url() 한 곳만 바꾼다(public/brand/). 그림이 없거나 늦게 와도 바탕색 위에 양식은 그대로 보인다.
+ * 로그인·가입·비밀번호 화면(DESIGN.md · The Living Blueprint): 넓으면 왼쪽에 캔버스 문법으로 그린 작은 구성도(AuthStage),
+ * 오른쪽에 양식 판. 좁으면 양식만, 캔버스와 같은 점 격자 위 가운데 판으로.
  */
 .page {
   /* 다크 단일 테마 — 자동완성·스크롤바 같은 브라우저 기본 컨트롤도 어둡게 그린다. */
@@ -12,8 +12,10 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   padding: 40px 16px;
-  background: var(--bg-canvas) url("/brand/auth-bg.webp") center / cover no-repeat;
   color: var(--text-primary);
+  background-color: var(--bg-canvas);
+  background-image: radial-gradient(circle at 1px 1px, var(--dot-grid) 0.6px, transparent 1px);
+  background-size: 20px 20px;
 }
 .form {
   /* 좁은 화면에서는 좌우 여백(16px) 안으로 줄어든다. */
@@ -26,11 +28,59 @@
   flex-direction: column;
   gap: 16px;
   padding: 32px 24px;
-  /* 반투명 상자: 배경 그림 위에서도 글자 대비를 지킨다(바탕 82% + 머리카락 선). */
-  background: color-mix(in srgb, var(--bg-canvas) 82%, transparent);
+  background: var(--color-paper-2);
   border: 1px solid var(--line-node);
   border-radius: var(--radius-surface);
 }
+
+/* ---- 왼쪽 무대: 작은 구성도. 좁으면 감춘다. ---- */
+.stage { display: none; }
+@media (min-width: 960px) {
+  .page { grid-template-columns: minmax(0, 1fr) minmax(400px, 480px); padding: 0; }
+  .form {
+    grid-column: 2; grid-row: 1; max-width: none; align-self: stretch; justify-content: center;
+    padding: 40px 56px; border: 0; border-left: 1px solid var(--line-shell); border-radius: 0;
+  }
+  .stage {
+    grid-column: 1; grid-row: 1; position: relative; display: flex; flex-direction: column; justify-content: center; gap: 40px;
+    min-width: 0; overflow: hidden; padding: 56px 64px;
+  }
+}
+.stageSay { max-width: 560px; }
+.stageTitle { margin: 0; font-size: var(--text-hero); font-weight: var(--weight-display); letter-spacing: var(--tracking-display); line-height: 1.15; }
+.stageText { margin: 12px 0 0; font-size: 15px; line-height: 1.65; color: var(--text-secondary); word-break: keep-all; }
+.stageDiagram { position: relative; flex: none; width: 640px; height: 440px; }
+.stageEdges { position: absolute; inset: 0; overflow: visible; }
+.stageEdges path { fill: none; stroke: var(--edge-request); stroke-width: 1.4; }
+.stageEdges path[data-kind="lit"] { stroke: var(--edge-request-lit); }
+.stageEdges path[data-kind="async"] { stroke: var(--edge-async); stroke-dasharray: 5 4; }
+.stageEdges path[data-kind="replication"] { stroke: var(--edge-replication); }
+.stageZone {
+  position: absolute; box-sizing: border-box; border-radius: var(--radius-zone);
+  background: color-mix(in srgb, var(--tint) 7%, transparent); border: 1px solid color-mix(in srgb, var(--tint) 45%, var(--line-node));
+}
+.stageZone[data-dashed] { border-style: dashed; }
+.stageZoneName {
+  position: absolute; top: -10px; left: 12px; padding: 0 9px; border-radius: var(--radius-pill); white-space: nowrap;
+  font-size: 12px; font-weight: 600; line-height: 1.5;
+  background: color-mix(in srgb, var(--tint) 22%, var(--bg-canvas)); color: color-mix(in srgb, var(--tint) 55%, var(--text-primary));
+}
+.stageNode {
+  position: absolute; box-sizing: border-box; width: 110px; height: 40px; display: flex; align-items: center; gap: 8px; padding: 0 10px 0 8px;
+  background: var(--bg-node); border: 1px solid var(--line-node); border-radius: var(--radius-node); white-space: nowrap;
+}
+.stageNode[data-selected] { border-color: var(--accent); }
+.stageNode b { display: block; font-size: 13px; font-weight: 600; line-height: 1.2; }
+.stageNode small { display: block; font-size: 12px; line-height: 1.2; color: var(--color-ink-2); }
+.stageCoin {
+  flex: none; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; color: var(--cat);
+  background: color-mix(in srgb, var(--cat) 26%, var(--bg-node)); border: 1px solid color-mix(in srgb, var(--cat) 38%, var(--line-node));
+}
+.stageCoin svg { width: 13px; height: 13px; }
+.stageLabel { position: absolute; padding: 0 4px; font-size: 12px; color: var(--text-secondary); background: var(--bg-canvas); white-space: nowrap; }
+/* 대화에서 고치는 한 줄(말풍선): 노드 참조는 연두. */
+.stageAsk { align-self: flex-start; margin: 0; padding: 10px 14px; font-size: 14px; background: var(--bg-panel-raised); border-radius: var(--radius-surface) var(--radius-surface) var(--radius-surface) 2px; }
+.stageAsk span { color: var(--accent); }
 .title {
   font-size: var(--text-hero);
   font-weight: var(--weight-display);

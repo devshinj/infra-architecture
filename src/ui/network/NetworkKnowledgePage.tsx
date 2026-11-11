@@ -146,6 +146,7 @@ export function NetworkKnowledgePage({ initialTypes, initialRules }: { initialTy
             })}
           </div>
 
+          {selected === null && <p className={styles.notesEmpty}>종류를 고르면 여기서 이름·다른 이름·등급을 고칠 수 있어요.</p>}
           {selected === "new" && (
             <TypeForm
               key="new"
@@ -286,7 +287,7 @@ function TypeForm({ label, initial, pending, onSave, onCancel, extra }: {
   const [d, setD] = useState(initial);
   const set = <K extends keyof TypeDraft>(k: K, v: TypeDraft[K]) => setD((x) => ({ ...x, [k]: v }));
   return (
-    <form className={styles.form} aria-label={label} onSubmit={(e) => { e.preventDefault(); onSave(d); }}>
+    <form className={`${styles.form} ${styles.notes} ticks`} aria-label={label} onSubmit={(e) => { e.preventDefault(); onSave(d); }}>
       <label>이름<input value={d.name} onChange={(e) => set("name", e.target.value)} /></label>
       <label>다른 이름(쉼표로 구분)<input value={d.aliases} onChange={(e) => set("aliases", e.target.value)} /></label>
       <label>설명<textarea value={d.description} onChange={(e) => set("description", e.target.value)} /></label>

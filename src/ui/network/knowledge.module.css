@@ -6,16 +6,18 @@
 .lead { margin: 0; font-size: 14px; line-height: 1.6; color: var(--text-secondary); max-width: 64ch; word-break: keep-all; }
 .section { display: flex; flex-direction: column; gap: 12px; }
 /* 머리 줄은 아래 목록 열(두 칸 가운데 왼쪽) 폭에 맞춰 「종류 추가」가 목록 오른쪽 끝에 붙는다. */
-.sectionHead { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: calc((100% - 16px) / 2); }
+.sectionHead { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: calc(100% - 400px - 24px); }
 .sectionHead h2 { margin: 0; font-size: var(--text-title); font-weight: 600; text-wrap: balance; }
-.body { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+/* 범례(왼쪽, 남은 폭 전부) + 주기 판(오른쪽 400px). 보조 페이지는 좁은 열 하나로 두지 않는다(DESIGN.md). */
+.body { display: grid; grid-template-columns: minmax(0, 1fr) 400px; gap: 24px; align-items: start; }
 .groups { display: flex; flex-direction: column; gap: 24px; }
 /* 무리 이름: 본문 글자색·굵게, 목록과 붙여 한 무리로 읽힌다. */
 .grade { margin: 0 0 8px; font-size: 13px; font-weight: 700; color: var(--text-primary); }
 /* 목록: 옅은 paper-2 우물 안에서 머리카락 선으로 줄을 가른다(무리마다 한 우물). */
-.list { margin: 0; padding: 0; list-style: none; background: var(--color-paper-2); border-radius: var(--radius-surface); }
+.list { margin: 0; padding: 0; list-style: none; border: 1px solid var(--line-node); border-radius: var(--radius-surface); overflow: hidden; }
 .list li + li { border-top: 1px solid var(--line-shell); }
-.item { display: flex; flex-direction: column; gap: 4px; width: 100%; min-height: 36px; text-align: left; font: inherit; color: var(--text-primary); background: transparent; border: 0; padding: 8px 12px; cursor: pointer; }
+/* 한 줄: 이름·표시 | 다른 이름. */
+.item { display: grid; grid-template-columns: minmax(180px, 1fr) minmax(0, 2fr); column-gap: 16px; align-items: baseline; width: 100%; min-height: 36px; text-align: left; font: inherit; color: var(--text-primary); background: transparent; border: 0; padding: 10px 14px; cursor: pointer; }
 .item:hover, .item[aria-current="true"] { background: var(--bg-panel-raised); }
 .dim { opacity: 0.6; }
 .head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 13px; }
@@ -23,9 +25,12 @@
 .meta { font-size: 12px; line-height: 1.4; color: var(--text-secondary); }
 .badge { flex: none; font-size: 12px; color: var(--text-secondary); border: 1px solid var(--line-node); border-radius: var(--radius-pill); padding: 0 4px; white-space: nowrap; }
 .empty { margin: 0; padding: 8px 12px; font-size: 13px; color: var(--text-secondary); }
-.table { border-collapse: collapse; font-size: 13px; border-top: 1px solid var(--line-shell); width: 100%; max-width: 560px; }
+.table { border-collapse: collapse; font-size: 13px; width: 100%; border: 1px solid var(--line-node); }
 .table th, .table td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line-shell); }
-.table th { font-weight: 600; color: var(--text-secondary); font-size: 12px; }
+.table th { font-weight: 500; color: var(--text-secondary); font-size: 12px; border-bottom-color: var(--text-secondary); }
+/* 주기 판(종류 편집): 도면 주기처럼 머리카락 선 + 네 모서리 눈금. 고르기 전에는 안내 한 줄. */
+.notes { background: var(--bg-canvas); border: 1px solid var(--line-node); border-radius: 0; padding: 20px; max-width: none; }
+.notesEmpty { margin: 0; padding: 20px; font-size: 13px; line-height: 1.6; color: var(--text-secondary); border: 1px dashed var(--line-node); border-radius: var(--radius-surface); }
 .ruleRow { display: flex; align-items: center; gap: 8px; padding: 8px 12px; }
 .ruleText { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; font-size: 13px; }
 .form { display: flex; flex-direction: column; gap: 12px; padding: 16px; background: var(--color-paper-2); border: 0; border-radius: var(--radius-surface); max-width: 560px; }
@@ -45,6 +50,8 @@
   .title { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
   .body { grid-template-columns: minmax(0, 1fr); }
   .sectionHead { width: auto; }
+  .item { grid-template-columns: minmax(0, 1fr); row-gap: 4px; }
+  .notesEmpty { display: none; }
   .item, .form input, .form select { min-height: 44px; }
   .ruleRow { flex-wrap: wrap; }
 }

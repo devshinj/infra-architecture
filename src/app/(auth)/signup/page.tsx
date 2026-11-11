@@ -8,6 +8,7 @@ import { Logo } from "@/ui/brand/Logo";
 
 import { AuthField, AuthSubmit } from "../_components/AuthField";
 import { useAuthForm, type FieldErrors } from "../_components/useAuthForm";
+import { AuthStage } from "../_components/AuthStage";
 import styles from "../auth.module.css";
 
 /** 서버(signup.ts)와 같은 규칙으로 미리 확인한다. */
@@ -26,6 +27,7 @@ export default function SignupPage() {
   const { errors, pending, formProps } = useAuthForm(signupAction, { validate });
   return (
     <main className={styles.page}>
+      <AuthStage />
       <form {...formProps} className={styles.form}>
         <Logo className={styles.logo} />
         <h1 className={styles.title}>회원가입</h1>
