@@ -223,3 +223,23 @@ describe("reset with token", () => {
     expect(screen.getByLabelText("새 비밀번호")).toHaveAccessibleDescription(expect.stringContaining(MESSAGES.passwordShort));
   });
 });
+
+describe("auth stage (DESIGN.md: the canvas grammar outside the canvas)", () => {
+  test.each([
+    ["login", () => <LoginForm />],
+    ["signup", () => <SignupPage />],
+    ["reset request", () => <ResetRequestPage />],
+    ["new password", () => <ResetPasswordForm token="t" usable />],
+  ])("%s shows the product line and a decorative diagram, keeping one h1 (the form's)", (_, ui) => {
+    render(ui());
+    expect(screen.getByText("말하면 구성도가 그려져요")).toBeInTheDocument();
+    const diagram = document.querySelector("[data-auth-diagram]");
+    expect(diagram).toHaveAttribute("aria-hidden", "true");
+    expect(screen.getAllByRole("heading", { level: 1 })).toHaveLength(1);
+  });
+
+  test("the sign-in screens no longer paint the constellation picture", async () => {
+    const { readFileSync } = await import("node:fs");
+    expect(readFileSync("src/app/(auth)/auth.module.css", "utf8")).not.toContain("auth-bg");
+  });
+});

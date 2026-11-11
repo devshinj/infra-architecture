@@ -1,27 +1,27 @@
 /* Hallmark · part of the InfraSketch Vantage redesign, stamped in src/styles/globals.css · shape: app screen · posture: restrained */
 /* 대화 탭. 토큰 색만 사용하고 강조색은 쓰지 않는다. */
 .chat { display: flex; flex-direction: column; height: 100%; min-height: 0; }
-.notice { margin: 12px 12px 0; padding: 8px 12px; font-size: 13px; line-height: 1.5; color: var(--text-primary); border: 1px solid var(--state-missing); border-radius: var(--radius-card); }
+.notice { margin: 12px 12px 0; padding: 8px 12px; font-size: 13px; line-height: 1.5; color: var(--text-primary); border: 1px solid var(--state-missing); border-radius: var(--radius-surface); }
 .log { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; padding: 16px 12px; }
 .line { margin: 0; font-size: 13px; line-height: 1.6; white-space: pre-wrap; word-break: break-word; color: var(--text-primary); }
 /* 내 말풍선: 오른쪽, 채움만(테두리 없음), 오른쪽 아래 모서리만 각지게. */
 .user { align-self: flex-end; max-width: 85%; padding: 8px 12px; background: var(--bg-panel-raised); border-radius: 12px 12px 4px 12px; }
 /* 차례 밖 안내(되돌림 등): 가운데 작은 회색 글. */
-.system { align-self: center; max-width: 90%; text-align: center; font-size: 11.5px; color: var(--text-secondary); }
-.error { font-size: 13px; color: var(--text-primary); border: 1px solid var(--state-missing); border-radius: var(--radius-card); padding: 8px 12px; }
+.system { align-self: center; max-width: 90%; text-align: center; font-size: 12px; color: var(--text-secondary); }
+.error { font-size: 13px; color: var(--text-primary); border: 1px solid var(--state-missing); border-radius: var(--radius-surface); padding: 8px 12px; }
 /* AI 메시지: 말풍선 없이 정돈된 글. 머리 줄 아래 본문·카드·칩은 이름 열에 맞춘다. */
 .ai { align-self: stretch; display: flex; flex-direction: column; gap: 8px; }
 .aiHead { display: flex; align-items: center; gap: 8px; min-height: 20px; }
 .mono { flex: none; display: inline-grid; place-items: center; width: 20px; height: 20px; box-sizing: border-box; border: 1px solid var(--line-node); border-radius: 3px; font-size: 9px; font-weight: 700; line-height: 1; color: var(--text-primary); }
 .aiName { font-size: 12px; font-weight: 600; color: var(--text-primary); }
-.aiTime { font-size: 11px; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+.aiTime { font-size: 12px; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
 .aiBody { display: flex; flex-direction: column; gap: 8px; padding-left: 28px; min-width: 0; }
 .assistant, .progress { color: var(--text-primary); }
 .note { font-size: 12px; color: var(--text-secondary); }
 /* 진행 카드: 단계 목록. 지난 단계는 체크, 지금 단계는 점 3개. 강조색은 쓰지 않는다. */
 .cardSlot { display: contents; }
 .srOnly { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
-.card { align-self: flex-start; min-width: 200px; box-sizing: border-box; margin: 0; padding: 8px 12px; list-style: none; display: flex; flex-direction: column; gap: 4px; border: 1px solid var(--line-node); border-radius: var(--radius-card); font-size: 12px; line-height: 1.5; }
+.card { align-self: flex-start; min-width: 200px; box-sizing: border-box; margin: 0; padding: 8px 12px; list-style: none; display: flex; flex-direction: column; gap: 4px; border: 1px solid var(--line-node); border-radius: var(--radius-surface); font-size: 12px; line-height: 1.5; }
 .step { display: flex; align-items: center; gap: 8px; color: var(--text-secondary); }
 .step[data-state="current"] { color: var(--text-primary); }
 .step[data-state="todo"] { opacity: 0.55; }
@@ -36,80 +36,72 @@
 @media (prefers-reduced-motion: reduce) { .dots span { animation: none; opacity: 0.6; } }
 /* 차례 끝 결과 칩 줄: 요약은 조용한 글, `주의 N` 은 누르면 구성 정보 카드를 여는 작은 칩. */
 .results { margin: 2px 0 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
-.result { font: inherit; font-size: 11.5px; line-height: 1.45; text-align: left; color: var(--text-primary); background: transparent; border: 1px solid var(--line-node); border-radius: var(--radius-card); padding: 2px 8px; }
+.result { font: inherit; font-size: 12px; line-height: 1.45; text-align: left; color: var(--text-primary); background: transparent; border: 1px solid var(--line-node); border-radius: var(--radius-control); padding: 2px 8px; }
 button.result { cursor: pointer; }
 button.result:hover { border-color: var(--text-secondary); }
 button.result:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
 .chipSummary { border-color: transparent; padding-left: 0; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+/* 구성도는 있고 대화가 빈 때: 안내 한 줄과 고치기 예시. */
+.editStart { display: flex; flex-direction: column; gap: 12px; }
+/* 가장 최근 차례 요약: 요약 글 한 줄, 그 아래 바뀐 곳 보기·되돌리기 한 줄. */
+.turnResult { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
+.turnActions { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
 /* 주의 N: 테두리만 --state-warn. */
 .chipWarning { border-color: var(--state-warn); font-variant-numeric: tabular-nums; }
-.ref { color: var(--text-primary); background: var(--line-node); border-radius: 4px; padding: 0 4px; font-size: 12px; }
+.ref { color: var(--text-primary); background: var(--line-node); border-radius: var(--radius-control); padding: 0 4px; font-size: 12px; }
 .composer { display: flex; flex-direction: column; gap: 8px; padding: 12px 12px 12px; border-top: 1px solid var(--line-node); }
 .reason { margin: 0; font-size: 12px; color: var(--text-secondary); }
 .mention { display: flex; flex-direction: column; gap: 8px; }
 .chipStrip { margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 8px; }
-.chip { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: var(--text-primary); background: var(--bg-panel-raised); border: 1px solid var(--line-node); border-radius: 999px; padding: 2px 4px 2px 12px; }
+.chip { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: var(--text-primary); background: var(--bg-panel-raised); border: 1px solid var(--line-node); border-radius: var(--radius-control); padding: 2px 4px 2px 12px; }
 .chipX { font: inherit; font-size: 13px; line-height: 1; color: var(--text-secondary); background: transparent; border: 0; border-radius: 50%; width: 18px; height: 18px; cursor: pointer; }
 .chipX:hover { color: var(--text-primary); }
-.textarea { font: inherit; font-size: 13px; line-height: 1.5; resize: none; color: var(--text-primary); background: var(--bg-panel-raised); border: 1px solid var(--line-input); border-radius: var(--radius-card); padding: 8px 12px; }
+.textarea { font: inherit; font-size: 13px; line-height: 1.5; resize: none; color: var(--text-primary); background: var(--bg-panel-raised); border: 1px solid var(--line-input); border-radius: var(--radius-control); padding: 8px 12px; }
 .textarea::placeholder { color: var(--text-secondary); }
 .textarea:disabled { opacity: 0.55; cursor: not-allowed; color: var(--text-secondary); }
 .actions { display: flex; justify-content: flex-end; gap: 8px; }
-.btn { font: inherit; font-size: 13px; color: var(--text-primary); background: transparent; border: 1px solid var(--line-node); border-radius: var(--radius-pill); padding: 8px 16px; cursor: pointer; }
-.btn:hover:not(:disabled) { border-color: var(--text-secondary); }
-.btn:active:not(:disabled), .example:active:not(:disabled), button.result:active, .assumptionChip:active:not(:disabled), .newChatBtn:active:not(:disabled), .sessionItem:active { background: var(--line-node); }
-.btn:disabled { opacity: 0.55; cursor: not-allowed; color: var(--text-secondary); }
-.btn:focus-visible, .chipX:focus-visible, .textarea:focus-visible, .log:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+.example:active:not(:disabled), button.result:active, .assumptionChip:active:not(:disabled), .sessionItem:active { background: var(--line-node); }
+.chipX:focus-visible, .textarea:focus-visible, .log:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
 .textarea:focus-visible { outline-offset: -2px; }
-/* 보내기 — 작업 화면의 유일한 주 동작(연두 칠). 보낼 수 있을 때만 이 칠을 쓰고, 입력이 비었거나 차례가 도는 동안은
-   .btn(무채색 비활성)으로 그린다(ChatPanel). 중단·저장 같은 나머지는 위 .btn 그대로. */
-.primaryBtn { font: inherit; font-size: 13px; font-weight: 600; color: var(--on-accent); background: var(--accent-fill); border: 1px solid var(--accent-fill); border-radius: var(--radius-pill); padding: 8px 16px; cursor: pointer; }
-.primaryBtn:hover:not(:disabled) { background: var(--accent-fill-hover); border-color: var(--accent-fill-hover); }
-.primaryBtn:active:not(:disabled) { background: var(--accent-fill-active); border-color: var(--accent-fill-active); }
-/* 패널의 버튼 포커스 규칙보다 앞서도록 .actions 를 붙인다. 연두 링을 바탕 한 줄 띄워 칠과 떼어 놓는다. */
-.actions .primaryBtn:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
-@media (prefers-reduced-motion: no-preference) {
-  .primaryBtn { transition: background-color var(--dur-micro) var(--ease-out), border-color var(--dur-micro) var(--ease-out), opacity var(--dur-micro) var(--ease-out); }
-}
 .assumptions { margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 8px; }
 .assumptionItem { position: relative; }
-.assumptionChip { font: inherit; font-size: 12px; color: var(--text-primary); background: var(--bg-panel-raised); border: 1px solid var(--line-node); border-radius: 999px; padding: 4px 12px; cursor: pointer; }
+.assumptionChip { font: inherit; font-size: 12px; color: var(--text-primary); background: var(--bg-panel-raised); border: 1px solid var(--line-node); border-radius: var(--radius-control); padding: 4px 12px; cursor: pointer; }
 .assumptionChip:hover:not(:disabled) { border-color: var(--text-secondary); }
 .assumptionChip:disabled { opacity: 0.55; cursor: not-allowed; }
 .assumptionStatic { display: inline-block; cursor: default; }
 .assumptionChip.assumptionStatic:hover { border-color: var(--line-node); }
 .assumptionConfirmed { font-weight: 600; }
-.assumptionMark { margin-left: 8px; font-size: 11px; font-weight: 600; color: var(--text-secondary); }
-.assumptionMenu { position: absolute; z-index: 5; top: calc(100% + 4px); left: 0; min-width: 180px; display: flex; flex-direction: column; padding: 4px; background: var(--bg-panel-raised); border: 1px solid var(--line-node); border-radius: var(--radius-card); }
-.assumptionChoice { font: inherit; font-size: 13px; text-align: left; color: var(--text-primary); background: transparent; border: 0; border-radius: 4px; padding: 8px 8px; cursor: pointer; }
+.assumptionMark { margin-left: 8px; font-size: 12px; font-weight: 600; color: var(--text-secondary); }
+.assumptionMenu { position: absolute; z-index: 5; top: calc(100% + 4px); left: 0; min-width: 180px; display: flex; flex-direction: column; padding: 4px; background: var(--bg-panel-raised); border: 1px solid var(--line-node); border-radius: var(--radius-surface); }
+.assumptionChoice { font: inherit; font-size: 13px; text-align: left; color: var(--text-primary); background: transparent; border: 0; border-radius: var(--radius-control); padding: 8px 8px; cursor: pointer; }
 .assumptionChoice:hover:not(:disabled) { background: var(--line-node); }
 .assumptionChoice:disabled { opacity: 0.55; cursor: not-allowed; }
 /* 망연계 거절 기억 칩 옆의 작은 지우기 단추 */
-.assumptionRemove { font: inherit; font-size: 11px; color: var(--text-secondary); background: transparent; border: 0; border-radius: 4px; padding: 2px 4px; margin-left: 2px; cursor: pointer; text-decoration: underline; }
+.assumptionRemove { font: inherit; font-size: 12px; color: var(--text-secondary); background: transparent; border: 0; border-radius: var(--radius-control); padding: 2px 4px; margin-left: 2px; cursor: pointer; text-decoration: underline; }
 .assumptionRemove:hover:not(:disabled) { color: var(--text-primary); }
 .assumptionRemove:disabled { opacity: 0.55; cursor: not-allowed; }
 .assumptionChip:focus-visible, .assumptionChoice:focus-visible, .assumptionRemove:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
 /* 빠진 정보 체크리스트(캔버스 구성 정보 카드 안). 노드별 블록을 접고 펼친다. 남은 수만 --state-missing-text. */
 .checklist { margin: 0 -8px; display: flex; flex-direction: column; gap: 2px; }
-.missingBlock { border-radius: var(--radius-card); }
+.missingBlock { border-radius: var(--radius-surface); }
 .missingBlock[data-open] { background: color-mix(in srgb, var(--bg-panel-raised) 55%, transparent); }
 .blockHead { display: flex; align-items: center; gap: 8px; min-height: 30px; padding: 0 8px 0 2px; }
-.blockToggle { flex: none; display: grid; place-items: center; width: 22px; height: 22px; padding: 0; color: var(--text-secondary); background: transparent; border: 0; border-radius: 4px; cursor: pointer; }
+.blockToggle { flex: none; display: grid; place-items: center; width: 22px; height: 22px; padding: 0; color: var(--text-secondary); background: transparent; border: 0; border-radius: var(--radius-control); cursor: pointer; }
 .blockToggle:hover { color: var(--text-primary); }
 .chevron[data-open] { transform: rotate(90deg); }
 .blockIcon { flex: none; display: grid; place-items: center; color: var(--cat, var(--text-secondary)); }
 .blockTitle { flex: 1; min-width: 0; padding: 4px 2px; font: inherit; font-size: 13px; font-weight: 500; text-align: left; color: var(--text-primary); background: transparent; border: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 button.blockTitle { cursor: pointer; }
 button.blockTitle:hover { text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--text-secondary); }
-.blockCount { flex: none; font-size: 11.5px; font-weight: 600; color: var(--state-missing-text); font-variant-numeric: tabular-nums; }
+.blockCount { flex: none; font-size: 12px; font-weight: 600; color: var(--state-missing-text); font-variant-numeric: tabular-nums; }
 .blockCount[data-zero] { color: var(--text-secondary); font-weight: 400; opacity: 0.6; }
 .blockBody { display: flex; flex-direction: column; gap: 8px; padding: 2px 8px 12px 32px; }
 .missingRow { display: grid; grid-template-columns: 72px 1fr auto; align-items: center; gap: 8px; }
 .missingLabel { font-size: 12px; color: var(--text-secondary); }
-.missingInput { font: inherit; font-size: 13px; min-width: 0; color: var(--text-primary); background: var(--bg-panel-raised); border: 1px solid var(--line-input); border-radius: var(--radius-card); padding: 4px 8px; }
+.missingInput { font: inherit; font-size: 13px; min-width: 0; color: var(--text-primary); background: var(--bg-panel-raised); border: 1px solid var(--line-input); border-radius: var(--radius-control); padding: 4px 8px; }
 .missingInput:disabled { opacity: 0.55; cursor: not-allowed; color: var(--text-secondary); }
 .missingUnknown { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: var(--text-secondary); cursor: pointer; }
-.missingError { margin: 0; font-size: 12px; color: var(--text-primary); border: 1px solid var(--state-missing); border-radius: var(--radius-card); padding: 4px 8px; }
+.missingError { margin: 0; font-size: 12px; color: var(--text-primary); border: 1px solid var(--state-missing); border-radius: var(--radius-surface); padding: 4px 8px; }
 .blockToggle:focus-visible, button.blockTitle:focus-visible, .missingInput:focus-visible, .missingUnknown input:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
 @media (prefers-reduced-motion: no-preference) {
   .chevron { transition: transform var(--dur-micro) var(--ease-out); }
@@ -126,7 +118,7 @@ button.blockTitle:hover { text-decoration: underline; text-underline-offset: 3px
 
 /* 대화 세션 고르기(대화 탭 맨 위). 팝오버는 보기 옵션과 같은 paper-2 칠. */
 .sessionBar { position: relative; flex: none; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 12px; border-bottom: 1px solid var(--line-node); }
-.sessionBtn { flex: 0 1 auto; min-width: 0; display: inline-flex; align-items: center; gap: 8px; max-width: 100%; font: inherit; font-size: 13px; font-weight: 600; color: var(--text-primary); background: transparent; border: 0; border-radius: var(--radius-card); padding: 4px 8px; margin-left: -8px; cursor: pointer; }
+.sessionBtn { flex: 0 1 auto; min-width: 0; display: inline-flex; align-items: center; gap: 8px; max-width: 100%; font: inherit; font-size: 13px; font-weight: 600; color: var(--text-primary); background: transparent; border: 0; border-radius: var(--radius-control); padding: 4px 8px; margin-left: -8px; cursor: pointer; }
 .sessionBtn:hover:not(:disabled), .sessionBtn[aria-expanded="true"] { background: var(--bg-panel-raised); }
 .sessionBtn:disabled { cursor: default; }
 .sessionBtn:focus-visible, .sessionItem:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 1px; }
@@ -135,25 +127,21 @@ button.blockTitle:hover { text-decoration: underline; text-underline-offset: 3px
 .sessionList {
   position: absolute; z-index: 30; top: calc(100% - 2px); left: 6px; right: 6px; max-height: 320px; overflow-y: auto; margin: 0; padding: 4px; list-style: none;
   background: var(--glass-bg);
-  border: 1px solid var(--glass-line); border-radius: var(--radius-panel);
+  border: 1px solid var(--glass-line); border-radius: var(--radius-surface);
 }
-.sessionItem { display: flex; align-items: baseline; gap: 12px; width: 100%; font: inherit; font-size: 13px; text-align: left; color: var(--text-primary); background: transparent; border: 0; border-radius: var(--radius-card); padding: 8px 8px; cursor: pointer; }
+.sessionItem { display: flex; align-items: baseline; gap: 12px; width: 100%; font: inherit; font-size: 13px; text-align: left; color: var(--text-primary); background: transparent; border: 0; border-radius: var(--radius-control); padding: 8px 8px; cursor: pointer; }
 .sessionItem:hover { background: var(--bg-panel-raised); }
 .sessionItem[aria-current="true"] { font-weight: 600; }
 .sessionItem .sessionLabel { flex: 1; }
-.sessionTime { flex: none; font-size: 11px; font-weight: 400; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+.sessionTime { flex: none; font-size: 12px; font-weight: 400; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
 /* 무리 이름(구성도 대화 / 노드 질문)과 행. 행의 ⋯ 메뉴는 행 오른쪽에 붙어 아래(자리가 모자라면 위)로 열린다. */
-.sessionGroup { margin: 0; padding: 8px 8px 2px; font-size: 11px; font-weight: 600; color: var(--text-secondary); }
+.sessionGroup { margin: 0; padding: 8px 8px 2px; font-size: 12px; font-weight: 600; color: var(--text-secondary); }
 .sessionList section + section { margin-top: 4px; padding-top: 4px; border-top: 1px solid var(--glass-line); }
 .sessionRows { margin: 0; padding: 0; list-style: none; }
 .sessionRow { position: relative; display: flex; align-items: center; gap: 2px; }
 .sessionRow .sessionItem { flex: 1; min-width: 0; }
 .sessionMenuBtn:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 1px; }
 /* 새 구성도 대화: 고르기 버튼 옆의 조용한 글 버튼(연두는 보내기 몫). */
-.newChatBtn { flex: none; display: inline-flex; align-items: center; gap: 4px; font: inherit; font-size: 12px; color: var(--text-secondary); background: transparent; border: 1px solid var(--line-node); border-radius: var(--radius-card); padding: 4px 8px; cursor: pointer; }
-.newChatBtn:hover:not(:disabled) { color: var(--text-primary); border-color: var(--text-secondary); }
-.newChatBtn:disabled { opacity: 0.55; cursor: not-allowed; }
-.newChatBtn:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
 .newChatIcon { flex: none; }
 /* 무리 끝 `더 보기`: 세션 행과 같은 크기의 조용한 글. */
 .sessionMore { color: var(--text-secondary); }
@@ -161,8 +149,7 @@ button.blockTitle:hover { text-decoration: underline; text-underline-offset: 3px
 .sessionMore[aria-disabled="true"] { cursor: default; opacity: 0.7; }
 /* 휴대폰(대화 탭): 손가락으로 누르는 줄·버튼은 44px. */
 @media (max-width: 640px) {
-  .sessionBtn, .newChatBtn { min-height: 44px; }
-  .newChatBtn { padding: 0 12px; font-size: 13px; }
+  .sessionBtn { min-height: 44px; }
   .sessionItem { min-height: 44px; align-items: center; font-size: 14px; }
   .sessionMenuBtn { min-width: 44px; min-height: 44px; }
 }

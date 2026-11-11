@@ -41,8 +41,17 @@ test("floating panel tokens have exact values (flat paper, hairline, no blur)", 
   expect(css).toContain("--glass-line: rgba(32, 40, 44, 1);");
   expect(css).not.toContain("--glass-highlight:");
   expect(css).not.toContain("--glass-blur:");
-  expect(css).toContain("--radius-panel: 4px;");
   expect(css).toContain("--panel-gap: 12px;");
+});
+
+test("radius scale comes from the diagram (DESIGN.md · Shapes): control = node, surface = zone", () => {
+  const css = read("src/styles/tokens.css");
+  expect(css).toContain("--radius-node: 6px;");
+  expect(css).toContain("--radius-zone: 8px;");
+  expect(css).toContain("--radius-control: var(--radius-node);");
+  expect(css).toContain("--radius-surface: var(--radius-zone);");
+  expect(css).toContain("--radius-panel: var(--radius-surface);");
+  expect(css).toContain("--radius-pill: 999px;");
 });
 
 test("sidebar and panel float as flat paper panels with a hairline over the full-bleed canvas", () => {
@@ -53,14 +62,14 @@ test("sidebar and panel float as flat paper panels with a hairline over the full
     expect(r, sel).toContain("background: var(--glass-bg)");
     expect(r, sel).not.toContain("backdrop-filter");
     expect(r, sel).toContain("border: 1px solid var(--glass-line)");
-    expect(r, sel).toContain("border-radius: var(--radius-panel)");
+    expect(r, sel).toContain("border-radius: var(--radius-surface)");
   }
   expect(css).not.toContain("backdrop-filter");
   expect(rule(css, ".sidebar")).toContain("position: absolute");
   expect(rule(css, ".panelDock")).toContain("position: absolute");
   expect(css).not.toMatch(/box-shadow|gradient/);
   // 알약 탭: 선택은 bg-panel-raised 채움 + text-primary
-  expect(rule(css, ".tab")).toContain("border-radius: 999px");
+  expect(rule(css, ".tab")).toContain("border-radius: var(--radius-pill)");
   const sel = css.match(/\.tab\[aria-selected="true"\] \{([^}]*)\}/)![1];
   expect(sel).toContain("background: var(--bg-panel-raised)");
   expect(sel).toContain("color: var(--text-primary)");
@@ -164,18 +173,13 @@ test("chat bubbles and progress dots follow the restrained spec", () => {
   expect(css).toMatch(/@media \(prefers-reduced-motion: reduce\) \{ \.dots span \{ animation: none;/);
   // 말풍선·아바타·진행 점은 금색을 쓰지 않는다.
   for (const sel of [".user", ".mono", ".dots span"]) expect(rule(css, sel), sel).not.toContain("var(--accent");
-  // 대화에서 금색은 보내기 버튼 하나뿐이다(사용자 결정: 작업 화면의 유일한 주 동작). 금색 칠을 쓰는 규칙은 .primaryBtn 뿐이고,
-  // 그 칠(var(--accent-fill))은 .primaryBtn 본 규칙 하나에만 있다.
-  const goldRules = [...css.matchAll(/([^{}]+)\{([^{}]*var\(--accent[^{}]*)\}/g)].map((m) => m[1].trim().split(/\r?\n/).pop()!.trim());
-  expect(goldRules.length).toBeGreaterThan(0);
-  for (const sel of goldRules) expect(sel).toMatch(/^\.primaryBtn(:[a-z():-]+)?$/);
-  expect(rule(css, ".primaryBtn")).toContain("background: var(--accent-fill)");
-  expect(css.replace(/(^|\n)\.primaryBtn \{[^}]*\}/, "")).not.toContain("var(--accent-fill)");
-  expect(css).not.toContain("var(--accent)");
-  // ChatPanel 에서 primaryBtn 을 쓰는 버튼은 보내기 하나다.
+  // 대화에서 연두는 보내기 버튼 하나뿐이다(사용자 결정: 작업 화면의 유일한 주 동작). 대화 스타일시트는 연두를 칠하지 않고,
+  // 칠은 공용 Button(button.module.css)의 primary 가 맡는다.
+  expect(css).not.toContain("var(--accent");
+  // ChatPanel 에서 primary 버튼은 보내기 하나다.
   const panel = read("src/ui/chat/ChatPanel.tsx");
-  expect(panel.match(/styles\.primaryBtn/g)).toHaveLength(1);
-  expect(panel).toMatch(/styles\.primaryBtn[^\n]*\n\s*보내기/);
+  expect(panel.match(/variant="primary"/g)).toHaveLength(1);
+  expect(panel).toMatch(/variant="primary"[^\n]*\n\s*보내기/);
   expect(css).not.toMatch(/gradient|box-shadow/);
 });
 
@@ -219,6 +223,37 @@ test("no css font-size below 11px", () => {
     }
   }
   expect(bad).toEqual([]);
+});
+
+test("screen chrome text never goes below 12px (DESIGN.md · The 12px Floor Rule)", () => {
+  // 캔버스 안(src/canvas, 확대·축소로 크기가 바뀌고 배치 상수와 묶인 글자)은 제외한다. 캔버스 위에 뜨는 팝오버·툴팁은 화면 틀이다.
+  const chromeInCanvas = [".canvas__opt-desc", ".canvas__export-foot", ".name-tooltip__sub"];
+  const allowed = [{ file: "chat.module.css", selector: ".mono" }]; // 대화 아바타 IS 모노그램(장식)
+  const bad: string[] = [];
+  for (const f of cssFiles(join(process.cwd(), "src"))) {
+    const inCanvas = /[\\/]src[\\/]canvas[\\/]/.test(f);
+    const css = readFileSync(f, "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
+    for (const m of css.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+      const sel = m[1].trim().split(/\r?\n/).pop()!.trim();
+      if (inCanvas && !chromeInCanvas.includes(sel)) continue;
+      if (allowed.some((a) => f.endsWith(a.file) && sel === a.selector)) continue;
+      for (const d of m[2].matchAll(/font-size:\s*([\d.]+)px/g)) if (parseFloat(d[1]) < 12) bad.push(`${f} ${sel} ${d[0]}`);
+    }
+  }
+  expect(bad).toEqual([]);
+});
+
+test("narrow canvas toolbar: icon-only 44px tools on one row, labels kept for screen readers", () => {
+  const css = read("src/canvas/canvas.css");
+  const narrow = css.slice(css.lastIndexOf("@media (max-width: 640px)"));
+  expect(narrow).toMatch(/\.canvas__tool \{[^}]*min-width: 44px;[^}]*min-height: 44px;/);
+  // 글자는 지우지 않고 화면에서만 감춘다(버튼 이름으로 읽힌다).
+  expect(narrow).toMatch(/\.canvas__tool > span \{[^}]*position: absolute;[^}]*clip-path: inset\(50%\);/);
+  expect(narrow).not.toMatch(/\.canvas__tool > span \{[^}]*display: none/);
+});
+
+test("placeholders use text-secondary everywhere, not the browser grey", () => {
+  expect(read("src/styles/globals.css")).toMatch(/::placeholder \{[^}]*color: var\(--text-secondary\);[^}]*opacity: 1;/);
 });
 
 // rgba 색을 불투명 배경 위에 합성한다.

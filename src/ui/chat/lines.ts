@@ -137,7 +137,7 @@ export function messagesToLines(rows: Row[]): ChatLine[] {
     // 옛 메시지(changed 없음)는 예전처럼 답 글만 본다.
     const wrote = answer.trim() !== "" || (meta.changed !== undefined && says.some((x) => x.trim() !== ""));
     const s = summaryText(r, wrote, meta.intent);
-    if (s) out.push({ id: `${m.id}-summary`, kind: "summary", text: s, ...t });
+    if (s) out.push({ id: `${m.id}-summary`, kind: "summary", text: s, version: r.version, changed: changedOf(r), ...t });
     // 빠진 정보(meta.missing)는 대화에 줄을 두지 않는다: 캔버스 카드가 지금 상태로 보여 준다.
     const chip = warningsChip(meta.warnings ?? [], meta.warningCounts);
     if (chip) out.push({ id: `${m.id}-warn`, ...chip, ...t });

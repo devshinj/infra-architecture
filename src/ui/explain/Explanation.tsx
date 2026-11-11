@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 import { normalizeTerm, type EdgeExplanation, type NodeExplanation } from "@/domain/explain";
+import { Button } from "@/ui/Button";
 
 import { AI_BADGE, AI_BADGE_SR, isUnreviewedAi } from "../glossary/aiBadge";
 import styles from "../panel.module.css";
@@ -38,9 +39,9 @@ function Rewrite({ onRewrite, busy }: { onRewrite: (instruction: string) => void
   const [text, setText] = useState("");
   if (!open) {
     return (
-      <button type="button" className={styles.linkBtn} disabled={busy} onClick={() => setOpen(true)}>
+      <Button size="sm" className={styles.start} disabled={busy} onClick={() => setOpen(true)}>
         다시 쓰기
-      </button>
+      </Button>
     );
   }
   return (
@@ -53,9 +54,8 @@ function Rewrite({ onRewrite, busy }: { onRewrite: (instruction: string) => void
         aria-label="다시 쓰기 지시"
         onChange={(e) => setText(e.target.value)}
       />
-      <button
-        type="button"
-        className={styles.linkBtn}
+      <Button
+        size="sm"
         disabled={busy}
         onClick={() => {
           onRewrite(text.trim() || DEFAULT_INSTRUCTION);
@@ -64,7 +64,7 @@ function Rewrite({ onRewrite, busy }: { onRewrite: (instruction: string) => void
         }}
       >
         다시 만들기
-      </button>
+      </Button>
     </div>
   );
 }
@@ -78,9 +78,9 @@ function Retry({ message, onRetry, busy }: { message?: string; onRetry?: () => v
         </p>
       )}
       {onRetry && (
-        <button type="button" className={styles.linkBtn} disabled={busy} onClick={onRetry}>
+        <Button size="sm" className={styles.start} disabled={busy} onClick={onRetry}>
           다시 시도
-        </button>
+        </Button>
       )}
     </>
   );

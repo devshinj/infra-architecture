@@ -49,6 +49,8 @@ export interface CanvasProps {
   autoArrangeDisabled?: boolean;
   /** 바뀔 때마다 새 배치가 나온 뒤 화면 전체를 한 번 맞춘다(자동 정렬·대화 재정렬). */
   fitRequest?: number;
+  /** 바뀔 때마다 도구 모음의 `전체 보기`를 누른 것과 같다(단축키 F). */
+  fitAllSignal?: number;
   motion: boolean;
   /** Toolbar toggles; the parent owns editMode / motion. */
   onEditModeChange(v: boolean): void;
@@ -102,7 +104,7 @@ const NO_INSETS: Insets = { left: 0, right: 0 };
 /** 도구 모음 아래 숨 쉴 틈(화면 px). 맞춤은 도구 모음 아래 끝 + 이만큼부터 쓴다. */
 const TOOLBAR_GAP = 8;
 const LAYOUT_FAILED_MESSAGE = "구성도를 배치하지 못했어요. 새로고침하거나 구성을 다시 확인해 주세요.";
-const EMPTY_MESSAGE = "아직 구성도가 비어 있어요. 오른쪽 대화에서 만들고 싶은 서비스를 설명해 보세요.";
+const EMPTY_MESSAGE = "아직 구성도가 비어 있어요. 대화에서 만들고 싶은 서비스를 설명해 보세요.";
 const EXPORT_LAYOUT_FAILED_REASON = "구성도를 배치하지 못해 저장할 그림이 없어요.";
 const EXPORT_LAYOUT_PENDING_REASON = "구성도를 그리는 중이에요. 잠시 뒤 다시 해 보세요.";
 
@@ -254,7 +256,7 @@ export function Canvas(props: CanvasProps) {
         </div>
         <span className="canvas__sep" role="separator" aria-orientation="vertical" />
         <div className="canvas__group" role="group" aria-label="화면">
-          <button type="button" className="canvas__tool" onClick={() => setFitTick((n) => n + 1)}>
+          <button type="button" className="canvas__tool" title="전체 보기 (F)" aria-keyshortcuts="F" onClick={() => setFitTick((n) => n + 1)}>
             <IconFit />
             <span>전체 보기</span>
           </button>
@@ -280,7 +282,7 @@ export function Canvas(props: CanvasProps) {
       ) : (
         view.layout && (
           <ReactFlowProvider>
-            <Flow {...props} cameraInsets={insets} fitAllRequest={fitTick} layout={view.layout} settled={view.settled} layoutFailed={view.layoutFailed} display={view.display} appearing={view.appearing} updated={view.updated} />
+            <Flow {...props} cameraInsets={insets} fitAllRequest={fitTick + (props.fitAllSignal ?? 0)}layout={view.layout} settled={view.settled} layoutFailed={view.layoutFailed} display={view.display} appearing={view.appearing} updated={view.updated} />
           </ReactFlowProvider>
         )
       )}

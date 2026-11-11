@@ -8,6 +8,7 @@ import { Logo } from "@/ui/brand/Logo";
 
 import { AuthField, AuthSubmit } from "../_components/AuthField";
 import { useAuthForm, type FieldErrors } from "../_components/useAuthForm";
+import { AuthStage } from "../_components/AuthStage";
 import styles from "../auth.module.css";
 
 function validate(data: FormData): FieldErrors {
@@ -25,6 +26,7 @@ export function LoginForm({ notice }: { notice?: string }) {
   });
   return (
     <main className={styles.page}>
+      <AuthStage />
       <form {...formProps} className={styles.form}>
         <Logo className={styles.logo} />
         <h1 className={styles.title}>로그인</h1>

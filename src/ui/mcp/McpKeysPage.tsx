@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useTransition } from "react";
 
 import { createMcpKeyAction, deleteMcpKeyAction, type McpKeyRow } from "@/app/(app)/actions";
+import { Button } from "@/ui/Button";
 
 import { type Dialog, DialogView, GENERIC_ERROR } from "../dialogs";
 import styles from "./McpKeysPage.module.css";
@@ -107,7 +108,7 @@ export function McpKeysPage({ initialKeys }: { initialKeys: McpKeyRow[] }) {
             <input ref={nameInput} value={name} maxLength={40} aria-invalid={error ? true : undefined} aria-describedby={error ? "mcp-name-error" : undefined} placeholder="예: 내 노트북" onChange={(e) => { setName(e.target.value); setError(null); }} />
           </label>
           <div className={styles.actions}>
-            <button type="submit" className={styles.btn} disabled={pending}>키 만들기</button>
+            <Button type="submit" variant="primary" disabled={pending}>키 만들기</Button>
           </div>
         </form>
       </section>
@@ -118,13 +119,13 @@ export function McpKeysPage({ initialKeys }: { initialKeys: McpKeyRow[] }) {
           <p className={styles.warn}>이 창을 닫으면 다시 볼 수 없어요. 지금 복사해 두세요.</p>
           <code className={styles.code}>{fresh.key}</code>
           <div className={styles.actions}>
-            <button type="button" className={styles.btn} onClick={() => copy(fresh.key)}>키 복사</button>
+            <Button onClick={() => copy(fresh.key)}>키 복사</Button>
           </div>
           <p className={styles.meta}>Claude Code 터미널에서 아래 명령을 실행하면 연결돼요.</p>
           <code className={styles.code}>{commandFor(fresh.key)}</code>
           <div className={styles.actions}>
-            <button type="button" className={styles.btn} onClick={() => copy(commandFor(fresh.key))}>설정 예 복사</button>
-            <button type="button" className={styles.btn} onClick={() => { focusAfter.current = "name"; setFresh(null); setCopyNote(null); setAnnounce(""); }}>닫기</button>
+            <Button onClick={() => copy(commandFor(fresh.key))}>설정 예 복사</Button>
+            <Button onClick={() => { focusAfter.current = "name"; setFresh(null); setCopyNote(null); setAnnounce(""); }}>닫기</Button>
           </div>
           <p className={styles.meta}>
             나중에 키를 지웠거나 &apos;키가 맞지 않아요&apos; 오류가 나면, 새 키를 만들고 claude mcp remove infrasketch 를 실행한 뒤 위 명령을 다시 실행하세요.
@@ -156,9 +157,9 @@ export function McpKeysPage({ initialKeys }: { initialKeys: McpKeyRow[] }) {
                   <td>{day(k.createdAt)}</td>
                   <td>{k.lastUsedAt ? day(k.lastUsedAt) : "아직 안 씀"}</td>
                   <td>
-                    <button type="button" ref={(el) => { if (el) deleteBtns.current.set(k.id, el); else deleteBtns.current.delete(k.id); }} className={`${styles.btn} ${styles.danger}`} aria-label={`${k.name} 지우기`} onClick={() => askDelete(k)}>
+                    <Button ref={(el) => { if (el) deleteBtns.current.set(k.id, el); else deleteBtns.current.delete(k.id); }} variant="danger" aria-label={`${k.name} 지우기`} onClick={() => askDelete(k)}>
                       지우기
-                    </button>
+                    </Button>
                   </td>
                 </tr>
               ))}

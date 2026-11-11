@@ -5,6 +5,7 @@ import { useState, useTransition } from "react";
 import { setTermReviewedAction, updateTermAction, type ActionResult } from "@/app/(app)/actions";
 
 import type { GlossaryItem } from "@/domain/glossary-types";
+import { Button } from "@/ui/Button";
 
 import { AI_BADGE, AI_BADGE_SR, isUnreviewedAi } from "./aiBadge";
 import styles from "./glossary.module.css";
@@ -112,31 +113,41 @@ export function GlossaryPage({ initial }: { initial: GlossaryItem[] }) {
         {shown.length === 0 ? (
           <p className={styles.empty}>맞는 용어가 없어요.</p>
         ) : (
-          <ul className={styles.list}>
-            {shown.map((t) => (
-              <li key={t.id}>
-                <button type="button" className={styles.item} aria-current={t.id === selectedId} onClick={() => select(t)}>
-                  <span className={styles.head}>
-                    <strong>{t.term}</strong>
-                    {t.category && <span className={styles.meta}>{t.category}</span>}
-                    {isUnreviewedAi(t) && (
-                      <>
-                        <span className={styles.badge}>{AI_BADGE}</span>
-                        <span className={styles.srOnly}>{AI_BADGE_SR}</span>
-                      </>
-                    )}
-                    {editing(t) && <span className={styles.badge}>수정 중</span>}
-                    <span className={styles.meta}>{t.source === "seed" ? "기본 제공" : "AI가 추가"}</span>
-                  </span>
-                  <p className={styles.snippet}>{t.definition}</p>
-                </button>
-              </li>
-            ))}
-          </ul>
+          <div className={styles.legend}>
+            {/* 범례표 머리: 눈으로 보는 열 이름(줄마다 버튼 이름으로 이미 읽힌다). */}
+            <div className={styles.legendHead} data-legend-head="" aria-hidden="true">
+              <span>용어</span>
+              <span>분류</span>
+              <span>한 줄 설명</span>
+              <span>출처</span>
+            </div>
+            <ul className={styles.list}>
+              {shown.map((t) => (
+                <li key={t.id}>
+                  <button type="button" className={styles.item} aria-current={t.id === selectedId} onClick={() => select(t)}>
+                    <span className={styles.head}>
+                      <strong>{t.term}</strong>
+                      {isUnreviewedAi(t) && (
+                        <>
+                          <span className={styles.badge}>{AI_BADGE}</span>
+                          <span className={styles.srOnly}>{AI_BADGE_SR}</span>
+                        </>
+                      )}
+                      {editing(t) && <span className={styles.badge}>수정 중</span>}
+                    </span>
+                    <span className={styles.meta}>{t.category}</span>
+                    <span className={styles.snippet}>{t.definition}</span>
+                    <span className={styles.meta} data-source={t.source}>{t.source === "seed" ? "기본 제공" : "AI가 추가"}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
         )}
+        {!(selected && draft) && <p className={styles.notesEmpty}>용어를 고르면 여기서 설명을 고치고 검수할 수 있어요.</p>}
         {selected && draft && (
           <form
-            className={styles.form}
+            className={`${styles.form} ticks`}
             aria-label={`${selected.term} 편집`}
             onSubmit={(e) => {
               e.preventDefault();
@@ -155,10 +166,10 @@ export function GlossaryPage({ initial }: { initial: GlossaryItem[] }) {
             ))}
             {error && <p className={styles.error} role="alert">{error}</p>}
             <div className={styles.actions}>
-              <button type="submit" disabled={pending}>저장</button>
-              <button type="button" disabled={pending} onClick={toggleReviewed}>
+              <Button type="submit" variant="primary" disabled={pending}>저장</Button>
+              <Button disabled={pending} onClick={toggleReviewed}>
                 {selected.reviewed ? "검수 취소" : "검수 완료"}
-              </button>
+              </Button>
             </div>
           </form>
         )}

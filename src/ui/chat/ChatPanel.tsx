@@ -3,6 +3,7 @@
 import { type ReactNode, type RefObject, useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import { NODE_GONE_MESSAGE } from "@/server/chat/events";
+import { Button } from "@/ui/Button";
 
 import { FLY_ORIGIN_ATTR } from "../FlyLayer";
 import { useShell } from "../Shell";
@@ -43,6 +44,18 @@ export interface ChatPanelProps {
   emptyHint?: string;
   /** `구성도 대화로 보내기` 가 옮겨 갈 구성도 대화(마지막으로 쓴 구성도 대화, 없으면 기본 대화). */
   handoffTo?: string;
+  /**
+   * 가장 최근 차례(요약 줄의 version 이 latest 와 같고 바꾼 곳이 있을 때)의 요약 옆 동작.
+   * 바뀐 곳 보기: 그 차례 직전 버전과 비교 화면. 되돌리기: 직전 버전으로 되돌린다(새 버전, 이력은 남는다).
+   */
+  turnActions?: TurnActions;
+}
+
+export interface TurnActions {
+  latest: number;
+  disabled?: boolean;
+  onCompare(version: number): void;
+  onUndo(version: number): void;
 }
 
 const PLACEHOLDER_BASE = "만들고 싶은 서비스나 바꾸고 싶은 점을 말해 주세요.";
@@ -59,6 +72,9 @@ const GREETING = "안녕하세요, InfraSketch예요. 만들고 싶은 서비스
 const GUIDE_TITLE = "이렇게 말하면 더 정확해요";
 const GUIDE_ITEMS = ["무엇을 만드는지 (예: 쇼핑몰, 예약 서비스)", "어디에 올리는지 (클라우드, 사내 IDC)", "대략 사용자 수 (예: 하루 1만 명)", "붙일 외부 서비스 (결제, 소셜 로그인, 문자)"];
 const EXAMPLES = ["결제와 카카오 로그인이 붙는 쇼핑몰", "사내 IDC에 WEB-WAS-DB 이중화", "AWS EKS 위 MSA와 Kafka", "하루 10만 명이 쓰는 예약 서비스"];
+/** 구성도는 있는데(샘플·가져오기·다른 대화) 이 대화가 비었을 때: 고치기 쪽 예시. */
+const EDIT_HINT = "구성도가 준비돼 있어요. 바꾸고 싶은 점을 말해 주세요.";
+const EDIT_EXAMPLES = ["WAS를 3대로 늘려줘", "앞단에 CDN을 붙여줘", "DB에 읽기 전용 복제본을 추가해줘", "한 대만 멈춰도 서비스가 서는 곳을 짚어줘"];
 
 const TOKEN = /@\[([^\]]*)\]\(node:([^)]+)\)/g;
 
@@ -195,6 +211,7 @@ export function ChatPanel({
   loading = false,
   emptyHint,
   handoffTo = "main",
+  turnActions,
 }: ChatPanelProps) {
   const { narrow } = useShell();
   const lines = ask ? allLines.filter((l) => !HIDDEN_IN_ASK.has(l.kind)) : allLines;
@@ -256,6 +273,25 @@ export function ChatPanel({
     const tone = l.kind === "summary" ? styles.chipSummary : styles.chipWarning;
     const attrs = { "data-kind": l.kind };
     const onClick = l.kind === "warning" ? onOpenWarnings : undefined;
+    // 가장 최근 차례가 바꾼 것만 비교·되돌리기를 붙인다(뒤에 다른 변경이 있으면 직전 버전 비교가 이 차례만의 변경이 아니다).
+    const v = l.version;
+    if (l.kind === "summary" && turnActions && !ask && typeof v === "number" && v > 1 && v === turnActions.latest && (l.changed ?? 0) > 0) {
+      return (
+        <span className={styles.turnResult}>
+          <span className={`${styles.result} ${tone}`} {...attrs}>
+            {l.text}
+          </span>
+          <span className={styles.turnActions}>
+            <Button size="sm" disabled={turnActions.disabled} onClick={() => turnActions.onCompare(v)}>
+              바뀐 곳 보기
+            </Button>
+            <Button size="sm" variant="quiet" disabled={turnActions.disabled} onClick={() => turnActions.onUndo(v)}>
+              되돌리기
+            </Button>
+          </span>
+        </span>
+      );
+    }
     return onClick ? (
       <button type="button" className={`${styles.result} ${tone}`} onClick={onClick} {...attrs}>
         {l.text}
@@ -341,16 +377,31 @@ export function ChatPanel({
             <li key={t}>{t}</li>
           ))}
         </ul>
-        <ul className={styles.examples} aria-label="예시 질문">
-          {EXAMPLES.map((t) => (
-            <li key={t}>
-              <button type="button" className={`${styles.result} ${styles.example}`} disabled={blocked} onClick={() => mentionRef.current?.setText(t)}>
-                {t}
-              </button>
-            </li>
-          ))}
-        </ul>
+        {renderExamples(EXAMPLES, "예시 질문")}
       </div>
+    </div>
+  );
+  /** 예시 칩: 입력칸만 채우고 보내지 않는다. */
+  function renderExamples(items: readonly string[], label: string) {
+    return (
+      <ul className={styles.examples} aria-label={label}>
+        {items.map((t) => (
+          <li key={t}>
+            <button type="button" className={`${styles.result} ${styles.example}`} disabled={blocked} onClick={() => mentionRef.current?.setText(t)}>
+              {t}
+            </button>
+          </li>
+        ))}
+      </ul>
+    );
+  }
+  /** 구성도는 있고 이 대화는 빈 때: 빈 기록 대신 고치기 안내와 예시. */
+  const renderEditStart = () => (
+    <div className={styles.editStart}>
+      <p className={`${styles.line} ${styles.system}`} data-kind="system">
+        {EDIT_HINT}
+      </p>
+      {renderExamples(EDIT_EXAMPLES, "바꿔 볼 예시")}
     </div>
   );
 
@@ -380,6 +431,7 @@ export function ChatPanel({
             {emptyHint}
           </p>
         )}
+        {!ask && !emptyDiagram && !loading && lines.length === 0 && !emptyHint && renderEditStart()}
         {toBlocks(lines).map((b) => (b.kind === "line" ? renderLine(b.line, false) : renderTurn(b.id, b.lines)))}
         {footer}
       </div>
@@ -407,13 +459,13 @@ export function ChatPanel({
           />
           <div className={styles.actions}>
             {busy && (
-              <button ref={stopBtn} type="button" className={styles.btn} onClick={onStop}>
+              <Button ref={stopBtn} onClick={onStop}>
                 중단
-              </button>
+              </Button>
             )}
-            <button type="button" className={canSubmit ? styles.primaryBtn : styles.btn} disabled={!canSubmit} onClick={() => mentionRef.current?.submit()}>
+            <Button variant="primary" disabled={!canSubmit} onClick={() => mentionRef.current?.submit()}>
               보내기
-            </button>
+            </Button>
           </div>
         </div>
       )}

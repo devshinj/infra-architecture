@@ -219,6 +219,15 @@ test("summary mentions 흐름 1개 바꿨어요", () => {
   expect(lines.map((l) => [l.kind, l.text])).toEqual([["summary", "노드 3 · 연결 2 · 흐름 1개 바꿨어요"]]);
 });
 
+test("reloaded summary lines carry the turn's version and changed count (for 바뀐 곳 보기 · 되돌리기)", () => {
+  const lines = messagesToLines([
+    { id: "a1", role: "assistant", content: "네", meta: { version: 3, applied: 4, changed: 2, nodes: 5, edges: 4 } },
+    { id: "a2", role: "assistant", content: "옛 답", meta: { version: 2, applied: 1 } },
+  ]);
+  const sums = lines.filter((l) => l.kind === "summary");
+  expect(sums.map((l) => [l.version, l.changed])).toEqual([[3, 2], [2, 1]]);
+});
+
 test("warning chip shows new, resolved and all-now counts; nothing when warnings did not change", () => {
   const text = (fresh: number, resolved: number, now: number) => warningsChip([], { fresh, resolved, now })?.text ?? null;
   expect(text(2, 0, 6)).toBe("새 주의 2 · 지금 모두 6");

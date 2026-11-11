@@ -26,6 +26,7 @@ import type { NetworkKnowledge } from "@/domain/network";
 import type { DiagramState } from "@/domain/types";
 
 import styles from "./app.module.css";
+import { Button } from "./Button";
 import type { VersionRow } from "./HistoryPanel";
 import { ELSEWHERE_BUSY, type LlmHealth } from "./chat/ChatPanel";
 import type { MentionInputHandle } from "./chat/MentionInput";
@@ -132,6 +133,8 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
   const [board, setBoard] = useState(0);
   // 자동 정렬(버튼·대화)마다 바뀌어, 새 배치가 나오면 화면을 한 번 맞춘다.
   const [arranged, setArranged] = useState(0);
+  /** 전체 보기 요청(단축키 F · 구성을 바꾼 차례 뒤): Canvas 의 `전체 보기` 버튼과 같은 맞춤. */
+  const [fitAll, setFitAll] = useState(0);
   const [versions, setVersions] = useState<VersionRow[]>([]);
   const [busy, startBusy] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -301,6 +304,8 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
 
   // Live chat: each server-applied command is replayed on the live state so nodes appear one by one.
   const adoptAfterChat = useRef(false);
+  /** 구성을 바꾼 차례가 끝났다: 그 버전을 받을 때 선택을 풀고 화면을 한 번 맞춘다(onDone 이 켜고 채택이 끈다). */
+  const fitAfterTurn = useRef(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
   useEffect(() => { adoptAfterChat.current = false; }, [current.number]);
@@ -358,6 +363,9 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
     },
     // 차례가 끝나도 빛점은 비우지 않는다: 출발점은 queue 때 잡아 두어, done 뒤 배치에서도 마지막 노드로 날 수 있다.
     onDone: (e) => {
+      // 구성을 바꾼 차례: 서버 버전을 받은 뒤(아래 채택) 선택을 풀고 새 배치가 끝나면 화면을 다시 맞춘다.
+      // 스트림이 멈출 때의 맞춤은 최종 배치 전이라, 받은 뒤 배치가 바뀌면 새 노드가 화면 밖에 남았다.
+      if (e?.version != null && (e.changed ?? e.applied) > 0) fitAfterTurn.current = true;
       refreshFromServer();
       void afterTurnRef.current(e);
     },
@@ -389,9 +397,13 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
     }
     setCurrent(latest);
     if (!adoptAfterChat.current) setBoard((n) => n + 1);
+    const refit = adoptAfterChat.current && fitAfterTurn.current;
+    fitAfterTurn.current = false;
+    // 전체가 보이게(전체 보기와 같은 맞춤: 읽을 수 있는 줌 바닥 없이). 자동 정렬 맞춤은 큰 구성도면 윗줄만 보여 새 노드가 밖에 남는다.
+    if (refit) setFitAll((n) => n + 1);
     setOptions((o) =>
       adoptAfterChat.current
-        ? { ...optionsFor(latest.state), selectedId: o.selectedId !== null && hasId(latest.state, o.selectedId) ? o.selectedId : null, collapsed: o.collapsed }
+        ? { ...optionsFor(latest.state), selectedId: !refit && o.selectedId !== null && hasId(latest.state, o.selectedId) ? o.selectedId : null, collapsed: o.collapsed }
         : optionsFor(latest.state),
     );
     setMode({ kind: "live" });
@@ -406,6 +418,9 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
   const explanations = useExplanations({ diagramId, state: shown, live, busy: chat.busy, selectedId: options.selectedId });
   const selId = options.selectedId;
   const selKind: TargetKind | null = selId === null ? null : shown.nodes[selId] ? "node" : shown.edges[selId] ? "edge" : null;
+  const nodeLabel = (id: string) => shown.nodes[id]?.label ?? id;
+  const selectionLabel =
+    selId === null ? null : selKind === "node" ? nodeLabel(selId) : selKind === "edge" ? `${nodeLabel(shown.edges[selId]!.from)} → ${nodeLabel(shown.edges[selId]!.to)} 연결` : null;
   let explain: ExplanationProps | undefined;
   if (selId !== null && selKind !== null) {
     const { rewrite, retry } = explanations;
@@ -465,6 +480,26 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
   }, [activeFlowKey, setActiveFlow]);
+  // 단축키: / 대화 입력칸, F 전체 보기, Esc 선택 풀기. 입력칸·대화상자·메뉴·말풍선이 받은 키, 조합 키, 한글 조합 중인 키는 건너뛴다.
+  // Esc 는 한 번에 한 단계: 흐름을 보고 있으면 위 처리(흐름 닫기)가 먼저다.
+  const shortcut = useRef<(e: KeyboardEvent) => void>(() => {});
+  shortcut.current = (e) => {
+    if (e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey || e.isComposing || escapeBelongsElsewhere(e)) return;
+    if (e.key === "/") {
+      e.preventDefault();
+      skipToChat();
+    } else if (e.code === "KeyF" && !e.shiftKey) {
+      e.preventDefault();
+      setFitAll((n) => n + 1);
+    } else if (e.key === "Escape" && activeFlowKey === null && options.selectedId !== null) {
+      onSelect(null);
+    }
+  };
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => shortcut.current(e);
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, []);
   // 이전 버전을 보는 중에는 끊김을 그 버전 그림으로 다시 잰다(서버는 최신 구성도로 잰다). 비교는 현재 상태 그대로다.
   const viewState = mode.kind === "view" ? mode.state : null;
   const shownFlows = useMemo(
@@ -838,6 +873,16 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
       loadVersions();
     });
 
+  // 결과 줄의 되돌리기: 이 차례가 만든 버전(v) 직전으로. 이력의 되돌리기와 같이 새 버전을 만들고, 대화에 한 줄 남긴다.
+  const undoTurn = (v: number) =>
+    !locked &&
+    run(async () => {
+      expectNewBoard();
+      await restoreVersionAction(diagramId, v - 1);
+      loadVersions();
+      pushDiagramLine({ kind: "system", text: `방금 바꾼 것을 되돌렸어요. v${v - 1} 구성으로 돌아갔어요.` });
+    });
+
   const importSample = (sampleId: string) =>
     !locked &&
     run(async () => {
@@ -912,10 +957,14 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
         <section id={CANVAS_ID} className={styles.center} aria-label={name} {...(narrow ? { role: "tabpanel", "aria-labelledby": mobileTabId("구성도") } : {})}>
           {/* 화면에 보이는 구성도 제목이 없어 보조기기용 제목만 둔다. */}
           <h1 className={styles.srOnly}>{name}</h1>
+          {/* 노드·연결을 고르면 오른쪽 패널이 설명으로 바뀐다(좁은 화면은 탭에 점만). 포커스는 캔버스에 남으므로 보조기기에 알린다. */}
+          <p className={styles.srOnly} aria-live="polite" data-selection-announce="">
+            {selectionLabel ? `${selectionLabel} 선택됨. 설명 탭에서 볼 수 있어요.` : ""}
+          </p>
           {banner && (
             <div className={styles.banner} role="status">
               <span>{banner}</span>
-              <button type="button" onClick={backToLive}>현재로 돌아가기</button>
+              <Button size="sm" onClick={backToLive}>현재로 돌아가기</Button>
               {mode.kind === "compare" && (
                 <div className={styles.legend} aria-label="범례">
                   <span><i className={`${styles.swatch} ${styles.swAdded}`} />추가 {mode.marks.added.size}</span>
@@ -929,7 +978,7 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
           {remote.pending && (
             <div className={`${styles.banner} ${styles.alertBanner}`} role="status">
               <span>{REMOTE_CHANGED}</span>
-              <button type="button" onClick={remote.load}>{REMOTE_LOAD}</button>
+              <Button size="sm" onClick={remote.load}>{REMOTE_LOAD}</Button>
             </div>
           )}
           {/* 좁은 화면은 어느 탭에서든 보이게 위 막대 바로 밑에 띄운다(app.module.css .alertBanner). */}
@@ -954,6 +1003,7 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
               onAutoArrange={onAutoArrange}
               autoArrangeDisabled={!live}
               fitRequest={arranged}
+              fitAllSignal={fitAll}
               onEditModeChange={(v) => live && !locked && setEditMode(v)}
               onMotionChange={setMotion}
               onWarnBadgeClick={onWarnBadge}
@@ -1056,6 +1106,7 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
               onSend: sendChat,
               onStop: chat.stop,
               onOpenWarnings: openWarnings,
+              turnActions: { latest: current.number, disabled: locked || busy || !live, onCompare: (v) => compare(v - 1), onUndo: undoTurn },
               health,
               mentionRef,
               ...(live ? {} : { disabledReason: "이전 버전을 보는 중에는 대화할 수 없어요." }),

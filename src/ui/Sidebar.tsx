@@ -17,6 +17,7 @@ import {
 import { LogoMark } from "@/ui/brand/Logo";
 
 import styles from "./app.module.css";
+import { Button } from "./Button";
 import { type Dialog, DialogView, GENERIC_ERROR, type NameDialog, RowMenu, type RowMenuItem } from "./dialogs";
 import { useShell } from "./Shell";
 
@@ -388,7 +389,7 @@ export function Sidebar({ projects, userName }: { projects: SidebarProject[]; us
     <>
       <span title={userName}>{userName}</span>
       <form action={logoutAction}>
-        <button type="submit" className={styles.linkBtn}>로그아웃</button>
+        <Button type="submit" variant="quiet" size="sm">로그아웃</Button>
       </form>
     </>
   );
@@ -571,7 +572,7 @@ export function Sidebar({ projects, userName }: { projects: SidebarProject[]; us
         <p className={styles.sideStatus} role="status">{duplicating ? "복제하는 중…" : ""}</p>
         {notice && <p className={`${styles.error} ${styles.sideNotice}`} role="alert">{notice}</p>}
         <div className={styles.sideFoot}>
-          <button ref={newProjectBtn} type="button" className={styles.btn} onClick={newProject}>새 프로젝트</button>
+          <Button ref={newProjectBtn} onClick={newProject}>새 프로젝트</Button>
           <div className={styles.pageLinks}>
             {glossaryLink(false)}
             {networkLink(false)}

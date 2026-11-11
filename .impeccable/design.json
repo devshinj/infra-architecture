@@ -1,0 +1,150 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-11T03:20:00Z",
+  "title": "Design System: InfraSketch",
+  "extensions": {
+    "colorMeta": {
+      "signal-lime": { "role": "primary", "displayName": "Signal Lime", "canonical": "oklch(89% 0.19 126)", "tonalRamp": ["oklch(19% 0.04 126)", "oklch(32% 0.08 126)", "oklch(45% 0.12 126)", "oklch(58% 0.15 126)", "oklch(70% 0.17 126)", "oklch(80% 0.18 126)", "oklch(89% 0.19 126)", "oklch(95% 0.09 126)"] },
+      "night-paper": { "role": "neutral", "displayName": "Night Paper", "canonical": "oklch(13.5% 0.012 235)", "tonalRamp": ["oklch(13.5% 0.012 235)", "oklch(17% 0.014 235)", "oklch(24% 0.016 235)", "oklch(26% 0.016 235)", "oklch(34% 0.016 235)", "oklch(68% 0.016 230)", "oklch(82% 0.012 230)", "oklch(95% 0.006 230)"] },
+      "drafting-well": { "role": "neutral", "displayName": "Drafting Well" },
+      "raised-slate": { "role": "neutral", "displayName": "Raised Slate", "canonical": "oklch(24% 0.016 235)" },
+      "node-slate": { "role": "neutral", "displayName": "Node Slate", "canonical": "oklch(26% 0.016 235)" },
+      "hairline": { "role": "neutral", "displayName": "Hairline", "canonical": "oklch(27% 0.014 235)" },
+      "hairline-strong": { "role": "neutral", "displayName": "Hairline Strong", "canonical": "oklch(34% 0.016 235)" },
+      "ink": { "role": "neutral", "displayName": "Ink", "canonical": "oklch(95% 0.006 230)" },
+      "ink-soft": { "role": "neutral", "displayName": "Ink Soft" },
+      "muted-steel": { "role": "neutral", "displayName": "Muted Steel", "canonical": "oklch(68% 0.016 230)" },
+      "missing-red": { "role": "neutral", "displayName": "Missing Red" },
+      "missing-red-text": { "role": "neutral", "displayName": "Missing Red Text" },
+      "warn-amber": { "role": "neutral", "displayName": "Warn Amber" },
+      "edge-request": { "role": "secondary", "displayName": "Request Steel" },
+      "edge-async": { "role": "secondary", "displayName": "Async Sand" },
+      "edge-replication": { "role": "secondary", "displayName": "Replication Moss" },
+      "edge-aux": { "role": "secondary", "displayName": "Aux Graphite" },
+      "zone-dmz-brass": { "role": "tertiary", "displayName": "DMZ Brass" },
+      "zone-private-navy": { "role": "tertiary", "displayName": "Private Navy" },
+      "zone-public-teal": { "role": "tertiary", "displayName": "Public Teal" },
+      "zone-external-copper": { "role": "tertiary", "displayName": "External Copper" }
+    },
+    "typographyMeta": {
+      "hero": { "displayName": "Hero", "purpose": "빈 홈과 로그인 제목." },
+      "page": { "displayName": "Page", "purpose": "보조 화면 제목." },
+      "title": { "displayName": "Title", "purpose": "패널·대화상자·노드 설명 제목." },
+      "body-lg": { "displayName": "Body Large", "purpose": "소개 글, 로그인 양식, 좁은 화면의 누르는 글자." },
+      "body": { "displayName": "Body", "purpose": "본문, 버튼, 목록 줄." },
+      "label": { "displayName": "Label", "purpose": "섹션 머리, 보조 라벨, 시각. 화면 틀 12px 하한(캔버스 안 노드 부제·연결선 라벨은 11px)." },
+      "mono": { "displayName": "Mono", "purpose": "키, 명령, IP·포트 값." }
+    },
+    "shadows": [],
+    "motion": [
+      { "name": "ease-out", "value": "cubic-bezier(0.16, 1, 0.3, 1)", "purpose": "상태 전환 기본 곡선." },
+      { "name": "dur-micro", "value": "120ms", "purpose": "버튼 올림·누름." },
+      { "name": "dur-short", "value": "220ms", "purpose": "패널·메뉴 열림." }
+    ],
+    "breakpoints": [
+      { "name": "mobile", "value": "640px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "화면마다 하나뿐인 주 동작(보내기, 만들기).",
+      "html": "<button class=\"ds-btn ds-btn-primary\">구성도 만들기</button>",
+      "css": ".ds-btn { font: inherit; font-size: 13px; border-radius: 6px; padding: 8px 16px; cursor: pointer; border: 1px solid transparent; transition: background-color 120ms cubic-bezier(0.16,1,0.3,1), border-color 120ms cubic-bezier(0.16,1,0.3,1); } .ds-btn:focus-visible { outline: 2px solid var(--focus-ring, #BCF053); outline-offset: 2px; } .ds-btn-primary { font-weight: 600; color: var(--on-accent, #04090C); background: var(--accent-fill, #BCF053); border-color: var(--accent-fill, #BCF053); } .ds-btn-primary:hover { background: var(--accent-fill-hover, #c9f26f); border-color: var(--accent-fill-hover, #c9f26f); } .ds-btn-primary:active { background: var(--accent-fill-active, #a8d84a); }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "칠 없는 머리카락 선 버튼. 취소, 새 대화, 노드 링크 복사.",
+      "html": "<button class=\"ds-btn ds-btn-secondary\">노드 링크 복사</button>",
+      "css": ".ds-btn { font: inherit; font-size: 13px; border-radius: 6px; padding: 8px 12px; cursor: pointer; } .ds-btn:focus-visible { outline: 2px solid var(--focus-ring, #BCF053); outline-offset: 2px; } .ds-btn-secondary { color: var(--text-primary, #EBEFF2); background: transparent; border: 1px solid var(--line-node, #30393F); } .ds-btn-secondary:hover { border-color: var(--text-secondary, #8F9AA0); } .ds-btn-secondary:active { background: var(--bg-panel-raised, #182126); }"
+    },
+    {
+      "name": "Danger Button",
+      "kind": "button",
+      "refersTo": "button-danger",
+      "description": "되돌릴 수 없는 삭제에만.",
+      "html": "<button class=\"ds-btn ds-btn-danger\">구성도 지우기</button>",
+      "css": ".ds-btn { font: inherit; font-size: 13px; font-weight: 600; border-radius: 6px; padding: 8px 16px; cursor: pointer; } .ds-btn:focus-visible { outline: 2px solid var(--focus-ring, #BCF053); outline-offset: 2px; } .ds-btn-danger { color: var(--state-missing-text, #E19A96); background: transparent; border: 1px solid var(--state-missing, #D9544B); } .ds-btn-danger:hover { background: var(--bg-panel-raised, #182126); }"
+    },
+    {
+      "name": "Text Input",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "판 위 입력칸. 오류는 칸 아래 자리를 미리 잡는다.",
+      "html": "<label class=\"ds-field\"><span>이름</span><input class=\"ds-input\" placeholder=\"예: 운영\"></label>",
+      "css": ".ds-field { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--text-secondary, #8F9AA0); } .ds-input { font: inherit; font-size: 13px; color: var(--text-primary, #EBEFF2); background: var(--bg-panel-raised, #182126); border: 1px solid var(--line-input, #6f7a80); border-radius: 6px; padding: 8px 12px; } .ds-input::placeholder { color: var(--text-secondary, #8F9AA0); } .ds-input:focus-visible { outline: 2px solid var(--focus-ring, #BCF053); outline-offset: -2px; }"
+    },
+    {
+      "name": "Panel Tabs",
+      "kind": "nav",
+      "refersTo": "tab",
+      "description": "오른쪽 패널의 알약 탭.",
+      "html": "<div class=\"ds-tabs\" role=\"tablist\"><button class=\"ds-tab\" aria-selected=\"true\">대화</button><button class=\"ds-tab\">설명</button><button class=\"ds-tab\">이력</button><button class=\"ds-tab\">흐름</button></div>",
+      "css": ".ds-tabs { display: flex; gap: 4px; padding: 4px; } .ds-tab { font: inherit; font-size: 13px; color: var(--text-secondary, #8F9AA0); background: transparent; border: 0; border-radius: 999px; padding: 8px 16px; cursor: pointer; } .ds-tab:hover { color: var(--text-primary, #EBEFF2); } .ds-tab[aria-selected=\"true\"] { color: var(--text-primary, #EBEFF2); background: var(--bg-panel-raised, #182126); font-weight: 600; } .ds-tab:focus-visible { outline: 2px solid var(--focus-ring, #BCF053); outline-offset: 2px; }"
+    },
+    {
+      "name": "Chip",
+      "kind": "chip",
+      "refersTo": "input",
+      "description": "예시 문장, 참조 노드, 가정. 미확정은 점선.",
+      "html": "<span class=\"ds-chip\">@WAS#1</span> <span class=\"ds-chip ds-chip-tentative\">트래픽 하루 1만 명</span>",
+      "css": ".ds-chip { display: inline-flex; align-items: center; font-size: 12px; color: var(--text-primary, #EBEFF2); background: var(--bg-panel-raised, #182126); border: 1px solid var(--line-node, #30393F); border-radius: 6px; padding: 4px 12px; } .ds-chip-tentative { border-style: dashed; }"
+    },
+    {
+      "name": "Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "대화상자·카드·로그인 상자. 그림자 없음.",
+      "html": "<div class=\"ds-card\"><h3>새 구성도</h3><p>프로젝트 안에 구성도를 하나 더 만들어요.</p></div>",
+      "css": ".ds-card { background: var(--color-paper-2, #0b1216); border: 1px solid var(--line-node, #30393F); border-radius: 8px; padding: 16px; color: var(--text-primary, #EBEFF2); } .ds-card h3 { margin: 0 0 8px; font-size: 15px; font-weight: 600; } .ds-card p { margin: 0; font-size: 13px; line-height: 1.5; color: var(--text-secondary, #8F9AA0); }"
+    },
+    {
+      "name": "Diagram Node",
+      "kind": "custom",
+      "refersTo": "card",
+      "description": "구성도 노드. 분류색 아이콘 원, 이름, 부제.",
+      "html": "<div class=\"ds-node\"><span class=\"ds-node-icon\"></span><span><b>WAS#1</b><small>Tomcat</small></span></div>",
+      "css": ".ds-node { display: inline-flex; align-items: center; gap: 8px; background: var(--bg-node, #1D252B); border: 1px solid var(--line-node, #30393F); border-radius: 6px; padding: 8px 12px; color: var(--text-primary, #EBEFF2); } .ds-node-icon { width: 20px; height: 20px; border-radius: 50%; background: color-mix(in srgb, var(--cat-compute, #C3CCD1) 18%, transparent); } .ds-node b { display: block; font-size: 13px; font-weight: 600; } .ds-node small { display: block; font-size: 12px; color: oklch(82% 0.012 230); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Living Blueprint",
+    "overview": "InfraSketch 는 대화로 고쳐 쓰는 설계도다. 구성도 캔버스가 이미 이 제품만의 문법을 갖고 있다: 겹겹이 들어앉은 영역, 종류마다 다른 선 모양, 선 위에 붙은 프로토콜 라벨, 잰 것에만 두르는 모서리 눈금, 점 격자 바탕. 이 체계의 일은 그 문법을 캔버스 밖으로 넓히는 것이다.",
+    "keyCharacteristics": [
+      "캔버스가 앞에 서고 화면 틀은 물러선다.",
+      "그림자 없음. 깊이는 칠 한 단과 머리카락 선으로 만든다.",
+      "강조색은 연두 하나. 한 화면에 칠한 연두 버튼은 하나.",
+      "모서리는 구성도와 같다: 조작 부품 6px(노드), 판 8px(영역), 알약은 탭과 상태 배지만.",
+      "라벨은 선 위의 프로토콜 라벨처럼 짧고 사실만 말한다."
+    ],
+    "rules": [
+      { "name": "The One Signal Rule", "body": "연두는 \"지금\"만 가리킨다: 지금 누를 것, 지금 고른 것, 방금 바뀐 것. 칠한 연두 버튼은 한 화면에 하나다.", "section": "colors" },
+      { "name": "The Diagram Owns Color Rule", "body": "색조는 구성도의 것이다. 화면 틀은 무채색 강철로만 그린다.", "section": "colors" },
+      { "name": "The Token-Only Rule", "body": "컴포넌트에 색 값을 직접 쓰지 않는다. placeholder 를 포함한 모든 글자 색은 토큰에서 온다.", "section": "colors" },
+      { "name": "The 12px Floor Rule", "body": "화면 틀에는 12px 아래 글자가 없다. 크기를 줄이는 대신 색으로 위계를 만든다. 캔버스 안 글자(확대·축소, 배치 상수와 묶임)는 예외.", "section": "typography" },
+      { "name": "The Label Voice Rule", "body": "라벨은 연결선 위의 TCP 1521 처럼 짧고 사실만 말한다.", "section": "typography" },
+      { "name": "The Canvas Leads Rule", "body": "화면 틀은 캔버스를 가리지 않는다. 떠 있는 것은 서로 겹치지 않고 노드를 덮지 않는다.", "section": "layout" },
+      { "name": "The Flat Sheet Rule", "body": "그림자, 흐림, 그라데이션으로 높이를 만들지 않는다.", "section": "elevation" },
+      { "name": "The Same Corners Rule", "body": "화면의 모서리는 6px, 8px, 알약 셋뿐이다.", "section": "shapes" }
+    ],
+    "dos": [
+      "Do 버튼은 공용 버튼 하나의 변형(Primary·Secondary·Danger·Quiet)으로만 그린다.",
+      "Do 모서리는 6px(조작), 8px(판), 알약(탭·배지) 셋만 쓴다.",
+      "Do 위계는 크기보다 색(Ink → Ink Soft → Muted Steel)으로 만든다. 화면 틀 글자는 12px 아래로 내려가지 않는다.",
+      "Do 바뀐 것, 고른 것, 지금 할 일에만 연두를 쓴다.",
+      "Do 화면 틀의 구분선·목록·카드에 캔버스와 같은 1px 선과 같은 모서리를 쓴다.",
+      "Do 확실하지 않은 것(미확정 가정, AI 추정 망연계)은 점선이나 \"추정\" 표시로 구분한다."
+    ],
+    "donts": [
+      "Don't 그림자, 흐림, 그라데이션으로 높이를 만든다.",
+      "Don't 화면마다 .btn 을 새로 정의한다.",
+      "Don't 칠한 연두 버튼을 한 화면에 둘 이상 둔다.",
+      "Don't 화면 틀에 영역·분류 색조를 장식으로 칠한다.",
+      "Don't 별자리·네온·유리 같은 범용 \"테크\" 장식을 쓴다. 바탕 그림이 필요하면 설계도의 재료(점 격자, 선, 영역)로 만든다."
+    ]
+  }
+}

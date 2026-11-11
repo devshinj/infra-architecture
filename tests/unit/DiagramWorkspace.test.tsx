@@ -1,8 +1,8 @@
 import "@testing-library/jest-dom/vitest";
-import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
-const hookState = vi.hoisted(() => ({ send: vi.fn(), busy: false, onCommand: null as null | ((c: unknown) => void), badgeFns: [] as unknown[], warnFns: [] as unknown[], lines: [] as unknown[], insets: [] as unknown[], focus: [] as unknown[], turn: null as null | { onDone(): void; onInterrupted(): void; onRelayout?(): void; onSessionLines?(key: string, fn: (ls: { id: string; kind: string; text: string }[]) => { id: string; kind: string; text: string }[]): void }, pushLine: vi.fn(), pinned: [] as unknown[], fitRequest: [] as unknown[], placed: null as null | ((locate: (id: string) => { x: number; y: number } | null) => void), flow: [] as unknown[], selected: [] as unknown[], refresh: vi.fn(), rfNodes: false }));
+const hookState = vi.hoisted(() => ({ send: vi.fn(), busy: false, onCommand: null as null | ((c: unknown) => void), badgeFns: [] as unknown[], warnFns: [] as unknown[], lines: [] as unknown[], insets: [] as unknown[], focus: [] as unknown[], turn: null as null | { onDone(): void; onInterrupted(): void; onRelayout?(): void; onSessionLines?(key: string, fn: (ls: { id: string; kind: string; text: string }[]) => { id: string; kind: string; text: string }[]): void }, pushLine: vi.fn(), pinned: [] as unknown[], fitRequest: [] as unknown[], fitAll: [] as unknown[], placed: null as null | ((locate: (id: string) => { x: number; y: number } | null) => void), flow: [] as unknown[], selected: [] as unknown[], refresh: vi.fn(), rfNodes: false }));
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: hookState.refresh }) }));
 vi.mock("@/app/(app)/actions", () => ({
@@ -17,13 +17,14 @@ vi.mock("@/app/(app)/actions", () => ({
   renameFlowAction: vi.fn(async () => ({ ok: true })), deleteFlowAction: vi.fn(async () => ({ ok: true })), confirmFlowAction: vi.fn(async () => ({ ok: true })), removeFlowStepAction: vi.fn(async () => ({ ok: true })),
 }));
 vi.mock("@/canvas/Canvas", () => ({
-  Canvas: ({ flow, options, state, pinned, fitRequest, onAutoArrange, fitKey, cameraInsets, focusRequest, onMention, onAskNode, onBadgeClick, onWarnBadgeClick, onSelect, onImportSample, onPlaced }: { flow?: unknown; options: { selectedId: string | null }; onAskNode?: (id: string) => void;  onPlaced?: (l: (id: string) => { x: number; y: number } | null) => void; onImportSample?: (id: string) => void; state: { nodes: object }; pinned: unknown; fitRequest?: unknown; onAutoArrange(): void; fitKey?: string; cameraInsets?: unknown; focusRequest?: unknown; onMention?: (id: string) => void; onBadgeClick?: (id: string) => void; onWarnBadgeClick?: (id: string) => void; onSelect: (id: string | null) => void }) => {
+  Canvas: ({ flow, options, state, pinned, fitRequest, fitAllSignal, onAutoArrange, fitKey, cameraInsets, focusRequest, onMention, onAskNode, onBadgeClick, onWarnBadgeClick, onSelect, onImportSample, onPlaced }: { flow?: unknown; options: { selectedId: string | null }; onAskNode?: (id: string) => void;  onPlaced?: (l: (id: string) => { x: number; y: number } | null) => void; onImportSample?: (id: string) => void; state: { nodes: object }; pinned: unknown; fitRequest?: unknown; fitAllSignal?: unknown; onAutoArrange(): void; fitKey?: string; cameraInsets?: unknown; focusRequest?: unknown; onMention?: (id: string) => void; onBadgeClick?: (id: string) => void; onWarnBadgeClick?: (id: string) => void; onSelect: (id: string | null) => void }) => {
     hookState.flow.push(flow ?? null);
     hookState.selected.push(options.selectedId);
     hookState.insets.push(cameraInsets);
     hookState.placed = onPlaced ?? null;
     hookState.pinned.push(pinned);
     hookState.fitRequest.push(fitRequest);
+    hookState.fitAll.push(fitAllSignal);
     hookState.focus.push(focusRequest);
     hookState.badgeFns.push(onBadgeClick);
     hookState.warnFns.push(onWarnBadgeClick);
@@ -1359,4 +1360,113 @@ describe("Claude Code 변경 알아채기", () => {
     expect(flowCalls()).toBe(before + 1);
     expect(hookState.refresh).not.toHaveBeenCalled();
   });
+});
+
+// ── AI 차례 결과: 끝난 뒤 화면 맞춤 · 바뀐 곳 보기 · 되돌리기 ──
+const mkw = (n: number, ids: string[]) => ({ number: n, state: { ...emptyState(), nodes: Object.fromEntries(ids.map((id) => [id, { id, kind: "web_server", label: id, parent: null, attrs: {} }])) } });
+
+test("a turn that changed the diagram clears the selection and asks for one whole-diagram fit once its version is adopted", () => {
+  hookState.busy = false;
+  hookState.lines = [];
+  hookState.fitAll.length = 0;
+  stubFetch();
+  const { rerender } = render(ui(mkw(1, ["a"])));
+  fireEvent.click(screen.getByRole("button", { name: "선택a" }));
+  expect(hookState.selected.at(-1)).toBe("a");
+  const before = hookState.fitAll.at(-1);
+  act(() => (hookState.turn!.onDone as (e: unknown) => void)({ t: "done", version: 2, status: "complete", applied: 2, changed: 2, skipped: 0 }));
+  rerender(ui(mkw(2, ["a", "x"])));
+  expect(hookState.selected.at(-1)).toBeNull();
+  expect(hookState.fitAll.at(-1)).not.toBe(before);
+});
+
+test("a turn that changed nothing keeps the selection and the camera", () => {
+  hookState.busy = false;
+  hookState.lines = [];
+  hookState.fitAll.length = 0;
+  stubFetch();
+  render(ui(mkw(1, ["a"])));
+  fireEvent.click(screen.getByRole("button", { name: "선택a" }));
+  const before = hookState.fitAll.at(-1);
+  act(() => (hookState.turn!.onDone as (e: unknown) => void)({ t: "done", version: null, status: "complete", applied: 0, changed: 0, skipped: 0 }));
+  expect(hookState.selected.at(-1)).toBe("a");
+  expect(hookState.fitAll.at(-1)).toBe(before);
+});
+
+test("the latest turn's summary offers 바뀐 곳 보기 (compare with the version before) and 되돌리기 (restore it)", async () => {
+  hookState.busy = false;
+  hookState.pushLine.mockClear();
+  vi.mocked(getVersionAction).mockReset().mockResolvedValue(mk(1, ["a"]).state as never);
+  vi.mocked(restoreVersionAction).mockReset().mockResolvedValue(undefined as never);
+  hookState.lines = [{ id: "s2", kind: "summary", text: "노드 2 · 연결 0 · 2곳 바꿨어요", turn: "t2", version: 2, changed: 2 }];
+  render(ui(mk(2, ["a", "x"])));
+  fireEvent.click(screen.getByRole("button", { name: "바뀐 곳 보기" }));
+  await waitFor(() => expect(getVersionAction).toHaveBeenCalledWith("d", 1));
+  expect(await screen.findByRole("button", { name: "현재로 돌아가기" })).toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: "현재로 돌아가기" }));
+  fireEvent.click(screen.getByRole("button", { name: "되돌리기" }));
+  await waitFor(() => expect(restoreVersionAction).toHaveBeenCalledWith("d", 1));
+  await waitFor(() => expect(hookState.pushLine).toHaveBeenCalledWith(expect.objectContaining({ kind: "system", text: expect.stringMatching(/되돌렸어요/) })));
+  hookState.lines = [];
+});
+
+test("an older turn's summary has no compare or undo, and neither does a turn that changed nothing", () => {
+  hookState.busy = false;
+  hookState.lines = [
+    { id: "s1", kind: "summary", text: "노드 1 · 연결 0 · 1곳 바꿨어요", turn: "t1", version: 1, changed: 1 },
+    { id: "s3", kind: "summary", text: "바꾼 곳이 없어요", turn: "t3", version: 2, changed: 0 },
+  ];
+  render(ui(mk(2, ["a", "x"])));
+  expect(screen.queryByRole("button", { name: "바뀐 곳 보기" })).toBeNull();
+  expect(screen.queryByRole("button", { name: "되돌리기" })).toBeNull();
+  hookState.lines = [];
+});
+
+// ── 단축키: / 대화 입력칸, F 전체 보기, Esc 선택 풀기 (입력칸·대화상자·메뉴 안에서는 건너뛴다) ──
+test("shortcut / jumps to the chat input from anywhere outside a text field", () => {
+  hookState.busy = false;
+  hookState.lines = [];
+  render(ui(mk(1, ["a"])));
+  fireEvent.click(screen.getByRole("tab", { name: "설명" }));
+  fireEvent.keyDown(document.body, { key: "/" });
+  expect(screen.getByRole("tab", { name: "대화" })).toHaveAttribute("aria-selected", "true");
+  expect(screen.getByRole("textbox")).toHaveFocus();
+});
+
+test("shortcut F asks the canvas for 전체 보기; typing f in a field does not", () => {
+  hookState.busy = false;
+  hookState.fitAll.length = 0;
+  render(ui(mk(1, ["a"])));
+  const before = hookState.fitAll.at(-1);
+  fireEvent.keyDown(document.body, { key: "f", code: "KeyF" });
+  const after = hookState.fitAll.at(-1);
+  expect(after).not.toBe(before);
+  fireEvent.keyDown(screen.getByRole("textbox"), { key: "f", code: "KeyF" });
+  expect(hookState.fitAll.at(-1)).toBe(after);
+  // Ctrl+F(브라우저 찾기)는 가로채지 않는다.
+  fireEvent.keyDown(document.body, { key: "f", code: "KeyF", ctrlKey: true });
+  expect(hookState.fitAll.at(-1)).toBe(after);
+});
+
+test("shortcut Esc clears the canvas selection", () => {
+  hookState.busy = false;
+  stubFetch();
+  render(ui(mkw(1, ["a"])));
+  fireEvent.click(screen.getByRole("button", { name: "선택a" }));
+  expect(hookState.selected.at(-1)).toBe("a");
+  fireEvent.keyDown(document.body, { key: "Escape" });
+  expect(hookState.selected.at(-1)).toBeNull();
+});
+
+test("selecting a node is announced to screen readers (the panel switches to 설명 silently otherwise)", () => {
+  hookState.busy = false;
+  stubFetch();
+  render(ui(mkw(1, ["a"])));
+  const live = document.querySelector("[data-selection-announce]") as HTMLElement;
+  expect(live).toHaveAttribute("aria-live", "polite");
+  expect(live).toHaveTextContent("");
+  fireEvent.click(screen.getByRole("button", { name: "선택a" }));
+  expect(live).toHaveTextContent("a 선택됨. 설명 탭에서 볼 수 있어요.");
+  fireEvent.click(screen.getByRole("button", { name: "선택해제" }));
+  expect(live).toHaveTextContent("");
 });

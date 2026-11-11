@@ -1,0 +1,60 @@
+/* 작업 화면 버튼의 유일한 정의(DESIGN.md · Components · Buttons). 다른 스타일시트는 버튼 모양을 따로 정하지 않는다.
+ * 모서리는 노드와 같은 --radius-control(6px). 연두 칠은 primary 하나뿐이다. */
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  box-sizing: border-box;
+  min-height: 32px;
+  font: inherit;
+  font-size: var(--text-body);
+  line-height: 1.2;
+  white-space: nowrap;
+  text-decoration: none;
+  color: var(--text-primary);
+  background: transparent;
+  border: 1px solid var(--line-node);
+  border-radius: var(--radius-control);
+  padding: 8px 16px;
+  cursor: pointer;
+}
+.button[data-size="sm"] { min-height: 28px; font-size: var(--text-label); padding: 4px 12px; }
+.button[data-size="lg"] { min-height: 44px; font-size: 14px; padding: 8px 16px; }
+.button[data-block] { display: flex; width: 100%; }
+.button:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+.button:disabled { cursor: not-allowed; }
+
+/* 둘째: 칠 없는 머리카락 선 */
+.button[data-variant="secondary"]:hover:not(:disabled) { border-color: var(--text-secondary); }
+.button[data-variant="secondary"]:active:not(:disabled) { background: var(--bg-panel-raised); }
+
+/* 주 동작: 연두 칠, 화면마다 하나 */
+.button[data-variant="primary"] { font-weight: 600; color: var(--on-accent); background: var(--accent-fill); border-color: var(--accent-fill); }
+.button[data-variant="primary"]:hover:not(:disabled) { background: var(--accent-fill-hover); border-color: var(--accent-fill-hover); }
+.button[data-variant="primary"]:active:not(:disabled) { background: var(--accent-fill-active); border-color: var(--accent-fill-active); }
+
+/* 지우기: 빠진 정보 색(연두 아님) */
+.button[data-variant="danger"] { font-weight: 600; color: var(--state-missing-text); border-color: var(--state-missing); }
+.button[data-variant="danger"]:hover:not(:disabled) { background: var(--bg-panel-raised); }
+.button[data-variant="danger"]:active:not(:disabled) { background: var(--line-shell); }
+
+/* 조용한 글자 버튼: 테두리 없음, 누를 영역 24px 이상 */
+.button[data-variant="quiet"] { min-height: 24px; color: var(--text-secondary); border-color: transparent; padding: 4px 8px; }
+.button[data-variant="quiet"]:hover:not(:disabled) { color: var(--text-primary); }
+.button[data-variant="quiet"]:active:not(:disabled) { background: var(--bg-panel-raised); }
+
+/* 비활성: 무채색으로 물러선다. 주 동작도 자리는 지키되 칠을 내려놓는다. */
+.button:disabled { color: var(--text-secondary); opacity: 0.7; }
+.button[data-variant="primary"]:disabled { background: var(--bg-panel-raised); border-color: var(--line-node); opacity: 1; }
+/* 보내는 중(aria-busy): 칠을 지킨 채 조금 흐리게 해 진행 문구를 읽게 둔다. */
+.button[data-variant="primary"][aria-busy="true"]:disabled { color: var(--on-accent); background: var(--accent-fill); border-color: var(--accent-fill); opacity: 0.75; cursor: progress; }
+
+/* 좁은 화면: 손가락으로 누를 버튼은 44px 이상 */
+@media (max-width: 640px) {
+  .button, .button[data-size="sm"], .button[data-variant="quiet"] { min-height: 44px; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .button { transition: background-color var(--dur-micro) var(--ease-out), border-color var(--dur-micro) var(--ease-out), color var(--dur-micro) var(--ease-out); }
+}

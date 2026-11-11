@@ -103,12 +103,13 @@
   --zone-tint-onprem: #7E888E; /* IDC·온프레미스 */
   --zone-tint-network: #857A9A; /* 망(업무망·인터넷망 등) */
 
-  /* 반경 — 캔버스 노드·영역은 그대로(구성도 모양은 움직이지 않는다), 작업 화면 테두리는 4px 이하 */
+  /* 반경 — 화면의 모서리는 구성도에서 온다(DESIGN.md · Shapes): 조작 부품 = 노드, 판 = 영역, 알약은 탭·상태 배지만. */
   --radius-node: 6px;
   --radius-zone: 8px;
-  --radius-panel: 4px; /* 떠 있는 판 */
-  --radius-card: 4px; /* 버튼·입력칸·메뉴·카드 */
-  --radius-pill: 999px; /* 탭·칩·주 동작 알약 */
+  --radius-control: var(--radius-node); /* 버튼·입력칸·칩·메뉴 항목·고른 줄 */
+  --radius-surface: var(--radius-zone); /* 카드·대화상자·메뉴 판·떠 있는 판·로그인 상자 */
+  --radius-panel: var(--radius-surface); /* 떠 있는 판(예전 이름) */
+  --radius-pill: 999px; /* 탭·상태 배지 */
 
   /* 간격 */
   --panel-gap: 12px; /* 떠 있는 판과 화면 가장자리 사이 */

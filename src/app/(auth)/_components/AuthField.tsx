@@ -2,6 +2,8 @@
 
 import { useId, useState } from "react";
 
+import { Button } from "@/ui/Button";
+
 import styles from "../auth.module.css";
 
 type Props = {
@@ -79,8 +81,8 @@ export function AuthField({ label, name, type = "text", autoComplete, hint, erro
 
 export function AuthSubmit({ pending, label, pendingLabel }: { pending: boolean; label: string; pendingLabel: string }) {
   return (
-    <button type="submit" disabled={pending} aria-busy={pending || undefined} className={`${styles.button} ${styles.primary}`}>
+    <Button type="submit" disabled={pending} aria-busy={pending || undefined} variant="primary" size="lg" block className={styles.submit}>
       {pending ? pendingLabel : label}
-    </button>
+    </Button>
   );
 }

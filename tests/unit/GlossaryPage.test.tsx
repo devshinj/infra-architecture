@@ -77,7 +77,8 @@ test("edit saves and shows errors", async () => {
 
   updateTermAction.mockResolvedValueOnce({ ok: true, term: { ...items[0]!, definition: "새 정의" } });
   await userEvent.click(screen.getByRole("button", { name: "저장" }));
-  expect(await screen.findByText("새 정의", { selector: "p" })).toBeInTheDocument();
+  // 줄의 한 줄 설명 칸이 새 정의를 보인다(버튼 안이라 p 가 아닌 span).
+  expect(await screen.findByText("새 정의", { selector: "button span" })).toBeInTheDocument();
   expect(screen.queryByRole("alert")).not.toBeInTheDocument();
 });
 
@@ -118,4 +119,16 @@ test("thrown errors show the generic message", async () => {
   await userEvent.click(screen.getByRole("button", { name: /Redis/ }));
   await userEvent.click(screen.getByRole("button", { name: "검수 완료" }));
   expect(await screen.findByRole("alert")).toHaveTextContent("처리하지 못했어요");
+});
+
+test("legend table: a column header for the eye only, and a notes panel that guides until a term is picked", async () => {
+  render(<GlossaryPage initial={items} />);
+  const header = document.querySelector("[data-legend-head]") as HTMLElement;
+  expect(header).toHaveAttribute("aria-hidden", "true");
+  expect(header).toHaveTextContent("용어분류한 줄 설명출처");
+  expect(screen.getAllByRole("listitem")).toHaveLength(3);
+  expect(screen.getByText("용어를 고르면 여기서 설명을 고치고 검수할 수 있어요.")).toBeInTheDocument();
+  await userEvent.click(screen.getByRole("button", { name: /Redis/ }));
+  expect(screen.queryByText("용어를 고르면 여기서 설명을 고치고 검수할 수 있어요.")).toBeNull();
+  expect(screen.getByRole("form", { name: "Redis 편집" })).toHaveClass("ticks");
 });
