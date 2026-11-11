@@ -3,7 +3,7 @@ import { expect, test } from "vitest";
 import { noLinkKey, parseNoLinkKey } from "@/domain/assumptions";
 import { crossingNote } from "@/domain/flows";
 import type { NetworkKnowledge } from "@/domain/network";
-import { NETWORK_TYPE_SEED } from "@/domain/network-seed";
+import { NETWORK_RULE_SEED, NETWORK_TYPE_SEED } from "@/domain/network-seed";
 import { crossingPaths, evaluateNetworkRules, linkWarningId, parseLinkWarningId } from "@/domain/networkRules";
 import { emptyState, type DiagramState } from "@/domain/types";
 import { evaluateRules, mergeWarnings } from "@/domain/warnings";
@@ -160,4 +160,38 @@ test("parseLinkWarningId: 망 짝 경고 id 를 규칙과 두 망 id 로 푼다"
   expect(parseLinkWarningId("spof:web")).toBeNull();
   expect(parseLinkWarningId("link_expected:only")).toBeNull();
   expect(parseLinkWarningId("link_expected:b--a")).toBeNull();
+});
+
+/** 두 망 영역의 노드를 중간 노드 하나로 잇는 사례(망 종류는 인자로). */
+const pairCase = (typeA: string, typeB: string, mid: "firewall" | "network_link" = "firewall"): DiagramState => ({
+  ...emptyState(),
+  groups: {
+    "zone-a": { id: "zone-a", groupKind: "network_zone", label: "가 망", parent: null, netType: { key: typeA, source: "user", confirmed: true } },
+    "zone-b": { id: "zone-b", groupKind: "network_zone", label: "나 망", parent: null, netType: { key: typeB, source: "user", confirmed: true } },
+  },
+  nodes: { a: n("a", "was", "A", "zone-a"), mid: n("mid", mid, "중간", null), b: n("b", "was", "B", "zone-b") },
+  edges: { e1: e("e1", "a", "mid"), e2: e("e2", "mid", "b") },
+});
+const KB: NetworkKnowledge = { ...K, baseRules: NETWORK_RULE_SEED };
+
+test("망분리 대상이 아닌 내부 망(사무망)은 방화벽만 거쳐 인터넷과 이어도 표시가 없다", () => {
+  expect(evaluateNetworkRules(pairCase("office-net", "internet"), KB)).toEqual([]);
+  // 같은 구성이라도 망분리 대상(업무망)이면 망연계를 예상한다.
+  expect(evaluateNetworkRules(pairCase("business-net", "internet"), KB).map((w) => w.rule)).toEqual(["link_expected"]);
+});
+
+test("직접 연결 짝(서버팜 ↔ 스토리지망)은 표시가 없다", () => {
+  expect(evaluateNetworkRules(pairCase("server-farm", "storage-net"), KB)).toEqual([]);
+});
+
+test("기본 제공 짝 규칙에 걸리면 그 까닭 한 줄을 문구에 넣고, 기관 규칙처럼 말하지 않는다", () => {
+  const [unusual] = evaluateNetworkRules(pairCase("guest-wlan", "office-net"), KB);
+  expect(unusual?.rule).toBe("link_unusual");
+  expect(unusual?.text).toContain("게스트망은 사내 망과 잇지 않고 인터넷만 쓰게 해요.");
+  expect(unusual?.text).toContain("기관 규정과 방화벽 담당자에게 확인해 보세요");
+  expect(unusual?.text).not.toContain("등록한 기관 규칙");
+
+  const [expected] = evaluateNetworkRules(pairCase("business-net", "agency-internet"), KB);
+  expect(expected?.rule).toBe("link_expected");
+  expect(expected?.text).toContain("망연계가 필요해요. 업무 자료를 다루는 망과 인터넷 구역 사이는");
 });

@@ -1,11 +1,13 @@
 import { randomUUID } from "node:crypto";
+import { readFileSync } from "node:fs";
+import path from "node:path";
 
-import { eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { expect, test } from "vitest";
 
 import { db } from "@/db/client";
 import { diagrams, networkRules, networkTypes, projects } from "@/db/schema";
-import { pairKey } from "@/domain/network";
+import { pairKey, requiredMethod } from "@/domain/network";
 import { NETWORK_TYPE_SEED } from "@/domain/network-seed";
 import type { DiagramState } from "@/domain/types";
 import {
@@ -212,4 +214,105 @@ test("countZonesUsingType: 두 프로젝트 구성도의 망을 센다 (최신 �
   expect(await countZonesUsingType(a.userId, "dmz")).toBe(1);
   expect(await countZonesUsingType(a.userId, "none")).toBe(0);
   expect(await countZonesUsingType(b.userId, "admin-net")).toBe(1);
+});
+
+test("ensureNetworkSeeded: 고치지 않은 기본 제공 종류는 지금 기본값으로 맞추고, 고친 것과 숨김은 지킨다", async () => {
+  const userId = await newUser();
+  await ensureNetworkSeeded(userId);
+  const [plain, edited, hidden] = NETWORK_TYPE_SEED;
+  // 예전 기본값이 남은 계정을 흉내 낸다: 이름·별칭·설명·망분리 값이 지금 기본값과 다르다.
+  // (목록을 읽으면 기본값 맞추기가 돌기 때문에 행을 직접 고친다.)
+  await db
+    .update(networkTypes)
+    .set({ name: "옛 이름", aliases: ["옛 별칭"], description: "옛 설명", separated: !plain!.separated })
+    .where(eq(networkTypes.userId, userId));
+  await db
+    .update(networkTypes)
+    .set({ description: "내가 고친 설명", edited: true })
+    .where(and(eq(networkTypes.userId, userId), eq(networkTypes.key, edited!.key)));
+  await db
+    .update(networkTypes)
+    .set({ hidden: true })
+    .where(and(eq(networkTypes.userId, userId), eq(networkTypes.key, hidden!.key)));
+
+  await ensureNetworkSeeded(userId);
+
+  const p = await seedRow(userId, plain!.key);
+  expect(p).toMatchObject({ name: plain!.name, aliases: plain!.aliases, description: plain!.description, separated: plain!.separated, edited: false });
+  const e = await seedRow(userId, edited!.key);
+  expect(e).toMatchObject({ name: "옛 이름", description: "내가 고친 설명", edited: true });
+  const h = await seedRow(userId, hidden!.key);
+  expect(h).toMatchObject({ name: hidden!.name, hidden: true });
+});
+
+test("ensureNetworkSeeded: 직접 만든 종류는 기본값 맞추기에 걸리지 않는다", async () => {
+  const userId = await newUser();
+  const mine = await addNetworkType(userId, { name: "실험망", aliases: [], description: "내 망", grade: "internal", separated: true });
+  await ensureNetworkSeeded(userId);
+  expect((await listNetworkTypes(userId)).find((t) => t.id === mine.id)).toMatchObject({ name: "실험망", description: "내 망", separated: true, source: "user" });
+});
+
+test("separated: 추가할 때 기본은 거짓, 고치면 바뀌고, 기본값으로 되돌리면 seed 값이 된다", async () => {
+  const userId = await newUser();
+  const mine = await addNetworkType(userId, { name: "사내 서버망", aliases: [], description: "", grade: "internal" });
+  expect(mine.separated).toBe(false);
+  expect((await updateNetworkType(userId, mine.id, { separated: true })).separated).toBe(true);
+  await expect(updateNetworkType(userId, mine.id, { separated: "yes" as never })).rejects.toBeInstanceOf(ValidationError);
+
+  const admin = await seedRow(userId, "admin-net");
+  expect(admin.separated).toBe(true);
+  expect(await updateNetworkType(userId, admin.id, { separated: false })).toMatchObject({ separated: false, edited: true });
+  expect(await resetNetworkType(userId, admin.id)).toMatchObject({ separated: true, edited: false });
+});
+
+test("getNetworkKnowledge: 망분리 값과 기본 제공 짝 규칙을 싣는다", async () => {
+  const userId = await newUser();
+  const k = await getNetworkKnowledge(userId);
+  expect(k.types["admin-net"]?.separated).toBe(true);
+  expect(k.types["office-net"]?.separated).toBe(false);
+  expect(k.baseRules?.length).toBeGreaterThan(0);
+  expect(requiredMethod(k, "office-net", "internet")?.method).toBe("firewall");
+  expect(requiredMethod(k, "admin-net", "internet")?.method).toBe("network_link");
+  expect(requiredMethod(k, "storage-net", "server-farm")?.method).toBe("direct");
+});
+
+test("upsertNetworkRule: 직접 연결(direct)도 기관 규칙으로 등록할 수 있다", async () => {
+  const userId = await newUser();
+  await upsertNetworkRule(userId, { a: "mgmt-net", b: "server-farm", method: "direct", note: "관리 포트 직결" });
+  const k = await getNetworkKnowledge(userId);
+  expect(requiredMethod(k, "server-farm", "mgmt-net")).toEqual({ method: "direct", source: "user", note: "관리 포트 직결" });
+});
+
+test("0009 마이그레이션: 이미 있던 내부 망은 망분리 대상으로 두어 예전 동작(외부와 망연계)을 지킨다", async () => {
+  const userId = await newUser();
+  const statements = readFileSync(path.resolve(process.cwd(), "src/db/migrations/0009_network_separated.sql"), "utf8")
+    .split("--> statement-breakpoint")
+    .map((x) => x.trim())
+    .filter(Boolean);
+  class Rollback extends Error {}
+  let seen: { key: string; separated: boolean }[] = [];
+  // 0008 까지의 모양으로 되돌리고(트랜잭션 안의 DDL) 그때 있던 행을 넣은 뒤 0009 를 그대로 돌린다. 끝나면 되돌린다.
+  await db
+    .transaction(async (tx) => {
+      await tx.execute(sql`alter table network_types drop column separated`);
+      await tx.execute(sql`
+        insert into network_types (user_id, key, name, grade, source) values
+          (${userId}, 'old-internal', '옛 내부망', 'internal', 'user'),
+          (${userId}, 'old-external', '옛 외부망', 'external', 'user'),
+          (${userId}, 'old-closed', '옛 폐쇄망', 'closed', 'seed')`);
+      for (const stmt of statements) await tx.execute(sql.raw(stmt));
+      const rows = await tx.execute<{ key: string; separated: boolean }>(
+        sql`select key, separated from network_types where user_id = ${userId} order by key`,
+      );
+      seen = [...rows];
+      throw new Rollback();
+    })
+    .catch((e) => {
+      if (!(e instanceof Rollback)) throw e;
+    });
+  expect(seen).toEqual([
+    { key: "old-closed", separated: false },
+    { key: "old-external", separated: false },
+    { key: "old-internal", separated: true },
+  ]);
 });

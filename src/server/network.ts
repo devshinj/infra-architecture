@@ -13,7 +13,7 @@ import {
   type NetRule,
   type NetworkKnowledge,
 } from "@/domain/network";
-import { NETWORK_TYPE_SEED } from "@/domain/network-seed";
+import { NETWORK_RULE_SEED, NETWORK_TYPE_SEED } from "@/domain/network-seed";
 import type { DiagramState } from "@/domain/types";
 import { NotFoundError, ValidationError } from "@/server/projects";
 
@@ -32,6 +32,7 @@ export interface NetTypeRow {
   aliases: string[];
   description: string;
   grade: NetGrade;
+  separated: boolean;
   source: "seed" | "user";
   edited: boolean;
   hidden: boolean;
@@ -42,6 +43,11 @@ const len = (s: string) => [...s].length;
 function checkGrade(g: unknown): NetGrade {
   if (typeof g !== "string" || !Object.hasOwn(GRADE_LABELS, g)) throw new ValidationError("망 등급 값이 올바르지 않아요");
   return g as NetGrade;
+}
+
+function checkSeparated(v: unknown): boolean {
+  if (typeof v !== "boolean") throw new ValidationError("망분리 대상 값이 올바르지 않아요");
+  return v;
 }
 
 function checkName(v: unknown): string {
@@ -77,27 +83,67 @@ const toRow = (r: typeof networkTypes.$inferSelect): NetTypeRow => ({
   aliases: r.aliases,
   description: r.description,
   grade: r.grade,
+  separated: r.separated,
   source: r.source,
   edited: r.edited,
   hidden: r.hidden,
 });
 
-/** 없는 기본 제공 종류만 넣는다. 이미 있는 행(숨긴 것, 고친 것 포함)은 건드리지 않는다. */
+const sameList = (x: readonly string[], y: readonly string[]) => x.length === y.length && x.every((v, i) => v === y[i]);
+
+/**
+ * 없는 기본 제공 종류를 넣고, 사용자가 고치지 않은 기본 제공 종류는 지금 기본값(network-seed)으로 맞춘다.
+ * 고친 행(edited)과 숨김 여부는 건드리지 않는다. 기본값이 바뀌어도 이미 쓰던 계정에 그대로 닿게 하려는 것이다.
+ * 대화 차례마다 불리므로 먼저 한 번 읽어 보고, 빠졌거나 달라진 것이 있을 때만 쓴다.
+ */
 export async function ensureNetworkSeeded(userId: string): Promise<void> {
-  await db
-    .insert(networkTypes)
-    .values(
-      NETWORK_TYPE_SEED.map((t) => ({
-        userId,
-        key: t.key,
-        name: t.name,
-        aliases: [...t.aliases],
-        description: t.description,
-        grade: t.grade,
-        source: "seed" as const,
-      })),
-    )
-    .onConflictDoNothing({ target: [networkTypes.userId, networkTypes.key] });
+  const rows = await db
+    .select({
+      key: networkTypes.key,
+      name: networkTypes.name,
+      aliases: networkTypes.aliases,
+      description: networkTypes.description,
+      grade: networkTypes.grade,
+      separated: networkTypes.separated,
+      edited: networkTypes.edited,
+    })
+    .from(networkTypes)
+    .where(and(eq(networkTypes.userId, userId), eq(networkTypes.source, "seed")));
+  const have = new Map(rows.map((r) => [r.key, r]));
+
+  const missing = NETWORK_TYPE_SEED.filter((t) => !have.has(t.key));
+  if (missing.length) {
+    await db
+      .insert(networkTypes)
+      .values(
+        missing.map((t) => ({
+          userId,
+          key: t.key,
+          name: t.name,
+          aliases: [...t.aliases],
+          description: t.description,
+          grade: t.grade,
+          separated: t.separated,
+          source: "seed" as const,
+        })),
+      )
+      .onConflictDoNothing({ target: [networkTypes.userId, networkTypes.key] });
+  }
+
+  const stale = NETWORK_TYPE_SEED.filter((t) => {
+    const r = have.get(t.key);
+    return (
+      r !== undefined &&
+      !r.edited &&
+      (r.name !== t.name || !sameList(r.aliases, t.aliases) || r.description !== t.description || r.grade !== t.grade || r.separated !== t.separated)
+    );
+  });
+  for (const t of stale) {
+    await db
+      .update(networkTypes)
+      .set({ name: t.name, aliases: [...t.aliases], description: t.description, grade: t.grade, separated: t.separated, updatedAt: new Date() })
+      .where(and(eq(networkTypes.userId, userId), eq(networkTypes.key, t.key), eq(networkTypes.source, "seed"), eq(networkTypes.edited, false)));
+  }
 }
 
 /** 숨긴 종류와, 숨긴 종류를 가리키는 규칙은 뺀다. */
@@ -107,14 +153,14 @@ export async function getNetworkKnowledge(userId: string): Promise<NetworkKnowle
   const types: NetworkKnowledge["types"] = {};
   for (const r of typeRows) {
     if (r.hidden) continue;
-    types[r.key] = { key: r.key, name: r.name, aliases: r.aliases, description: r.description, grade: r.grade };
+    types[r.key] = { key: r.key, name: r.name, aliases: r.aliases, description: r.description, grade: r.grade, separated: r.separated };
   }
   const rules: NetRule[] = [];
   for (const r of await listNetworkRules(userId)) {
     if (!types[r.a] || !types[r.b]) continue;
     rules.push(r.note ? { a: r.a, b: r.b, method: r.method, note: r.note } : { a: r.a, b: r.b, method: r.method });
   }
-  return { types, rules };
+  return { types, rules, baseRules: NETWORK_RULE_SEED };
 }
 
 export async function listNetworkTypes(userId: string): Promise<NetTypeRow[]> {
@@ -148,8 +194,9 @@ function newTypeKey(name: string): string {
 
 export async function addNetworkType(
   userId: string,
-  input: { name: string; aliases: string[]; description: string; grade: NetGrade },
+  input: { name: string; aliases: string[]; description: string; grade: NetGrade; separated?: boolean },
 ): Promise<NetTypeRow> {
+  const separated = input.separated === undefined ? false : checkSeparated(input.separated);
   const name = checkName(input.name);
   const aliases = checkAliases(input.aliases);
   const description = checkDescription(input.description);
@@ -161,7 +208,7 @@ export async function addNetworkType(
     const key = newTypeKey(name);
     const [row] = await db
       .insert(networkTypes)
-      .values({ userId, key, name, aliases, description, grade, source: "user" })
+      .values({ userId, key, name, aliases, description, grade, separated, source: "user" })
       .onConflictDoNothing({ target: [networkTypes.userId, networkTypes.key] })
       .returning();
     if (row) return toRow(row);
@@ -182,7 +229,7 @@ async function getOwnedType(userId: string, id: string): Promise<typeof networkT
 export async function updateNetworkType(
   userId: string,
   id: string,
-  patch: Partial<{ name: string; aliases: string[]; description: string; grade: NetGrade }>,
+  patch: Partial<{ name: string; aliases: string[]; description: string; grade: NetGrade; separated: boolean }>,
 ): Promise<NetTypeRow> {
   const cur = await getOwnedType(userId, id);
   const set: Partial<typeof networkTypes.$inferInsert> = {};
@@ -190,6 +237,7 @@ export async function updateNetworkType(
   if (patch.aliases !== undefined) set.aliases = checkAliases(patch.aliases);
   if (patch.description !== undefined) set.description = checkDescription(patch.description);
   if (patch.grade !== undefined) set.grade = checkGrade(patch.grade);
+  if (patch.separated !== undefined) set.separated = checkSeparated(patch.separated);
   if (!Object.keys(set).length) return toRow(cur);
   if (cur.source === "seed") set.edited = true;
   const [row] = await db
@@ -213,6 +261,7 @@ export async function resetNetworkType(userId: string, id: string): Promise<NetT
       aliases: [...seed.aliases],
       description: seed.description,
       grade: seed.grade,
+      separated: seed.separated,
       edited: false,
       updatedAt: new Date(),
     })

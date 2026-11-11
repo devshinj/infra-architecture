@@ -395,6 +395,10 @@ const reqStrings = (v: unknown, what: string): string[] => {
   if (!Array.isArray(v) || v.some((x) => typeof x !== "string")) throw bad(what);
   return v as string[];
 };
+const reqBool = (v: unknown, what: string): boolean => {
+  if (typeof v !== "boolean") throw bad(what);
+  return v;
+};
 const reqGrade = (v: unknown): NetGrade => {
   if (typeof v !== "string" || !Object.hasOwn(GRADE_LABELS, v)) throw bad("등급");
   return v as NetGrade;
@@ -418,6 +422,7 @@ export async function addNetworkTypeAction(input: {
   aliases: string[];
   description: string;
   grade: NetGrade;
+  separated?: boolean;
 }): Promise<ActionResult<{ type: NetTypeRow }>> {
   return runResult(async (uid) => {
     const type = await addNetworkType(uid, {
@@ -425,6 +430,7 @@ export async function addNetworkTypeAction(input: {
       aliases: reqStrings(input?.aliases, "다른 이름"),
       description: reqString(input?.description, "설명"),
       grade: reqGrade(input?.grade),
+      ...(input?.separated === undefined ? {} : { separated: reqBool(input.separated, "망분리 대상") }),
     });
     revalidatePath("/network");
     return { type };
@@ -433,7 +439,7 @@ export async function addNetworkTypeAction(input: {
 
 export async function updateNetworkTypeAction(
   id: string,
-  patch: Partial<{ name: string; aliases: string[]; description: string; grade: NetGrade }>,
+  patch: Partial<{ name: string; aliases: string[]; description: string; grade: NetGrade; separated: boolean }>,
 ): Promise<ActionResult<{ type: NetTypeRow }>> {
   return runResult(async (uid) => {
     const p: Parameters<typeof updateNetworkType>[2] = {};
@@ -441,6 +447,7 @@ export async function updateNetworkTypeAction(
     if (patch?.aliases !== undefined) p.aliases = reqStrings(patch.aliases, "다른 이름");
     if (patch?.description !== undefined) p.description = reqString(patch.description, "설명");
     if (patch?.grade !== undefined) p.grade = reqGrade(patch.grade);
+    if (patch?.separated !== undefined) p.separated = reqBool(patch.separated, "망분리 대상");
     const type = await updateNetworkType(uid, reqString(id, "종류"), p);
     revalidatePath("/network");
     return { type };

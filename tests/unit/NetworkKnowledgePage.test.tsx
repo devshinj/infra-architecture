@@ -31,11 +31,11 @@ beforeEach(() => Object.values(fns).forEach((f) => f.mockReset()));
 afterEach(cleanup);
 
 const row = (o: Partial<NetTypeRow>): NetTypeRow => ({
-  id: "t1", key: "internal-net", name: "업무망", aliases: [], description: "", grade: "internal",
+  id: "t1", key: "internal-net", name: "업무망", aliases: [], description: "", grade: "internal", separated: false,
   source: "seed", edited: false, hidden: false, ...o,
 });
 const types = [
-  row({ id: "t1", key: "internal-net", name: "업무망", grade: "internal" }),
+  row({ id: "t1", key: "internal-net", name: "업무망", grade: "internal", separated: true }),
   row({ id: "t2", key: "dmz", name: "DMZ", grade: "boundary", edited: true }),
   row({ id: "t3", key: "internet", name: "인터넷", grade: "external", hidden: true }),
   row({ id: "t4", key: "partner", name: "협력사망", grade: "external", source: "user" }),
@@ -62,7 +62,7 @@ test("사용자 종류 추가 → addNetworkTypeAction 호출", async () => {
   await user.type(within(form).getByLabelText("다른 이름(쉼표로 구분)"), "랩, 테스트망");
   await user.selectOptions(within(form).getByLabelText("등급"), "internal");
   await user.click(within(form).getByRole("button", { name: "저장" }));
-  expect(fns.addNetworkTypeAction).toHaveBeenCalledWith({ name: "실험망", aliases: ["랩", "테스트망"], description: "", grade: "internal" });
+  expect(fns.addNetworkTypeAction).toHaveBeenCalledWith({ name: "실험망", aliases: ["랩", "테스트망"], description: "", grade: "internal", separated: false });
   expect(await screen.findByRole("button", { name: /실험망/ })).toBeInTheDocument();
 });
 
@@ -160,4 +160,49 @@ test("기관 규칙 추가에서는 두 종류를 고를 수 있다", async () =
   const form = screen.getByRole("form", { name: "기관 규칙 추가" });
   expect(within(form).getByLabelText("종류 하나")).toBeEnabled();
   expect(within(form).queryByText("종류를 바꾸려면 이 규칙을 지우고 새로 추가해 주세요.")).toBeNull();
+});
+
+test("망분리 대상: 목록에 표시가 붙고, 체크를 바꿔 저장하면 separated 를 보낸다", async () => {
+  const user = userEvent.setup();
+  fns.updateNetworkTypeAction.mockResolvedValue({ ok: true, type: row({ id: "t2", key: "dmz", name: "DMZ", grade: "boundary", edited: true, separated: true }) });
+  render(<NetworkKnowledgePage initialTypes={types} initialRules={[]} />);
+  expect(within(screen.getByRole("button", { name: /업무망/ })).getByText("망분리 대상")).toBeInTheDocument();
+  expect(within(screen.getByRole("button", { name: /DMZ/ })).queryByText("망분리 대상")).toBeNull();
+
+  await user.click(screen.getByRole("button", { name: /DMZ/ }));
+  const form = screen.getByRole("form", { name: "DMZ 편집" });
+  const box = within(form).getByRole("checkbox", { name: /망분리 대상/ });
+  expect(box).not.toBeChecked();
+  await user.click(box);
+  await user.click(within(form).getByRole("button", { name: "저장" }));
+  expect(fns.updateNetworkTypeAction).toHaveBeenCalledWith("t2", expect.objectContaining({ separated: true }));
+  expect(await within(screen.getByRole("button", { name: /DMZ/ })).findByText("망분리 대상")).toBeInTheDocument();
+});
+
+test("기본 제공 짝 규칙: 쓰는 종류끼리의 규칙만 표로 보이고, 같은 짝에 기관 규칙이 있으면 그렇게 알린다", () => {
+  const seedTypes = [
+    row({ id: "s1", key: "server-farm", name: "서버팜" }),
+    row({ id: "s2", key: "storage-net", name: "스토리지망" }),
+    row({ id: "s3", key: "internet", name: "인터넷망", grade: "external" }),
+    row({ id: "s4", key: "backup-net", name: "백업망", hidden: true }),
+  ];
+  const { rerender } = render(<NetworkKnowledgePage initialTypes={seedTypes} initialRules={[]} />);
+  const table = screen.getByRole("table", { name: "기본 제공 짝 규칙" });
+  const direct = within(table).getByRole("row", { name: /서버팜 ↔ 스토리지망/ });
+  expect(within(direct).getByText("직접 연결(사이에 통제 장비 없음)")).toBeInTheDocument();
+  expect(within(table).getByRole("row", { name: /인터넷망 ↔ 서버팜/ })).toBeInTheDocument();
+  // 쓰지 않는(숨긴) 종류가 낀 규칙은 보이지 않는다.
+  expect(within(table).queryByRole("row", { name: /백업망/ })).toBeNull();
+  // 등급 규칙 표에는 망분리 대상일 때만 맞는 줄이 따로 있다.
+  expect(within(screen.getByRole("table", { name: "기본 등급 규칙" })).getByRole("row", { name: /내부 ↔ 외부 \(둘 중 하나가 망분리 대상\).*망연계 필요/ })).toBeInTheDocument();
+
+  rerender(
+    <NetworkKnowledgePage
+      key="with-rule"
+      initialTypes={seedTypes}
+      initialRules={[{ id: "r1", a: "server-farm", b: "storage-net", method: "firewall", note: "사내 표준" }]}
+    />,
+  );
+  const overridden = within(screen.getByRole("table", { name: "기본 제공 짝 규칙" })).getByRole("row", { name: /서버팜 ↔ 스토리지망/ });
+  expect(within(overridden).getByText(/기관 규칙이 먼저/)).toBeInTheDocument();
 });

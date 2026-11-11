@@ -129,7 +129,7 @@ test("non-crossing edge unchanged", () => {
 });
 
 describe("망 종류 빠진 정보", () => {
-  const K: NetworkKnowledge = { types: { "admin-net": { key: "admin-net", name: "행정망", aliases: [], description: "", grade: "internal" } }, rules: [] };
+  const K: NetworkKnowledge = { types: { "admin-net": { key: "admin-net", name: "행정망", aliases: [], description: "", grade: "internal", separated: true } }, rules: [] };
   const zones = (a?: { key: string }, b?: { key: string }): DiagramState => ({
     ...emptyState(),
     groups: {

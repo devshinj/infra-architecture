@@ -1,96 +1,139 @@
-import type { NetType } from "./network";
+import { pairKey, type LinkMethod, type NetGrade, type NetRule, type NetType } from "./network";
 
-// 기본 제공 망 종류. 일반 지식 수준이며 기관마다 다를 수 있다.
+// 기본 제공 망 종류와 짝 규칙. 일반 지식 수준이며 기관마다 다를 수 있다(화면과 경고는 늘 "예상"이라고 말한다).
+// 근거와 출처는 docs/research/2026-11-11-network-glossary/ 에 있다. 규정은 자주 바뀌므로 설명에 날짜를 적지 않는다.
+//
+// separated(망분리 대상): 규정이나 기관 방침으로 바깥 망과 떼어 놓는 망. 이 값이 참인 내부 망만 외부 망과 "망연계"가 기본이고,
+// 나머지 내부 망(사무망, 서버팜, 클라우드 서브넷 등)은 방화벽이 기본이다.
+
+const t = (key: string, name: string, grade: NetGrade, separated: boolean, aliases: string[], description: string): NetType => ({
+  key,
+  name,
+  aliases,
+  description,
+  grade,
+  separated,
+});
+
 export const NETWORK_TYPE_SEED: readonly NetType[] = [
-  {
-    key: "admin-net",
-    name: "행정망",
-    aliases: ["정부 업무망", "행정 내부망"],
-    description: "행정기관이 업무에 쓰는 내부 망이에요. 인터넷과는 나뉘어 있어요.",
-    grade: "internal",
-  },
-  {
-    key: "business-net",
-    name: "업무망",
-    aliases: ["내부망", "인트라넷"],
-    description: "기관 안에서 업무용으로 쓰는 망이에요. 바깥 인터넷과는 분리해 둬요.",
-    grade: "internal",
-  },
-  {
-    key: "mgmt-net",
-    name: "관리망",
-    aliases: ["운영망", "관리 전용망"],
-    description: "서버와 장비를 운영하고 관리하는 데만 쓰는 망이에요.",
-    grade: "internal",
-  },
-  {
-    key: "backup-net",
-    name: "백업망",
-    aliases: ["백업 전용망"],
-    description: "데이터 백업을 옮기는 데 쓰는 망이에요. 업무 통신과 따로 둬요.",
-    grade: "internal",
-  },
-  {
-    key: "dev-net",
-    name: "개발·테스트망",
-    aliases: ["개발망", "테스트망", "스테이징망"],
-    description: "개발하고 시험해 보는 데 쓰는 망이에요. 운영 망과 나눠서 써요.",
-    grade: "internal",
-  },
-  {
-    key: "gcloud-internal",
-    name: "공공 클라우드 내부 영역",
-    aliases: ["G-클라우드 업무존", "GCloud 내부망", "공공 클라우드 업무 영역"],
-    description: "공공 클라우드 안에서 업무 시스템을 두는 내부 영역이에요.",
-    grade: "internal",
-  },
-  {
-    key: "control-net",
-    name: "제어망",
-    aliases: ["OT망", "SCADA망", "제어시스템망"],
-    description: "설비나 장치를 제어하는 망이에요. 원칙적으로 바깥과 잇지 않아요.",
-    grade: "closed",
-  },
-  {
-    key: "finance-net",
-    name: "금융 전산망",
-    aliases: ["금융 폐쇄망", "전산 폐쇄망"],
-    description: "금융 거래 같은 중요한 전산에 쓰는 완전히 닫힌 망이에요.",
-    grade: "closed",
-  },
-  {
-    key: "dmz",
-    name: "DMZ",
-    aliases: ["비무장지대", "완충망", "경계망"],
-    description: "안쪽 망과 바깥 사이에 두는 중간 망이에요. 바깥에 보여 줄 서버를 여기에 둬요.",
-    grade: "boundary",
-  },
-  {
-    key: "internet",
-    name: "인터넷망",
-    aliases: ["대외 인터넷", "외부망", "인터넷"],
-    description: "누구나 닿을 수 있는 공개 인터넷이에요.",
-    grade: "external",
-  },
-  {
-    key: "inter-agency",
-    name: "기관 간 연계망",
-    aliases: ["대외망", "대외 연계망", "기관 연계망"],
-    description: "다른 기관과 자료를 주고받을 때 쓰는 망이에요.",
-    grade: "external",
-  },
-  {
-    key: "gcloud-internet",
-    name: "공공 클라우드 인터넷 영역",
-    aliases: ["GCloud 인터넷망", "G-클라우드 인터넷존", "공공 클라우드 외부 영역"],
-    description: "공공 클라우드 안에서 인터넷과 닿는 영역이에요.",
-    grade: "external",
-  },
-  {
-    key: "private-cloud",
-    name: "민간 클라우드",
-    aliases: ["상용 클라우드", "퍼블릭 클라우드"],
-    description: "민간 회사가 제공하는 클라우드예요. 기관 밖에 있는 망으로 봐요.",
-    grade: "external",
-  },
+  // ── 공통 ─────────────────────────────────────────
+  t("business-net", "업무망", "internal", true, ["내부망", "인트라넷", "내부 업무망", "업무 영역"], "기관 안에서 업무용으로 쓰는 망이에요. 비공개 업무 자료를 다루는 곳이라 바깥 인터넷과 바로 잇지 않아요."),
+  t("mgmt-net", "관리망", "internal", false, ["운영망", "관리 전용망", "OOB", "대역 외 관리망", "장비 관리 구간"], "서버와 장비를 운영하고 관리하는 데만 쓰는 망이에요. 서비스 통신과 섞지 않아요."),
+  t("backup-net", "백업망", "internal", false, ["백업 전용망", "백업 구간", "Backup LAN"], "데이터 백업을 옮기는 데 쓰는 망이에요. 업무 통신과 따로 둬요."),
+  t("dev-net", "개발·테스트망", "internal", false, ["개발망", "테스트망", "스테이징망", "검증망", "개발계"], "개발하고 시험해 보는 데 쓰는 망이에요. 운영 망과 나눠서 써요."),
+  t("dmz", "DMZ", "boundary", false, ["비무장지대", "완충망", "경계망", "공개서버 구간", "대외 서비스 구간"], "안쪽 망과 바깥 사이에 두는 중간 망이에요. 홈페이지처럼 바깥에 보여 줄 서버를 여기에 둬요."),
+  t("internet", "인터넷망", "external", false, ["대외 인터넷", "외부망", "인터넷", "상용 인터넷망"], "누구나 닿을 수 있는 공개 인터넷이에요."),
+  t("inter-agency", "기관 간 연계망", "external", false, ["대외망", "대외 연계망", "기관 연계망", "전용회선 연계"], "다른 기관과 자료를 주고받을 때 쓰는 망이에요."),
+  t("private-cloud", "민간 클라우드", "external", false, ["상용 클라우드", "퍼블릭 클라우드", "외부 클라우드"], "민간 회사가 제공하는 클라우드예요. 기관 밖에 있는 망으로 봐요. 공공기관은 허용된 서비스만 쓸 수 있어요."),
+  t("saas", "업무용 SaaS", "external", false, ["SaaS", "외부 협업 도구", "클라우드 소프트웨어"], "인터넷으로 빌려 쓰는 업무용 소프트웨어예요. 망분리 대상 기관은 허용된 서비스만, 정해진 조건에서 이어 써요."),
+  t("remote-access", "원격 접속 구간", "boundary", false, ["재택근무 접속", "원격근무 접속 구간", "VPN 접속 구간", "ZTNA 접속 구간"], "집이나 바깥에서 일하는 사람이 기관 시스템으로 들어오는 입구예요. 사용자와 기기를 확인한 뒤 통과시켜요."),
+  t("partner-access", "협력사 접속망", "boundary", false, ["용역업체 작업망", "외주 접속 구간", "파트너망", "엑스트라넷", "유지보수 구간"], "협력사나 외주 인력이 정해진 시스템에만 들어오도록 따로 둔 접속 구간이에요. 기관 망과 떼어서 꾸며요."),
+  t("guest-wlan", "방문자·개인기기 무선망", "external", false, ["게스트 와이파이", "게스트망", "방문자 Wi-Fi", "BYOD망", "외부인용 와이파이"], "손님이나 개인 기기가 쓰는 무선 망이에요. 관리하지 않는 기기가 붙으니 사내 망과 떼어 놓고 인터넷만 쓰게 해요."),
+  t("office-wlan", "업무용 무선망", "internal", false, ["업무용 와이파이", "업무용 AP", "사내 무선랜"], "기관이 나눠 준 기기만 붙는 사무실 무선 망이에요."),
+
+  // ── 공공 ─────────────────────────────────────────
+  t("admin-net", "행정망", "internal", true, ["정부 업무망", "행정 내부망", "국가정보통신망", "국가융합망", "행정업무망"], "국가기관과 지자체가 함께 쓰는 정부 전용 통신망이에요. 인터넷과 따로 놓인 회선으로 기관끼리 이어 줘요."),
+  t("local-gov-net", "지자체 행정망", "internal", true, ["시도 행정망", "시군구 행정망", "자체 행정통신망"], "시청·도청·구청이 쓰는 업무망이에요. 정부 통신망을 거쳐 중앙 시스템과 이어져요."),
+  t("agency-internet", "기관 인터넷망", "boundary", false, ["인터넷 영역", "공개등급 영역", "인터넷 PC망"], "기관 안에서 인터넷 검색과 메일에 쓰는 구역이에요. 공개해도 되는 자료만 다뤄요."),
+  t("classified-net", "기밀망", "closed", true, ["기밀등급 영역", "비밀망", "비밀관리 구간"], "비밀·대외비 문서를 다루는 망이에요. 인터넷과 분리된 별도 구역에서만 써요."),
+  t("gcloud-internal", "공공 클라우드 내부 영역", "internal", true, ["G-클라우드 업무존", "GCloud 내부망", "공공 클라우드 업무 영역", "행정업무망 존"], "공공 클라우드 안에서 내부 업무 시스템을 두는 영역이에요."),
+  t("gcloud-internet", "공공 클라우드 인터넷 영역", "external", false, ["GCloud 인터넷망", "G-클라우드 인터넷존", "공공 클라우드 외부 영역", "대국민 서비스 존"], "공공 클라우드 안에서 인터넷과 닿는 영역이에요. 국민이 쓰는 서비스를 여기에 올려요."),
+  t("ppp-cloud", "민관협력형 클라우드 존", "internal", true, ["PPP 클라우드", "PPP존"], "정부 데이터센터 건물 안에 민간 회사가 클라우드를 들여놓은 구역이에요. 정부 통신망과 보안 시설을 그대로 써요."),
+  t("edu-admin-net", "교육 업무망", "internal", true, ["교육행정망", "교사망", "나이스망", "스쿨넷 업무망"], "학교와 교육청에서 행정 업무에 쓰는 망이에요. 나이스·K-에듀파인 같은 시스템에 들어갈 수 있어요."),
+  t("edu-class-net", "교육망", "boundary", false, ["수업망", "학생망", "학교 무선망", "스쿨넷 교육망"], "학교에서 수업에 쓰는 망이에요. 학생 기기도 붙지만 행정 시스템에는 들어갈 수 없어요."),
+  t("defense-net", "국방망", "internal", true, ["국방 인트라넷", "군 내부망", "국방 업무망"], "군에서 행정·군수·인사 업무에 쓰는 내부망이에요. 인터넷과는 나뉘어 있어요."),
+  t("iot-net", "사물인터넷망", "closed", true, ["IoT망", "센서망", "설비망"], "센서나 카메라 같은 기기들이 붙는 망이에요. 사무용 망과 따로 떼어 놓아요."),
+
+  // ── 금융 ─────────────────────────────────────────
+  t("finance-net", "금융 전산망", "closed", true, ["금융 폐쇄망", "전산 폐쇄망", "전산센터 내부망", "계정계·정보계 망", "코어뱅킹 망"], "계좌와 거래를 처리하는 핵심 서버가 모인 망이에요. 인터넷과는 물리적으로 떨어져 있고, 정해진 구간과만 필요한 포트로 이어요."),
+  t("fin-ops-terminal", "전산센터 운영 단말망", "closed", true, ["운영 단말망", "관리자 단말망", "운영자 PC망"], "전산센터 서버에 직접 붙어 운영·개발·보안 작업을 하는 PC들의 망이에요. 인터넷과 물리적으로 분리해요."),
+  t("fin-business", "금융 업무망", "internal", true, ["금융 내부 업무망", "영업점망", "본점 OA망", "업무용 단말망"], "금융회사 임직원이 사내 업무 시스템을 쓰는 망이에요. 인터넷과 분리·차단하는 게 원칙이에요."),
+  t("fin-partner-gateway", "대외계망", "boundary", false, ["대외계", "FEP 구간", "대외접속망", "대외 연계 구간"], "다른 금융기관·결제기관과 전문을 주고받는 서버(FEP)가 있는 구간이에요. 필요한 포트만 열어 특정 기관과 이어요."),
+  t("fin-partner-line", "대외기관 전용회선망", "external", false, ["금융공동망", "대외기관망", "제휴사 전용회선", "전문 회선"], "금융결제원이나 다른 금융사·제휴사와 이어진 전용 회선이에요. 인터넷이 아니라 정해진 상대만 이어져요."),
+  t("fin-rnd", "금융 연구·개발망", "boundary", false, ["R&D망", "연구개발망", "인터넷 되는 개발망"], "인터넷을 쓰면서 연구·개발하는 망이에요. 고객의 주민번호·신용정보는 다루지 않는 조건으로 허용돼요."),
+  t("fin-dr", "재해복구센터망", "closed", true, ["DR센터", "백업센터", "재해복구망", "원격지 센터"], "주 전산센터가 멈췄을 때 대신 돌아가는 원격지 센터 망이에요. 주센터와 같은 수준으로 보호해요."),
+  t("fin-cloud", "금융 클라우드 영역", "internal", false, ["금융 클라우드", "금융존 클라우드"], "금융회사가 평가 절차를 거쳐 쓰는 클라우드 영역이에요. 절차를 거치면 전산실 물리적 망분리 대상에서 빠져요."),
+
+  // ── 의료 · 개인정보 · 결제 ───────────────────────
+  t("med-clinical", "병원 진료망", "internal", false, ["원내망", "HIS망", "EMR망", "OCS망", "PACS망"], "진료기록(EMR)·처방(OCS)·영상(PACS) 시스템이 있는 병원 내부 망이에요. 인터넷과 나누는 것은 권고 수준이에요."),
+  t("pi-system-zone", "개인정보처리시스템 구간", "internal", false, ["개인정보 DB존", "고객정보 시스템 구간"], "고객 개인정보를 저장·처리하는 시스템이 있는 구간이에요. 이용자가 아주 많은 곳은 이 시스템을 다루는 PC의 인터넷을 막아야 해요."),
+  t("pay-cde", "카드 데이터 환경", "internal", false, ["CDE", "카드정보 처리 구간", "카드회원 데이터 구간"], "카드번호를 저장·처리·전송하는 시스템이 모인 구간이에요. 다른 망과 나누어야 점검 범위가 줄어요."),
+  t("pay-partner-line", "VAN·PG 연계 구간", "boundary", false, ["VAN 전용회선", "승인망", "PG 연동 구간", "카드사 연계"], "가맹점·PG·VAN·카드사 사이에 승인·매입 전문이 오가는 구간이에요. 전용회선이나 그에 준하는 회선을 써요."),
+
+  // ── 제어(OT) ─────────────────────────────────────
+  t("control-net", "제어망", "closed", true, ["OT망", "SCADA망", "제어시스템망", "ICS망", "공정망", "PLC망"], "설비나 장치를 직접 움직이는 망이에요. 원칙적으로 사무용 망이나 인터넷과 잇지 않아요."),
+  t("ot-operations", "생산 운영망", "internal", true, ["MES망", "현장 운영 구간", "히스토리안 구간", "감시망"], "생산 실적과 이력을 모으고 현장 전체를 관리하는 망이에요. 제어망과 업무망 사이에 있어요."),
+  t("ot-dmz", "IT/OT 경계 구간", "boundary", false, ["산업용 DMZ", "iDMZ", "OT DMZ", "제어 DMZ"], "사무용 업무망과 공장·설비 망 사이에 둔 중간 구간이에요. 두 망이 직접 통신하지 않게 여기서 한 번 끊어요."),
+
+  // ── 일반 기업 · 데이터센터 ───────────────────────
+  t("office-net", "사무망", "internal", false, ["OA망", "사내망", "임직원망", "오피스망"], "임직원 PC와 프린터 같은 사무 기기가 붙는 사내 망이에요. 보통 방화벽이나 프록시를 거쳐 인터넷을 쓸 수 있어요."),
+  t("server-farm", "서버팜", "internal", false, ["서버망", "서버존", "내부 서버 영역"], "업무 시스템 서버와 DB를 모아 둔 망이에요. 사무망이나 인터넷에서 바로 들어오지 못하게 방화벽 뒤에 둬요."),
+  t("service-net", "서비스망", "internal", false, ["프로덕션망", "서비스 네트워크", "데이터망", "프런트망"], "사용자 요청과 응답이 실제로 오가는 데이터센터의 기본 망이에요. 관리용·백업용 통신과 섞지 않아요."),
+  t("storage-net", "스토리지망", "internal", false, ["SAN", "스토리지 전용망", "iSCSI망", "FC망", "NAS망"], "서버와 저장 장치 사이에서 데이터를 주고받는 전용 망이에요. 서버에는 바로 붙고 바깥과는 잇지 않아요."),
+  t("cluster-interconnect", "클러스터 인터커넥트", "closed", false, ["하트비트망", "클러스터 내부망", "프라이빗 인터커넥트", "동기화망"], "한 묶음으로 동작하는 서버들끼리 상태 확인과 동기화를 주고받는 전용 망이에요. 그 서버들끼리만 이어요."),
+  t("vdi-net", "VDI 망", "internal", false, ["가상 데스크톱 영역", "VDI존", "데스크톱 가상화 영역"], "서버에서 돌아가는 가상 PC들이 모여 있는 망이에요. 사용자는 화면만 받아 보고 자료는 이 망 안에 남아요."),
+  t("branch-wan", "본사–지사 연결망", "internal", false, ["WAN", "지사망", "거점 간 전용망", "SD-WAN 구간"], "본사와 지사, 데이터센터를 잇는 회사 전용 통신 구간이에요. 전용회선이나 SD-WAN으로 만들어요."),
+  t("on-prem-dc", "사내 데이터센터", "internal", false, ["온프레미스", "IDC", "자체 전산실", "기존 전산망"], "회사가 직접 운영하는 전산실이나 데이터센터예요. 클라우드와 함께 쓰는 구성에서 한쪽 끝이 돼요."),
+
+  // ── 클라우드 ─────────────────────────────────────
+  t("cloud-public-subnet", "퍼블릭 서브넷", "boundary", false, ["Public Subnet", "공개 서브넷", "퍼블릭 영역"], "인터넷 게이트웨이로 가는 길이 있는 클라우드 서브넷이에요. 로드밸런서처럼 인터넷과 맞닿는 자원을 둬요."),
+  t("cloud-private-subnet", "프라이빗 서브넷", "internal", false, ["Private Subnet", "사설 서브넷", "프라이빗 영역"], "인터넷에서 먼저 들어올 수 없는 클라우드 서브넷이에요. 밖으로 나갈 때는 NAT 게이트웨이를 거쳐요."),
+  t("cloud-isolated-subnet", "격리 서브넷", "internal", false, ["Isolated Subnet", "데이터 서브넷", "DB 서브넷"], "VPC 밖으로 나가는 길이 아예 없는 서브넷이에요. 같은 VPC 안의 자원끼리만 통신해서 주로 DB를 둬요."),
+  t("cloud-transit-hub", "전송 허브", "boundary", false, ["Transit Gateway", "허브 VPC", "허브 가상 네트워크", "Transit Hub"], "여러 VPC와 사내 망을 한곳에서 이어 주는 클라우드의 중앙 연결 지점이에요. 망끼리 오가는 길을 여기서 정해요."),
+  t("cloud-shared-services", "공유 서비스 VPC", "internal", false, ["Shared Services VPC", "공용 서비스 영역", "플랫폼 영역"], "여러 업무 VPC가 함께 쓰는 DNS, 인증, 모니터링 같은 공통 기능을 모아 둔 VPC예요."),
+  t("cloud-inspection", "검사 VPC", "boundary", false, ["Inspection VPC", "보안 검사 영역", "방화벽 VPC"], "VPC 사이, 인터넷, 사내 망으로 오가는 통신을 한곳에서 검사하는 전용 VPC예요."),
+  t("cloud-egress", "이그레스 VPC", "boundary", false, ["Egress VPC", "아웃바운드 VPC", "중앙 인터넷 출구"], "여러 VPC가 인터넷으로 나갈 때 함께 쓰는 출구 VPC예요. NAT 게이트웨이와 방화벽을 여기에 모아 둬요."),
+  t("hybrid-link", "하이브리드 연결 구간", "boundary", false, ["전용선 구간", "Direct Connect", "ExpressRoute", "Cloud Interconnect", "사이트 간 VPN"], "사내 데이터센터와 클라우드를 잇는 사설 연결 구간이에요. 전용선이나 VPN으로 만들고 공용 인터넷을 거치지 않아요."),
+];
+
+const r = (x: string, y: string, method: LinkMethod, note: string): NetRule => {
+  const [a, b] = pairKey(x, y);
+  return { a, b, method, note };
+};
+
+/**
+ * 기본 제공 짝 규칙: 등급 규칙과 다르게 봐야 하는 짝만 적는다. 사용자가 같은 짝에 기관 규칙을 등록하면 그쪽이 먼저다.
+ * 방향(일방향 전송)이나 조건(다루는 정보·기관 규모)은 담지 못해 note 에 글로 적는다.
+ */
+export const NETWORK_RULE_SEED: readonly NetRule[] = [
+  // 공공
+  r("business-net", "agency-internet", "network_link", "업무 자료를 다루는 망과 인터넷 구역 사이는 자료 전송 통제(망연계)를 거쳐요."),
+  r("classified-net", "business-net", "network_link", "등급이 다른 영역 사이는 막거나, 잇는다면 통제 장비를 거쳐요. 기관 규정 확인이 꼭 필요해요."),
+  r("iot-net", "business-net", "network_link", "기기 망은 사무용 망과 나누는 게 원칙이고, 통신이 필요하면 통제 장비를 거쳐요."),
+  r("edu-class-net", "edu-admin-net", "none", "수업용 망에서는 나이스 같은 행정 시스템에 들어가지 못하게 막아요."),
+  r("guest-wlan", "business-net", "none", "개인 기기와 방문자 기기는 업무용 망에 붙이지 않아요."),
+  r("guest-wlan", "office-wlan", "none", "업무용 무선망과 방문자용 무선망은 나눠 설치하고 섞어 쓰지 않아요."),
+  r("guest-wlan", "office-net", "none", "게스트망은 사내 망과 잇지 않고 인터넷만 쓰게 해요."),
+  r("guest-wlan", "server-farm", "none", "게스트망은 사내 서버와 잇지 않고 인터넷만 쓰게 해요."),
+
+  // 금융: 전산망은 인터넷과는 떨어져 있지만 정해진 구간과는 필요한 포트만 열어 이어요.
+  r("finance-net", "dmz", "firewall", "DMZ 시스템과 실시간으로 주고받는 내부 시스템은 필요한 포트만 열어 이어요."),
+  r("finance-net", "fin-partner-gateway", "firewall", "특정 외부기관과 주고받는 시스템은 필요한 포트만 열어 이어요."),
+  r("finance-net", "fin-ops-terminal", "firewall", "운영 단말은 전산센터 시스템에 직접 접속하는 용도예요. 둘 다 인터넷과는 분리해요."),
+  r("finance-net", "fin-business", "firewall", "업무 단말이 업무 시스템을 쓰는 통상 경로예요."),
+  r("finance-net", "fin-dr", "firewall", "주센터와 재해복구센터는 데이터 복제를 위해 전용회선으로 이어요."),
+  r("finance-net", "fin-cloud", "firewall", "평가와 승인 절차를 거친 클라우드는 물리적 망분리 대상에서 빠져요."),
+  r("fin-business", "fin-partner-line", "firewall", "업무상 꼭 필요한 외부기관 연결은 필요한 포트에 한해 특정 기관과 이을 수 있어요."),
+  r("fin-business", "saas", "firewall", "고객의 주민번호·신용정보를 다루지 않는 허용된 SaaS는 망분리 예외예요. 평가와 점검 조건이 붙어요."),
+  r("fin-business", "fin-rnd", "network_link", "연구·개발망은 인터넷이 열려 있어 업무망과는 통제된 경로로만 자료를 옮겨요."),
+
+  // 제어(OT)
+  r("control-net", "ot-operations", "firewall", "제어망과 운영망은 방화벽으로 구역을 나눠 필요한 통신만 허용해요."),
+  r("control-net", "ot-dmz", "network_link", "제어 데이터는 일방향 전송 장치나 경계 구간을 통해서만 밖으로 내보내요."),
+  r("ot-operations", "internet", "none", "설비 쪽 망은 인터넷과 직접 잇지 않아요. 원격 유지보수는 경계 구간을 거쳐요."),
+
+  // 결제
+  r("pay-cde", "internet", "none", "카드 데이터를 저장하는 시스템은 인터넷에서 직접 닿지 않게 하고 DMZ 를 거쳐요."),
+
+  // 일반 기업 · 데이터센터 · 클라우드
+  r("server-farm", "internet", "none", "서버팜은 인터넷과 바로 잇지 않고 DMZ 를 거쳐요."),
+  r("mgmt-net", "internet", "none", "장비 관리용 망은 인터넷과 바로 잇지 않아요. 원격 관리는 배스천이나 VPN 을 거쳐요."),
+  r("backup-net", "internet", "none", "백업망은 바깥과 잇지 않는 전용망으로 둬요."),
+  r("storage-net", "internet", "none", "스토리지망은 서버와 저장 장치 사이에서만 쓰고 바깥과 잇지 않아요."),
+  r("storage-net", "dmz", "none", "스토리지망은 서버와 저장 장치 사이에서만 쓰고 바깥과 잇지 않아요."),
+  r("storage-net", "server-farm", "direct", "서버가 스토리지 전용 랜카드로 저장 장치에 바로 붙어요."),
+  r("storage-net", "service-net", "direct", "서버가 스토리지 전용 랜카드로 저장 장치에 바로 붙어요."),
+  r("backup-net", "server-farm", "direct", "서버가 백업 전용 랜카드로 백업 장비에 바로 붙어요."),
+  r("backup-net", "service-net", "direct", "서버가 백업 전용 랜카드로 백업 장비에 바로 붙어요."),
+  r("cloud-isolated-subnet", "internet", "none", "격리 서브넷에는 VPC 밖으로 나가는 길이 없어요."),
 ];

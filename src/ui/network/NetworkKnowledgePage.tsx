@@ -15,6 +15,7 @@ import {
   type NetworkRuleRow,
 } from "@/app/(app)/actions";
 import { GRADE_LABELS, GRADE_RULES, METHOD_LABELS, type LinkMethod, type NetGrade } from "@/domain/network";
+import { NETWORK_RULE_SEED } from "@/domain/network-seed";
 import type { NetTypeRow } from "@/server/network";
 import { Button } from "@/ui/Button";
 
@@ -27,7 +28,7 @@ const gradeLabel = (g: NetGrade | "*") => (g === "*" ? "모든 등급" : GRADE_L
 
 const sourceLabel = (t: NetTypeRow) => (t.source === "user" ? "직접 추가" : t.edited ? "사용자가 고침" : "기본 제공");
 
-type TypeDraft = { name: string; aliases: string; description: string; grade: NetGrade };
+type TypeDraft = { name: string; aliases: string; description: string; grade: NetGrade; separated: boolean };
 type RuleDraft = { id?: string; a: string; b: string; method: LinkMethod; note: string };
 
 const splitAliases = (s: string) => s.split(",").map((x) => x.trim()).filter(Boolean);
@@ -97,6 +98,10 @@ export function NetworkKnowledgePage({ initialTypes, initialRules }: { initialTy
     });
 
   const usable = types.filter((t) => !t.hidden);
+  // 기본 제공 짝 규칙: 쓰는 종류끼리의 것만 보인다. 같은 짝에 기관 규칙이 있으면 기관 규칙이 먼저다.
+  const usableKeys = new Set(usable.map((t) => t.key));
+  const baseRules = NETWORK_RULE_SEED.filter((r) => usableKeys.has(r.a) && usableKeys.has(r.b));
+  const overridden = (a: string, b: string) => rules.some((r) => r.a === a && r.b === b);
 
   return (
     <div className={styles.page}>
@@ -133,6 +138,7 @@ export function NetworkKnowledgePage({ initialTypes, initialRules }: { initialTy
                             <span className={styles.head}>
                               <strong>{t.name}</strong>
                               <span className={styles.badge}>{sourceLabel(t)}</span>
+                              {t.separated && <span className={styles.badge}>망분리 대상</span>}
                               {t.hidden && <span className={styles.badge}>쓰지 않음</span>}
                             </span>
                             {t.aliases.length > 0 && <span className={styles.meta}>다른 이름: {t.aliases.join(", ")}</span>}
@@ -151,12 +157,12 @@ export function NetworkKnowledgePage({ initialTypes, initialRules }: { initialTy
             <TypeForm
               key="new"
               label="종류 추가"
-              initial={{ name: "", aliases: "", description: "", grade: "internal" }}
+              initial={{ name: "", aliases: "", description: "", grade: "internal", separated: false }}
               pending={pending}
               onCancel={() => setSelected(null)}
               onSave={(d) =>
                 attempt(
-                  () => addNetworkTypeAction({ name: d.name, aliases: splitAliases(d.aliases), description: d.description, grade: d.grade }),
+                  () => addNetworkTypeAction({ name: d.name, aliases: splitAliases(d.aliases), description: d.description, grade: d.grade, separated: d.separated }),
                   (r) => {
                     setTypes((all) => [...all, r.type]);
                     setSelected(r.type.id);
@@ -167,13 +173,13 @@ export function NetworkKnowledgePage({ initialTypes, initialRules }: { initialTy
           )}
           {current && (
             <TypeForm
-              key={`${current.id}:${current.name}:${current.aliases.join(",")}:${current.description}:${current.grade}`}
+              key={`${current.id}:${current.name}:${current.aliases.join(",")}:${current.description}:${current.grade}:${current.separated}`}
               label={`${current.name} 편집`}
-              initial={{ name: current.name, aliases: current.aliases.join(", "), description: current.description, grade: current.grade }}
+              initial={{ name: current.name, aliases: current.aliases.join(", "), description: current.description, grade: current.grade, separated: current.separated }}
               pending={pending}
               onSave={(d) =>
                 attempt(
-                  () => updateNetworkTypeAction(current.id, { name: d.name, aliases: splitAliases(d.aliases), description: d.description, grade: d.grade }),
+                  () => updateNetworkTypeAction(current.id, { name: d.name, aliases: splitAliases(d.aliases), description: d.description, grade: d.grade, separated: d.separated }),
                   (r) => replaceType(r.type),
                 )
               }
@@ -215,13 +221,34 @@ export function NetworkKnowledgePage({ initialTypes, initialRules }: { initialTy
           </thead>
           <tbody>
             {GRADE_RULES.map((r) => (
-              <tr key={`${r.a}-${r.b}`}>
-                <td>{gradeLabel(r.a)} ↔ {gradeLabel(r.b)}</td>
+              <tr key={`${r.a}-${r.b}-${r.when ?? ""}`}>
+                <td>{gradeLabel(r.a)} ↔ {gradeLabel(r.b)}{r.when === "separated" ? " (둘 중 하나가 망분리 대상)" : ""}</td>
                 <td>{METHOD_LABELS[r.method]}</td>
               </tr>
             ))}
           </tbody>
         </table>
+
+        <h3 className={styles.grade}>기본 제공 짝 규칙</h3>
+        <p className={styles.meta}>등급 규칙과 다르게 보는 짝이에요. 일반 지식 수준이라 기관마다 다를 수 있고, 같은 짝에 기관 규칙을 등록하면 기관 규칙을 따라요.</p>
+        {baseRules.length === 0 ? (
+          <p className={styles.empty}>쓰는 종류 사이에 기본 제공 짝 규칙이 없어요.</p>
+        ) : (
+          <table className={styles.table} aria-label="기본 제공 짝 규칙">
+            <thead>
+              <tr><th scope="col">종류 짝</th><th scope="col">보통 필요한 연결</th><th scope="col">까닭</th></tr>
+            </thead>
+            <tbody>
+              {baseRules.map((r) => (
+                <tr key={`${r.a}--${r.b}`}>
+                  <td>{nameOf(r.a)} ↔ {nameOf(r.b)}</td>
+                  <td>{METHOD_LABELS[r.method]}{overridden(r.a, r.b) ? " (기관 규칙이 먼저)" : ""}</td>
+                  <td>{r.note}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
 
         <div className={styles.sectionHead}>
           <h3 className={styles.grade}>기관 규칙</h3>
@@ -233,7 +260,7 @@ export function NetworkKnowledgePage({ initialTypes, initialRules }: { initialTy
           </Button>
         </div>
         {rules.length === 0 ? (
-          <p className={styles.empty}>등록한 기관 규칙이 없어요. 기본 등급 규칙을 따라요.</p>
+          <p className={styles.empty}>등록한 기관 규칙이 없어요. 기본 제공 짝 규칙과 기본 등급 규칙을 따라요.</p>
         ) : (
           <ul className={styles.list}>
             {rules.map((r) => (
@@ -296,6 +323,13 @@ function TypeForm({ label, initial, pending, onSave, onCancel, extra }: {
         <select value={d.grade} onChange={(e) => set("grade", e.target.value as NetGrade)}>
           {GRADES.map((g) => <option key={g} value={g}>{GRADE_LABELS[g]}</option>)}
         </select>
+      </label>
+      <label className={styles.check}>
+        <input type="checkbox" checked={d.separated} onChange={(e) => set("separated", e.target.checked)} />
+        <span>
+          망분리 대상
+          <span className={styles.meta}> — 규정이나 방침으로 인터넷 같은 바깥 망과 떼어 놓는 망이에요. 켜면 외부 망과는 망연계가 기본이 돼요.</span>
+        </span>
       </label>
       <div className={styles.actions}>
         <Button type="submit" variant="primary" disabled={pending}>저장</Button>
