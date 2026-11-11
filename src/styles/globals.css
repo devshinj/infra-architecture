@@ -21,6 +21,11 @@ body {
   background: color-mix(in oklab, var(--accent) 28%, transparent);
   color: var(--text-primary);
 }
+/* 입력칸 안내 글자: 브라우저 회색(#757575) 대신 muted 강철(어느 칸 칠 위에서도 4.5:1 이상). 파이어폭스의 기본 흐림도 끈다. */
+::placeholder {
+  color: var(--text-secondary);
+  opacity: 1;
+}
 /* 포커스 링: 연두, 바로 나타난다. 화면별 규칙이 위치를 다듬는다. */
 :focus-visible {
   outline: 2px solid var(--focus-ring);

@@ -7,21 +7,21 @@
 /* 내 말풍선: 오른쪽, 채움만(테두리 없음), 오른쪽 아래 모서리만 각지게. */
 .user { align-self: flex-end; max-width: 85%; padding: 8px 12px; background: var(--bg-panel-raised); border-radius: 12px 12px 4px 12px; }
 /* 차례 밖 안내(되돌림 등): 가운데 작은 회색 글. */
-.system { align-self: center; max-width: 90%; text-align: center; font-size: 11.5px; color: var(--text-secondary); }
-.error { font-size: 13px; color: var(--text-primary); border: 1px solid var(--state-missing); border-radius: var(--radius-card); padding: 8px 12px; }
+.system { align-self: center; max-width: 90%; text-align: center; font-size: 12px; color: var(--text-secondary); }
+.error { font-size: 13px; color: var(--text-primary); border: 1px solid var(--state-missing); border-radius: var(--radius-surface); padding: 8px 12px; }
 /* AI 메시지: 말풍선 없이 정돈된 글. 머리 줄 아래 본문·카드·칩은 이름 열에 맞춘다. */
 .ai { align-self: stretch; display: flex; flex-direction: column; gap: 8px; }
 .aiHead { display: flex; align-items: center; gap: 8px; min-height: 20px; }
 .mono { flex: none; display: inline-grid; place-items: center; width: 20px; height: 20px; box-sizing: border-box; border: 1px solid var(--line-node); border-radius: 3px; font-size: 9px; font-weight: 700; line-height: 1; color: var(--text-primary); }
 .aiName { font-size: 12px; font-weight: 600; color: var(--text-primary); }
-.aiTime { font-size: 11px; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+.aiTime { font-size: 12px; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
 .aiBody { display: flex; flex-direction: column; gap: 8px; padding-left: 28px; min-width: 0; }
 .assistant, .progress { color: var(--text-primary); }
 .note { font-size: 12px; color: var(--text-secondary); }
 /* 진행 카드: 단계 목록. 지난 단계는 체크, 지금 단계는 점 3개. 강조색은 쓰지 않는다. */
 .cardSlot { display: contents; }
 .srOnly { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
-.card { align-self: flex-start; min-width: 200px; box-sizing: border-box; margin: 0; padding: 8px 12px; list-style: none; display: flex; flex-direction: column; gap: 4px; border: 1px solid var(--line-node); border-radius: var(--radius-card); font-size: 12px; line-height: 1.5; }
+.card { align-self: flex-start; min-width: 200px; box-sizing: border-box; margin: 0; padding: 8px 12px; list-style: none; display: flex; flex-direction: column; gap: 4px; border: 1px solid var(--line-node); border-radius: var(--radius-surface); font-size: 12px; line-height: 1.5; }
 .step { display: flex; align-items: center; gap: 8px; color: var(--text-secondary); }
 .step[data-state="current"] { color: var(--text-primary); }
 .step[data-state="todo"] { opacity: 0.55; }
@@ -36,19 +36,19 @@
 @media (prefers-reduced-motion: reduce) { .dots span { animation: none; opacity: 0.6; } }
 /* 차례 끝 결과 칩 줄: 요약은 조용한 글, `주의 N` 은 누르면 구성 정보 카드를 여는 작은 칩. */
 .results { margin: 2px 0 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
-.result { font: inherit; font-size: 11.5px; line-height: 1.45; text-align: left; color: var(--text-primary); background: transparent; border: 1px solid var(--line-node); border-radius: var(--radius-card); padding: 2px 8px; }
+.result { font: inherit; font-size: 12px; line-height: 1.45; text-align: left; color: var(--text-primary); background: transparent; border: 1px solid var(--line-node); border-radius: var(--radius-control); padding: 2px 8px; }
 button.result { cursor: pointer; }
 button.result:hover { border-color: var(--text-secondary); }
 button.result:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
 .chipSummary { border-color: transparent; padding-left: 0; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
 /* 주의 N: 테두리만 --state-warn. */
 .chipWarning { border-color: var(--state-warn); font-variant-numeric: tabular-nums; }
-.ref { color: var(--text-primary); background: var(--line-node); border-radius: 4px; padding: 0 4px; font-size: 12px; }
+.ref { color: var(--text-primary); background: var(--line-node); border-radius: var(--radius-control); padding: 0 4px; font-size: 12px; }
 .composer { display: flex; flex-direction: column; gap: 8px; padding: 12px 12px 12px; border-top: 1px solid var(--line-node); }
 .reason { margin: 0; font-size: 12px; color: var(--text-secondary); }
 .mention { display: flex; flex-direction: column; gap: 8px; }
 .chipStrip { margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 8px; }
-.chip { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: var(--text-primary); background: var(--bg-panel-raised); border: 1px solid var(--line-node); border-radius: 999px; padding: 2px 4px 2px 12px; }
+.chip { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: var(--text-primary); background: var(--bg-panel-raised); border: 1px solid var(--line-node); border-radius: var(--radius-control); padding: 2px 4px 2px 12px; }
 .chipX { font: inherit; font-size: 13px; line-height: 1; color: var(--text-secondary); background: transparent; border: 0; border-radius: 50%; width: 18px; height: 18px; cursor: pointer; }
 .chipX:hover { color: var(--text-primary); }
 .textarea { font: inherit; font-size: 13px; line-height: 1.5; resize: none; color: var(--text-primary); background: var(--bg-panel-raised); border: 1px solid var(--line-input); border-radius: var(--radius-control); padding: 8px 12px; }
@@ -60,19 +60,19 @@ button.result:focus-visible { outline: 2px solid var(--focus-ring); outline-offs
 .textarea:focus-visible { outline-offset: -2px; }
 .assumptions { margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 8px; }
 .assumptionItem { position: relative; }
-.assumptionChip { font: inherit; font-size: 12px; color: var(--text-primary); background: var(--bg-panel-raised); border: 1px solid var(--line-node); border-radius: 999px; padding: 4px 12px; cursor: pointer; }
+.assumptionChip { font: inherit; font-size: 12px; color: var(--text-primary); background: var(--bg-panel-raised); border: 1px solid var(--line-node); border-radius: var(--radius-control); padding: 4px 12px; cursor: pointer; }
 .assumptionChip:hover:not(:disabled) { border-color: var(--text-secondary); }
 .assumptionChip:disabled { opacity: 0.55; cursor: not-allowed; }
 .assumptionStatic { display: inline-block; cursor: default; }
 .assumptionChip.assumptionStatic:hover { border-color: var(--line-node); }
 .assumptionConfirmed { font-weight: 600; }
-.assumptionMark { margin-left: 8px; font-size: 11px; font-weight: 600; color: var(--text-secondary); }
-.assumptionMenu { position: absolute; z-index: 5; top: calc(100% + 4px); left: 0; min-width: 180px; display: flex; flex-direction: column; padding: 4px; background: var(--bg-panel-raised); border: 1px solid var(--line-node); border-radius: var(--radius-card); }
-.assumptionChoice { font: inherit; font-size: 13px; text-align: left; color: var(--text-primary); background: transparent; border: 0; border-radius: 4px; padding: 8px 8px; cursor: pointer; }
+.assumptionMark { margin-left: 8px; font-size: 12px; font-weight: 600; color: var(--text-secondary); }
+.assumptionMenu { position: absolute; z-index: 5; top: calc(100% + 4px); left: 0; min-width: 180px; display: flex; flex-direction: column; padding: 4px; background: var(--bg-panel-raised); border: 1px solid var(--line-node); border-radius: var(--radius-surface); }
+.assumptionChoice { font: inherit; font-size: 13px; text-align: left; color: var(--text-primary); background: transparent; border: 0; border-radius: var(--radius-control); padding: 8px 8px; cursor: pointer; }
 .assumptionChoice:hover:not(:disabled) { background: var(--line-node); }
 .assumptionChoice:disabled { opacity: 0.55; cursor: not-allowed; }
 /* 망연계 거절 기억 칩 옆의 작은 지우기 단추 */
-.assumptionRemove { font: inherit; font-size: 11px; color: var(--text-secondary); background: transparent; border: 0; border-radius: 4px; padding: 2px 4px; margin-left: 2px; cursor: pointer; text-decoration: underline; }
+.assumptionRemove { font: inherit; font-size: 12px; color: var(--text-secondary); background: transparent; border: 0; border-radius: var(--radius-control); padding: 2px 4px; margin-left: 2px; cursor: pointer; text-decoration: underline; }
 .assumptionRemove:hover:not(:disabled) { color: var(--text-primary); }
 .assumptionRemove:disabled { opacity: 0.55; cursor: not-allowed; }
 .assumptionChip:focus-visible, .assumptionChoice:focus-visible, .assumptionRemove:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
@@ -88,7 +88,7 @@ button.result:focus-visible { outline: 2px solid var(--focus-ring); outline-offs
 .blockTitle { flex: 1; min-width: 0; padding: 4px 2px; font: inherit; font-size: 13px; font-weight: 500; text-align: left; color: var(--text-primary); background: transparent; border: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 button.blockTitle { cursor: pointer; }
 button.blockTitle:hover { text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--text-secondary); }
-.blockCount { flex: none; font-size: 11.5px; font-weight: 600; color: var(--state-missing-text); font-variant-numeric: tabular-nums; }
+.blockCount { flex: none; font-size: 12px; font-weight: 600; color: var(--state-missing-text); font-variant-numeric: tabular-nums; }
 .blockCount[data-zero] { color: var(--text-secondary); font-weight: 400; opacity: 0.6; }
 .blockBody { display: flex; flex-direction: column; gap: 8px; padding: 2px 8px 12px 32px; }
 .missingRow { display: grid; grid-template-columns: 72px 1fr auto; align-items: center; gap: 8px; }
@@ -96,7 +96,7 @@ button.blockTitle:hover { text-decoration: underline; text-underline-offset: 3px
 .missingInput { font: inherit; font-size: 13px; min-width: 0; color: var(--text-primary); background: var(--bg-panel-raised); border: 1px solid var(--line-input); border-radius: var(--radius-control); padding: 4px 8px; }
 .missingInput:disabled { opacity: 0.55; cursor: not-allowed; color: var(--text-secondary); }
 .missingUnknown { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: var(--text-secondary); cursor: pointer; }
-.missingError { margin: 0; font-size: 12px; color: var(--text-primary); border: 1px solid var(--state-missing); border-radius: var(--radius-card); padding: 4px 8px; }
+.missingError { margin: 0; font-size: 12px; color: var(--text-primary); border: 1px solid var(--state-missing); border-radius: var(--radius-surface); padding: 4px 8px; }
 .blockToggle:focus-visible, button.blockTitle:focus-visible, .missingInput:focus-visible, .missingUnknown input:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
 @media (prefers-reduced-motion: no-preference) {
   .chevron { transition: transform var(--dur-micro) var(--ease-out); }
@@ -128,9 +128,9 @@ button.blockTitle:hover { text-decoration: underline; text-underline-offset: 3px
 .sessionItem:hover { background: var(--bg-panel-raised); }
 .sessionItem[aria-current="true"] { font-weight: 600; }
 .sessionItem .sessionLabel { flex: 1; }
-.sessionTime { flex: none; font-size: 11px; font-weight: 400; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+.sessionTime { flex: none; font-size: 12px; font-weight: 400; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
 /* 무리 이름(구성도 대화 / 노드 질문)과 행. 행의 ⋯ 메뉴는 행 오른쪽에 붙어 아래(자리가 모자라면 위)로 열린다. */
-.sessionGroup { margin: 0; padding: 8px 8px 2px; font-size: 11px; font-weight: 600; color: var(--text-secondary); }
+.sessionGroup { margin: 0; padding: 8px 8px 2px; font-size: 12px; font-weight: 600; color: var(--text-secondary); }
 .sessionList section + section { margin-top: 4px; padding-top: 4px; border-top: 1px solid var(--glass-line); }
 .sessionRows { margin: 0; padding: 0; list-style: none; }
 .sessionRow { position: relative; display: flex; align-items: center; gap: 2px; }
