@@ -1,11 +1,13 @@
 import { randomUUID } from "node:crypto";
 
-import { eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { expect, test } from "vitest";
 
 import { db } from "@/db/client";
 import { glossaryTerms } from "@/db/schema";
-import { GLOSSARY_SEED } from "@/domain/glossary-seed";
+import { normalizeTerm } from "@/domain/explain";
+import { GLOSSARY_SEED, GLOSSARY_SEED_CORE } from "@/domain/glossary-seed";
+import { GLOSSARY_SEED_EXTRA } from "@/domain/glossary-seed-extra";
 import { addAiTerm, ensureSeeded, findTerm, listTerms, updateTerm } from "@/server/glossary";
 import { NotFoundError, ValidationError } from "@/server/projects";
 
@@ -14,7 +16,7 @@ import { makeOwnedDiagram } from "./helpers";
 const newUser = async () => (await makeOwnedDiagram()).userId;
 const rowsOf = (userId: string) => db.select().from(glossaryTerms).where(eq(glossaryTerms.userId, userId));
 
-test("ensureSeeded copies 50 once, concurrent calls don't duplicate", async () => {
+test("ensureSeeded copies the whole seed once, concurrent calls don't duplicate", async () => {
   const userId = await newUser();
   await Promise.all([ensureSeeded(userId), ensureSeeded(userId), ensureSeeded(userId)]);
   const rows = await rowsOf(userId);
@@ -25,6 +27,36 @@ test("ensureSeeded copies 50 once, concurrent calls don't duplicate", async () =
   await db.delete(glossaryTerms).where(eq(glossaryTerms.id, rows[0]!.id));
   await ensureSeeded(userId);
   expect(await rowsOf(userId)).toHaveLength(GLOSSARY_SEED.length - 1);
+});
+
+test("ensureSeeded: 1차분만 있던 계정에는 2차분만 한 번 더 넣고, 그 뒤 지운 항목은 다시 넣지 않는다", async () => {
+  const userId = await newUser();
+  await ensureSeeded(userId);
+  // 2차분이 생기기 전의 계정을 흉내 낸다: 2차분을 모두 지우고, 1차분 하나는 사용자가 지웠고 하나는 고쳤다.
+  const extraKeys = GLOSSARY_SEED_EXTRA.map((e) => normalizeTerm(e.term));
+  await db.delete(glossaryTerms).where(and(eq(glossaryTerms.userId, userId), inArray(glossaryTerms.key, extraKeys)));
+  const [gone, kept] = GLOSSARY_SEED_CORE;
+  await db.delete(glossaryTerms).where(and(eq(glossaryTerms.userId, userId), eq(glossaryTerms.key, normalizeTerm(gone!.term))));
+  const [keptRow] = await db.select().from(glossaryTerms).where(and(eq(glossaryTerms.userId, userId), eq(glossaryTerms.key, normalizeTerm(kept!.term))));
+  await updateTerm(userId, keptRow!.id, { definition: "내가 고친 정의입니다.", reviewed: true });
+  // 2차분의 말 하나를 AI 가 먼저 넣어 둔 경우: 그 항목은 그대로 둔다.
+  const taken = GLOSSARY_SEED_EXTRA[0]!;
+  await addAiTerm(userId, { term: taken.term, category: "AI 분류", definition: "AI 가 먼저 넣은 정의입니다." });
+
+  await ensureSeeded(userId);
+
+  const rows = await rowsOf(userId);
+  expect(rows).toHaveLength(GLOSSARY_SEED.length - 1);
+  expect(rows.find((r) => r.key === normalizeTerm(gone!.term))).toBeUndefined();
+  expect(rows.find((r) => r.key === normalizeTerm(kept!.term))).toMatchObject({ definition: "내가 고친 정의입니다.", reviewed: true });
+  expect(rows.find((r) => r.key === normalizeTerm(taken.term))).toMatchObject({ source: "ai", definition: "AI 가 먼저 넣은 정의입니다." });
+  expect(rows.filter((r) => extraKeys.includes(r.key) && r.source === "seed")).toHaveLength(GLOSSARY_SEED_EXTRA.length - 1);
+
+  // 2차분이 들어간 뒤 사용자가 지운 2차분 항목은 다시 생기지 않는다.
+  const second = normalizeTerm(GLOSSARY_SEED_EXTRA[1]!.term);
+  await db.delete(glossaryTerms).where(and(eq(glossaryTerms.userId, userId), eq(glossaryTerms.key, second)));
+  await ensureSeeded(userId);
+  expect((await rowsOf(userId)).find((r) => r.key === second)).toBeUndefined();
 });
 
 test("findTerm matches alias", async () => {
@@ -119,8 +151,8 @@ test("listTerms filters", async () => {
   // 대소문자 무시 코드 포인트 순: 영문 → 한글
   const terms = all.map((r) => r.term.toLowerCase());
   expect(terms).toEqual([...terms].sort((x, y) => (x < y ? -1 : x > y ? 1 : 0)));
-  expect(all[0]!.term).toBe("Active/Standby");
-  expect(all.at(-1)!.term).toBe("파드");
+  expect(all[0]!.term).toBe("ACL");
+  expect(all.at(-1)!.term).toBe("허브-스포크");
 
   expect((await listTerms(userId, { q: "redis" })).map((r) => r.term)).toContain("Redis");
   // definition 부분 일치
