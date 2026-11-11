@@ -6,6 +6,7 @@ import { setTermReviewedAction, updateTermAction, type ActionResult } from "@/ap
 
 import type { GlossaryItem } from "@/domain/glossary-types";
 import { Button } from "@/ui/Button";
+import { closeOnEscape, useNotesPanel } from "@/ui/useNotesPanel";
 
 import { AI_BADGE, AI_BADGE_SR, isUnreviewedAi } from "./aiBadge";
 import styles from "./glossary.module.css";
@@ -37,7 +38,9 @@ export function GlossaryPage({ initial }: { initial: GlossaryItem[] }) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [drafts, setDrafts] = useState<Record<string, Draft>>({});
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [pending, start] = useTransition();
+  const { rootRef, panelRef, returnTo } = useNotesPanel(selectedId);
 
   const needle = q.trim().toLowerCase();
   const shown = items.filter(
@@ -45,6 +48,7 @@ export function GlossaryPage({ initial }: { initial: GlossaryItem[] }) {
       (!unreviewedOnly || isUnreviewedAi(t)) &&
       (!needle || [t.term, t.fullName, t.definition].some((s) => s.toLowerCase().includes(needle))),
   );
+  const filtered = !!needle || unreviewedOnly;
   const selected = items.find((t) => t.id === selectedId) ?? null;
 
   const draft = selected ? (drafts[selected.id] ?? toDraft(selected)) : null;
@@ -53,20 +57,33 @@ export function GlossaryPage({ initial }: { initial: GlossaryItem[] }) {
     const d = drafts[t.id];
     return !!d && FIELDS.some(([k]) => d[k] !== t[k]);
   };
-  const setField = (id: string, base: Draft, key: FieldKey, value: string) =>
+  const setField = (id: string, base: Draft, key: FieldKey, value: string) => {
+    setNotice(null);
     setDrafts((m) => ({ ...m, [id]: { ...(m[id] ?? base), [key]: value } }));
+  };
 
   const select = (t: GlossaryItem) => {
     setSelectedId(t.id);
     setError(null);
+    setNotice(null);
+  };
+  // 닫아도 고치던 입력은 항목별로 남는다(목록에 「수정 중」).
+  const close = () => {
+    const prev = selectedId;
+    setSelectedId(null);
+    setError(null);
+    setNotice(null);
+    returnTo(prev);
   };
 
-  const apply = (r: ActionResult<{ term: GlossaryItem }>, clearDraft: boolean) => {
+  const apply = (r: ActionResult<{ term: GlossaryItem }>, clearDraft: boolean, done: (t: GlossaryItem) => string) => {
     if (!r.ok) {
+      setNotice(null);
       setError(r.error);
       return;
     }
     setError(null);
+    setNotice(done(r.term));
     setItems((all) => all.map((t) => (t.id === r.term.id ? r.term : t)));
     if (clearDraft) {
       setDrafts((m) => {
@@ -77,23 +94,31 @@ export function GlossaryPage({ initial }: { initial: GlossaryItem[] }) {
     }
   };
 
-  const attempt = (call: () => Promise<ActionResult<{ term: GlossaryItem }>>, clearDraft: boolean) =>
+  const attempt = (
+    call: () => Promise<ActionResult<{ term: GlossaryItem }>>,
+    clearDraft: boolean,
+    done: (t: GlossaryItem) => string,
+  ) =>
     start(async () => {
       try {
-        apply(await call(), clearDraft);
+        apply(await call(), clearDraft, done);
       } catch {
+        setNotice(null);
         setError("처리하지 못했어요. 잠시 후 다시 시도해 주세요.");
       }
     });
   const save = () => {
-    if (selected && draft) attempt(() => updateTermAction(selected.id, draft), true);
+    if (selected && draft) attempt(() => updateTermAction(selected.id, draft), true, () => "저장했어요.");
   };
   const toggleReviewed = () => {
-    if (selected) attempt(() => setTermReviewedAction(selected.id, !selected.reviewed), false);
+    if (selected)
+      attempt(() => setTermReviewedAction(selected.id, !selected.reviewed), false, (t) =>
+        t.reviewed ? "검수 완료로 표시했어요." : "검수를 취소했어요.",
+      );
   };
 
   return (
-    <div className={styles.page}>
+    <div className={styles.page} ref={rootRef}>
       <h1 className={styles.title}>용어 사전</h1>
       <div className={styles.tools}>
         <input
@@ -108,6 +133,7 @@ export function GlossaryPage({ initial }: { initial: GlossaryItem[] }) {
           <input type="checkbox" checked={unreviewedOnly} onChange={(e) => setUnreviewedOnly(e.target.checked)} />
           AI 설명만
         </label>
+        <span className={styles.count}>{filtered ? `${items.length}개 중 ${shown.length}개` : `${items.length}개`}</span>
       </div>
       <div className={styles.body}>
         {shown.length === 0 ? (
@@ -124,7 +150,13 @@ export function GlossaryPage({ initial }: { initial: GlossaryItem[] }) {
             <ul className={styles.list}>
               {shown.map((t) => (
                 <li key={t.id}>
-                  <button type="button" className={styles.item} aria-current={t.id === selectedId} onClick={() => select(t)}>
+                  <button
+                    type="button"
+                    className={styles.item}
+                    data-row-id={t.id}
+                    aria-current={t.id === selectedId}
+                    onClick={() => select(t)}
+                  >
                     <span className={styles.head}>
                       <strong>{t.term}</strong>
                       {isUnreviewedAi(t) && (
@@ -144,35 +176,47 @@ export function GlossaryPage({ initial }: { initial: GlossaryItem[] }) {
             </ul>
           </div>
         )}
-        {!(selected && draft) && <p className={styles.notesEmpty}>용어를 고르면 여기서 설명을 고치고 검수할 수 있어요.</p>}
-        {selected && draft && (
-          <form
-            className={`${styles.form} ticks`}
-            aria-label={`${selected.term} 편집`}
-            onSubmit={(e) => {
-              e.preventDefault();
-              save();
-            }}
-          >
-            {FIELDS.map(([key, label, multiline]) => (
-              <label key={key}>
-                {label}
-                {multiline ? (
-                  <textarea value={draft[key]} onChange={(e) => setField(selected.id, draft, key, e.target.value)} />
-                ) : (
-                  <input value={draft[key]} onChange={(e) => setField(selected.id, draft, key, e.target.value)} />
-                )}
-              </label>
-            ))}
-            {error && <p className={styles.error} role="alert">{error}</p>}
-            <div className={styles.actions}>
-              <Button type="submit" variant="primary" disabled={pending}>저장</Button>
-              <Button disabled={pending} onClick={toggleReviewed}>
-                {selected.reviewed ? "검수 취소" : "검수 완료"}
-              </Button>
-            </div>
-          </form>
-        )}
+        {/* 주기 판: 넓은 화면에서는 화면 위에 붙어 목록을 내려도 따라온다(sticky). 길면 판 안에서 스크롤한다. */}
+        <div className={styles.notesCol} ref={panelRef}>
+          {!(selected && draft) && <p className={styles.notesEmpty}>용어를 고르면 여기서 설명을 고치고 검수할 수 있어요.</p>}
+          {selected && draft && (
+            <form
+              className={`${styles.form} ticks`}
+              aria-label={`${selected.term} 편집`}
+              onKeyDown={closeOnEscape(close)}
+              onSubmit={(e) => {
+                e.preventDefault();
+                save();
+              }}
+            >
+              <div className={styles.panelHead}>
+                <h2 className={styles.panelTitle} tabIndex={-1} data-panel-title="">
+                  {selected.term} 편집
+                </h2>
+                <Button variant="quiet" size="sm" onClick={close}>닫기</Button>
+              </div>
+              {FIELDS.map(([key, label, multiline]) => (
+                <label key={key}>
+                  {label}
+                  {multiline ? (
+                    <textarea value={draft[key]} onChange={(e) => setField(selected.id, draft, key, e.target.value)} />
+                  ) : (
+                    <input value={draft[key]} onChange={(e) => setField(selected.id, draft, key, e.target.value)} />
+                  )}
+                </label>
+              ))}
+              {error && <p className={styles.error} role="alert">{error}</p>}
+              <div className={styles.actions}>
+                <Button type="submit" variant="primary" disabled={pending}>저장</Button>
+                <Button disabled={pending} onClick={toggleReviewed}>
+                  {selected.reviewed ? "검수 취소" : "검수 완료"}
+                </Button>
+                {/* 저장·검수 결과 한 줄: 버튼 옆에 두어 누른 자리에서 바로 보인다. */}
+                <span className={styles.notice} role="status">{notice}</span>
+              </div>
+            </form>
+          )}
+        </div>
       </div>
     </div>
   );
