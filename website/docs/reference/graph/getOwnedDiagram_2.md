@@ -1,6 +1,6 @@
 ---
 title: "getOwnedDiagram()"
-sidebar_position: 86
+sidebar_position: 109
 sidebar_label: "핵심 노드: getOwnedDiagram()"
 ---
 # getOwnedDiagram()
@@ -44,9 +44,9 @@ sidebar_label: "핵심 노드: getOwnedDiagram()"
 - [pipeline.ts](pipeline.ts.md) `EXTRACTED`
 - [mcp/apply.ts](mcp-apply.ts.md) `EXTRACTED`
 - server/explain.ts `EXTRACTED`
-- ask.ts `EXTRACTED`
+- [ask.ts](ask.ts.md) `EXTRACTED`
 - [read.ts](read.ts.md) `EXTRACTED`
-- [flowSuggest.ts](flowSuggest.ts.md) `EXTRACTED`
+- flowSuggest.ts `EXTRACTED`
 - server/flows.ts `EXTRACTED`
 - [\[sessionId\]/route.ts]([sessionId]-route.ts.md) `EXTRACTED`
 - [samples.ts](samples.ts.md) `EXTRACTED`

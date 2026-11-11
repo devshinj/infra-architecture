@@ -1,6 +1,6 @@
 ---
 title: "useRemoteChanges.ts"
-sidebar_position: 66
+sidebar_position: 71
 ---
 # useRemoteChanges.ts
 
@@ -26,11 +26,10 @@ sidebar_position: 66
 
 ## Relationships
 
-- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (4 shared connections)
+- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (5 shared connections)
 - [File Structure](File_Structure.md) (1 shared connections)
 - [GhostLayer.tsx](GhostLayer.tsx.md) (1 shared connections)
 - [Task 5: MCP 고치기·되돌리기 서비스](Task_5-_MCP_고치기·되돌리기_서비스.md) (1 shared connections)
-- [ref_react](ref_react.md) (1 shared connections)
 - [(app)/actions.ts](app-actions.ts.md) (1 shared connections)
 
 ## Source Files

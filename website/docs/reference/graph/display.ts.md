@@ -1,64 +1,63 @@
 ---
 title: "display.ts"
-sidebar_position: 20
+sidebar_position: 6
 ---
 # display.ts
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 32 nodes · cohesion 0.09
+> 45 nodes · cohesion 0.08
 
 ## Key Concepts
 
+- **layoutMetrics.ts** (30 connections) — `src/canvas/layoutMetrics.ts`
 - **display.ts** (28 connections) — `src/canvas/display.ts`
 - **useDiagramView.ts** (20 connections) — `src/canvas/useDiagramView.ts`
 - **Layout** (16 connections) — `src/canvas/layout.ts`
 - **DisplayEdge** (12 connections) — `src/canvas/display.ts`
+- **measureLayout()** (11 connections) — `src/canvas/layoutMetrics.ts`
 - **DisplayGraph** (9 connections) — `src/canvas/display.ts`
 - **Group** (9 connections) — `src/domain/types.ts`
 - **buildDisplayGraph()** (8 connections) — `src/canvas/display.ts`
-- **EdgeLayerProps** (7 connections) — `src/canvas/EdgeLayer.tsx`
-- **구성도 배치 조화 1단계 — 선택 강조와 선 간격 Implementation Plan** (6 connections) — `docs/superpowers/plans/2026-11-04-layout-harmony-stage1.md`
 - **defaultDisplayOptions()** (6 connections) — `src/canvas/display.ts`
-- **Task 2: 마우스 강조·흐리기** (5 connections) — `docs/superpowers/plans/2026-10-31-infrasketch-phase3e-readability.md`
+- **defaultViewLayout()** (6 connections) — `src/canvas/layoutMetrics.ts`
 - **FlowProps** (4 connections) — `src/canvas/Canvas.tsx`
 - **outermostCollapsedAncestor()** (4 connections) — `src/canvas/display.ts`
+- **rectHit()** (4 connections) — `src/canvas/layoutMetrics.ts`
 - **EdgeDirection** (4 connections) — `src/domain/types.ts`
 - **EdgePayload** (4 connections) — `src/domain/types.ts`
+- **Task 1: 배치 측정 모듈과 기준선 테스트** (3 connections) — `docs/superpowers/plans/2026-11-04-layout-harmony-stage1.md`
 - **drawnId()** (3 connections) — `src/canvas/Canvas.tsx`
 - **DisplayOptions** (3 connections) — `src/canvas/display.ts`
-- **.onHover()** (3 connections) — `src/canvas/EdgeLayer.tsx`
 - **ExportRequest** (3 connections) — `src/canvas/exportImage.ts`
-- **NodeVisualState** (3 connections) — `src/canvas/NodeCard.tsx`
+- **hi()** (3 connections) — `src/canvas/layoutMetrics.ts`
+- **lo()** (3 connections) — `src/canvas/layoutMetrics.ts`
+- **viewLayout()** (3 connections) — `src/canvas/layoutMetrics.ts`
+- **zoneHeadPill()** (3 connections) — `src/canvas/layoutMetrics.ts`
 - **DiagramView** (3 connections) — `src/canvas/useDiagramView.ts`
-- **optionsFor()** (3 connections) — `src/ui/DiagramWorkspace.tsx`
-- **DisplayGroup** (2 connections) — `src/canvas/display.ts`
-- **initialCollapsed()** (2 connections) — `src/canvas/display.ts`
-- **isBus()** (2 connections) — `src/canvas/display.ts`
-- *... and 7 more nodes in this community*
+- *... and 20 more nodes in this community*
 
 ## Relationships
 
-- [Canvas.tsx](Canvas.tsx.md) (21 shared connections)
-- [layoutMetrics.ts](layoutMetrics.ts.md) (9 shared connections)
-- [EdgeLayer.tsx](EdgeLayer.tsx.md) (7 shared connections)
-- [getOwnedDiagram](getOwnedDiagram.md) (7 shared connections)
-- [layout.ts](layout.ts.md) (7 shared connections)
-- [EdgePanels.tsx](EdgePanels.tsx.md) (5 shared connections)
-- [exportImage.ts](exportImage.ts.md) (4 shared connections)
+- [Canvas.tsx](Canvas.tsx.md) (16 shared connections)
+- [layout.ts](layout.ts.md) (15 shared connections)
+- [types.ts](types.ts.md) (9 shared connections)
+- [exportImage.ts](exportImage.ts.md) (6 shared connections)
+- [EdgeLayer.tsx](EdgeLayer.tsx.md) (5 shared connections)
+- [EdgePanels.tsx](EdgePanels.tsx.md) (4 shared connections)
+- [segments.ts](segments.ts.md) (4 shared connections)
+- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (4 shared connections)
+- [DiagramState](DiagramState.md) (3 shared connections)
 - [ZoneNameLayer.tsx](ZoneNameLayer.tsx.md) (3 shared connections)
-- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (3 shared connections)
 - [Command](Command.md) (3 shared connections)
-- [segments.ts](segments.ts.md) (2 shared connections)
-- [DiagramState](DiagramState.md) (2 shared connections)
+- [useCamera.ts](useCamera.ts.md) (2 shared connections)
 
 ## Source Files
 
-- `docs/superpowers/plans/2026-10-31-infrasketch-phase3e-readability.md`
 - `docs/superpowers/plans/2026-11-04-layout-harmony-stage1.md`
+- `docs/superpowers/specs/2026-11-06-network-character-and-link-guess-design.md`
+- `src/app/dev/edges/EdgePanels.tsx`
 - `src/canvas/Canvas.tsx`
-- `src/canvas/EdgeLayer.tsx`
-- `src/canvas/NodeCard.tsx`
 - `src/canvas/display.ts`
 - `src/canvas/exportImage.ts`
 - `src/canvas/layout.ts`
@@ -69,8 +68,8 @@ sidebar_position: 20
 
 ## Audit Trail
 
-- EXTRACTED: 123 (93%)
-- INFERRED: 9 (7%)
+- EXTRACTED: 151 (96%)
+- INFERRED: 7 (4%)
 - AMBIGUOUS: 0 (0%)
 
 ---

@@ -1,12 +1,12 @@
 ---
 title: "mcp/route.ts"
-sidebar_position: 67
+sidebar_position: 86
 ---
 # mcp/route.ts
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 12 nodes · cohesion 0.23
+> 10 nodes · cohesion 0.29
 
 ## Key Concepts
 
@@ -14,8 +14,6 @@ sidebar_position: 67
 - **verifyMcpKey()** (5 connections) — `src/server/mcpKeys.ts`
 - **POST()** (4 connections) — `src/app/api/mcp/route.ts`
 - **notAllowed()** (3 connections) — `src/app/api/mcp/route.ts`
-- **hashKey()** (3 connections) — `src/server/mcpKeys.ts`
-- **Task 7: MCP 라우트와 도구** (2 connections) — `docs/superpowers/plans/2026-11-09-mcp-server.md`
 - **ref_modelcontextprotocol_sdk** (2 connections)
 - **bearerKey()** (2 connections) — `src/app/api/mcp/route.ts`
 - **DELETE()** (2 connections) — `src/app/api/mcp/route.ts`
@@ -26,21 +24,19 @@ sidebar_position: 67
 ## Relationships
 
 - [read.ts](read.ts.md) (4 shared connections)
-- [server/network.ts](server-network.ts.md) (3 shared connections)
+- [NotFoundError](NotFoundError.md) (3 shared connections)
+- [auth.ts](auth.ts.md) (1 shared connections)
 - [File Structure](File_Structure.md) (1 shared connections)
-- [ref_react](ref_react.md) (1 shared connections)
-- [(app)/actions.ts](app-actions.ts.md) (1 shared connections)
 
 ## Source Files
 
-- `docs/superpowers/plans/2026-11-09-mcp-server.md`
 - `src/app/api/mcp/route.ts`
 - `src/server/mcpKeys.ts`
 
 ## Audit Trail
 
-- EXTRACTED: 24 (96%)
-- INFERRED: 1 (4%)
+- EXTRACTED: 21 (95%)
+- INFERRED: 1 (5%)
 - AMBIGUOUS: 0 (0%)
 
 ---

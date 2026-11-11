@@ -1,6 +1,6 @@
 ---
 title: "DiagramWorkspace()"
-sidebar_position: 87
+sidebar_position: 110
 sidebar_label: "핵심 노드: DiagramWorkspace()"
 ---
 # DiagramWorkspace()
@@ -14,7 +14,7 @@ sidebar_label: "핵심 노드: DiagramWorkspace()"
 ## Connections by Relation
 
 ### calls
-- [Button()](Button.md) `EXTRACTED`
+- [Button()](Button_2.md) `EXTRACTED`
 - applyCommand() `EXTRACTED`
 - Canvas() `EXTRACTED`
 - useChatTurn() `EXTRACTED`
@@ -24,12 +24,12 @@ sidebar_label: "핵심 노드: DiagramWorkspace()"
 - checkFlow() `EXTRACTED`
 - useExplanations() `EXTRACTED`
 - RightPanel() `EXTRACTED`
+- useShell() `EXTRACTED`
 - useSessions() `EXTRACTED`
 - DiagramPage() `EXTRACTED`
 - isFlowCommand() `EXTRACTED`
 - restoreVersionAction() `EXTRACTED`
 - GhostLayer `EXTRACTED`
-- useShell() `EXTRACTED`
 - Legend() `EXTRACTED`
 - diffStates() `EXTRACTED`
 - useRemoteChanges() `EXTRACTED`

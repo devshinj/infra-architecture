@@ -1,83 +1,69 @@
 ---
 title: "pipeline.ts"
-sidebar_position: 5
+sidebar_position: 24
 ---
 # pipeline.ts
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 60 nodes · cohesion 0.08
+> 30 nodes · cohesion 0.09
 
 ## Key Concepts
 
-- **pipeline.ts** (114 connections) — `src/server/chat/pipeline.ts`
-- **ask.ts** (56 connections) — `src/server/chat/ask.ts`
-- **lockedTurn()** (40 connections) — `src/server/chat/pipeline.ts`
-- **domain/assumptions.ts** (18 connections) — `src/domain/assumptions.ts`
-- **runAskTurn()** (14 connections) — `src/server/chat/ask.ts`
-- **getSession()** (14 connections) — `src/server/chat/sessions.ts`
-- **askInSession()** (13 connections) — `src/server/chat/ask.ts`
+- **pipeline.ts** (115 connections) — `src/server/chat/pipeline.ts`
+- **clef.ts** (23 connections) — `src/server/llm/clef.ts`
 - **intent.ts** (13 connections) — `src/server/chat/intent.ts`
-- **runChatTurn()** (12 connections) — `src/server/chat/pipeline.ts`
-- **lockedAsk()** (10 connections) — `src/server/chat/ask.ts`
-- **Task 2: 질문 차례(서버)** (9 connections) — `docs/superpowers/plans/2026-11-01-infrasketch-phase3c2-ask-node.md`
-- **ChatEvent** (9 connections) — `src/server/chat/events.ts`
-- **QwenClient** (9 connections) — `src/server/llm/qwen.ts`
-- **createThinkStripper()** (9 connections) — `src/server/llm/think.ts`
-- **sessionTurn()** (8 connections) — `src/server/chat/pipeline.ts`
-- **createSession()** (8 connections) — `src/server/chat/sessions.ts`
-- **toFlowOp()** (7 connections) — `src/domain/commands.ts`
-- **createMessage()** (7 connections) — `src/server/chat/messages.ts`
-- **.emit()** (7 connections) — `src/server/chat/pipeline.ts`
-- **splitFlowSteps()** (6 connections) — `src/domain/linkGuess.ts`
-- **MissingItem** (6 connections) — `src/domain/missing.ts`
+- **ClefClient** (8 connections) — `src/server/llm/clef.ts`
 - **resolveIntent()** (6 connections) — `src/server/chat/intent.ts`
-- **buildAskMessages()** (6 connections) — `src/server/chat/prompt.ts`
-- **touchSession()** (6 connections) — `src/server/chat/sessions.ts`
-- **.emit()** (5 connections) — `src/server/chat/ask.ts`
-- *... and 35 more nodes in this community*
+- **ChatDeps** (5 connections) — `src/server/chat/pipeline.ts`
+- **skips.ts** (5 connections) — `src/server/chat/skips.ts`
+- **Intent** (5 connections) — `src/server/llm/clef.ts`
+- **isAssumptionChangeMessage()** (3 connections) — `src/domain/assumptions.ts`
+- **clefOpenItems()** (3 connections) — `src/server/chat/intent.ts`
+- **createSkipTally()** (3 connections) — `src/server/chat/skips.ts`
+- **skipKey()** (3 connections) — `src/server/chat/skips.ts`
+- **abortError()** (2 connections) — `src/server/chat/pipeline.ts`
+- **opName()** (2 connections) — `src/server/chat/pipeline.ts`
+- **EXPLAIN_SCORE_QUESTION** (2 connections) — `src/server/llm/clef.ts`
+- **INTENT_MIN_CONFIDENCE** (2 connections) — `src/server/llm/clef.ts`
+- **HISTORY_REPLY** (1 connections) — `src/server/chat/pipeline.ts`
+- **KNOWN_OPS** (1 connections) — `src/server/chat/pipeline.ts`
+- **LAYOUT_REPLY** (1 connections) — `src/server/chat/pipeline.ts`
+- **MAX_CONTINUATIONS** (1 connections) — `src/server/chat/pipeline.ts`
+- **TIMEOUT_MESSAGE** (1 connections) — `src/server/chat/pipeline.ts`
+- **SkipKind** (1 connections) — `src/server/chat/skips.ts`
+- **ClefAnswer** (1 connections) — `src/server/llm/clef.ts`
+- **ClefAnswers** (1 connections) — `src/server/llm/clef.ts`
+- **.classifyIntent()** (1 connections) — `src/server/llm/clef.ts`
+- *... and 5 more nodes in this community*
 
 ## Relationships
 
-- [getOwnedDiagram](getOwnedDiagram.md) (40 shared connections)
-- [ask/route.ts](ask-route.ts.md) (22 shared connections)
-- [mcp/apply.ts](mcp-apply.ts.md) (20 shared connections)
-- [domain/flows.ts](domain-flows.ts.md) (19 shared connections)
-- [\[diagramId\]/page.tsx]([diagramId]-page.tsx.md) (12 shared connections)
-- [\[sessionId\]/route.ts]([sessionId]-route.ts.md) (12 shared connections)
-- [missing.ts](missing.ts.md) (11 shared connections)
-- [useChatTurn.ts](useChatTurn.ts.md) (10 shared connections)
-- [prompt.ts](prompt.ts.md) (10 shared connections)
-- [DiagramState](DiagramState.md) (10 shared connections)
-- [samples.ts](samples.ts.md) (9 shared connections)
-- [clef.ts](clef.ts.md) (8 shared connections)
+- [mcp/apply.ts](mcp-apply.ts.md) (21 shared connections)
+- [ask.ts](ask.ts.md) (15 shared connections)
+- [getOwnedDiagram](getOwnedDiagram.md) (11 shared connections)
+- [ask/route.ts](ask-route.ts.md) (10 shared connections)
+- [domain/flows.ts](domain-flows.ts.md) (9 shared connections)
+- [\[diagramId\]/page.tsx]([diagramId]-page.tsx.md) (8 shared connections)
+- [types.ts](types.ts.md) (7 shared connections)
+- [samples.ts](samples.ts.md) (6 shared connections)
+- [prompt.ts](prompt.ts.md) (5 shared connections)
+- [createJsonlParser](createJsonlParser.md) (4 shared connections)
+- [deps.ts](deps.ts.md) (4 shared connections)
+- [Task 5: MCP 고치기·되돌리기 서비스](Task_5-_MCP_고치기·되돌리기_서비스.md) (4 shared connections)
 
 ## Source Files
 
-- `docs/superpowers/plans/2026-10-30-infrasketch-phase3b-warnings.md`
-- `docs/superpowers/plans/2026-11-01-infrasketch-phase3c2-ask-node.md`
 - `src/domain/assumptions.ts`
-- `src/domain/commands.ts`
-- `src/domain/flows.ts`
-- `src/domain/linkGuess.ts`
-- `src/domain/missing.ts`
-- `src/server/chat/ask.ts`
-- `src/server/chat/events.ts`
 - `src/server/chat/intent.ts`
-- `src/server/chat/messages.ts`
 - `src/server/chat/pipeline.ts`
-- `src/server/chat/prompt.ts`
-- `src/server/chat/sessions.ts`
 - `src/server/chat/skips.ts`
-- `src/server/flowSuggest.ts`
 - `src/server/llm/clef.ts`
-- `src/server/llm/qwen.ts`
-- `src/server/llm/think.ts`
 
 ## Audit Trail
 
-- EXTRACTED: 358 (96%)
-- INFERRED: 14 (4%)
+- EXTRACTED: 174 (100%)
+- INFERRED: 0 (0%)
 - AMBIGUOUS: 0 (0%)
 
 ---

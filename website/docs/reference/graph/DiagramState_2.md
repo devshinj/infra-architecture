@@ -1,6 +1,6 @@
 ---
 title: "DiagramState"
-sidebar_position: 95
+sidebar_position: 118
 ---
 # DiagramState
 
@@ -13,7 +13,7 @@ sidebar_position: 95
 ## Connections by Relation
 
 ### contains
-- types.ts `EXTRACTED`
+- [types.ts](types.ts.md) `EXTRACTED`
 
 ### imports
 - [(app)/actions.ts](app-actions.ts.md) `EXTRACTED`
@@ -22,27 +22,27 @@ sidebar_position: 95
 - [Canvas.tsx](Canvas.tsx.md) `EXTRACTED`
 - [mcp/apply.ts](mcp-apply.ts.md) `EXTRACTED`
 - [projects.ts](projects.ts.md) `EXTRACTED`
-- server/explain.ts `EXTRACTED`
 - [prompt.ts](prompt.ts.md) `EXTRACTED`
-- [NodeInfo.tsx](NodeInfo.tsx.md) `EXTRACTED`
-- ask.ts `EXTRACTED`
+- server/explain.ts `EXTRACTED`
 - [server/network.ts](server-network.ts.md) `EXTRACTED`
+- [NodeInfo.tsx](NodeInfo.tsx.md) `EXTRACTED`
+- [ask.ts](ask.ts.md) `EXTRACTED`
 - [read.ts](read.ts.md) `EXTRACTED`
-- schema.ts `EXTRACTED`
-- [flowSuggest.ts](flowSuggest.ts.md) `EXTRACTED`
+- [schema.ts](schema.ts.md) `EXTRACTED`
+- flowSuggest.ts `EXTRACTED`
 - server/flows.ts `EXTRACTED`
 - [domain/flows.ts](domain-flows.ts.md) `EXTRACTED`
 - domain/warnings.ts `EXTRACTED`
 - chat/warnings.ts `EXTRACTED`
 - [versions.ts](versions.ts.md) `EXTRACTED`
-- MissingChecklist.tsx `EXTRACTED`
+- [MissingChecklist.tsx](MissingChecklist.tsx.md) `EXTRACTED`
 - *…and 24 more `imports` connection(s) not listed (lowest-degree first to go)*
 
 ### references
 - CanvasProps `EXTRACTED`
 - FlowPanelProps `EXTRACTED`
 - RightPanelProps `EXTRACTED`
-- InfoCardProps `EXTRACTED`
+- [InfoCardProps](InfoCardProps.md) `EXTRACTED`
 - NodeInfoProps `EXTRACTED`
 - MissingChecklistProps `EXTRACTED`
 - DiagramWorkspaceProps `EXTRACTED`

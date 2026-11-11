@@ -1,12 +1,12 @@
 ---
 title: "projects.ts"
-sidebar_position: 33
+sidebar_position: 37
 ---
 # projects.ts
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 24 nodes · cohesion 0.18
+> 23 nodes · cohesion 0.19
 
 ## Key Concepts
 
@@ -29,7 +29,6 @@ sidebar_position: 33
 - **listDiagramsWithVersions()** (4 connections) — `src/server/projects.ts`
 - **copyName()** (3 connections) — `src/server/projects.ts`
 - **isUniqueViolation()** (3 connections) — `src/server/projects.ts`
-- **parsePinned()** (3 connections) — `src/server/projects.ts`
 - **sameName()** (3 connections) — `src/server/projects.ts`
 - **clip()** (2 connections) — `src/server/projects.ts`
 - **coord** (1 connections) — `src/server/projects.ts`
@@ -37,18 +36,18 @@ sidebar_position: 33
 
 ## Relationships
 
-- [getOwnedDiagram](getOwnedDiagram.md) (25 shared connections)
+- [getOwnedDiagram](getOwnedDiagram.md) (17 shared connections)
 - [(app)/actions.ts](app-actions.ts.md) (12 shared connections)
-- [Sidebar.tsx](Sidebar.tsx.md) (11 shared connections)
-- [read.ts](read.ts.md) (9 shared connections)
+- [versions.ts](versions.ts.md) (7 shared connections)
 - [server/network.ts](server-network.ts.md) (7 shared connections)
-- [DiagramState](DiagramState.md) (6 shared connections)
-- [versions.ts](versions.ts.md) (2 shared connections)
-- [ask/route.ts](ask-route.ts.md) (2 shared connections)
-- [auth](auth.md) (2 shared connections)
-- [flowSuggest.ts](flowSuggest.ts.md) (2 shared connections)
-- [\[diagramId\]/page.tsx]([diagramId]-page.tsx.md) (2 shared connections)
-- [pipeline.ts](pipeline.ts.md) (2 shared connections)
+- [Sidebar.tsx](Sidebar.tsx.md) (7 shared connections)
+- [auth](auth.md) (5 shared connections)
+- [Shell.tsx](Shell.tsx.md) (4 shared connections)
+- [drawing/rules.ts](drawing-rules.ts.md) (4 shared connections)
+- [read.ts](read.ts.md) (4 shared connections)
+- [NotFoundError](NotFoundError.md) (4 shared connections)
+- [DiagramState](DiagramState.md) (3 shared connections)
+- [schema.ts](schema.ts.md) (2 shared connections)
 
 ## Source Files
 
@@ -56,7 +55,7 @@ sidebar_position: 33
 
 ## Audit Trail
 
-- EXTRACTED: 139 (100%)
+- EXTRACTED: 137 (100%)
 - INFERRED: 0 (0%)
 - AMBIGUOUS: 0 (0%)
 

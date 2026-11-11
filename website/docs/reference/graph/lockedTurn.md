@@ -1,6 +1,6 @@
 ---
 title: "lockedTurn()"
-sidebar_position: 89
+sidebar_position: 112
 sidebar_label: "핵심 노드: lockedTurn()"
 ---
 # lockedTurn()
@@ -9,7 +9,7 @@ sidebar_label: "핵심 노드: lockedTurn()"
 
 > God node · 40 connections · `src/server/chat/pipeline.ts`
 
-**Community:** [pipeline.ts](pipeline.ts.md)
+**Community:** [mcp/apply.ts](mcp-apply.ts.md)
 
 ## Connections by Relation
 

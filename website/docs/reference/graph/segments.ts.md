@@ -1,12 +1,12 @@
 ---
 title: "segments.ts"
-sidebar_position: 40
+sidebar_position: 46
 ---
 # segments.ts
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 20 nodes · cohesion 0.19
+> 19 nodes · cohesion 0.21
 
 ## Key Concepts
 
@@ -16,10 +16,9 @@ sidebar_position: 40
 - **buildSegs()** (5 connections) — `src/canvas/segments.ts`
 - **normalize()** (5 connections) — `src/canvas/segments.ts`
 - **rp()** (5 connections) — `src/canvas/segments.ts`
+- **Task 2: 평소 화면 평행선 16px** (4 connections) — `docs/superpowers/plans/2026-11-04-layout-harmony-stage1.md`
 - **piecesOf()** (4 connections) — `src/canvas/segments.ts`
 - **pk()** (4 connections) — `src/canvas/segments.ts`
-- **연결선 모양과 움직임** (3 connections) — `docs/superpowers/specs/2026-10-29-infra-architecture-visualizer-design.md`
-- **Bundle** (3 connections) — `src/canvas/segments.ts`
 - **Segment** (3 connections) — `src/canvas/segments.ts`
 - **speedOf()** (3 connections) — `src/canvas/segments.ts`
 - **assignStarts()** (2 connections) — `src/canvas/segments.ts`
@@ -33,27 +32,24 @@ sidebar_position: 40
 
 ## Relationships
 
-- [EdgeLayer.tsx](EdgeLayer.tsx.md) (5 shared connections)
-- [motion.ts](motion.ts.md) (4 shared connections)
+- [motion.ts](motion.ts.md) (5 shared connections)
+- [display.ts](display.ts.md) (4 shared connections)
+- [EdgeLayer.tsx](EdgeLayer.tsx.md) (4 shared connections)
 - [ZoneNameLayer.tsx](ZoneNameLayer.tsx.md) (2 shared connections)
-- [display.ts](display.ts.md) (2 shared connections)
-- [InfraSketch 설계 문서](InfraSketch_설계_문서.md) (1 shared connections)
-- [Legend.tsx](Legend.tsx.md) (1 shared connections)
-- [layoutMetrics.ts](layoutMetrics.ts.md) (1 shared connections)
-- [missing.ts](missing.ts.md) (1 shared connections)
+- [types.ts](types.ts.md) (2 shared connections)
+- [exportImage.ts](exportImage.ts.md) (1 shared connections)
 - [samples.ts](samples.ts.md) (1 shared connections)
-- [getOwnedDiagram](getOwnedDiagram.md) (1 shared connections)
 
 ## Source Files
 
-- `docs/superpowers/specs/2026-10-29-infra-architecture-visualizer-design.md`
+- `docs/superpowers/plans/2026-11-04-layout-harmony-stage1.md`
 - `src/canvas/segments.ts`
 - `src/domain/catalog.ts`
 
 ## Audit Trail
 
-- EXTRACTED: 54 (96%)
-- INFERRED: 2 (4%)
+- EXTRACTED: 51 (93%)
+- INFERRED: 4 (7%)
 - AMBIGUOUS: 0 (0%)
 
 ---

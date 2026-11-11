@@ -1,6 +1,6 @@
 ---
 title: "ZoneNameLayer.tsx"
-sidebar_position: 29
+sidebar_position: 27
 ---
 # ZoneNameLayer.tsx
 
@@ -40,17 +40,17 @@ sidebar_position: 29
 ## Relationships
 
 - [Canvas.tsx](Canvas.tsx.md) (13 shared connections)
+- [EdgePanels.tsx](EdgePanels.tsx.md) (7 shared connections)
 - [layout.ts](layout.ts.md) (7 shared connections)
-- [EdgePanels.tsx](EdgePanels.tsx.md) (5 shared connections)
-- [ref_react](ref_react.md) (4 shared connections)
-- [domain/flows.ts](domain-flows.ts.md) (4 shared connections)
+- [types.ts](types.ts.md) (5 shared connections)
 - [display.ts](display.ts.md) (3 shared connections)
+- [motion.ts](motion.ts.md) (2 shared connections)
 - [segments.ts](segments.ts.md) (2 shared connections)
 - [mcp/apply.ts](mcp-apply.ts.md) (2 shared connections)
-- [getOwnedDiagram](getOwnedDiagram.md) (2 shared connections)
+- [domain/flows.ts](domain-flows.ts.md) (2 shared connections)
 - [drawing/rules.ts](drawing-rules.ts.md) (2 shared connections)
-- [Legend.tsx](Legend.tsx.md) (2 shared connections)
 - [NodeInfo.tsx](NodeInfo.tsx.md) (2 shared connections)
+- [AuthStage.tsx](AuthStage.tsx.md) (1 shared connections)
 
 ## Source Files
 

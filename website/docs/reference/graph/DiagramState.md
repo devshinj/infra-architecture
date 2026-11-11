@@ -1,73 +1,68 @@
 ---
 title: "DiagramState"
-sidebar_position: 23
+sidebar_position: 36
 sidebar_label: "핵심 노드: DiagramState"
 ---
 # DiagramState
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 30 nodes · cohesion 0.11
+> 23 nodes · cohesion 0.14
 
 ## Key Concepts
 
 - **DiagramState** (61 connections) — `src/domain/types.ts`
 - **flowSuggest.ts** (53 connections) — `src/server/flowSuggest.ts`
-- **server/flows.ts** (52 connections) — `src/server/flows.ts`
-- **db** (16 connections) — `src/db/client.ts`
-- **checkFlow()** (13 connections) — `src/domain/flows.ts`
-- **withOwnedFlow()** (10 connections) — `src/server/flows.ts`
-- **Task 4: 흐름 저장소·조회·이름 바꾸기·삭제·확인** (9 connections) — `docs/superpowers/plans/2026-11-05-flows-and-network-boundaries.md`
+- **suggestFlows()** (14 connections) — `src/server/flowSuggest.ts`
 - **FlowOp** (8 connections) — `src/domain/flows.ts`
-- **byKey()** (8 connections) — `src/server/flows.ts`
-- **pickFlows()** (7 connections) — `src/server/flowSuggest.ts`
-- **removeFlowStep()** (6 connections) — `src/server/flows.ts`
-- **renameFlow()** (6 connections) — `src/server/flows.ts`
-- **BusyError** (5 connections) — `src/server/flows.ts`
-- **confirmFlow()** (5 connections) — `src/server/flows.ts`
-- **deleteFlow()** (5 connections) — `src/server/flows.ts`
+- **FlowSuggestRepo** (8 connections) — `src/server/flowSuggest.ts`
+- **흐름 보기와 망 경계 표시 Implementation Plan** (5 connections) — `docs/superpowers/plans/2026-11-05-flows-and-network-boundaries.md`
 - **.applyFlowOps()** (5 connections) — `src/server/flowSuggest.ts`
 - **diagrams** (4 connections) — `src/db/schema.ts`
-- **flows** (4 connections) — `src/db/schema.ts`
-- **copyFlows()** (3 connections) — `src/server/flows.ts`
-- **FLOW_BUSY_MESSAGE** (3 connections) — `src/server/flows.ts`
+- **.getLatestState()** (4 connections) — `src/server/flowSuggest.ts`
+- **.getOwnedDiagram()** (3 connections) — `src/server/flowSuggest.ts`
+- **.listFlows()** (3 connections) — `src/server/flowSuggest.ts`
 - **Checked** (3 connections) — `src/server/mcp/apply.ts`
-- **.constructor()** (1 connections) — `src/server/flows.ts`
-- **DiagramHead** (1 connections) — `src/server/flows.ts`
-- **LAST_STEP_MESSAGE** (1 connections) — `src/server/flows.ts`
+- **.claimSuggest()** (2 connections) — `src/server/flowSuggest.ts`
+- **.releaseSuggest()** (2 connections) — `src/server/flowSuggest.ts`
+- **.withLock()** (2 connections) — `src/server/flowSuggest.ts`
+- **2026-11-05-flows-and-network-boundaries.md** (1 connections) — `docs/superpowers/plans/2026-11-05-flows-and-network-boundaries.md`
+- **Global Constraints** (1 connections) — `docs/superpowers/plans/2026-11-05-flows-and-network-boundaries.md`
 - **AddFlowOp** (1 connections) — `src/server/flowSuggest.ts`
-- *... and 5 more nodes in this community*
+- **dbRepo** (1 connections) — `src/server/flowSuggest.ts`
+- **DepsInput** (1 connections) — `src/server/flowSuggest.ts`
+- **FLOW_SUGGEST_FAIL_MESSAGE** (1 connections) — `src/server/flowSuggest.ts`
+- **FLOW_SUGGEST_LIMIT_MESSAGE** (1 connections) — `src/server/flowSuggest.ts`
+- **SuggestResult** (1 connections) — `src/server/flowSuggest.ts`
 
 ## Relationships
 
-- [getOwnedDiagram](getOwnedDiagram.md) (28 shared connections)
-- [domain/flows.ts](domain-flows.ts.md) (16 shared connections)
-- [mcp/apply.ts](mcp-apply.ts.md) (15 shared connections)
-- [server/network.ts](server-network.ts.md) (12 shared connections)
-- [ref_react](ref_react.md) (12 shared connections)
-- [useFlows](useFlows.md) (11 shared connections)
-- [flowSuggest.ts](flowSuggest.ts.md) (11 shared connections)
-- [pipeline.ts](pipeline.ts.md) (10 shared connections)
-- [(app)/actions.ts](app-actions.ts.md) (8 shared connections)
-- [versions.ts](versions.ts.md) (7 shared connections)
-- [projects.ts](projects.ts.md) (6 shared connections)
+- [mcp/apply.ts](mcp-apply.ts.md) (11 shared connections)
+- [types.ts](types.ts.md) (10 shared connections)
+- [versions.ts](versions.ts.md) (9 shared connections)
+- [getOwnedDiagram](getOwnedDiagram.md) (9 shared connections)
+- [deps.ts](deps.ts.md) (6 shared connections)
 - [samples.ts](samples.ts.md) (5 shared connections)
+- [auth](auth.md) (5 shared connections)
+- [prompt.ts](prompt.ts.md) (4 shared connections)
+- [projects.ts](projects.ts.md) (3 shared connections)
+- [schema.ts](schema.ts.md) (3 shared connections)
+- [pipeline.ts](pipeline.ts.md) (3 shared connections)
+- [domain/flows.ts](domain-flows.ts.md) (3 shared connections)
 
 ## Source Files
 
 - `docs/superpowers/plans/2026-11-05-flows-and-network-boundaries.md`
-- `src/db/client.ts`
 - `src/db/schema.ts`
 - `src/domain/flows.ts`
 - `src/domain/types.ts`
 - `src/server/flowSuggest.ts`
-- `src/server/flows.ts`
 - `src/server/mcp/apply.ts`
 
 ## Audit Trail
 
-- EXTRACTED: 229 (93%)
-- INFERRED: 16 (7%)
+- EXTRACTED: 143 (96%)
+- INFERRED: 6 (4%)
 - AMBIGUOUS: 0 (0%)
 
 ---

@@ -1,6 +1,6 @@
 ---
 title: "SkipTally"
-sidebar_position: 82
+sidebar_position: 103
 ---
 # SkipTally
 
@@ -18,7 +18,8 @@ sidebar_position: 82
 
 ## Relationships
 
-- [pipeline.ts](pipeline.ts.md) (2 shared connections)
+- [pipeline.ts](pipeline.ts.md) (1 shared connections)
+- [mcp/apply.ts](mcp-apply.ts.md) (1 shared connections)
 
 ## Source Files
 

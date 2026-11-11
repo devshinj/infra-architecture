@@ -1,17 +1,15 @@
 ---
 title: "getOwnedDiagram"
-sidebar_position: 13
+sidebar_position: 16
 ---
 # getOwnedDiagram
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 39 nodes · cohesion 0.19
+> 34 nodes · cohesion 0.21
 
 ## Key Concepts
 
-- **types.ts** (71 connections) — `src/domain/types.ts`
-- **ValidationError** (56 connections) — `src/server/projects.ts`
 - **getOwnedDiagram()** (53 connections) — `src/server/projects.ts`
 - **withDiagramLock()** (31 connections) — `src/server/chat/lock.ts`
 - **createVersion()** (31 connections) — `src/server/versions.ts`
@@ -19,37 +17,39 @@ sidebar_position: 13
 - **emptyState()** (29 connections) — `src/domain/types.ts`
 - **server/linkGuess.ts** (29 connections) — `src/server/linkGuess.ts`
 - **fields.ts** (23 connections) — `src/server/fields.ts`
+- **domain/assumptions.ts** (18 connections) — `src/domain/assumptions.ts`
 - **zoneType.ts** (17 connections) — `src/server/zoneType.ts`
 - **rejectLinkGuessFor()** (16 connections) — `src/server/linkGuess.ts`
 - **ignore.ts** (15 connections) — `src/server/ignore.ts`
+- **lock.ts** (13 connections) — `src/server/chat/lock.ts`
 - **saveFieldsFor()** (13 connections) — `src/server/fields.ts`
 - **listFlows()** (13 connections) — `src/server/flows.ts`
-- **linkVerdicts()** (12 connections) — `src/domain/networkRules.ts`
 - **server/assumptions.ts** (12 connections) — `src/server/assumptions.ts`
-- **lock.ts** (12 connections) — `src/server/chat/lock.ts`
 - **restoreMcpVersion()** (12 connections) — `src/server/mcp/apply.ts`
-- **rewriteFlows()** (11 connections) — `src/server/flows.ts`
 - **BUSY_MESSAGE** (10 connections) — `src/server/chat/busy.ts`
 - **setWarningIgnoredFor()** (10 connections) — `src/server/ignore.ts`
 - **removeNoLinkFor()** (10 connections) — `src/server/linkGuess.ts`
 - **setZoneTypeFor()** (10 connections) — `src/server/zoneType.ts`
 - **confirmAssumptionFor()** (9 connections) — `src/server/assumptions.ts`
 - **confirmLinkGuessFor()** (9 connections) — `src/server/linkGuess.ts`
-- *... and 14 more nodes in this community*
+- **duplicateDiagram()** (9 connections) — `src/server/projects.ts`
+- **noLinkKey()** (8 connections) — `src/domain/assumptions.ts`
+- **Task 7: 서버 액션 — 망 종류 확인·바꾸기, 망연계 맞아요·아니에요** (7 connections) — `docs/superpowers/plans/2026-11-06-network-knowledge-link-guess.md`
+- *... and 9 more nodes in this community*
 
 ## Relationships
 
-- [pipeline.ts](pipeline.ts.md) (40 shared connections)
-- [(app)/actions.ts](app-actions.ts.md) (33 shared connections)
-- [DiagramState](DiagramState.md) (28 shared connections)
-- [projects.ts](projects.ts.md) (25 shared connections)
-- [mcp/apply.ts](mcp-apply.ts.md) (20 shared connections)
-- [domain/flows.ts](domain-flows.ts.md) (19 shared connections)
-- [read.ts](read.ts.md) (18 shared connections)
-- [samples.ts](samples.ts.md) (15 shared connections)
-- [server/network.ts](server-network.ts.md) (15 shared connections)
-- [versions.ts](versions.ts.md) (11 shared connections)
-- [missing.ts](missing.ts.md) (9 shared connections)
+- [(app)/actions.ts](app-actions.ts.md) (30 shared connections)
+- [mcp/apply.ts](mcp-apply.ts.md) (26 shared connections)
+- [types.ts](types.ts.md) (24 shared connections)
+- [versions.ts](versions.ts.md) (18 shared connections)
+- [projects.ts](projects.ts.md) (17 shared connections)
+- [server/network.ts](server-network.ts.md) (13 shared connections)
+- [pipeline.ts](pipeline.ts.md) (11 shared connections)
+- [ask.ts](ask.ts.md) (11 shared connections)
+- [samples.ts](samples.ts.md) (9 shared connections)
+- [DiagramState](DiagramState.md) (9 shared connections)
+- [File Structure](File_Structure.md) (9 shared connections)
 - [ask/route.ts](ask-route.ts.md) (8 shared connections)
 
 ## Source Files
@@ -74,8 +74,8 @@ sidebar_position: 13
 
 ## Audit Trail
 
-- EXTRACTED: 439 (94%)
-- INFERRED: 26 (6%)
+- EXTRACTED: 334 (94%)
+- INFERRED: 22 (6%)
 - AMBIGUOUS: 0 (0%)
 
 ---
