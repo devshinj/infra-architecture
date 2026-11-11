@@ -385,7 +385,7 @@ export const GLOSSARY_SEED_EXTRA: GlossarySeedEntry[] = [
       "TLS(Transport Layer Security)는 클라이언트와 서버가 인터넷에서 주고받는 통신을 도청, 변조, 위조할 수 없게 보호하는 프로토콜입니다.",
     why: "중간에서 통신을 가로채도 내용을 보거나 바꿀 수 없습니다.",
     compare: "TLS는 SSL의 후속 표준이며, HTTPS는 HTTP 통신을 TLS로 보호한 것입니다.",
-    aliases: ["transportlayersecurity", "ssl", "ssltls", "https", "전송계층보안"],
+    aliases: ["transportlayersecurity", "ssl", "ssltls", "전송계층보안"],
   },
   {
     term: "SSO",
@@ -963,7 +963,7 @@ export const GLOSSARY_SEED_EXTRA: GlossarySeedEntry[] = [
       "하이퍼바이저는 물리 서버의 CPU·메모리·디스크를 나누어 가상 머신 여러 개를 만들고 실행하는 소프트웨어입니다.",
     why: "가상 머신들이 한 서버의 자원을 서로 방해하지 않고 나누어 쓰게 합니다.",
     compare: "하이퍼바이저는 가상 머신을 띄우는 바탕이고, 가상 머신은 그 위에서 도는 가상의 서버입니다.",
-    aliases: ["hypervisor", "가상화소프트웨어", "vmm", "kvm"],
+    aliases: ["hypervisor", "가상화소프트웨어", "vmm"],
   },
 
   // ── 개념 — 환경 · 배포 · 운영 ──

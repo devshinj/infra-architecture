@@ -1,0 +1,1385 @@
+[
+ {
+  "term": "Rocky Linux",
+  "fullName": "Rocky Linux",
+  "category": "운영체제 / 리눅스",
+  "definition": "Rocky Linux는 RESF(Rocky Enterprise Software Foundation)가 주관하고 커뮤니티가 개발하는, RHEL과 호환되는 오픈소스 기업용 리눅스 배포판입니다.",
+  "why": "",
+  "compare": "",
+  "aliases": [
+   "rocky",
+   "rockylinux",
+   "록키 리눅스",
+   "로키 리눅스"
+  ],
+  "kind": "product",
+  "verified": true,
+  "sources": [
+   {
+    "title": "Rocky Linux (홈)",
+    "org": "Rocky Enterprise Software Foundation",
+    "url": "https://rockylinux.org/",
+    "kind": "primary"
+   },
+   {
+    "title": "About Rocky Linux",
+    "org": "Rocky Enterprise Software Foundation",
+    "url": "https://rockylinux.org/about",
+    "kind": "primary"
+   }
+  ],
+  "changed": "'무료'를 공식 문구인 '오픈소스'로, '주도'를 '주관(hosted)'으로 바꿈",
+  "note": ""
+ },
+ {
+  "term": "Ubuntu",
+  "fullName": "Ubuntu (Ubuntu Server)",
+  "category": "운영체제 / 리눅스",
+  "definition": "Ubuntu는 캐노니컬(Canonical)이 데비안(Debian)을 바탕으로 만들어 배포하는 리눅스 배포판으로, 장기 지원판(LTS)이 2년마다 나옵니다.",
+  "why": "",
+  "compare": "",
+  "aliases": [
+   "ubuntu server",
+   "ubuntu lts",
+   "우분투"
+  ],
+  "kind": "product",
+  "verified": true,
+  "sources": [
+   {
+    "title": "The Ubuntu lifecycle and release cadence",
+    "org": "Canonical",
+    "url": "https://ubuntu.com/about/release-cycle",
+    "kind": "primary"
+   },
+   {
+    "title": "Ubuntu and Debian",
+    "org": "Canonical",
+    "url": "https://ubuntu.com/community/governance/debian",
+    "kind": "primary"
+   }
+  ],
+  "changed": "'서버와 클라우드에서 널리 쓰입니다'는 연 페이지에 없어 뺌",
+  "note": ""
+ },
+ {
+  "term": "AIX",
+  "fullName": "Advanced Interactive eXecutive",
+  "category": "운영체제 / 유닉스",
+  "definition": "AIX는 IBM이 자사 Power 서버용으로 만드는 상용 유닉스(UNIX) 운영체제입니다.",
+  "why": "",
+  "compare": "",
+  "aliases": [
+   "ibm aix",
+   "에이아이엑스"
+  ],
+  "kind": "product",
+  "verified": true,
+  "sources": [
+   {
+    "title": "IBM AIX",
+    "org": "IBM",
+    "url": "https://www.ibm.com/products/aix",
+    "kind": "primary"
+   }
+  ],
+  "changed": "",
+  "note": ""
+ },
+ {
+  "term": "HP-UX",
+  "fullName": "Hewlett Packard UniX",
+  "category": "운영체제 / 유닉스",
+  "definition": "HP-UX는 HPE(구 HP)가 자사 Integrity·HP 9000 서버용으로 만든 상용 유닉스 운영체제입니다.",
+  "why": "",
+  "compare": "",
+  "aliases": [
+   "hpux",
+   "hp ux",
+   "hp-ux 11i",
+   "에이치피유엑스"
+  ],
+  "kind": "product",
+  "verified": false,
+  "sources": [
+   {
+    "title": "The last supported version of HP-UX is no more",
+    "org": "The Register",
+    "url": "https://www.theregister.com/2026/01/05/hpux_end_of_life/",
+    "kind": "aux"
+   }
+  ],
+  "changed": "지원 종료 날짜·버전 문구를 정의에서 빼고, category 의 '(표준 지원 종료)'도 뺌",
+  "note": "HPE 공식 페이지(hpe.com 제품 페이지, 지원 매트릭스 PDF, support.hpe.com)가 시간 초과·빈 응답으로 열리지 않음. 검색 결과 요약으로만 본 보조 출처(The Register 등)는 11i v3 표준 지원이 끝나고 mature support 단계라고 전하나 공식 문서로 확인하지 못함."
+ },
+ {
+  "term": "Solaris",
+  "fullName": "Oracle Solaris",
+  "category": "운영체제 / 유닉스",
+  "definition": "Solaris(Oracle Solaris)는 오라클(Oracle)이 공급하는 기업용 서버 운영체제로, SPARC와 x86 서버에서 동작합니다.",
+  "why": "",
+  "compare": "",
+  "aliases": [
+   "oracle solaris",
+   "sunos",
+   "솔라리스"
+  ],
+  "kind": "product",
+  "verified": true,
+  "sources": [
+   {
+    "title": "Oracle Solaris 11.4 Release Notes",
+    "org": "Oracle",
+    "url": "https://docs.oracle.com/cd/E37838_01/html/E60973/index.html",
+    "kind": "primary"
+   },
+   {
+    "title": "Oracle Solaris 11.4 Release Notes - Platform Support",
+    "org": "Oracle",
+    "url": "https://docs.oracle.com/cd/E37838_01/html/E60973/platform-support.html",
+    "kind": "primary"
+   },
+   {
+    "title": "Oracle Solaris 11.4 Documentation Library",
+    "org": "Oracle",
+    "url": "https://docs.oracle.com/en/operating-systems/solaris/oracle-solaris/11.4/",
+    "kind": "primary"
+   }
+  ],
+  "changed": "버전 번호(11.4), 썬 마이크로시스템즈 유래, '상용 유닉스' 표현을 뺌",
+  "note": "oracle.com 제품 페이지는 403 으로 안 열려 docs.oracle.com 으로 확인. 연 문서는 'enterprise-class operating system'이라 하고 SPARC·x86 항목을 따로 다루지만, '유닉스'라는 말과 썬 마이크로시스템즈 유래, 별칭 sunos 는 연 페이지에서 확인하지 못함(category 의 '유닉스'도 같은 상태)."
+ },
+ {
+  "term": "IIS",
+  "fullName": "Internet Information Services",
+  "category": "웹 서버",
+  "definition": "IIS(Internet Information Services)는 마이크로소프트가 Windows Server의 역할로 포함해 제공하는 웹 서버로, ASP.NET 애플리케이션 등을 실행합니다.",
+  "why": "",
+  "compare": "",
+  "aliases": [
+   "internet information services",
+   "microsoft iis",
+   "아이아이에스"
+  ],
+  "kind": "product",
+  "verified": true,
+  "sources": [
+   {
+    "title": "Introduction to IIS Architectures",
+    "org": "Microsoft Learn",
+    "url": "https://learn.microsoft.com/en-us/iis/get-started/introduction-to-iis/introduction-to-iis-architecture",
+    "kind": "primary"
+   },
+   {
+    "title": "IIS Web Server Overview",
+    "org": "Microsoft Learn",
+    "url": "https://learn.microsoft.com/en-us/iis/get-started/introduction-to-iis/iis-web-server-overview",
+    "kind": "primary"
+   },
+   {
+    "title": "Roles, Role Services, and Features included in Windows Server - Server Core",
+    "org": "Microsoft Learn",
+    "url": "https://learn.microsoft.com/en-us/windows-server/administration/server-core/server-core-roles-and-services",
+    "kind": "primary"
+   }
+  ],
+  "changed": "'주로 쓰입니다'를 확인된 범위('ASP.NET 애플리케이션 등을 실행')로 고침",
+  "note": ""
+ },
+ {
+  "term": "WebLogic",
+  "fullName": "Oracle WebLogic Server",
+  "category": "WAS / 서블릿 컨테이너",
+  "definition": "WebLogic(Oracle WebLogic Server)은 오라클(Oracle)이 공급하는 자바 EE 표준 기반의 웹 애플리케이션 서버(WAS)입니다.",
+  "why": "",
+  "compare": "",
+  "aliases": [
+   "weblogic server",
+   "oracle weblogic",
+   "wls",
+   "웹로직"
+  ],
+  "kind": "product",
+  "verified": true,
+  "sources": [
+   {
+    "title": "Understanding Oracle WebLogic Server - Introduction",
+    "org": "Oracle",
+    "url": "https://docs.oracle.com/en/middleware/standalone/weblogic-server/14.1.1.0/intro/intro.html",
+    "kind": "primary"
+   }
+  ],
+  "changed": "BEA Systems 인수 이력과 '상용'을 뺌(연 문서에 없음)",
+  "note": "oracle.com 제품 페이지는 403. 연 문서에는 BEA 인수 이력과 라이선스(상용) 문구가 없음."
+ },
+ {
+  "term": "WebSphere",
+  "fullName": "IBM WebSphere Application Server",
+  "category": "WAS / 서블릿 컨테이너",
+  "definition": "WebSphere(IBM WebSphere Application Server)는 IBM이 공급하는 상용 자바 애플리케이션 서버(WAS)로, 전통(traditional) 판과 가벼운 Liberty 판이 있습니다.",
+  "why": "",
+  "compare": "",
+  "aliases": [
+   "websphere application server",
+   "ibm was",
+   "websphere liberty",
+   "웹스피어"
+  ],
+  "kind": "product",
+  "verified": true,
+  "sources": [
+   {
+    "title": "IBM WebSphere Application Server",
+    "org": "IBM",
+    "url": "https://www.ibm.com/products/websphere-application-server",
+    "kind": "primary"
+   }
+  ],
+  "changed": "'자바 웹 애플리케이션 서버'를 공식 표현 '자바 애플리케이션 서버'로 다듬음",
+  "note": ""
+ },
+ {
+  "term": "OHS",
+  "fullName": "Oracle HTTP Server",
+  "category": "웹 서버",
+  "definition": "OHS(Oracle HTTP Server)는 Apache HTTP Server를 바탕으로 만든 Oracle Fusion Middleware의 웹 서버로, 주로 WebLogic 앞단에서 요청을 받아 넘깁니다.",
+  "why": "",
+  "compare": "",
+  "aliases": [
+   "oracle http server",
+   "오에이치에스"
+  ],
+  "kind": "product",
+  "verified": true,
+  "sources": [
+   {
+    "title": "Administering Oracle HTTP Server - Introduction to Oracle HTTP Server",
+    "org": "Oracle",
+    "url": "https://docs.oracle.com/en/middleware/fusion-middleware/web-tier/12.2.1.4/administer-ohs/intro_ohs.html",
+    "kind": "primary"
+   }
+  ],
+  "changed": "문장을 다듬음(사실 변경 없음)",
+  "note": ""
+ },
+ {
+  "term": "Spring Boot",
+  "fullName": "Spring Boot (내장 톰캣)",
+  "category": "애플리케이션 프레임워크 / 내장 WAS",
+  "definition": "Spring Boot는 Tomcat 같은 서버를 안에 품어 따로 설치 없이 바로 실행되는 스프링(Spring) 애플리케이션을 만들게 해 주는 오픈소스 프레임워크입니다.",
+  "why": "",
+  "compare": "",
+  "aliases": [
+   "springboot",
+   "embedded tomcat",
+   "내장 톰캣",
+   "스프링 부트",
+   "스프링부트"
+  ],
+  "kind": "product",
+  "verified": true,
+  "sources": [
+   {
+    "title": "Spring Boot",
+    "org": "Spring (Broadcom)",
+    "url": "https://spring.io/projects/spring-boot",
+    "kind": "primary"
+   },
+   {
+    "title": "spring-projects/spring-boot (공식 저장소)",
+    "org": "Spring",
+    "url": "https://github.com/spring-projects/spring-boot",
+    "kind": "primary"
+   }
+  ],
+  "changed": "'실행 파일 하나'를 공식 표현(stand-alone, 서버 내장)에 맞게 고치고 별칭 'spring'을 뺌",
+  "note": "별칭 'spring'은 Spring Framework 전체를 가리키는 말이라 Spring Boot 의 별칭으로는 맞지 않아 뺌."
+ },
+ {
+  "term": "Node.js",
+  "fullName": "Node.js",
+  "category": "애플리케이션 런타임",
+  "definition": "Node.js는 크롬의 V8 엔진으로 자바스크립트(JavaScript)를 브라우저 밖에서 실행하는 오픈소스 런타임으로, OpenJS Foundation 소속 프로젝트입니다.",
+  "why": "",
+  "compare": "",
+  "aliases": [
+   "node",
+   "nodejs",
+   "노드",
+   "노드제이에스"
+  ],
+  "kind": "product",
+  "verified": true,
+  "sources": [
+   {
+    "title": "Introduction to Node.js",
+    "org": "OpenJS Foundation",
+    "url": "https://nodejs.org/en/learn/getting-started/introduction-to-nodejs",
+    "kind": "primary"
+   },
+   {
+    "title": "About Node.js",
+    "org": "OpenJS Foundation",
+    "url": "https://nodejs.org/en/about",
+    "kind": "primary"
+   }
+  ],
+  "changed": "'서버에서 실행'을 공식 표현 '브라우저 밖에서 실행'으로, '관리합니다'를 '소속 프로젝트'로 고침",
+  "note": ""
+ },
+ {
+  "term": "PM2",
+  "fullName": "Process Manager 2",
+  "category": "프로세스 관리자",
+  "definition": "PM2는 Node.js 애플리케이션을 백그라운드로 띄워 계속 살려 두고 여러 프로세스로 부하를 나누어 주는 오픈소스 프로세스 관리자입니다.",
+  "why": "",
+  "compare": "",
+  "aliases": [
+   "pm2",
+   "피엠투"
+  ],
+  "kind": "product",
+  "verified": true,
+  "sources": [
+   {
+    "title": "PM2 Quick Start",
+    "org": "PM2 (Keymetrics)",
+    "url": "https://pm2.keymetrics.io/docs/usage/quick-start/",
+    "kind": "primary"
+   },
+   {
+    "title": "Unitech/pm2 (공식 저장소)",
+    "org": "PM2",
+    "url": "https://github.com/Unitech/pm2",
+    "kind": "primary"
+   }
+  ],
+  "changed": "문장을 공식 설명(daemon process manager, 내장 로드 밸런서)에 맞게 다듬음",
+  "note": "fullName 'Process Manager 2'는 공식 문서에서 풀이로 확인하지 못함(공식 표기는 PM2)."
+ },
+ {
+  "term": "MariaDB",
+  "fullName": "MariaDB Server",
+  "category": "관계형 DB",
+  "definition": "MariaDB는 MySQL의 원 개발자들이 만든 오픈소스 관계형 데이터베이스(RDBMS)로, MySQL을 그대로 대체할 수 있게 설계되었습니다.",
+  "why": "",
+  "compare": "",
+  "aliases": [
+   "mariadb",
+   "maria db",
+   "마리아DB",
+   "마리아디비"
+  ],
+  "kind": "product",
+  "verified": true,
+  "sources": [
+   {
+    "title": "About MariaDB Server",
+    "org": "MariaDB Foundation",
+    "url": "https://mariadb.org/about/",
+    "kind": "primary"
+   }
+  ],
+  "changed": "'갈라져 나온', '명령과 접속 방식이 거의 같습니다'를 공식 표현(원 개발자, drop-in replacement)으로 고침",
+  "note": ""
+ },
+ {
+  "term": "MS SQL Server",
+  "fullName": "Microsoft SQL Server",
+  "category": "관계형 DB",
+  "definition": "MS SQL Server(Microsoft SQL Server)는 마이크로소프트가 만드는 상용 관계형 데이터베이스(RDBMS)로, Windows와 리눅스에서 동작합니다.",
+  "why": "",
+  "compare": "",
+  "aliases": [
+   "mssql",
+   "sql server",
+   "sqlserver",
+   "엠에스에스큐엘",
+   "MS SQL"
+  ],
+  "kind": "product",
+  "verified": true,
+  "sources": [
+   {
+    "title": "What Is SQL Server?",
+    "org": "Microsoft Learn",
+    "url": "https://learn.microsoft.com/en-us/sql/sql-server/what-is-sql-server",
+    "kind": "primary"
+   }
+  ],
+  "changed": "'Windows Server'를 문서 표현인 'Windows'로 고침",
+  "note": ""
+ },
+ {
+  "term": "Altibase",
+  "fullName": "Altibase",
+  "category": "관계형 DB / 인메모리",
+  "definition": "Altibase는 알티베이스(Altibase)가 만든 국산 상용 관계형 데이터베이스(RDBMS)로, 메모리 테이블과 디스크 테이블을 한 엔진에서 함께 쓰는 하이브리드 구조입니다.",
+  "why": "",
+  "compare": "",
+  "aliases": [
+   "altibase",
+   "altibase hdb",
+   "알티베이스"
+  ],
+  "kind": "product",
+  "verified": true,
+  "sources": [
+   {
+    "title": "Altibase (공식 사이트)",
+    "org": "Altibase",
+    "url": "https://altibase.com/",
+    "kind": "primary"
+   }
+  ],
+  "changed": "'상용', '한 엔진에서'를 덧붙임",
+  "note": ""
+ },
+ {
+  "term": "Db2",
+  "fullName": "IBM Db2",
+  "category": "관계형 DB",
+  "definition": "Db2(IBM Db2)는 IBM이 만드는 상용 관계형 데이터베이스(RDBMS)로, 메인프레임·유닉스·리눅스·윈도우에서 동작합니다.",
+  "why": "",
+  "compare": "",
+  "aliases": [
+   "db2",
+   "ibm db2",
+   "udb",
+   "디비투"
+  ],
+  "kind": "product",
+  "verified": true,
+  "sources": [
+   {
+    "title": "IBM Db2",
+    "org": "IBM",
+    "url": "https://www.ibm.com/products/db2",
+    "kind": "primary"
+   },
+   {
+    "title": "Db2 for Linux, UNIX and Windows 12.1 - Database fundamentals",
+    "org": "IBM",
+    "url": "https://www.ibm.com/docs/en/db2/12.1.x?topic=database-fundamentals",
+    "kind": "primary"
+   },
+   {
+    "title": "Db2 for z/OS 13 documentation",
+    "org": "IBM",
+    "url": "https://www.ibm.com/docs/en/db2-for-zos/13.0.0?topic=getting-started-db2-zos",
+    "kind": "primary"
+   }
+  ],
+  "changed": "",
+  "note": "동작 플랫폼은 IBM 문서가 'Db2 for Linux, UNIX and Windows'와 'Db2 for z/OS'(메인프레임)로 나뉘어 있는 것으로 확인함."
+ },
+ {
+  "term": "Oracle RAC",
+  "fullName": "Oracle Real Application Clusters",
+  "category": "관계형 DB / 클러스터",
+  "definition": "Oracle RAC(Real Application Clusters)는 여러 서버의 인스턴스가 공유 저장소에 있는 데이터베이스 하나를 함께 열어 서비스하게 하는 Oracle Database의 클러스터 옵션입니다.",
+  "why": "",
+  "compare": "",
+  "aliases": [
+   "rac",
+   "real application clusters",
+   "오라클 랙",
+   "랙"
+  ],
+  "kind": "product",
+  "verified": true,
+  "sources": [
+   {
+    "title": "Real Application Clusters Administration and Deployment Guide - Introduction to Oracle RAC",
+    "org": "Oracle",
+    "url": "https://docs.oracle.com/en/database/oracle/oracle-database/19/racad/introduction-to-oracle-rac.html",
+    "kind": "primary"
+   }
+  ],
+  "changed": "'기능'을 공식 표현인 '옵션'으로 고치고 문장을 다듬음",
+  "note": ""
+ },
+ {
+  "term": "Oracle Data Guard",
+  "fullName": "Oracle Data Guard",
+  "category": "관계형 DB / 복제·재해복구",
+  "definition": "Oracle Data Guard는 운영 데이터베이스의 변경 기록(redo)을 대기(Standby) 데이터베이스로 보내 적용해 같은 상태로 유지하는 Oracle Database의 재해복구 기능입니다.",
+  "why": "",
+  "compare": "",
+  "aliases": [
+   "data guard",
+   "dataguard",
+   "adg",
+   "active data guard",
+   "데이터 가드"
+  ],
+  "kind": "product",
+  "verified": true,
+  "sources": [
+   {
+    "title": "Data Guard Concepts and Administration - Introduction to Oracle Data Guard",
+    "org": "Oracle",
+    "url": "https://docs.oracle.com/en/database/oracle/oracle-database/19/sbydb/introduction-to-oracle-data-guard-concepts.html",
+    "kind": "primary"
+   }
+  ],
+  "changed": "문장을 다듬음(사실 변경 없음)",
+  "note": "별칭 adg·active data guard 는 Data Guard 자체가 아니라 대기 DB를 읽기 전용으로 열 때 필요한 별도 라이선스 옵션(Active Data Guard)임."
+ },
+ {
+  "term": "Aurora",
+  "fullName": "Amazon Aurora",
+  "category": "관계형 DB / 클라우드 관리형",
+  "definition": "Aurora(Amazon Aurora)는 AWS가 제공하는 MySQL·PostgreSQL 호환 관리형 관계형 데이터베이스로, 데이터를 세 가용 영역에 자동으로 복제합니다.",
+  "why": "",
+  "compare": "",
+  "aliases": [
+   "amazon aurora",
+   "aws aurora",
+   "aurora mysql",
+   "aurora postgresql",
+   "오로라"
+  ],
+  "kind": "product",
+  "verified": true,
+  "sources": [
+   {
+    "title": "What is Amazon Aurora?",
+    "org": "AWS",
+    "url": "https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/CHAP_AuroraOverview.html",
+    "kind": "primary"
+   },
+   {
+    "title": "Amazon Aurora storage",
+    "org": "AWS",
+    "url": "https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/Aurora.Overview.StorageReliability.html",
+    "kind": "primary"
+   }
+  ],
+  "changed": "'여러 가용 영역'을 문서대로 '세 가용 영역'으로 고침",
+  "note": ""
+ },
+ {
+  "term": "RDS",
+  "fullName": "Amazon Relational Database Service",
+  "category": "관계형 DB / 클라우드 관리형",
+  "definition": "RDS(Amazon Relational Database Service)는 MySQL·PostgreSQL·Oracle 같은 관계형 데이터베이스의 설치·백업·패치를 AWS가 대신 해 주는 관리형 서비스입니다.",
+  "why": "",
+  "compare": "",
+  "aliases": [
+   "amazon rds",
+   "aws rds",
+   "알디에스"
+  ],
+  "kind": "product",
+  "verified": true,
+  "sources": [
+   {
+    "title": "What is Amazon Relational Database Service (Amazon RDS)?",
+    "org": "AWS",
+    "url": "https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Welcome.html",
+    "kind": "primary"
+   }
+  ],
+  "changed": "글자 수를 맞추려 엔진 예시에서 SQL Server 를 뺌",
+  "note": ""
+ },
+ {
+  "term": "DynamoDB",
+  "fullName": "Amazon DynamoDB",
+  "category": "NoSQL DB / 클라우드 관리형",
+  "definition": "DynamoDB(Amazon DynamoDB)는 AWS가 제공하는 서버리스 방식의 관리형 NoSQL 데이터베이스로, 키-값과 문서 형태의 데이터를 저장합니다.",
+  "why": "",
+  "compare": "",
+  "aliases": [
+   "amazon dynamodb",
+   "dynamo",
+   "다이나모DB",
+   "다이나모디비"
+  ],
+  "kind": "product",
+  "verified": true,
+  "sources": [
+   {
+    "title": "What is Amazon DynamoDB?",
+    "org": "AWS",
+    "url": "https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Introduction.html",
+    "kind": "primary"
+   }
+  ],
+  "changed": "",
+  "note": ""
+ },
+ {
+  "term": "Cassandra",
+  "fullName": "Apache Cassandra",
+  "category": "NoSQL DB / 와이드 컬럼",
+  "definition": "Cassandra(Apache Cassandra)는 여러 서버에 데이터를 나누어 저장하고 주(Master) 서버 없이 동작하는 오픈소스 분산 NoSQL 데이터베이스입니다.",
+  "why": "",
+  "compare": "",
+  "aliases": [
+   "apache cassandra",
+   "카산드라"
+  ],
+  "kind": "product",
+  "verified": true,
+  "sources": [
+   {
+    "title": "Cassandra Basics",
+    "org": "Apache Software Foundation",
+    "url": "https://cassandra.apache.org/_/cassandra-basics.html",
+    "kind": "primary"
+   }
+  ],
+  "changed": "",
+  "note": "category 의 '와이드 컬럼'은 연 페이지에 나오지 않아 확인하지 못함."
+ },
+ {
+  "term": "HBase",
+  "fullName": "Apache HBase",
+  "category": "NoSQL DB / 와이드 컬럼",
+  "definition": "HBase(Apache HBase)는 하둡(Hadoop)의 분산 파일 시스템 위에서 아주 큰 표 형태의 데이터를 저장하는 오픈소스 분산 NoSQL 데이터베이스입니다.",
+  "why": "",
+  "compare": "",
+  "aliases": [
+   "apache hbase",
+   "에이치베이스"
+  ],
+  "kind": "product",
+  "verified": true,
+  "sources": [
+   {
+    "title": "Apache HBase (홈)",
+    "org": "Apache Software Foundation",
+    "url": "https://hbase.apache.org/",
+    "kind": "primary"
+   }
+  ],
+  "changed": "",
+  "note": "연 페이지는 'big data store'라 하며 'NoSQL'이라는 낱말은 쓰지 않음(Bigtable 을 본뜬 저장소라고 설명)."
+ },
+ {
+  "term": "InfluxDB",
+  "fullName": "InfluxDB",
+  "category": "시계열 DB",
+  "definition": "InfluxDB는 인플럭스데이터(InfluxData)가 만드는 시계열 데이터베이스로, 시간 순서로 쌓이는 측정값(모니터링 지표, 센서 값)을 저장하고 조회하는 데 맞춰져 있습니다.",
+  "why": "",
+  "compare": "",
+  "aliases": [
+   "influx",
+   "influxdb",
+   "인플럭스DB",
+   "인플럭스디비"
+  ],
+  "kind": "product",
+  "verified": true,
+  "sources": [
+   {
+    "title": "InfluxDB overview",
+    "org": "InfluxData",
+    "url": "https://www.influxdata.com/products/influxdb-overview/",
+    "kind": "primary"
+   },
+   {
+    "title": "InfluxDB 3 Core documentation",
+    "org": "InfluxData",
+    "url": "https://docs.influxdata.com/influxdb3/core/",
+    "kind": "primary"
+   }
+  ],
+  "changed": "",
+  "note": "라이선스는 판마다 다름. 문서는 InfluxDB 3 Core 를 오픈소스 판이라고만 하고 라이선스 이름은 연 페이지에서 확인하지 못해 정의에 넣지 않음."
+ },
+ {
+  "term": "Memcached",
+  "fullName": "Memcached",
+  "category": "캐시 / 인메모리",
+  "definition": "Memcached는 키와 값을 메모리에 저장하는 오픈소스 분산 캐시 서버로, 데이터베이스 부하를 줄여 응답을 빠르게 하는 데 씁니다.",
+  "why": "",
+  "compare": "",
+  "aliases": [
+   "memcache",
+   "memcached",
+   "멤캐시드",
+   "멤캐시"
+  ],
+  "kind": "product",
+  "verified": true,
+  "sources": [
+   {
+    "title": "memcached - a distributed memory object caching system",
+    "org": "memcached.org",
+    "url": "https://memcached.org/",
+    "kind": "primary"
+   },
+   {
+    "title": "About Memcached",
+    "org": "memcached.org",
+    "url": "https://memcached.org/about",
+    "kind": "primary"
+   }
+  ],
+  "changed": "'디스크에 남기지 않습니다', '구조가 단순'은 연 페이지에 명시가 없어 빼고 용도를 적음",
+  "note": ""
+ },
+ {
+  "term": "ActiveMQ",
+  "fullName": "Apache ActiveMQ",
+  "category": "큐 / 메시지 브로커",
+  "definition": "ActiveMQ(Apache ActiveMQ)는 자바로 만든 오픈소스 메시지 브로커로, 자바 메시지 표준(JMS)을 비롯한 여러 프로토콜로 시스템 사이에 메시지를 전달합니다.",
+  "why": "",
+  "compare": "",
+  "aliases": [
+   "apache activemq",
+   "activemq artemis",
+   "액티브MQ",
+   "액티브엠큐"
+  ],
+  "kind": "product",
+  "verified": true,
+  "sources": [
+   {
+    "title": "Apache ActiveMQ (홈)",
+    "org": "Apache Software Foundation",
+    "url": "https://activemq.apache.org/",
+    "kind": "primary"
+   }
+  ],
+  "changed": "공식 표현(multi-protocol, Java-based)에 맞게 고침",
+  "note": "별칭 activemq artemis 는 ActiveMQ 프로젝트 안의 별도 브로커(Artemis)를 가리킴."
+ },
+ {
+  "term": "IBM MQ",
+  "fullName": "IBM MQ",
+  "category": "큐 / 메시지 브로커",
+  "definition": "IBM MQ는 IBM이 공급하는 상용 메시지 큐 미들웨어로, 애플리케이션이 큐에 넣은 메시지를 다른 시스템으로 빠짐없이 전달하며 금융권에서도 쓰입니다.",
+  "why": "",
+  "compare": "",
+  "aliases": [
+   "mq",
+   "websphere mq",
+   "mqseries",
+   "아이비엠 엠큐"
+  ],
+  "kind": "product",
+  "verified": true,
+  "sources": [
+   {
+    "title": "IBM MQ",
+    "org": "IBM",
+    "url": "https://www.ibm.com/products/mq",
+    "kind": "primary"
+   },
+   {
+    "title": "IBM MQ 9.4 - Introduction to IBM MQ",
+    "org": "IBM",
+    "url": "https://www.ibm.com/docs/en/ibm-mq/9.4.x?topic=mq-introduction",
+    "kind": "primary"
+   }
+  ],
+  "changed": "예전 이름(MQSeries·WebSphere MQ)을 정의와 fullName 에서 빼고 하는 일을 적음",
+  "note": "예전 이름 MQSeries·WebSphere MQ 는 연 IBM 페이지 4곳에 나오지 않아 확인하지 못함. 별칭 websphere mq·mqseries 는 입력 그대로 두었으니 쓰기 전에 확인 필요."
+ },
+ {
+  "term": "Control-M",
+  "fullName": "BMC Control-M",
+  "category": "배치 스케줄러",
+  "definition": "Control-M은 BMC가 공급하는 상용 작업 자동화(배치 스케줄러) 제품으로, 여러 시스템의 작업 흐름을 순서와 시간에 맞춰 실행하고 한곳에서 관리합니다.",
+  "why": "",
+  "compare": "",
+  "aliases": [
+   "controlm",
+   "ctm",
+   "bmc control-m",
+   "컨트롤엠"
+  ],
+  "kind": "product",
+  "verified": true,
+  "sources": [
+   {
+    "title": "Control-M: Workflow Orchestration Software",
+    "org": "BMC Software",
+    "url": "https://www.bmc.com/it-solutions/control-m.html",
+    "kind": "primary"
+   }
+  ],
+  "changed": "'배치 작업'을 공식 표현에 가까운 '작업 흐름(워크플로)'으로 다듬음",
+  "note": ""
+ },
+ {
+  "term": "Quartz",
+  "fullName": "Quartz Job Scheduler",
+  "category": "배치 스케줄러 / 라이브러리",
+  "definition": "Quartz는 자바 애플리케이션 안에서 정해진 시각이나 주기에 작업을 실행하게 해 주는 오픈소스 작업 스케줄링 라이브러리입니다.",
+  "why": "",
+  "compare": "",
+  "aliases": [
+   "quartz scheduler",
+   "쿼츠"
+  ],
+  "kind": "product",
+  "verified": true,
+  "sources": [
+   {
+    "title": "Quartz Job Scheduler (홈)",
+    "org": "Quartz (Terracotta)",
+    "url": "https://www.quartz-scheduler.org/",
+    "kind": "primary"
+   }
+  ],
+  "changed": "",
+  "note": ""
+ },
+ {
+  "term": "Airflow",
+  "fullName": "Apache Airflow",
+  "category": "배치 스케줄러 / 워크플로",
+  "definition": "Airflow(Apache Airflow)는 여러 단계로 이어지는 배치 작업 흐름을 파이썬 코드로 정의해 일정에 맞춰 실행하고 감시하는 오픈소스 워크플로 플랫폼입니다.",
+  "why": "",
+  "compare": "",
+  "aliases": [
+   "apache airflow",
+   "에어플로",
+   "에어플로우"
+  ],
+  "kind": "product",
+  "verified": true,
+  "sources": [
+   {
+    "title": "What is Airflow?",
+    "org": "Apache Software Foundation",
+    "url": "https://airflow.apache.org/docs/apache-airflow/stable/index.html",
+    "kind": "primary"
+   }
+  ],
+  "changed": "'데이터 처리 작업'을 문서 표현인 '배치 작업 흐름'으로, '도구'를 '플랫폼'으로 고침",
+  "note": ""
+ },
+ {
+  "term": "Oracle GoldenGate",
+  "fullName": "Oracle GoldenGate",
+  "category": "데이터 복제 / CDC",
+  "definition": "Oracle GoldenGate는 데이터베이스에서 바뀐 데이터를 잡아 같은 종류나 다른 종류의 데이터베이스로 실시간 복제하는 오라클의 데이터 복제(CDC) 제품입니다.",
+  "why": "",
+  "compare": "",
+  "aliases": [
+   "goldengate",
+   "ogg",
+   "골든게이트"
+  ],
+  "kind": "product",
+  "verified": true,
+  "sources": [
+   {
+    "title": "Oracle GoldenGate 21c - Overview of Oracle GoldenGate",
+    "org": "Oracle",
+    "url": "https://docs.oracle.com/en/middleware/goldengate/core/21.3/coredoc/overview-oracle-goldengate.html",
+    "kind": "primary"
+   }
+  ],
+  "changed": "'변경 기록을 읽어', '실시간에 가깝게', '상용'을 빼고 문서 표현(실시간, 이기종 복제)으로 고침",
+  "note": "변경 기록(로그)을 읽는 방식이라는 점과 라이선스(상용) 문구는 연 페이지에 없음."
+ },
+ {
+  "term": "Debezium",
+  "fullName": "Debezium",
+  "category": "데이터 복제 / CDC",
+  "definition": "Debezium은 데이터베이스의 변경 내용을 잡아 Kafka로 내보내는 오픈소스 변경 데이터 캡처(CDC) 플랫폼으로, Commonhaus 재단이 주관합니다.",
+  "why": "",
+  "compare": "",
+  "aliases": [
+   "debezium",
+   "데비지움"
+  ],
+  "kind": "product",
+  "verified": true,
+  "sources": [
+   {
+    "title": "Debezium (홈)",
+    "org": "Debezium / Commonhaus Foundation",
+    "url": "https://debezium.io/",
+    "kind": "primary"
+   }
+  ],
+  "changed": "'레드햇에서 시작해'를 뺌(공식 홈에 없음)",
+  "note": "레드햇에서 시작했다는 이력은 연 페이지에서 확인하지 못함."
+ },
+ {
+  "term": "Hyper-V",
+  "fullName": "Microsoft Hyper-V",
+  "category": "가상화 / 하이퍼바이저",
+  "definition": "Hyper-V는 마이크로소프트가 Windows Server와 Windows에 포함해 제공하는 하이퍼바이저로, 물리 서버 한 대에 여러 가상 머신을 띄웁니다.",
+  "why": "",
+  "compare": "",
+  "aliases": [
+   "hyperv",
+   "hyper v",
+   "하이퍼브이",
+   "하이퍼V"
+  ],
+  "kind": "product",
+  "verified": true,
+  "sources": [
+   {
+    "title": "Hyper-V virtualization in Windows Server and Windows",
+    "org": "Microsoft Learn",
+    "url": "https://learn.microsoft.com/en-us/windows-server/virtualization/hyper-v/overview",
+    "kind": "primary"
+   }
+  ],
+  "changed": "Windows(클라이언트)에도 들어 있다는 점을 더함",
+  "note": ""
+ },
+ {
+  "term": "KVM",
+  "fullName": "Kernel-based Virtual Machine",
+  "category": "가상화 / 하이퍼바이저",
+  "definition": "KVM(Kernel-based Virtual Machine)은 리눅스 커널에 들어 있는 오픈소스 가상화 기능으로, 리눅스 서버를 하이퍼바이저로 만들어 가상 머신을 띄웁니다.",
+  "why": "",
+  "compare": "",
+  "aliases": [
+   "kernel-based virtual machine",
+   "qemu-kvm",
+   "케이브이엠"
+  ],
+  "kind": "product",
+  "verified": true,
+  "sources": [
+   {
+    "title": "KVM (Main Page)",
+    "org": "linux-kvm.org",
+    "url": "https://linux-kvm.org/page/Main_Page",
+    "kind": "primary"
+   }
+  ],
+  "changed": "",
+  "note": ""
+ },
+ {
+  "term": "Docker",
+  "fullName": "Docker (Docker Engine)",
+  "category": "컨테이너 / 실행 도구",
+  "definition": "Docker는 애플리케이션과 실행에 필요한 것들을 컨테이너 이미지로 묶고 그 이미지를 컨테이너로 실행하는 도구로, 도커(Docker, Inc.)가 만듭니다.",
+  "why": "",
+  "compare": "",
+  "aliases": [
+   "docker engine",
+   "dockerd",
+   "도커"
+  ],
+  "kind": "product",
+  "verified": true,
+  "sources": [
+   {
+    "title": "What is Docker?",
+    "org": "Docker, Inc.",
+    "url": "https://docs.docker.com/get-started/docker-overview/",
+    "kind": "primary"
+   },
+   {
+    "title": "Docker - Company",
+    "org": "Docker, Inc.",
+    "url": "https://www.docker.com/company/",
+    "kind": "primary"
+   }
+  ],
+  "changed": "",
+  "note": ""
+ },
+ {
+  "term": "OpenShift",
+  "fullName": "Red Hat OpenShift",
+  "category": "컨테이너 플랫폼 / 쿠버네티스 배포판",
+  "definition": "OpenShift(Red Hat OpenShift)는 레드햇이 쿠버네티스를 중심으로 개발·운영 도구를 더해 공급하는 기업용 컨테이너 애플리케이션 플랫폼입니다.",
+  "why": "",
+  "compare": "",
+  "aliases": [
+   "openshift",
+   "ocp",
+   "openshift container platform",
+   "오픈시프트"
+  ],
+  "kind": "product",
+  "verified": true,
+  "sources": [
+   {
+    "title": "Red Hat OpenShift",
+    "org": "Red Hat",
+    "url": "https://www.redhat.com/en/technologies/cloud-computing/openshift",
+    "kind": "primary"
+   },
+   {
+    "title": "Red Hat OpenShift Container Platform",
+    "org": "Red Hat",
+    "url": "https://www.redhat.com/en/technologies/cloud-computing/openshift/container-platform",
+    "kind": "primary"
+   }
+  ],
+  "changed": "'구독 방식'과 세부 기능 나열을 빼고 공식 설명에 맞게 다듬음",
+  "note": "구독은 공식 페이지에 'A subscription may be required for some services'로만 나와 정의에서 뺌."
+ },
+ {
+  "term": "Rancher",
+  "fullName": "SUSE Rancher",
+  "category": "쿠버네티스 / 클러스터 관리",
+  "definition": "Rancher는 여러 쿠버네티스 클러스터의 인증·접근 권한·모니터링을 한곳에서 관리하게 해 주는 수세(SUSE)의 컨테이너 관리 플랫폼입니다.",
+  "why": "",
+  "compare": "",
+  "aliases": [
+   "suse rancher",
+   "랜처"
+  ],
+  "kind": "product",
+  "verified": true,
+  "sources": [
+   {
+    "title": "SUSE Rancher Manager - Overview",
+    "org": "SUSE",
+    "url": "https://ranchermanager.docs.rancher.com/v2.15/getting-started/overview",
+    "kind": "primary"
+   }
+  ],
+  "changed": "'오픈소스'를 빼고 공식 설명(컨테이너 관리 플랫폼, 중앙 인증·접근 제어·모니터링)에 맞춤, 별칭 'rke'를 뺌",
+  "note": "오픈소스라는 문구는 연 페이지에 명시되지 않음. 'rke'는 Rancher 가 만든 쿠버네티스 배포판 이름이라 Rancher 의 별칭으로는 맞지 않아 뺌."
+ },
+ {
+  "term": "Jenkins",
+  "fullName": "Jenkins",
+  "category": "CI/CD / 자동화 서버",
+  "definition": "Jenkins는 소프트웨어의 빌드·테스트·배포 작업을 자동으로 돌려 주는 오픈소스 자동화 서버입니다.",
+  "why": "",
+  "compare": "",
+  "aliases": [
+   "jenkins",
+   "젠킨스"
+  ],
+  "kind": "product",
+  "verified": true,
+  "sources": [
+   {
+    "title": "Jenkins User Documentation",
+    "org": "Jenkins (CD Foundation)",
+    "url": "https://www.jenkins.io/doc/",
+    "kind": "primary"
+   }
+  ],
+  "changed": "문장을 다듬음(사실 변경 없음)",
+  "note": ""
+ },
+ {
+  "term": "GitLab",
+  "fullName": "GitLab",
+  "category": "형상관리 / CI/CD",
+  "definition": "GitLab은 Git 소스 관리와 계획, CI/CD, 보안 점검을 한 제품으로 제공하는 개발(DevSecOps) 플랫폼으로, 사내에 직접 설치해 쓸 수도 있습니다.",
+  "why": "",
+  "compare": "",
+  "aliases": [
+   "gitlab ci",
+   "gitlab ce",
+   "깃랩"
+  ],
+  "kind": "product",
+  "verified": true,
+  "sources": [
+   {
+    "title": "GitLab (홈)",
+    "org": "GitLab Inc.",
+    "url": "https://about.gitlab.com/",
+    "kind": "primary"
+   },
+   {
+    "title": "GitLab Docs",
+    "org": "GitLab Inc.",
+    "url": "https://docs.gitlab.com/",
+    "kind": "primary"
+   }
+  ],
+  "changed": "'코드 리뷰'를 연 페이지에 나온 범위(계획·소스 관리·CI/CD·보안)로 고침",
+  "note": ""
+ },
+ {
+  "term": "Ansible",
+  "fullName": "Red Hat Ansible",
+  "category": "구성 관리 / 자동화",
+  "definition": "Ansible은 대상 서버에 별도 프로그램(에이전트)을 깔지 않고 SSH로 접속해 설치·설정 작업을 자동으로 수행하는 오픈소스 자동화 도구로, 레드햇이 후원합니다.",
+  "why": "",
+  "compare": "",
+  "aliases": [
+   "ansible",
+   "ansible playbook",
+   "앤서블",
+   "앤시블"
+  ],
+  "kind": "product",
+  "verified": true,
+  "sources": [
+   {
+    "title": "Introduction to Ansible",
+    "org": "Ansible community (Red Hat)",
+    "url": "https://docs.ansible.com/ansible/latest/getting_started/introduction.html",
+    "kind": "primary"
+   },
+   {
+    "title": "How Ansible works",
+    "org": "Red Hat",
+    "url": "https://www.redhat.com/en/ansible-collaborative/how-ansible-works",
+    "kind": "primary"
+   }
+  ],
+  "changed": "'레드햇이 주도'를 공식 표기(Sponsored by Red Hat)에 맞춰 '후원'으로 고침",
+  "note": ""
+ },
+ {
+  "term": "Terraform",
+  "fullName": "HashiCorp Terraform",
+  "category": "인프라 코드(IaC)",
+  "definition": "Terraform은 클라우드와 사내 인프라 자원을 코드로 적어 만들고 바꾸는 하시코프(HashiCorp)의 코드형 인프라(IaC) 도구로, 라이선스가 MPL에서 BSL로 바뀌었습니다.",
+  "why": "",
+  "compare": "",
+  "aliases": [
+   "terraform",
+   "tf",
+   "hashicorp terraform",
+   "테라폼"
+  ],
+  "kind": "product",
+  "verified": true,
+  "sources": [
+   {
+    "title": "What is Terraform?",
+    "org": "HashiCorp",
+    "url": "https://developer.hashicorp.com/terraform/intro",
+    "kind": "primary"
+   },
+   {
+    "title": "HashiCorp adopts Business Source License",
+    "org": "HashiCorp",
+    "url": "https://www.hashicorp.com/en/blog/hashicorp-adopts-business-source-license",
+    "kind": "primary"
+   }
+  ],
+  "changed": "연도(2023, 2025)와 IBM 인수 문구를 뺌",
+  "note": "IBM 인수는 연 페이지에서 확인하지 못함(Terraform 소개 페이지 바닥글의 지원 링크가 IBM 을 가리키는 정도). 라이선스 변경 글은 '모든 HashiCorp 제품의 앞으로 나올 릴리스'라고 하며 Terraform 을 따로 이름 부르지는 않음."
+ },
+ {
+  "term": "Grafana",
+  "fullName": "Grafana",
+  "category": "모니터링 / 대시보드",
+  "definition": "Grafana는 여러 데이터 저장소의 지표·로그를 조회해 그래프 대시보드로 보여 주고 알림을 보내는 오픈소스 시각화 도구로, 그라파나 랩스(Grafana Labs)가 만듭니다.",
+  "why": "",
+  "compare": "",
+  "aliases": [
+   "grafana",
+   "그라파나"
+  ],
+  "kind": "product",
+  "verified": true,
+  "sources": [
+   {
+    "title": "About Grafana",
+    "org": "Grafana Labs",
+    "url": "https://grafana.com/docs/grafana/latest/introduction/",
+    "kind": "primary"
+   }
+  ],
+  "changed": "'Prometheus 같은'을 빼고 알림 기능을 더함",
+  "note": "연 페이지는 Prometheus 를 데이터 소스 예로 직접 들지는 않음."
+ },
+ {
+  "term": "Nagios",
+  "fullName": "Nagios (Nagios Core)",
+  "category": "모니터링 / 인프라",
+  "definition": "Nagios는 서버·네트워크 장비·서비스 상태를 감시해 문제가 생기면 알림을 보내는 모니터링 도구로, 오픈소스인 Nagios Core와 상용 Nagios XI가 있습니다.",
+  "why": "",
+  "compare": "",
+  "aliases": [
+   "nagios core",
+   "nagios xi",
+   "나기오스"
+  ],
+  "kind": "product",
+  "verified": true,
+  "sources": [
+   {
+    "title": "Nagios Core",
+    "org": "Nagios Enterprises",
+    "url": "https://www.nagios.org/projects/nagios-core/",
+    "kind": "primary"
+   },
+   {
+    "title": "About Nagios",
+    "org": "Nagios Enterprises",
+    "url": "https://www.nagios.org/about/",
+    "kind": "primary"
+   }
+  ],
+  "changed": "문장을 다듬음(사실 변경 없음)",
+  "note": ""
+ },
+ {
+  "term": "ELK 스택",
+  "fullName": "Elasticsearch · Logstash · Kibana (Elastic Stack)",
+  "category": "로깅 / 로그 수집·검색",
+  "definition": "ELK 스택은 데이터를 모으는 Logstash, 저장·검색하는 Elasticsearch, 화면으로 보여 주는 Kibana를 묶어 부르는 이름으로, 엘라스틱(Elastic)의 Elastic Stack에 해당합니다.",
+  "why": "",
+  "compare": "",
+  "aliases": [
+   "elk",
+   "elastic stack",
+   "엘크",
+   "엘라스틱 스택"
+  ],
+  "kind": "product",
+  "verified": true,
+  "sources": [
+   {
+    "title": "Elastic Stack",
+    "org": "Elastic",
+    "url": "https://www.elastic.co/elastic-stack",
+    "kind": "primary"
+   },
+   {
+    "title": "Logstash",
+    "org": "Elastic",
+    "url": "https://www.elastic.co/logstash",
+    "kind": "primary"
+   }
+  ],
+  "changed": "'로그'를 '데이터'로 넓히고 Elastic Stack 과의 관계 표현을 다듬음",
+  "note": "Elastic 은 Elastic Stack 을 Elasticsearch·Kibana·Beats·Logstash 등으로 이루어진다고 설명함(ELK 보다 넓은 묶음)."
+ },
+ {
+  "term": "Logstash",
+  "fullName": "Logstash",
+  "category": "로깅 / 로그 수집기",
+  "definition": "Logstash는 여러 곳의 데이터를 받아 가공한 뒤 Elasticsearch 같은 저장소로 보내는 엘라스틱(Elastic)의 오픈소스 데이터 수집·가공 파이프라인입니다.",
+  "why": "",
+  "compare": "",
+  "aliases": [
+   "logstash",
+   "로그스태시"
+  ],
+  "kind": "product",
+  "verified": true,
+  "sources": [
+   {
+    "title": "Logstash",
+    "org": "Elastic",
+    "url": "https://www.elastic.co/logstash",
+    "kind": "primary"
+   }
+  ],
+  "changed": "'로그'를 '데이터'로 넓히고 '오픈소스', '파이프라인'을 공식 표현대로 넣음",
+  "note": ""
+ },
+ {
+  "term": "Kibana",
+  "fullName": "Kibana",
+  "category": "로깅 / 대시보드",
+  "definition": "Kibana는 Elasticsearch에 쌓인 데이터를 검색·분석하고 그래프와 대시보드로 보여 주는 엘라스틱(Elastic)의 화면 도구입니다.",
+  "why": "",
+  "compare": "",
+  "aliases": [
+   "kibana",
+   "키바나"
+  ],
+  "kind": "product",
+  "verified": true,
+  "sources": [
+   {
+    "title": "Kibana",
+    "org": "Elastic",
+    "url": "https://www.elastic.co/kibana",
+    "kind": "primary"
+   }
+  ],
+  "changed": "문장을 다듬음(사실 변경 없음)",
+  "note": ""
+ },
+ {
+  "term": "WhaTap",
+  "fullName": "WhaTap Monitoring",
+  "category": "모니터링 / 통합 모니터링(SaaS)",
+  "definition": "WhaTap은 와탭랩스(WhaTap Labs)가 SaaS로 제공하는 국산 모니터링 서비스로, 애플리케이션·서버·데이터베이스·쿠버네티스 상태를 실시간으로 보여 줍니다.",
+  "why": "",
+  "compare": "",
+  "aliases": [
+   "whatap",
+   "와탭"
+  ],
+  "kind": "product",
+  "verified": true,
+  "sources": [
+   {
+    "title": "와탭 (공식 사이트)",
+    "org": "와탭랩스",
+    "url": "https://www.whatap.io/ko/",
+    "kind": "primary"
+   },
+   {
+    "title": "WhaTap Docs",
+    "org": "와탭랩스",
+    "url": "https://docs.whatap.io/",
+    "kind": "primary"
+   }
+  ],
+  "changed": "'구독형(SaaS)'을 'SaaS로 제공', '실시간'으로 다듬음",
+  "note": "설치형(온프레미스) 제공 여부는 연 페이지에서 확인하지 못함."
+ },
+ {
+  "term": "Datadog",
+  "fullName": "Datadog",
+  "category": "모니터링 / 통합 모니터링(SaaS)",
+  "definition": "Datadog은 인프라·애플리케이션·로그의 상태를 한곳에 모아 보여 주는 데이터독(Datadog)의 통합 모니터링·보안 플랫폼입니다.",
+  "why": "",
+  "compare": "",
+  "aliases": [
+   "datadog",
+   "데이터독"
+  ],
+  "kind": "product",
+  "verified": true,
+  "sources": [
+   {
+    "title": "Getting Started",
+    "org": "Datadog",
+    "url": "https://docs.datadoghq.com/getting_started/",
+    "kind": "primary"
+   },
+   {
+    "title": "Datadog (홈)",
+    "org": "Datadog",
+    "url": "https://www.datadoghq.com/",
+    "kind": "primary"
+   }
+  ],
+  "changed": "'구독형(SaaS)'을 빼고 공식 표현(모니터링·보안 통합 플랫폼)으로 고침",
+  "note": "연 공식 페이지 4곳에 'SaaS'라는 말이 직접 나오지 않아 정의에서 뺌. category 의 '(SaaS)'는 입력 그대로 두었으나 같은 이유로 문구 확인은 못 함."
+ },
+ {
+  "term": "Nexus",
+  "fullName": "Sonatype Nexus Repository",
+  "category": "아티팩트 저장소",
+  "definition": "Nexus(Sonatype Nexus Repository)는 Maven·npm·Docker 같은 형식의 소프트웨어 구성 요소를 한곳에 저장하고 배포하는 소나타입(Sonatype)의 저장소 관리 제품입니다.",
+  "why": "",
+  "compare": "",
+  "aliases": [
+   "nexus repository",
+   "nexus oss",
+   "sonatype nexus",
+   "넥서스"
+  ],
+  "kind": "product",
+  "verified": true,
+  "sources": [
+   {
+    "title": "Sonatype Nexus Repository",
+    "org": "Sonatype",
+    "url": "https://help.sonatype.com/en/sonatype-nexus-repository.html",
+    "kind": "primary"
+   }
+  ],
+  "changed": "'사내에', '빌드 결과물과 외부 라이브러리'를 공식 표현(구성 요소를 관리·배포)으로 다듬음",
+  "note": "판은 Community·Pro·Pro+ 로 나뉘며 자체 설치와 클라우드 제공이 있음. 별칭 'nexus oss'는 지금의 공식 판 이름이 아님(확인 범위 밖이라 그대로 둠)."
+ }
+]

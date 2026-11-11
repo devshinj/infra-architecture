@@ -1,0 +1,907 @@
+[
+ {
+  "term": "쿠버네티스 클러스터",
+  "fullName": "쿠버네티스 클러스터(Kubernetes Cluster)",
+  "category": "컨테이너 / 쿠버네티스",
+  "definition": "쿠버네티스 클러스터는 전체를 관리하는 컨트롤 플레인과 컨테이너를 실제로 실행하는 워커 노드들을 묶은 쿠버네티스 한 벌입니다.",
+  "why": "서버 여러 대를 하나의 실행 공간처럼 다루어 컨테이너를 배치하고 관리합니다.",
+  "compare": "쿠버네티스는 소프트웨어 이름이고, 쿠버네티스 클러스터는 그것으로 실제 구성한 서버 묶음입니다.",
+  "aliases": [
+   "k8s cluster",
+   "kubernetes cluster",
+   "클러스터(K8s)"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "Cluster Architecture",
+    "org": "Kubernetes",
+    "url": "https://kubernetes.io/docs/concepts/architecture/",
+    "kind": "primary"
+   }
+  ],
+  "changed": "워커 노드 '여러 대'를 '워커 노드들'로(최소 1대면 성립), why 의 '알아서 되살린다'를 뺌, 구성 요소인 별칭 2개(워커 노드·컨트롤 플레인) 제거",
+  "note": "기존 항목과 겹침(사전에 이미 '쿠버네티스'가 있음)"
+ },
+ {
+  "term": "EAI",
+  "fullName": "기업 애플리케이션 통합(Enterprise Application Integration)",
+  "category": "미들웨어 / 연계",
+  "definition": "EAI(기업 애플리케이션 통합)는 회사 안의 서로 다른 시스템과 애플리케이션을 미들웨어 등으로 연결해 데이터를 주고받게 하는 통합 방식이나 그 솔루션입니다.",
+  "why": "시스템끼리 일일이 직접 연결하지 않고 가운데 허브에서 전달 경로와 데이터 변환을 관리합니다.",
+  "compare": "EAI는 시스템을 통합하는 일 전체를 가리키고, ESB는 그 가운데 허브를 구현하는 방식의 하나입니다.",
+  "aliases": [
+   "enterprise application integration",
+   "이에이아이",
+   "내부 연계"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "What is enterprise application integration (EAI)?",
+    "org": "IBM",
+    "url": "https://www.ibm.com/think/topics/enterprise-application-integration",
+    "kind": "primary"
+   }
+  ],
+  "changed": "정의를 '솔루션'에서 '통합 방식이나 그 솔루션'으로, compare 를 확인되지 않은 FEP 대비에서 출처에 있는 ESB 대비로 바꿈, 별칭 '연계 서버' 제거",
+  "note": ""
+ },
+ {
+  "term": "ESB",
+  "fullName": "엔터프라이즈 서비스 버스(Enterprise Service Bus)",
+  "category": "미들웨어 / 연계",
+  "definition": "ESB(엔터프라이즈 서비스 버스)는 가운데 놓인 소프트웨어가 애플리케이션 사이의 데이터 변환·전달 경로 지정·통신 규약 변환을 맡아 통합하는 구조입니다.",
+  "why": "시스템끼리 일일이 직접 연결하지 않아도 되고, 기능을 서비스로 만들어 다시 쓰기 쉬워집니다.",
+  "compare": "EAI는 시스템을 통합하는 일 전체를 가리키고, ESB는 서비스 인터페이스로 느슨하게 연결하는 통합 구조의 하나입니다.",
+  "aliases": [
+   "enterprise service bus",
+   "이에스비",
+   "서비스 버스"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "What is an enterprise service bus (ESB)?",
+    "org": "IBM",
+    "url": "https://www.ibm.com/think/topics/esb",
+    "kind": "primary"
+   },
+   {
+    "title": "What is enterprise application integration (EAI)?",
+    "org": "IBM",
+    "url": "https://www.ibm.com/think/topics/enterprise-application-integration",
+    "kind": "primary"
+   }
+  ],
+  "changed": "정의를 '연계 미들웨어'에서 출처 표현(아키텍처 패턴)에 맞춰 '구조'로, compare 에서 출처에 없는 'EAI는 허브에서 출발' 서술을 뺌",
+  "note": ""
+ },
+ {
+  "term": "MCI",
+  "fullName": "멀티 채널 통합(Multi Channel Integration)",
+  "category": "미들웨어 / 연계 (금융)",
+  "definition": "MCI(멀티 채널 통합)는 영업점 단말·자동화기기 같은 여러 채널과 계정계 사이의 연계를 한곳에서 맡는 금융권 채널 연계 시스템입니다.",
+  "why": "채널이 늘어도 업무 시스템과의 연결을 한곳에서 받아 넘기게 합니다.",
+  "compare": "MCI는 채널과 내부 업무 시스템 사이를, FEP는 내부 시스템과 외부 기관 사이를 잇습니다.",
+  "aliases": [
+   "multi channel integration",
+   "mca",
+   "엠씨아이",
+   "채널 통합"
+  ],
+  "kind": "concept",
+  "verified": false,
+  "sources": [
+   {
+    "title": "차세대 우체국금융시스템 구축을 위한 정보제공요청서(RFI)",
+    "org": "우정사업본부(사본 게시: smallake.kr)",
+    "url": "https://smallake.kr/wp-content/uploads/2019/09/차세대-우체국금융시스템-구축을-위한-정보제공요청서RFI.pdf",
+    "kind": "primary"
+   },
+   {
+    "title": "TmaxSoft press release (AnyLink: EAI, MCI, and FEP integration)",
+    "org": "TmaxSoft",
+    "url": "https://www.tmaxsoft.com/en/press/view?seq=522",
+    "kind": "aux"
+   },
+   {
+    "title": "MCI",
+    "org": "IT위키",
+    "url": "https://itwiki.kr/w/MCI",
+    "kind": "aux"
+   },
+   {
+    "title": "금융 IT 시스템 연계: 내부 연계(EAI·MCI)와 외부 연계(FEP)",
+    "org": "개인 블로그",
+    "url": "https://nayoungs.tistory.com/entry/%EA%B8%88%EC%9C%B5-IT-%EC%8B%9C%EC%8A%A4%ED%85%9C-%EC%97%B0%EA%B3%84-%EB%82%B4%EB%B6%80%EC%97%B0%EA%B3%84EAI-MCI%EC%99%80-%EC%99%B8%EB%B6%80%EC%97%B0%EA%B3%84FEP",
+    "kind": "aux"
+   }
+  ],
+  "changed": "정의에서 확인하지 못한 '표준 전문으로 바꿔'를 빼고 확인된 역할(채널과 계정계 사이 연계)만 남김",
+  "note": "역할은 우정사업본부 RFI('MCI: 대내 채널과 계정계 인터페이스를 지원하는 어플리케이션', 사본 사이트 열람)에서 확인했으나, 약어 풀이(Multi Channel Integration)와 별칭 MCA 는 보조 출처(IT위키·블로그)뿐입니다. 티맥스 문서(docs.tmaxsoft.com)는 열리지 않았고 검색 요약에는 '멀티채널 인터페이스'로 나와 풀이가 엇갈립니다. compare 의 FEP 설명도 미확인입니다."
+ },
+ {
+  "term": "FEP",
+  "fullName": "대외계 연계 시스템(Front-End Processor)",
+  "category": "미들웨어 / 연계 (금융)",
+  "definition": "FEP(Front-End Processor)는 국내 금융권에서 금융결제원·카드사·타 은행 같은 외부 기관과 전문을 주고받는 대외 연계 시스템을 가리키는 말입니다.",
+  "why": "기관마다 다른 통신 방식과 전문 형식을 한곳에서 맞춰 주고 대외 거래를 통제합니다.",
+  "compare": "FEP는 원래 메인프레임 앞단의 통신 처리 장치를 뜻했지만, 국내 금융 SI에서는 대외 기관 연계 시스템이라는 뜻으로 씁니다.",
+  "aliases": [
+   "front-end processor",
+   "에프이피",
+   "대외계 서버",
+   "대외 연계",
+   "대외계 시스템"
+  ],
+  "kind": "concept",
+  "verified": false,
+  "sources": [
+   {
+    "title": "TmaxSoft press release (AnyLink: EAI, MCI, and FEP integration)",
+    "org": "TmaxSoft",
+    "url": "https://www.tmaxsoft.com/en/press/view?seq=522",
+    "kind": "aux"
+   },
+   {
+    "title": "금융 IT 시스템 연계: 내부 연계(EAI·MCI)와 외부 연계(FEP)",
+    "org": "개인 블로그",
+    "url": "https://nayoungs.tistory.com/entry/%EA%B8%88%EC%9C%B5-IT-%EC%8B%9C%EC%8A%A4%ED%85%9C-%EC%97%B0%EA%B3%84-%EB%82%B4%EB%B6%80%EC%97%B0%EA%B3%84EAI-MCI%EC%99%80-%EC%99%B8%EB%B6%80%EC%97%B0%EA%B3%84FEP",
+    "kind": "aux"
+   }
+  ],
+  "changed": "정의에서 확인하지 못한 '전용선으로'를 뺌, 정의 끝을 '~입니다'로 맞춤",
+  "note": "대외 연계 시스템이라는 뜻을 직접 풀이한 기관·벤더 공식 문서를 열지 못했습니다. 티맥스소프트 보도자료는 'EAI, MCI, FEP 연계'라고 이름만 들고, 뜻 풀이는 블로그·IT위키뿐입니다. '원래 메인프레임 앞단 통신 처리 장치'라는 compare 도 출처로 확인하지 못했습니다(TTA 용어사전 접속 실패)."
+ },
+ {
+  "term": "API 관리",
+  "fullName": "API 관리(API Management, APIM)",
+  "category": "미들웨어 / 연계",
+  "definition": "API 관리는 API를 배포하고 통제하고 분석하는 과정으로, 게이트웨이·개발자 포털·접근 통제·사용량 제한·통계를 아우르는 활동이나 솔루션입니다.",
+  "why": "누가 어떤 API를 얼마나 쓰는지 통제하고 개발자에게 API를 안전하게 공개합니다.",
+  "compare": "API 게이트웨이는 요청을 받아 넘기는 단일 관문이고, API 관리는 게이트웨이에 통계·포털·접근 통제까지 더한 전체 체계입니다.",
+  "aliases": [
+   "api management",
+   "apim",
+   "api 관리 플랫폼"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "What is API management?",
+    "org": "Red Hat",
+    "url": "https://www.redhat.com/en/topics/api/what-is-api-management",
+    "kind": "primary"
+   }
+  ],
+  "changed": "정의를 출처 표현(배포·통제·분석)에 맞춰 다듬고, 뜻이 다른 별칭 '오픈 API 플랫폼' 제거",
+  "note": ""
+ },
+ {
+  "term": "배치 스케줄러",
+  "fullName": "배치 스케줄러(Batch Scheduler, 작업 스케줄러)",
+  "category": "미들웨어 / 배치",
+  "definition": "배치 스케줄러는 배치 작업을 정해진 시각이나 앞선 작업의 완료 같은 조건에 맞춰 자동으로 실행하는 소프트웨어입니다.",
+  "why": "많은 배치 작업을 사람 손 없이 정해진 시각과 순서대로 실행합니다.",
+  "compare": "작업 스케줄러는 주로 한 시스템의 배치 작업을 실행하고, 워크로드 자동화는 여러 서버에 걸친 작업 흐름을 한곳에서 관리합니다.",
+  "aliases": [
+   "batch scheduler",
+   "job scheduler",
+   "작업 스케줄러",
+   "잡 스케줄러"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "Job Scheduling vs Workload Automation: What's The Difference?",
+    "org": "BMC",
+    "url": "https://www.bmc.com/resources/topics/job-scheduling-vs-workload-automation-whats-difference/",
+    "kind": "primary"
+   },
+   {
+    "title": "What is Batch Processing?",
+    "org": "AWS",
+    "url": "https://aws.amazon.com/what-is/batch-processing/",
+    "kind": "primary"
+   }
+  ],
+  "changed": "정의에서 확인 못 한 '성공·실패 기록'과 why 의 '실패하면 바로 알림'을 빼고 실행 조건(시각·선행 작업)을 넣음, compare 를 출처에 있는 워크로드 자동화 대비로 바꾸고 그 별칭을 제거",
+  "note": "출처(BMC)는 작업 스케줄러와 워크로드 자동화를 구분하지만 현업에서는 섞어 쓰기도 합니다. IBM·Red Hat 의 해당 용어 해설 페이지는 찾지 못했습니다."
+ },
+ {
+  "term": "ETL",
+  "fullName": "추출·변환·적재(Extract, Transform, Load)",
+  "category": "데이터 / 연계",
+  "definition": "ETL은 여러 원천의 데이터를 꺼내(추출) 분석에 맞는 모양으로 바꾼(변환) 뒤 데이터 웨어하우스 같은 곳에 넣는(적재) 작업이나 도구입니다.",
+  "why": "여러 시스템에 흩어진 데이터를 한곳에 모아 통계와 분석에 쓰게 합니다.",
+  "compare": "ETL은 데이터를 바꾼 뒤에 적재하고, ELT는 먼저 적재한 뒤 대상 시스템 안에서 바꿉니다.",
+  "aliases": [
+   "extract transform load",
+   "이티엘",
+   "데이터 적재"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "What is ETL (Extract Transform Load)?",
+    "org": "AWS",
+    "url": "https://aws.amazon.com/what-is/etl/",
+    "kind": "primary"
+   }
+  ],
+  "changed": "'운영 시스템의 데이터'를 '여러 원천의 데이터'로, compare 를 CDC 대비(출처상 CDC 는 ETL 의 추출 수단이기도 함)에서 ELT 대비로 바꿈, 뜻이 다른 별칭 elt·데이터 이관 제거",
+  "note": ""
+ },
+ {
+  "term": "CDC",
+  "fullName": "변경 데이터 캡처(Change Data Capture)",
+  "category": "데이터 / 연계",
+  "definition": "CDC(변경 데이터 캡처)는 데이터베이스에서 언제 무엇이 바뀌었는지 추적해 그 변경분을 다른 시스템에 전달하는 데이터 통합 방식입니다.",
+  "why": "데이터 전체를 다시 옮기지 않고 바뀐 부분만 전달해 다른 시스템을 실시간에 가깝게 맞춥니다.",
+  "compare": "로그 기반 CDC는 트랜잭션 로그를 읽어 원본 부담이 적고, 조회 기반 방식은 원본을 주기적으로 조회해 부담이 더 큽니다.",
+  "aliases": [
+   "change data capture",
+   "씨디씨",
+   "변경 데이터 캡처"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "What is change data capture (CDC)?",
+    "org": "Red Hat",
+    "url": "https://www.redhat.com/en/topics/integration/what-is-change-data-capture",
+    "kind": "primary"
+   }
+  ],
+  "changed": "정의에서 '변경 기록(로그)에서만 읽는다'는 한정을 뺌(조회 기반 방식도 있음), compare 를 확인 못 한 DB 복제 대비에서 로그 기반·조회 기반 대비로 바꿈, 별칭 '실시간 복제' 제거",
+  "note": ""
+ },
+ {
+  "term": "리포팅 툴",
+  "fullName": "리포팅 툴(Reporting Tool, 보고서 솔루션)",
+  "category": "미들웨어 / 출력",
+  "definition": "리포팅 툴은 데이터베이스의 데이터를 정해진 쪽 양식의 보고서로 만들어 화면에 보여 주고 인쇄하거나 PDF·엑셀 등으로 내보내는 솔루션입니다.",
+  "why": "양식(보고서 정의)만 만들어 두면 실행할 때 데이터를 가져와 양식에 채워 문서를 만들어 냅니다.",
+  "compare": "리포팅 툴은 모든 데이터를 쪽에 맞춰 빠짐없이 출력하고, BI 도구의 보고서는 화면에서 데이터를 살펴보는 데 맞춰져 있습니다.",
+  "aliases": [
+   "reporting tool",
+   "리포트 툴",
+   "리포트 서버",
+   "레포팅 툴",
+   "보고서 툴"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "What are paginated reports in Power BI?",
+    "org": "Microsoft Learn",
+    "url": "https://learn.microsoft.com/en-us/power-bi/paginated-reports/paginated-reports-report-builder-power-bi",
+    "kind": "primary"
+   }
+  ],
+  "changed": "정의의 예시(증명서·전표)를 빼고 출처 표현(쪽 단위 양식, 인쇄·내보내기)에 맞춤, why·compare 를 출처 내용으로 바꿈",
+  "note": "'리포팅 툴'이라는 분류 이름 자체를 정의한 표준 문서는 없어, 같은 종류의 제품 개념인 Microsoft '페이지를 매긴 보고서(paginated reports)' 설명으로 핵심 사실을 확인했습니다."
+ },
+ {
+  "term": "EAM",
+  "fullName": "통합 접근 관리(Enterprise/Extranet Access Management)",
+  "category": "미들웨어 / 인증·권한",
+  "definition": "EAM(통합 접근 관리)은 통합 인증(SSO)에 더해 사용자별로 어느 시스템의 어떤 메뉴와 기능을 쓸 수 있는지 권한을 한곳에서 관리하는 솔루션입니다.",
+  "why": "인사 정보에 따라 여러 시스템의 권한을 한 번에 주고 거둡니다.",
+  "compare": "EAM은 SSO에 권한 관리를 더한 것입니다.",
+  "aliases": [
+   "enterprise access management",
+   "extranet access management",
+   "통합 권한 관리",
+   "이에이엠"
+  ],
+  "kind": "concept",
+  "verified": false,
+  "sources": [
+   {
+    "title": "EAM",
+    "org": "IT위키",
+    "url": "https://itwiki.kr/w/EAM",
+    "kind": "aux"
+   }
+  ],
+  "changed": "",
+  "note": "SSO에 권한 관리를 더한 것이라는 설명은 IT위키·국내 논문·보안 매체 같은 보조 출처의 검색 요약에서만 보았고 본문을 연 primary 출처가 없습니다. 약어 풀이도 Extranet Access Management(국내 논문)와 Enterprise Access Management(위키·블로그)로 엇갈립니다. TTA 용어사전은 접속이 되지 않았습니다."
+ },
+ {
+  "term": "연계(인터페이스)",
+  "fullName": "시스템 연계(Interface, I/F)",
+  "category": "연계",
+  "definition": "연계(인터페이스)는 서로 다른 시스템이 정해진 형식과 방식으로 데이터를 주고받는 일 또는 그 연결 한 건을 뜻하는 말입니다.",
+  "why": "시스템마다 따로 가진 데이터를 서로 맞추고 업무를 이어지게 합니다.",
+  "compare": "점대점 연계는 시스템끼리 하나씩 직접 잇고, 허브 방식은 가운데 허브를 거쳐 여러 시스템을 잇습니다.",
+  "aliases": [
+   "interface",
+   "i/f",
+   "인터페이스",
+   "연동",
+   "시스템 연계",
+   "전문 연계"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "차세대 우체국금융시스템 구축을 위한 정보제공요청서(RFI)",
+    "org": "우정사업본부(사본 게시: smallake.kr)",
+    "url": "https://smallake.kr/wp-content/uploads/2019/09/차세대-우체국금융시스템-구축을-위한-정보제공요청서RFI.pdf",
+    "kind": "primary"
+   },
+   {
+    "title": "What is enterprise application integration (EAI)?",
+    "org": "IBM",
+    "url": "https://www.ibm.com/think/topics/enterprise-application-integration",
+    "kind": "primary"
+   }
+  ],
+  "changed": "compare 를 확인하지 못한 온라인·배치 연계 대비에서 출처(IBM)에 있는 점대점·허브 방식 대비로 바꿈, 너무 흔한 낱말인 별칭 'if' 제거, 정의 끝을 '~입니다'로 맞춤",
+  "note": "표준 정의가 아니라 쓰임 사례로 확인했습니다(우정사업본부 RFI: '제휴기관과 연계를 지원', '대외 기관과 인터페이스를 위한 공통 기능'). RFI 는 사본 사이트에서 열람했습니다."
+ },
+ {
+  "term": "배치",
+  "fullName": "배치 처리(Batch Processing, 일괄 처리)",
+  "category": "처리 방식",
+  "definition": "배치는 양이 많고 반복되는 데이터 작업을 모아 두었다가 주기적으로 한꺼번에 처리하는 방식 또는 그렇게 도는 작업입니다.",
+  "why": "정산·청구처럼 양이 많은 작업을 야간 같은 한가한 시간에 사람 손을 거의 들이지 않고 처리합니다.",
+  "compare": "배치는 모아 둔 데이터를 정해진 때에 차례로 처리하고, 스트림 처리는 데이터가 흘러들어오는 대로 계속 처리합니다.",
+  "aliases": [
+   "batch",
+   "batch job",
+   "일괄 처리",
+   "배치 작업",
+   "야간 배치"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "What is Batch Processing?",
+    "org": "AWS",
+    "url": "https://aws.amazon.com/what-is/batch-processing/",
+    "kind": "primary"
+   }
+  ],
+  "changed": "정의를 출처 표현(주기적·대량·반복)에 맞추고, compare 를 출처에 있는 스트림 처리 대비로 바꿈, 동의어가 아닌 별칭 '일 마감' 제거, 정의 끝을 '~입니다'로 맞춤",
+  "note": ""
+ },
+ {
+  "term": "온라인 트랜잭션",
+  "fullName": "온라인 트랜잭션 처리(Online Transaction Processing, OLTP)",
+  "category": "처리 방식",
+  "definition": "온라인 트랜잭션은 많은 사용자의 요청(조회·이체·주문 등)을 받는 즉시 실시간으로 처리해 결과를 돌려주는 거래 처리 방식입니다.",
+  "why": "사용자가 기다리는 동안 바로 끝내야 하는 거래 업무를 처리합니다.",
+  "compare": "온라인 트랜잭션(OLTP)은 짧고 단순한 거래를 아주 많이 처리하고, 분석 처리(OLAP)는 많은 데이터를 복잡하게 조회해 분석합니다.",
+  "aliases": [
+   "oltp",
+   "online transaction",
+   "온라인 거래",
+   "온라인 처리",
+   "실시간 거래"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "What is OLTP (online transactional processing)?",
+    "org": "IBM",
+    "url": "https://www.ibm.com/think/topics/oltp",
+    "kind": "primary"
+   }
+  ],
+  "changed": "why 의 '몇 초 안에'처럼 출처에 없는 수치를 빼고 표현을 출처에 맞춤",
+  "note": ""
+ },
+ {
+  "term": "채널계",
+  "fullName": "채널계",
+  "category": "금융 SI / 시스템 구분",
+  "definition": "채널계는 금융 회사에서 영업점 창구·ATM·인터넷뱅킹·모바일뱅킹처럼 고객이 거래를 요청하는 접점 시스템들을 묶어 부르는 말입니다.",
+  "why": "고객 접점이 늘거나 바뀌어도 핵심 업무 시스템(계정계)을 건드리지 않게 구역을 나눕니다.",
+  "compare": "채널계는 요청을 받는 곳이고, 계정계는 그 거래를 실제로 처리해 원장에 기록하는 곳입니다.",
+  "aliases": [
+   "채널 시스템",
+   "대고객 채널",
+   "비대면 채널"
+  ],
+  "kind": "concept",
+  "verified": false,
+  "sources": [
+   {
+    "title": "차세대 우체국금융시스템 구축을 위한 정보제공요청서(RFI)",
+    "org": "우정사업본부(사본 게시: smallake.kr)",
+    "url": "https://smallake.kr/wp-content/uploads/2019/09/차세대-우체국금융시스템-구축을-위한-정보제공요청서RFI.pdf",
+    "kind": "primary"
+   },
+   {
+    "title": "금융 IT 시스템 연계: 내부 연계(EAI·MCI)와 외부 연계(FEP)",
+    "org": "개인 블로그",
+    "url": "https://nayoungs.tistory.com/entry/%EA%B8%88%EC%9C%B5-IT-%EC%8B%9C%EC%8A%A4%ED%85%9C-%EC%97%B0%EA%B3%84-%EB%82%B4%EB%B6%80%EC%97%B0%EA%B3%84EAI-MCI%EC%99%80-%EC%99%B8%EB%B6%80%EC%97%B0%EA%B3%84FEP",
+    "kind": "aux"
+   }
+  ],
+  "changed": "fullName 의 확인되지 않은 영어 표기(Channel System)와 너무 흔한 별칭 'channel' 제거",
+  "note": "우정사업본부 RFI(사본 사이트 열람)는 영업점 단말·CD/ATM·인터넷뱅킹·스마트뱅킹·폰뱅킹을 '고객채널'로 묶어 뜻은 맞지만, '채널계'라는 낱말 자체는 블로그·언론 같은 보조 출처에서만 확인했습니다."
+ },
+ {
+  "term": "계정계",
+  "fullName": "계정계(Core Banking System)",
+  "category": "금융 SI / 시스템 구분",
+  "definition": "계정계는 금융 회사에서 예금·대출·외환 같은 실제 거래를 처리하고 고객 계좌 원장을 관리하는 핵심 시스템입니다.",
+  "why": "돈이 오가는 거래와 원장을 다루므로 가장 높은 안정성과 정확성이 필요한 구역으로 따로 관리합니다.",
+  "compare": "계정계는 거래를 실시간으로 처리하고, 정보계는 그 거래 데이터를 모아 분석합니다.",
+  "aliases": [
+   "core banking",
+   "기간계",
+   "코어뱅킹",
+   "원장 시스템",
+   "계정 시스템"
+  ],
+  "kind": "concept",
+  "verified": false,
+  "sources": [
+   {
+    "title": "차세대 우체국금융시스템 구축을 위한 정보제공요청서(RFI)",
+    "org": "우정사업본부(사본 게시: smallake.kr)",
+    "url": "https://smallake.kr/wp-content/uploads/2019/09/차세대-우체국금융시스템-구축을-위한-정보제공요청서RFI.pdf",
+    "kind": "primary"
+   },
+   {
+    "title": "금융 IT 시스템 연계: 내부 연계(EAI·MCI)와 외부 연계(FEP)",
+    "org": "개인 블로그",
+    "url": "https://nayoungs.tistory.com/entry/%EA%B8%88%EC%9C%B5-IT-%EC%8B%9C%EC%8A%A4%ED%85%9C-%EC%97%B0%EA%B3%84-%EB%82%B4%EB%B6%80%EC%97%B0%EA%B3%84EAI-MCI%EC%99%80-%EC%99%B8%EB%B6%80%EC%97%B0%EA%B3%84FEP",
+    "kind": "aux"
+   }
+  ],
+  "changed": "정의에서 '기간계라고도 부릅니다'를 뺌(기간계는 더 넓게 쓰이기도 해 같은 말로 확인하지 못함), fullName 에서 기간계 제거, 정의 끝을 '~입니다'로 맞춤",
+  "note": "우정사업본부 RFI 에 '계정계' 시스템과 '대내 채널과 계정계 인터페이스'라는 쓰임은 있으나 거래 처리·원장 관리라는 뜻 풀이는 없습니다. KB국민은행 용어사전의 '코어뱅킹' 항목(여수신·외국환 등 고객 금융거래를 담당하는 계정계 시스템)은 검색 요약으로만 보았고 페이지 본문은 열지 못했습니다."
+ },
+ {
+  "term": "정보계",
+  "fullName": "정보계",
+  "category": "금융 SI / 시스템 구분",
+  "definition": "정보계는 금융 회사에서 거래 데이터를 모아 통계·분석·경영 보고에 쓰는 시스템들(데이터 웨어하우스 등)을 묶어 부르는 말입니다.",
+  "why": "분석용 조회가 거래 처리를 느리게 하지 않도록 데이터를 따로 옮겨 놓고 씁니다.",
+  "compare": "정보계는 주로 지난 데이터를 조회·집계하고, 계정계는 지금 일어나는 거래를 기록합니다.",
+  "aliases": [
+   "분석계",
+   "경영정보계"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "차세대 우체국금융시스템 구축을 위한 정보제공요청서(RFI)",
+    "org": "우정사업본부(사본 게시: smallake.kr)",
+    "url": "https://smallake.kr/wp-content/uploads/2019/09/차세대-우체국금융시스템-구축을-위한-정보제공요청서RFI.pdf",
+    "kind": "primary"
+   }
+  ],
+  "changed": "fullName 의 확인되지 않은 영어 표기와 동의어가 아닌 별칭(information system·정보 시스템·dw) 제거, 정의 끝을 '~입니다'로 맞춤, 정의에서 '계정계에 쌓인'을 뺌(출처로 직접 확인 못 함)",
+  "note": "뜻 풀이가 아니라 쓰임 사례로 확인했습니다. 우정사업본부 RFI(사본 사이트 열람)가 계정계·정보계·대외계를 나란히 들고 정보계의 상용 SW 로 'BI OLAP, ETL, CDC'를 적고 있습니다. why·compare 의 계정계 대비 서술은 이 구성에서 미루어 본 것이라 근거가 약합니다."
+ },
+ {
+  "term": "대외계",
+  "fullName": "대외계",
+  "category": "금융 SI / 시스템 구분",
+  "definition": "대외계는 금융 회사에서 금융공동망·제휴 기관 같은 외부 기관과 전문을 주고받는 연계 시스템 구역입니다.",
+  "why": "외부 기관과의 연결을 한 구역에 모아 통신 방식 차이를 흡수하고 보안을 통제합니다.",
+  "compare": "대외계는 구역(영역)의 이름이고, FEP는 그 구역에서 실제로 연계를 처리하는 시스템입니다.",
+  "aliases": [
+   "대외 시스템",
+   "대외기관 연계",
+   "대외 연계계"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "차세대 우체국금융시스템 구축을 위한 정보제공요청서(RFI)",
+    "org": "우정사업본부(사본 게시: smallake.kr)",
+    "url": "https://smallake.kr/wp-content/uploads/2019/09/차세대-우체국금융시스템-구축을-위한-정보제공요청서RFI.pdf",
+    "kind": "primary"
+   }
+  ],
+  "changed": "정의의 기관 예시를 출처에 나온 것(금융공동망·제휴 기관)으로 바꿈, fullName 의 확인되지 않은 영어 표기와 동의어가 아닌 별칭 'fep' 제거, 정의 끝을 '~입니다'로 맞춤",
+  "note": "우정사업본부 RFI 의 '대외계 상세 어플리케이션별 주요 기능'(금융공동망 연계, 제휴기관 연계, 대외 기관 인터페이스 공통 기능)으로 확인했습니다. 원문은 공공기관 문서이나 사본 사이트(smallake.kr)에서 열람했습니다. compare 의 FEP 설명은 확인하지 못했습니다."
+ },
+ {
+  "term": "포트",
+  "fullName": "포트 번호(Port Number)",
+  "category": "프로토콜 / 기본 개념",
+  "definition": "포트는 컴퓨터 한 대 안에서 어느 프로그램(서비스)으로 가는 통신인지 구분하는 0~65535 사이의 번호입니다.",
+  "why": "IP 주소 하나로 웹·DB·원격 접속 같은 여러 서비스를 동시에 받게 합니다.",
+  "compare": "IP 주소는 어느 서버인지를 가리키고, 포트는 그 서버 안의 어느 프로그램인지를 가리킵니다.",
+  "aliases": [
+   "port",
+   "포트 번호",
+   "tcp 포트",
+   "서비스 포트",
+   "리슨 포트"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "RFC 6335: IANA Procedures for the Management of the Service Name and Transport Protocol Port Number Registry",
+    "org": "IETF",
+    "url": "https://www.rfc-editor.org/rfc/rfc6335.html",
+    "kind": "primary"
+   }
+  ],
+  "changed": "'서버 한 대 안에서 여러 프로그램 가운데'를 '컴퓨터 한 대 안에서'로 줄임(내용은 같음)",
+  "note": ""
+ },
+ {
+  "term": "HTTP",
+  "fullName": "HyperText Transfer Protocol",
+  "category": "프로토콜 / 웹",
+  "definition": "HTTP(HyperText Transfer Protocol)는 브라우저와 웹 서버가 요청과 응답을 주고받는 웹의 기본 통신 규약으로, 기본 포트는 80입니다.",
+  "why": "웹 페이지와 API 호출이 모두 이 규약으로 오갑니다.",
+  "compare": "HTTP는 내용이 암호화되지 않고, HTTPS는 암호화됩니다.",
+  "aliases": [
+   "http",
+   "80 포트",
+   "에이치티티피"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "RFC 9110: HTTP Semantics",
+    "org": "IETF",
+    "url": "https://www.rfc-editor.org/rfc/rfc9110.html",
+    "kind": "primary"
+   }
+  ],
+  "changed": "",
+  "note": ""
+ },
+ {
+  "term": "HTTPS",
+  "fullName": "HTTP over TLS (HTTP Secure)",
+  "category": "프로토콜 / 웹",
+  "definition": "HTTPS는 HTTP 통신을 TLS로 암호화하고 서버를 인증해 중간에서 엿보거나 바꾸지 못하게 한 통신 규약으로, 기본 포트는 443입니다.",
+  "why": "로그인 정보와 개인 정보가 전송 중에 노출되지 않게 합니다.",
+  "compare": "HTTPS는 서버에 인증서가 있어야 하고, HTTP는 인증서 없이 동작합니다.",
+  "aliases": [
+   "https",
+   "443 포트",
+   "보안 접속"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "RFC 9110: HTTP Semantics",
+    "org": "IETF",
+    "url": "https://www.rfc-editor.org/rfc/rfc9110.html",
+    "kind": "primary"
+   }
+  ],
+  "changed": "정의에 서버 인증을 더하고, 별개의 규약 이름인 별칭 ssl·tls 제거",
+  "note": ""
+ },
+ {
+  "term": "TCP",
+  "fullName": "전송 제어 프로토콜(Transmission Control Protocol)",
+  "category": "프로토콜 / 전송 계층",
+  "definition": "TCP(전송 제어 프로토콜)는 먼저 연결을 맺고 데이터가 빠짐없이 순서대로 도착했는지 확인하며 보내는 전송 규약입니다.",
+  "why": "웹·DB·파일 전송처럼 데이터가 하나도 빠지면 안 되는 통신에 씁니다.",
+  "compare": "TCP는 연결을 맺고 도착을 확인하며 보내고, UDP는 연결 없이 보내며 도착을 보장하지 않습니다.",
+  "aliases": [
+   "tcp",
+   "transmission control protocol",
+   "티씨피"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "RFC 9293: Transmission Control Protocol (TCP)",
+    "org": "IETF",
+    "url": "https://www.rfc-editor.org/rfc/rfc9293.html",
+    "kind": "primary"
+   }
+  ],
+  "changed": "compare 에서 출처에 없는 '느리다·빠르다' 단정을 뺌",
+  "note": ""
+ },
+ {
+  "term": "UDP",
+  "fullName": "사용자 데이터그램 프로토콜(User Datagram Protocol)",
+  "category": "프로토콜 / 전송 계층",
+  "definition": "UDP(사용자 데이터그램 프로토콜)는 연결을 맺지 않고 도착 확인도 없이 데이터를 바로 보내는 전송 규약입니다.",
+  "why": "DNS 조회처럼 짧게 주고받거나 절차를 줄여 빠르게 보내야 하는 통신에 씁니다.",
+  "compare": "UDP는 절차가 적은 대신 도착과 중복 방지를 보장하지 않고, TCP는 빠짐없이 순서대로 도착하게 합니다.",
+  "aliases": [
+   "udp",
+   "user datagram protocol",
+   "유디피"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "RFC 768: User Datagram Protocol",
+    "org": "IETF",
+    "url": "https://www.rfc-editor.org/rfc/rfc768.txt",
+    "kind": "primary"
+   }
+  ],
+  "changed": "why·compare 를 출처 표현(최소한의 절차, 도착·중복 방지 미보장)에 맞춤",
+  "note": ""
+ },
+ {
+  "term": "AJP",
+  "fullName": "Apache JServ Protocol",
+  "category": "프로토콜 / 웹 서버-WAS 연결",
+  "definition": "AJP(Apache JServ Protocol)는 Apache 같은 웹 서버가 받은 요청을 뒤쪽 Tomcat 같은 WAS로 넘길 때 쓰는 이진 통신 규약으로, 기본 포트는 8009입니다.",
+  "why": "웹 서버와 WAS 사이를 성능을 위해 이진 형식의 패킷으로, 연결을 재사용하며 잇습니다.",
+  "compare": "AJP는 웹 서버와 WAS 사이에서만 쓰고, 믿을 수 있는 내부 망 밖에 열어 두면 안 되는 내부 전용 통로입니다.",
+  "aliases": [
+   "ajp",
+   "ajp13",
+   "8009 포트",
+   "에이제이피"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "Apache Tomcat 9 Configuration Reference: The AJP Connector",
+    "org": "Apache Software Foundation",
+    "url": "https://tomcat.apache.org/tomcat-9.0-doc/config/ajp.html",
+    "kind": "primary"
+   },
+   {
+    "title": "AJPv13 Protocol Reference",
+    "org": "Apache Software Foundation",
+    "url": "https://tomcat.apache.org/connectors-doc/ajp/ajpv13a.html",
+    "kind": "primary"
+   },
+   {
+    "title": "The Apache Tomcat Connectors: workers.properties configuration",
+    "org": "Apache Software Foundation",
+    "url": "https://tomcat.apache.org/connectors-doc/reference/workers.html",
+    "kind": "primary"
+   }
+  ],
+  "changed": "why 의 'HTTP보다 가벼운'을 출처 표현(성능을 위한 이진 형식, 연결 재사용)으로 바꿈, 규약이 아니라 연결 모듈 이름인 별칭 mod_jk 제거",
+  "note": "8009는 Tomcat 커넥터(mod_jk ajp13 워커)의 기본값이며 IANA 등록부에서 8009/tcp 는 다른 서비스(nvme-disc)에 배정돼 있습니다."
+ },
+ {
+  "term": "JDBC",
+  "fullName": "Java Database Connectivity",
+  "category": "프로토콜 / DB 접속 규격",
+  "definition": "JDBC(Java Database Connectivity)는 자바 프로그램이 데이터베이스에 접속해 SQL을 실행하는 표준 접속 규격(API)입니다.",
+  "why": "데이터베이스 제품이 달라도 드라이버만 바꿔 같은 방식으로 접속합니다.",
+  "compare": "JDBC는 통신 규약이 아니라 자바의 접속 방식 표준이고, 실제 통신은 DB 제품마다 다른 드라이버와 포트로 이루어집니다.",
+  "aliases": [
+   "jdbc",
+   "jdbc 드라이버",
+   "jdbc url",
+   "제이디비씨"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "Java SE Technologies: Java Database Connectivity (JDBC)",
+    "org": "Oracle",
+    "url": "https://docs.oracle.com/javase/8/docs/technotes/guides/jdbc/",
+    "kind": "primary"
+   }
+  ],
+  "changed": "compare 에서 이번에 확인하지 않은 제품별 포트 번호 예시를 뺌",
+  "note": ""
+ },
+ {
+  "term": "SSH",
+  "fullName": "시큐어 셸(Secure Shell)",
+  "category": "프로토콜 / 원격 접속",
+  "definition": "SSH(Secure Shell)는 안전하지 않은 망에서도 암호화된 통로로 서버에 원격 접속해 명령을 실행하게 하는 통신 규약으로, 기본 포트는 22입니다.",
+  "why": "관리자가 떨어진 곳에서 서버를 안전하게 조작합니다.",
+  "compare": "SSH는 원격 접속 규약이고, SFTP는 그 SSH 통로 위에서 파일을 주고받는 규약입니다.",
+  "aliases": [
+   "ssh",
+   "secure shell",
+   "22 포트",
+   "에스에스에이치"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "RFC 4253: The Secure Shell (SSH) Transport Layer Protocol",
+    "org": "IETF",
+    "url": "https://www.rfc-editor.org/rfc/rfc4253.txt",
+    "kind": "primary"
+   },
+   {
+    "title": "SSH File Transfer Protocol (draft-ietf-secsh-filexfer-02)",
+    "org": "IETF(인터넷 드래프트)",
+    "url": "https://datatracker.ietf.org/doc/html/draft-ietf-secsh-filexfer-02",
+    "kind": "primary"
+   }
+  ],
+  "changed": "compare 를 이번에 출처로 확인하지 않은 텔넷 대비에서 SFTP 대비로 바꿈, 뜻이 넓은 별칭 '터미널 접속' 제거",
+  "note": ""
+ },
+ {
+  "term": "SFTP",
+  "fullName": "SSH 파일 전송 프로토콜(SSH File Transfer Protocol)",
+  "category": "프로토콜 / 파일 전송",
+  "definition": "SFTP(SSH File Transfer Protocol)는 SSH의 암호화된 통로로 파일을 주고받는 통신 규약으로, 기본 포트는 SSH와 같은 22입니다.",
+  "why": "시스템 사이에 파일을 암호화해 안전하게 보냅니다.",
+  "compare": "SFTP는 이름과 달리 FTP를 확장한 것이 아니라 SSH의 하위 기능으로 동작하는 별도 규약입니다.",
+  "aliases": [
+   "sftp",
+   "ssh ftp",
+   "에스에프티피"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "SSH File Transfer Protocol (draft-ietf-secsh-filexfer-02)",
+    "org": "IETF(인터넷 드래프트)",
+    "url": "https://datatracker.ietf.org/doc/html/draft-ietf-secsh-filexfer-02",
+    "kind": "primary"
+   },
+   {
+    "title": "sftp-server(8) manual page",
+    "org": "OpenBSD(OpenSSH)",
+    "url": "https://man.openbsd.org/sftp-server",
+    "kind": "primary"
+   },
+   {
+    "title": "RFC 4253: The Secure Shell (SSH) Transport Layer Protocol",
+    "org": "IETF",
+    "url": "https://www.rfc-editor.org/rfc/rfc4253.txt",
+    "kind": "primary"
+   }
+  ],
+  "changed": "compare 에서 이번에 확인하지 않은 FTP·FTPS 서술을 빼고 출처 내용(SSH 하위 시스템)으로 바꿈, 뜻이 넓은 별칭 '파일 전송' 제거, 정의 끝을 '~입니다'로 맞춤",
+  "note": "SFTP 는 RFC 로 확정되지 않고 IETF 인터넷 드래프트(draft-ietf-secsh-filexfer)로만 남아 있으며, OpenSSH 가 이 드래프트를 근거로 구현합니다. 22번은 SFTP 고유 포트가 아니라 SSH 포트입니다."
+ },
+ {
+  "term": "SMTP",
+  "fullName": "간이 우편 전송 프로토콜(Simple Mail Transfer Protocol)",
+  "category": "프로토콜 / 메일",
+  "definition": "SMTP(Simple Mail Transfer Protocol)는 메일 서버끼리 또는 프로그램이 메일 서버로 전자우편을 보낼 때 쓰는 통신 규약으로, 기본 포트는 25(제출용 587)입니다.",
+  "why": "시스템이 알림·인증 메일을 보낼 때 씁니다.",
+  "compare": "SMTP는 메일을 보내는 규약이고, 받은 메일을 읽는 데는 IMAP·POP3를 씁니다.",
+  "aliases": [
+   "smtp",
+   "메일 발송",
+   "25 포트",
+   "587 포트"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "RFC 5321: Simple Mail Transfer Protocol",
+    "org": "IETF",
+    "url": "https://www.rfc-editor.org/rfc/rfc5321.txt",
+    "kind": "primary"
+   },
+   {
+    "title": "Service Name and Transport Protocol Port Number Registry (smtp)",
+    "org": "IANA",
+    "url": "https://www.iana.org/assignments/service-names-port-numbers/service-names-port-numbers.xhtml?search=smtp",
+    "kind": "primary"
+   },
+   {
+    "title": "RFC 6409: Message Submission for Mail",
+    "org": "IETF",
+    "url": "https://www.rfc-editor.org/rfc/rfc6409.txt",
+    "kind": "primary"
+   }
+  ],
+  "changed": "정의 문장의 쉼표만 다듬음, 규약이 아니라 서버를 가리키는 별칭 '메일 서버' 제거",
+  "note": ""
+ },
+ {
+  "term": "LDAP",
+  "fullName": "경량 디렉터리 접근 프로토콜(Lightweight Directory Access Protocol)",
+  "category": "프로토콜 / 디렉터리",
+  "definition": "LDAP(Lightweight Directory Access Protocol)는 사용자·조직 정보를 모아 둔 디렉터리 서비스를 조회하고 인증하는 통신 규약으로, 기본 포트는 389(TLS 636)입니다.",
+  "why": "여러 시스템이 한곳에 모아 둔 계정 정보를 함께 조회해 로그인에 쓰게 합니다.",
+  "compare": "LDAP는 디렉터리에 접근하는 통신 규약이고, 디렉터리 서버는 그 규약으로 조회되는 계정·조직 정보 저장소입니다.",
+  "aliases": [
+   "ldap",
+   "ldaps",
+   "엘댑"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "RFC 4511: Lightweight Directory Access Protocol (LDAP): The Protocol",
+    "org": "IETF",
+    "url": "https://www.rfc-editor.org/rfc/rfc4511.txt",
+    "kind": "primary"
+   },
+   {
+    "title": "Service Name and Transport Protocol Port Number Registry (ldaps)",
+    "org": "IANA",
+    "url": "https://www.iana.org/assignments/service-names-port-numbers/service-names-port-numbers.xhtml?search=ldaps",
+    "kind": "primary"
+   }
+  ],
+  "changed": "why·compare 에서 이번에 출처로 확인하지 않은 Active Directory 서술을 빼고, 규약이 아닌 제품·서버 이름 별칭 3개 제거",
+  "note": ""
+ },
+ {
+  "term": "SNMP",
+  "fullName": "간이 망 관리 프로토콜(Simple Network Management Protocol)",
+  "category": "프로토콜 / 장비 관리",
+  "definition": "SNMP(Simple Network Management Protocol)는 관리 서버가 장비의 상태 값을 읽고 장비가 이상을 알리는 통신 규약으로, 기본 포트는 UDP 161(알림 162)입니다.",
+  "why": "제조사가 다른 장비들의 상태를 한 가지 방식으로 모아 모니터링합니다.",
+  "compare": "SNMP 조회는 관리 서버가 장비에 값을 물어보는 것이고, 트랩(알림)은 장비가 먼저 이상을 알리는 것입니다.",
+  "aliases": [
+   "snmp",
+   "snmp trap",
+   "161 포트",
+   "에스엔엠피"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "RFC 3411: An Architecture for Describing SNMP Management Frameworks",
+    "org": "IETF",
+    "url": "https://www.rfc-editor.org/rfc/rfc3411.txt",
+    "kind": "primary"
+   },
+   {
+    "title": "RFC 3417: Transport Mappings for SNMP",
+    "org": "IETF",
+    "url": "https://www.rfc-editor.org/rfc/rfc3417.txt",
+    "kind": "primary"
+   }
+  ],
+  "changed": "compare 를 헷갈리기 쉬운 '에이전트 방식' 대비(SNMP 도 장비 쪽 에이전트를 씀)에서 조회·알림 대비로 바꿈, 규약이 아닌 별칭 mib 제거, 정의 끝을 '~입니다'로 맞춤",
+  "note": ""
+ },
+ {
+  "term": "NTP",
+  "fullName": "네트워크 시간 프로토콜(Network Time Protocol)",
+  "category": "프로토콜 / 시간 동기화",
+  "definition": "NTP(Network Time Protocol)는 서버와 장비의 시계를 기준 시간 서버에 맞추는 통신 규약으로, 기본 포트는 UDP 123입니다.",
+  "why": "서버마다 시간이 다르면 로그 순서가 어긋나고 인증·거래가 실패할 수 있어 모든 서버의 시간을 맞춥니다.",
+  "compare": "NTP는 시간을 맞추는 규약이고, NTP 서버(타임 서버)는 기준 시간을 알려 주는 서버입니다.",
+  "aliases": [
+   "ntp",
+   "시간 동기화",
+   "123 포트"
+  ],
+  "kind": "concept",
+  "verified": true,
+  "sources": [
+   {
+    "title": "RFC 5905: Network Time Protocol Version 4",
+    "org": "IETF",
+    "url": "https://www.rfc-editor.org/rfc/rfc5905.txt",
+    "kind": "primary"
+   }
+  ],
+  "changed": "규약이 아니라 제품·서버를 가리키는 별칭 chrony·타임 서버 제거, 정의 끝을 '~입니다'로 맞춤",
+  "note": ""
+ }
+]
