@@ -1,73 +1,57 @@
 ---
 title: "samples.ts"
-sidebar_position: 11
+sidebar_position: 56
 ---
 # samples.ts
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 38 nodes · cohesion 0.12
+> 18 nodes · cohesion 0.12
 
 ## Key Concepts
 
-- **domain/apply.ts** (26 connections) — `src/domain/apply.ts`
-- **applyCommand()** (26 connections) — `src/domain/apply.ts`
-- **domain/linkGuess.ts** (25 connections) — `src/domain/linkGuess.ts`
-- **settle.ts** (15 connections) — `src/server/chat/settle.ts`
-- **settleTurn()** (12 connections) — `src/server/chat/settle.ts`
-- **Task 4: 차례 끝 정리 공용화와 코드 경고 점검** (9 connections) — `docs/superpowers/plans/2026-11-09-mcp-server.md`
-- **recordReplaced()** (9 connections) — `src/domain/linkGuess.ts`
-- **revertLinkGuess()** (9 connections) — `src/domain/linkGuess.ts`
-- **freeEdgeId()** (7 connections) — `src/domain/apply.ts`
-- **has()** (7 connections) — `src/domain/apply.ts`
-- **pruneEmptyGroups()** (7 connections) — `src/domain/apply.ts`
-- **splitsFor()** (7 connections) — `src/domain/linkGuess.ts`
-- **Task 4: 되돌리기 도메인 — 대신한 연결 기록, 되돌리기, 흐름 단계 나누기·합치기** (6 connections) — `docs/superpowers/plans/2026-11-06-network-knowledge-link-guess.md`
-- **has()** (6 connections) — `src/domain/linkGuess.ts`
-- **InfraSketch 3B단계: 경고·구성 패턴 구현 계획** (5 connections) — `docs/superpowers/plans/2026-10-30-infrasketch-phase3b-warnings.md`
-- **applyCommands()** (5 connections) — `src/domain/apply.ts`
-- **incident()** (5 connections) — `src/domain/linkGuess.ts`
-- **구조 변경은 applyCommand 로만** (4 connections) — `docs/superpowers/plans/2026-10-29-infrasketch-phase1-foundation-canvas.md`
-- **idTaken()** (4 connections) — `src/domain/apply.ts`
-- **removeGroups()** (4 connections) — `src/domain/apply.ts`
-- **StepSplit** (4 connections) — `src/domain/linkGuess.ts`
-- **ReplacedEdge** (4 connections) — `src/domain/types.ts`
-- **endpointOk()** (3 connections) — `src/domain/apply.ts`
-- **fail()** (3 connections) — `src/domain/apply.ts`
-- **parentOk()** (3 connections) — `src/domain/apply.ts`
-- *... and 13 more nodes in this community*
+- **samples.ts** (34 connections) — `src/server/samples.ts`
+- **convertSpikeScenario()** (4 connections) — `src/server/samples.ts`
+- **SAMPLES** (3 connections) — `src/server/samples.ts`
+- **sampleState()** (3 connections) — `src/server/samples.ts`
+- **docs_superpowers_spike_spike_results** (1 connections)
+- **AddEdge** (1 connections) — `src/server/samples.ts`
+- **AddGroup** (1 connections) — `src/server/samples.ts`
+- **AddNode** (1 connections) — `src/server/samples.ts`
+- **AUX_NODE_KINDS** (1 connections) — `src/server/samples.ts`
+- **EDGE_KIND_MAP** (1 connections) — `src/server/samples.ts`
+- **EDGE_KIND_SET** (1 connections) — `src/server/samples.ts`
+- **NODE_KIND_SET** (1 connections) — `src/server/samples.ts`
+- **scenarios** (1 connections) — `src/server/samples.ts`
+- **SpikeEdge** (1 connections) — `src/server/samples.ts`
+- **SpikeGroup** (1 connections) — `src/server/samples.ts`
+- **SpikeNode** (1 connections) — `src/server/samples.ts`
+- **SpikeScenario** (1 connections) — `src/server/samples.ts`
+- **SpikeState** (1 connections) — `src/server/samples.ts`
 
 ## Relationships
 
-- [mcp/apply.ts](mcp-apply.ts.md) (16 shared connections)
-- [types.ts](types.ts.md) (11 shared connections)
-- [Task 5: MCP 고치기·되돌리기 서비스](Task_5-_MCP_고치기·되돌리기_서비스.md) (7 shared connections)
-- [pipeline.ts](pipeline.ts.md) (6 shared connections)
 - [getOwnedDiagram](getOwnedDiagram.md) (5 shared connections)
-- [DiagramState](DiagramState.md) (4 shared connections)
-- [domain/flows.ts](domain-flows.ts.md) (3 shared connections)
-- [samples.ts](samples.ts.md) (3 shared connections)
-- [InfraSketch 설계 문서](InfraSketch_설계_문서.md) (2 shared connections)
-- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (2 shared connections)
-- [(app)/actions.ts](app-actions.ts.md) (2 shared connections)
-- [Claude Code 연동(MCP 서버) — 설계](Claude_Code_연동MCP_서버_—_설계.md) (2 shared connections)
+- [(app)/actions.ts](app-actions.ts.md) (4 shared connections)
+- [domain/apply.ts](domain-apply.ts.md) (3 shared connections)
+- [\[sessionId\]/route.ts]([sessionId]-route.ts.md) (2 shared connections)
+- [Legend.tsx](Legend.tsx.md) (1 shared connections)
+- [MissingChecklist.tsx](MissingChecklist.tsx.md) (1 shared connections)
+- [Task 5: MCP 고치기·되돌리기 서비스](Task_5-_MCP_고치기·되돌리기_서비스.md) (1 shared connections)
+- [Command](Command.md) (1 shared connections)
+- [ZoneNameLayer.tsx](ZoneNameLayer.tsx.md) (1 shared connections)
+- [commands.ts](commands.ts.md) (1 shared connections)
+- [schema.ts](schema.ts.md) (1 shared connections)
+- [projects.ts](projects.ts.md) (1 shared connections)
 
 ## Source Files
 
-- `docs/superpowers/plans/2026-10-29-infrasketch-phase1-foundation-canvas.md`
-- `docs/superpowers/plans/2026-10-30-infrasketch-phase3b-warnings.md`
-- `docs/superpowers/plans/2026-11-06-network-knowledge-link-guess.md`
-- `docs/superpowers/plans/2026-11-09-mcp-server.md`
-- `src/domain/apply.ts`
-- `src/domain/flows.ts`
-- `src/domain/linkGuess.ts`
-- `src/domain/types.ts`
-- `src/server/chat/settle.ts`
+- `src/server/samples.ts`
 
 ## Audit Trail
 
-- EXTRACTED: 128 (83%)
-- INFERRED: 26 (17%)
+- EXTRACTED: 40 (100%)
+- INFERRED: 0 (0%)
 - AMBIGUOUS: 0 (0%)
 
 ---

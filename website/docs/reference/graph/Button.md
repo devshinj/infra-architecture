@@ -1,63 +1,62 @@
 ---
-title: "Button"
-sidebar_position: 44
+title: "Button()"
+sidebar_position: 104
+sidebar_label: "핵심 노드: Button()"
 ---
-# Button
+# Button()
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 20 nodes · cohesion 0.17
+> God node · 42 connections · `src/ui/Button.tsx`
 
-## Key Concepts
+**Community:** [ResetPasswordForm.tsx](ResetPasswordForm.tsx.md)
 
-- **Button()** (42 connections) — `src/ui/Button.tsx`
-- **NetworkKnowledgePage.tsx** (40 connections) — `src/ui/network/NetworkKnowledgePage.tsx`
-- **dialogs.tsx** (18 connections) — `src/ui/dialogs.tsx`
-- **NetworkKnowledgePage()** (18 connections) — `src/ui/network/NetworkKnowledgePage.tsx`
-- **DialogView()** (14 connections) — `src/ui/dialogs.tsx`
-- **Dialog** (6 connections) — `src/ui/dialogs.tsx`
-- **RowMenuItem** (4 connections) — `src/ui/dialogs.tsx`
-- **RuleForm()** (3 connections) — `src/ui/network/NetworkKnowledgePage.tsx`
-- **TypeForm()** (3 connections) — `src/ui/network/NetworkKnowledgePage.tsx`
-- **NetworkRuleRow** (2 connections) — `src/app/(app)/actions.ts`
-- **focusables()** (2 connections) — `src/ui/dialogs.tsx`
-- **NameDialog** (2 connections) — `src/ui/dialogs.tsx`
-- **gradeLabel()** (2 connections) — `src/ui/network/NetworkKnowledgePage.tsx`
-- **sourceLabel()** (2 connections) — `src/ui/network/NetworkKnowledgePage.tsx`
-- **splitAliases()** (2 connections) — `src/ui/network/NetworkKnowledgePage.tsx`
-- **src_ui_network_knowledge_module** (1 connections)
-- **GRADES** (1 connections) — `src/ui/network/NetworkKnowledgePage.tsx`
-- **METHODS** (1 connections) — `src/ui/network/NetworkKnowledgePage.tsx`
-- **RuleDraft** (1 connections) — `src/ui/network/NetworkKnowledgePage.tsx`
-- **TypeDraft** (1 connections) — `src/ui/network/NetworkKnowledgePage.tsx`
+## Connections by Relation
 
-## Relationships
+### calls
+- [DiagramWorkspace()](DiagramWorkspace.md) `EXTRACTED`
+- Sidebar() `EXTRACTED`
+- MissingChecklist() `EXTRACTED`
+- ChatPanel() `EXTRACTED`
+- FlowPanel() `EXTRACTED`
+- NetworkKnowledgePage() `EXTRACTED`
+- SessionPicker() `EXTRACTED`
+- DialogView() `EXTRACTED`
+- AuthSubmit() `EXTRACTED`
+- ZoneTypePicker() `EXTRACTED`
+- ResetRequestPage() `EXTRACTED`
+- GlossaryPage() `EXTRACTED`
+- HistoryPanel() `EXTRACTED`
+- McpKeysPage() `EXTRACTED`
+- LinkGuessPart() `EXTRACTED`
+- CreateButton() `EXTRACTED`
+- expandedNav() `EXTRACTED`
+- buttonClassName() `EXTRACTED`
+- Rewrite() `EXTRACTED`
+- Cautions() `EXTRACTED`
+- *…and 4 more `calls` connection(s) not listed (lowest-degree first to go)*
 
-- [NetworkKnowledgePage.tsx](NetworkKnowledgePage.tsx.md) (17 shared connections)
-- [Sidebar.tsx](Sidebar.tsx.md) (9 shared connections)
-- [SessionPicker.tsx](SessionPicker.tsx.md) (8 shared connections)
-- [domain/network.ts](domain-network.ts.md) (8 shared connections)
-- [FlowPanel.tsx](FlowPanel.tsx.md) (7 shared connections)
-- [NotFoundError](NotFoundError.md) (6 shared connections)
-- [ResetPasswordForm.tsx](ResetPasswordForm.tsx.md) (5 shared connections)
-- [(app)/actions.ts](app-actions.ts.md) (4 shared connections)
-- [server/network.ts](server-network.ts.md) (4 shared connections)
-- [Explanation.tsx](Explanation.tsx.md) (3 shared connections)
-- [GlossaryPage.tsx](GlossaryPage.tsx.md) (3 shared connections)
-- [NodeInfo.tsx](NodeInfo.tsx.md) (3 shared connections)
+### contains
+- Button.tsx `EXTRACTED`
 
-## Source Files
-
-- `src/app/(app)/actions.ts`
-- `src/ui/Button.tsx`
-- `src/ui/dialogs.tsx`
-- `src/ui/network/NetworkKnowledgePage.tsx`
-
-## Audit Trail
-
-- EXTRACTED: 131 (99%)
-- INFERRED: 1 (1%)
-- AMBIGUOUS: 0 (0%)
+### imports
+- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) `EXTRACTED`
+- [NodeInfo.tsx](NodeInfo.tsx.md) `EXTRACTED`
+- [ChatPanel.tsx](ChatPanel.tsx.md) `EXTRACTED`
+- [Sidebar.tsx](Sidebar.tsx.md) `EXTRACTED`
+- [NetworkKnowledgePage.tsx](NetworkKnowledgePage.tsx.md) `EXTRACTED`
+- [MissingChecklist.tsx](MissingChecklist.tsx.md) `EXTRACTED`
+- [Explanation.tsx](Explanation.tsx.md) `EXTRACTED`
+- [SessionPicker.tsx](SessionPicker.tsx.md) `EXTRACTED`
+- [FlowPanel.tsx](FlowPanel.tsx.md) `EXTRACTED`
+- [Shell.tsx](Shell.tsx.md) `EXTRACTED`
+- reset/page.tsx `EXTRACTED`
+- [ZoneTypePicker.tsx](ZoneTypePicker.tsx.md) `EXTRACTED`
+- [GlossaryPage.tsx](GlossaryPage.tsx.md) `EXTRACTED`
+- dialogs.tsx `EXTRACTED`
+- McpKeysPage.tsx `EXTRACTED`
+- AuthField.tsx `EXTRACTED`
+- HistoryPanel.tsx `EXTRACTED`
 
 ---
 

@@ -1,6 +1,6 @@
 ---
 title: "prompt.ts"
-sidebar_position: 20
+sidebar_position: 21
 ---
 # prompt.ts
 
@@ -39,18 +39,18 @@ sidebar_position: 20
 
 ## Relationships
 
-- [drawing/rules.ts](drawing-rules.ts.md) (13 shared connections)
-- [domain/flows.ts](domain-flows.ts.md) (5 shared connections)
-- [pipeline.ts](pipeline.ts.md) (5 shared connections)
-- [ask.ts](ask.ts.md) (5 shared connections)
-- [types.ts](types.ts.md) (5 shared connections)
-- [DiagramState](DiagramState.md) (4 shared connections)
-- [mcp/apply.ts](mcp-apply.ts.md) (4 shared connections)
-- [domain/network.ts](domain-network.ts.md) (3 shared connections)
+- [drawing/rules.ts](drawing-rules.ts.md) (11 shared connections)
+- [pipeline.ts](pipeline.ts.md) (11 shared connections)
+- [domain/flows.ts](domain-flows.ts.md) (7 shared connections)
+- [MissingChecklist.tsx](MissingChecklist.tsx.md) (4 shared connections)
+- [server/network.ts](server-network.ts.md) (4 shared connections)
+- [domain/explain.ts](domain-explain.ts.md) (3 shared connections)
+- [Command](Command.md) (3 shared connections)
 - [설명 생성과 품질 검사](설명_생성과_품질_검사.md) (3 shared connections)
+- [DiagramState](DiagramState.md) (3 shared connections)
 - [deps.ts](deps.ts.md) (2 shared connections)
-- [domain/explain.ts](domain-explain.ts.md) (2 shared connections)
-- [Command](Command.md) (2 shared connections)
+- [domain/linkGuess.ts](domain-linkGuess.ts.md) (2 shared connections)
+- [NodeInfo.tsx](NodeInfo.tsx.md) (1 shared connections)
 
 ## Source Files
 

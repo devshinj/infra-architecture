@@ -1,66 +1,72 @@
 ---
 title: "[sessionId]/route.ts"
-sidebar_position: 26
+sidebar_position: 7
 ---
 # [sessionId]/route.ts
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 29 nodes · cohesion 0.12
+> 42 nodes · cohesion 0.09
 
 ## Key Concepts
 
 - **[sessionId]/route.ts** (34 connections) — `src/app/api/diagrams/[id]/sessions/[sessionId]/route.ts`
 - **sessions.ts** (32 connections) — `src/server/chat/sessions.ts`
-- **createSession()** (8 connections) — `src/server/chat/sessions.ts`
+- **[diagramId]/page.tsx** (21 connections) — `src/app/(app)/p/[projectId]/d/[diagramId]/page.tsx`
+- **getNetworkKnowledge()** (20 connections) — `src/server/network.ts`
+- **sessions/route.ts** (18 connections) — `src/app/api/diagrams/[id]/sessions/route.ts`
+- **messages.ts** (17 connections) — `src/server/chat/messages.ts`
+- **listMessages()** (13 connections) — `src/server/chat/messages.ts`
+- **DiagramPage()** (9 connections) — `src/app/(app)/p/[projectId]/d/[diagramId]/page.tsx`
+- **GET()** (8 connections) — `src/app/api/diagrams/[id]/sessions/route.ts`
 - **guard()** (7 connections) — `src/app/api/diagrams/[id]/sessions/[sessionId]/route.ts`
 - **PATCH()** (7 connections) — `src/app/api/diagrams/[id]/sessions/[sessionId]/route.ts`
 - **DELETE()** (6 connections) — `src/app/api/diagrams/[id]/sessions/[sessionId]/route.ts`
 - **GET()** (6 connections) — `src/app/api/diagrams/[id]/sessions/[sessionId]/route.ts`
 - **json()** (6 connections) — `src/app/api/diagrams/[id]/sessions/[sessionId]/route.ts`
 - **asRow()** (6 connections) — `src/server/chat/sessions.ts`
+- **listSessionPage()** (6 connections) — `src/server/chat/sessions.ts`
 - **failed()** (5 connections) — `src/app/api/diagrams/[id]/sessions/[sessionId]/route.ts`
+- **GENERIC_ERROR_MESSAGE** (5 connections) — `src/server/chat/pipeline.ts`
 - **foldTitle()** (4 connections) — `src/server/chat/sessions.ts`
+- **isDbTimestamp()** (4 connections) — `src/server/chat/sessions.ts`
+- **parseCursor()** (4 connections) — `src/server/chat/sessions.ts`
 - **renameSession()** (4 connections) — `src/server/chat/sessions.ts`
 - **deleteSession()** (3 connections) — `src/server/chat/sessions.ts`
-- **ChatSessionKind** (2 connections) — `src/db/schema.ts`
-- **chatSessions** (2 connections) — `src/db/schema.ts`
-- **listSessions()** (2 connections) — `src/server/chat/sessions.ts`
-- **SessionRow** (2 connections) — `src/server/chat/sessions.ts`
-- **TITLE_MAX** (2 connections) — `src/server/chat/sessions.ts`
-- **Ctx** (1 connections) — `src/app/api/diagrams/[id]/sessions/[sessionId]/route.ts`
-- **dynamic** (1 connections) — `src/app/api/diagrams/[id]/sessions/[sessionId]/route.ts`
-- **RenameSchema** (1 connections) — `src/app/api/diagrams/[id]/sessions/[sessionId]/route.ts`
-- **runtime** (1 connections) — `src/app/api/diagrams/[id]/sessions/[sessionId]/route.ts`
-- **SessionIdSchema** (1 connections) — `src/app/api/diagrams/[id]/sessions/[sessionId]/route.ts`
-- **columns** (1 connections) — `src/server/chat/sessions.ts`
-- **NewSession** (1 connections) — `src/server/chat/sessions.ts`
-- *... and 4 more nodes in this community*
+- **json()** (2 connections) — `src/app/api/diagrams/[id]/sessions/route.ts`
+- **messages** (2 connections) — `src/db/schema.ts`
+- *... and 17 more nodes in this community*
 
 ## Relationships
 
-- [\[diagramId\]/page.tsx]([diagramId]-page.tsx.md) (13 shared connections)
-- [ask/route.ts](ask-route.ts.md) (8 shared connections)
-- [getOwnedDiagram](getOwnedDiagram.md) (6 shared connections)
-- [ask.ts](ask.ts.md) (6 shared connections)
-- [auth](auth.md) (3 shared connections)
-- [pipeline.ts](pipeline.ts.md) (3 shared connections)
-- [schema.ts](schema.ts.md) (3 shared connections)
-- [versions.ts](versions.ts.md) (3 shared connections)
-- [auth.ts](auth.ts.md) (2 shared connections)
-- [NotFoundError](NotFoundError.md) (1 shared connections)
-- [projects.ts](projects.ts.md) (1 shared connections)
+- [pipeline.ts](pipeline.ts.md) (31 shared connections)
+- [getOwnedDiagram](getOwnedDiagram.md) (12 shared connections)
+- [schema.ts](schema.ts.md) (12 shared connections)
+- [auth](auth.md) (10 shared connections)
+- [ask/route.ts](ask-route.ts.md) (10 shared connections)
+- [(app)/actions.ts](app-actions.ts.md) (5 shared connections)
+- [useChatTurn.ts](useChatTurn.ts.md) (4 shared connections)
+- [read.ts](read.ts.md) (4 shared connections)
+- [ResetPasswordForm.tsx](ResetPasswordForm.tsx.md) (3 shared connections)
+- [auth.ts](auth.ts.md) (3 shared connections)
+- [projects.ts](projects.ts.md) (3 shared connections)
+- [server/network.ts](server-network.ts.md) (3 shared connections)
 
 ## Source Files
 
+- `src/app/(app)/p/[projectId]/d/[diagramId]/page.tsx`
 - `src/app/api/diagrams/[id]/sessions/[sessionId]/route.ts`
+- `src/app/api/diagrams/[id]/sessions/route.ts`
 - `src/db/schema.ts`
+- `src/server/chat/messages.ts`
+- `src/server/chat/pipeline.ts`
 - `src/server/chat/sessions.ts`
+- `src/server/network.ts`
 
 ## Audit Trail
 
-- EXTRACTED: 97 (98%)
-- INFERRED: 2 (2%)
+- EXTRACTED: 183 (96%)
+- INFERRED: 7 (4%)
 - AMBIGUOUS: 0 (0%)
 
 ---

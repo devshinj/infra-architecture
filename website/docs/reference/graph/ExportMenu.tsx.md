@@ -1,6 +1,6 @@
 ---
 title: "ExportMenu.tsx"
-sidebar_position: 47
+sidebar_position: 52
 ---
 # ExportMenu.tsx
 
@@ -34,7 +34,7 @@ sidebar_position: 47
 
 - [Canvas.tsx](Canvas.tsx.md) (9 shared connections)
 - [exportImage.ts](exportImage.ts.md) (4 shared connections)
-- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (1 shared connections)
+- [AskNode.tsx](AskNode.tsx.md) (1 shared connections)
 
 ## Source Files
 

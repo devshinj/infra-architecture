@@ -1,6 +1,6 @@
 ---
 title: "DiagramWorkspace()"
-sidebar_position: 110
+sidebar_position: 103
 sidebar_label: "핵심 노드: DiagramWorkspace()"
 ---
 # DiagramWorkspace()
@@ -14,7 +14,7 @@ sidebar_label: "핵심 노드: DiagramWorkspace()"
 ## Connections by Relation
 
 ### calls
-- [Button()](Button_2.md) `EXTRACTED`
+- [Button()](Button.md) `EXTRACTED`
 - applyCommand() `EXTRACTED`
 - Canvas() `EXTRACTED`
 - useChatTurn() `EXTRACTED`
@@ -40,7 +40,7 @@ sidebar_label: "핵심 노드: DiagramWorkspace()"
 - [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) `EXTRACTED`
 
 ### imports
-- [\[diagramId\]/page.tsx]([diagramId]-page.tsx.md) `EXTRACTED`
+- \[diagramId\]/page.tsx `EXTRACTED`
 
 ### references
 - InfraSketch 3D단계: 화면·사용성 개선 구현 계획 `INFERRED`

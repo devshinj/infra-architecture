@@ -1,6 +1,6 @@
 ---
 title: "DiagramState"
-sidebar_position: 118
+sidebar_position: 112
 ---
 # DiagramState
 
@@ -8,12 +8,12 @@ sidebar_position: 118
 
 > God node · 61 connections · `src/domain/types.ts`
 
-**Community:** [DiagramState](DiagramState.md)
+**Community:** [Command](Command.md)
 
 ## Connections by Relation
 
 ### contains
-- [types.ts](types.ts.md) `EXTRACTED`
+- types.ts `EXTRACTED`
 
 ### imports
 - [(app)/actions.ts](app-actions.ts.md) `EXTRACTED`
@@ -26,7 +26,7 @@ sidebar_position: 118
 - server/explain.ts `EXTRACTED`
 - [server/network.ts](server-network.ts.md) `EXTRACTED`
 - [NodeInfo.tsx](NodeInfo.tsx.md) `EXTRACTED`
-- [ask.ts](ask.ts.md) `EXTRACTED`
+- ask.ts `EXTRACTED`
 - [read.ts](read.ts.md) `EXTRACTED`
 - [schema.ts](schema.ts.md) `EXTRACTED`
 - flowSuggest.ts `EXTRACTED`
@@ -34,7 +34,7 @@ sidebar_position: 118
 - [domain/flows.ts](domain-flows.ts.md) `EXTRACTED`
 - domain/warnings.ts `EXTRACTED`
 - chat/warnings.ts `EXTRACTED`
-- [versions.ts](versions.ts.md) `EXTRACTED`
+- versions.ts `EXTRACTED`
 - [MissingChecklist.tsx](MissingChecklist.tsx.md) `EXTRACTED`
 - *…and 24 more `imports` connection(s) not listed (lowest-degree first to go)*
 
@@ -42,7 +42,7 @@ sidebar_position: 118
 - CanvasProps `EXTRACTED`
 - FlowPanelProps `EXTRACTED`
 - RightPanelProps `EXTRACTED`
-- [InfoCardProps](InfoCardProps.md) `EXTRACTED`
+- InfoCardProps `EXTRACTED`
 - NodeInfoProps `EXTRACTED`
 - MissingChecklistProps `EXTRACTED`
 - DiagramWorkspaceProps `EXTRACTED`

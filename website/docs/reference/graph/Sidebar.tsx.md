@@ -1,12 +1,12 @@
 ---
 title: "Sidebar.tsx"
-sidebar_position: 14
+sidebar_position: 24
 ---
 # Sidebar.tsx
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 35 nodes · cohesion 0.12
+> 29 nodes · cohesion 0.16
 
 ## Key Concepts
 
@@ -23,9 +23,6 @@ sidebar_position: 14
 - **renameProjectAction()** (6 connections) — `src/app/(app)/actions.ts`
 - **LogoMark()** (5 connections) — `src/ui/brand/Logo.tsx`
 - **expandedNav()** (5 connections) — `src/ui/Sidebar.tsx`
-- **LinkPending.tsx** (4 connections) — `src/ui/LinkPending.tsx`
-- **ShellValue** (4 connections) — `src/ui/Shell.tsx`
-- **LinkPending()** (3 connections) — `src/ui/LinkPending.tsx`
 - **IconBook()** (3 connections) — `src/ui/Sidebar.tsx`
 - **IconClose()** (3 connections) — `src/ui/Sidebar.tsx`
 - **IconCollapse()** (3 connections) — `src/ui/Sidebar.tsx`
@@ -34,35 +31,35 @@ sidebar_position: 14
 - **IconNetwork()** (3 connections) — `src/ui/Sidebar.tsx`
 - **IconPlus()** (3 connections) — `src/ui/Sidebar.tsx`
 - **IconUser()** (3 connections) — `src/ui/Sidebar.tsx`
-- **.setCollapsed()** (2 connections) — `src/ui/Shell.tsx`
-- *... and 10 more nodes in this community*
+- **deleteMessage()** (2 connections) — `src/ui/Sidebar.tsx`
+- **diagramPath()** (2 connections) — `src/ui/Sidebar.tsx`
+- **isRedirect()** (2 connections) — `src/ui/Sidebar.tsx`
+- **RailButton()** (2 connections) — `src/ui/Sidebar.tsx`
+- *... and 4 more nodes in this community*
 
 ## Relationships
 
 - [(app)/actions.ts](app-actions.ts.md) (12 shared connections)
-- [Shell.tsx](Shell.tsx.md) (9 shared connections)
-- [Button](Button.md) (9 shared connections)
-- [projects.ts](projects.ts.md) (7 shared connections)
-- [NetworkKnowledgePage.tsx](NetworkKnowledgePage.tsx.md) (5 shared connections)
+- [Shell.tsx](Shell.tsx.md) (10 shared connections)
+- [ResetPasswordForm.tsx](ResetPasswordForm.tsx.md) (8 shared connections)
+- [FlowPanel.tsx](FlowPanel.tsx.md) (8 shared connections)
+- [useFlows](useFlows.md) (6 shared connections)
+- [projects.ts](projects.ts.md) (6 shared connections)
 - [getOwnedDiagram](getOwnedDiagram.md) (3 shared connections)
-- [ResetPasswordForm.tsx](ResetPasswordForm.tsx.md) (3 shared connections)
-- [auth.ts](auth.ts.md) (2 shared connections)
-- [SessionPicker.tsx](SessionPicker.tsx.md) (2 shared connections)
-- [useFlows](useFlows.md) (1 shared connections)
-- [Button.tsx](Button.tsx.md) (1 shared connections)
-- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (1 shared connections)
+- [ShellValue](ShellValue.md) (3 shared connections)
+- [read.ts](read.ts.md) (1 shared connections)
+- [AskNode.tsx](AskNode.tsx.md) (1 shared connections)
+- [Review Focus](Review_Focus.md) (1 shared connections)
 
 ## Source Files
 
 - `src/app/(app)/actions.ts`
-- `src/ui/LinkPending.tsx`
-- `src/ui/Shell.tsx`
 - `src/ui/Sidebar.tsx`
 - `src/ui/brand/Logo.tsx`
 
 ## Audit Trail
 
-- EXTRACTED: 128 (99%)
+- EXTRACTED: 121 (99%)
 - INFERRED: 1 (1%)
 - AMBIGUOUS: 0 (0%)
 

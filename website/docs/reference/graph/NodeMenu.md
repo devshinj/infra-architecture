@@ -1,6 +1,6 @@
 ---
 title: "NodeMenu"
-sidebar_position: 95
+sidebar_position: 92
 ---
 # NodeMenu
 
@@ -21,8 +21,7 @@ sidebar_position: 95
 ## Relationships
 
 - [Canvas.tsx](Canvas.tsx.md) (3 shared connections)
-- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (1 shared connections)
-- [AskNode.tsx](AskNode.tsx.md) (1 shared connections)
+- [AskNode.tsx](AskNode.tsx.md) (2 shared connections)
 
 ## Source Files
 

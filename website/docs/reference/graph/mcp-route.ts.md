@@ -1,17 +1,16 @@
 ---
 title: "mcp/route.ts"
-sidebar_position: 86
+sidebar_position: 84
 ---
 # mcp/route.ts
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 10 nodes · cohesion 0.29
+> 9 nodes · cohesion 0.31
 
 ## Key Concepts
 
 - **mcp/route.ts** (13 connections) — `src/app/api/mcp/route.ts`
-- **verifyMcpKey()** (5 connections) — `src/server/mcpKeys.ts`
 - **POST()** (4 connections) — `src/app/api/mcp/route.ts`
 - **notAllowed()** (3 connections) — `src/app/api/mcp/route.ts`
 - **ref_modelcontextprotocol_sdk** (2 connections)
@@ -24,19 +23,17 @@ sidebar_position: 86
 ## Relationships
 
 - [read.ts](read.ts.md) (4 shared connections)
-- [NotFoundError](NotFoundError.md) (3 shared connections)
-- [auth.ts](auth.ts.md) (1 shared connections)
-- [File Structure](File_Structure.md) (1 shared connections)
+- [schema.ts](schema.ts.md) (3 shared connections)
+- [ResetPasswordForm.tsx](ResetPasswordForm.tsx.md) (1 shared connections)
 
 ## Source Files
 
 - `src/app/api/mcp/route.ts`
-- `src/server/mcpKeys.ts`
 
 ## Audit Trail
 
-- EXTRACTED: 21 (95%)
-- INFERRED: 1 (5%)
+- EXTRACTED: 19 (100%)
+- INFERRED: 0 (0%)
 - AMBIGUOUS: 0 (0%)
 
 ---

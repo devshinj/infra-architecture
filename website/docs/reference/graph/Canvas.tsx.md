@@ -6,7 +6,7 @@ sidebar_position: 2
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 64 nodes · cohesion 0.06
+> 70 nodes · cohesion 0.05
 
 ## Key Concepts
 
@@ -16,6 +16,7 @@ sidebar_position: 2
 - **CanvasProps** (17 connections) — `src/canvas/Canvas.tsx`
 - **roving.ts** (16 connections) — `src/canvas/roving.ts`
 - **emphasis.ts** (9 connections) — `src/canvas/emphasis.ts`
+- **stacking.ts** (9 connections) — `src/canvas/stacking.ts`
 - **ChatLine** (9 connections) — `src/ui/chat/useChatTurn.ts`
 - **usePopover()** (8 connections) — `src/canvas/usePopover.ts`
 - **Task 5: 화면 — 경고 배지, 설명 패널 "주의할 점", 대화 줄** (6 connections) — `docs/superpowers/plans/2026-10-30-infrasketch-phase3b-warnings.md`
@@ -34,23 +35,22 @@ sidebar_position: 2
 - **canvasAriaLabels()** (3 connections) — `src/canvas/ariaLabels.ts`
 - **zoneDescription()** (3 connections) — `src/canvas/ariaLabels.ts`
 - **.onOptionsChange()** (3 connections) — `src/canvas/Canvas.tsx`
-- **.onWarnBadgeClick()** (3 connections) — `src/canvas/Canvas.tsx`
-- *... and 39 more nodes in this community*
+- *... and 45 more nodes in this community*
 
 ## Relationships
 
-- [display.ts](display.ts.md) (16 shared connections)
-- [ZoneNameLayer.tsx](ZoneNameLayer.tsx.md) (13 shared connections)
+- [ZoneNameLayer.tsx](ZoneNameLayer.tsx.md) (14 shared connections)
+- [useDiagramView.ts](useDiagramView.ts.md) (12 shared connections)
 - [useCamera.ts](useCamera.ts.md) (12 shared connections)
-- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (11 shared connections)
-- [EdgeLayer.tsx](EdgeLayer.tsx.md) (9 shared connections)
+- [domain/flows.ts](domain-flows.ts.md) (10 shared connections)
 - [ExportMenu.tsx](ExportMenu.tsx.md) (9 shared connections)
-- [domain/flows.ts](domain-flows.ts.md) (7 shared connections)
-- [exportImage.ts](exportImage.ts.md) (7 shared connections)
-- [types.ts](types.ts.md) (7 shared connections)
-- [EdgePanels.tsx](EdgePanels.tsx.md) (4 shared connections)
-- [layout.ts](layout.ts.md) (4 shared connections)
-- [(app)/actions.ts](app-actions.ts.md) (3 shared connections)
+- [EdgeLayer.tsx](EdgeLayer.tsx.md) (7 shared connections)
+- [display.ts](display.ts.md) (7 shared connections)
+- [exportImage.ts](exportImage.ts.md) (6 shared connections)
+- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (6 shared connections)
+- [layout.ts](layout.ts.md) (5 shared connections)
+- [AskNode.tsx](AskNode.tsx.md) (5 shared connections)
+- [SessionPicker.tsx](SessionPicker.tsx.md) (4 shared connections)
 
 ## Source Files
 
@@ -61,6 +61,7 @@ sidebar_position: 2
 - `src/canvas/display.ts`
 - `src/canvas/emphasis.ts`
 - `src/canvas/roving.ts`
+- `src/canvas/stacking.ts`
 - `src/canvas/useHoverEmphasis.ts`
 - `src/canvas/usePopover.ts`
 - `src/domain/warnings.ts`
@@ -68,7 +69,7 @@ sidebar_position: 2
 
 ## Audit Trail
 
-- EXTRACTED: 237 (96%)
+- EXTRACTED: 246 (96%)
 - INFERRED: 9 (4%)
 - AMBIGUOUS: 0 (0%)
 

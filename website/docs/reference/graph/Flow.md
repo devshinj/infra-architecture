@@ -1,47 +1,43 @@
 ---
-title: "Flow"
-sidebar_position: 104
+title: "Flow()"
+sidebar_position: 107
+sidebar_label: "핵심 노드: Flow()"
 ---
-# Flow
+# Flow()
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 5 nodes · cohesion 0.40
+> God node · 36 connections · `src/canvas/Canvas.tsx`
 
-## Key Concepts
+**Community:** [Canvas.tsx](Canvas.tsx.md)
 
-- **Flow** (11 connections) — `src/domain/flows.ts`
-- **StoredFlow** (10 connections) — `src/server/flows.ts`
-- **FlowSource** (3 connections) — `src/db/schema.ts`
-- **FlowProblem** (3 connections) — `src/domain/flows.ts`
-- **.refresh()** (2 connections) — `src/ui/flows/useFlows.ts`
+## Connections by Relation
 
-## Relationships
+### calls
+- computeMissing() `EXTRACTED`
+- Canvas() `EXTRACTED`
+- mergeWarnings() `EXTRACTED`
+- useCamera() `EXTRACTED`
+- crossesBoundary() `EXTRACTED`
+- NodeMenu() `EXTRACTED`
+- categoryOf() `EXTRACTED`
+- prefersReducedMotion() `EXTRACTED`
+- emphasisOf() `EXTRACTED`
+- displayEdgeFor() `EXTRACTED`
+- unionRect() `EXTRACTED`
+- warningsByNode() `EXTRACTED`
+- useHoverEmphasis() `EXTRACTED`
+- flowEmphasis() `EXTRACTED`
+- litZones() `EXTRACTED`
+- step() `EXTRACTED`
+- EdgeLayerPortal() `EXTRACTED`
+- ZoneNameLayerPortal() `EXTRACTED`
+- drawnId() `EXTRACTED`
+- .onOptionsChange() `EXTRACTED`
+- *…and 15 more `calls` connection(s) not listed (lowest-degree first to go)*
 
-- [versions.ts](versions.ts.md) (4 shared connections)
-- [useFlows](useFlows.md) (3 shared connections)
-- [schema.ts](schema.ts.md) (2 shared connections)
-- [NodeInfo.tsx](NodeInfo.tsx.md) (2 shared connections)
-- [DiagramState](DiagramState.md) (2 shared connections)
-- [types.ts](types.ts.md) (2 shared connections)
-- [FlowPanel.tsx](FlowPanel.tsx.md) (2 shared connections)
-- [samples.ts](samples.ts.md) (1 shared connections)
-- [prompt.ts](prompt.ts.md) (1 shared connections)
-- [mcp/apply.ts](mcp-apply.ts.md) (1 shared connections)
-- [drawing/rules.ts](drawing-rules.ts.md) (1 shared connections)
-
-## Source Files
-
-- `src/db/schema.ts`
-- `src/domain/flows.ts`
-- `src/server/flows.ts`
-- `src/ui/flows/useFlows.ts`
-
-## Audit Trail
-
-- EXTRACTED: 25 (100%)
-- INFERRED: 0 (0%)
-- AMBIGUOUS: 0 (0%)
+### contains
+- [Canvas.tsx](Canvas.tsx.md) `EXTRACTED`
 
 ---
 
