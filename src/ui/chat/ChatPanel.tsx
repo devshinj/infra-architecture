@@ -51,6 +51,8 @@ export interface ChatPanelProps {
    * 바뀐 곳 보기: 그 차례 직전 버전과 비교 화면. 되돌리기: 직전 버전으로 되돌린다(새 버전, 이력은 남는다).
    */
   turnActions?: TurnActions;
+  /** 되돌려진 차례의 버전들. 그 요약 줄은 흐리게 하고 끝에 "· 되돌림" 을 붙인다(지금 구성과 다른 숫자라). */
+  undone?: ReadonlySet<number>;
 }
 
 export interface TurnActions {
@@ -59,6 +61,9 @@ export interface TurnActions {
   onCompare(version: number): void;
   onUndo(version: number): void;
 }
+
+/** 되돌려진 차례 요약 줄 끝에 붙는 말. */
+export const UNDONE_TAG = "되돌림";
 
 const PLACEHOLDER_BASE = "만들고 싶은 서비스나 바꾸고 싶은 점을 말해 주세요.";
 const PLACEHOLDER = `${PLACEHOLDER_BASE} 노드를 오른쪽 클릭하면 참조를 붙일 수 있어요.`;
@@ -214,6 +219,7 @@ export function ChatPanel({
   emptyHint,
   handoffTo = "main",
   turnActions,
+  undone,
 }: ChatPanelProps) {
   const { narrow } = useShell();
   const lines = ask ? allLines.filter((l) => !HIDDEN_IN_ASK.has(l.kind)) : allLines;
@@ -280,6 +286,14 @@ export function ChatPanel({
     const onClick = l.kind === "warning" ? onOpenWarnings : undefined;
     // 가장 최근 차례가 바꾼 것만 비교·되돌리기를 붙인다(뒤에 다른 변경이 있으면 직전 버전 비교가 이 차례만의 변경이 아니다).
     const v = l.version;
+    // 되돌려진 차례: 지금 구성과 다른 숫자라 흐리게 두고 "되돌림" 을 붙인다. 동작은 붙이지 않는다.
+    if (l.kind === "summary" && typeof v === "number" && undone?.has(v)) {
+      return (
+        <span className={`${styles.result} ${tone} ${styles.chipUndone}`} {...attrs} data-undone="">
+          <span className={styles.undoneText}>{l.text}</span> · {UNDONE_TAG}
+        </span>
+      );
+    }
     if (l.kind === "summary" && turnActions && !ask && typeof v === "number" && v > 1 && v === turnActions.latest && (l.changed ?? 0) > 0) {
       return (
         <span className={styles.turnResult}>

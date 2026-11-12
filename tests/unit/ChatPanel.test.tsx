@@ -375,3 +375,15 @@ test("the edit examples stay away when a new-chat hint, the node-question view o
   rerender(<ChatPanel {...base({ emptyDiagram: false, lines: [{ id: "u", kind: "user", text: "안녕" }] })} />);
   expect(screen.queryByRole("list", { name: "바꿔 볼 예시" })).toBeNull();
 });
+
+test("an undone turn's summary is dimmed and tagged 되돌림, without compare/undo buttons", () => {
+  const lines: ChatLine[] = [{ id: "s", kind: "summary", text: "노드 16 · 연결 20 · 3곳 바뀌었어요", version: 3, changed: 3, ...T }];
+  const turnActions = { latest: 3, onCompare: vi.fn(), onUndo: vi.fn() };
+  const { rerender } = render(<ChatPanel {...base({ lines, turnActions })} />);
+  expect(screen.getByRole("button", { name: "되돌리기" })).toBeInTheDocument();
+  rerender(<ChatPanel {...base({ lines, turnActions: { ...turnActions, latest: 4 }, undone: new Set([3]) })} />);
+  const chip = document.querySelector('[data-undone]')!;
+  expect(chip).toHaveTextContent("노드 16 · 연결 20 · 3곳 바뀌었어요 · 되돌림");
+  expect(screen.queryByRole("button", { name: "되돌리기" })).not.toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "바뀐 곳 보기" })).not.toBeInTheDocument();
+});

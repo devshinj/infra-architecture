@@ -22,6 +22,7 @@ import { displayEdgeFor, outermostCollapsedAncestor, type DisplayGraph, type Dis
 import type { Layout, Rect } from "./layout";
 import { NodeMenu } from "./NodeMenu";
 import { nodeTypes } from "./nodeTypes";
+import { zoneHeadPill } from "./layoutMetrics";
 import { offscreenHints, type OffscreenTarget } from "./offscreen";
 import { NAV_KEYS, navItems, readingOrder, step, tabStop } from "./roving";
 import { NODE_Z, zoneZ } from "./stacking";
@@ -33,6 +34,8 @@ import { ZoneNameLayerPortal, type ZoneName } from "./ZoneNameLayer";
 
 export type CanvasOptions = DisplayOptions & { hoverLabels: boolean; showMissingBadges: boolean };
 export type DiffMarks = { added: Set<string>; removed: Set<string>; changed: Set<string> };
+/** 방금 끝난 대화 차례가 더하거나 바꾼 노드. 비교 화면과 같은 테두리로 표시하되 배지는 그대로 둔다. */
+export type TurnMarks = { added: Set<string>; changed: Set<string> };
 type Pinned = Record<string, { x: number; y: number }>;
 
 export interface CanvasProps {
@@ -58,6 +61,8 @@ export interface CanvasProps {
   onMotionChange(v: boolean): void;
   /** Compare mode: ids to outline as added / removed (ghost) / changed. Only nodes are marked. */
   diffMarks?: DiffMarks;
+  /** 실시간 화면: 방금 끝난 차례의 추가·변경 노드(다음 조작까지). diffMarks 가 있으면 그쪽이 이긴다. */
+  turnMarks?: TurnMarks;
   /** Changes when the shown diagram version/mode changes; the view is re-fitted. */
   fitKey?: string;
   /** A chat turn is assembling the diagram: the camera follows calmly (see useCamera). */
@@ -75,6 +80,8 @@ export interface CanvasProps {
    * 선택은 바꾸지 않는다. 접힌 영역 안이면 그려진 바깥 영역으로 간다.
    */
   focusRequest?: { id: string; token: number };
+  /** 바뀐 곳 맞춤: 이 노드·영역들을 담게 카메라를 맞춘다. 새 배치가 끝난 뒤 한 번(토큰마다). */
+  frameRequest?: { ids: string[]; token: number };
   /** Click on a node's missing-info badge (open the 구성 정보 card at that node). */
   onBadgeClick?(nodeId: string): void;
   /** Click on a node's warning badge (select the node → 설명 탭 주의할 점). */
@@ -308,9 +315,9 @@ function ZoomVar({ target }: { target: React.RefObject<HTMLDivElement | null> })
  * 보이는 띠 밖으로 나간 외부 서비스 열을 띠 가장자리에 「외부 서비스 2 →」로 알린다. 누르면 그 묶음으로 간다(위치 보기).
  * 화면 이동마다 바뀌므로 이 컴포넌트만 뷰포트를 구독한다.
  */
-function OffscreenHints({ targets, size, insets, onGo }: { targets: OffscreenTarget[]; size: { width: number; height: number }; insets: Insets; onGo(r: Rect): void }) {
+function OffscreenHints({ targets, size, insets, avoid, onGo }: { targets: OffscreenTarget[]; size: { width: number; height: number }; insets: Insets; avoid: Rect[]; onGo(r: Rect): void }) {
   const [x, y, zoom] = useStore((s) => s.transform);
-  const hints = useMemo(() => offscreenHints(targets, { x, y, zoom }, size, insets), [targets, x, y, zoom, size, insets]);
+  const hints = useMemo(() => offscreenHints(targets, { x, y, zoom }, size, insets, avoid), [targets, x, y, zoom, size, insets, avoid]);
   return (
     <>
       {hints.map((h) => (
@@ -343,7 +350,7 @@ interface FlowProps extends CanvasProps {
   updated: Set<string>;
 }
 
-function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onPinnedChange, motion, layout, settled, layoutFailed, fitRequest, fitAllRequest, display, appearing, updated, diffMarks, fitKey, streaming = false, cameraInsets = NO_INSETS, focusRequest, onMention, onAskNode, askDisabled, askReason, onBadgeClick, onWarnBadgeClick, onPlaced, flow = null, knowledge }: FlowProps) {
+function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onPinnedChange, motion, layout, settled, layoutFailed, fitRequest, fitAllRequest, display, appearing, updated, diffMarks, turnMarks, fitKey, streaming = false, cameraInsets = NO_INSETS, focusRequest, frameRequest, onMention, onAskNode, askDisabled, askReason, onBadgeClick, onWarnBadgeClick, onPlaced, flow = null, knowledge }: FlowProps) {
   const far = useStore((s) => s.transform[2] < FAR_ZOOM);
   const selected = drawnId(state, options.collapsed, options.selectedId);
   const k = knowledge ?? undefined;
@@ -469,7 +476,13 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
       else if (updated.has(ln.id)) visual = "updated";
       else if (hov && !hov.nodes.has(ln.id) && !pulse?.ids.has(ln.id)) visual = "faded";
       const az = n.attrs.az;
-      const diff = diffMarks?.removed.has(ln.id) ? "removed" : diffMarks?.added.has(ln.id) ? "added" : diffMarks?.changed.has(ln.id) ? "changed" : undefined;
+      const diff = diffMarks?.removed.has(ln.id)
+        ? "removed"
+        : (diffMarks ?? turnMarks)?.added.has(ln.id)
+          ? "added"
+          : (diffMarks ?? turnMarks)?.changed.has(ln.id)
+            ? "changed"
+            : undefined;
       const data: NodeCardData = {
         label: ln.displayLabel,
         fullLabel: n.label,
@@ -509,7 +522,7 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
     }
     return out;
     // eslint-disable-next-line react-hooks/exhaustive-deps -- zoneDesc 는 useId 에서 나와 바뀌지 않는다
-  }, [layout, display, selected, sel, lit, appearing, updated, editMode, options, toggleGroup, diffMarks, missingByNode, warnByNode, onBadgeClick, onWarnBadgeClick, pulse, hoverId, known]);
+  }, [layout, display, selected, sel, lit, appearing, updated, editMode, options, toggleGroup, diffMarks, turnMarks, missingByNode, warnByNode, onBadgeClick, onWarnBadgeClick, pulse, hoverId, known]);
 
   // 영역 이름 알약(연결선 위 층): 영역 노드와 같은 배치·흐림(lit)에서 만든다. 호버·등장 효과로는 다시 만들지 않는다.
   const zoneNames = useMemo<ZoneName[]>(() => {
@@ -579,6 +592,18 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
       .filter((t) => t.count > 0);
   }, [display.groups, layout.groups, state.nodes, state.groups]);
   const canvasSize = useMemo(() => ({ width, height }), [width, height]);
+  // 방향 표시가 덮지 않을 상자: 노드, 접힌 영역(상자 하나로 그려지는 것), 펼친 영역의 이름 알약.
+  const nodeBoxes = useMemo(
+    () => [
+      ...Object.values(layout.nodes),
+      ...Object.values(layout.groups).flatMap((g) => {
+        const dg = display.groups[g.id];
+        if (!dg) return [];
+        return dg.collapsed ? [g] : [zoneHeadPill(g, dg.label)];
+      }),
+    ],
+    [layout.nodes, layout.groups, display.groups],
+  );
   // 위치 보기. 프로그램 이동이라 onMoveStart 에 null 이벤트로 와서 사용자 이동으로 치지 않는다.
   // 다시 마운트돼도(빈 캔버스 → 그림) 이미 처리한 옛 요청으로 움직이지 않는다.
   const focusToken = focusRequest?.token;
@@ -604,6 +629,23 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
     setPulse({ ids, token: focusRequest.token });
     // eslint-disable-next-line react-hooks/exhaustive-deps -- 새 요청(토큰)일 때만 움직인다
   }, [focusToken]);
+  // 바뀐 곳 맞춤: 비교 화면의 새 배치(지운 노드까지 든 합친 그림)가 끝난 뒤 바뀐 노드들에 맞춘다. 토큰마다 한 번.
+  const frameToken = frameRequest?.token;
+  const handledFrame = useRef<number | undefined>(undefined);
+  useEffect(() => {
+    if (!frameRequest || !settled || handledFrame.current === frameRequest.token) return;
+    const rects = frameRequest.ids.flatMap((id) => {
+      const d = drawnId(state, options.collapsed, id);
+      const r = d === null ? undefined : (layout.nodes[d] ?? layout.groups[d]);
+      return r ? [r] : [];
+    });
+    // 배치에 아직 하나도 없으면(새 배치 전) 다음 배치를 기다린다.
+    const target = unionRect(rects);
+    if (!target) return;
+    handledFrame.current = frameRequest.token;
+    camera.fitTo(target);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- 새 요청이거나 배치가 끝났을 때만 본다
+  }, [frameToken, settled, layout]);
   useEffect(() => {
     if (!pulse) return;
     const t = setTimeout(() => setPulse(null), PULSE_MS);
@@ -824,7 +866,7 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
           onPillContextMenu={(id, e) => openMenu(id, true, e)}
         />
       </ReactFlow>
-      {laneTargets.length > 0 && <OffscreenHints targets={laneTargets} size={canvasSize} insets={cameraInsets} onGo={(r) => camera.focus(r)} />}
+      {laneTargets.length > 0 && <OffscreenHints targets={laneTargets} size={canvasSize} insets={cameraInsets} avoid={nodeBoxes} onGo={(r) => camera.focus(r)} />}
       {menu && onMention && (
         <NodeMenu
           x={menu.x}

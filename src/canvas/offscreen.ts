@@ -24,6 +24,13 @@ export interface OffscreenHint {
 export const PEEK_PX = 24;
 /** 표시 가운데가 띠 위·아래 끝에서 떨어질 최소 거리(px). */
 const EDGE_PAD = 28;
+/** 표시 단추의 대략 크기와 띠 가장자리에서 띄운 거리(canvas.css .canvas__offscreen 과 맞춘다). 노드 피하기에 쓴다. */
+const HINT_W = 140;
+const HINT_H = 32;
+const HINT_INSET = 8;
+/** 노드와 띄울 틈, 빈 높이를 찾을 때 한 번에 옮기는 거리(px). */
+const HINT_GAP = 6;
+const Y_STEP = 8;
 
 const unite = (rs: Rect[]): Rect => {
   const x1 = Math.min(...rs.map((r) => r.x));
@@ -43,6 +50,8 @@ export function offscreenHints(
   transform: { x: number; y: number; zoom: number },
   size: { width: number; height: number },
   insets: Insets,
+  /** 표시가 덮으면 안 되는 상자(노드, 흐름 좌표). 덮으면 띠 가장자리를 따라 가장 가까운 빈 높이로 비킨다. */
+  avoid: Rect[] = [],
 ): OffscreenHint[] {
   if (size.width <= 0 || size.height <= 0) return [];
   const left = insets.left;
@@ -65,7 +74,24 @@ export function offscreenHints(
     const count = ts.reduce((n, t) => n + t.count, 0);
     const name = ts.length === 1 ? ts[0]!.label : "외부 서비스";
     const cy = (rect.y + rect.height / 2) * transform.zoom + transform.y;
-    const y = Math.min(Math.max(cy, top + EDGE_PAD), Math.max(top + EDGE_PAD, bottom - EDGE_PAD));
+    const lo = top + EDGE_PAD;
+    const hi = Math.max(lo, bottom - EDGE_PAD);
+    const want = Math.min(Math.max(cy, lo), hi);
+    // 표시가 놓일 가로 칸(띠 가장자리에서 안쪽 HINT_W): 그 칸에 걸친 노드를 화면 좌표로 바꿔 둔다.
+    const x1 = side === "right" ? right - HINT_INSET - HINT_W : left + HINT_INSET;
+    const x2 = x1 + HINT_W;
+    const blocks = avoid
+      .map((r) => ({ x1: r.x * transform.zoom + transform.x, x2: (r.x + r.width) * transform.zoom + transform.x, y1: r.y * transform.zoom + transform.y, y2: (r.y + r.height) * transform.zoom + transform.y }))
+      .filter((b) => b.x2 > x1 && b.x1 < x2);
+    const free = (y: number) => blocks.every((b) => b.y2 + HINT_GAP <= y - HINT_H / 2 || b.y1 - HINT_GAP >= y + HINT_H / 2);
+    let y = want;
+    if (!free(want)) {
+      // 원하는 높이에서 위아래로 한 칸씩 넓혀 가며 처음 빈 곳. 없으면 원래 높이(덮는 편이 사라지는 것보다 낫다).
+      for (let d = Y_STEP; d <= hi - lo; d += Y_STEP) {
+        if (want - d >= lo && free(want - d)) { y = want - d; break; }
+        if (want + d <= hi && free(want + d)) { y = want + d; break; }
+      }
+    }
     out.push({ side, text: `${name} ${count}`, y, rect, ids: ts.map((t) => t.id) });
   }
   return out;

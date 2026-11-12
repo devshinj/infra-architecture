@@ -36,3 +36,13 @@ test("no hint before the canvas has a size or when the strip is too narrow", () 
   expect(offscreenHints([ext(800)], at(0), { width: 0, height: 0 }, INSETS)).toEqual([]);
   expect(offscreenHints([ext(800)], at(0), SIZE, { left: 480, right: 480 })).toEqual([]);
 });
+
+test("the hint slides along the strip edge to the nearest height that covers no node", () => {
+  // 띠 오른쪽 가장자리 칸(x 552–692)에 노드가 y 220–280 에 있다. 묶음 가운데(250)는 막혀 위나 아래로 비킨다.
+  const node = { x: 560, y: 220, width: 120, height: 60 };
+  const [h] = offscreenHints([ext(800)], at(0), SIZE, INSETS, [node]);
+  expect(h!.y + 16 <= 220 - 6 || h!.y - 16 >= 280 + 6).toBe(true);
+  expect(Math.abs(h!.y - 250)).toBeLessThanOrEqual(60);
+  // 칸 밖 노드는 상관없다.
+  expect(offscreenHints([ext(800)], at(0), SIZE, INSETS, [{ x: 200, y: 220, width: 120, height: 60 }])[0]!.y).toBe(250);
+});

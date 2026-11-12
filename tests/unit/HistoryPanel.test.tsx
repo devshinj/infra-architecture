@@ -73,3 +73,14 @@ test("the latest version is marked 지금, times are relative with the full stam
   expect(t.tagName).toBe("TIME");
   expect(t).toHaveAttribute("title", new Date(now - 5 * 60_000).toLocaleString("ko-KR"));
 });
+
+test("undoneVersions: a version is undone when the last restore after it went back before it", async () => {
+  const { undoneVersions } = await import("@/ui/HistoryPanel");
+  const row = (number: number, source: "ai" | "restore" | "import", restoredFrom: number | null = null) => ({ number, source, status: "complete" as const, restoredFrom, createdAt: new Date() });
+  // v2 AI → v3 되돌리기(v1) : v2 는 되돌려졌다.
+  expect([...undoneVersions([row(1, "import"), row(2, "ai"), row(3, "restore", 1)])]).toEqual([2]);
+  // 그 뒤 v4 에서 v2 로 다시 되돌리면 되살아난다.
+  expect([...undoneVersions([row(1, "import"), row(2, "ai"), row(3, "restore", 1), row(4, "restore", 2)])]).toEqual([]);
+  // 되돌리기 뒤에 만든 AI 버전(v4)은 상관없다. 이력에서 아주 앞(v1)으로 가면 그 사이 버전이 모두 되돌려진다.
+  expect([...undoneVersions([row(1, "import"), row(2, "ai"), row(3, "ai"), row(4, "restore", 1), row(5, "ai")])].sort()).toEqual([2, 3]);
+});

@@ -183,6 +183,8 @@ describe("runChatTurn", () => {
     const vs = await versions(ids.diagramId);
     expect(vs).toHaveLength(2);
     expect(vs[1]).toMatchObject({ number: 2, source: "ai", status: "complete", messageId: start.messageId });
+    // 이력 한 줄: 요청 글 · 증감(빈 구성에서 그렸으니 노드·연결·영역이 붙기만 한다).
+    expect(vs[1]!.summary).toMatch(/^IDC 이중화 그려줘 · 노드 \+\d+ · 연결 \+\d+ · 영역 \+\d+$/);
     expect(vs[1]!.state).toEqual({ ...s2, warnings: [expect.objectContaining({ id: "spof:db-proxy", rule: "spof" })] });
 
     const msgs = await listMessages(ids.diagramId);

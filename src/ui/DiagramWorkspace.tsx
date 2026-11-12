@@ -15,7 +15,7 @@ import {
   savePinnedAction,
   setWarningIgnoredAction,
 } from "@/app/(app)/actions";
-import { Canvas, type CanvasOptions, type DiffMarks } from "@/canvas/Canvas";
+import { Canvas, type CanvasOptions, type DiffMarks, type TurnMarks } from "@/canvas/Canvas";
 import { defaultDisplayOptions } from "@/canvas/display";
 import { applyCommand } from "@/domain/apply";
 import { assumptionChangeMessage, confirmAssumption } from "@/domain/assumptions";
@@ -27,7 +27,7 @@ import type { DiagramState } from "@/domain/types";
 
 import styles from "./app.module.css";
 import { Button } from "./Button";
-import type { VersionRow } from "./HistoryPanel";
+import { undoneVersions, type VersionRow } from "./HistoryPanel";
 import { ELSEWHERE_BUSY, type LlmHealth } from "./chat/ChatPanel";
 import type { MentionInputHandle } from "./chat/MentionInput";
 import type { ChecklistDrafts, ChecklistExpanded, MissingChecklistProps } from "./chat/MissingChecklist";
@@ -57,6 +57,20 @@ type Mode =
   | { kind: "live" }
   | { kind: "view"; number: number; state: DiagramState }
   | { kind: "compare"; number: number; state: DiagramState; marks: DiffMarks };
+type DiffKind = "added" | "removed" | "changed";
+/** 순회 차례: 노드(이름 순) → 영역 → 연결. 비교 화면의 합친 그림에 있는 것만(지운 것도 들어 있다). */
+function diffItems(ids: Set<string>, state: DiagramState): string[] {
+  const byLabel = (a: string, b: string, label: (id: string) => string) => label(a).localeCompare(label(b), "ko", { numeric: true });
+  const nodes = [...ids].filter((id) => state.nodes[id]).sort((a, b) => byLabel(a, b, (id) => state.nodes[id]!.label));
+  const groups = [...ids].filter((id) => state.groups[id]).sort((a, b) => byLabel(a, b, (id) => state.groups[id]!.label));
+  const edges = [...ids].filter((id) => state.edges[id]).sort();
+  return [...nodes, ...groups, ...edges];
+}
+const DIFF_KINDS: { kind: DiffKind; label: string; swatch: "swAdded" | "swRemoved" | "swChanged" }[] = [
+  { kind: "added", label: "추가", swatch: "swAdded" },
+  { kind: "removed", label: "삭제", swatch: "swRemoved" },
+  { kind: "changed", label: "변경", swatch: "swChanged" },
+];
 
 export interface DiagramWorkspaceProps {
   diagramId: string;
@@ -126,6 +140,9 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
   const [current, setCurrent] = useState(latest);
   const [pinned, setPinned] = useState<Pinned>(initialPinned);
   const [options, setOptions] = useState<CanvasOptions>(() => optionsFor(latest.state));
+  /** 방금 끝난 대화 차례가 더하거나 바꾼 노드. 다음 조작까지 비교 화면과 같은 표시로 남는다. */
+  const [turnMarks, setTurnMarks] = useState<TurnMarks | null>(null);
+  const turnBase = useRef<DiagramState | null>(null);
   const [editMode, setEditMode] = useState(false);
   // 흐름 표시는 기본으로 끈다: 연두 움직임은 고른 흐름(흐름 탭)에만 쓴다(One Signal Rule). 켜면 모든 선이 움직인다.
   const [motion, setMotion] = useState(false);
@@ -311,7 +328,13 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
   const fitAfterTurn = useRef(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
-  useEffect(() => { adoptAfterChat.current = false; }, [current.number]);
+  // 채택이 끝난 뒤에 푼다. 채택은 렌더 중에 일어나므로 거기서 ref 를 바꾸면, 개발 모드(StrictMode)의 두 번째 렌더가
+  // 이미 풀린 값을 보고 "구성을 바꾼 차례가 아니다"로 판단해 선택 해제·화면 맞춤·바뀐 노드 표시를 놓친다.
+  useEffect(() => {
+    adoptAfterChat.current = false;
+    fitAfterTurn.current = false;
+    turnBase.current = null;
+  }, [current.number]);
   // 브라우저가 스스로 쓴 버전(대화·되돌리기·가져오기·폼 저장 등)을 받아 오는 중: 그동안은 Claude Code 변경을 묻지 않는다.
   // 그 버전을 바깥 변경으로 오해해 한 번 더 불러오거나 안내를 띄우지 않게. 새 버전을 받으면(아래 effect) 또는 OWN_WRITE_MS 뒤 풀린다.
   const ownWriteUntil = useRef(0);
@@ -321,6 +344,9 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
   useEffect(() => {
     ownWriteUntil.current = 0;
   }, [current.number]);
+  // 처음 열 때도 이력을 받아 둔다: 대화의 되돌린 차례 요약 줄을 흐리게 하려면 되돌리기 이력이 필요하다.
+  useEffect(() => loadVersions(), [loadVersions]);
+  const undone = useMemo(() => undoneVersions(versions), [versions]);
   const refreshFromServer = () => {
     adoptAfterChat.current = true;
     markOwnWrite();
@@ -400,8 +426,16 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
     }
     setCurrent(latest);
     if (!adoptAfterChat.current) setBoard((n) => n + 1);
+    // 렌더 중이라 ref 는 읽기만 한다(푸는 것은 current.number 가 바뀐 뒤의 effect).
     const refit = adoptAfterChat.current && fitAfterTurn.current;
-    fitAfterTurn.current = false;
+    // 구성을 바꾼 대화 차례: 차례 직전과 비교해 추가·변경 노드를 다음 조작(고르기·빈 곳 누르기·다음 차례·화면 전환)까지 표시한다.
+    // 그 밖의 채택(가져오기·되돌리기·바깥 변경)은 지난 표시를 걷는다.
+    if (refit && turnBase.current) {
+      const d = diffStates(turnBase.current, latest.state);
+      const nodesOf = (ids: Set<string>) => new Set([...ids].filter((id) => id in latest.state.nodes));
+      const marks = { added: nodesOf(d.added), changed: nodesOf(d.changed) };
+      setTurnMarks(marks.added.size + marks.changed.size > 0 ? marks : null);
+    } else setTurnMarks(null);
     // 전체가 보이게(전체 보기와 같은 맞춤: 읽을 수 있는 줌 바닥 없이). 자동 정렬 맞춤은 큰 구성도면 윗줄만 보여 새 노드가 밖에 남는다.
     if (refit) setFitAll((n) => n + 1);
     setOptions((o) =>
@@ -416,6 +450,13 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
   const runningKey = chat.busy ? (chat.runningKey ?? "main") : null;
   // 구성도를 바꾸는 차례(기본 대화·구성도 대화 세션). 노드 질문 차례는 구성도를 바꾸지 않는다.
   const mainTurn = chat.busy && !chat.runningAsk;
+  // 차례가 시작되면 그 직전 구성을 잡아 두고(끝난 뒤 바뀐 노드 표시의 기준), 지난 차례 표시는 걷는다.
+  useEffect(() => {
+    if (!mainTurn) return;
+    turnBase.current = current.state;
+    setTurnMarks(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- 차례가 시작될 때 한 번
+  }, [mainTurn]);
 
   // 설명: 대화가 끝나거나 구성도를 열면 낡은 노드를 차례로 만든다. 이력 보기·비교에서는 멈춘다.
   const explanations = useExplanations({ diagramId, state: shown, live, busy: chat.busy, selectedId: options.selectedId });
@@ -469,9 +510,10 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
     },
     [setActiveFlow],
   );
-  /** 캔버스·패널의 선택. 노드·연결을 고르면 흐름 보기를 푼다. */
+  /** 캔버스·패널의 선택. 노드·연결을 고르면 흐름 보기를 푼다. 고르거나 빈 곳을 누르는 것은 다음 조작이라 차례 표시를 걷는다. */
   const onSelect = (id: string | null) => {
     if (id !== null) setActiveFlow(null);
+    setTurnMarks(null);
     setOptions((o) => ({ ...o, selectedId: id }));
   };
   useEffect(() => {
@@ -724,6 +766,8 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
   const [warnScroll, setWarnScroll] = useState(0);
   // 위치 보기: 캔버스가 그 노드로 이동해 강조한다(선택은 하지 않는다).
   const [focusRequest, setFocusRequest] = useState<{ id: string; token: number } | undefined>(undefined);
+  // 바뀐 곳 맞춤(비교 화면에 들어갈 때): 캔버스가 새 배치 뒤 이 노드들을 담게 맞춘다.
+  const [frameRequest, setFrameRequest] = useState<{ ids: string[]; token: number } | undefined>(undefined);
   // Canvas 의 노드 계산 deps 에 들어가므로 정체성을 고정한다(setter·ref 만 쓴다).
   // 위치 보기와 같은 길로 카메라도 그 노드로 옮긴다(열린 카드를 피해 가운데에 둔다).
   const onBadgeClick = useCallback((id: string) => {
@@ -844,6 +888,7 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
   const enter = (next: Mode, state: DiagramState) => {
     setMode(next);
     setEditMode(false);
+    setTurnMarks(null);
     setOptions(optionsFor(state));
   };
   const backToLive = () => {
@@ -866,9 +911,28 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
       const old = await getVersionAction(diagramId, number);
       if (!old) return;
       const marks = diffStates(old, current.state);
-      enter({ kind: "compare", number, state: old, marks }, unionState(old, current.state));
+      const union = unionState(old, current.state);
+      enter({ kind: "compare", number, state: old, marks }, union);
       setPanelShown(false);
+      // 바뀐 곳에 카메라를 맞추고, 그 자리를 덮지 않게 구성 정보 카드를 접는다. 연결은 두 끝 노드로 맞춘다.
+      changeCardOpen(false);
+      const ids = [...marks.added, ...marks.removed, ...marks.changed].flatMap((id) => {
+        const e = union.edges[id];
+        return e ? [e.from, e.to] : [id];
+      });
+      seq.current += 1;
+      if (ids.length > 0) setFrameRequest({ ids, token: seq.current });
+      setDiffCursor({});
     });
+
+  // 비교 띠의 「추가 n」「삭제 n」「변경 n」: 누를 때마다 그 종류의 다음 항목으로 위치 보기(끝나면 처음부터).
+  const [diffCursor, setDiffCursor] = useState<Partial<Record<DiffKind, number>>>({});
+  const cycleDiff = (kind: DiffKind, items: string[]) => {
+    if (items.length === 0) return;
+    const i = ((diffCursor[kind] ?? -1) + 1) % items.length;
+    setDiffCursor((c) => ({ ...c, [kind]: i }));
+    locate(items[i]!);
+  };
 
   const restore = (number: number) =>
     !locked &&
@@ -971,10 +1035,25 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
               <span>{banner}</span>
               <Button size="sm" onClick={backToLive}>현재로 돌아가기</Button>
               {mode.kind === "compare" && (
-                <div className={styles.legend} aria-label="범례">
-                  <span><i className={`${styles.swatch} ${styles.swAdded}`} />추가 {mode.marks.added.size}</span>
-                  <span><i className={`${styles.swatch} ${styles.swRemoved}`} />삭제 {mode.marks.removed.size}</span>
-                  <span><i className={`${styles.swatch} ${styles.swChanged}`} />변경 {mode.marks.changed.size}</span>
+                <div className={styles.legend} role="group" aria-label="바뀐 곳">
+                  {DIFF_KINDS.map(({ kind, label, swatch }) => {
+                    const items = diffItems(mode.marks[kind], shown);
+                    const at = diffCursor[kind];
+                    return (
+                      <button
+                        key={kind}
+                        type="button"
+                        className={styles.diffStep}
+                        disabled={items.length === 0}
+                        aria-label={items.length === 0 ? `${label} 0` : `${label} ${items.length}곳 가운데 ${at === undefined ? 1 : ((at + 1) % items.length) + 1}번째로 가기`}
+                        onClick={() => cycleDiff(kind, items)}
+                      >
+                        <i className={`${styles.swatch} ${styles[swatch]}`} aria-hidden="true" />
+                        {label} {mode.marks[kind].size}
+                        {at !== undefined && items.length > 1 && <span className={styles.diffAt}>{at + 1}/{items.length}</span>}
+                      </button>
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -997,6 +1076,7 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
               options={canvasOptions}
               motion={motion}
               fitKey={`${board}:${mode.kind}:${mode.kind === "live" ? "" : mode.number}`}
+              {...(live && turnMarks ? { turnMarks } : {})}
               streaming={live && mainTurn}
               cameraInsets={cameraInsets}
               onOptionsChange={changeOptions}
@@ -1019,6 +1099,7 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
               diagramName={name}
               {...(projectName !== undefined ? { projectName } : {})}
               {...(focusRequest ? { focusRequest } : {})}
+              {...(frameRequest && mode.kind === "compare" ? { frameRequest } : {})}
               {...(live ? { onMention, onBadgeClick, onAskNode: onAskFromMenu } : {})}
               {...(mode.kind === "compare" ? { diffMarks: mode.marks } : {})}
             />
@@ -1112,6 +1193,7 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
               onStop: chat.stop,
               onOpenWarnings: openWarnings,
               turnActions: { latest: current.number, disabled: locked || busy || !live, onCompare: (v) => compare(v - 1), onUndo: undoTurn },
+              undone,
               health,
               mentionRef,
               ...(live ? {} : { disabledReason: "이전 버전을 보는 중에는 대화할 수 없어요." }),

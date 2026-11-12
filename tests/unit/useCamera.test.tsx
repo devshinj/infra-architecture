@@ -412,3 +412,12 @@ test("자동 정렬 after 전체 보기 fits again by the readable rule", () => 
   act(() => vi.advanceTimersByTime(1000));
   expect(r.setViewport).toHaveBeenCalledTimes(1);
 });
+
+test("fitTo frames a rect at the readable zoom or closer (max 1) and cancels a scheduled follow", () => {
+  const r = rig({ rects: { a: box(0, 0) } });
+  act(() => r.hook.result.current.fitTo(box(400, 300)));
+  const v = r.vp();
+  expect(v.zoom).toBeLessThanOrEqual(1);
+  expect(v.zoom).toBeGreaterThanOrEqual(READABLE_ZOOM);
+  expect(v).toEqual(fitViewport(box(400, 300), SIZE, { left: 0, right: 0 }, 1, { minZoom: READABLE_ZOOM }));
+});

@@ -31,14 +31,20 @@
 .version { border: 1px solid transparent; border-radius: var(--radius-control); }
 .version[data-viewing] { border-color: var(--text-secondary); }
 .versionRow {
-  width: 100%; display: flex; align-items: center; gap: 8px; font: inherit; font-size: 13px;
+  width: 100%; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; font: inherit; font-size: 13px;
   color: var(--text-primary); background: transparent; border: 0; padding: 8px; cursor: pointer; text-align: left;
 }
 .versionRow:hover { background: var(--bg-panel-raised); }
 .versionNo { font-weight: 600; min-width: 28px; }
+/* 요청 글 · 증감: 머리 줄(번호·출처·지금·시각) 아래 줄에 둔다. 두 줄까지 보이고 넘치면 말줄임(전체는 title).
+   한 줄에 욱여넣으면 시각이 두 줄로 꺾이고 증감이 잘린다. 번호 칸(28px + 사이 8px)만큼 들여 출처 글과 줄을 맞춘다. */
+.versionSummary {
+  order: 10; flex: 1 0 100%; min-width: 0; padding-left: 36px; box-sizing: border-box; line-height: 1.5;
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; overflow-wrap: anywhere;
+}
 /* 지금 버전: 연두는 "지금"을 가리킨다(DESIGN.md · One Signal). 글자만 연두, 칠은 없다. */
 .now { flex: none; font-size: 12px; font-weight: 600; color: var(--accent); border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent); border-radius: var(--radius-pill); padding: 0 8px; }
-.time { margin-left: auto; font-size: 12px; color: var(--text-secondary); }
+.time { flex: none; margin-left: auto; font-size: 12px; color: var(--text-secondary); white-space: nowrap; }
 .badge { font-size: 12px; color: var(--text-primary); border: 1px solid var(--state-missing); border-radius: var(--radius-pill); padding: 0 4px; }
 .actions { display: flex; flex-wrap: wrap; gap: 8px; padding: 0 8px 12px; }
 /* 세로로 쌓이는 판 안의 도구 버튼(공용 Button)은 글자 폭만 차지한다. */

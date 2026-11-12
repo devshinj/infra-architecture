@@ -166,7 +166,7 @@ const idsKey = (rects: Record<string, Rect>) => Object.keys(rects).sort().join("
  *   choice, so no automatic fit (follow, end of turn) overrides it until the next board, re-arrange or turn start;
  * - reduced motion → every move is instant.
  */
-export function useCamera(input: CameraInput): { onMoveStart(event: unknown): void; focus(r: Rect): void } {
+export function useCamera(input: CameraInput): { onMoveStart(event: unknown): void; focus(r: Rect): void; fitTo(r: Rect): void } {
   const latest = useRef(input);
   useEffect(() => {
     latest.current = input;
@@ -359,5 +359,17 @@ export function useCamera(input: CameraInput): { onMoveStart(event: unknown): vo
     setViewport(focusViewport(r, size, insets, getViewport().zoom), { duration: reducedMotion ? 0 : FOCUS_DURATION });
   }, []);
 
-  return { onMoveStart, focus };
+  /**
+   * 바뀐 곳 맞춤: `r` 을 띠 안에 담는다(확대는 1 까지, 읽을 수 있는 줌 바닥은 지킨다). 다 못 담으면 보통 맞춤처럼 왼쪽 위부터.
+   * 위치 보기처럼 예약된 따라가기를 지워, 새 배치가 들어오며 늘어난 노드 때문에 전체로 끌려가지 않게 한다.
+   */
+  const fitTo = useCallback((r: Rect) => {
+    const { size, insets, reducedMotion, setViewport } = latest.current;
+    if (!(size.width > 0 && size.height > 0)) return;
+    clearTimer();
+    st.current.pending.clear();
+    setViewport(fitViewport(r, size, insets, FINAL_MAX_ZOOM, { minZoom: READABLE_ZOOM }), { duration: reducedMotion ? 0 : FOCUS_DURATION });
+  }, []);
+
+  return { onMoveStart, focus, fitTo };
 }
