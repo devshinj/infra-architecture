@@ -44,6 +44,17 @@
   .page {
     grid-template-columns: 560px 440px; justify-content: center; align-content: center;
     padding: 32px; background-image: none;
+    position: relative; isolation: isolate;
+  }
+  /*
+   * 판 바깥 바탕에만 사용자 배경 그림(public/brand/auth-bg.webp, 2560×1440, 가운데가 빈 별자리)을 옅게 깐다.
+   * 가운데 빈 곳에 판이 앉고 양옆 무늬만 살짝 비친다. 판(무대·양식)은 불투명 칠이라 그림이 판 안으로 들어오지 않는다.
+   * 좁은 화면은 세로라 cover 로 가운데만 남아 그림이 거의 안 보이므로 점 격자만 쓴다.
+   */
+  .page::before {
+    content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+    background: url("/brand/auth-bg.webp") center / cover no-repeat;
+    opacity: 0.6;
   }
   .form {
     grid-column: 2; grid-row: 1; max-width: none; align-self: stretch; justify-content: center;

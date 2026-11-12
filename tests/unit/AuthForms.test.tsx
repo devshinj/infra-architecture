@@ -238,8 +238,15 @@ describe("auth stage (DESIGN.md: the canvas grammar outside the canvas)", () => 
     expect(screen.getAllByRole("heading", { level: 1 })).toHaveLength(1);
   });
 
-  test("the sign-in screens no longer paint the constellation picture", async () => {
+  test("the background picture shows only faintly behind the panel, on wide screens", async () => {
     const { readFileSync } = await import("node:fs");
-    expect(readFileSync("src/app/(auth)/auth.module.css", "utf8")).not.toContain("auth-bg");
+    const css = readFileSync("src/app/(auth)/auth.module.css", "utf8");
+    // 그림은 넓은 화면 블록 안의 바탕 층(.page::before) 한 곳에만, 1 보다 낮은 불투명도로.
+    const wide = css.slice(css.indexOf("@media (min-width: 1080px)"));
+    const layer = wide.slice(wide.indexOf(".page::before"), wide.indexOf("}", wide.indexOf(".page::before")));
+    expect(css.match(/url\(/g)).toHaveLength(1);
+    expect(layer).toContain('url("/brand/auth-bg.webp")');
+    expect(layer).toMatch(/z-index:\s*-1/);
+    expect(Number(/opacity:\s*([\d.]+)/.exec(layer)?.[1])).toBeLessThan(1);
   });
 });
