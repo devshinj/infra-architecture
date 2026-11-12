@@ -127,6 +127,20 @@ describe("projects", () => {
     expect((await createProject(a, "  운영  ")).name).toBe("운영");
   });
 
+  test("깨진 글자·제어 문자가 든 이름은 거절하고 보통 한글 이름은 된다", async () => {
+    const a = await user("a");
+    const MSG = "이름에 쓸 수 없는 글자(깨진 글자·제어 문자)가 있어요";
+    for (const bad of ["영\uFFFD상", "a\u0007b", "a\u2028b"]) {
+      await expect(createProject(a, bad)).rejects.toThrow(MSG);
+    }
+    const p = await createProject(a, "영상 관제");
+    expect(p.name).toBe("영상 관제");
+    const d = await createDiagram(a, p.id, "구성도");
+    await expect(renameDiagram(a, d.id, "영\uFFFD상")).rejects.toThrow(MSG);
+    await expect(renameDiagram(a, d.id, "a\u0007b")).rejects.toThrow(MSG);
+    await renameDiagram(a, d.id, "영상 구성도");
+  });
+
   test("list, rename and delete cascade", async () => {
     const a = await user("a"); const p = await createProject(a, "x");
     const d = await createDiagram(a, p.id, "y");

@@ -195,6 +195,31 @@ describe("/api/mcp", () => {
     expect(dup.isError).toBe(true);
   });
 
+  test("create_project 는 diagram_name 으로 첫 구성도 이름을 정하고, 없으면 새 구성도", async () => {
+    const { key } = await makeUserKey();
+    const client = await connect(key);
+
+    const named = dataOf<{ projectId: string }>(await call(client, "create_project", { name: "영상관제", diagram_name: "VMS 구성도" }));
+    expect(dataOf<{ name: string }[]>(await call(client, "list_diagrams", { project_id: named.projectId })).map((d) => d.name)).toEqual(["VMS 구성도"]);
+
+    const plain = dataOf<{ projectId: string }>(await call(client, "create_project", { name: "기본" }));
+    expect(dataOf<{ name: string }[]>(await call(client, "list_diagrams", { project_id: plain.projectId })).map((d) => d.name)).toEqual(["새 구성도"]);
+  });
+
+  test("create_project 는 깨진 이름을 isError 로 거절한다", async () => {
+    const { key } = await makeUserKey();
+    const client = await connect(key);
+    const MSG = "이름에 쓸 수 없는 글자(깨진 글자·제어 문자)가 있어요";
+
+    const bad = await call(client, "create_project", { name: "\uFFFD\uFFFD\uFFFD" });
+    expect(bad.isError).toBe(true);
+    expect(textOf(bad)).toContain(MSG);
+
+    const badDiagram = await call(client, "create_project", { name: "정상", diagram_name: "영\uFFFD상" });
+    expect(badDiagram.isError).toBe(true);
+    expect(textOf(badDiagram)).toContain(MSG);
+  });
+
   test("틀린 명령은 몇 번째가 왜 틀렸는지 알려 주고 저장하지 않는다", async () => {
     const { key } = await makeUserKey();
     const client = await connect(key);

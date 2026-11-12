@@ -80,11 +80,16 @@ export function createMcpServer(userId: string): McpServer {
   server.registerTool(
     "create_project",
     {
-      description: describe("새 프로젝트를 만들어요. 첫 구성도(버전 1)가 함께 생겨요."),
-      inputSchema: { name: z.string().describe("프로젝트 이름(1~60자, 내 프로젝트끼리 겹치지 않게)") },
+      description: describe("새 프로젝트를 만들어요. 첫 구성도(버전 1)가 함께 생기고, 그 이름은 diagram_name 으로 정해요."),
+      inputSchema: {
+        name: z.string().describe("프로젝트 이름(1~60자, 내 프로젝트끼리 겹치지 않게)"),
+        diagram_name: z.string().optional().describe("첫 구성도 이름(1~60자, 비우면 \"새 구성도\")"),
+      },
     },
-    ({ name }) =>
-      guarded("create_project", NO_PROJECT, GENERIC, async () => ok("프로젝트를 만들었어요. 첫 구성도는 버전 1이에요.", await createProjectForMcp(userId, name))),
+    ({ name, diagram_name }) =>
+      guarded("create_project", NO_PROJECT, GENERIC, async () =>
+        ok("프로젝트를 만들었어요. 첫 구성도는 버전 1이에요.", await createProjectForMcp(userId, name, diagram_name)),
+      ),
   );
 
   server.registerTool(

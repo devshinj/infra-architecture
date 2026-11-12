@@ -32,7 +32,7 @@ InfraSketch 는 인프라 구성도를 그리고 고치는 웹 도구예요. 이
 
 const HOW_TO_USE = `## 쓰는 순서
 
-1. list_projects 로 프로젝트와 구성도를 찾아요. 없으면 create_project 나 create_diagram 으로 만들어요.
+1. list_projects 로 프로젝트와 구성도를 찾아요. 없으면 create_project 나 create_diagram 으로 만들어요. create_project 는 첫 구성도를 함께 만드니 그 이름은 diagram_name 으로 정하고, 같은 프로젝트에 create_diagram 을 또 부르지 않아요(빈 구성도가 남아요).
 2. get_diagram 으로 구성도를 읽어요. 이때 받은 version 이 base_version 이에요.
 3. apply_commands 로 바꿀 부분만 보내요. base_version 에는 get_diagram 의 version 을 그대로 써요.
 4. 먼저 dry_run 으로 확인할 수 있어요. dry_run 은 검사만 하고 저장하지 않아요.
@@ -130,8 +130,12 @@ export async function listProjectsForMcp(userId: string): Promise<McpProject[]> 
   return listProjectsWithVersions(userId);
 }
 
-export async function createProjectForMcp(userId: string, name: string): Promise<{ projectId: string; diagramId: string }> {
-  const r = await createProjectWithDiagram(userId, name, FIRST_DIAGRAM_NAME);
+export async function createProjectForMcp(
+  userId: string,
+  name: string,
+  diagramName?: string,
+): Promise<{ projectId: string; diagramId: string }> {
+  const r = await createProjectWithDiagram(userId, name, diagramName ?? FIRST_DIAGRAM_NAME);
   return { projectId: r.id, diagramId: r.diagramId };
 }
 
