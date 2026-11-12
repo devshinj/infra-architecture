@@ -51,7 +51,7 @@
 .button[data-variant="primary"][aria-busy="true"]:disabled { color: var(--on-accent); background: var(--accent-fill); border-color: var(--accent-fill); opacity: 0.75; cursor: progress; }
 
 /* 좁은 화면: 손가락으로 누를 버튼은 44px 이상 */
-@media (max-width: 640px) {
+@media (max-width: 640px), (max-height: 480px) and (orientation: landscape) {
   .button, .button[data-size="sm"], .button[data-variant="quiet"] { min-height: 44px; }
 }
 

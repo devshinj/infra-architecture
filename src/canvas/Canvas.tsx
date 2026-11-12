@@ -82,6 +82,10 @@ export interface CanvasProps {
   focusRequest?: { id: string; token: number };
   /** 바뀐 곳 맞춤: 이 노드·영역들을 담게 카메라를 맞춘다. 새 배치가 끝난 뒤 한 번(토큰마다). */
   frameRequest?: { ids: string[]; token: number };
+  /** 한눈 보기(휴대폰): 처음 열 때를 비롯한 자동 맞춤이 구성도 전체를 담는다(읽을 수 있는 줌 바닥 없이). */
+  overview?: boolean;
+  /** 「보기」 메뉴 아래에 덧붙일 내용(좁은 화면의 범례). */
+  viewMenuExtra?: React.ReactNode;
   /** Click on a node's missing-info badge (open the 구성 정보 card at that node). */
   onBadgeClick?(nodeId: string): void;
   /** Click on a node's warning badge (select the node → 설명 탭 주의할 점). */
@@ -145,7 +149,7 @@ const IconFlow = () => <Icon><path d="M1.5 8h3l2-4 3 8 2-4h3" /></Icon>;
 const IconChevron = () => <svg className="canvas__tool-chevron" width="8" height="8" viewBox="0 0 8 8" aria-hidden="true" focusable="false" {...stroke}><path d="M1.5 3 4 5.5 6.5 3" /></svg>;
 
 /** `보기 ▾`: 누르면 `보기 옵션` 팝오버가 열린다. 항목마다 체크와 한 줄 설명. */
-function ViewMenu({ options, onFlip }: { options: CanvasOptions; onFlip(key: ToggleKey): void }) {
+function ViewMenu({ options, onFlip, extra }: { options: CanvasOptions; onFlip(key: ToggleKey): void; extra?: React.ReactNode }) {
   const { open, setOpen, root, trigger } = usePopover('input[type="checkbox"]');
   return (
     <div ref={root} className="canvas__view">
@@ -165,6 +169,8 @@ function ViewMenu({ options, onFlip }: { options: CanvasOptions; onFlip(key: Tog
               </span>
             </label>
           ))}
+          {/* 좁은 화면: 떠 있는 범례 대신 이 메뉴 안에 범례를 둔다(캔버스 바닥을 비운다). */}
+          {extra && <div className="canvas__pop-extra">{extra}</div>}
         </div>
       )}
     </div>
@@ -250,7 +256,7 @@ export function Canvas(props: CanvasProps) {
     <div ref={rootRef} className="canvas">
       <div ref={toolbarRef} className="canvas__toolbar" role="toolbar" aria-label="캔버스 도구">
         <div className="canvas__group" role="group" aria-label="보기">
-          <ViewMenu options={options} onFlip={flip} />
+          <ViewMenu options={options} onFlip={flip} {...(props.viewMenuExtra ? { extra: props.viewMenuExtra } : {})} />
         </div>
         <span className="canvas__sep" role="separator" aria-orientation="vertical" />
         <div className="canvas__group" role="group" aria-label="편집">
@@ -350,7 +356,7 @@ interface FlowProps extends CanvasProps {
   updated: Set<string>;
 }
 
-function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onPinnedChange, motion, layout, settled, layoutFailed, fitRequest, fitAllRequest, display, appearing, updated, diffMarks, turnMarks, fitKey, streaming = false, cameraInsets = NO_INSETS, focusRequest, frameRequest, onMention, onAskNode, askDisabled, askReason, onBadgeClick, onWarnBadgeClick, onPlaced, flow = null, knowledge }: FlowProps) {
+function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onPinnedChange, motion, layout, settled, layoutFailed, fitRequest, fitAllRequest, display, appearing, updated, diffMarks, turnMarks, fitKey, streaming = false, cameraInsets = NO_INSETS, focusRequest, frameRequest, overview = false, onMention, onAskNode, askDisabled, askReason, onBadgeClick, onWarnBadgeClick, onPlaced, flow = null, knowledge }: FlowProps) {
   const far = useStore((s) => s.transform[2] < FAR_ZOOM);
   const selected = drawnId(state, options.collapsed, options.selectedId);
   const k = knowledge ?? undefined;
@@ -568,6 +574,7 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
     settled,
     layoutFailed,
     reducedMotion: prefersReducedMotion(),
+    overview,
     getViewport,
     setViewport: applyViewport,
   });

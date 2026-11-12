@@ -62,7 +62,7 @@ import { readFileSync } from "node:fs";
 import { clearPinnedAction, confirmAssumptionAction, getVersionAction, importSampleAction, listVersionsAction, removeFlowStepAction, removeNoLinkAction, restoreVersionAction, saveFieldsAction, setWarningIgnoredAction, setZoneTypeAction } from "@/app/(app)/actions";
 import { emptyState } from "@/domain/types";
 import { DiagramWorkspace } from "@/ui/DiagramWorkspace";
-import { ShellProvider } from "@/ui/Shell";
+import { NARROW_QUERY, ShellProvider } from "@/ui/Shell";
 import { POLL_MS } from "@/ui/useRemoteChanges";
 
 import { KNOWLEDGE, adminCase } from "../fixtures/network";
@@ -737,7 +737,7 @@ test("the workspace has a single h1 with the diagram name", () => {
 
 // ── 좁은 화면(휴대폰): 아래 탭 막대로 구성도·대화·설명·이력을 한 화면씩 본다 ──
 const stubNarrow = () =>
-  vi.stubGlobal("matchMedia", (q: string) => ({ matches: q === "(max-width: 640px)", media: q, addEventListener() {}, removeEventListener() {} }));
+  vi.stubGlobal("matchMedia", (q: string) => ({ matches: q === NARROW_QUERY, media: q, addEventListener() {}, removeEventListener() {} }));
 const narrowUi = (latest: ReturnType<typeof mk> | ReturnType<typeof two>) => <ShellProvider>{ui(latest as never)}</ShellProvider>;
 const bottomTabs = () => screen.getByRole("tablist", { name: "작업 화면" });
 const bottomTab = (name: string | RegExp) => within(bottomTabs()).getByRole("tab", { name });
@@ -1534,4 +1534,21 @@ test("inside the shell, 대화로·캔버스로 건너뛰기 go into the shell's
     slot.remove();
     sidebar.remove();
   }
+});
+
+test("narrow: no floating legend over the canvas (it lives in the 보기 menu); wide keeps it", () => {
+  hookState.busy = false;
+  window.sessionStorage.clear();
+  stubNarrow();
+  const { unmount } = render(narrowUi(two()));
+  expect(screen.queryByRole("complementary", { name: "연결 범례" })).toBeNull();
+  unmount();
+  vi.unstubAllGlobals();
+  render(ui(two() as never));
+  expect(screen.getByRole("complementary", { name: "연결 범례" })).toBeInTheDocument();
+});
+
+test("NARROW_QUERY covers phones held sideways (short landscape) as well as narrow portrait", () => {
+  expect(NARROW_QUERY).toContain("(max-width: 640px)");
+  expect(NARROW_QUERY).toContain("(max-height: 480px) and (orientation: landscape)");
 });

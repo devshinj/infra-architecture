@@ -156,6 +156,16 @@ export function Legend({ hideAux, empty = false, bottom, onMeasure }: LegendProp
       {open && (
         <div id="legend-body" className={styles.body}>
           <h2 className={styles.heading}>연결 범례</h2>
+          <LegendList hideAux={hideAux} />
+        </div>
+      )}
+    </aside>
+  );
+}
+
+/** 범례 목록(연결 종류·통신 수단·점·화살표). 떠 있는 범례와, 좁은 화면의 「보기」 메뉴가 같이 쓴다. */
+export function LegendList({ hideAux }: { hideAux: boolean }) {
+  return (
           <ul className={styles.list}>
             {EDGE_KINDS.map((k) => (
               <li key={k.kind} className={styles.row}>
@@ -195,8 +205,5 @@ export function Legend({ hideAux, empty = false, bottom, onMeasure }: LegendProp
               <span className={styles.text}>화살표: 연결이 향하는 쪽</span>
             </li>
           </ul>
-        </div>
-      )}
-    </aside>
   );
 }

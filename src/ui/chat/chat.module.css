@@ -151,7 +151,7 @@ button.blockTitle:hover { text-decoration: underline; text-underline-offset: 3px
 .sessionMore:hover { color: var(--text-primary); }
 .sessionMore[aria-disabled="true"] { cursor: default; opacity: 0.7; }
 /* 휴대폰(대화 탭): 손가락으로 누르는 줄·버튼은 44px. */
-@media (max-width: 640px) {
+@media (max-width: 640px), (max-height: 480px) and (orientation: landscape) {
   .sessionBtn { min-height: 44px; }
   .sessionItem { min-height: 44px; align-items: center; font-size: 14px; }
   .sessionMenuBtn { min-width: 44px; min-height: 44px; }

@@ -36,7 +36,7 @@ import type { ChecklistDrafts, ChecklistExpanded, MissingChecklistProps } from "
 import { type ChatLine, type SendOptions, useChatTurn } from "./chat/useChatTurn";
 import { NEW_SESSION, type SessionKey, type SessionPaging, type SessionSummary, useSessions } from "./chat/useSessions";
 import { type CardMeasure, InfoCard } from "./canvas/InfoCard";
-import { Legend, legendPlacement } from "./canvas/Legend";
+import { Legend, LegendList, legendPlacement } from "./canvas/Legend";
 import { FlyLayer, useFly } from "./FlyLayer";
 import { GhostLayer, type GhostRequest } from "./GhostLayer";
 import type { ExplanationProps } from "./explain/Explanation";
@@ -216,7 +216,8 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
     insetLeft,
     insetRight,
     cardWidth: cardSize?.width || CARD_WIDTH,
-    legendWidth,
+    // 좁은 화면은 떠 있는 범례가 없다(「보기」 메뉴 안): 바닥은 카드 한 줄만 비운다.
+    legendWidth: narrow ? 0 : legendWidth,
     gap: PANEL_GAP,
     cardLine: cardSize?.lineHeight || CARD_LINE_HEIGHT,
     cardOpen,
@@ -1104,6 +1105,8 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
               {...(live && turnMarks ? { turnMarks } : {})}
               streaming={live && mainTurn}
               cameraInsets={cameraInsets}
+              overview={narrow}
+              {...(narrow ? { viewMenuExtra: <LegendList hideAux={canvasOptions.hideAux} /> } : {})}
               onOptionsChange={changeOptions}
               onSelect={onSelect}
               flow={canvasFlow}
@@ -1153,7 +1156,10 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
                 onLocate: locate,
               }}
             />
-            <Legend hideAux={canvasOptions.hideAux} empty={Object.keys(shown.nodes).length === 0} onMeasure={setLegendWidth} {...(legendBottom !== undefined ? { bottom: legendBottom } : {})} />
+            {/* 좁은 화면은 떠 있는 범례를 걸고 「보기」 메뉴 안에 둔다(바닥에는 구성 정보 한 줄만). */}
+            {!narrow && (
+              <Legend hideAux={canvasOptions.hideAux} empty={Object.keys(shown.nodes).length === 0} onMeasure={setLegendWidth} {...(legendBottom !== undefined ? { bottom: legendBottom } : {})} />
+            )}
           </div>
         </section>
         {!narrow && <PanelResizer width={shownPanelWidth} min={panelMin} max={panelMax} defaultWidth={PANEL_DEFAULT} onChange={changePanelWidth} offset={PANEL_GAP} />}

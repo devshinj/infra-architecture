@@ -215,7 +215,7 @@
  * 구성도·대화·설명·이력을 한 화면씩 본다. 막대 내용과 서랍은 하이드레이션 뒤에 그려지므로, 그 자리(띠)와
  * 숨길 넓은 화면 요소는 여기서 첫 칠부터 맞춘다(넓은 화면 마크업이 먼저 와도 사이드바·패널이 캔버스를 덮지 않는다).
  */
-@media (max-width: 640px) {
+@media (max-width: 640px), (max-height: 480px) and (orientation: landscape) {
   .shell {
     --topbar-h: calc(48px + env(safe-area-inset-top));
     --tabbar-h: calc(56px + env(safe-area-inset-bottom));

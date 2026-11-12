@@ -421,3 +421,10 @@ test("fitTo frames a rect at the readable zoom or closer (max 1) and cancels a s
   expect(v.zoom).toBeGreaterThanOrEqual(READABLE_ZOOM);
   expect(v).toEqual(fitViewport(box(400, 300), SIZE, { left: 0, right: 0 }, 1, { minZoom: READABLE_ZOOM }));
 });
+
+test("overview (phones): the board fit frames the whole diagram even below the readable zoom", () => {
+  const rects = { a: box(0, 0), b: box(1450, 0), z: box(0, 3000) };
+  const r = rig({ rects, overview: true });
+  expect(r.vp().zoom).toBeLessThan(READABLE_ZOOM);
+  expect(r.vp()).toEqual(fitViewport(unionRectOf(rects), SIZE, { left: 0, right: 0 }, 2));
+});

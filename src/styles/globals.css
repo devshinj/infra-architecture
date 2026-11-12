@@ -80,7 +80,7 @@ body {
 }
 
 /* 좁은 화면: iOS 사파리는 16px 보다 작은 입력칸에 포커스하면 화면을 확대한다. 입력 글자만 16px 로 올린다. */
-@media (max-width: 640px) {
+@media (max-width: 640px), (max-height: 480px) and (orientation: landscape) {
   input:not([type="checkbox"]):not([type="radio"]),
   textarea,
   select {
