@@ -1,68 +1,70 @@
 ---
 title: "DiagramWorkspace.tsx"
-sidebar_position: 15
+sidebar_position: 11
 ---
 # DiagramWorkspace.tsx
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 33 nodes · cohesion 0.13
+> 41 nodes · cohesion 0.07
 
 ## Key Concepts
 
-- **DiagramWorkspace.tsx** (116 connections) — `src/ui/DiagramWorkspace.tsx`
-- **DiagramWorkspace()** (49 connections) — `src/ui/DiagramWorkspace.tsx`
-- **run()** (15 connections) — `src/app/(app)/actions.ts`
-- **refreshDiagram()** (12 connections) — `src/app/(app)/actions.ts`
-- **restoreVersionAction()** (9 connections) — `src/app/(app)/actions.ts`
+- **DiagramWorkspace.tsx** (117 connections) — `src/ui/DiagramWorkspace.tsx`
+- **MobileTabBar.tsx** (13 connections) — `src/ui/MobileTabBar.tsx`
+- **useRemoteChanges.ts** (10 connections) — `src/ui/useRemoteChanges.ts`
 - **PanelResizer.tsx** (9 connections) — `src/ui/PanelResizer.tsx`
-- **getVersionAction()** (7 connections) — `src/app/(app)/actions.ts`
-- **saveFieldsAction()** (7 connections) — `src/app/(app)/actions.ts`
-- **setWarningIgnoredAction()** (7 connections) — `src/app/(app)/actions.ts`
-- **clearPinnedAction()** (6 connections) — `src/app/(app)/actions.ts`
-- **confirmAssumptionAction()** (6 connections) — `src/app/(app)/actions.ts`
-- **importSampleAction()** (6 connections) — `src/app/(app)/actions.ts`
-- **listVersionsAction()** (6 connections) — `src/app/(app)/actions.ts`
-- **removeNoLinkAction()** (6 connections) — `src/app/(app)/actions.ts`
-- **savePinnedAction()** (6 connections) — `src/app/(app)/actions.ts`
-- **confirmAssumption()** (6 connections) — `src/domain/assumptions.ts`
-- **validVersion()** (3 connections) — `src/app/(app)/actions.ts`
-- **assumptionChangeMessage()** (3 connections) — `src/domain/assumptions.ts`
-- **optionsFor()** (3 connections) — `src/ui/DiagramWorkspace.tsx`
-- **NetworkKnowledgeProvider()** (3 connections) — `src/ui/network/NetworkKnowledgeContext.tsx`
+- **useRemoteChanges()** (7 connections) — `src/ui/useRemoteChanges.ts`
+- **MobileTabBar()** (6 connections) — `src/ui/MobileTabBar.tsx`
+- **Task 9: 열어 둔 브라우저가 변경을 알아채기** (5 connections) — `docs/superpowers/plans/2026-11-09-mcp-server.md`
+- **mobileTabId()** (4 connections) — `src/ui/MobileTabBar.tsx`
+- **MobileTabBarProps** (3 connections) — `src/ui/MobileTabBar.tsx`
 - **PanelResizer()** (3 connections) — `src/ui/PanelResizer.tsx`
+- **UseRemoteChangesInput** (3 connections) — `src/ui/useRemoteChanges.ts`
+- **.onFlows()** (3 connections) — `src/ui/useRemoteChanges.ts`
+- **.onVersion()** (3 connections) — `src/ui/useRemoteChanges.ts`
+- **.pending()** (2 connections) — `src/domain/edgeCoalesce.ts`
+- **ELSEWHERE_BUSY** (2 connections) — `src/ui/chat/ChatPanel.tsx`
+- **LlmHealth** (2 connections) — `src/ui/chat/ChatPanel.tsx`
 - **escapeBelongsElsewhere()** (2 connections) — `src/ui/DiagramWorkspace.tsx`
 - **hasId()** (2 connections) — `src/ui/DiagramWorkspace.tsx`
 - **unionState()** (2 connections) — `src/ui/DiagramWorkspace.tsx`
+- **MOBILE_VIEWS** (2 connections) — `src/ui/MobileTabBar.tsx`
+- **.controls()** (2 connections) — `src/ui/MobileTabBar.tsx`
+- **.onChange()** (2 connections) — `src/ui/MobileTabBar.tsx`
+- **MobileView** (2 connections) — `src/ui/MobileTabBar.tsx`
 - **PANEL_DEFAULT** (2 connections) — `src/ui/PanelResizer.tsx`
-- *... and 8 more nodes in this community*
+- **PANEL_MAX** (2 connections) — `src/ui/PanelResizer.tsx`
+- *... and 16 more nodes in this community*
 
 ## Relationships
 
-- [NetworkKnowledgePage.tsx](NetworkKnowledgePage.tsx.md) (25 shared connections)
-- [getOwnedDiagram](getOwnedDiagram.md) (10 shared connections)
-- [MobileTabBar.tsx](MobileTabBar.tsx.md) (8 shared connections)
-- [Canvas.tsx](Canvas.tsx.md) (7 shared connections)
-- [useSessions.ts](useSessions.ts.md) (7 shared connections)
-- [ref_react](ref_react.md) (6 shared connections)
-- [InfoCard.tsx](InfoCard.tsx.md) (6 shared connections)
-- [Legend.tsx](Legend.tsx.md) (5 shared connections)
-- [FlyLayer.tsx](FlyLayer.tsx.md) (5 shared connections)
-- [domain/explain.ts](domain-explain.ts.md) (5 shared connections)
-- [RightPanel.tsx](RightPanel.tsx.md) (5 shared connections)
-- [useRemoteChanges.ts](useRemoteChanges.ts.md) (5 shared connections)
+- [(app)/actions.ts](app-actions.ts.md) (19 shared connections)
+- [useChatTurn.ts](useChatTurn.ts.md) (9 shared connections)
+- [RightPanel.tsx](RightPanel.tsx.md) (8 shared connections)
+- [FlyLayer.tsx](FlyLayer.tsx.md) (7 shared connections)
+- [ChatPanel.tsx](ChatPanel.tsx.md) (6 shared connections)
+- [Shell.tsx](Shell.tsx.md) (6 shared connections)
+- [InfoCard.tsx](InfoCard.tsx.md) (5 shared connections)
+- [Canvas.tsx](Canvas.tsx.md) (4 shared connections)
+- [domain/assumptions.ts](domain-assumptions.ts.md) (4 shared connections)
+- [MissingChecklist.tsx](MissingChecklist.tsx.md) (4 shared connections)
+- [ExportMenu.tsx](ExportMenu.tsx.md) (4 shared connections)
+- [display.ts](display.ts.md) (3 shared connections)
 
 ## Source Files
 
-- `src/app/(app)/actions.ts`
-- `src/domain/assumptions.ts`
+- `docs/superpowers/plans/2026-11-09-mcp-server.md`
+- `src/domain/edgeCoalesce.ts`
 - `src/ui/DiagramWorkspace.tsx`
+- `src/ui/MobileTabBar.tsx`
 - `src/ui/PanelResizer.tsx`
-- `src/ui/network/NetworkKnowledgeContext.tsx`
+- `src/ui/chat/ChatPanel.tsx`
+- `src/ui/useRemoteChanges.ts`
 
 ## Audit Trail
 
-- EXTRACTED: 235 (98%)
+- EXTRACTED: 168 (98%)
 - INFERRED: 4 (2%)
 - AMBIGUOUS: 0 (0%)
 

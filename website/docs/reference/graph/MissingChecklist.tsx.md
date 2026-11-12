@@ -1,19 +1,18 @@
 ---
 title: "MissingChecklist.tsx"
-sidebar_position: 36
+sidebar_position: 52
 ---
 # MissingChecklist.tsx
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 22 nodes · cohesion 0.13
+> 21 nodes · cohesion 0.14
 
 ## Key Concepts
 
 - **MissingChecklist.tsx** (36 connections) — `src/ui/chat/MissingChecklist.tsx`
 - **MissingChecklist()** (20 connections) — `src/ui/chat/MissingChecklist.tsx`
 - **MissingChecklistProps** (8 connections) — `src/ui/chat/MissingChecklist.tsx`
-- **MissingItem** (6 connections) — `src/domain/missing.ts`
 - **ZoneTypeSave** (4 connections) — `src/ui/chat/MissingChecklist.tsx`
 - **blocksOf()** (2 connections) — `src/ui/chat/MissingChecklist.tsx`
 - **ChecklistDrafts** (2 connections) — `src/ui/chat/MissingChecklist.tsx`
@@ -35,27 +34,26 @@ sidebar_position: 36
 
 ## Relationships
 
-- [InfoCard.tsx](InfoCard.tsx.md) (11 shared connections)
-- [EdgePanels.tsx](EdgePanels.tsx.md) (5 shared connections)
+- [InfoCard.tsx](InfoCard.tsx.md) (12 shared connections)
+- [EdgePanels.tsx](EdgePanels.tsx.md) (4 shared connections)
 - [missing.ts](missing.ts.md) (4 shared connections)
 - [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (4 shared connections)
-- [ref_react](ref_react.md) (3 shared connections)
 - [InfraSketch 설계 문서](InfraSketch_설계_문서.md) (2 shared connections)
-- [flowSuggest.ts](flowSuggest.ts.md) (2 shared connections)
-- [Button](Button.md) (2 shared connections)
-- [pipeline.ts](pipeline.ts.md) (1 shared connections)
-- [prompt.ts](prompt.ts.md) (1 shared connections)
-- [mcp/apply.ts](mcp-apply.ts.md) (1 shared connections)
-- [read.ts](read.ts.md) (1 shared connections)
+- [DiagramState](DiagramState.md) (2 shared connections)
+- [NetworkKnowledgePage.tsx](NetworkKnowledgePage.tsx.md) (2 shared connections)
+- [ZoneTypePicker.tsx](ZoneTypePicker.tsx.md) (1 shared connections)
+- [ChatPanel.tsx](ChatPanel.tsx.md) (1 shared connections)
+- [ExportMenu.tsx](ExportMenu.tsx.md) (1 shared connections)
+- [catalog.ts](catalog.ts.md) (1 shared connections)
+- [getOwnedDiagram](getOwnedDiagram.md) (1 shared connections)
 
 ## Source Files
 
-- `src/domain/missing.ts`
 - `src/ui/chat/MissingChecklist.tsx`
 
 ## Audit Trail
 
-- EXTRACTED: 70 (97%)
+- EXTRACTED: 65 (97%)
 - INFERRED: 2 (3%)
 - AMBIGUOUS: 0 (0%)
 

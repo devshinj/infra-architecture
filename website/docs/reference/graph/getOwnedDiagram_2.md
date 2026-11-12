@@ -1,6 +1,6 @@
 ---
 title: "getOwnedDiagram()"
-sidebar_position: 117
+sidebar_position: 104
 sidebar_label: "핵심 노드: getOwnedDiagram()"
 ---
 # getOwnedDiagram()
@@ -40,7 +40,7 @@ sidebar_label: "핵심 노드: getOwnedDiagram()"
 - [projects.ts](projects.ts.md) `EXTRACTED`
 
 ### imports
-- (app)/actions.ts `EXTRACTED`
+- [(app)/actions.ts](app-actions.ts.md) `EXTRACTED`
 - [pipeline.ts](pipeline.ts.md) `EXTRACTED`
 - [mcp/apply.ts](mcp-apply.ts.md) `EXTRACTED`
 - server/explain.ts `EXTRACTED`

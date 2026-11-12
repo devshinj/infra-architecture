@@ -1,6 +1,6 @@
 ---
 title: "InfraSketch 설계 문서"
-sidebar_position: 6
+sidebar_position: 7
 sidebar_label: "핵심 노드: InfraSketch 설계 문서"
 ---
 # InfraSketch 설계 문서
@@ -40,17 +40,17 @@ sidebar_label: "핵심 노드: InfraSketch 설계 문서"
 
 ## Relationships
 
-- [deps.ts](deps.ts.md) (4 shared connections)
+- [clef.ts](clef.ts.md) (6 shared connections)
 - [getOwnedDiagram](getOwnedDiagram.md) (3 shared connections)
 - [missing.ts](missing.ts.md) (3 shared connections)
-- [clef.ts](clef.ts.md) (3 shared connections)
 - [domain/apply.ts](domain-apply.ts.md) (2 shared connections)
+- [domain/assumptions.ts](domain-assumptions.ts.md) (2 shared connections)
 - [MissingChecklist.tsx](MissingChecklist.tsx.md) (2 shared connections)
+- [display.ts](display.ts.md) (2 shared connections)
 - [Canvas.tsx](Canvas.tsx.md) (1 shared connections)
 - [ask/route.ts](ask-route.ts.md) (1 shared connections)
-- [useChatTurn](useChatTurn.md) (1 shared connections)
+- [useChatTurn.ts](useChatTurn.ts.md) (1 shared connections)
 - [layout.ts](layout.ts.md) (1 shared connections)
-- [domain/assumptions.ts](domain-assumptions.ts.md) (1 shared connections)
 - [segments.ts](segments.ts.md) (1 shared connections)
 
 ## Source Files

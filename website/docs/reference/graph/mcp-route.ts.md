@@ -1,6 +1,6 @@
 ---
 title: "mcp/route.ts"
-sidebar_position: 97
+sidebar_position: 87
 ---
 # mcp/route.ts
 
@@ -23,8 +23,8 @@ sidebar_position: 97
 ## Relationships
 
 - [read.ts](read.ts.md) (4 shared connections)
-- [mcpKeys.ts](mcpKeys.ts.md) (3 shared connections)
-- [auth.ts](auth.ts.md) (1 shared connections)
+- [schema.ts](schema.ts.md) (3 shared connections)
+- [ResetPasswordForm.tsx](ResetPasswordForm.tsx.md) (1 shared connections)
 
 ## Source Files
 

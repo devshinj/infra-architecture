@@ -1,6 +1,6 @@
 ---
 title: "Review Focus"
-sidebar_position: 130
+sidebar_position: 116
 ---
 # Review Focus
 
@@ -23,7 +23,7 @@ sidebar_position: 130
 ## Relationships
 
 - [InfoCard.tsx](InfoCard.tsx.md) (1 shared connections)
-- [edgeLabels.ts](edgeLabels.ts.md) (1 shared connections)
+- [display.ts](display.ts.md) (1 shared connections)
 
 ## Source Files
 

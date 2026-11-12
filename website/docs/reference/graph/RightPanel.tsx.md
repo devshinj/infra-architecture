@@ -1,57 +1,66 @@
 ---
 title: "RightPanel.tsx"
-sidebar_position: 59
+sidebar_position: 39
 ---
 # RightPanel.tsx
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 16 nodes · cohesion 0.19
+> 24 nodes · cohesion 0.14
 
 ## Key Concepts
 
 - **RightPanel.tsx** (27 connections) — `src/ui/RightPanel.tsx`
 - **RightPanelProps** (12 connections) — `src/ui/RightPanel.tsx`
+- **HistoryPanel.tsx** (11 connections) — `src/ui/HistoryPanel.tsx`
 - **RightPanel()** (10 connections) — `src/ui/RightPanel.tsx`
 - **ChatPanelProps** (9 connections) — `src/ui/chat/ChatPanel.tsx`
+- **HistoryPanel()** (9 connections) — `src/ui/HistoryPanel.tsx`
 - **Tab** (7 connections) — `src/ui/panelTabs.ts`
+- **HistoryPanelProps** (6 connections) — `src/ui/HistoryPanel.tsx`
 - **panelTabs.ts** (4 connections) — `src/ui/panelTabs.ts`
 - **TABS** (3 connections) — `src/ui/panelTabs.ts`
 - **.onTabChange()** (3 connections) — `src/ui/RightPanel.tsx`
-- **.onSend()** (2 connections) — `src/ui/chat/ChatPanel.tsx`
+- **.onCompare()** (2 connections) — `src/ui/HistoryPanel.tsx`
+- **.onRestore()** (2 connections) — `src/ui/HistoryPanel.tsx`
+- **.onView()** (2 connections) — `src/ui/HistoryPanel.tsx`
+- **relativeTime()** (2 connections) — `src/ui/HistoryPanel.tsx`
+- **VersionRow** (2 connections) — `src/ui/HistoryPanel.tsx`
 - **RIGHT_PANEL_BODY_ID** (2 connections) — `src/ui/RightPanel.tsx`
 - **.onHistoryOpen()** (2 connections) — `src/ui/RightPanel.tsx`
 - **tabIdOf()** (2 connections) — `src/ui/RightPanel.tsx`
 - **.onOpenWarnings()** (1 connections) — `src/ui/chat/ChatPanel.tsx`
 - **.onStop()** (1 connections) — `src/ui/chat/ChatPanel.tsx`
+- **SOURCE_LABEL** (1 connections) — `src/ui/HistoryPanel.tsx`
 - **.onMention()** (1 connections) — `src/ui/RightPanel.tsx`
 - **.onSelect()** (1 connections) — `src/ui/RightPanel.tsx`
 
 ## Relationships
 
-- [ChatPanel.tsx](ChatPanel.tsx.md) (5 shared connections)
-- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (5 shared connections)
+- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (8 shared connections)
+- [ChatPanel.tsx](ChatPanel.tsx.md) (6 shared connections)
+- [NodeInfo.tsx](NodeInfo.tsx.md) (6 shared connections)
 - [FlowPanel.tsx](FlowPanel.tsx.md) (5 shared connections)
-- [HistoryPanel.tsx](HistoryPanel.tsx.md) (5 shared connections)
-- [NodeInfo.tsx](NodeInfo.tsx.md) (5 shared connections)
+- [Explanation.tsx](Explanation.tsx.md) (3 shared connections)
+- [NetworkKnowledgePage.tsx](NetworkKnowledgePage.tsx.md) (2 shared connections)
+- [ExportMenu.tsx](ExportMenu.tsx.md) (2 shared connections)
 - [PageSkeleton.tsx](PageSkeleton.tsx.md) (2 shared connections)
-- [MobileTabBar.tsx](MobileTabBar.tsx.md) (2 shared connections)
-- [flowSuggest.ts](flowSuggest.ts.md) (2 shared connections)
-- [domain/explain.ts](domain-explain.ts.md) (2 shared connections)
-- [useSessions.ts](useSessions.ts.md) (1 shared connections)
-- [SessionPickerProps](SessionPickerProps.md) (1 shared connections)
-- [MentionInput](MentionInput.md) (1 shared connections)
+- [DiagramState](DiagramState.md) (2 shared connections)
+- [useChatTurn.ts](useChatTurn.ts.md) (1 shared connections)
+- [SessionPicker.tsx](SessionPicker.tsx.md) (1 shared connections)
+- [mcpKeys.ts](mcpKeys.ts.md) (1 shared connections)
 
 ## Source Files
 
+- `src/ui/HistoryPanel.tsx`
 - `src/ui/RightPanel.tsx`
 - `src/ui/chat/ChatPanel.tsx`
 - `src/ui/panelTabs.ts`
 
 ## Audit Trail
 
-- EXTRACTED: 63 (98%)
-- INFERRED: 1 (2%)
+- EXTRACTED: 81 (98%)
+- INFERRED: 2 (2%)
 - AMBIGUOUS: 0 (0%)
 
 ---

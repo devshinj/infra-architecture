@@ -1,6 +1,6 @@
 ---
 title: "AuthStage.tsx"
-sidebar_position: 44
+sidebar_position: 58
 ---
 # AuthStage.tsx
 
@@ -32,11 +32,11 @@ sidebar_position: 44
 
 ## Relationships
 
-- [ResetPasswordForm.tsx](ResetPasswordForm.tsx.md) (7 shared connections)
-- [EdgePanels.tsx](EdgePanels.tsx.md) (5 shared connections)
-- [Button](Button.md) (3 shared connections)
-- [signup/page.tsx](signup-page.tsx.md) (3 shared connections)
-- [ref_react](ref_react.md) (1 shared connections)
+- [ResetPasswordForm.tsx](ResetPasswordForm.tsx.md) (12 shared connections)
+- [EdgePanels.tsx](EdgePanels.tsx.md) (4 shared connections)
+- [ExportMenu.tsx](ExportMenu.tsx.md) (1 shared connections)
+- [catalog.ts](catalog.ts.md) (1 shared connections)
+- [ResetPasswordForm](ResetPasswordForm.md) (1 shared connections)
 
 ## Source Files
 

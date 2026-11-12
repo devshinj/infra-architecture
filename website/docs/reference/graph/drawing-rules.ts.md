@@ -1,28 +1,32 @@
 ---
 title: "drawing/rules.ts"
-sidebar_position: 55
+sidebar_position: 48
 ---
 # drawing/rules.ts
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 17 nodes · cohesion 0.13
+> 21 nodes · cohesion 0.15
 
 ## Key Concepts
 
 - **drawing/rules.ts** (35 connections) — `src/server/drawing/rules.ts`
-- **patternBlock()** (7 connections) — `src/server/drawing/rules.ts`
-- **patternPromptBlock()** (6 connections) — `src/domain/patterns.ts`
-- **buildGuide()** (6 connections) — `src/server/mcp/read.ts`
-- **patterns.ts** (4 connections) — `src/domain/patterns.ts`
+- **networkBlock()** (10 connections) — `src/server/chat/prompt.ts`
+- **userRuleLines()** (8 connections) — `src/server/drawing/rules.ts`
+- **baseRuleBlock()** (7 connections) — `src/server/drawing/rules.ts`
+- **networkGuideText()** (7 connections) — `src/server/drawing/rules.ts`
+- **networkTypeLines()** (7 connections) — `src/server/drawing/rules.ts`
+- **gradeRuleLines()** (6 connections) — `src/server/drawing/rules.ts`
+- **baseRuleLines()** (4 connections) — `src/server/drawing/rules.ts`
+- **byStr()** (4 connections) — `src/server/drawing/rules.ts`
 - **FIELD_LABELS** (3 connections) — `src/domain/missing.ts`
 - **GRADE_RULES** (3 connections) — `src/domain/network.ts`
 - **EDGE_MEDIA** (3 connections) — `src/domain/types.ts`
 - **COMMAND_EXAMPLES** (3 connections) — `src/server/drawing/rules.ts`
+- **byStr()** (2 connections) — `src/server/chat/prompt.ts`
 - **ATTR_LIST** (2 connections) — `src/server/drawing/rules.ts`
 - **DRAW_RULE_GROUPS** (2 connections) — `src/server/drawing/rules.ts`
-- **Pattern** (1 connections) — `src/domain/patterns.ts`
-- **PATTERNS** (1 connections) — `src/domain/patterns.ts`
+- **DRAW_RULES** (2 connections) — `src/server/drawing/rules.ts`
 - **EDGE_KIND_LIST** (1 connections) — `src/server/drawing/rules.ts`
 - **GROUP_KIND_LIST** (1 connections) — `src/server/drawing/rules.ts`
 - **GUIDE_ONLY_LINES** (1 connections) — `src/server/drawing/rules.ts`
@@ -30,32 +34,30 @@ sidebar_position: 55
 
 ## Relationships
 
-- [networkBlock](networkBlock.md) (10 shared connections)
-- [read.ts](read.ts.md) (9 shared connections)
-- [prompt.ts](prompt.ts.md) (5 shared connections)
-- [ref_react](ref_react.md) (4 shared connections)
-- [EdgePanels.tsx](EdgePanels.tsx.md) (3 shared connections)
+- [read.ts](read.ts.md) (13 shared connections)
+- [NetworkKnowledgePage.tsx](NetworkKnowledgePage.tsx.md) (11 shared connections)
+- [prompt.ts](prompt.ts.md) (10 shared connections)
+- [목표](목표.md) (5 shared connections)
+- [catalog.ts](catalog.ts.md) (3 shared connections)
 - [missing.ts](missing.ts.md) (2 shared connections)
-- [NetworkKnowledgePage.tsx](NetworkKnowledgePage.tsx.md) (2 shared connections)
-- [Command](Command.md) (2 shared connections)
+- [getOwnedDiagram](getOwnedDiagram.md) (2 shared connections)
 - [NodeInfo.tsx](NodeInfo.tsx.md) (1 shared connections)
-- [Claude Code 연동(MCP 서버) — 설계](Claude_Code_연동MCP_서버_—_설계.md) (1 shared connections)
-- [chat/warnings.ts](chat-warnings.ts.md) (1 shared connections)
-- [commands.ts](commands.ts.md) (1 shared connections)
+- [mcp/apply.ts](mcp-apply.ts.md) (1 shared connections)
+- [pipeline.ts](pipeline.ts.md) (1 shared connections)
+- [InfraSketch 설계 문서](InfraSketch_설계_문서.md) (1 shared connections)
 
 ## Source Files
 
 - `src/domain/missing.ts`
 - `src/domain/network.ts`
-- `src/domain/patterns.ts`
 - `src/domain/types.ts`
+- `src/server/chat/prompt.ts`
 - `src/server/drawing/rules.ts`
-- `src/server/mcp/read.ts`
 
 ## Audit Trail
 
-- EXTRACTED: 56 (90%)
-- INFERRED: 6 (10%)
+- EXTRACTED: 76 (94%)
+- INFERRED: 5 (6%)
 - AMBIGUOUS: 0 (0%)
 
 ---

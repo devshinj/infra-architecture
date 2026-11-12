@@ -1,12 +1,12 @@
 ---
 title: "NodeInfo.tsx"
-sidebar_position: 11
+sidebar_position: 21
 ---
 # NodeInfo.tsx
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 35 nodes · cohesion 0.09
+> 33 nodes · cohesion 0.10
 
 ## Key Concepts
 
@@ -14,7 +14,6 @@ sidebar_position: 11
 - **NodeInfo()** (19 connections) — `src/ui/NodeInfo.tsx`
 - **Flow** (11 connections) — `src/domain/flows.ts`
 - **NodeInfoProps** (10 connections) — `src/ui/NodeInfo.tsx`
-- **categoryOf()** (7 connections) — `src/domain/catalog.ts`
 - **isEmpty()** (5 connections) — `src/domain/missing.ts`
 - **AskNode.tsx** (5 connections) — `src/ui/explain/AskNode.tsx`
 - **AskNode()** (5 connections) — `src/ui/explain/AskNode.tsx`
@@ -26,7 +25,6 @@ sidebar_position: 11
 - **src_ui_panel_module** (4 connections)
 - **Fields()** (3 connections) — `src/ui/NodeInfo.tsx`
 - **.onAsk()** (2 connections) — `src/ui/explain/AskNode.tsx`
-- **src_ui_network_network_module** (2 connections)
 - **edgeKindName()** (2 connections) — `src/ui/NodeInfo.tsx`
 - **kindName()** (2 connections) — `src/ui/NodeInfo.tsx`
 - **LinkGuessSave** (2 connections) — `src/ui/NodeInfo.tsx`
@@ -35,27 +33,28 @@ sidebar_position: 11
 - **.onIgnoreWarning()** (2 connections) — `src/ui/NodeInfo.tsx`
 - **.onMention()** (2 connections) — `src/ui/NodeInfo.tsx`
 - **.onSelect()** (2 connections) — `src/ui/NodeInfo.tsx`
-- *... and 10 more nodes in this community*
+- **onOpen()** (2 connections) — `src/ui/NodeInfo.tsx`
+- **PARTIAL_UNDO** (2 connections) — `src/ui/NodeInfo.tsx`
+- *... and 8 more nodes in this community*
 
 ## Relationships
 
-- [EdgePanels.tsx](EdgePanels.tsx.md) (7 shared connections)
-- [glossary.ts](glossary.ts.md) (7 shared connections)
-- [NetworkKnowledgePage.tsx](NetworkKnowledgePage.tsx.md) (6 shared connections)
-- [domain/warnings.ts](domain-warnings.ts.md) (5 shared connections)
-- [RightPanel.tsx](RightPanel.tsx.md) (5 shared connections)
-- [flowSuggest.ts](flowSuggest.ts.md) (4 shared connections)
+- [(app)/actions.ts](app-actions.ts.md) (7 shared connections)
+- [domain/warnings.ts](domain-warnings.ts.md) (6 shared connections)
+- [Explanation.tsx](Explanation.tsx.md) (6 shared connections)
+- [RightPanel.tsx](RightPanel.tsx.md) (6 shared connections)
 - [domain/flows.ts](domain-flows.ts.md) (4 shared connections)
-- [missing.ts](missing.ts.md) (4 shared connections)
-- [ref_react](ref_react.md) (4 shared connections)
-- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (3 shared connections)
-- [Button](Button.md) (3 shared connections)
-- [Canvas.tsx](Canvas.tsx.md) (2 shared connections)
+- [ZoneTypePicker.tsx](ZoneTypePicker.tsx.md) (4 shared connections)
+- [missing.ts](missing.ts.md) (3 shared connections)
+- [NetworkKnowledgePage.tsx](NetworkKnowledgePage.tsx.md) (3 shared connections)
+- [InfoCard.tsx](InfoCard.tsx.md) (3 shared connections)
+- [EdgePanels.tsx](EdgePanels.tsx.md) (3 shared connections)
+- [catalog.ts](catalog.ts.md) (3 shared connections)
+- [flowSuggest.ts](flowSuggest.ts.md) (2 shared connections)
 
 ## Source Files
 
 - `docs/superpowers/plans/2026-11-01-infrasketch-phase3c2-ask-node.md`
-- `src/domain/catalog.ts`
 - `src/domain/flows.ts`
 - `src/domain/missing.ts`
 - `src/ui/NodeInfo.tsx`
@@ -63,7 +62,7 @@ sidebar_position: 11
 
 ## Audit Trail
 
-- EXTRACTED: 126 (98%)
+- EXTRACTED: 120 (98%)
 - INFERRED: 3 (2%)
 - AMBIGUOUS: 0 (0%)
 

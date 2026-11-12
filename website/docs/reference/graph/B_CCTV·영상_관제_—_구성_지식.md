@@ -1,6 +1,6 @@
 ---
 title: "B) CCTV·영상 관제 — 구성 지식"
-sidebar_position: 45
+sidebar_position: 59
 ---
 # B) CCTV·영상 관제 — 구성 지식
 

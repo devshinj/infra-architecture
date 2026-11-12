@@ -1,19 +1,17 @@
 ---
 title: "versions.ts"
-sidebar_position: 51
+sidebar_position: 72
 ---
 # versions.ts
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 18 nodes · cohesion 0.17
+> 15 nodes · cohesion 0.20
 
 ## Key Concepts
 
 - **versions.ts** (36 connections) — `src/server/versions.ts`
-- **File Structure** (18 connections) — `docs/superpowers/plans/2026-11-09-mcp-server.md`
 - **Tx** (7 connections) — `src/db/client.ts`
-- **getVersion()** (7 connections) — `src/server/versions.ts`
 - **restoreVersionWithMessage()** (7 connections) — `src/server/versions.ts`
 - **diagramVersions** (6 connections) — `src/db/schema.ts`
 - **restoreVersion()** (6 connections) — `src/server/versions.ts`
@@ -26,23 +24,22 @@ sidebar_position: 51
 - **VersionStatus** (3 connections) — `src/db/schema.ts`
 - **lockLatestNumber()** (3 connections) — `src/server/versions.ts`
 - **WriteOpts** (2 connections) — `src/server/flows.ts`
-- **Task 10: E2E와 문서** (1 connections) — `docs/superpowers/plans/2026-11-09-mcp-server.md`
 - **.constructor()** (1 connections) — `src/server/versions.ts`
 
 ## Relationships
 
-- [getOwnedDiagram](getOwnedDiagram.md) (12 shared connections)
-- [schema.ts](schema.ts.md) (9 shared connections)
-- [NetworkKnowledgePage.tsx](NetworkKnowledgePage.tsx.md) (5 shared connections)
+- [getOwnedDiagram](getOwnedDiagram.md) (10 shared connections)
+- [schema.ts](schema.ts.md) (8 shared connections)
+- [(app)/actions.ts](app-actions.ts.md) (7 shared connections)
 - [read.ts](read.ts.md) (4 shared connections)
 - [useFlows](useFlows.md) (4 shared connections)
-- [mcp/apply.ts](mcp-apply.ts.md) (4 shared connections)
 - [pipeline.ts](pipeline.ts.md) (4 shared connections)
-- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (4 shared connections)
-- [DiagramState](DiagramState.md) (3 shared connections)
-- [projects.ts](projects.ts.md) (3 shared connections)
-- [flowSuggest.ts](flowSuggest.ts.md) (2 shared connections)
-- [domain/apply.ts](domain-apply.ts.md) (1 shared connections)
+- [mcp/apply.ts](mcp-apply.ts.md) (3 shared connections)
+- [projects.ts](projects.ts.md) (2 shared connections)
+- [DiagramState](DiagramState.md) (2 shared connections)
+- [RightPanel.tsx](RightPanel.tsx.md) (1 shared connections)
+- [목표](목표.md) (1 shared connections)
+- [NetworkKnowledgePage.tsx](NetworkKnowledgePage.tsx.md) (1 shared connections)
 
 ## Source Files
 
@@ -55,8 +52,8 @@ sidebar_position: 51
 
 ## Audit Trail
 
-- EXTRACTED: 81 (86%)
-- INFERRED: 13 (14%)
+- EXTRACTED: 66 (90%)
+- INFERRED: 7 (10%)
 - AMBIGUOUS: 0 (0%)
 
 ---

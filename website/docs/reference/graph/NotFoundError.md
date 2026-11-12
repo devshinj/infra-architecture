@@ -1,6 +1,6 @@
 ---
 title: "NotFoundError"
-sidebar_position: 121
+sidebar_position: 108
 sidebar_label: "핵심 노드: NotFoundError"
 ---
 # NotFoundError
@@ -9,7 +9,7 @@ sidebar_label: "핵심 노드: NotFoundError"
 
 > God node · 36 connections · `src/server/projects.ts`
 
-**Community:** [projects.ts](projects.ts.md)
+**Community:** [ValidationError](ValidationError.md)
 
 ## Connections by Relation
 
@@ -31,18 +31,18 @@ sidebar_label: "핵심 노드: NotFoundError"
 - [projects.ts](projects.ts.md) `EXTRACTED`
 
 ### imports
-- (app)/actions.ts `EXTRACTED`
+- [(app)/actions.ts](app-actions.ts.md) `EXTRACTED`
 - [pipeline.ts](pipeline.ts.md) `EXTRACTED`
 - ask.ts `EXTRACTED`
-- [server/network.ts](server-network.ts.md) `EXTRACTED`
+- server/network.ts `EXTRACTED`
 - server/flows.ts `EXTRACTED`
 - [glossary.ts](glossary.ts.md) `EXTRACTED`
 - [\[sessionId\]/route.ts]([sessionId]-route.ts.md) `EXTRACTED`
 - [ask/route.ts](ask-route.ts.md) `EXTRACTED`
 - server.ts `EXTRACTED`
 - chat/route.ts `EXTRACTED`
-- [\[diagramId\]/page.tsx]([diagramId]-page.tsx.md) `EXTRACTED`
-- explain/route.ts `EXTRACTED`
+- \[diagramId\]/page.tsx `EXTRACTED`
+- [explain/route.ts](explain-route.ts.md) `EXTRACTED`
 - sessions/route.ts `EXTRACTED`
 - [mcpKeys.ts](mcpKeys.ts.md) `EXTRACTED`
 - suggest/route.ts `EXTRACTED`

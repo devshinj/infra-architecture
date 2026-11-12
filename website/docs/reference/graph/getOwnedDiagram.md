@@ -1,15 +1,16 @@
 ---
 title: "getOwnedDiagram"
-sidebar_position: 14
+sidebar_position: 16
 ---
 # getOwnedDiagram
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 33 nodes · cohesion 0.22
+> 37 nodes · cohesion 0.19
 
 ## Key Concepts
 
+- **types.ts** (78 connections) — `src/domain/types.ts`
 - **getOwnedDiagram()** (53 connections) — `src/server/projects.ts`
 - **withDiagramLock()** (31 connections) — `src/server/chat/lock.ts`
 - **createVersion()** (31 connections) — `src/server/versions.ts`
@@ -34,23 +35,22 @@ sidebar_position: 14
 - **confirmLinkGuessFor()** (9 connections) — `src/server/linkGuess.ts`
 - **duplicateDiagram()** (9 connections) — `src/server/projects.ts`
 - **noLinkKey()** (8 connections) — `src/domain/assumptions.ts`
-- **Task 7: 서버 액션 — 망 종류 확인·바꾸기, 망연계 맞아요·아니에요** (7 connections) — `docs/superpowers/plans/2026-11-06-network-knowledge-link-guess.md`
-- *... and 8 more nodes in this community*
+- *... and 12 more nodes in this community*
 
 ## Relationships
 
-- [NetworkKnowledgePage.tsx](NetworkKnowledgePage.tsx.md) (22 shared connections)
-- [pipeline.ts](pipeline.ts.md) (21 shared connections)
+- [(app)/actions.ts](app-actions.ts.md) (34 shared connections)
+- [pipeline.ts](pipeline.ts.md) (26 shared connections)
 - [projects.ts](projects.ts.md) (20 shared connections)
-- [mcp/apply.ts](mcp-apply.ts.md) (16 shared connections)
-- [read.ts](read.ts.md) (16 shared connections)
+- [mcp/apply.ts](mcp-apply.ts.md) (18 shared connections)
+- [read.ts](read.ts.md) (17 shared connections)
+- [ValidationError](ValidationError.md) (16 shared connections)
+- [domain/assumptions.ts](domain-assumptions.ts.md) (15 shared connections)
+- [domain/flows.ts](domain-flows.ts.md) (14 shared connections)
 - [useFlows](useFlows.md) (13 shared connections)
-- [server/network.ts](server-network.ts.md) (13 shared connections)
-- [versions.ts](versions.ts.md) (12 shared connections)
-- [Command](Command.md) (10 shared connections)
-- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (10 shared connections)
-- [ask/route.ts](ask-route.ts.md) (8 shared connections)
-- [flowSuggest.ts](flowSuggest.ts.md) (8 shared connections)
+- [ask/route.ts](ask-route.ts.md) (12 shared connections)
+- [\[sessionId\]/route.ts]([sessionId]-route.ts.md) (11 shared connections)
+- [domain/apply.ts](domain-apply.ts.md) (10 shared connections)
 
 ## Source Files
 
@@ -70,14 +70,13 @@ sidebar_position: 14
 - `src/server/linkGuess.ts`
 - `src/server/mcp/apply.ts`
 - `src/server/projects.ts`
-- `src/server/samples.ts`
 - `src/server/versions.ts`
 - `src/server/zoneType.ts`
 
 ## Audit Trail
 
-- EXTRACTED: 330 (94%)
-- INFERRED: 22 (6%)
+- EXTRACTED: 402 (95%)
+- INFERRED: 22 (5%)
 - AMBIGUOUS: 0 (0%)
 
 ---

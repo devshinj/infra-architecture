@@ -1,62 +1,64 @@
 ---
 title: "pipeline.ts"
-sidebar_position: 12
+sidebar_position: 9
 ---
 # pipeline.ts
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 35 nodes · cohesion 0.12
+> 45 nodes · cohesion 0.10
 
 ## Key Concepts
 
-- **pipeline.ts** (117 connections) — `src/server/chat/pipeline.ts`
+- **pipeline.ts** (125 connections) — `src/server/chat/pipeline.ts`
 - **ask.ts** (59 connections) — `src/server/chat/ask.ts`
-- **lockedTurn()** (41 connections) — `src/server/chat/pipeline.ts`
+- **lockedTurn()** (45 connections) — `src/server/chat/pipeline.ts`
+- **getNetworkKnowledge()** (20 connections) — `src/server/network.ts`
 - **askInSession()** (14 connections) — `src/server/chat/ask.ts`
 - **intent.ts** (13 connections) — `src/server/chat/intent.ts`
+- **buildMessages()** (12 connections) — `src/server/chat/prompt.ts`
+- **createThinkStripper()** (9 connections) — `src/server/llm/think.ts`
+- **toFlowOp()** (7 connections) — `src/domain/commands.ts`
 - **createMessage()** (7 connections) — `src/server/chat/messages.ts`
+- **buildAskMessages()** (7 connections) — `src/server/chat/prompt.ts`
 - **matchUserTerms()** (7 connections) — `src/server/glossary.ts`
 - **resolveIntent()** (6 connections) — `src/server/chat/intent.ts`
 - **cachedNodeExplanation()** (6 connections) — `src/server/explain.ts`
-- **ChatDeps** (5 connections) — `src/server/chat/pipeline.ts`
 - **streamFailure()** (5 connections) — `src/server/chat/pipeline.ts`
 - **skips.ts** (5 connections) — `src/server/chat/skips.ts`
 - **Intent** (5 connections) — `src/server/llm/clef.ts`
+- **think.ts** (5 connections) — `src/server/llm/think.ts`
+- **validChoices()** (4 connections) — `src/domain/clarify.ts`
 - **keepStepText()** (4 connections) — `src/domain/flows.ts`
+- **glossaryBlock()** (4 connections) — `src/domain/glossaryMatch.ts`
 - **turnSignals()** (4 connections) — `src/server/chat/pipeline.ts`
 - **parseMentions()** (4 connections) — `src/server/chat/prompt.ts`
 - **isAssumptionChangeMessage()** (3 connections) — `src/domain/assumptions.ts`
-- **createFlowRetarget()** (3 connections) — `src/domain/commands.ts`
-- **asksStepText()** (3 connections) — `src/domain/flows.ts`
-- **clefOpenItems()** (3 connections) — `src/server/chat/intent.ts`
-- **USER_TURN_LOCK_WAIT_MS** (3 connections) — `src/server/chat/lock.ts`
-- **ChatTurnResult** (3 connections) — `src/server/chat/pipeline.ts`
-- **createSkipTally()** (3 connections) — `src/server/chat/skips.ts`
-- **skipKey()** (3 connections) — `src/server/chat/skips.ts`
-- **abortError()** (2 connections) — `src/server/chat/pipeline.ts`
-- *... and 10 more nodes in this community*
+- **choicesNote()** (3 connections) — `src/domain/clarify.ts`
+- *... and 20 more nodes in this community*
 
 ## Relationships
 
-- [getOwnedDiagram](getOwnedDiagram.md) (21 shared connections)
-- [ask/route.ts](ask-route.ts.md) (19 shared connections)
-- [commands.ts](commands.ts.md) (12 shared connections)
-- [runAskTurn](runAskTurn.md) (12 shared connections)
-- [createJsonlParser](createJsonlParser.md) (9 shared connections)
-- [\[diagramId\]/page.tsx]([diagramId]-page.tsx.md) (8 shared connections)
+- [ask/route.ts](ask-route.ts.md) (29 shared connections)
+- [getOwnedDiagram](getOwnedDiagram.md) (26 shared connections)
+- [\[sessionId\]/route.ts]([sessionId]-route.ts.md) (23 shared connections)
+- [mcp/apply.ts](mcp-apply.ts.md) (22 shared connections)
+- [prompt.ts](prompt.ts.md) (14 shared connections)
+- [clef.ts](clef.ts.md) (11 shared connections)
+- [clarify.ts](clarify.ts.md) (9 shared connections)
+- [DiagramState](DiagramState.md) (9 shared connections)
+- [missing.ts](missing.ts.md) (9 shared connections)
 - [domain/apply.ts](domain-apply.ts.md) (8 shared connections)
-- [missing.ts](missing.ts.md) (7 shared connections)
-- [\[sessionId\]/route.ts]([sessionId]-route.ts.md) (7 shared connections)
-- [prompt.ts](prompt.ts.md) (7 shared connections)
-- [useChatTurn.ts](useChatTurn.ts.md) (6 shared connections)
-- [mcp/apply.ts](mcp-apply.ts.md) (6 shared connections)
+- [useChatTurn.ts](useChatTurn.ts.md) (7 shared connections)
+- [NetworkKnowledgePage.tsx](NetworkKnowledgePage.tsx.md) (7 shared connections)
 
 ## Source Files
 
 - `src/domain/assumptions.ts`
+- `src/domain/clarify.ts`
 - `src/domain/commands.ts`
 - `src/domain/flows.ts`
+- `src/domain/glossaryMatch.ts`
 - `src/server/chat/ask.ts`
 - `src/server/chat/intent.ts`
 - `src/server/chat/lock.ts`
@@ -67,11 +69,13 @@ sidebar_position: 12
 - `src/server/explain.ts`
 - `src/server/glossary.ts`
 - `src/server/llm/clef.ts`
+- `src/server/llm/think.ts`
+- `src/server/network.ts`
 
 ## Audit Trail
 
-- EXTRACTED: 268 (100%)
-- INFERRED: 1 (0%)
+- EXTRACTED: 319 (98%)
+- INFERRED: 8 (2%)
 - AMBIGUOUS: 0 (0%)
 
 ---
