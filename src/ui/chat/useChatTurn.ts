@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import type { ClarifyQuestion } from "@/domain/clarify";
 import type { Command } from "@/domain/commands";
 import type { Warning } from "@/domain/types";
 import type { WarningCounts } from "@/domain/warnings";
@@ -34,8 +35,9 @@ export interface ChatLine {
    * card: 진행 카드 · progress: AI 안내(say) · summary/warning: 차례 끝 칩(warning 은 `주의 N` 하나).
    * system: 안내 글(차례 밖이면 가운데 작은 글).
    * handoff: 질문 세션의 `구성도 대화로 보내기` 버튼. text 는 넘길 사용자 글.
+   * clarify: 그리기 전에 되묻는 카드. 물은 것은 clarify 에 있다.
    */
-  kind: "user" | "assistant" | "system" | "progress" | "error" | "warning" | "card" | "summary" | "handoff";
+  kind: "user" | "assistant" | "system" | "progress" | "error" | "warning" | "card" | "summary" | "handoff" | "clarify";
   text: string;
   meta?: MessageMeta;
   /** 같은 값의 줄은 한 AI 메시지로 묶인다(차례 id 또는 assistant 메시지 id). */
@@ -44,6 +46,8 @@ export interface ChatLine {
   at?: number;
   /** kind "card" */
   card?: ProgressCard;
+  /** kind "clarify" */
+  clarify?: ClarifyQuestion[];
   /** kind "summary": 이 차례가 만든 버전과 바꾼 곳 수. 가장 최근 차례면 `바뀐 곳 보기`·`되돌리기`를 붙인다(ChatPanel turnActions). */
   version?: number | null;
   changed?: number;
@@ -60,6 +64,11 @@ export type TurnTarget =
   | { kind: "diagram"; sessionId: string | null }
   | { kind: "ask"; nodeId: string; sessionId: string | null };
 const MAIN: TurnTarget = { kind: "main" };
+
+/** 보낼 때 덧붙이는 것. choices: 되묻기 카드에서 고른 답(가정 key → 값). */
+export interface SendOptions {
+  choices?: Record<string, string>;
+}
 
 export interface UseChatTurnArgs {
   diagramId: string;
@@ -109,7 +118,7 @@ export function useChatTurn(args: UseChatTurnArgs) {
   }, []);
 
   const send = useCallback(
-    async (text: string, target: TurnTarget = MAIN) => {
+    async (text: string, target: TurnTarget = MAIN, opts: SendOptions = {}) => {
       const trimmed = text.trim();
       if (!trimmed || runningRef.current) return;
       runningRef.current = true;
@@ -145,6 +154,7 @@ export function useChatTurn(args: UseChatTurnArgs) {
       let cmds = 0;
       let errored = false;
       let intent: string | null = null;
+      let clarified = false; // 그리지 않고 되물은 차례(요약 칩을 두지 않는다)
       /** done 없이 끝남: 그린 게 있으면 중단됨으로 남기고, 없으면 카드를 치운다. */
       const endWithoutDone = (aborted: boolean) => (aborted || cmds > 0 ? patchCard((c) => ({ ...c, end: "aborted" })) : removeCard());
       let warnings: Warning[] = []; // done 앞에 오지만 요약 칩 다음에 둔다
@@ -165,6 +175,11 @@ export function useChatTurn(args: UseChatTurnArgs) {
             break;
           case "handoff":
             if (ask) pushT({ kind: "handoff", text: ev.text });
+            break;
+          case "clarify":
+            if (ask) break;
+            clarified = true;
+            pushT({ kind: "clarify", text: "", clarify: ev.questions });
             break;
           case "start":
             intent = ev.intent;
@@ -219,7 +234,7 @@ export function useChatTurn(args: UseChatTurnArgs) {
               const end = ev.status === "aborted" ? "aborted" : "done";
               patchCard((c) => ({ ...c, end, nodes: ev.nodes, edges: ev.edges }));
             } else removeCard();
-            const s = summaryText(ev, answerId !== null || said, intent);
+            const s = clarified ? null : summaryText(ev, answerId !== null || said, intent);
             if (s) pushT({ kind: "summary", text: s, version: ev.version, changed: ev.changed ?? ev.applied });
             pushWarnings(ev.warningCounts);
             a.onDone(ev);
@@ -241,10 +256,12 @@ export function useChatTurn(args: UseChatTurnArgs) {
           : target.kind === "diagram"
             ? { text: trimmed, ...(target.sessionId ? { sessionId: target.sessionId } : { newSession: true }) }
             : { text: trimmed };
+        // 되묻기에 고른 답은 구성도 대화(기본·세션)에만 싣는다.
+        const payload = !ask && opts.choices ? { ...body, choices: opts.choices } : body;
         const res = await fetch(ask ? `${base}/ask` : `${base}/chat`, {
           method: "POST",
           headers: { "content-type": "application/json" },
-          body: JSON.stringify(body),
+          body: JSON.stringify(payload),
           signal: ctrl.signal,
         });
         if (!res.ok || !res.body) {

@@ -20,7 +20,7 @@ async function setup(page: Page) {
   await page.getByRole("dialog").getByRole("button", { name: "만들기" }).click();
   await page.waitForURL(/\/p\/[^/]+\/d\/[^/]+/);
   await page.getByRole("tab", { name: "대화" }).click();
-  await page.getByPlaceholder(PLACEHOLDER).fill("결제랑 카카오 로그인 붙는 쇼핑몰");
+  await page.getByPlaceholder(PLACEHOLDER).fill("AWS 에 결제랑 카카오 로그인 붙는 쇼핑몰");
   await page.getByRole("button", { name: "보내기" }).click();
   await expect(nodes(page)).toHaveCount(S1_NODE_COUNT, { timeout: 30_000 });
   await expect(page.getByText(DONE)).toBeVisible({ timeout: 30_000 });

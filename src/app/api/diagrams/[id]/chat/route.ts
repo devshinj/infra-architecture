@@ -26,6 +26,8 @@ const BodySchema = z
     text: z.string().trim().min(1).max(4000),
     sessionId: z.uuid().optional(),
     newSession: z.literal(true).optional(),
+    // 되묻기에 고른 답(가정 key → 값). 모르는 key·값은 서버가 버린다.
+    choices: z.record(z.string().max(40), z.string().max(80)).optional(),
   })
   .refine((b) => !(b.sessionId && b.newSession));
 
@@ -55,7 +57,7 @@ export async function POST(request: Request, ctx: { params: Promise<{ id: string
   }
   const parsed = BodySchema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: BAD_BODY }, { status: 400 });
-  const { text, sessionId, newSession } = parsed.data;
+  const { text, sessionId, newSession, choices } = parsed.data;
   const target: ChatSessionTarget | undefined = newSession ? "new" : sessionId ? { id: sessionId } : undefined;
 
   const { id } = await ctx.params;
@@ -74,7 +76,7 @@ export async function POST(request: Request, ctx: { params: Promise<{ id: string
 
   return streamTurn<ChatTurnResult>({
     requestSignal: request.signal,
-    run: (emit, signal) => runChatTurn({ userId, diagramId: id, text, session: target, signal, emit }, defaultChatDeps()),
+    run: (emit, signal) => runChatTurn({ userId, diagramId: id, text, session: target, ...(choices ? { choices } : {}), signal, emit }, defaultChatDeps()),
     early(outcome) {
       if (!outcome.ok && outcome.err instanceof NotFoundError) return NextResponse.json({ error: NOT_FOUND }, { status: 404 });
       if (!outcome.ok && outcome.err instanceof ValidationError) return NextResponse.json({ error: BAD_BODY }, { status: 400 });

@@ -31,7 +31,7 @@ import type { VersionRow } from "./HistoryPanel";
 import { ELSEWHERE_BUSY, type LlmHealth } from "./chat/ChatPanel";
 import type { MentionInputHandle } from "./chat/MentionInput";
 import type { ChecklistDrafts, ChecklistExpanded, MissingChecklistProps } from "./chat/MissingChecklist";
-import { type ChatLine, useChatTurn } from "./chat/useChatTurn";
+import { type ChatLine, type SendOptions, useChatTurn } from "./chat/useChatTurn";
 import { NEW_SESSION, type SessionKey, type SessionPaging, type SessionSummary, useSessions } from "./chat/useSessions";
 import { type CardMeasure, InfoCard } from "./canvas/InfoCard";
 import { Legend, legendPlacement } from "./canvas/Legend";
@@ -612,19 +612,21 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
     sessions.setLines(diagramKey, (ls) => [...ls, { id, ...line }]);
   };
   /** 구성도 대화(diagramKey)로만 보낸다. 구조를 바꾸는 가정 변경처럼 질문 세션으로 가면 안 되는 차례가 쓴다. */
-  const sendMain = (text: string) => {
+  const sendMain = (text: string, opts?: SendOptions) => {
     if (!live || chat.busy) return;
     setEditMode(false);
     adoptAfterChat.current = false;
     remoteAdopt.current = null;
-    if (diagramKey === "main") return void chat.send(text);
+    // 덧붙일 것이 없으면 예전처럼 글(과 보낼 곳)만 넘긴다.
+    const rest = opts ? [opts] : [];
+    if (diagramKey === "main") return void (opts ? chat.send(text, undefined, opts) : chat.send(text));
     if (diagramKey === NEW_SESSION) {
       // 새 구성도 대화의 첫 메시지: 서버가 세션을 만들고 id 를 준다. 앞서 실패한 첫 메시지 줄은 비우고 다시 시작한다.
       sessions.startNewDiagram(text);
-      return void chat.send(text, { kind: "diagram", sessionId: null });
+      return void chat.send(text, { kind: "diagram", sessionId: null }, ...rest);
     }
     if (activeSummary) sessions.upsert({ ...activeSummary, updatedAt: new Date().toISOString() });
-    void chat.send(text, { kind: "diagram", sessionId: diagramKey });
+    void chat.send(text, { kind: "diagram", sessionId: diagramKey }, ...rest);
   };
   /** `새 대화`: 새 구성도 대화를 열고 입력칸으로 간다. 서버 세션은 첫 메시지를 보낼 때 만든다. */
   const newChat = () => {
@@ -633,8 +635,8 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
     skipToChat();
   };
   // 대화 패널의 보내기: 질문 세션을 보고 있으면 그 세션으로, 아니면 보고 있는 구성도 대화로.
-  const sendChat = (text: string) => {
-    if (inDiagramChat) return sendMain(text);
+  const sendChat = (text: string, opts?: SendOptions) => {
+    if (inDiagramChat) return opts ? sendMain(text, opts) : sendMain(text);
     if (!live || chat.busy) return;
     // 질문 세션: 노드가 지금 구성도에 있을 때만 이어 묻는다. 새 세션은 서버가 id 를 줄 때까지 sessionId 없이 보낸다.
     if (!activeSession || labelOf(activeSession.nodeId) === null) return;

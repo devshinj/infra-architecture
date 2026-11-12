@@ -27,14 +27,14 @@ async function send(page: Page, text: string) {
 const nodes = (page: Page) => page.locator(".react-flow__node-infra");
 
 async function buildS1(page: Page) {
-  await send(page, "결제랑 카카오 로그인 붙는 쇼핑몰");
+  await send(page, "AWS 에 결제랑 카카오 로그인 붙는 쇼핑몰");
   await expect(nodes(page)).toHaveCount(S1_NODE_COUNT, { timeout: 30_000 });
   await expect(page.getByText(/노드 \d+ · 연결 \d+ · (?:\d+곳 바꿨어요|바꾼 곳이 없어요)/)).toBeVisible({ timeout: 30_000 });
 }
 
 test("대화로 구성도 생성 → 노드가 하나씩 나타남 → 요약·버전", async ({ page }) => {
   await setup(page);
-  await send(page, "결제랑 카카오 로그인 붙는 쇼핑몰");
+  await send(page, "AWS 에 결제랑 카카오 로그인 붙는 쇼핑몰");
 
   const seen = new Set<number>();
   await expect
@@ -76,7 +76,7 @@ test("노드 우클릭 참조 → 수정 반영", async ({ page }) => {
 
 test("중단하면 '중단됨' 버전이 남고 바로 다시 보낼 수 있음", async ({ page }) => {
   await setup(page);
-  await send(page, "천천히 결제랑 카카오 로그인 붙는 쇼핑몰");
+  await send(page, "천천히 AWS 에 결제랑 카카오 로그인 붙는 쇼핑몰");
   await expect(nodes(page)).not.toHaveCount(0, { timeout: 30_000 });
   await page.getByRole("button", { name: "중단" }).click();
 

@@ -33,7 +33,7 @@ async function selectRedis(page: Page) {
 
 test("explanations and glossary", async ({ page }) => {
   await setup(page);
-  await page.getByPlaceholder(PLACEHOLDER).fill("결제랑 카카오 로그인 붙는 쇼핑몰");
+  await page.getByPlaceholder(PLACEHOLDER).fill("AWS 에 결제랑 카카오 로그인 붙는 쇼핑몰");
   await page.getByRole("button", { name: "보내기" }).click();
   await expect(nodes(page)).toHaveCount(S1_NODE_COUNT, { timeout: 30_000 });
   await expect(page.getByText(/노드 \d+ · 연결 \d+ · (?:\d+곳 바꿨어요|바꾼 곳이 없어요)/)).toBeVisible({ timeout: 30_000 });
@@ -81,7 +81,7 @@ test("no page-level scroll", async ({ page }) => {
   expect(d.doc).toBeLessThanOrEqual(0);
   expect(d.wide).toBeLessThanOrEqual(0);
   // 구성도를 불러온 화면: 보기 팝오버를 연 채로, 구성 정보 카드를 펼친 채로도 문서가 넘치지 않는다.
-  await page.getByPlaceholder(PLACEHOLDER).fill("결제랑 카카오 로그인 붙는 쇼핑몰");
+  await page.getByPlaceholder(PLACEHOLDER).fill("AWS 에 결제랑 카카오 로그인 붙는 쇼핑몰");
   await page.getByRole("button", { name: "보내기" }).click();
   await expect(nodes(page)).toHaveCount(S1_NODE_COUNT, { timeout: 30_000 });
   await expect(page.getByText(/노드 \d+ · 연결 \d+ · (?:\d+곳 바꿨어요|바꾼 곳이 없어요)/)).toBeVisible({ timeout: 30_000 });

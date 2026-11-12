@@ -154,6 +154,22 @@ button.blockTitle:hover { text-decoration: underline; text-underline-offset: 3px
   .sessionMenuBtn { min-width: 44px; min-height: 44px; }
 }
 /* 질문 세션: 구성도 대화로 넘기는 버튼(결과 칩과 같은 모양). */
+/* 그리기 전에 되묻는 카드: 질문마다 선택지 한 줄(라디오 묶음), 아래에 `이대로 그리기`. */
+.clarify { display: flex; flex-direction: column; gap: 12px; }
+.clarifyQuestion { margin: 0; padding: 0; border: 0; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.clarifyLegend { padding: 0; font-size: 13px; font-weight: 600; color: var(--text-primary); }
+.clarifyChoices { display: flex; flex-wrap: wrap; gap: 6px; }
+.clarifyChoice { position: relative; display: inline-flex; align-items: center; min-height: 28px; box-sizing: border-box; font-size: 12px; color: var(--text-primary); background: transparent; border: 1px solid var(--line-node); border-radius: var(--radius-control); padding: 4px 12px; cursor: pointer; }
+.clarifyChoice:hover { border-color: var(--text-secondary); }
+.clarifyChoice[data-auto] { color: var(--text-secondary); }
+.clarifyChoice[data-checked] { font-weight: 600; color: var(--text-primary); background: var(--bg-panel-raised); border-color: var(--text-primary); }
+.clarifyChoice:focus-within { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+/* 라디오는 화면에서만 숨긴다(키보드·보조 기술은 그대로 쓴다). */
+.clarifyRadio { position: absolute; inset: 0; margin: 0; opacity: 0; cursor: pointer; }
+.clarifyQuestion:disabled .clarifyChoice { cursor: not-allowed; opacity: 0.55; }
+.clarifyQuestion:disabled .clarifyChoice[data-checked] { opacity: 1; }
+.clarifyQuestion:disabled .clarifyChoice:hover { border-color: var(--line-node); }
+.clarifyQuestion:disabled .clarifyRadio { cursor: not-allowed; }
 .handoff { cursor: pointer; }
 .handoff:disabled { opacity: 0.55; cursor: not-allowed; }
 .handoff:disabled:hover { border-color: var(--line-node); }

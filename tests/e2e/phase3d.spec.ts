@@ -29,7 +29,7 @@ async function send(page: Page, text: string) {
   await page.getByRole("button", { name: "보내기" }).click();
 }
 
-async function buildS1(page: Page, text = "결제랑 카카오 로그인 붙는 쇼핑몰") {
+async function buildS1(page: Page, text = "AWS 에 결제랑 카카오 로그인 붙는 쇼핑몰") {
   await send(page, text);
   await expect(nodes(page)).toHaveCount(S1_NODE_COUNT, { timeout: 30_000 });
   await expect(page.getByText(DONE)).toBeVisible({ timeout: 30_000 });
@@ -99,7 +99,7 @@ test("sidebar collapses and stays collapsed after reload", async ({ page }) => {
 
 test("progress card shows steps and own bubble appears immediately", async ({ page }) => {
   await setup(page);
-  const text = "천천히 결제랑 카카오 로그인 붙는 쇼핑몰";
+  const text = "천천히 AWS 에 결제랑 카카오 로그인 붙는 쇼핑몰";
   await send(page, text);
   // 내 말풍선은 서버 응답을 기다리지 않고 바로 보이고, 진행 카드가 단계를 보여 준다.
   await expect(page.getByText(text, { exact: true })).toBeVisible();
