@@ -21,10 +21,14 @@ const node: NodeExplanation = {
 };
 const terms = [{ key: "was", term: "WAS", definition: "애플리케이션 서버" }];
 
-test("node sections in spec order with the AI 설명 badge", () => {
+test("node: role first, then 정의·필요한 이유·비교·왜 이렇게 짰나요 inside 자세히, with the AI 설명 badge", () => {
   render(<Explanation status="ready" data={node} terms={terms} />);
   const heads = screen.getAllByRole("heading", { level: 3 }).map((h) => h.textContent);
-  expect(heads).toEqual(["정의", "필요한 이유", "비교", "이 구성에서의 역할", "왜 이렇게 짰나요"]);
+  expect(heads).toEqual(["이 구성에서의 역할", "정의", "필요한 이유", "비교", "왜 이렇게 짰나요"]);
+  const details = document.querySelector("details")!;
+  expect(details).not.toHaveAttribute("open");
+  expect(details.querySelector("summary")).toHaveTextContent("자세히정의 · 필요한 이유 · 비교 · 왜 이렇게 짰나요");
+  expect(screen.getByRole("heading", { name: "이 구성에서의 역할" }).closest("details")).toBeNull();
   expect(screen.getByText("AI 설명")).not.toHaveAttribute("title");
   // 배지 뜻은 화면 읽기용 숨긴 글로 들린다(title 과 겹쳐 두 번 읽히지 않게 title 은 두지 않는다).
   expect(screen.getByText("(사람이 아직 확인하지 않았어요)")).toBeInTheDocument();
@@ -60,7 +64,7 @@ test("no why/compare headings without glossary entry", () => {
 test("loading draws skeleton lines under each heading and announces once", () => {
   const { container } = render(<Explanation status="loading" terms={[]} />);
   const heads = screen.getAllByRole("heading", { level: 3 }).map((h) => h.textContent);
-  expect(heads).toEqual(["정의", "이 구성에서의 역할", "왜 이렇게 짰나요"]);
+  expect(heads).toEqual(["이 구성에서의 역할", "정의", "왜 이렇게 짰나요"]);
   // 글자 대신 칸마다 줄 자리(스켈레톤). "만드는 중"은 알림 한 자리에만.
   expect(container.querySelectorAll("section").length).toBe(3);
   container.querySelectorAll("section").forEach((sec) => expect(sec.querySelector("h3 + span")).not.toBeNull());
@@ -94,7 +98,7 @@ test("loading shows the glossary definition at once; role and ADR wait", () => {
     />,
   );
   const heads = screen.getAllByRole("heading", { level: 3 }).map((h) => h.textContent);
-  expect(heads).toEqual(["정의", "필요한 이유", "비교", "이 구성에서의 역할", "왜 이렇게 짰나요"]);
+  expect(heads).toEqual(["이 구성에서의 역할", "정의", "필요한 이유", "비교", "왜 이렇게 짰나요"]);
   expect(screen.getByText("메모리 저장소입니다.")).toBeInTheDocument();
   expect(screen.getByText("AI 설명")).toBeInTheDocument();
   expect(screen.getByText("빠르게 읽으려고")).toBeInTheDocument();
@@ -146,4 +150,29 @@ test("edge four fields", () => {
 test("busy disables retry", () => {
   render(<Explanation status="error" message="x" terms={[]} onRetry={vi.fn()} busy />);
   expect(screen.getByRole("button", { name: "다시 시도" })).toBeDisabled();
+});
+
+test("each glossary term is underlined only where it first appears in the panel (role first), never the node's own term", () => {
+  const t = [
+    { key: "was", term: "WAS", definition: "애플리케이션 서버" },
+    { key: "nginx", term: "Nginx", definition: "웹 서버" },
+    { key: "apache", term: "Apache", definition: "웹 서버" },
+  ];
+  const d = { ...node, role: "외부 요청을 WAS 로 넘기고 WAS 응답을 돌려줍니다.", why: "WAS 앞에서 정적 파일을 내보냅니다.", compare: "Apache 보다 가볍습니다.", adr: { ...node.adr, alternative: "Apache" } };
+  render(<Explanation status="ready" data={d} terms={t} />);
+  const abbrs = [...document.querySelectorAll("abbr.term")].map((a) => a.textContent);
+  expect(abbrs).toEqual(["WAS", "Apache"]);
+  // 첫 자리는 역할 문단(자세히 밖)이다.
+  expect(document.querySelector("abbr.term")!.closest("details")).toBeNull();
+});
+
+test("자세히 remembers being opened (next node opens it too)", async () => {
+  window.localStorage.removeItem("infrasketch.explainDetails");
+  const { unmount } = render(<Explanation status="ready" data={node} terms={[]} />);
+  await userEvent.click(screen.getByText("자세히"));
+  expect(window.localStorage.getItem("infrasketch.explainDetails")).toBe("1");
+  unmount();
+  render(<Explanation status="ready" data={{ ...node, role: "다른 노드" }} terms={[]} />);
+  expect(document.querySelector("details")).toHaveAttribute("open");
+  window.localStorage.removeItem("infrasketch.explainDetails");
 });

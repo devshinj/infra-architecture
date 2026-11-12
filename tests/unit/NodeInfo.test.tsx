@@ -325,3 +325,18 @@ test("NodeInfo: 이력 보기(linkGuess 없음)는 AI 추정 표시만, 추정 �
   expect(screen.queryByText("AI 추정")).not.toBeInTheDocument();
   expect(screen.queryByRole("button", { name: "맞아요" })).not.toBeInTheDocument();
 });
+
+test("연결 is one section: a row per connection with the other node as a chip, no separate 연결된 노드 list", async () => {
+  const onSelect = vi.fn();
+  render(<NodeInfo state={fx("s2")} selectedId="was-1" onSelect={onSelect} onMention={vi.fn()} />);
+  expect(screen.queryByRole("heading", { name: "연관관계" })).not.toBeInTheDocument();
+  expect(screen.queryByRole("heading", { name: "연결된 노드" })).not.toBeInTheDocument();
+  const sec = screen.getByRole("heading", { name: "연결" }).closest("section")!;
+  const rows = within(sec).getAllByRole("listitem");
+  expect(rows.length).toBeGreaterThan(0);
+  for (const row of rows) expect(within(row).queryAllByRole("button").length + (row.querySelector("span") ? 1 : 0)).toBeGreaterThan(0);
+  await userEvent.click(within(sec).getByRole("button", { name: /DB 중계/ }));
+  expect(onSelect).toHaveBeenCalledWith(expect.stringMatching(/proxy/));
+  // 노드 링크 복사는 이름 줄(header) 안의 조용한 단추다.
+  expect(screen.getByRole("button", { name: "노드 링크 복사" }).closest("header")).not.toBeNull();
+});

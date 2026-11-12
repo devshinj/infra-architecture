@@ -96,10 +96,11 @@ function Fields({ title, fields, attrs, unknown, hideEmpty, lead }: { title: str
   );
 }
 
+/** 노드 링크 복사: 이름 줄 오른쪽 조용한 글자 단추. 설명이 이름 바로 아래에서 시작하게 둔다. */
 function LinkButton({ id, onMention, disabled }: { id: string; onMention?: (id: string) => void; disabled?: boolean }) {
   if (!onMention) return null;
   return (
-    <Button size="sm" className={styles.start} disabled={disabled} onClick={() => onMention(id)}>
+    <Button size="sm" variant="quiet" className={styles.headAction} disabled={disabled} onClick={() => onMention(id)}>
       노드 링크 복사
     </Button>
   );
@@ -242,7 +243,6 @@ function LinkGuessPart({ nodeId, save }: { nodeId: string; save?: LinkGuessSave 
 
 const PAYLOAD_NAME = { api: "API", file: "파일" } as const;
 const DIRECTION_NAME = { one_way: "단방향", two_way: "양방향" } as const;
-const MEDIUM_NAME = { wireless: "근거리 무선", video: "영상 스트림", media: "실시간 미디어", serial: "유선 직렬" } as const;
 
 export function NodeInfo({ state, selectedId, onSelect, onMention, mentionDisabled, warningState, explain, ask, flows, linkGuess, ...caution }: NodeInfoProps) {
   const knowledge = useNetworkKnowledge();
@@ -276,9 +276,13 @@ export function NodeInfo({ state, selectedId, onSelect, onMention, mentionDisabl
   if (group) {
     return (
       <div className={styles.info}>
-        <h2 className={styles.title}>{group.label}</h2>
-        <p className={styles.kind}>{GROUP_KINDS.find((k) => k.kind === group.groupKind)?.labelKo ?? group.groupKind}</p>
-        <LinkButton id={group.id} onMention={onMention} disabled={mentionDisabled} />
+        <header className={styles.head}>
+          <div>
+            <h2 className={styles.title}>{group.label}</h2>
+            <p className={styles.kind}>{GROUP_KINDS.find((k) => k.kind === group.groupKind)?.labelKo ?? group.groupKind}</p>
+          </div>
+          <LinkButton id={group.id} onMention={onMention} disabled={mentionDisabled} />
+        </header>
       </div>
     );
   }
@@ -293,7 +297,6 @@ export function NodeInfo({ state, selectedId, onSelect, onMention, mentionDisabl
       const otherId = incoming ? e.from : e.to;
       return { id: e.id, otherId, text: `${incoming ? "←" : "→"} ${edgeKindName(e.edgeKind)}${e.label ? ` · ${e.label}` : ""}` };
     });
-  const chips = [...new Set(relations.map((r) => r.otherId))].filter((id) => state.nodes[id]);
   // 관리형 서비스(ALB·RDS 등): 서버 칸(CPU·RAM·IP 등)과 AZ 는 비어 있으면 줄째 빼고, 서버 정보 대신 운영 정보로 보인다.
   const managed = managedBasis(node);
   const serverFields: [string, string][] = managed && MULTI_AZ_KINDS.includes(node.kind) ? [...SERVER_FIELDS, ["multi_az", "Multi-AZ"]] : SERVER_FIELDS;
@@ -327,8 +330,8 @@ export function NodeInfo({ state, selectedId, onSelect, onMention, mentionDisabl
           <h2 className={styles.title}>{node.label}</h2>
           <p className={styles.kind} data-testid="kind">{kindName(node.kind)}</p>
         </div>
+        <LinkButton id={node.id} onMention={onMention} disabled={mentionDisabled} />
       </header>
-      <LinkButton id={node.id} onMention={onMention} disabled={mentionDisabled} />
       {node.guess && <LinkGuessPart nodeId={node.id} {...(linkGuess ? { save: linkGuess } : {})} />}
       {explain && <Explanation key={node.id} {...explain} />}
       <Cautions {...pick((w) => w.nodeId === node.id)} {...caution} />
@@ -341,32 +344,28 @@ export function NodeInfo({ state, selectedId, onSelect, onMention, mentionDisabl
         {...(hideEmpty ? { hideEmpty, lead: managedRow } : {})}
       />
       {otherFields.length > 0 && <Fields title="기타 정보" fields={otherFields} attrs={node.attrs} unknown={node.unknown ?? []} {...(hideEmpty ? { hideEmpty } : {})} />}
+      {/* 연결: 줄마다 상대(노드면 누르면 고르는 칩) + 방향·종류·이름. 예전의 연관관계 글 목록과 연결된 노드 칩을 합쳤다. */}
       <section className={styles.section}>
-        <h3 className={styles.heading}>연관관계</h3>
+        <h3 className={styles.heading}>연결</h3>
         {relations.length === 0 ? (
           <p className={styles.missing}>연결된 노드가 없어요.</p>
         ) : (
           <ul className={styles.relations}>
             {relations.map((r) => (
-              <li key={r.id}>
-                <span>{nameOf(state, r.otherId)}</span> <span className={styles.relText}>{r.text}</span>
+              <li key={r.id} className={styles.relation}>
+                {state.nodes[r.otherId] ? (
+                  <button type="button" className={styles.chip} onClick={() => onSelect(r.otherId)}>
+                    {state.nodes[r.otherId]!.label}
+                  </button>
+                ) : (
+                  <span>{nameOf(state, r.otherId)}</span>
+                )}
+                <span className={styles.relText}>{r.text}</span>
               </li>
             ))}
           </ul>
         )}
       </section>
-      {chips.length > 0 && (
-        <section className={styles.section}>
-          <h3 className={styles.heading}>연결된 노드</h3>
-          <div className={styles.chips}>
-            {chips.map((id) => (
-              <button key={id} type="button" className={styles.chip} onClick={() => onSelect(id)}>
-                {state.nodes[id].label}
-              </button>
-            ))}
-          </div>
-        </section>
-      )}
       <FlowChips state={state} id={node.id} title="이 노드를 지나는 흐름" flows={flows} />
       {ask && <AskNode nodeId={node.id} nodeLabel={node.label} {...ask} />}
     </div>

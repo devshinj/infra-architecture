@@ -8,7 +8,7 @@ import { SkeletonLines } from "@/ui/skeleton/Skeleton";
 
 import { AI_BADGE, AI_BADGE_SR, isUnreviewedAi } from "../glossary/aiBadge";
 import styles from "../panel.module.css";
-import { TermText, type GlossaryTerm } from "./TermText";
+import { TermText, underlinePlan, type GlossaryTerm } from "./TermText";
 
 export interface ExplanationProps {
   status: "idle" | "loading" | "ready" | "error";
@@ -109,14 +109,57 @@ function Retry({ message, onRetry, busy }: { message?: string; onRetry?: () => v
 
 const ADR_LABELS = ["결정", "이유", "대안", "대가"] as const;
 
+/** 「자세히」 펼침 상태를 브라우저에 기억하는 키("1" 이면 펼침). 노드를 바꿔도 같은 상태로 연다. */
+export const DETAILS_OPEN_KEY = "infrasketch.explainDetails";
+
+function readOpen(): boolean {
+  try {
+    return window.localStorage.getItem(DETAILS_OPEN_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * 「자세히」 접힘 절: 정의·필요한 이유·비교·왜 이렇게 짰나요. 펼침 상태는 기억한다.
+ * 첫 렌더는 접힌 채(하이드레이션 일치), 마운트 뒤 기억한 값을 읽는다.
+ */
+function Details({ parts, children }: { parts: string[]; children: React.ReactNode }) {
+  const [open, setOpen] = useState(false);
+  useEffect(() => setOpen(readOpen()), []);
+  return (
+    <details
+      className={styles.details}
+      open={open}
+      onToggle={(e) => {
+        const next = (e.currentTarget as HTMLDetailsElement).open;
+        setOpen(next);
+        try {
+          window.localStorage.setItem(DETAILS_OPEN_KEY, next ? "1" : "0");
+        } catch {
+          /* 저장 실패는 이번 방문에만 영향 */
+        }
+      }}
+    >
+      <summary className={styles.detailsSummary}>
+        <svg className={styles.detailsChevron} width={12} height={12} viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M4.5 2.75 7.75 6 4.5 9.25" />
+        </svg>
+        자세히
+        <span className={styles.detailsParts}>{parts.join(" · ")}</span>
+      </summary>
+      <div className={styles.detailsBody}>{children}</div>
+    </details>
+  );
+}
+
 /** 정의(+AI 설명 배지)와 사전에 있으면 필요한 이유·비교. 다 만든 설명과, 만드는 중·실패 때 사전 정의에 같이 쓴다. */
-function DefinitionPart({ d, terms }: { d: Partial<NodeExplanation> & { definition: string }; terms: GlossaryTerm[] }) {
-  const own = d.term ? normalizeTerm(d.term) : undefined;
+function DefinitionPart({ d, terms, plan }: { d: Partial<NodeExplanation> & { definition: string }; terms: GlossaryTerm[]; plan: Plan }) {
   return (
     <>
       <Section title="정의">
         <p className={styles.explainText}>
-          <TermText text={d.definition} terms={terms} exclude={own} />
+          <PlannedText text={d.definition} terms={terms} plan={plan} />
           {isUnreviewedAi({ source: d.termSource ?? (d.definitionSource === "ai" ? "ai" : undefined), reviewed: d.reviewed }) && (
             <>
               <span className={styles.unreviewed}>{AI_BADGE}</span>
@@ -127,36 +170,61 @@ function DefinitionPart({ d, terms }: { d: Partial<NodeExplanation> & { definiti
       </Section>
       {d.why && (
         <Section title="필요한 이유">
-          <p className={styles.explainText}><TermText text={d.why} terms={terms} /></p>
+          <p className={styles.explainText}><PlannedText text={d.why} terms={terms} plan={plan} /></p>
         </Section>
       )}
       {d.compare && (
         <Section title="비교">
-          <p className={styles.explainText}><TermText text={d.compare} terms={terms} /></p>
+          <p className={styles.explainText}><PlannedText text={d.compare} terms={terms} plan={plan} /></p>
         </Section>
       )}
     </>
   );
 }
 
+/** 「자세히」 머리에 적을 안의 절 이름. */
+const detailParts = (d: Partial<NodeExplanation>, adr: boolean) =>
+  [d.definition ? "정의" : null, d.why ? "필요한 이유" : null, d.compare ? "비교" : null, adr ? "왜 이렇게 짰나요" : null].filter((x): x is string => x !== null);
+
+/**
+ * 밑줄 계획: 화면에 놓이는 차례(역할 → 정의 → 필요한 이유 → 비교 → 왜 이렇게 짰나요)대로 글을 읽어 용어마다 첫 글에서만 밑줄.
+ * 노드 자신의 용어(정의의 대상)는 패널 어디서도 감싸지 않는다.
+ */
+type Plan = Map<string, ReadonlySet<string>>;
+function makePlan(texts: string[], terms: GlossaryTerm[], own?: string): Plan {
+  const sets = underlinePlan(texts, terms, own);
+  const plan: Plan = new Map();
+  texts.forEach((t, i) => {
+    // 같은 글이 두 번 나오면 앞의 계획에 합친다(두 번째 자리는 이미 본 용어라 비어 있다).
+    plan.set(t, new Set([...(plan.get(t) ?? []), ...sets[i]!]));
+  });
+  return plan;
+}
+function PlannedText({ text, terms, plan }: { text: string; terms: GlossaryTerm[]; plan: Plan }) {
+  return <TermText text={text} terms={terms} only={plan.get(text) ?? new Set()} />;
+}
+
 function NodeBody({ d, terms }: { d: NodeExplanation; terms: GlossaryTerm[] }) {
   const adr = [d.adr.decision, d.adr.reason, d.adr.alternative, d.adr.cost];
+  const plan = makePlan([d.role, d.definition, d.why ?? "", d.compare ?? "", ...adr], terms, d.term ? normalizeTerm(d.term) : undefined);
   return (
     <>
-      <DefinitionPart d={d} terms={terms} />
       <Section title="이 구성에서의 역할">
-        <p className={styles.explainText}><TermText text={d.role} terms={terms} /></p>
+        <p className={styles.explainText}><PlannedText text={d.role} terms={terms} plan={plan} /></p>
       </Section>
-      <Section title="왜 이렇게 짰나요">
-        <dl className={styles.adr}>
-          {ADR_LABELS.map((label, i) => (
-            <div key={label} className={styles.adrRow}>
-              <dt>{label}</dt>
-              <dd><TermText text={adr[i]} terms={terms} /></dd>
-            </div>
-          ))}
-        </dl>
-      </Section>
+      <Details parts={detailParts(d, true)}>
+        <DefinitionPart d={d} terms={terms} plan={plan} />
+        <Section title="왜 이렇게 짰나요">
+          <dl className={styles.adr}>
+            {ADR_LABELS.map((label, i) => (
+              <div key={label} className={styles.adrRow}>
+                <dt>{label}</dt>
+                <dd><PlannedText text={adr[i]} terms={terms} plan={plan} /></dd>
+              </div>
+            ))}
+          </dl>
+        </Section>
+      </Details>
     </>
   );
 }
@@ -168,11 +236,12 @@ function EdgeBody({ d, terms }: { d: EdgeExplanation; terms: GlossaryTerm[] }) {
     ["왜 연결됐나", d.why],
     ["방화벽 규칙", d.firewall],
   ];
+  const plan = makePlan(rows.map(([, v]) => v), terms);
   return (
     <>
       {rows.map(([title, value]) => (
         <Section key={title} title={title}>
-          <p className={styles.explainText}><TermText text={value} terms={terms} /></p>
+          <p className={styles.explainText}><PlannedText text={value} terms={terms} plan={plan} /></p>
         </Section>
       ))}
     </>
@@ -188,16 +257,29 @@ export function Explanation({ status, data, partial, message, terms, onRewrite, 
   // 노드의 사전 정의(만드는 중·실패 때 받아 둔 것).
   const known = !isEdge && partial?.definition ? { ...partial, definition: partial.definition } : null;
 
+  const knownPlan = known ? makePlan([known.definition, known.why ?? "", known.compare ?? ""], terms, known.term ? normalizeTerm(known.term) : undefined) : null;
+  const skeleton = (s: string, i: number) => (
+    <Section key={s} title={s}>
+      <SkeletonLines widths={SLOT_LINES[s] ?? DEFAULT_LINES} start={i * 2} />
+    </Section>
+  );
+
   if (status === "loading") {
-    const slots = isEdge ? ["무엇이 오가나", "방식", "왜 연결됐나", "방화벽 규칙"] : known ? ["이 구성에서의 역할", "왜 이렇게 짰나요"] : ["정의", "이 구성에서의 역할", "왜 이렇게 짰나요"];
+    // 다 만든 설명과 같은 자리: 역할이 맨 위, 정의·왜 이렇게 짰나요는 「자세히」 안. 받아 둔 사전 정의는 그 안에 바로 보인다.
+    const edgeSlots = ["무엇이 오가나", "방식", "왜 연결됐나", "방화벽 규칙"];
     return (
       <div className={styles.explain} aria-busy="true">
-        {known && <DefinitionPart d={known} terms={terms} />}
-        {slots.map((s, i) => (
-          <Section key={s} title={s}>
-            <SkeletonLines widths={SLOT_LINES[s] ?? DEFAULT_LINES} start={i * 2} />
-          </Section>
-        ))}
+        {isEdge ? (
+          edgeSlots.map(skeleton)
+        ) : (
+          <>
+            {skeleton("이 구성에서의 역할", 0)}
+            <Details parts={known ? detailParts(known, true) : ["정의", "왜 이렇게 짰나요"]}>
+              {known && knownPlan ? <DefinitionPart d={known} terms={terms} plan={knownPlan} /> : skeleton("정의", 1)}
+              {skeleton("왜 이렇게 짰나요", 2)}
+            </Details>
+          </>
+        )}
         {/* 알림 한 자리: 평소에는 보조기기에만 "만드는 중", 오래 걸리면 화면에도 보이는 안내로 바뀐다. */}
         <p role="status" className={slow ? styles.slowNote : styles.srOnly}>
           {slow ? SLOW : LOADING}
@@ -209,10 +291,14 @@ export function Explanation({ status, data, partial, message, terms, onRewrite, 
   if (status === "error") {
     return (
       <div className={styles.explain}>
-        {known && <DefinitionPart d={known} terms={terms} />}
         <Section title={known ? "이 구성에서의 역할" : "설명"}>
           <Retry message={message} onRetry={onRetry} busy={busy} />
         </Section>
+        {known && knownPlan && (
+          <Details parts={detailParts(known, false)}>
+            <DefinitionPart d={known} terms={terms} plan={knownPlan} />
+          </Details>
+        )}
       </div>
     );
   }
