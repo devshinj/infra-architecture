@@ -37,6 +37,7 @@ const MEDIA: Readonly<Record<string, EdgeMedium>> = {
   wireless: "wireless", 무선: "wireless", "근거리 무선": "wireless", ble: "wireless", bluetooth: "wireless", 블루투스: "wireless", nfc: "wireless", zigbee: "wireless",
   video: "video", 영상: "video", "영상 스트림": "video", rtsp: "video", stream: "video",
   media: "media", 미디어: "media", "실시간 미디어": "media", webrtc: "media", srtp: "media", rtp: "media",
+  serial: "serial", 직렬: "serial", "유선 직렬": "serial", "rs-485": "serial", rs485: "serial", "rs-232": "serial", rs232: "serial", osdp: "serial", wiegand: "serial", "modbus rtu": "serial",
 };
 
 const ID_FIELDS = ["id", "from", "to", "parent", "target"] as const;

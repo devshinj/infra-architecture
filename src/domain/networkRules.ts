@@ -1,6 +1,6 @@
 // 통신 길 판정: 경계 노드만 거쳐 이어진 길이 두 망 사이의 필요한 방식과 맞는지 본다. 순수 모듈이다.
 import { noLinkKey } from "./assumptions";
-import { BOUNDARY_NODE_KINDS, networkZoneOf } from "./boundary";
+import { BOUNDARY_NODE_KINDS, isLocalLink, networkZoneOf } from "./boundary";
 import { GRADE_LABELS, pairKey, requiredMethod, type NetworkKnowledge } from "./network";
 import type { DiagramState, Warning } from "./types";
 
@@ -39,8 +39,8 @@ export function crossingPaths(state: DiagramState): CrossingPath[] {
   const outgoing = new Map<string, string[]>();
   for (const e of Object.values(state.edges)) {
     if (!state.nodes[e.from] || !state.nodes[e.to]) continue;
-    // 근거리 무선은 망을 거치지 않으므로 망 사이 통신 길로 따라가지 않는다.
-    if (e.medium === "wireless") continue;
+    // 근거리 무선·유선 직렬은 망을 거치지 않으므로 망 사이 통신 길로 따라가지 않는다.
+    if (isLocalLink(e.medium)) continue;
     outgoing.set(e.from, [...(outgoing.get(e.from) ?? []), e.id]);
   }
 

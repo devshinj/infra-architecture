@@ -91,8 +91,8 @@ export const DRAW_RULE_GROUPS = [
 - Kafka/MSK/Kinesis 는 stream, SQS/RabbitMQ 는 queue.
 - CDN, WAF, DNS 처럼 VPC 밖 전역 서비스는 VPC 밖(리전 그룹 또는 최상위)에 둔다.
 - 사용자(client_*)에서 시작하는 진입 연결을 반드시 그린다.
-- medium(통신 수단)은 보통의 IP 통신이 아닐 때만 쓴다: 근거리 무선(BLE·NFC·Zigbee 등)은 wireless, 카메라 영상 스트림(RTSP 등)은 video, 실시간 영상·음성(WebRTC)은 media. 프로토콜 이름은 label 에 적는다(예: "BLE(GATT)", "RTSP", "SRTP/UDP"). video·media 연결은 영상·음성이 흐르는 방향으로 그린다.
-- wireless 연결은 망·방화벽을 거치지 않고 두 기기를 바로 잇는다. BLE·Zigbee·NFC 만 쓰는 기기(iot_device)는 서버에 바로 잇지 않고 휴대폰 앱(client_mobile)이나 iot_gateway 를 거친다.
+- medium(통신 수단)은 보통의 IP 통신이 아닐 때만 쓴다: 근거리 무선(BLE·NFC·Zigbee 등)은 wireless, 카메라 영상 스트림(RTSP 등)은 video, 실시간 영상·음성(WebRTC)은 media, 기기와 컨트롤러를 바로 잇는 RS-485·RS-232 직렬 선(OSDP·Wiegand·Modbus RTU 등)은 serial. 프로토콜 이름은 label 에 적는다(예: "BLE(GATT)", "RTSP", "SRTP/UDP", "OSDP(RS-485)"). video·media 연결은 영상·음성이 흐르는 방향으로 그린다.
+- wireless·serial 연결은 망·방화벽을 거치지 않고 두 기기를 바로 잇는다. BLE·Zigbee·NFC 만 쓰는 기기(iot_device)는 서버에 바로 잇지 않고 휴대폰 앱(client_mobile)이나 iot_gateway 를 거친다.
 - 기기·게이트웨이는 mqtt_broker 로 먼저 건다(기기 → 브로커, 예: "MQTT/TLS 8883"). 브로커에서 기기로 내려가는 연결은 따로 그리지 않는다. 브로커에서 뒤쪽 처리로 가는 연결은 async 다.
 - 카메라(camera)는 video_recorder(NVR·VMS)에 video 로 잇고, 관제 화면(control_display)은 video_recorder 에서 영상을 받는다. 카메라를 관제 화면이나 인터넷에 바로 잇지 않는다. 밖에서 볼 때는 경계 구역의 media_server 를 거친다.
 - 영상 분석·LLM·임베딩 서빙은 model_server 로 그리고 attrs 의 model·gpu 에 값을 쓴다. GPU 를 따로 노드로 만들지 않는다.

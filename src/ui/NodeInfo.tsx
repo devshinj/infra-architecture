@@ -229,7 +229,7 @@ function LinkGuessPart({ nodeId, save }: { nodeId: string; save?: LinkGuessSave 
 
 const PAYLOAD_NAME = { api: "API", file: "파일" } as const;
 const DIRECTION_NAME = { one_way: "단방향", two_way: "양방향" } as const;
-const MEDIUM_NAME = { wireless: "근거리 무선", video: "영상 스트림", media: "실시간 미디어" } as const;
+const MEDIUM_NAME = { wireless: "근거리 무선", video: "영상 스트림", media: "실시간 미디어", serial: "유선 직렬" } as const;
 
 export function NodeInfo({ state, selectedId, onSelect, onMention, mentionDisabled, warningState, explain, ask, flows, linkGuess, ...caution }: NodeInfoProps) {
   const knowledge = useNetworkKnowledge();

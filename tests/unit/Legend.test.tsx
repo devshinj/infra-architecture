@@ -35,10 +35,10 @@ test("legend lists four edge kinds from catalog plus dot, junction and arrow row
   expect(within(list).getByText("움직이는 금색 점: 요청이 흘러가는 방향")).toBeInTheDocument();
   expect(within(list).getByText("작은 점: 여러 연결이 한 줄로 합쳐지는 곳")).toBeInTheDocument();
   expect(within(list).getByText("화살표: 연결이 향하는 쪽")).toBeInTheDocument();
-  // 통신 수단 표지 세 줄(근거리 무선·영상 스트림·실시간 미디어)
-  for (const text of ["근거리 무선", "영상 스트림", "실시간 미디어"]) expect(within(list).getByText(text)).toBeInTheDocument();
-  expect(list.querySelectorAll(".edge-medium")).toHaveLength(3);
-  expect(within(list).getAllByRole("listitem")).toHaveLength(10);
+  // 통신 수단 표지 네 줄(근거리 무선·영상 스트림·실시간 미디어·유선 직렬)
+  for (const text of ["근거리 무선", "영상 스트림", "실시간 미디어", "유선 직렬"]) expect(within(list).getByText(text)).toBeInTheDocument();
+  expect(list.querySelectorAll(".edge-medium")).toHaveLength(4);
+  expect(within(list).getAllByRole("listitem")).toHaveLength(11);
   expect(screen.queryByText("숨김")).toBeNull();
 });
 
