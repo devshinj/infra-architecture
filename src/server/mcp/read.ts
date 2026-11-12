@@ -9,6 +9,8 @@ import { mergeWarnings } from "@/domain/warnings";
 import { baseRuleBlock, COMMAND_EXAMPLES, DRAW_RULES, gradeRuleLines, KIND_BLOCK, networkTypeLines, patternBlock, userRuleLines } from "@/server/drawing/rules";
 import { GRADE_LABELS } from "@/domain/network";
 import { listFlows, type StoredFlow } from "@/server/flows";
+import type { MatchedTerm } from "@/domain/glossaryMatch";
+import { matchUserTerms } from "@/server/glossary";
 import { getNetworkKnowledge } from "@/server/network";
 import {
   createDiagram,
@@ -33,10 +35,11 @@ InfraSketch 는 인프라 구성도를 그리고 고치는 웹 도구예요. 이
 const HOW_TO_USE = `## 쓰는 순서
 
 1. list_projects 로 프로젝트와 구성도를 찾아요. 없으면 create_project 나 create_diagram 으로 만들어요. create_project 는 첫 구성도를 함께 만드니 그 이름은 diagram_name 으로 정하고, 같은 프로젝트에 create_diagram 을 또 부르지 않아요(빈 구성도가 남아요).
-2. get_diagram 으로 구성도를 읽어요. 이때 받은 version 이 base_version 이에요.
-3. apply_commands 로 바꿀 부분만 보내요. base_version 에는 get_diagram 의 version 을 그대로 써요.
-4. 먼저 dry_run 으로 확인할 수 있어요. dry_run 은 검사만 하고 저장하지 않아요.
-5. 구성도가 바뀌었으면 get_diagram 으로 다시 읽고 고쳐요. 그사이 사용자가 브라우저에서 고쳤을 수 있어서, 구성을 바꾸는 명령은 버전이 다르면 저장되지 않아요.
+2. 그리기 전에 사용자 요청 글로 lookup_terms 를 한 번 불러요. 나온 말은 그 뜻대로 그려요(예: 사내에서 정한 장비·망 이름).
+3. get_diagram 으로 구성도를 읽어요. 이때 받은 version 이 base_version 이에요.
+4. apply_commands 로 바꿀 부분만 보내요. base_version 에는 get_diagram 의 version 을 그대로 써요.
+5. 먼저 dry_run 으로 확인할 수 있어요. dry_run 은 검사만 하고 저장하지 않아요.
+6. 구성도가 바뀌었으면 get_diagram 으로 다시 읽고 고쳐요. 그사이 사용자가 브라우저에서 고쳤을 수 있어서, 구성을 바꾸는 명령은 버전이 다르면 저장되지 않아요.
 
 ## 명령 보내는 방식
 
@@ -211,4 +214,9 @@ export async function listVersionsForMcp(userId: string, diagramId: string): Pro
     .orderBy(desc(diagramVersions.number))
     .limit(VERSION_LIST_LIMIT);
   return rows.map((r) => ({ ...r, createdAt: r.createdAt.toISOString() }));
+}
+
+/** 요청 글에 나온 말을 이 계정의 용어 사전에서 찾는다(앱 대화와 같은 매칭, 6개까지). */
+export function lookupTermsForMcp(userId: string, text: string): Promise<MatchedTerm[]> {
+  return matchUserTerms(userId, text);
 }

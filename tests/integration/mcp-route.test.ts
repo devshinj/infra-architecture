@@ -125,7 +125,7 @@ describe("/api/mcp", () => {
     expect((await DELETE()).status).toBe(405);
   });
 
-  test("도구 9개, 설명은 모두 get_guide 안내로 끝난다", async () => {
+  test("도구 10개, 설명은 모두 get_guide 안내로 끝난다", async () => {
     const { key } = await makeUserKey();
     const client = await connect(key);
     const { tools } = await client.listTools();
@@ -139,10 +139,25 @@ describe("/api/mcp", () => {
         "list_diagrams",
         "list_projects",
         "list_versions",
+        "lookup_terms",
         "restore_version",
       ].sort(),
     );
     for (const t of tools) expect(t.description?.endsWith(GUIDE_LINE)).toBe(true);
+  });
+
+  test("lookup_terms: 기본 용어는 정의와 함께, 맞는 말이 없으면 빈 배열", async () => {
+    const { key } = await makeUserKey();
+    const client = await connect(key);
+    const hit = await call(client, "lookup_terms", { text: "Redis 캐시 서버를 앞에 둬 줘" });
+    expect(hit.isError).toBeFalsy();
+    expect(textOf(hit)).toContain("그릴 때 이 뜻을 따라요.");
+    const terms = dataOf<{ term: string; definition: string }[]>(hit);
+    const redis = terms.find((x) => x.term === "Redis");
+    expect(redis?.definition.length).toBeGreaterThan(0);
+    const none = await call(client, "lookup_terms", { text: "zzqq 아무 말도 아닌 글" });
+    expect(none.isError).toBeFalsy();
+    expect(textOf(none)).toBe("용어 사전에 맞는 말이 없어요.\n[]");
   });
 
   test("안내서를 읽는다", async () => {

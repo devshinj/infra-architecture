@@ -14,6 +14,7 @@ import {
   listDiagramsForMcp,
   listProjectsForMcp,
   listVersionsForMcp,
+  lookupTermsForMcp,
 } from "./read";
 
 export const GUIDE_LINE = "InfraSketch에 처음 그리기 전에 get_guide를 먼저 읽으세요.";
@@ -75,6 +76,20 @@ export function createMcpServer(userId: string): McpServer {
       annotations: { readOnlyHint: true },
     },
     () => guarded("list_projects", NO_PROJECT, READ_FAILED, async () => ok("프로젝트 목록이에요.", await listProjectsForMcp(userId))),
+  );
+
+  server.registerTool(
+    "lookup_terms",
+    {
+      description: describe("요청 글에 나온 말을 이 계정의 용어 사전에서 찾아 뜻을 돌려줘요(앱 대화와 같은 방식, 6개까지)."),
+      inputSchema: { text: z.string().min(1).max(2000).describe("사용자 요청 글") },
+      annotations: { readOnlyHint: true },
+    },
+    ({ text }) =>
+      guarded("lookup_terms", NO_DIAGRAM, READ_FAILED, async () => {
+        const terms = await lookupTermsForMcp(userId, text);
+        return terms.length > 0 ? ok(`용어 ${terms.length}개를 찾았어요. 그릴 때 이 뜻을 따라요.`, terms) : ok("용어 사전에 맞는 말이 없어요.", []);
+      }),
   );
 
   server.registerTool(

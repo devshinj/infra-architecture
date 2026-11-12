@@ -21,6 +21,7 @@ describe("buildGuide", () => {
     expect(guide).toContain("흐름을 고치기 전에 get_diagram 으로 최신 흐름");
     expect(guide).toContain("base_version");
     expect(guide).toContain("diagram_name");
+    expect(guide).toContain("lookup_terms");
     expect(guide).toContain("dry_run");
     expect(guide).toContain("배열의 원소");
   });
