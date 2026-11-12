@@ -1,5 +1,7 @@
 import type { AriaLabelConfig } from "@xyflow/react";
 
+import { euro } from "@/domain/josa";
+
 // React Flow 화살표 방향(up·down·left·right) → 읽어 줄 말.
 const DIRECTION: Record<string, string> = { up: "위", down: "아래", left: "왼쪽", right: "오른쪽" };
 
@@ -23,7 +25,7 @@ export function canvasAriaLabels(editMode: boolean): Partial<AriaLabelConfig> {
   return {
     "node.a11yDescription.default": node,
     "node.a11yDescription.keyboardDisabled": node,
-    "node.a11yDescription.ariaLiveMessage": ({ direction, x, y }) => `선택한 노드를 ${DIRECTION[direction] ?? direction}(으)로 옮겼습니다. 새 위치 x ${x}, y ${y}.`,
+    "node.a11yDescription.ariaLiveMessage": ({ direction, x, y }) => `선택한 노드를 ${euro(DIRECTION[direction] ?? direction)} 옮겼습니다. 새 위치 x ${x}, y ${y}.`,
     // 연결선은 React Flow 가 아니라 EdgeLayer 가 그린다(React Flow 연결선 0개). 영어 안내가 남지 않게 비운다.
     "edge.a11yDescription.default": "",
     "controls.ariaLabel": "화면 조절",

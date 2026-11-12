@@ -162,7 +162,7 @@ export function InfoCard({ state, readOnly, busy, open, onOpenChange, scrollToWa
       {open && (
         <div id="info-card-body" className={styles.body}>
           <section className={styles.section} aria-label="가정">
-            <h3 className={styles.heading}>가정</h3>
+            <h2 className={styles.heading}>가정</h2>
             {assumptionCount > 0 ? (
               <AssumptionChips assumptions={state.assumptions} groups={state.groups} busy={busy} readOnly={readOnly} onChoose={onChooseAssumption} onConfirm={onConfirmAssumption} {...(onRemoveNoLink ? { onRemoveNoLink } : {})} />
             ) : (
@@ -170,9 +170,9 @@ export function InfoCard({ state, readOnly, busy, open, onOpenChange, scrollToWa
             )}
           </section>
           <section className={styles.section} aria-label="채워야 할 정보">
-            <h3 className={styles.heading}>
+            <h2 className={styles.heading}>
               채워야 할 정보 <Count n={missing} />
-            </h3>
+            </h2>
             {miss.items.length > 0 ? (
               <MissingChecklist {...checklist} state={state} busy={busy} readOnly={readOnly} {...(zoneType ? { zoneType } : {})} />
             ) : (
@@ -180,9 +180,9 @@ export function InfoCard({ state, readOnly, busy, open, onOpenChange, scrollToWa
             )}
           </section>
           <section ref={warningsRef} className={styles.section} aria-label="주의">
-            <h3 ref={warnHeadRef} tabIndex={-1} className={styles.heading}>
+            <h2 ref={warnHeadRef} tabIndex={-1} className={styles.heading}>
               주의 <Count n={warnings.length} />
-            </h3>
+            </h2>
             {warnings.length > 0 ? (
               <ul className={styles.warnings}>
                 {warnings.map((w) => (

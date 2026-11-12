@@ -79,6 +79,22 @@ export function AuthField({ label, name, type = "text", autoComplete, hint, erro
   );
 }
 
+/**
+ * 양식 전체 오류 한 줄(아이디·비밀번호가 맞지 않아요 등). 자리를 늘 잡아 두어 오류가 나타나도 양식이 밀리거나
+ * 가운데 정렬된 판이 위로 튀지 않는다(DESIGN.md · Inputs "자리를 미리 잡아"). 글이 있을 때만 role=alert 로 알린다.
+ */
+export function FormAlert({ message }: { message?: string | undefined }) {
+  return (
+    <div className={styles.alertSlot}>
+      {message && (
+        <p className={styles.alert} role="alert">
+          {message}
+        </p>
+      )}
+    </div>
+  );
+}
+
 export function AuthSubmit({ pending, label, pendingLabel }: { pending: boolean; label: string; pendingLabel: string }) {
   return (
     <Button type="submit" disabled={pending} aria-busy={pending || undefined} variant="primary" size="lg" block className={styles.submit}>

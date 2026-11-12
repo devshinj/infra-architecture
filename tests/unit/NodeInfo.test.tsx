@@ -163,7 +163,7 @@ const cautionSection = () => screen.getByRole("heading", { name: "주의할 점"
 test("주의할 점 lists text, guide and level", () => {
   render(<NodeInfo state={risky()} selectedId="w" onSelect={vi.fn()} />);
   const sec = cautionSection();
-  expect(within(sec).getByText("웹이(가) 1대뿐이라 멈추면 서비스도 멈춰요.")).toBeInTheDocument();
+  expect(within(sec).getByText("웹이 1대뿐이라 멈추면 서비스도 멈춰요.")).toBeInTheDocument();
   expect(within(sec).getByText("같은 역할 서버를 2대 이상 두고 이중화 묶음(VIP)으로 묶으세요.")).toBeInTheDocument();
   expect(within(sec).getByText("외부에서 보일 수 있어요.")).toBeInTheDocument();
   expect(within(sec).getAllByText("경고")).toHaveLength(2); // spof, no_firewall
@@ -180,7 +180,7 @@ test("no 주의할 점 section without warnings", () => {
 test("의도된 구성 calls onIgnoreWarning(id, true)", async () => {
   const onIgnoreWarning = vi.fn();
   render(<NodeInfo state={risky()} selectedId="w" onSelect={vi.fn()} onIgnoreWarning={onIgnoreWarning} />);
-  const item = screen.getByText("웹이(가) 1대뿐이라 멈추면 서비스도 멈춰요.").closest("li")!;
+  const item = screen.getByText("웹이 1대뿐이라 멈추면 서비스도 멈춰요.").closest("li")!;
   await userEvent.click(within(item).getByRole("button", { name: "의도된 구성" }));
   expect(onIgnoreWarning).toHaveBeenCalledWith("spof:w", true);
 });
@@ -197,7 +197,7 @@ test("ignored list shows 다시 경고", async () => {
   const sec = cautionSection();
   const sub = within(sec).getByRole("heading", { name: "의도된 구성으로 표시함" });
   const ignoredList = sub.nextElementSibling as HTMLElement;
-  expect(within(ignoredList).getByText("웹이(가) 1대뿐이라 멈추면 서비스도 멈춰요.")).toBeInTheDocument();
+  expect(within(ignoredList).getByText("웹이 1대뿐이라 멈추면 서비스도 멈춰요.")).toBeInTheDocument();
   await userEvent.click(within(ignoredList).getByRole("button", { name: "다시 경고" }));
   expect(onIgnoreWarning).toHaveBeenCalledWith("spof:w", false);
   expect(within(sec).getAllByRole("button", { name: "의도된 구성" })).toHaveLength(2);
@@ -206,7 +206,7 @@ test("ignored list shows 다시 경고", async () => {
 test("edge selection shows its warning", () => {
   render(<NodeInfo state={risky()} selectedId="e1" onSelect={vi.fn()} onIgnoreWarning={vi.fn()} />);
   const sec = cautionSection();
-  expect(within(sec).getByText("사용자에서 웹(으)로 바로 들어와요.")).toBeInTheDocument();
+  expect(within(sec).getByText("사용자에서 웹으로 바로 들어와요.")).toBeInTheDocument();
   expect(within(sec).queryByText(/1대뿐/)).not.toBeInTheDocument();
   expect(within(sec).getByRole("button", { name: "의도된 구성" })).toBeInTheDocument();
 });

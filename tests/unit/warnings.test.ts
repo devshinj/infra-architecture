@@ -86,9 +86,9 @@ test("cache without any db warns, with db does not", () => {
 
 test("labels are filled into the template", () => {
   const s = build([node("db", "db_rdb", "주 DB", "pub")], [["pub", "dmz", null]]);
-  expect(evaluateRules(s).find((w) => w.id === "db_public:db")!.text).toBe("주 DB이(가) 공개 구역에 있어요.");
+  expect(evaluateRules(s).find((w) => w.id === "db_public:db")!.text).toBe("주 DB가 공개 구역에 있어요.");
   const e = build([node("c", "client_web", "사용자"), node("w", "was", "WAS")], [], [["e1", "c", "w", "async"]]);
-  expect(evaluateRules(e).find((w) => w.rule === "no_firewall")!.text).toBe("사용자에서 WAS(으)로 바로 들어와요.");
+  expect(evaluateRules(e).find((w) => w.rule === "no_firewall")!.text).toBe("사용자에서 WAS로 바로 들어와요.");
 });
 
 test("db_exposed is Clef-only and exports instructions", () => {
@@ -141,7 +141,7 @@ const zoned = (edges: [string, string, string, "request" | "async" | "aux"][]) =
 test("network_direct warns on WAS(업무망) → API(인터넷망) direct edge", () => {
   const s = zoned([["e", "was", "api", "request"]]);
   const w = evaluateRules(s).find((x) => x.rule === "network_direct");
-  expect(w).toMatchObject({ id: "network_direct:e", nodeId: "api", edgeId: "e", level: "warn", text: "WAS에서 API(으)로 망을 바로 넘어가요." });
+  expect(w).toMatchObject({ id: "network_direct:e", nodeId: "api", edgeId: "e", level: "warn", text: "WAS에서 API로 망을 바로 넘어가요." });
   expect(w?.guide).toBe("서로 다른 망 사이 통신은 방화벽·망연계 솔루션·VPN 을 거치게 그리세요.");
   expect(RULES.find((r) => r.rule === "network_direct")?.patternId).toBeTruthy();
 });
@@ -170,9 +170,9 @@ test("pass-through node with any edge, or a non pass-through node alone, does no
 
 test("spof text says 1대뿐 only when it is the only node of its kind; otherwise it is outside the redundancy group", () => {
   const text = (s: DiagramState, id: string) => evaluateRules(s).find((w) => w.id === `spof:${id}`)?.text;
-  expect(text(build([node("w", "was", "WAS")]), "w")).toBe("WAS이(가) 1대뿐이라 멈추면 서비스도 멈춰요.");
+  expect(text(build([node("w", "was", "WAS")]), "w")).toBe("WAS가 1대뿐이라 멈추면 서비스도 멈춰요.");
   const two = build([node("w1", "was", "WAS #1"), node("w2", "was", "WAS #2")]);
-  expect(text(two, "w1")).toBe("WAS #1이(가) 이중화 묶음(VIP)에 들어 있지 않아 멈춰도 대신할 서버로 넘어가지 않아요.");
+  expect(text(two, "w1")).toBe("WAS #1이 이중화 묶음(VIP)에 들어 있지 않아 멈춰도 대신할 서버로 넘어가지 않아요.");
   // 같은 종류가 묶음 안에 있어도, 밖에 있는 노드는 묶음에 없다고 알린다.
   const mixed = build([node("w1", "was", "WAS #1", "r"), node("w2", "was", "WAS #2")], [["r", "redundancy_group", null]]);
   expect(text(mixed, "w2")).toContain("이중화 묶음(VIP)에 들어 있지 않아");
@@ -240,8 +240,8 @@ test("managed is read from the product name when the field is empty (diagrams sa
 test("managed DB/cache: multi_az yes is fine, no warns, unknown is a check", () => {
   const db = (attrs: DNode["attrs"]) => build([withAttrs(node("d", "db_rdb", "RDS", "priv"), { managed: "yes", ...attrs })], cloud);
   expect(ids(db({ multi_az: "yes" }))).toEqual([]);
-  expect(warnOf(db({ multi_az: "no" }), "multi_az:d")).toMatchObject({ level: "warn", text: "RDS이(가) 한 AZ 에만 있어 그 AZ 가 멈추면 데이터도 쓸 수 없어요." });
-  expect(warnOf(db({}), "multi_az:d")).toMatchObject({ level: "check", text: "RDS이(가) 여러 AZ 에 복제(Multi-AZ)되는지 알 수 없어요." });
+  expect(warnOf(db({ multi_az: "no" }), "multi_az:d")).toMatchObject({ level: "warn", text: "RDS가 한 AZ 에만 있어 그 AZ 가 멈추면 데이터도 쓸 수 없어요." });
+  expect(warnOf(db({}), "multi_az:d")).toMatchObject({ level: "check", text: "RDS가 여러 AZ 에 복제(Multi-AZ)되는지 알 수 없어요." });
   const cache = build([withAttrs(node("c", "cache", "ElastiCache", "priv"), { managed: "예", multi_az: null })], cloud);
   expect(warnOf(cache, "multi_az:c")!.level).toBe("check");
 });
@@ -249,7 +249,7 @@ test("managed DB/cache: multi_az yes is fine, no warns, unknown is a check", () 
 test("self-run cloud server outside a group warns spof_cloud with the AZ guide", () => {
   const s = build([node("w", "was", "Admin App", "priv")], cloud);
   const w = warnOf(s, "spof_cloud:w")!;
-  expect(w.text).toBe("Admin App이(가) 1대뿐이라 멈추면 서비스도 멈춰요.");
+  expect(w.text).toBe("Admin App이 1대뿐이라 멈추면 서비스도 멈춰요.");
   expect(w.guide).toContain("서로 다른 AZ");
   expect(w.guide).not.toContain("VIP");
   expect(ids(s)).not.toContain("spof:w");

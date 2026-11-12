@@ -173,5 +173,6 @@ test("app layout wraps page content in a main landmark (resizer and glossary too
   const src = readFileSync(`${process.cwd()}/src/app/(app)/layout.tsx`, "utf8");
   expect(src).toContain("<ShellMain>{children}</ShellMain>");
   const main = readFileSync(`${process.cwd()}/src/ui/ShellMain.tsx`, "utf8");
-  expect(main).toContain("<main className={styles.main}");
+  // 「본문으로 건너뛰기」 도착점이라 id 와 tabIndex -1 을 가진다.
+  expect(main).toContain("<main id={MAIN_ID} tabIndex={-1} className={styles.main}");
 });

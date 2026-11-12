@@ -1514,3 +1514,24 @@ test("바뀐 곳 보기 frames the changed nodes and its 추가 n button steps t
   expect(screen.getByRole("button", { name: "삭제 0" })).toBeDisabled();
   hookState.lines = [];
 });
+
+test("inside the shell, 대화로·캔버스로 건너뛰기 go into the shell's skip slot (before the sidebar)", () => {
+  hookState.busy = false;
+  const slot = document.createElement("div");
+  slot.id = "skip-links";
+  const sidebar = document.createElement("nav");
+  sidebar.innerHTML = "<button>프로젝트</button>";
+  document.body.prepend(sidebar);
+  document.body.prepend(slot);
+  try {
+    render(ui(mk(1, ["a"])));
+    const inSlot = [...slot.querySelectorAll("button")].map((b) => b.textContent);
+    expect(inSlot).toEqual(["대화로 건너뛰기", "캔버스로 건너뛰기"]);
+    // 문서 차례에서 사이드바보다 앞이다(첫 Tab 칸).
+    const all = [...document.querySelectorAll("button")];
+    expect(all.indexOf(slot.querySelector("button")!)).toBeLessThan(all.indexOf(sidebar.querySelector("button")!));
+  } finally {
+    slot.remove();
+    sidebar.remove();
+  }
+});

@@ -140,9 +140,15 @@
 .error { margin: 0; color: var(--state-missing-text); font-size: 12px; }
 
 .workspace { position: relative; height: 100%; min-height: 0; }
-/* 대화로 건너뛰기: 키보드 포커스를 받기 전에는 숨기고(보조기기는 읽는다), 받으면 캔버스 왼쪽 위에 떠 있는 판 단추로 보인다. */
+/*
+ * 건너뛰기(셸 맨 앞 자리): 키보드 포커스를 받기 전에는 숨기고(보조기기는 읽는다), 받으면 사이드바 바로 옆 위에 떠 있는 판 단추로 보인다.
+ * 구성도 화면이 자기 건너뛰기(대화·캔버스)를 넣으면 기본 「본문으로 건너뛰기」는 뺀다.
+ */
+.skipSlot { display: contents; }
+.skipSlot:has(.skipCustom) .skipDefault { display: none; }
 .skipLink {
-  position: absolute; z-index: 60; top: var(--panel-gap); left: calc(max(var(--panel-gap), var(--canvas-inset-left, 0px)) + var(--safe-l, 0px));
+  position: fixed; z-index: 60; top: calc(var(--panel-gap) + var(--safe-t, 0px)); left: calc(var(--shell-inset-left, 0px) + var(--panel-gap) + var(--safe-l, 0px));
+  text-decoration: none;
   font: inherit; font-size: 13px; font-weight: 600; color: var(--text-primary); white-space: nowrap; cursor: pointer;
   padding: 8px 16px; min-height: 36px; border-radius: var(--radius-control);
   background: var(--glass-bg); border: 1px solid var(--glass-line);

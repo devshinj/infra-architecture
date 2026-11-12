@@ -155,7 +155,7 @@ export function Legend({ hideAux, empty = false, bottom, onMeasure }: LegendProp
       </button>
       {open && (
         <div id="legend-body" className={styles.body}>
-          <h3 className={styles.heading}>연결 범례</h3>
+          <h2 className={styles.heading}>연결 범례</h2>
           <ul className={styles.list}>
             {EDGE_KINDS.map((k) => (
               <li key={k.kind} className={styles.row}>
@@ -178,7 +178,7 @@ export function Legend({ hideAux, empty = false, bottom, onMeasure }: LegendProp
                 <path className="edge-line edge-line--request" d="M3 7H37" />
                 <path className="motion-path motion-comet--head" d="M22 7H28" />
               </svg>
-              <span className={styles.text}>움직이는 금색 점: 요청이 흘러가는 방향</span>
+              <span className={styles.text}>움직이는 연두 점: 요청이 흘러가는 방향</span>
             </li>
             <li className={styles.row}>
               <svg className={styles.sample} width={40} height={14} viewBox="0 0 40 14" aria-hidden="true">

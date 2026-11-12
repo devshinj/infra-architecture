@@ -1,5 +1,6 @@
 import { isDirectCrossing } from "./boundary";
 import { categoryOf } from "./catalog";
+import { eulReul, euro, iGa } from "./josa";
 import { isManaged, MULTI_AZ_KINDS, yesNo } from "./managed";
 import type { NetworkKnowledge } from "./network";
 import { evaluateNetworkRules, LINK_RULES } from "./networkRules";
@@ -85,7 +86,7 @@ export const RULES: Rule[] = [
     rule: "db_public",
     level: "warn",
     patternId: "web-was-db",
-    template: (_s, { node }) => `${node.label}이(가) 공개 구역에 있어요.`,
+    template: (_s, { node }) => `${iGa(node.label)} 공개 구역에 있어요.`,
     guide: "DB·캐시는 내부 구역에 두고 WAS 를 거쳐서만 접근하게 하세요.",
   },
   {
@@ -95,8 +96,8 @@ export const RULES: Rule[] = [
     // 온프레미스(클라우드 영역 밖) 규칙: "이중화 묶음(VIP) 밖"이다.
     template: (s, { node }) =>
       hasPeer(s, node)
-        ? `${node.label}이(가) 이중화 묶음(VIP)에 들어 있지 않아 멈춰도 대신할 서버로 넘어가지 않아요.`
-        : `${node.label}이(가) 1대뿐이라 멈추면 서비스도 멈춰요.`,
+        ? `${iGa(node.label)} 이중화 묶음(VIP)에 들어 있지 않아 멈춰도 대신할 서버로 넘어가지 않아요.`
+        : `${iGa(node.label)} 1대뿐이라 멈추면 서비스도 멈춰요.`,
     guide: "같은 역할 서버를 2대 이상 두고 이중화 묶음(VIP)으로 묶으세요.",
   },
   {
@@ -106,8 +107,8 @@ export const RULES: Rule[] = [
     // 클라우드에서 직접 운영하는 서버가 묶음(Auto Scaling·대상 그룹) 밖에 있다. 관리형은 여기 오지 않는다.
     template: (s, { node }) =>
       hasPeer(s, node)
-        ? `${node.label}이(가) 같은 역할 서버 묶음에 들어 있지 않아 멈춰도 대신할 서버로 넘어가지 않아요.`
-        : `${node.label}이(가) 1대뿐이라 멈추면 서비스도 멈춰요.`,
+        ? `${iGa(node.label)} 같은 역할 서버 묶음에 들어 있지 않아 멈춰도 대신할 서버로 넘어가지 않아요.`
+        : `${iGa(node.label)} 1대뿐이라 멈추면 서비스도 멈춰요.`,
     guide: "같은 역할 서버를 2대 이상 서로 다른 AZ 에 두고 Auto Scaling 그룹(대상 그룹)으로 묶으세요.",
   },
   {
@@ -131,15 +132,15 @@ export const RULES: Rule[] = [
     patternId: "dr",
     template: (_s, { node }) =>
       yesNo(node.attrs.multi_az) === "no"
-        ? `${node.label}이(가) 한 AZ 에만 있어 그 AZ 가 멈추면 데이터도 쓸 수 없어요.`
-        : `${node.label}이(가) 여러 AZ 에 복제(Multi-AZ)되는지 알 수 없어요.`,
+        ? `${iGa(node.label)} 한 AZ 에만 있어 그 AZ 가 멈추면 데이터도 쓸 수 없어요.`
+        : `${iGa(node.label)} 여러 AZ 에 복제(Multi-AZ)되는지 알 수 없어요.`,
     guide: "관리형 DB·캐시는 Multi-AZ(다른 AZ 의 대기 복제본)를 켜고, 노드의 Multi-AZ 칸에 적으세요.",
   },
   {
     rule: "no_firewall",
     level: "warn",
     patternId: "lb-autoscale",
-    template: (s, { node, edge }) => `${edge ? (s.nodes[edge.from]?.label ?? edge.from) : ""}에서 ${node.label}(으)로 바로 들어와요.`,
+    template: (s, { node, edge }) => `${edge ? (s.nodes[edge.from]?.label ?? edge.from) : ""}에서 ${euro(node.label)} 바로 들어와요.`,
     guide: "외부 요청은 WAF·방화벽·로드밸런서를 거쳐 내부로 들어오게 하세요.",
   },
   {
@@ -153,7 +154,7 @@ export const RULES: Rule[] = [
     rule: "db_exposed",
     level: "warn",
     patternId: "web-was-db",
-    template: (_s, { node }) => `${node.label}이(가) 외부에서 직접 접근될 수 있어 보여요.`,
+    template: (_s, { node }) => `${iGa(node.label)} 외부에서 직접 접근될 수 있어 보여요.`,
     guide: "DB 는 내부 구역에 두고, 외부와의 연결은 WAS 나 API 게이트웨이를 거치게 하세요.",
     instructions: "이 저장소가 인터넷(외부 사용자·외부 서비스)에서 방화벽 없이 직접 접근 가능한 위치에 있거나 그렇게 연결돼 있는가?",
   },
@@ -161,14 +162,14 @@ export const RULES: Rule[] = [
     rule: "network_direct",
     level: "warn",
     patternId: "external",
-    template: (s, { node, edge }) => `${edge ? (s.nodes[edge.from]?.label ?? edge.from) : ""}에서 ${node.label}(으)로 망을 바로 넘어가요.`,
+    template: (s, { node, edge }) => `${edge ? (s.nodes[edge.from]?.label ?? edge.from) : ""}에서 ${euro(node.label)} 망을 바로 넘어가요.`,
     guide: "서로 다른 망 사이 통신은 방화벽·망연계 솔루션·VPN 을 거치게 그리세요.",
   },
   {
     rule: "unused_passthrough",
     level: "warn",
     patternId: "external",
-    template: (_s, { node }) => `${node.label}을(를) 지나는 연결이 없어 아무 통신도 거치지 않아요.`,
+    template: (_s, { node }) => `${eulReul(node.label)} 지나는 연결이 없어 아무 통신도 거치지 않아요.`,
     guide: "지켜야 할 통신이 이 노드를 거치게 이어 주세요(예: 웹 서버 → 방화벽 → WAS).",
   },
 ];

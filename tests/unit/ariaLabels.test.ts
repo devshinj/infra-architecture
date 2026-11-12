@@ -26,7 +26,7 @@ test("canvasAriaLabels replaces every React Flow default label with Korean text"
   expect(canvasAriaLabels(false)["node.a11yDescription.keyboardDisabled"]).not.toContain("옮길 수 있습니다");
   expect(canvasAriaLabels(true)["node.a11yDescription.keyboardDisabled"]).toContain("선택한 노드를 화살표 키로 옮길 수 있습니다");
   const live = canvasAriaLabels(true)["node.a11yDescription.ariaLiveMessage"]!;
-  expect(live({ direction: "up", x: 5, y: 7 })).toBe("선택한 노드를 위(으)로 옮겼습니다. 새 위치 x 5, y 7.");
+  expect(live({ direction: "up", x: 5, y: 7 })).toBe("선택한 노드를 위로 옮겼습니다. 새 위치 x 5, y 7.");
 });
 
 test("zone description: Space folds or unfolds, Enter clears the selection, arrows move focus", () => {

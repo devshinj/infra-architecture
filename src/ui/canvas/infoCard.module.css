@@ -84,7 +84,8 @@
 .warning:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: -1px; }
 .level { flex: none; font-size: 12px; line-height: 1.5; padding: 0 4px; border: 1px solid var(--state-warn); border-radius: var(--radius-pill); color: var(--text-primary); }
 .warning[data-level="check"] .level { border-color: var(--line-node); color: var(--text-secondary); }
-.warnText { min-width: 0; font-size: 13px; line-height: 1.5; }
+/* 어절 단위로 줄을 바꾼다("멈춰 / 요." 처럼 한 글자만 넘어가지 않게). */
+.warnText { min-width: 0; font-size: 13px; line-height: 1.5; word-break: keep-all; overflow-wrap: anywhere; }
 
 @media (prefers-reduced-motion: no-preference) {
   .chevron { transition: transform var(--dur-micro) var(--ease-out); }

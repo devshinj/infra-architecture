@@ -3,6 +3,7 @@ import { and, asc, eq, ilike, or, sql } from "drizzle-orm";
 import { db } from "@/db/client";
 import { glossaryTerms } from "@/db/schema";
 import { normalizeTerm, pickTerm } from "@/domain/explain";
+import { eunNeun } from "@/domain/josa";
 import { matchGlossaryTerms, type MatchedTerm } from "@/domain/glossaryMatch";
 import { GLOSSARY_SEED_CORE } from "@/domain/glossary-seed";
 import { GLOSSARY_SEED_BATCH3 } from "@/domain/glossary-seed-batch3";
@@ -194,7 +195,7 @@ export async function updateTerm(userId: string, id: string, patch: TermPatch): 
     const s = v.trim();
     const len = [...s].length;
     if (len < min || len > max) {
-      throw new ValidationError(min ? `${name}은(는) ${min}~${max}자로 입력해 주세요` : `${name}은(는) ${max}자 이내로 입력해 주세요`);
+      throw new ValidationError(min ? `${eunNeun(name)} ${min}~${max}자로 입력해 주세요` : `${eunNeun(name)} ${max}자 이내로 입력해 주세요`);
     }
     set[field] = s;
   }

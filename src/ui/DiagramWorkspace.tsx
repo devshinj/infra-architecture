@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
+import { createPortal } from "react-dom";
 
 import {
   clearPinnedAction,
@@ -20,6 +21,7 @@ import { defaultDisplayOptions } from "@/canvas/display";
 import { applyCommand } from "@/domain/apply";
 import { assumptionChangeMessage, confirmAssumption } from "@/domain/assumptions";
 import { isFlowCommand } from "@/domain/commands";
+import { gwaWa } from "@/domain/josa";
 import { diffStates } from "@/domain/diff";
 import { checkFlow } from "@/domain/flows";
 import type { NetworkKnowledge } from "@/domain/network";
@@ -43,7 +45,7 @@ import type { FlowPanelProps } from "./flows/FlowPanel";
 import { useFlows } from "./flows/useFlows";
 import { MOBILE_VIEWS, MobileTabBar, type MobileView, mobileTabId } from "./MobileTabBar";
 import { PANEL_DEFAULT, PANEL_MAX, PANEL_MIN, PANEL_MIN_COMPACT, PanelResizer } from "./PanelResizer";
-import { PANEL_GAP, useShell } from "./Shell";
+import { PANEL_GAP, SKIP_SLOT_ID, useShell } from "./Shell";
 import { RIGHT_PANEL_BODY_ID, RightPanel, type Tab } from "./RightPanel";
 import { NetworkKnowledgeProvider } from "./network/NetworkKnowledgeContext";
 import { PARTIAL_UNDO } from "./NodeInfo";
@@ -616,6 +618,18 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
     showTab("대화");
     setSkipPending(true);
   };
+  // 캔버스로 건너뛰기: 캔버스의 Tab 칸(고른 노드·마지막 노드, 없으면 첫 노드)으로. 좁은 화면이면 구성도 탭으로 먼저 간다.
+  const skipToCanvas = () => {
+    if (narrow) setPanelShown(false);
+    requestAnimationFrame(() => {
+      const root = document.getElementById(CANVAS_ID);
+      const stop = root?.querySelector<HTMLElement>('.react-flow__node[tabindex="0"]') ?? root?.querySelector<HTMLElement>(".canvas__flow");
+      stop?.focus();
+    });
+  };
+  // 셸 맨 앞 건너뛰기 자리(Shell). 마운트 뒤에 찾아 포털로 넣는다.
+  const [skipSlot, setSkipSlot] = useState<HTMLElement | null>(null);
+  useEffect(() => setSkipSlot(document.getElementById(SKIP_SLOT_ID)), []);
   useEffect(() => {
     if (!skipPending || tab !== "대화") return;
     setSkipPending(false);
@@ -1007,7 +1021,7 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
     mode.kind === "view"
       ? `v${mode.number} 보는 중`
       : mode.kind === "compare"
-        ? `v${mode.number}과 현재 비교 중`
+        ? `${gwaWa(`v${mode.number}`)} 현재 비교 중`
         : null;
 
   return (
@@ -1019,10 +1033,21 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
         data-mview={panelShown ? "panel" : "canvas"}
         style={{ "--canvas-inset-left": `${insetLeft}px`, "--canvas-inset-right": `${insetRight}px` } as React.CSSProperties}
       >
-        {/* 구성도 화면의 첫 Tab 칸: 캔버스 도구·노드를 건너뛰어 대화 입력으로. 포커스를 받을 때만 보인다. */}
-        <button type="button" className={styles.skipLink} onClick={skipToChat}>
-          대화로 건너뛰기
-        </button>
+        {/* 화면의 첫 Tab 칸들(셸 맨 앞, 사이드바보다 앞): 대화 입력으로, 캔버스로. 포커스를 받을 때만 보인다.
+            자리가 아직 없으면(첫 렌더) 이 자리에 그대로 둔다. */}
+        {(() => {
+          const links = (
+            <>
+              <button type="button" className={`${styles.skipLink} ${styles.skipCustom}`} onClick={skipToChat}>
+                대화로 건너뛰기
+              </button>
+              <button type="button" className={`${styles.skipLink} ${styles.skipCustom}`} onClick={skipToCanvas}>
+                캔버스로 건너뛰기
+              </button>
+            </>
+          );
+          return skipSlot ? createPortal(links, skipSlot) : links;
+        })()}
         <section id={CANVAS_ID} className={styles.center} aria-label={name} {...(narrow ? { role: "tabpanel", "aria-labelledby": mobileTabId("구성도") } : {})}>
           {/* 화면에 보이는 구성도 제목이 없어 보조기기용 제목만 둔다. */}
           <h1 className={styles.srOnly}>{name}</h1>

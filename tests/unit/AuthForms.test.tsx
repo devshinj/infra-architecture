@@ -144,6 +144,24 @@ describe("login", () => {
     await waitFor(() => expect(screen.getByLabelText("비밀번호")).toHaveFocus());
   });
 
+  test("the form error has a reserved slot right above the submit button, so the alert does not push the form", async () => {
+    actions.loginAction.mockResolvedValue({ errors: { form: MESSAGES.loginFailed } });
+    const user = userEvent.setup();
+    render(<LoginForm />);
+    const submit = screen.getByRole("button", { name: "로그인" });
+    const slot = submit.previousElementSibling!;
+    // 오류 전에도 자리가 있다(비어 있음).
+    expect(slot.tagName).toBe("DIV");
+    expect(slot).toBeEmptyDOMElement();
+    await user.type(screen.getByLabelText("아이디"), "jae");
+    await user.type(screen.getByLabelText("비밀번호"), "wrongpass");
+    await user.click(submit);
+    // 같은 자리에 알림이 들어간다(새 요소가 끼어들지 않는다).
+    expect(await screen.findByRole("alert")).toHaveTextContent(MESSAGES.loginFailed);
+    expect(screen.getByRole("alert").parentElement).toBe(slot);
+    expect(submit.previousElementSibling).toBe(slot);
+  });
+
   test("shows a notice passed from another screen and keeps the links", () => {
     render(<LoginForm notice="비밀번호를 바꿨어요. 새 비밀번호로 로그인해 주세요." />);
     expect(screen.getByRole("status")).toHaveTextContent("비밀번호를 바꿨어요");

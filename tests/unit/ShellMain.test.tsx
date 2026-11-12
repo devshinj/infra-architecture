@@ -36,3 +36,16 @@ test("while navigating to another diagram the main area shows the workspace skel
   expect(main).not.toHaveAttribute("data-navigating");
   expect(screen.queryByRole("status")).not.toBeInTheDocument();
 });
+
+test("the shell's first tab stop is 본문으로 건너뛰기, pointing at the focusable main area", () => {
+  render(
+    <ShellProvider>
+      <nav><button>사이드바</button></nav>
+      <ShellMain><p>본문</p></ShellMain>
+    </ShellProvider>,
+  );
+  const links = [...document.querySelectorAll("a, button")];
+  expect(links[0]).toHaveTextContent("본문으로 건너뛰기");
+  expect(links[0]).toHaveAttribute("href", "#main");
+  expect(document.getElementById("main")).toHaveAttribute("tabindex", "-1");
+});

@@ -364,14 +364,14 @@ describe("buildMessages", () => {
     for (const intent of ["structure_change", "question", null] as const) {
       const user = buildMessages({ intent, text: "x", state: s, mentions: [], history: [] }).at(-1)!.content;
       expect(user).toContain("현재 경고:\n- ");
-      expect(user.split("\n")).toContain(`- fw ${JSON.stringify("경계 방화벽을(를) 지나는 연결이 없어 아무 통신도 거치지 않아요.")}`);
+      expect(user.split("\n")).toContain(`- fw ${JSON.stringify("경계 방화벽을 지나는 연결이 없어 아무 통신도 거치지 않아요.")}`);
       expect(user.indexOf("현재 경고:")).toBeGreaterThan(user.indexOf("현재 구성:"));
       expect(user.indexOf("현재 경고:")).toBeLessThan(user.indexOf("참조 노드:"));
     }
     const ignored = { ...s, ignoredWarnings: ["unused_passthrough:fw"] };
     const user = buildMessages({ intent: null, text: "x", state: ignored, mentions: [], history: [] }).at(-1)!.content;
     expect(user).not.toContain("unused_passthrough");
-    expect(user).not.toContain("경계 방화벽을(를) 지나는");
+    expect(user).not.toContain("경계 방화벽을 지나는");
   });
 
   test("warning lines name the edge when the warning is about an edge", () => {

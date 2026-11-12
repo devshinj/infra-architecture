@@ -805,7 +805,7 @@ describe("runChatTurn", () => {
       JSON.stringify({ op: "add_group", id: "pub", group_kind: "subnet_public", label: "공개", parent: null }),
       JSON.stringify({ op: "add_node", id: "db-1", kind: "db_rdb", label: "DB", parent: "pub" }),
     ];
-    const TEMPLATE = "DB이(가) 공개 구역에 있어요.";
+    const TEMPLATE = "DB가 공개 구역에 있어요.";
 
     /** 첫 호출은 명령 줄, 둘째 호출(경고 문구)은 문구 줄을 흘리는 가짜 Qwen. */
     function seqQwen(first: string, second: string): QwenClient & { calls: ChatMessage[][] } {
