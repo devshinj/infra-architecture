@@ -22,6 +22,7 @@ import { displayEdgeFor, outermostCollapsedAncestor, type DisplayGraph, type Dis
 import type { Layout, Rect } from "./layout";
 import { NodeMenu } from "./NodeMenu";
 import { nodeTypes } from "./nodeTypes";
+import { offscreenHints, type OffscreenTarget } from "./offscreen";
 import { NAV_KEYS, navItems, readingOrder, step, tabStop } from "./roving";
 import { NODE_Z, zoneZ } from "./stacking";
 import { prefersReducedMotion, unionRect, useCamera, type Insets, type Viewport } from "./useCamera";
@@ -131,6 +132,7 @@ const Icon = ({ children }: { children: React.ReactNode }) => (
 const IconEye = () => <Icon><path d="M1.5 8s2.4-4.5 6.5-4.5S14.5 8 14.5 8 12.1 12.5 8 12.5 1.5 8 1.5 8Z" /><circle cx="8" cy="8" r="1.8" /></Icon>;
 const IconMove = () => <Icon><path d="M8 1.5v13M1.5 8h13M8 1.5 6.2 3.3M8 1.5l1.8 1.8M8 14.5l-1.8-1.8M8 14.5l1.8-1.8M1.5 8l1.8-1.8M1.5 8l1.8 1.8M14.5 8l-1.8-1.8M14.5 8l-1.8 1.8" /></Icon>;
 const IconArrange = () => <Icon><rect x="2" y="2" width="5" height="4" rx="1" /><rect x="9" y="2" width="5" height="4" rx="1" /><rect x="5.5" y="10" width="5" height="4" rx="1" /><path d="M4.5 6v2h7V6M8 8v2" /></Icon>;
+const IconArrow = ({ left = false }: { left?: boolean }) => <Icon>{left ? <path d="M13.5 8h-11M6.5 4 2.5 8l4 4" /> : <path d="M2.5 8h11M9.5 4l4 4-4 4" />}</Icon>;
 const IconFit = () => <Icon><path d="M2 5.5V2h3.5M10.5 2H14v3.5M14 10.5V14h-3.5M5.5 14H2v-3.5" /></Icon>;
 const IconFlow = () => <Icon><path d="M1.5 8h3l2-4 3 8 2-4h3" /></Icon>;
 const IconChevron = () => <svg className="canvas__tool-chevron" width="8" height="8" viewBox="0 0 8 8" aria-hidden="true" focusable="false" {...stroke}><path d="M1.5 3 4 5.5 6.5 3" /></svg>;
@@ -300,6 +302,34 @@ function ZoomVar({ target }: { target: React.RefObject<HTMLDivElement | null> })
     target.current?.style.setProperty("--zoom", String(zoom));
   }, [zoom, target]);
   return null;
+}
+
+/**
+ * 보이는 띠 밖으로 나간 외부 서비스 열을 띠 가장자리에 「외부 서비스 2 →」로 알린다. 누르면 그 묶음으로 간다(위치 보기).
+ * 화면 이동마다 바뀌므로 이 컴포넌트만 뷰포트를 구독한다.
+ */
+function OffscreenHints({ targets, size, insets, onGo }: { targets: OffscreenTarget[]; size: { width: number; height: number }; insets: Insets; onGo(r: Rect): void }) {
+  const [x, y, zoom] = useStore((s) => s.transform);
+  const hints = useMemo(() => offscreenHints(targets, { x, y, zoom }, size, insets), [targets, x, y, zoom, size, insets]);
+  return (
+    <>
+      {hints.map((h) => (
+        <button
+          key={h.side}
+          type="button"
+          className="canvas__offscreen"
+          data-side={h.side}
+          style={h.side === "right" ? { right: insets.right + 8, top: h.y } : { left: insets.left + 8, top: h.y }}
+          aria-label={`${h.text}개, 화면 ${h.side === "right" ? "오른쪽" : "왼쪽"} 밖. 누르면 그쪽으로 이동`}
+          onClick={() => onGo(h.rect)}
+        >
+          {h.side === "left" && <IconArrow left />}
+          <span>{h.text}</span>
+          {h.side === "right" && <IconArrow />}
+        </button>
+      ))}
+    </>
+  );
 }
 
 interface FlowProps extends CanvasProps {
@@ -528,6 +558,27 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
     getViewport,
     setViewport: applyViewport,
   });
+  // 오른쪽 외부 서비스 열(맨 위 external_service 영역): 띠 밖으로 나가면 가장자리에 방향 표시를 띄운다.
+  const laneTargets = useMemo<OffscreenTarget[]>(() => {
+    const inside = (nodeParent: string | null, groupId: string) => {
+      const seen = new Set<string>();
+      for (let p = nodeParent; p !== null && !seen.has(p); p = state.groups[p]?.parent ?? null) {
+        if (p === groupId) return true;
+        seen.add(p);
+      }
+      return false;
+    };
+    return Object.values(display.groups)
+      .filter((g) => g.parent === null && g.groupKind === "external_service" && layout.groups[g.id])
+      .map((g) => ({
+        id: g.id,
+        label: g.label,
+        count: g.collapsed ? g.hiddenCount : Object.values(state.nodes).filter((n) => inside(n.parent, g.id)).length,
+        rect: layout.groups[g.id]!,
+      }))
+      .filter((t) => t.count > 0);
+  }, [display.groups, layout.groups, state.nodes, state.groups]);
+  const canvasSize = useMemo(() => ({ width, height }), [width, height]);
   // 위치 보기. 프로그램 이동이라 onMoveStart 에 null 이벤트로 와서 사용자 이동으로 치지 않는다.
   // 다시 마운트돼도(빈 캔버스 → 그림) 이미 처리한 옛 요청으로 움직이지 않는다.
   const focusToken = focusRequest?.token;
@@ -773,6 +824,7 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
           onPillContextMenu={(id, e) => openMenu(id, true, e)}
         />
       </ReactFlow>
+      {laneTargets.length > 0 && <OffscreenHints targets={laneTargets} size={canvasSize} insets={cameraInsets} onGo={(r) => camera.focus(r)} />}
       {menu && onMention && (
         <NodeMenu
           x={menu.x}

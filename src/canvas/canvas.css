@@ -227,6 +227,20 @@ button.node__badge--pair-end::before { left: -1px; transform: none; }
 .canvas__tool:focus-visible { outline: 1.5px solid var(--focus-ring); outline-offset: 1px; }
 .canvas__tool-icon, .canvas__tool-chevron { flex: none; }
 .canvas__view { position: relative; }
+/*
+ * 화면 밖 외부 서비스 표시: 보이는 띠 가장자리(판 안쪽 8px)에 떠 있는 판 단추. 도구 모음과 같은 칠·선·모서리,
+ * 화면 틀이라 연두를 쓰지 않는다. 세로 가운데를 묶음 높이에 맞춘다(top 은 가운데 y).
+ */
+.canvas__offscreen {
+  position: absolute; z-index: 20; transform: translateY(-50%);
+  display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; min-height: 32px; box-sizing: border-box;
+  font: inherit; font-size: 12px; white-space: nowrap; color: var(--text-primary);
+  background: var(--glass-bg); border: 1px solid var(--glass-line); border-radius: var(--radius-control); cursor: pointer;
+}
+.canvas__offscreen:hover { background: var(--bg-panel-raised); border-color: var(--line-node); }
+.canvas__offscreen:active { background: var(--line-node); }
+.canvas__offscreen:focus-visible { outline: 1.5px solid var(--focus-ring); outline-offset: 1px; }
+.canvas__offscreen svg { color: var(--text-secondary); }
 /* 보기 옵션 팝오버: 도구 모음 아래, 보기 버튼의 왼쪽 끝에 맞춰 오른쪽으로 펼친다(왼쪽 사이드바 밑으로 가지 않게). */
 .canvas__pop {
   position: absolute; z-index: 30; top: calc(100% + 10px); left: 0; width: 300px; padding: 6px;

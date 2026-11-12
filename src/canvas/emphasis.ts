@@ -13,16 +13,24 @@ export interface Emphasis {
 export function emphasisOf(edges: DisplayEdge[], id: string | null, nodeIds?: ReadonlySet<string>): Emphasis | null {
   if (id === null) return null;
   const hit = displayEdgeFor(edges, id);
-  if (hit) return { nodes: new Set([hit.from, hit.to]), edges: new Set([hit.id]) };
+  if (hit) {
+    // 묶음 경계에서 합친 연결: 원래 연결이면 그 연결이 나온 구성원, 합친 연결 자체면 구성원 모두를 밝힌다.
+    const from = hit.origins ? (hit.origins[id] ? [hit.origins[id]] : Object.values(hit.origins)) : [];
+    return { nodes: new Set([hit.from, hit.to, ...from]), edges: new Set([hit.id]) };
+  }
   // 사라진 대상(다시 배치되며 없어진 노드 등)이면 강조하지 않는다.
   if (nodeIds && !nodeIds.has(id)) return null;
   const nodes = new Set([id]);
   const ids = new Set<string>();
   for (const e of edges) {
-    if (e.from !== id && e.to !== id) continue;
+    // 묶음 경계에서 합친 연결은 그 연결을 보낸 구성원을 고를 때도 이어진 선이다.
+    const viaMember = !!e.origins && Object.values(e.origins).includes(id);
+    if (e.from !== id && e.to !== id && !viaMember) continue;
     ids.add(e.id);
     nodes.add(e.from);
     nodes.add(e.to);
+    // 대상 쪽을 고르면 합친 연결을 보낸 구성원 모두가 이웃이다(구성원 하나를 고르면 다른 구성원은 이웃이 아니다).
+    if (e.origins && !viaMember) for (const o of Object.values(e.origins)) nodes.add(o);
   }
   return { nodes, edges: ids };
 }
@@ -41,6 +49,9 @@ export function flowEmphasis(edges: DisplayEdge[], stepEdgeIds: string[], extraN
     ids.add(hit.id);
     nodes.add(hit.from);
     nodes.add(hit.to);
+    // 묶음 경계에서 합친 연결이면 이 단계가 실제로 나온 구성원도 밝힌다.
+    const origin = hit.origins?.[id];
+    if (origin) nodes.add(origin);
   }
   return { nodes, edges: ids };
 }

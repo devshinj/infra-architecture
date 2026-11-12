@@ -6,7 +6,7 @@ import { shortLabel } from "@/domain/flows";
 
 import "./edges.css";
 import type { DisplayEdge } from "./display";
-import { boundaryDotAt, labelBox, mergedLabels, stepLabels, tagSpots, type Box } from "./edgeLabels";
+import { boundaryDotAt, labelBox, mergedLabels, restingLabelClusters, stepLabels, tagSpots, type Box } from "./edgeLabels";
 import { emphasisOf, type Emphasis } from "./emphasis";
 import type { Layout, Rect } from "./layout";
 import { MediumMark, pointAlong } from "./mediumMark";
@@ -177,6 +177,21 @@ export function EdgeLayer({ layout, edges, selectedId, selectedRect, hoverId, on
   }, [steps, sel, selectedId, selectedRect, edges, emphLaid, byId, layout.edges]);
   const mergedIds = useMemo(() => new Set(merged.flatMap((p) => p.edgeIds)), [merged]);
 
+  // 평소 화면(고른 것·올린 것·흐름 없음, 이름 늘 보임): 같은 끝을 함께 쓰는 같은 이름은 하나만 "<이름> ×N" 으로 남긴다.
+  // 노드에 올리면 연결마다 제 이름으로 돌아가 어느 가지인지 보인다.
+  const resting = useMemo(() => {
+    if (sel !== null || hov !== null || steps || hoverLabels) return null;
+    const items = laid.flatMap((l) => {
+      const e = byId.get(l.id)!;
+      return e.label && l.labelAt && !e.egress ? [{ id: e.id, label: e.label, from: e.from, to: e.to, at: l.labelAt }] : [];
+    });
+    const centerOf = (id: string) => {
+      const r = layout.nodes[id] ?? layout.groups[id];
+      return r ? { x: r.x + r.width / 2, y: r.y + r.height / 2 } : undefined;
+    };
+    return restingLabelClusters(items, centerOf);
+  }, [sel, hov, steps, hoverLabels, laid, byId, layout.nodes, layout.groups]);
+
   // 망 경계 점: 경계를 넘는 연결의 가운데(이름 자리, 없으면 선 가운데). 이름이 있으면 이름 글자 옆으로 비킨다.
   const dots = useMemo(() => {
     const out = new Map<string, Pt>();
@@ -228,13 +243,16 @@ export function EdgeLayer({ layout, edges, selectedId, selectedRect, hoverId, on
   }, [steps, stepIds, selectedId, sel, laid, dots, byId, nodeRects, stepPlaced, dotBoxes, merged, mergedIds]);
 
   // Which bundles animate. Over 40 nodes only the ones touching the selection; with fewer, every bundle animates.
+  // 흐름 표시를 꺼도 흐름을 보는 동안은 그 흐름 단계가 지나는 묶음만 움직인다(연두 움직임은 고른 흐름에만).
   const restrictTo = nodeCount > MANY_NODES ? incident : null;
   const active = useMemo(
     () =>
       motion
         ? bundles.filter((b) => !restrictTo || b.segments.some((s) => s.edgeIds.some((i) => restrictTo.has(i))))
-        : [],
-    [bundles, motion, restrictTo],
+        : steps
+          ? bundles.filter((b) => b.segments.some((s) => s.edgeIds.some((i) => stepIds.has(i))))
+          : [],
+    [bundles, motion, restrictTo, steps, stepIds],
   );
 
   // Restart the lights only when geometry, timing or the active set really change, not when the
@@ -262,6 +280,8 @@ export function EdgeLayer({ layout, edges, selectedId, selectedRect, hoverId, on
   }, [signature]);
 
   const isDegraded = (ids: string[]) => ids.every((i) => laid.find((l) => l.id === i)?.degraded);
+  // 출구선만 지나는 조각은 보조선처럼 흐리고 가늘게(다른 선과 나눠 쓰는 조각은 평소대로).
+  const isEgress = (ids: string[]) => ids.length > 0 && ids.every((i) => byId.get(i)?.egress);
   const bundleEdgeIds = (b: Bundle) => b.segments.flatMap((s) => s.edgeIds);
   // 고른 동안 갈림점은 겹선의 점 위에 있을 때만 흐리지 않는다.
   const junctionDim = (j: Pt) => sel !== null && !emphLaid.some((l) => onPolyline(j, l.points));
@@ -281,7 +301,7 @@ export function EdgeLayer({ layout, edges, selectedId, selectedRect, hoverId, on
               return (
                 <g
                   key={s.key}
-                  className={`edge-seg${isDim(s.edgeIds) ? " edge--dim" : ""}${isUnder(s.edgeIds) ? " edge--under" : ""}${isFaded(s.edgeIds) ? " edge--faded" : ""}${degraded ? " edge--degraded" : ""}`}
+                  className={`edge-seg${isDim(s.edgeIds) ? " edge--dim" : ""}${isUnder(s.edgeIds) ? " edge--under" : ""}${isFaded(s.edgeIds) ? " edge--faded" : ""}${degraded ? " edge--degraded" : ""}${isEgress(s.edgeIds) ? " edge--egress" : ""}`}
                   data-seg-shared={s.edgeIds.length > 1 ? "true" : undefined}
                   data-edge-ids={s.edgeIds.join(" ")}
                   data-edge-kind={s.edgeKind}
@@ -353,13 +373,18 @@ export function EdgeLayer({ layout, edges, selectedId, selectedRect, hoverId, on
         const arrowUnder = emphLaid.some((x) => x.id === e.id);
         // 고른 동안 이어지지 않은 선의 이름은 마우스를 올렸을 때만 보인다(흐린 선에 같은 이름이 남지 않게).
         // 합친 이름에 들어간 선은 따로 그리지 않는다.
-        const shown = incident.has(e.id) || (sel ? hoverLabels && hovered === e.id : !hoverLabels || hovered === e.id);
+        // 출구선 이름은 늘 올렸을 때만(고르면 이어진 선이라 보인다).
+        const hoverOnly = hoverLabels || !!e.egress;
+        const shown = incident.has(e.id) || (sel ? hoverOnly && hovered === e.id : !hoverOnly || hovered === e.id);
         // 흐름을 보는 동안 단계 연결은 제 이름 대신 단계 글자를 단다.
-        const showLabel = !!e.label && !!l.labelAt && !mergedIds.has(e.id) && !stepIds.has(e.id) && shown;
+        // 평소 화면에서 같은 이름 무리에 묻힌 이름은 올렸을 때만 보인다.
+        const clustered = !!resting?.hidden.has(e.id) && hovered !== e.id;
+        const showLabel = !!e.label && !!l.labelAt && !mergedIds.has(e.id) && !stepIds.has(e.id) && shown && !clustered;
+        const labelText = (hovered !== e.id && resting?.shown.get(e.id)) || e.label;
         const dot = dots.get(e.id);
         const mark = e.medium ? pointAlong(l.points, MEDIUM_AT) : null;
         return (
-          <g key={e.id} className={`edge${dim ? " edge--dim" : ""}${faded ? " edge--faded" : ""}${isSelectedEdge(e) ? " edge--selected" : ""}`} data-edge-id={e.id} data-edge-kind={e.edgeKind}>
+          <g key={e.id} className={`edge${dim ? " edge--dim" : ""}${faded ? " edge--faded" : ""}${isSelectedEdge(e) ? " edge--selected" : ""}${e.egress ? " edge--egress" : ""}`} data-edge-id={e.id} data-edge-kind={e.edgeKind}>
             {d && <path className={`edge-arrow edge-arrow--${e.edgeKind}${arrowUnder ? " edge--under" : ""}`} d={d} />}
             <path
               className="edge-hit"
@@ -379,7 +404,7 @@ export function EdgeLayer({ layout, edges, selectedId, selectedRect, hoverId, on
             />
             {showLabel && (
               <text className="edge-label" x={l.labelAt!.x} y={l.labelAt!.y}>
-                {e.label}
+                {labelText}
               </text>
             )}
             {/* 망 경계 점: 평소 모습이라 내보낸 그림에도 남는다. 이름 글자보다 위에 그린다. */}

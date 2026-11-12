@@ -511,3 +511,14 @@ test("an empty short description leaves just the number", () => {
   render(<EdgeLayer layout={flowLayout} edges={flowEdges} {...base} flowSteps={[{ displayEdgeId: "e1", n: 3, short: "" }]} />);
   expect(document.querySelector(".edge-step-label")!.textContent).toBe("3");
 });
+
+test("resting view (nothing selected or hovered, names always on) folds the same name on a shared end into '<name> ×N'", () => {
+  const { layout, edges } = labelled();
+  const { rerender } = render(<EdgeLayer layout={layout} edges={edges} {...base} hoverLabels={false} />);
+  // n 에서 나가는 HTTP 둘(h1·h2)만 한 무리다. n 으로 들어오는 h3 은 방향이 달라, 끝이 겹치지 않는 far 는 따로 남는다.
+  expect(labelTexts().filter((t) => t.startsWith("HTTP")).sort()).toEqual(["HTTP", "HTTP", "HTTP ×2"]);
+  expect(document.querySelector('[data-edge-id="h2"] .edge-label') ?? document.querySelector('[data-edge-id="h1"] .edge-label')).not.toBeNull();
+  // 이름을 올렸을 때만 보이게 하면 묶을 이름이 없다.
+  rerender(<EdgeLayer layout={layout} edges={edges} {...base} hoverLabels />);
+  expect(labelTexts()).toEqual([]);
+});

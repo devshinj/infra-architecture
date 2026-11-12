@@ -18,6 +18,9 @@
 .edge-arrow--async { stroke: var(--edge-async); }
 .edge-arrow--replication { stroke: var(--edge-replication); }
 .edge-arrow--aux { stroke: var(--edge-aux); }
+/* 출구선(NAT 에 닿는 연결): 종류 모양(실선·점선)은 지키고 색과 굵기만 흑연 보조선으로 낮춘다. 고르면 강조 겹선이 평소 색으로 밝힌다. */
+.edge--egress .edge-line:not(.edge-line--replication-core) { stroke: var(--edge-aux); stroke-width: 1; }
+.edge--egress .edge-arrow { stroke: var(--edge-aux); stroke-width: 1.1; }
 .edge-junction { fill: var(--edge-request); }
 .edge-hit { stroke: transparent; stroke-width: 10; pointer-events: stroke; }
 .edge-label {

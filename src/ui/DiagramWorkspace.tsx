@@ -100,7 +100,8 @@ const CARD_LINE_HEIGHT = 42;
 const CARD_WIDTH = 380;
 
 // showMissingBadges 는 브라우저 설정이라 여기서는 항상 끈 값이고, 실제 값은 아래 showMissing 상태가 덮어쓴다.
-const optionsFor = (state: DiagramState): CanvasOptions => ({ ...defaultDisplayOptions(state), hoverLabels: true, showMissingBadges: false });
+// 연결 이름(프로토콜 라벨)은 기본으로 늘 보인다: 회의 화면 공유·내보낸 그림에서는 아무도 마우스를 올리지 않는다.
+const optionsFor = (state: DiagramState): CanvasOptions => ({ ...defaultDisplayOptions(state), hoverLabels: false, showMissingBadges: false });
 
 const NO_SESSIONS: SessionSummary[] = [];
 
@@ -126,7 +127,8 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
   const [pinned, setPinned] = useState<Pinned>(initialPinned);
   const [options, setOptions] = useState<CanvasOptions>(() => optionsFor(latest.state));
   const [editMode, setEditMode] = useState(false);
-  const [motion, setMotion] = useState(true);
+  // 흐름 표시는 기본으로 끈다: 연두 움직임은 고른 흐름(흐름 탭)에만 쓴다(One Signal Rule). 켜면 모든 선이 움직인다.
+  const [motion, setMotion] = useState(false);
   const [mode, setMode] = useState<Mode>({ kind: "live" });
   // 캔버스 판 번호: 가져오기·복원 등으로 새 판이 오면 바뀌어 화면을 다시 맞춘다. 대화가 끝나고 저장된 판을
   // 받아올 때는 같은 판이므로 그대로 둔다(끝날 때 맞춤·사용자 이동을 덮지 않게).
@@ -282,7 +284,8 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
   }, [narrow, mobileView, diagramId]);
   // 대화 차례의 add_node: 진행 카드의 현재 단계 점에서 그 노드로 빛점이 날아간다(배치가 끝나 좌표가 나오면).
   // 좁은 화면은 대화와 캔버스가 한 화면에 함께 보이지 않아 날리지 않는다.
-  const fly = useFly({ motion, chatVisible: tab === "대화" && !narrow });
+  // 「흐름 표시」(선 위 움직임)와는 따로 간다: AI 가 한 일을 보이는 움직임이라 늘 켜고, 운영체제 동작 줄이기만 따른다.
+  const fly = useFly({ motion: true, chatVisible: tab === "대화" && !narrow });
   const clearFly = fly.clear;
   // 바깥(Claude Code)에서 받은 새 버전의 지운 노드·연결을 잠깐 유령으로 보인다(GhostLayer 가 그 커밋 직전 화면을 뜬다).
   const [ghostRequest, setGhostRequest] = useState<GhostRequest | null>(null);
@@ -1124,7 +1127,8 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
           />
         )}
         <FlyLayer ref={fly.layerRef} />
-        <GhostLayer request={ghostRequest} root={workspaceRef} motion={motion} />
+        {/* 유령도 바깥 변경을 보이는 움직임이라 「흐름 표시」와 상관없이 켠다(동작 줄이기면 GhostLayer 가 그리지 않는다). */}
+        <GhostLayer request={ghostRequest} root={workspaceRef} motion />
       </div>
     </NetworkKnowledgeProvider>
   );
