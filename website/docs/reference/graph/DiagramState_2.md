@@ -1,6 +1,6 @@
 ---
 title: "DiagramState"
-sidebar_position: 115
+sidebar_position: 126
 ---
 # DiagramState
 
@@ -8,7 +8,7 @@ sidebar_position: 115
 
 > God node · 61 connections · `src/domain/types.ts`
 
-**Community:** [DiagramState](DiagramState.md)
+**Community:** [flowSuggest.ts](flowSuggest.ts.md)
 
 ## Connections by Relation
 
@@ -16,17 +16,17 @@ sidebar_position: 115
 - types.ts `EXTRACTED`
 
 ### imports
-- [(app)/actions.ts](app-actions.ts.md) `EXTRACTED`
-- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) `EXTRACTED`
+- (app)/actions.ts `EXTRACTED`
 - [pipeline.ts](pipeline.ts.md) `EXTRACTED`
+- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) `EXTRACTED`
 - [Canvas.tsx](Canvas.tsx.md) `EXTRACTED`
 - [mcp/apply.ts](mcp-apply.ts.md) `EXTRACTED`
 - [projects.ts](projects.ts.md) `EXTRACTED`
 - [prompt.ts](prompt.ts.md) `EXTRACTED`
 - server/explain.ts `EXTRACTED`
 - [NodeInfo.tsx](NodeInfo.tsx.md) `EXTRACTED`
-- [server/network.ts](server-network.ts.md) `EXTRACTED`
 - ask.ts `EXTRACTED`
+- [server/network.ts](server-network.ts.md) `EXTRACTED`
 - [read.ts](read.ts.md) `EXTRACTED`
 - [schema.ts](schema.ts.md) `EXTRACTED`
 - [flowSuggest.ts](flowSuggest.ts.md) `EXTRACTED`
@@ -34,7 +34,7 @@ sidebar_position: 115
 - [domain/flows.ts](domain-flows.ts.md) `EXTRACTED`
 - [domain/warnings.ts](domain-warnings.ts.md) `EXTRACTED`
 - [chat/warnings.ts](chat-warnings.ts.md) `EXTRACTED`
-- versions.ts `EXTRACTED`
+- [versions.ts](versions.ts.md) `EXTRACTED`
 - [MissingChecklist.tsx](MissingChecklist.tsx.md) `EXTRACTED`
 - *…and 24 more `imports` connection(s) not listed (lowest-degree first to go)*
 

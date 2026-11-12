@@ -1,6 +1,6 @@
 ---
 title: "FlowPanel.tsx"
-sidebar_position: 59
+sidebar_position: 48
 ---
 # FlowPanel.tsx
 
@@ -13,6 +13,7 @@ sidebar_position: 59
 - **FlowPanel.tsx** (31 connections) — `src/ui/flows/FlowPanel.tsx`
 - **FlowPanel()** (18 connections) — `src/ui/flows/FlowPanel.tsx`
 - **FlowPanelProps** (14 connections) — `src/ui/flows/FlowPanel.tsx`
+- **RowMenuItem** (4 connections) — `src/ui/dialogs.tsx`
 - **ref_react_dom** (2 connections)
 - **FlowOrigin** (2 connections) — `src/domain/flows.ts`
 - **.onActivate()** (2 connections) — `src/ui/flows/FlowPanel.tsx`
@@ -24,7 +25,6 @@ sidebar_position: 59
 - **.onRepair()** (2 connections) — `src/ui/flows/FlowPanel.tsx`
 - **menuRootId()** (2 connections) — `src/ui/flows/FlowPanel.tsx`
 - **stepMark()** (2 connections) — `src/ui/flows/FlowPanel.tsx`
-- **AI_SUGGEST_BADGE** (2 connections) — `src/ui/glossary/aiBadge.ts`
 - **Action** (1 connections) — `src/ui/flows/FlowPanel.tsx`
 - **.onSuggest()** (1 connections) — `src/ui/flows/FlowPanel.tsx`
 - **GROUPS** (1 connections) — `src/ui/flows/FlowPanel.tsx`
@@ -32,27 +32,28 @@ sidebar_position: 59
 
 ## Relationships
 
-- [ZoneTypePicker.tsx](ZoneTypePicker.tsx.md) (7 shared connections)
 - [mcpKeys.ts](mcpKeys.ts.md) (5 shared connections)
+- [glossary.ts](glossary.ts.md) (5 shared connections)
 - [RightPanel.tsx](RightPanel.tsx.md) (5 shared connections)
+- [SessionPicker.tsx](SessionPicker.tsx.md) (4 shared connections)
 - [domain/flows.ts](domain-flows.ts.md) (4 shared connections)
-- [ref_react](ref_react.md) (4 shared connections)
-- [SessionPicker.tsx](SessionPicker.tsx.md) (3 shared connections)
-- [schema.ts](schema.ts.md) (3 shared connections)
-- [DiagramState](DiagramState.md) (2 shared connections)
+- [useFlows](useFlows.md) (3 shared connections)
+- [InfoCard.tsx](InfoCard.tsx.md) (2 shared connections)
+- [flowSuggest.ts](flowSuggest.ts.md) (2 shared connections)
+- [Button](Button.md) (2 shared connections)
 - [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (2 shared connections)
-- [domain/network.ts](domain-network.ts.md) (1 shared connections)
-- [getOwnedDiagram](getOwnedDiagram.md) (1 shared connections)
+- [ref_react](ref_react.md) (2 shared connections)
+- [Sidebar.tsx](Sidebar.tsx.md) (1 shared connections)
 
 ## Source Files
 
 - `src/domain/flows.ts`
+- `src/ui/dialogs.tsx`
 - `src/ui/flows/FlowPanel.tsx`
-- `src/ui/glossary/aiBadge.ts`
 
 ## Audit Trail
 
-- EXTRACTED: 64 (100%)
+- EXTRACTED: 66 (100%)
 - INFERRED: 0 (0%)
 - AMBIGUOUS: 0 (0%)
 

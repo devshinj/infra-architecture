@@ -1,6 +1,6 @@
 ---
 title: "exportImage.ts"
-sidebar_position: 30
+sidebar_position: 28
 ---
 # exportImage.ts
 
@@ -41,14 +41,13 @@ sidebar_position: 30
 
 - [Canvas.tsx](Canvas.tsx.md) (5 shared connections)
 - [display.ts](display.ts.md) (4 shared connections)
+- [layout.ts](layout.ts.md) (4 shared connections)
 - [ExportMenu.tsx](ExportMenu.tsx.md) (4 shared connections)
-- [textWidth](textWidth.md) (3 shared connections)
 - [useCamera.ts](useCamera.ts.md) (2 shared connections)
 - [Layout](Layout.md) (2 shared connections)
-- [motion.ts](motion.ts.md) (1 shared connections)
+- [segments.ts](segments.ts.md) (1 shared connections)
 - [edgeLabels.ts](edgeLabels.ts.md) (1 shared connections)
 - [구성도 배치 조화 1단계 — 선택 강조와 선 간격](구성도_배치_조화_1단계_—_선택_강조와_선_간격.md) (1 shared connections)
-- [layout.ts](layout.ts.md) (1 shared connections)
 
 ## Source Files
 

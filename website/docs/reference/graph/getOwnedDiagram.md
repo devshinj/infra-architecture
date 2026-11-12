@@ -1,16 +1,15 @@
 ---
 title: "getOwnedDiagram"
-sidebar_position: 16
+sidebar_position: 14
 ---
 # getOwnedDiagram
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 38 nodes · cohesion 0.18
+> 33 nodes · cohesion 0.22
 
 ## Key Concepts
 
-- **types.ts** (77 connections) — `src/domain/types.ts`
 - **getOwnedDiagram()** (53 connections) — `src/server/projects.ts`
 - **withDiagramLock()** (31 connections) — `src/server/chat/lock.ts`
 - **createVersion()** (31 connections) — `src/server/versions.ts`
@@ -26,7 +25,7 @@ sidebar_position: 16
 - **listFlows()** (13 connections) — `src/server/flows.ts`
 - **server/assumptions.ts** (12 connections) — `src/server/assumptions.ts`
 - **restoreMcpVersion()** (12 connections) — `src/server/mcp/apply.ts`
-- **getDiagramForMcp()** (12 connections) — `src/server/mcp/read.ts`
+- **rewriteFlows()** (11 connections) — `src/server/flows.ts`
 - **BUSY_MESSAGE** (10 connections) — `src/server/chat/busy.ts`
 - **setWarningIgnoredFor()** (10 connections) — `src/server/ignore.ts`
 - **removeNoLinkFor()** (10 connections) — `src/server/linkGuess.ts`
@@ -35,27 +34,29 @@ sidebar_position: 16
 - **confirmLinkGuessFor()** (9 connections) — `src/server/linkGuess.ts`
 - **duplicateDiagram()** (9 connections) — `src/server/projects.ts`
 - **noLinkKey()** (8 connections) — `src/domain/assumptions.ts`
-- *... and 13 more nodes in this community*
+- **Task 7: 서버 액션 — 망 종류 확인·바꾸기, 망연계 맞아요·아니에요** (7 connections) — `docs/superpowers/plans/2026-11-06-network-knowledge-link-guess.md`
+- *... and 8 more nodes in this community*
 
 ## Relationships
 
-- [(app)/actions.ts](app-actions.ts.md) (32 shared connections)
-- [pipeline.ts](pipeline.ts.md) (30 shared connections)
-- [mcp/apply.ts](mcp-apply.ts.md) (24 shared connections)
-- [schema.ts](schema.ts.md) (20 shared connections)
-- [projects.ts](projects.ts.md) (18 shared connections)
-- [server/network.ts](server-network.ts.md) (15 shared connections)
-- [read.ts](read.ts.md) (13 shared connections)
-- [AssumptionChips.tsx](AssumptionChips.tsx.md) (11 shared connections)
-- [domain/apply.ts](domain-apply.ts.md) (10 shared connections)
-- [DiagramState](DiagramState.md) (10 shared connections)
-- [\[sessionId\]/route.ts]([sessionId]-route.ts.md) (10 shared connections)
-- [domain/flows.ts](domain-flows.ts.md) (8 shared connections)
+- [NetworkKnowledgePage.tsx](NetworkKnowledgePage.tsx.md) (22 shared connections)
+- [pipeline.ts](pipeline.ts.md) (21 shared connections)
+- [projects.ts](projects.ts.md) (20 shared connections)
+- [mcp/apply.ts](mcp-apply.ts.md) (16 shared connections)
+- [read.ts](read.ts.md) (16 shared connections)
+- [useFlows](useFlows.md) (13 shared connections)
+- [server/network.ts](server-network.ts.md) (13 shared connections)
+- [versions.ts](versions.ts.md) (12 shared connections)
+- [Command](Command.md) (10 shared connections)
+- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (10 shared connections)
+- [ask/route.ts](ask-route.ts.md) (8 shared connections)
+- [flowSuggest.ts](flowSuggest.ts.md) (8 shared connections)
 
 ## Source Files
 
 - `docs/superpowers/plans/2026-10-30-infrasketch-phase3b-warnings.md`
 - `docs/superpowers/plans/2026-11-06-network-knowledge-link-guess.md`
+- `src/app/(app)/actions.ts`
 - `src/domain/assumptions.ts`
 - `src/domain/linkGuess.ts`
 - `src/domain/networkRules.ts`
@@ -68,7 +69,6 @@ sidebar_position: 16
 - `src/server/ignore.ts`
 - `src/server/linkGuess.ts`
 - `src/server/mcp/apply.ts`
-- `src/server/mcp/read.ts`
 - `src/server/projects.ts`
 - `src/server/samples.ts`
 - `src/server/versions.ts`
@@ -76,8 +76,8 @@ sidebar_position: 16
 
 ## Audit Trail
 
-- EXTRACTED: 401 (95%)
-- INFERRED: 22 (5%)
+- EXTRACTED: 330 (94%)
+- INFERRED: 22 (6%)
 - AMBIGUOUS: 0 (0%)
 
 ---

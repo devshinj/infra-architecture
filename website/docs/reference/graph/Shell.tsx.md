@@ -1,24 +1,29 @@
 ---
 title: "Shell.tsx"
-sidebar_position: 47
+sidebar_position: 30
 ---
 # Shell.tsx
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 21 nodes · cohesion 0.16
+> 26 nodes · cohesion 0.14
 
 ## Key Concepts
 
 - **Shell.tsx** (26 connections) — `src/ui/Shell.tsx`
 - **(app)/layout.tsx** (12 connections) — `src/app/(app)/layout.tsx`
 - **useShell()** (12 connections) — `src/ui/Shell.tsx`
+- **(app)/page.tsx** (10 connections) — `src/app/(app)/page.tsx`
 - **useNotesPanel.ts** (8 connections) — `src/ui/useNotesPanel.ts`
 - **ShellMain.tsx** (7 connections) — `src/ui/ShellMain.tsx`
 - **useNotesPanel()** (7 connections) — `src/ui/useNotesPanel.ts`
 - **AppLayout()** (6 connections) — `src/app/(app)/layout.tsx`
+- **Home()** (5 connections) — `src/app/(app)/page.tsx`
+- **listProjects()** (5 connections) — `src/server/projects.ts`
+- **CreateButton()** (5 connections) — `src/ui/Shell.tsx`
 - **ShellProvider()** (5 connections) — `src/ui/Shell.tsx`
 - **ShellMain()** (5 connections) — `src/ui/ShellMain.tsx`
+- **lastActiveDiagram()** (3 connections) — `src/server/projects.ts`
 - **useMediaQuery.ts** (3 connections) — `src/ui/useMediaQuery.ts`
 - **useMediaQuery()** (3 connections) — `src/ui/useMediaQuery.ts`
 - **extentOf()** (2 connections) — `src/ui/Shell.tsx`
@@ -30,26 +35,28 @@ sidebar_position: 47
 - **RAIL_WIDTH** (1 connections) — `src/ui/Shell.tsx`
 - **ShellContext** (1 connections) — `src/ui/Shell.tsx`
 - **SIDEBAR_COLLAPSED_KEY** (1 connections) — `src/ui/Shell.tsx`
-- **SIDEBAR_WIDTH** (1 connections) — `src/ui/Shell.tsx`
+- *... and 1 more nodes in this community*
 
 ## Relationships
 
-- [Sidebar.tsx](Sidebar.tsx.md) (7 shared connections)
-- [ref_react](ref_react.md) (6 shared connections)
-- [(app)/page.tsx](app-page.tsx.md) (5 shared connections)
-- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (5 shared connections)
+- [Sidebar.tsx](Sidebar.tsx.md) (9 shared connections)
+- [auth](auth.md) (4 shared connections)
+- [auth.ts](auth.ts.md) (4 shared connections)
+- [projects.ts](projects.ts.md) (4 shared connections)
+- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (4 shared connections)
 - [NetworkKnowledgePage.tsx](NetworkKnowledgePage.tsx.md) (4 shared connections)
 - [ChatPanel.tsx](ChatPanel.tsx.md) (3 shared connections)
+- [ref_react](ref_react.md) (3 shared connections)
 - [PageSkeleton.tsx](PageSkeleton.tsx.md) (3 shared connections)
-- [GlossaryPage.tsx](GlossaryPage.tsx.md) (3 shared connections)
-- [auth](auth.md) (2 shared connections)
-- [auth.ts](auth.ts.md) (1 shared connections)
-- [projects.ts](projects.ts.md) (1 shared connections)
-- [(app)/actions.ts](app-actions.ts.md) (1 shared connections)
+- [glossary.ts](glossary.ts.md) (3 shared connections)
+- [Button](Button.md) (2 shared connections)
+- [Button.tsx](Button.tsx.md) (1 shared connections)
 
 ## Source Files
 
 - `src/app/(app)/layout.tsx`
+- `src/app/(app)/page.tsx`
+- `src/server/projects.ts`
 - `src/ui/Shell.tsx`
 - `src/ui/ShellMain.tsx`
 - `src/ui/useMediaQuery.ts`
@@ -57,7 +64,7 @@ sidebar_position: 47
 
 ## Audit Trail
 
-- EXTRACTED: 74 (100%)
+- EXTRACTED: 90 (100%)
 - INFERRED: 0 (0%)
 - AMBIGUOUS: 0 (0%)
 

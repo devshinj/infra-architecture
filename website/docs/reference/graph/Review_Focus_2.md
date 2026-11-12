@@ -1,6 +1,6 @@
 ---
 title: "Review Focus"
-sidebar_position: 119
+sidebar_position: 130
 ---
 # Review Focus
 
@@ -10,34 +10,29 @@ sidebar_position: 119
 
 ## Key Concepts
 
-- **Review Focus** (6 connections) — `docs/superpowers/plans/2026-11-01-infrasketch-phase3c2-ask-node.md`
-- **Task 3: 세션 고르기와 질문 세션 화면** (6 connections) — `docs/superpowers/plans/2026-11-01-infrasketch-phase3c2-ask-node.md`
-- **InfraSketch 3C-2단계 — 노드에 대해 물어보기 Implementation Plan** (5 connections) — `docs/superpowers/plans/2026-11-01-infrasketch-phase3c2-ask-node.md`
-- **.setText()** (3 connections) — `src/ui/chat/MentionInput.tsx`
-- **Task 1: 세션 저장** (2 connections) — `docs/superpowers/plans/2026-11-01-infrasketch-phase3c2-ask-node.md`
-- **2026-11-01-infrasketch-phase3c2-ask-node.md** (1 connections) — `docs/superpowers/plans/2026-11-01-infrasketch-phase3c2-ask-node.md`
-- **Global Constraints** (1 connections) — `docs/superpowers/plans/2026-11-01-infrasketch-phase3c2-ask-node.md`
-- **Task 5: E2E — 노드 질문 흐름** (1 connections) — `docs/superpowers/plans/2026-11-01-infrasketch-phase3c2-ask-node.md`
-- **실행 순서** (1 connections) — `docs/superpowers/plans/2026-11-01-infrasketch-phase3c2-ask-node.md`
+- **Review Focus** (7 connections) — `docs/superpowers/plans/2026-10-31-infrasketch-phase3e-readability.md`
+- **InfraSketch 3E단계 — 연결선·글자·주의 바로 가기 Implementation Plan** (4 connections) — `docs/superpowers/plans/2026-10-31-infrasketch-phase3e-readability.md`
+- **2026-10-31-infrasketch-phase3e-readability.md** (1 connections) — `docs/superpowers/plans/2026-10-31-infrasketch-phase3e-readability.md`
+- **Global Constraints** (1 connections) — `docs/superpowers/plans/2026-10-31-infrasketch-phase3e-readability.md`
+- **Task 1: 글자 크기와 대비** (1 connections) — `docs/superpowers/plans/2026-10-31-infrasketch-phase3e-readability.md`
+- **Task 3: 잘린 이름 말풍선** (1 connections) — `docs/superpowers/plans/2026-10-31-infrasketch-phase3e-readability.md`
+- **Task 4: 연결 범례** (1 connections) — `docs/superpowers/plans/2026-10-31-infrasketch-phase3e-readability.md`
+- **Task 6: E2E — 3E 흐름** (1 connections) — `docs/superpowers/plans/2026-10-31-infrasketch-phase3e-readability.md`
+- **실행 순서** (1 connections) — `docs/superpowers/plans/2026-10-31-infrasketch-phase3e-readability.md`
 
 ## Relationships
 
-- [ChatPanel.tsx](ChatPanel.tsx.md) (3 shared connections)
-- [pipeline.ts](pipeline.ts.md) (2 shared connections)
-- [useChatTurn.ts](useChatTurn.ts.md) (2 shared connections)
-- [NodeInfo.tsx](NodeInfo.tsx.md) (1 shared connections)
-- [\[sessionId\]/route.ts]([sessionId]-route.ts.md) (1 shared connections)
-- [SessionPicker.tsx](SessionPicker.tsx.md) (1 shared connections)
+- [InfoCard.tsx](InfoCard.tsx.md) (1 shared connections)
+- [edgeLabels.ts](edgeLabels.ts.md) (1 shared connections)
 
 ## Source Files
 
-- `docs/superpowers/plans/2026-11-01-infrasketch-phase3c2-ask-node.md`
-- `src/ui/chat/MentionInput.tsx`
+- `docs/superpowers/plans/2026-10-31-infrasketch-phase3e-readability.md`
 
 ## Audit Trail
 
-- EXTRACTED: 11 (61%)
-- INFERRED: 7 (39%)
+- EXTRACTED: 10 (100%)
+- INFERRED: 0 (0%)
 - AMBIGUOUS: 0 (0%)
 
 ---

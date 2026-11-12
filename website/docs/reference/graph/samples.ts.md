@@ -1,6 +1,6 @@
 ---
 title: "samples.ts"
-sidebar_position: 61
+sidebar_position: 52
 ---
 # samples.ts
 
@@ -31,15 +31,17 @@ sidebar_position: 61
 
 ## Relationships
 
-- [getOwnedDiagram](getOwnedDiagram.md) (7 shared connections)
+- [getOwnedDiagram](getOwnedDiagram.md) (6 shared connections)
 - [domain/apply.ts](domain-apply.ts.md) (3 shared connections)
-- [ZoneNameLayer.tsx](ZoneNameLayer.tsx.md) (2 shared connections)
-- [DiagramState](DiagramState.md) (2 shared connections)
-- [(app)/actions.ts](app-actions.ts.md) (2 shared connections)
-- [\[sessionId\]/route.ts]([sessionId]-route.ts.md) (2 shared connections)
-- [domain/explain.ts](domain-explain.ts.md) (1 shared connections)
+- [EdgePanels.tsx](EdgePanels.tsx.md) (2 shared connections)
+- [NetworkKnowledgePage.tsx](NetworkKnowledgePage.tsx.md) (2 shared connections)
+- [\[diagramId\]/page.tsx]([diagramId]-page.tsx.md) (2 shared connections)
+- [InfraSketch 설계 문서](InfraSketch_설계_문서.md) (1 shared connections)
+- [DiagramState](DiagramState.md) (1 shared connections)
+- [flowSuggest.ts](flowSuggest.ts.md) (1 shared connections)
 - [commands.ts](commands.ts.md) (1 shared connections)
-- [schema.ts](schema.ts.md) (1 shared connections)
+- [Command](Command.md) (1 shared connections)
+- [versions.ts](versions.ts.md) (1 shared connections)
 - [projects.ts](projects.ts.md) (1 shared connections)
 
 ## Source Files

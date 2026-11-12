@@ -1,6 +1,6 @@
 ---
 title: "normalize.ts"
-sidebar_position: 71
+sidebar_position: 72
 ---
 # normalize.ts
 
@@ -28,9 +28,10 @@ sidebar_position: 71
 ## Relationships
 
 - [pipeline.ts](pipeline.ts.md) (3 shared connections)
-- [flowSuggest.ts](flowSuggest.ts.md) (3 shared connections)
-- [Legend.tsx](Legend.tsx.md) (1 shared connections)
-- [getOwnedDiagram](getOwnedDiagram.md) (1 shared connections)
+- [flowSuggest.ts](flowSuggest.ts.md) (2 shared connections)
+- [display.ts](display.ts.md) (1 shared connections)
+- [Command](Command.md) (1 shared connections)
+- [commands.ts](commands.ts.md) (1 shared connections)
 - [missing.ts](missing.ts.md) (1 shared connections)
 
 ## Source Files

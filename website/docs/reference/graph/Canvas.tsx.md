@@ -1,12 +1,12 @@
 ---
 title: "Canvas.tsx"
-sidebar_position: 3
+sidebar_position: 2
 ---
 # Canvas.tsx
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 58 nodes · cohesion 0.06
+> 68 nodes · cohesion 0.06
 
 ## Key Concepts
 
@@ -15,12 +15,16 @@ sidebar_position: 3
 - **Canvas()** (20 connections) — `src/canvas/Canvas.tsx`
 - **CanvasProps** (17 connections) — `src/canvas/Canvas.tsx`
 - **roving.ts** (16 connections) — `src/canvas/roving.ts`
-- **usePopover()** (8 connections) — `src/canvas/usePopover.ts`
+- **emphasis.ts** (9 connections) — `src/canvas/emphasis.ts`
+- **stacking.ts** (9 connections) — `src/canvas/stacking.ts`
 - **Task 5: 화면 — 경고 배지, 설명 패널 "주의할 점", 대화 줄** (6 connections) — `docs/superpowers/plans/2026-10-30-infrasketch-phase3b-warnings.md`
 - **Icon()** (6 connections) — `src/canvas/Canvas.tsx`
-- **usePopover.ts** (6 connections) — `src/canvas/usePopover.ts`
+- **displayEdgeFor()** (6 connections) — `src/canvas/display.ts`
+- **emphasisOf()** (6 connections) — `src/canvas/emphasis.ts`
 - **ariaLabels.ts** (5 connections) — `src/canvas/ariaLabels.ts`
 - **ViewMenu()** (5 connections) — `src/canvas/Canvas.tsx`
+- **outermostCollapsedAncestor()** (4 connections) — `src/canvas/display.ts`
+- **flowEmphasis()** (4 connections) — `src/canvas/emphasis.ts`
 - **litZones()** (4 connections) — `src/canvas/emphasis.ts`
 - **step()** (4 connections) — `src/canvas/roving.ts`
 - **useHoverEmphasis()** (4 connections) — `src/canvas/useHoverEmphasis.ts`
@@ -30,27 +34,23 @@ sidebar_position: 3
 - **zoneDescription()** (3 connections) — `src/canvas/ariaLabels.ts`
 - **.onOptionsChange()** (3 connections) — `src/canvas/Canvas.tsx`
 - **.onWarnBadgeClick()** (3 connections) — `src/canvas/Canvas.tsx`
-- **IconArrange()** (3 connections) — `src/canvas/Canvas.tsx`
-- **IconEye()** (3 connections) — `src/canvas/Canvas.tsx`
-- **IconFit()** (3 connections) — `src/canvas/Canvas.tsx`
-- **IconFlow()** (3 connections) — `src/canvas/Canvas.tsx`
-- **IconMove()** (3 connections) — `src/canvas/Canvas.tsx`
-- *... and 33 more nodes in this community*
+- **drawnId()** (3 connections) — `src/canvas/Canvas.tsx`
+- *... and 43 more nodes in this community*
 
 ## Relationships
 
-- [display.ts](display.ts.md) (14 shared connections)
-- [ZoneNameLayer.tsx](ZoneNameLayer.tsx.md) (13 shared connections)
+- [EdgePanels.tsx](EdgePanels.tsx.md) (15 shared connections)
 - [useCamera.ts](useCamera.ts.md) (12 shared connections)
-- [ExportMenu.tsx](ExportMenu.tsx.md) (9 shared connections)
-- [Layout](Layout.md) (9 shared connections)
-- [domain/warnings.ts](domain-warnings.ts.md) (6 shared connections)
-- [layout.ts](layout.ts.md) (6 shared connections)
+- [ExportMenu.tsx](ExportMenu.tsx.md) (10 shared connections)
+- [edgeLabels.ts](edgeLabels.ts.md) (9 shared connections)
+- [display.ts](display.ts.md) (8 shared connections)
+- [Layout](Layout.md) (8 shared connections)
+- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (7 shared connections)
+- [layout.ts](layout.ts.md) (7 shared connections)
 - [exportImage.ts](exportImage.ts.md) (5 shared connections)
-- [EdgePanels.tsx](EdgePanels.tsx.md) (4 shared connections)
-- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (4 shared connections)
-- [(app)/actions.ts](app-actions.ts.md) (3 shared connections)
-- [ZoneTypePicker.tsx](ZoneTypePicker.tsx.md) (3 shared connections)
+- [ref_react](ref_react.md) (5 shared connections)
+- [domain/warnings.ts](domain-warnings.ts.md) (4 shared connections)
+- [glossary.ts](glossary.ts.md) (3 shared connections)
 
 ## Source Files
 
@@ -58,15 +58,16 @@ sidebar_position: 3
 - `docs/superpowers/plans/2026-11-04-layout-harmony-stage1.md`
 - `src/canvas/Canvas.tsx`
 - `src/canvas/ariaLabels.ts`
+- `src/canvas/display.ts`
 - `src/canvas/emphasis.ts`
 - `src/canvas/roving.ts`
+- `src/canvas/stacking.ts`
 - `src/canvas/useHoverEmphasis.ts`
-- `src/canvas/usePopover.ts`
 - `src/domain/warnings.ts`
 
 ## Audit Trail
 
-- EXTRACTED: 216 (96%)
+- EXTRACTED: 231 (96%)
 - INFERRED: 9 (4%)
 - AMBIGUOUS: 0 (0%)
 
