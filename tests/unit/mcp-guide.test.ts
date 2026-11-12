@@ -31,6 +31,7 @@ describe("buildGuide", () => {
     expect(guide).toContain("가정 key=video_site");
     expect(guide).toContain("흐름 3~5개");
     expect(guide).toContain("no_link:");
+    expect(guide).toContain("key(call_mode·llm_serving·video_site·iot_link·net_separation)");
   });
 
   test("Qwen 전용 문구는 없다", () => {

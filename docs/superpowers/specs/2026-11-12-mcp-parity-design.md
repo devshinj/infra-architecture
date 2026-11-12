@@ -26,5 +26,3 @@ Claude Code 로 InfraSketch MCP(`/api/mcp`)를 써서 VMS 구성도를 그려 �
 - 경고 점검의 Clef db_exposed 판정·Qwen 문구를 MCP 에 붙이는 것.
 - 같은 망 안 client → 서버 연결의 `no_firewall` 경고(앱과 공통 규칙 품질 문제).
 - 문서 사이트(feat/docs-site) 동기화 — main 에 합친 뒤 별도로.
-</content>
-</invoke>

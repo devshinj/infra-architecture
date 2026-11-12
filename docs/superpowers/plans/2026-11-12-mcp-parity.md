@@ -110,9 +110,3 @@ Spec: `docs/superpowers/specs/2026-11-12-mcp-parity-design.md`
 4. 테스트:
    - `tests/unit/clarify.test.ts`: `clarifyGuideLines()` 가 6줄이고 각 줄이 그 key 와 모든 선택지를 담는다. video_site 줄에 "지자체 통합관제센터" 와 "camera·video_recorder" 가 들어 있다. `CLARIFY_KEYS` 가 6개다. 기존 detectForks 테스트는 그대로 통과.
    - `tests/unit/mcp-guide.test.ts`: 가이드에 "## 그리기 전에 물을 것", "가정 key=video_site", "흐름 3~5개", "no_link:" 가 들어 있고, seed 지식으로 24000자 이하·줄임 안내 없음 테스트가 그대로 통과한다.
-</content>
-</invoke>
-<invoke name="Bash">
-<parameter name="command">cd C:/Users/devsh/Desktop/new-study/infra-mcp-parity && git add docs/superpowers && git commit -q -m "docs(mcp): MCP 그리기를 앱 대화와 맞추는 설계와 계획
-
-Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>" && git log --oneline -1 && S=C:/Users/devsh/.claude/plugins/cache/claude-plugins-official/superpowers/7.0.0/skills/subagent-driven-development/scripts && bash $S/sdd-workspace docs/superpowers/plans/2026-11-12-mcp-parity.md

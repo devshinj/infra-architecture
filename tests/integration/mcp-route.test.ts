@@ -219,6 +219,13 @@ describe("/api/mcp", () => {
 
     const plain = dataOf<{ projectId: string }>(await call(client, "create_project", { name: "기본" }));
     expect(dataOf<{ name: string }[]>(await call(client, "list_diagrams", { project_id: plain.projectId })).map((d) => d.name)).toEqual(["새 구성도"]);
+
+    for (const blank of ["", "   "]) {
+      const r = await call(client, "create_project", { name: `빈 이름 ${blank.length}`, diagram_name: blank });
+      expect(r.isError).toBeFalsy();
+      const { projectId } = dataOf<{ projectId: string }>(r);
+      expect(dataOf<{ name: string }[]>(await call(client, "list_diagrams", { project_id: projectId })).map((d) => d.name)).toEqual(["새 구성도"]);
+    }
   });
 
   test("create_project 는 깨진 이름을 isError 로 거절한다", async () => {
