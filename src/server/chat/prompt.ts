@@ -1,6 +1,7 @@
 import { NODE_KINDS } from "@/domain/catalog";
 import { LIMITS, type NodeExplanation } from "@/domain/explain";
 import type { Flow } from "@/domain/flows";
+import { glossaryBlock, type MatchedTerm } from "@/domain/glossaryMatch";
 import type { MissingItem } from "@/domain/missing";
 import { METHOD_LABELS, pairKey, requiredMethod, type NetworkKnowledge } from "@/domain/network";
 import type { DiagramState } from "@/domain/types";
@@ -223,6 +224,8 @@ export function buildMessages(input: {
   flows?: Flow[];
   /** 망 지식. 있으면 "현재 구성" 바로 뒤에 망 종류·망 짝 규칙을 넣는다. */
   network?: NetworkKnowledge;
+  /** 요청에 나온 사전 용어와 정의. 있으면 "참조 노드" 앞에 넣는다. */
+  terms?: MatchedTerm[];
 }): ChatMessage[] {
   const answerMode = input.intent === "question" || input.intent === "other";
   const system = answerMode ? ANSWER_PROMPT : SYSTEM_PROMPT;
@@ -234,7 +237,7 @@ export function buildMessages(input: {
   const flowBlock = input.flows?.length ? `흐름:\n${summarizeFlows(input.flows)}\n\n` : "";
   const netBlock = input.network ? `${networkBlock(input.state, input.network)}\n\n` : "";
   const warnBlock = warningBlock(input.state, input.network);
-  const user = `현재 구성:\n${summarizeState(input.state, input.network)}\n\n${netBlock}${flowBlock}${warnBlock}참조 노드:\n${refs}\n\n${missingBlock}요청: ${input.text}${cont}`;
+  const user = `현재 구성:\n${summarizeState(input.state, input.network)}\n\n${netBlock}${flowBlock}${warnBlock}${glossaryBlock(input.terms ?? [])}참조 노드:\n${refs}\n\n${missingBlock}요청: ${input.text}${cont}`;
   return [
     { role: "system", content: system },
     ...replayHistory(input.history, answerMode).slice(-HISTORY_LIMIT),
@@ -483,8 +486,10 @@ export function buildAskMessages(input: {
   explanation?: NodeExplanation;
   history: { role: "user" | "assistant"; content: string }[];
   text: string;
+  /** 질문에 나온 사전 용어와 정의. 있으면 "질문" 앞에 넣는다. */
+  terms?: MatchedTerm[];
 }): ChatMessage[] {
-  const user = `대상 노드:\n${explainContext(input.state, "node", input.nodeId)}\n\n설명:\n${explanationBlock(input.explanation)}\n\n질문: ${input.text}`;
+  const user = `대상 노드:\n${explainContext(input.state, "node", input.nodeId)}\n\n설명:\n${explanationBlock(input.explanation)}\n\n${glossaryBlock(input.terms ?? [])}질문: ${input.text}`;
   return [
     { role: "system", content: ASK_PROMPT },
     ...input.history.slice(-HISTORY_LIMIT).map((h) => ({ role: h.role, content: h.content })),

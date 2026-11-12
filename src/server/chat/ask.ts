@@ -3,6 +3,7 @@ import type { DiagramState } from "@/domain/types";
 import type { Intent } from "@/server/llm/clef";
 import { cachedNodeExplanation } from "@/server/explain";
 import { createThinkStripper } from "@/server/llm/think";
+import { matchUserTerms } from "@/server/glossary";
 import { getNetworkKnowledge } from "@/server/network";
 import { getOwnedDiagram, NotFoundError, ValidationError } from "@/server/projects";
 import { getLatestState } from "@/server/versions";
@@ -169,7 +170,12 @@ async function askInSession(
     console.error("ask explanation lookup failed", { diagramId, nodeId, err: err instanceof Error ? err.message : String(err) });
     return undefined;
   });
-  const messages = buildAskMessages({ state, nodeId, explanation, history, text: args.text });
+  // 질문에 나온 사전 용어의 정의. 못 읽으면 없이 답한다.
+  const terms = await matchUserTerms(args.userId, args.text).catch((err) => {
+    console.error("ask glossary match failed", err);
+    return [];
+  });
+  const messages = buildAskMessages({ state, nodeId, explanation, history, text: args.text, ...(terms.length ? { terms } : {}) });
   emit({ t: "status", phase: "thinking" });
 
   // <think> 를 지운 글만 보내고, 보낸 글 그대로 모아 저장한다(중단·오류여도).

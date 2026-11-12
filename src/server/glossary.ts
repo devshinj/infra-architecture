@@ -3,6 +3,7 @@ import { and, asc, eq, ilike, or, sql } from "drizzle-orm";
 import { db } from "@/db/client";
 import { glossaryTerms } from "@/db/schema";
 import { normalizeTerm, pickTerm } from "@/domain/explain";
+import { matchGlossaryTerms, type MatchedTerm } from "@/domain/glossaryMatch";
 import { GLOSSARY_SEED_CORE } from "@/domain/glossary-seed";
 import { GLOSSARY_SEED_BATCH3 } from "@/domain/glossary-seed-batch3";
 import { GLOSSARY_SEED_BATCH4 } from "@/domain/glossary-seed-batch4";
@@ -70,6 +71,20 @@ export async function findTerm(userId: string, keys: string[]): Promise<Glossary
       ),
     );
   return pickTerm(rows, wanted);
+}
+
+/**
+ * 사용자 말(text)에 나온 사전 용어와 그 정의. 대화·질문 프롬프트에 붙인다.
+ * 처음 쓰는 계정도 초안이 있도록 먼저 채운다. 사전 전체(수백 줄)를 읽어 메모리에서 찾는다.
+ */
+export async function matchUserTerms(userId: string, text: string): Promise<MatchedTerm[]> {
+  if (!text.trim()) return [];
+  await ensureSeeded(userId);
+  const rows = await db
+    .select({ key: glossaryTerms.key, aliases: glossaryTerms.aliases, term: glossaryTerms.term, definition: glossaryTerms.definition })
+    .from(glossaryTerms)
+    .where(eq(glossaryTerms.userId, userId));
+  return matchGlossaryTerms(text, rows);
 }
 
 const escapeLike = (s: string) => s.replace(/[\\%_]/g, (c) => `\\${c}`);

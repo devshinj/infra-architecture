@@ -8,7 +8,7 @@ import { glossaryTerms } from "@/db/schema";
 import { normalizeTerm } from "@/domain/explain";
 import { GLOSSARY_SEED, GLOSSARY_SEED_CORE } from "@/domain/glossary-seed";
 import { GLOSSARY_SEED_EXTRA } from "@/domain/glossary-seed-extra";
-import { addAiTerm, ensureSeeded, findTerm, listTerms, updateTerm } from "@/server/glossary";
+import { addAiTerm, ensureSeeded, findTerm, listTerms, matchUserTerms, updateTerm } from "@/server/glossary";
 import { NotFoundError, ValidationError } from "@/server/projects";
 
 import { makeOwnedDiagram } from "./helpers";
@@ -165,4 +165,22 @@ test("listTerms filters", async () => {
   const unreviewed = await listTerms(userId, { unreviewedOnly: true });
   expect(unreviewed).toHaveLength(GLOSSARY_SEED.length - 1);
   expect(unreviewed.some((r) => r.id === redis.id)).toBe(false);
+});
+
+test("matchUserTerms: 처음 쓰는 계정도 초안을 채운 뒤 찾고, 사용자가 고친 정의를 돌려준다", async () => {
+  const userId = await newUser();
+  // 초안을 넣기 전에 불러도 찾는다.
+  const first = await matchUserTerms(userId, "SFU랑 Redis 차이가 뭐야?");
+  expect(first.map((t) => t.term).sort()).toEqual(["Redis", "SFU"]);
+  expect(await matchUserTerms(userId, "   ")).toEqual([]);
+  expect(await matchUserTerms(userId, "이거 왼쪽으로 옮겨 줘")).toEqual([]);
+
+  const row = (await rowsOf(userId)).find((r) => r.term === "SFU")!;
+  await updateTerm(userId, row.id, { definition: "우리 회사에서 SFU 는 화상회의 중계 서버를 말합니다." });
+  const edited = await matchUserTerms(userId, "sfu 가 뭐야");
+  expect(edited).toEqual([{ term: "SFU", definition: "우리 회사에서 SFU 는 화상회의 중계 서버를 말합니다." }]);
+
+  // 다른 사용자의 사전은 보지 않는다.
+  const other = await newUser();
+  expect((await matchUserTerms(other, "sfu 가 뭐야"))[0]!.definition).not.toContain("우리 회사");
 });
