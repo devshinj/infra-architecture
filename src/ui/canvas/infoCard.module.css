@@ -94,3 +94,16 @@
 
 /* 연결 방식 예상 줄 아래의 망 종류 확인(추정 망마다 하나). 주의 줄 글자 칸과 줄을 맞춘다. */
 .guesses { display: flex; flex-direction: column; gap: 8px; padding: 4px 8px 8px; }
+
+/* 가로 휴대폰(높이 ≤ 480): 접힌 줄을 짧은 단추로 「구성 정보 7·1·4」. 항목 이름은 화면에서만 감추고 버튼 설명으로 읽힌다.
+   낮은 화면에서 넓은 줄이 캔버스 바닥을 가리지 않게 한다. 펼치면 각 절 제목이 이름을 다시 보인다. */
+@media (max-height: 480px) and (orientation: landscape) {
+  .card:not([data-open]) { min-width: 0; }
+  .card:not([data-open]) .segName { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  /* 이름 뒤·항목 사이 띄어쓰기도 없앤다: 줄 글자 크기를 0 으로 두고 제목(13px)·숫자·가운뎃점만 크기를 되돌린다. */
+  .card:not([data-open]) .line { font-size: 0; }
+  .card:not([data-open]) .seg { margin-left: 0; padding-left: 0; border-left: 0; }
+  .card:not([data-open]) .seg .num { font-size: 12px; }
+  .card:not([data-open]) .seg + .seg::before { content: "·"; margin: 0 2px; font-size: 12px; color: var(--text-secondary); }
+  .card:not([data-open]) .title { margin-right: 4px; }
+}

@@ -853,3 +853,29 @@ test("손가락으로 쓰는 화면에서는 연결 이름 옵션을 '누를 때
     window.matchMedia = original;
   }
 });
+
+test("이름을 붙인 도구 모음이 한 줄에 안 들면 아이콘만 보이고 이름은 툴팁으로 준다", () => {
+  const desc = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "offsetTop")!;
+  // 마지막 묶음(이미지)이 둘째 줄로 내려간 것처럼 잰다.
+  Object.defineProperty(HTMLElement.prototype, "offsetTop", {
+    configurable: true,
+    get(this: HTMLElement) {
+      return this.getAttribute("aria-label") === "이미지" ? 40 : 0;
+    },
+  });
+  try {
+    render(<Canvas {...baseProps(emptyState())} />);
+    const bar = screen.getByRole("toolbar", { name: "캔버스 도구" });
+    expect(bar).toHaveAttribute("data-compact");
+    expect(screen.getByRole("button", { name: "자동 정렬" })).toHaveAttribute("title", "자동 정렬");
+    expect(screen.getByRole("button", { name: "보기" })).toHaveAttribute("title", "보기");
+  } finally {
+    Object.defineProperty(HTMLElement.prototype, "offsetTop", desc);
+  }
+});
+
+test("한 줄에 들면 이름을 보이고 툴팁을 겹쳐 두지 않는다", () => {
+  render(<Canvas {...baseProps(emptyState())} />);
+  expect(screen.getByRole("toolbar", { name: "캔버스 도구" })).not.toHaveAttribute("data-compact");
+  expect(screen.getByRole("button", { name: "자동 정렬" })).not.toHaveAttribute("title");
+});
