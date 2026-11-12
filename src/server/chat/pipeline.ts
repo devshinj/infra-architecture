@@ -14,6 +14,7 @@ import type { QwenClient } from "@/server/llm/qwen";
 import { getOwnedDiagram, NotFoundError, ValidationError } from "@/server/projects";
 import { createVersion, getLatestState } from "@/server/versions";
 import { applyFlowOps, listFlows, rewriteFlows } from "@/server/flows";
+import { matchUserTerms } from "@/server/glossary";
 import { getNetworkKnowledge } from "@/server/network";
 
 import { SESSION_GONE_MESSAGE, sessionPayload, type ChatEvent, type MessageMeta } from "./events";
@@ -255,7 +256,12 @@ async function lockedTurn(args: TurnArgs, sessionId: string | null, followUp: bo
       console.error("chat list flows failed", err);
       return [];
     });
-    const network = knowledge ? { network: knowledge } : {};
+    // 요청에 나온 사전 용어의 정의. 못 읽으면 없이 돈다.
+    const terms = await matchUserTerms(args.userId, clean).catch((err) => {
+      console.error("chat glossary match failed", err);
+      return [];
+    });
+    const network = { ...(knowledge ? { network: knowledge } : {}), ...(terms.length ? { terms } : {}) };
     const messages = buildMessages({ intent, text: clean, state, mentions, history, missing: openMissing, flows, ...network });
     const keepText = !asksStepText(clean);
     emit({ t: "status", phase: "thinking" });
