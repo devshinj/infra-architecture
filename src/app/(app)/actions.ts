@@ -511,7 +511,7 @@ export async function logoutAction(): Promise<void> {
   await signOut({ redirectTo: "/login" });
 }
 
-/** Claude Code 연결 키. 날짜는 문자열로 넘긴다(화면에서 그대로 보이고 서버 액션 경계도 가볍다). */
+/** MCP 연결 키. 날짜는 문자열로 넘긴다(화면에서 그대로 보이고 서버 액션 경계도 가볍다). */
 export type McpKeyRow = { id: string; name: string; prefix: string; createdAt: string; lastUsedAt: string | null };
 
 const toKeyRow = (k: Awaited<ReturnType<typeof listMcpKeys>>[number]): McpKeyRow => ({
@@ -530,7 +530,7 @@ export async function listMcpKeysAction(): Promise<ActionResult<{ keys: McpKeyRo
 export async function createMcpKeyAction(name: string): Promise<ActionResult<{ id: string; key: string; prefix: string }>> {
   return runResult(async (uid) => {
     const k = await createMcpKey(uid, typeof name === "string" ? name : "");
-    revalidatePath("/claude-code");
+    revalidatePath("/mcp");
     return k;
   });
 }
@@ -538,7 +538,7 @@ export async function createMcpKeyAction(name: string): Promise<ActionResult<{ i
 export async function deleteMcpKeyAction(id: string): Promise<ActionResult> {
   return runResult(async (uid) => {
     await deleteMcpKey(uid, reqString(id, "키"));
-    revalidatePath("/claude-code");
+    revalidatePath("/mcp");
     return {};
   });
 }

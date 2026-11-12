@@ -29,10 +29,10 @@ export const NOT_ARRAY_MESSAGE = "commands 는 명령 목록(배열)이어야 �
 
 export { diagramUrl };
 
-/** 이력에 남길 한 줄: 앞뒤 공백을 지우고, 비면 "Claude Code에서 N곳 바꿈", 80자에서 자른다. */
+/** 이력에 남길 한 줄: 앞뒤 공백을 지우고, 비면 "MCP로 N곳 바꿈", 80자에서 자른다. */
 export function versionSummary(summary: string | undefined, changed: number): string {
   const clean = typeof summary === "string" ? summary.trim() : "";
-  const text = clean === "" ? `Claude Code에서 ${changed}곳 바꿈` : clean;
+  const text = clean === "" ? `MCP로 ${changed}곳 바꿈` : clean;
   return [...text].slice(0, SUMMARY_MAX).join("");
 }
 

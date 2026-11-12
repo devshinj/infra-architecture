@@ -68,7 +68,7 @@ export function Sidebar({ projects, userName }: { projects: SidebarProject[]; us
   const [account, setAccount] = useState(false);
   const glossaryCurrent = pathname === "/glossary";
   const networkCurrent = pathname === "/network";
-  const claudeCodeCurrent = pathname === "/claude-code";
+  const mcpCurrent = pathname === "/mcp";
   const { narrow } = shell;
 
   // 좁은 화면: 사이드바는 위 막대의 ☰ 로 여는 서랍이다. 다른 화면으로 가거나 넓은 화면이 되면 닫는다.
@@ -383,17 +383,17 @@ export function Sidebar({ projects, userName }: { projects: SidebarProject[]; us
     </Link>
   );
   // inAccount: 접힌 레일의 계정 팝오버 안(한 줄 전체를 차지한다). 펼친 사이드바에서는 용어 사전·망 지식과 한 묶음이다.
-  const claudeCodeLink = (inAccount: boolean) => (
+  const mcpLink = (inAccount: boolean) => (
     <Link
-      href="/claude-code"
-      className={`${styles.sideLink} ${inAccount ? styles.accountLink : ""} ${claudeCodeCurrent ? styles.sideLinkActive : ""}`}
-      aria-current={claudeCodeCurrent ? "page" : undefined}
+      href="/mcp"
+      className={`${styles.sideLink} ${inAccount ? styles.accountLink : ""} ${mcpCurrent ? styles.sideLinkActive : ""}`}
+      aria-current={mcpCurrent ? "page" : undefined}
       onClick={() => {
         setAccount(false);
         setDrawer(false);
       }}
     >
-      Claude Code 연결
+      MCP 연결
       <LinkPending />
     </Link>
   );
@@ -407,7 +407,7 @@ export function Sidebar({ projects, userName }: { projects: SidebarProject[]; us
   );
   const accountRow = (
     <>
-      {claudeCodeLink(true)}
+      {mcpLink(true)}
       {userRow}
     </>
   );
@@ -441,8 +441,8 @@ export function Sidebar({ projects, userName }: { projects: SidebarProject[]; us
               <span className={styles.topbarDiagram}>용어 사전</span>
             ) : networkCurrent ? (
               <span className={styles.topbarDiagram}>망 지식</span>
-            ) : claudeCodeCurrent ? (
-              <span className={styles.topbarDiagram}>Claude Code 연결</span>
+            ) : mcpCurrent ? (
+              <span className={styles.topbarDiagram}>MCP 연결</span>
             ) : (
               <span className={styles.topbarBrand}>
                 <LogoMark size={18} />
@@ -588,7 +588,7 @@ export function Sidebar({ projects, userName }: { projects: SidebarProject[]; us
           <div className={styles.pageLinks}>
             {glossaryLink(false)}
             {networkLink(false)}
-            {claudeCodeLink(false)}
+            {mcpLink(false)}
           </div>
         </div>
         <div className={`${styles.user} ${styles.userSeam}`}>{userRow}</div>

@@ -76,7 +76,7 @@ describe("applyMcpCommands", () => {
     expect(r).toMatchObject({ ok: true, dryRun: false, version: 2, changed: 3, flowsChanged: 0, url: diagramUrl(projectId, ids.diagramId) });
     expect(diagramUrl(projectId, ids.diagramId)).toMatch(new RegExp(`/p/${projectId}/d/${ids.diagramId}$`));
     const [v] = await listVersions(ids.diagramId);
-    expect(v).toMatchObject({ number: 2, source: "mcp", via: "mcp", summary: "Claude Code에서 3곳 바꿈" });
+    expect(v).toMatchObject({ number: 2, source: "mcp", via: "mcp", summary: "MCP로 3곳 바꿈" });
     const s = await latest(ids.diagramId);
     expect(s.nodes.db).toBeDefined();
     expect(s.edges.e2).toBeDefined();
@@ -90,14 +90,14 @@ describe("applyMcpCommands", () => {
     const [v] = await listVersions(ids.diagramId);
     expect(v.summary).toBe("가".repeat(80));
     await applyMcpCommands({ ...ids, baseVersion: 2, commands: [relabel], summary: "   " });
-    expect((await listVersions(ids.diagramId))[0].summary).toBe("Claude Code에서 1곳 바꿈");
+    expect((await listVersions(ids.diagramId))[0].summary).toBe("MCP로 1곳 바꿈");
   });
 
   test("기본 요약의 N 은 가정 명령도 센다(0곳이 되지 않는다)", async () => {
     const ids = await setup();
     const r = await applyMcpCommands({ ...ids, baseVersion: 1, commands: [{ op: "set_assumption", key: "ha", value: "이중화 없음" }] });
     expect(r).toMatchObject({ ok: true, version: 2, changed: 0 });
-    expect((await listVersions(ids.diagramId))[0].summary).toBe("Claude Code에서 1곳 바꿈");
+    expect((await listVersions(ids.diagramId))[0].summary).toBe("MCP로 1곳 바꿈");
   });
 
   test("commands 가 배열이 아니면 거절", async () => {

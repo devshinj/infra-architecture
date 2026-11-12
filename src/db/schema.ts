@@ -140,7 +140,7 @@ export const diagramVersions = pgTable(
     status: text("status").$type<VersionStatus>().notNull().default("complete"),
     restoredFrom: integer("restored_from"),
     messageId: uuid("message_id").references(() => messages.id, { onDelete: "set null" }),
-    // Claude Code(MCP)로 만든 버전이면 "mcp". 되돌리기처럼 source 가 다른 버전에도 붙는다.
+    // MCP로 만든 버전이면 "mcp". 되돌리기처럼 source 가 다른 버전에도 붙는다.
     via: text("via").$type<"mcp">(),
     summary: text("summary"),
     createdAt: createdAt(),
@@ -148,7 +148,7 @@ export const diagramVersions = pgTable(
   (t) => [unique().on(t.diagramId, t.number)],
 );
 
-// Claude Code 연결용 키. 원문은 저장하지 않고 SHA-256 해시만 둔다.
+// MCP 연결용 키. 원문은 저장하지 않고 SHA-256 해시만 둔다.
 export const mcpKeys = pgTable("mcp_keys", {
   id: uuid("id").primaryKey().defaultRandom(),
   userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),

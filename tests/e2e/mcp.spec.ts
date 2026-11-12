@@ -22,16 +22,16 @@ const nodes = (page: Page) => page.locator(".react-flow__node-infra");
 
 /** 키 화면 링크는 펼친 사이드바에 바로 있거나, 레일이면 "계정" 팝오버 안에 있다. */
 async function openKeyScreen(page: Page) {
-  const link = page.getByRole("link", { name: "Claude Code 연결" });
+  const link = page.getByRole("link", { name: "MCP 연결" });
   const rail = page.getByRole("button", { name: "계정" });
   // 펼친 사이드바의 링크나 레일의 계정 버튼 중 먼저 나타나는 쪽을 기다린다.
   await link.or(rail).first().waitFor();
   if (await rail.isVisible()) await rail.click();
   await link.click();
-  await page.waitForURL(/\/claude-code$/);
+  await page.waitForURL(/\/mcp$/);
 }
 
-const WRONG_KEY = "키가 맞지 않거나 지워졌어요. Claude Code 연결 화면에서 새 키를 만들어 다시 등록해 주세요.";
+const WRONG_KEY = "키가 맞지 않거나 지워졌어요. InfraSketch 의 MCP 연결 화면에서 새 키를 만들어 다시 등록해 주세요.";
 
 const MCP_HEADERS = (key: string) => ({
   authorization: `Bearer ${key}`,
@@ -62,7 +62,7 @@ test("Claude Code 연동: 키 만들기, 열어 둔 구성도에 변경이 뜨�
 
   // 키 만들기: 원문은 화면에 한 번 나온다.
   await openKeyScreen(page);
-  await expect(page.getByRole("heading", { name: "Claude Code 연결" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "MCP 연결" })).toBeVisible();
   await page.getByLabel("키 이름").fill("시험 키");
   await page.getByRole("button", { name: "키 만들기" }).click();
   const fresh = page.getByRole("region", { name: /키를 만들었어요/ });
@@ -116,7 +116,7 @@ test("Claude Code 연동: 키 만들기, 열어 둔 구성도에 변경이 뜨�
 
   // 이력에 Claude Code 에서 만든 버전이 보인다.
   await page.getByRole("tab", { name: "이력" }).click();
-  await expect(page.getByRole("tabpanel").getByText("Claude Code에서", { exact: true })).toBeVisible();
+  await expect(page.getByRole("tabpanel").getByText("MCP로", { exact: true })).toBeVisible();
 
   // 키를 지우면 같은 호출이 403.
   await openKeyScreen(page);

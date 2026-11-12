@@ -4,7 +4,7 @@ import { PageSkeleton } from "@/ui/skeleton/PageSkeleton";
 export default function Loading() {
   return (
     <PageSkeleton
-      title="Claude Code 연결"
+      title="MCP 연결"
       lead
       tools
       columns="minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr) max-content"

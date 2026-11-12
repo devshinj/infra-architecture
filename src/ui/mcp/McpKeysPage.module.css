@@ -1,9 +1,30 @@
 /* Hallmark · part of the InfraSketch Vantage redesign, stamped in src/styles/globals.css · shape: app screen · posture: restrained */
-/* Claude Code 연결 화면. Tokens only (망 지식 화면과 같은 모양). */
+/* MCP 연결 화면. Tokens only. 용어 사전·망 지식과 같은 범례표 + 주기 판 배치: 왼쪽 키, 오른쪽 연결 방법. */
 .page { box-sizing: border-box; height: 100%; overflow-y: auto; background: var(--bg-canvas); color: var(--text-primary); padding: 32px 32px 40px; padding-left: calc(var(--shell-inset-left, 0px) + var(--safe-l, 0px) + 40px); display: flex; flex-direction: column; gap: 24px; }
 /* 화면 제목: 가는 굵기의 큰 글자 하나(작업 화면 1.2 비율 단계의 맨 위). */
 .title { margin: 0; font-size: var(--text-page); font-weight: var(--weight-display); letter-spacing: var(--tracking-display); line-height: 1.15; overflow-wrap: break-word; min-width: 0; }
 .lead { margin: 0; font-size: 14px; line-height: 1.6; color: var(--text-secondary); max-width: 64ch; word-break: keep-all; }
+/* 두 칸: 왼쪽 키 만들기·내 키, 오른쪽 연결 방법 주기 판(320–400px). */
+.body { display: grid; grid-template-columns: minmax(0, 1fr) minmax(320px, 400px); gap: 24px; align-items: start; }
+.mainCol { min-width: 0; display: flex; flex-direction: column; gap: 24px; }
+/* 주기 판 자리: 화면 위 16px 에 붙어 따라오고, 화면보다 길면 판 밖 칸이 스크롤한다(눈금은 판에). */
+.notesCol { position: sticky; top: 16px; min-width: 0; max-height: calc(100dvh - 32px); overflow-y: auto; overscroll-behavior: contain; }
+.notes { display: flex; flex-direction: column; gap: 12px; padding: 20px; background: var(--bg-canvas); border: 1px solid var(--line-node); border-radius: 0; }
+.notesTitle { margin: 0; font-size: var(--text-title); font-weight: 600; }
+.steps { margin: 0; padding: 0 0 0 20px; display: flex; flex-direction: column; gap: 16px; font-size: 13px; line-height: 1.6; }
+/* 줄은 번호(::marker)가 보이게 list-item 그대로 두고, 안의 조각을 위아래로 쌓는다. */
+.steps li { padding-left: 4px; }
+.steps li > * { display: block; }
+.steps li > * + * { margin-top: 6px; }
+.steps li > .actions { display: flex; }
+.steps li::marker { color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+.steps b { font-weight: 600; }
+.steps span { color: var(--text-secondary); word-break: keep-all; }
+.kv { margin: 0; display: flex; flex-direction: column; gap: 4px; font-size: 12px; }
+.kv div { display: grid; grid-template-columns: 36px minmax(0, 1fr); gap: 8px; align-items: baseline; }
+.kv dt { color: var(--text-secondary); }
+.kv dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+.kv code { font-family: var(--font-mono); font-size: 12px; }
 .section { display: flex; flex-direction: column; gap: 12px; }
 .section h2, .fresh h2 { margin: 0; font-size: var(--text-title); font-weight: 600; text-wrap: balance; }
 .form { display: flex; flex-direction: column; gap: 12px; padding: 16px; background: var(--color-paper-2); border: 0; border-radius: var(--radius-surface); max-width: 560px; }
@@ -14,7 +35,7 @@
 }
 .fresh { display: flex; flex-direction: column; gap: 12px; padding: 16px; background: var(--color-paper-2); border: 1px solid var(--line-node); border-radius: var(--radius-surface); max-width: 760px; }
 .warn { margin: 0; font-size: 13px; font-weight: 600; }
-.code { display: block; font-family: var(--font-mono); font-size: 12.5px; line-height: 1.5; padding: 8px 12px; background: var(--bg-canvas); border: 1px solid var(--line-shell); border-radius: var(--radius-control); overflow-wrap: anywhere; user-select: all; }
+.code { display: block; margin: 0; white-space: pre-wrap; font-family: var(--font-mono); font-size: 12.5px; line-height: 1.5; padding: 8px 12px; background: var(--bg-canvas); border: 1px solid var(--line-shell); border-radius: var(--radius-control); overflow-wrap: anywhere; user-select: all; }
 .meta { margin: 0; font-size: 12px; line-height: 1.4; color: var(--text-secondary); }
 .empty { margin: 0; padding: 8px 12px; font-size: 13px; color: var(--text-secondary); }
 .table { border-collapse: collapse; font-size: 13px; width: 100%; border: 1px solid var(--line-node); }
@@ -31,4 +52,7 @@
   .title { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
   .form input { min-height: 44px; }
   .table { display: block; overflow-x: auto; }
+  /* 좁은 화면: 연결 방법 판은 키 아래로 쌓는다. */
+  .body { grid-template-columns: minmax(0, 1fr); }
+  .notesCol { position: static; max-height: none; overflow: visible; }
 }

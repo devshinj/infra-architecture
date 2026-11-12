@@ -1206,7 +1206,7 @@ describe("Claude Code 변경 알아채기", () => {
   const claudeWrote = (n: number) => {
     head = { ...head, version: n, mcpVersion: n };
   };
-  const notice = () => screen.queryByText("Claude Code가 구성도를 바꿨어요");
+  const notice = () => screen.queryByText("MCP로 연결한 도구가 구성도를 바꿨어요");
   const versionRows = (...ns: number[]) => ns.map((number) => ({ number, source: "ai", status: "complete", restoredFrom: null, createdAt: new Date(0) }));
   /** 화면에 그려진 노드처럼 크기를 준다(유령은 크기 0 인 것을 뜨지 않는다). */
   const drawNodes = () => {

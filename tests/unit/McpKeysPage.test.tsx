@@ -27,11 +27,22 @@ const keys: McpKeyRow[] = [
 
 test("목록에 이름·앞 8글자·마지막 사용을 보인다", () => {
   render(<McpKeysPage initialKeys={keys} />);
-  expect(screen.getByRole("heading", { name: "Claude Code 연결" })).toBeInTheDocument();
+  expect(screen.getByRole("heading", { name: "MCP 연결" })).toBeInTheDocument();
   const row = within(screen.getByText("내 노트북").closest("tr")!);
   expect(row.getByText("isk_abcd")).toBeInTheDocument();
   expect(row.getByText("아직 안 씀")).toBeInTheDocument();
   expect(within(screen.getByText("회사 PC").closest("tr")!).queryByText("아직 안 씀")).toBeNull();
+});
+
+test("키를 만들기 전에도 연결 방법이 보이고, 키 자리는 <키> 로 둔다", () => {
+  render(<McpKeysPage initialKeys={[]} />);
+  const howto = within(screen.getByRole("complementary", { name: "연결 방법" }));
+  expect(howto.getByText(`${window.location.origin}/api/mcp`)).toBeInTheDocument();
+  expect(
+    howto.getByText(`claude mcp add --transport http infrasketch ${window.location.origin}/api/mcp --header "Authorization: Bearer <키>"`),
+  ).toBeInTheDocument();
+  expect(howto.getByRole("button", { name: "명령 복사" })).toBeInTheDocument();
+  expect(howto.getByRole("button", { name: "설정 복사" })).toBeInTheDocument();
 });
 
 test("빈 이름이면 안내 문구를 보이고 만들지 않는다", async () => {
@@ -58,8 +69,10 @@ test("만들면 키와 설정 예가 보이고, 닫으면 키 원문이 DOM 에�
     ),
   ).toBeInTheDocument();
   expect(screen.getByText("새 키")).toBeInTheDocument(); // 목록에도 추가
-  // 키가 틀렸거나 지워졌을 때 다시 등록하는 법도 설정 예 옆에 있다.
-  expect(screen.getByText(/'키가 맞지 않아요' 오류가 나면/)).toHaveTextContent("claude mcp remove infrasketch");
+  // 설정 파일 예에도 같은 키가 들어간다.
+  expect(screen.getByText(/"mcpServers"/)).toHaveTextContent(`"Authorization": "Bearer ${RAW}"`);
+  // 키가 틀렸거나 지워졌을 때 다시 등록하는 법도 연결 방법에 있다.
+  expect(screen.getByText(/'키가 맞지 않아요'가 나오면/)).toHaveTextContent("claude mcp remove infrasketch");
 
   await user.click(screen.getByRole("button", { name: "닫기" }));
   expect(document.body.innerHTML).not.toContain(RAW);
@@ -120,7 +133,7 @@ test("복사 버튼은 clipboard 로 쓰고, 실패하면 직접 복사 안내�
   expect(write).toHaveBeenCalledWith(RAW);
 
   write.mockRejectedValue(new Error("denied"));
-  await user.click(screen.getByRole("button", { name: "설정 예 복사" }));
+  await user.click(screen.getByRole("button", { name: "설정 복사" }));
   expect(await screen.findByText("직접 선택해 복사해 주세요")).toBeInTheDocument();
   if (original) Object.defineProperty(navigator, "clipboard", original);
   else delete (navigator as unknown as Record<string, unknown>).clipboard;

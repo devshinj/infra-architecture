@@ -15,7 +15,7 @@ import { makeOwnedDiagram } from "./helpers";
 
 const URL_MCP = "http://localhost/api/mcp";
 const GUIDE_LINE = "InfraSketch에 처음 그리기 전에 get_guide를 먼저 읽으세요.";
-const WRONG_KEY = "키가 맞지 않거나 지워졌어요. Claude Code 연결 화면에서 새 키를 만들어 다시 등록해 주세요.";
+const WRONG_KEY = "키가 맞지 않거나 지워졌어요. InfraSketch 의 MCP 연결 화면에서 새 키를 만들어 다시 등록해 주세요.";
 
 async function makeUserKey(): Promise<{ userId: string; key: string }> {
   const tag = randomUUID().slice(0, 8);

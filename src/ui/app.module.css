@@ -103,7 +103,7 @@
 .sideFoot { padding: 8px; border-top: 1px solid var(--glass-line); display: flex; flex-direction: column; gap: 8px; }
 .user { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; font-size: 12px; color: var(--text-secondary); padding: 0 4px; }
 .user span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-/* 펼친 사이드바 바닥: 새 프로젝트, 그 아래 화면 링크 셋(용어 사전·망 지식·Claude Code 연결)을 한 묶음으로, 계정 줄은 제 이음매 아래. */
+/* 펼친 사이드바 바닥: 새 프로젝트, 그 아래 화면 링크 셋(용어 사전·망 지식·MCP 연결)을 한 묶음으로, 계정 줄은 제 이음매 아래. */
 .pageLinks { display: flex; flex-direction: column; gap: 4px; }
 .userSeam { flex: none; padding: 8px 12px; border-top: 1px solid var(--glass-line); }
 /* 버튼 모양은 공용 Button(button.module.css)이 정한다. */
