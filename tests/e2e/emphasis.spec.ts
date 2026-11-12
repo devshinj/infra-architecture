@@ -1,12 +1,12 @@
 import { expect, test, type Page } from "@playwright/test";
 
 const uid = () => Math.random().toString(36).slice(2, 8);
-const S4_TITLE = "대규모 멀티 AZ 커머스";
-const S4_NODE_COUNT = 33;
-// s4 의 API #1 은 연결 9개에 닿는다(web-1·bastion 에서 들어오고 DB·캐시·검색·S3·SQS·PG·문자로 나간다).
-const API1_EDGES = 9;
+const SHOP_TITLE = "AWS 쇼핑몰";
+const SHOP_NODE_COUNT = 15;
+// "AWS 쇼핑몰" 샘플의 API #1 은 연결 4개에 닿는다(ALB 에서 들어오고 ElastiCache·RDS·NAT 로 나간다).
+const API1_EDGES = 4;
 
-async function openS4(page: Page) {
+async function openShop(page: Page) {
   const name = `em${uid()}`;
   await page.goto("/signup");
   await page.getByLabel("아이디").fill(name);
@@ -18,8 +18,8 @@ async function openS4(page: Page) {
   await page.getByRole("dialog").getByRole("button", { name: "만들기" }).click();
   await page.waitForURL(/\/p\/[^/]+\/d\/[^/]+/);
   await page.getByRole("button", { name: "샘플 불러오기" }).click();
-  await page.getByRole("menuitem", { name: S4_TITLE }).click();
-  await expect(page.locator(".react-flow__node-infra")).toHaveCount(S4_NODE_COUNT, { timeout: 30_000 });
+  await page.getByRole("menuitem", { name: SHOP_TITLE }).click();
+  await expect(page.locator(".react-flow__node-infra")).toHaveCount(SHOP_NODE_COUNT, { timeout: 30_000 });
   await expect(page.locator("g.edge[data-edge-id]").first()).toBeAttached();
 }
 
@@ -31,7 +31,9 @@ async function zoomOf(page: Page): Promise<number> {
 }
 
 test("selecting API node overlays its edges and dims unrelated zones", async ({ page }) => {
-  await openS4(page);
+  await openShop(page);
+  // 샘플이 옆으로 넓어 API #1 이 떠 있는 프로젝트 사이드바 밑에 놓인다. 사이드바를 접고 누른다.
+  await page.getByRole("button", { name: "프로젝트 영역 접기" }).click();
   const api1 = page.locator(".react-flow__node-infra").filter({ has: page.getByTitle("API #1", { exact: true }) });
   await api1.click();
   await expect(api1.locator(".node--selected")).toHaveCount(1);
@@ -46,7 +48,7 @@ test("selecting API node overlays its edges and dims unrelated zones", async ({ 
 });
 
 test("zone names are at least 10px on screen at default view", async ({ page }) => {
-  await openS4(page);
+  await openShop(page);
   // 기본 맞춤이 끝날 때까지(배율을 0.3초 사이 두 번 읽어 같을 때까지) 기다린다.
   await expect
     .poll(

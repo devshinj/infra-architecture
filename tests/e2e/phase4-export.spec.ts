@@ -2,6 +2,9 @@ import { readFile } from "node:fs/promises";
 
 import { expect, test, type Page } from "@playwright/test";
 
+// "IDC WEB-WAS-DB 이중화" 샘플(src/domain/samples/idc-3tier.ts)의 노드 수.
+const IDC_NODES = 12;
+
 const uid = () => Math.random().toString(36).slice(2, 8);
 
 async function signup(page: Page, name: string) {
@@ -57,12 +60,12 @@ test("구성도를 PNG·SVG, 어두운·흰 바탕으로 내보낸다", async ({
   await expect(trigger).toHaveAttribute("title", /비어 있어/);
 
   await importSample(page, "IDC WEB-WAS-DB 이중화");
-  await expect(page.locator(".react-flow__node-infra")).toHaveCount(9);
+  await expect(page.locator(".react-flow__node-infra")).toHaveCount(IDC_NODES);
   await expect(trigger).toBeEnabled();
   // 보조 연결 숨김(기본) 상태에서 노드를 고르면 그 노드의 보조 연결이 화면에만 드러난다. 그림에는 넣지 않는다.
   const baseEdges = await page.locator(".edge-layer g[data-edge-id]").evaluateAll((els) => els.map((e) => e.getAttribute("data-edge-id")!));
   // 노드를 골라 흐림·강조가 있는 화면에서 내보내도 그림은 평상시 모습이다(화면은 그대로 남는다).
-  await page.getByTitle("WAS#1").click();
+  await page.getByTitle("WAS #1").click();
   await expect(page.locator(".edge--dim").first()).toBeAttached();
   await expect(trigger).toBeEnabled();
   const selectedEdges = await page.locator(".edge-layer g[data-edge-id]").evaluateAll((els) => els.map((e) => e.getAttribute("data-edge-id")!));
@@ -92,14 +95,14 @@ test("구성도를 PNG·SVG, 어두운·흰 바탕으로 내보낸다", async ({
   expect(darkSvg.name).toBe("쇼핑몰-새 구성도.svg");
   const darkText = darkSvg.body.toString("utf8");
   expect(darkText.startsWith("<svg")).toBe(true);
-  expect(darkText).toContain("WAS#1");
+  expect(darkText).toContain("WAS #1");
   expect(darkText).toContain("@font-face");
   expect(darkText).toContain("rgb(4, 9, 12)");
 
   const lightSvg = await exportAs(page, "SVG 흰 바탕(문서용)");
   expect(lightSvg.name).toBe("쇼핑몰-새 구성도.svg");
   const lightText = lightSvg.body.toString("utf8");
-  expect(lightText).toContain("WAS#1");
+  expect(lightText).toContain("WAS #1");
   expect(lightText).toContain("rgb(255, 255, 255)");
   // 화면 장치(배지·접기 버튼·말풍선)·움직임 겹선·선택 강조·흐림은 그림에 없다.
   for (const t of [lightText, darkText]) {

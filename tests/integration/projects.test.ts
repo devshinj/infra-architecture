@@ -26,6 +26,7 @@ import {
   renameProject,
   savePinnedPositions,
 } from "@/server/projects";
+import { listFlows } from "@/server/flows";
 import { SAMPLES, importSample } from "@/server/samples";
 
 async function user(name: string): Promise<string> {
@@ -50,7 +51,7 @@ describe("projects", () => {
     await expect(deleteDiagram(b, d.id)).rejects.toBeInstanceOf(NotFoundError);
     await expect(duplicateDiagram(b, d.id)).rejects.toBeInstanceOf(NotFoundError);
     await expect(savePinnedPositions(b, d.id, {})).rejects.toBeInstanceOf(NotFoundError);
-    await expect(importSample(b, d.id, "s1")).rejects.toBeInstanceOf(NotFoundError);
+    await expect(importSample(b, d.id, "aws-shop")).rejects.toBeInstanceOf(NotFoundError);
     expect(await listProjects(b)).toEqual([]);
     expect((await getDiagram(a, d.id)).name).toBe("운영");
   });
@@ -65,10 +66,15 @@ describe("projects", () => {
   test("import sample adds a version, duplicate copies latest", async () => {
     const a = await user("a"); const p = await createProject(a, "쇼핑몰");
     const d = await createDiagram(a, p.id, "운영");
-    await importSample(a, d.id, "s2");
+    await importSample(a, d.id, "idc-3tier");
     const g = await getDiagram(a, d.id);
     expect(g.latest.number).toBe(2);
     expect(Object.keys(g.latest.state.nodes).length).toBeGreaterThan(0);
+    // 샘플 흐름은 사람이 확인한 흐름으로 함께 들어온다. 다시 불러와도 같은 흐름이 겹치지 않는다.
+    const flowsOf = async () => (await listFlows(a, d.id)).map((f) => [f.id, f.source, f.reviewed, f.problems.length]);
+    expect(await flowsOf()).toEqual([["login", "user", true, 0]]);
+    await importSample(a, d.id, "idc-3tier");
+    expect(await flowsOf()).toEqual([["login", "user", true, 0]]);
     const copy = await duplicateDiagram(a, d.id);
     const c = await getDiagram(a, copy.id);
     expect(c.name).toBe("운영 사본");
@@ -191,7 +197,7 @@ describe("projects", () => {
     const q = await createProject(a, "y");
     const d2 = await createDiagram(a, q.id, "둘");
     expect(await lastActiveDiagram(a)).toEqual({ id: d2.id, projectId: q.id });
-    await importSample(a, d1.id, "s1"); // 새 버전 = 최근 작업
+    await importSample(a, d1.id, "aws-shop"); // 새 버전 = 최근 작업
     expect(await lastActiveDiagram(a)).toEqual({ id: d1.id, projectId: p.id });
     await savePinnedPositions(a, d2.id, { "was-1": { x: 1, y: 2 } }); // 노드를 옮긴 것도 최근 작업
     expect(await lastActiveDiagram(a)).toEqual({ id: d2.id, projectId: q.id });

@@ -1,7 +1,11 @@
-import spike from "../../docs/superpowers/spike/spike-results.json";
+import { and, eq, inArray } from "drizzle-orm";
+
+import { db } from "@/db/client";
+import { flows } from "@/db/schema";
 import { applyCommands } from "@/domain/apply";
 import { EDGE_KINDS, NODE_KINDS } from "@/domain/catalog";
 import type { Command } from "@/domain/commands";
+import { buildSample, SAMPLE_LIST } from "@/domain/samples";
 import { emptyState } from "@/domain/types";
 import type { DiagramState } from "@/domain/types";
 import { createVersion } from "@/server/versions";
@@ -105,20 +109,31 @@ export function convertSpikeScenario(raw: SpikeState): DiagramState {
 }
 
 
-type SpikeScenario = { id: string; title: string; state: SpikeState };
-const scenarios = spike.scenarios as unknown as SpikeScenario[];
+export const SAMPLES: { id: string; title: string }[] = SAMPLE_LIST.map((s) => ({ id: s.id, title: s.title }));
 
-export const SAMPLES: { id: string; title: string }[] = scenarios.map((s) => ({ id: s.id, title: s.title }));
-
-export function sampleState(sampleId: string): DiagramState {
-  const s = scenarios.find((x) => x.id === sampleId);
+function sampleOf(sampleId: string) {
+  const s = SAMPLE_LIST.find((x) => x.id === sampleId);
   if (!s) throw new Error(`알 수 없는 샘플입니다: ${sampleId}`);
-  return convertSpikeScenario(s.state);
+  return buildSample(s);
 }
 
+export function sampleState(sampleId: string): DiagramState {
+  return sampleOf(sampleId).state;
+}
+
+/**
+ * 샘플을 새 버전으로 넣고 흐름도 함께 넣는다(같은 트랜잭션). 흐름은 사람이 쓴 것이라 확인한 사용자 흐름으로 둔다.
+ * 같은 id 의 흐름이 남아 있으면 샘플 것으로 바꾼다.
+ */
 export async function importSample(userId: string, diagramId: string, sampleId: string): Promise<{ number: number }> {
   await getOwnedDiagram(userId, diagramId);
-  const state = sampleState(sampleId);
-  const { number } = await createVersion(diagramId, state, { source: "import" });
-  return { number };
+  const { state, flows: sampleFlows } = sampleOf(sampleId);
+  return db.transaction(async (tx) => {
+    const { number } = await createVersion(diagramId, state, { source: "import", tx });
+    if (sampleFlows.length > 0) {
+      await tx.delete(flows).where(and(eq(flows.diagramId, diagramId), inArray(flows.key, sampleFlows.map((f) => f.id))));
+      await tx.insert(flows).values(sampleFlows.map((f) => ({ diagramId, key: f.id, data: f, source: "user" as const, reviewed: true })));
+    }
+    return { number };
+  });
 }
