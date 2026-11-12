@@ -16,8 +16,12 @@ const day = (iso: string) => iso.slice(0, 10);
 /** 방금 만든 키. 원문은 이 화면의 상태에만 있고, 닫거나 떠나면 사라진다. */
 type Fresh = { id: string; key: string; name: string };
 
-const commandFor = (key: string) =>
-  `claude mcp add --transport http infrasketch ${window.location.origin}/api/mcp --header "Authorization: Bearer ${key}"`;
+/** 키 자리 글자: 키를 만들기 전 연결 방법에 보인다. */
+const KEY_SLOT = "<키>";
+const endpointOf = (origin: string) => `${origin}/api/mcp`;
+const claudeCommand = (origin: string, key: string) => `claude mcp add --transport http infrasketch ${endpointOf(origin)} --header "Authorization: Bearer ${key}"`;
+const jsonConfig = (origin: string, key: string) =>
+  JSON.stringify({ mcpServers: { infrasketch: { url: endpointOf(origin), headers: { Authorization: `Bearer ${key}` } } } }, null, 2);
 
 export function McpKeysPage({ initialKeys }: { initialKeys: McpKeyRow[] }) {
   const [keys, setKeys] = useState(initialKeys);
@@ -32,6 +36,11 @@ export function McpKeysPage({ initialKeys }: { initialKeys: McpKeyRow[] }) {
   const freshHeading = useRef<HTMLHeadingElement>(null);
   const deleteBtns = useRef(new Map<string, HTMLButtonElement>());
   const focusAfter = useRef<"fresh" | "name" | { id: string } | null>(null);
+  // 이 서버 주소: 첫 렌더(서버)는 자리 글자, 마운트 뒤 브라우저 주소로 바꾼다(하이드레이션 일치).
+  const [origin, setOrigin] = useState("https://(이 서버 주소)");
+  useEffect(() => setOrigin(window.location.origin), []);
+  // 연결 방법 판의 명령·설정에 넣을 키: 방금 만든 키가 있으면 그 키, 없으면 자리 글자.
+  const shownKey = fresh?.key ?? KEY_SLOT;
 
   // 상태가 바뀌어 새 요소가 그려진 뒤에 포커스를 옮긴다.
   useEffect(() => {
@@ -79,7 +88,7 @@ export function McpKeysPage({ initialKeys }: { initialKeys: McpKeyRow[] }) {
     setDialog({
       kind: "delete",
       title: `${k.name} 키 지우기`,
-      message: "이 키를 쓰는 Claude Code는 더 이상 연결되지 않아요. 지울까요?",
+      message: "이 키를 쓰는 도구는 더 이상 연결되지 않아요. 지울까요?",
       run: async () => {
         const d = await deleteMcpKeyAction(k.id);
         if (!d.ok) return d.error;
@@ -93,11 +102,14 @@ export function McpKeysPage({ initialKeys }: { initialKeys: McpKeyRow[] }) {
 
   return (
     <div className={styles.page}>
-      <h1 className={styles.title}>Claude Code 연결</h1>
+      <h1 className={styles.title}>MCP 연결</h1>
       <p className={styles.lead}>
-        키를 만들어 Claude Code에 연결하면, Claude Code가 내 구성도를 읽고 고칠 수 있어요. 키는 만들 때 한 번만 보여요.
+        키를 만들어 MCP 를 쓰는 도구(Claude Code·Cursor 등)에 등록하면, 그 도구가 내 구성도를 읽고 고칠 수 있어요. 키는 만들 때 한 번만 보여요.
       </p>
       <p className={styles.srOnly} role="status" aria-live="polite">{announce}</p>
+
+      <div className={styles.body}>
+      <div className={styles.mainCol}>
       {error && <p id="mcp-name-error" className={styles.error} role="alert">{error}</p>}
 
       <section className={styles.section} aria-labelledby="mcp-new">
@@ -120,16 +132,9 @@ export function McpKeysPage({ initialKeys }: { initialKeys: McpKeyRow[] }) {
           <code className={styles.code}>{fresh.key}</code>
           <div className={styles.actions}>
             <Button onClick={() => copy(fresh.key)}>키 복사</Button>
-          </div>
-          <p className={styles.meta}>Claude Code 터미널에서 아래 명령을 실행하면 연결돼요.</p>
-          <code className={styles.code}>{commandFor(fresh.key)}</code>
-          <div className={styles.actions}>
-            <Button onClick={() => copy(commandFor(fresh.key))}>설정 예 복사</Button>
             <Button onClick={() => { focusAfter.current = "name"; setFresh(null); setCopyNote(null); setAnnounce(""); }}>닫기</Button>
           </div>
-          <p className={styles.meta}>
-            나중에 키를 지웠거나 &apos;키가 맞지 않아요&apos; 오류가 나면, 새 키를 만들고 claude mcp remove infrasketch 를 실행한 뒤 위 명령을 다시 실행하세요.
-          </p>
+          <p className={styles.meta}>연결 방법의 명령·설정에 이 키가 들어가 있어요. 그대로 복사해 쓰면 돼요.</p>
           <p className={styles.meta} role="status">{copyNote ?? ""}</p>
         </section>
       )}
@@ -167,6 +172,51 @@ export function McpKeysPage({ initialKeys }: { initialKeys: McpKeyRow[] }) {
           </table>
         )}
       </section>
+      </div>
+
+      {/* 연결 방법(주기 판): 키가 없어도 순서가 보인다. 방금 만든 키가 있으면 명령·설정에 그 키를 넣는다. */}
+      <aside className={styles.notesCol} aria-labelledby="mcp-howto">
+        <div className={`${styles.notes} ticks`}>
+          <h2 id="mcp-howto" className={styles.notesTitle}>연결 방법</h2>
+          <ol className={styles.steps}>
+            <li>
+              <b>키 만들기</b>
+              <span>「새 키 만들기」에서 키 이름을 적고 만든다. 키는 그때 한 번만 보인다.</span>
+            </li>
+            <li>
+              <b>도구에 서버 등록</b>
+              <span>MCP 를 쓰는 도구에 아래 주소와 헤더를 넣는다(전송 방식 HTTP).</span>
+              <dl className={styles.kv}>
+                <div><dt>주소</dt><dd><code>{endpointOf(origin)}</code></dd></div>
+                <div><dt>헤더</dt><dd><code>Authorization: Bearer {shownKey}</code></dd></div>
+              </dl>
+            </li>
+            <li>
+              <b>Claude Code 예</b>
+              <span>터미널에서 실행한다.</span>
+              <code className={styles.code}>{claudeCommand(origin, shownKey)}</code>
+              <div className={styles.actions}>
+                <Button size="sm" onClick={() => copy(claudeCommand(origin, shownKey))}>명령 복사</Button>
+              </div>
+            </li>
+            <li>
+              <b>설정 파일을 쓰는 도구 예</b>
+              <span>mcpServers 설정(예: Cursor 의 mcp.json)에 넣는다. 형식은 도구마다 조금 다를 수 있다.</span>
+              <pre className={styles.code}>{jsonConfig(origin, shownKey)}</pre>
+              <div className={styles.actions}>
+                <Button size="sm" onClick={() => copy(jsonConfig(origin, shownKey))}>설정 복사</Button>
+              </div>
+            </li>
+            <li>
+              <b>확인</b>
+              <span>도구에서 &quot;infrasketch 구성도 목록 보여 줘&quot;처럼 물어 본다. &apos;키가 맞지 않아요&apos;가 나오면 새 키를 만들어 다시 등록한다(Claude Code 는 claude mcp remove infrasketch 뒤 다시 add).</span>
+            </li>
+          </ol>
+          {!fresh && <p className={styles.meta}>키를 만들면 위 명령·설정의 {KEY_SLOT} 자리에 키가 들어가요.</p>}
+          {!fresh && <p className={styles.meta} role="status">{copyNote ?? ""}</p>}
+        </div>
+      </aside>
+      </div>
       {dialog && <DialogView dialog={dialog} onClose={() => setDialog(null)} />}
     </div>
   );

@@ -68,7 +68,7 @@ export function Sidebar({ projects, userName }: { projects: SidebarProject[]; us
   const [account, setAccount] = useState(false);
   const glossaryCurrent = pathname === "/glossary";
   const networkCurrent = pathname === "/network";
-  const claudeCodeCurrent = pathname === "/claude-code";
+  const mcpCurrent = pathname === "/mcp";
   const { narrow } = shell;
 
   // 좁은 화면: 사이드바는 위 막대의 ☰ 로 여는 서랍이다. 다른 화면으로 가거나 넓은 화면이 되면 닫는다.
@@ -383,17 +383,17 @@ export function Sidebar({ projects, userName }: { projects: SidebarProject[]; us
     </Link>
   );
   // inAccount: 접힌 레일의 계정 팝오버 안(한 줄 전체를 차지한다). 펼친 사이드바에서는 용어 사전·망 지식과 한 묶음이다.
-  const claudeCodeLink = (inAccount: boolean) => (
+  const mcpLink = (inAccount: boolean) => (
     <Link
-      href="/claude-code"
-      className={`${styles.sideLink} ${inAccount ? styles.accountLink : ""} ${claudeCodeCurrent ? styles.sideLinkActive : ""}`}
-      aria-current={claudeCodeCurrent ? "page" : undefined}
+      href="/mcp"
+      className={`${styles.sideLink} ${inAccount ? styles.accountLink : ""} ${mcpCurrent ? styles.sideLinkActive : ""}`}
+      aria-current={mcpCurrent ? "page" : undefined}
       onClick={() => {
         setAccount(false);
         setDrawer(false);
       }}
     >
-      Claude Code 연결
+      MCP 연결
       <LinkPending />
     </Link>
   );
@@ -407,7 +407,7 @@ export function Sidebar({ projects, userName }: { projects: SidebarProject[]; us
   );
   const accountRow = (
     <>
-      {claudeCodeLink(true)}
+      {mcpLink(true)}
       {userRow}
     </>
   );
@@ -441,8 +441,8 @@ export function Sidebar({ projects, userName }: { projects: SidebarProject[]; us
               <span className={styles.topbarDiagram}>용어 사전</span>
             ) : networkCurrent ? (
               <span className={styles.topbarDiagram}>망 지식</span>
-            ) : claudeCodeCurrent ? (
-              <span className={styles.topbarDiagram}>Claude Code 연결</span>
+            ) : mcpCurrent ? (
+              <span className={styles.topbarDiagram}>MCP 연결</span>
             ) : (
               <span className={styles.topbarBrand}>
                 <LogoMark size={18} />
@@ -540,8 +540,10 @@ export function Sidebar({ projects, userName }: { projects: SidebarProject[]; us
                     onClick={() => toggle(p.id)}
                   >
                     <span className={styles.caret} aria-hidden="true">{isCollapsed ? "▸" : "▾"}</span>
+                    <IconFolder />
                     <span className={styles.rowName} title={p.name}>{p.name}</span>
-                    <span className={styles.count} aria-hidden="true">{p.diagrams.length}</span>
+                    {/* 수는 접혀 있을 때만: 펼치면 아래 줄이 곧 그 수다. */}
+                    {isCollapsed && <span className={styles.count} aria-hidden="true">{`구성도 ${p.diagrams.length}`}</span>}
                     <span className={styles.srOnly}>{`, 구성도 ${p.diagrams.length}개`}</span>
                   </button>
                   {menuFor({ type: "project", id: p.id, name: p.name, project: p })}
@@ -563,10 +565,11 @@ export function Sidebar({ projects, userName }: { projects: SidebarProject[]; us
                             <button
                               ref={current ? currentRow : undefined}
                               type="button"
-                              className={styles.rowMain}
+                              className={`${styles.rowMain} ${styles.diagramMain}`}
                               aria-current={current ? "page" : undefined}
                               onClick={() => goDiagram(p.id, d.id)}
                             >
+                              <IconDiagram />
                               {/* 잘린 긴 이름은 마우스를 올리면 보인다. 포커스되지 않는 안쪽에 두어 이름을 두 번 읽지 않게. */}
                               <span className={styles.rowName} title={d.name}>{d.name}</span>
                             </button>
@@ -588,7 +591,7 @@ export function Sidebar({ projects, userName }: { projects: SidebarProject[]; us
           <div className={styles.pageLinks}>
             {glossaryLink(false)}
             {networkLink(false)}
-            {claudeCodeLink(false)}
+            {mcpLink(false)}
           </div>
         </div>
         <div className={`${styles.user} ${styles.userSeam}`}>{userRow}</div>
@@ -627,6 +630,14 @@ const Svg = ({ children }: { children: React.ReactNode }) => (
     {children}
   </svg>
 );
+/** 트리 줄 앞 작은 그림(14px): 프로젝트는 폴더(묶음), 구성도는 상자 셋을 이은 그림(열어 볼 것). */
+const RowSvg = ({ children }: { children: React.ReactNode }) => (
+  <svg className={styles.rowIcon} width="14" height="14" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    {children}
+  </svg>
+);
+const IconFolder = () => <RowSvg><path d="M2.5 5a1.5 1.5 0 0 1 1.5-1.5h3.2l1.6 1.75H14a1.5 1.5 0 0 1 1.5 1.5V13a1.5 1.5 0 0 1-1.5 1.5H4A1.5 1.5 0 0 1 2.5 13z" /></RowSvg>;
+const IconDiagram = () => <RowSvg><rect x="2.5" y="2.5" width="5" height="4" rx="1" /><rect x="10.5" y="2.5" width="5" height="4" rx="1" /><rect x="6.5" y="11.5" width="5" height="4" rx="1" /><path d="M5 6.5V9h8V6.5M9 9v2.5" /></RowSvg>;
 const IconCollapse = () => <Svg><rect x="2.5" y="3" width="13" height="12" rx="2" /><path d="M6.5 3v12M11.5 7l-2 2 2 2" /></Svg>;
 const IconExpand = () => <Svg><rect x="2.5" y="3" width="13" height="12" rx="2" /><path d="M6.5 3v12M9.5 7l2 2-2 2" /></Svg>;
 const IconPlus = () => <Svg><path d="M9 4v10M4 9h10" /></Svg>;

@@ -26,7 +26,7 @@ const CELL_WIDTHS = [
   ["64%", "44%", "70%", "40px"],
 ];
 
-/** 보조 페이지(용어 사전·망 지식·Claude Code 연결)를 불러오는 동안: 같은 머리 여백과 제목, 범례표 줄 자리, 주기 판 자리. */
+/** 보조 페이지(용어 사전·망 지식·MCP 연결)를 불러오는 동안: 같은 머리 여백과 제목, 범례표 줄 자리, 주기 판 자리. */
 export function PageSkeleton({ title, lead = false, tools = false, columns, cells, head, notes = false, rows = 8 }: PageSkeletonProps) {
   const table = (
     <div className={s.table} style={{ "--cols": columns } as CSSProperties}>

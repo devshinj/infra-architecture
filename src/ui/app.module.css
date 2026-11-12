@@ -64,13 +64,18 @@
   flex: 1; min-width: 0; text-align: left; font: inherit; font-size: 13px; color: var(--text-primary);
   background: transparent; border: 0; padding: 8px; cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
-.projectMain { display: flex; align-items: center; gap: 8px; }
+/* 프로젝트 = 묶음 머리말(폴더 + 12px 굵게 흐린 글자), 구성도 = 열어 볼 항목(구성도 그림 + 13px 본문, 더 들여씀). */
+.projectMain, .diagramMain { display: flex; align-items: center; gap: 8px; }
+.projectMain { font-size: 12px; font-weight: 600; color: var(--text-secondary); }
+.projectMain:hover, .currentProject .projectMain { color: var(--text-primary); }
 .caret { flex: none; color: var(--text-secondary); }
+.rowIcon { flex: none; color: var(--text-secondary); }
 .rowName { display: block; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.count { flex: none; font-size: 12px; font-weight: 400; color: var(--text-secondary); }
-.diagramRow { margin-left: 12px; }
+/* 접혀 있을 때만: "구성도 N". */
+.count { flex: none; font-size: 12px; font-weight: 400; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+.diagramRow { margin-left: 20px; }
 .addRow {
-  display: block; width: calc(100% - 12px); margin-left: 12px; text-align: left; font: inherit; font-size: 12px;
+  display: block; width: calc(100% - 20px); margin-left: 20px; text-align: left; font: inherit; font-size: 12px;
   color: var(--text-secondary); background: transparent; border: 0; border-radius: var(--radius-control); padding: 4px 8px; cursor: pointer;
 }
 .addRow:hover { color: var(--text-primary); background: var(--bg-panel-raised); }
@@ -103,7 +108,7 @@
 .sideFoot { padding: 8px; border-top: 1px solid var(--glass-line); display: flex; flex-direction: column; gap: 8px; }
 .user { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; font-size: 12px; color: var(--text-secondary); padding: 0 4px; }
 .user span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-/* 펼친 사이드바 바닥: 새 프로젝트, 그 아래 화면 링크 셋(용어 사전·망 지식·Claude Code 연결)을 한 묶음으로, 계정 줄은 제 이음매 아래. */
+/* 펼친 사이드바 바닥: 새 프로젝트, 그 아래 화면 링크 셋(용어 사전·망 지식·MCP 연결)을 한 묶음으로, 계정 줄은 제 이음매 아래. */
 .pageLinks { display: flex; flex-direction: column; gap: 4px; }
 .userSeam { flex: none; padding: 8px 12px; border-top: 1px solid var(--glass-line); }
 /* 버튼 모양은 공용 Button(button.module.css)이 정한다. */
@@ -287,6 +292,7 @@
 .drawerNav .sideHead { padding: 4px 4px 4px 16px; }
 .drawerNav .iconBtn { width: 44px; height: 44px; border-radius: var(--radius-control); }
 .drawerNav .rowMain { min-height: 44px; padding: 8px; font-size: 14px; }
+.drawerNav .projectMain { font-size: 13px; }
 .drawerNav .menuBtn { min-width: 44px; min-height: 44px; }
 .drawerNav .addRow { min-height: 44px; font-size: 13px; }
 .drawerNav .sideLink { min-height: 44px; box-sizing: border-box; display: flex; align-items: center; font-size: 14px; }

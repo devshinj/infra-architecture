@@ -258,7 +258,8 @@ export function NetworkKnowledgePage({ initialTypes, initialRules }: { initialTy
                           >
                             <span className={styles.head}>
                               <strong>{t.name}</strong>
-                              <span className={styles.badge}>{sourceLabel(t)}</span>
+                              {/* 기본 제공은 줄마다 되풀이돼 감춘다(용어 사전과 같다). 직접 추가·사용자가 고침만 표시. */}
+                              {sourceLabel(t) !== "기본 제공" && <span className={styles.badge}>{sourceLabel(t)}</span>}
                               {t.separated && <span className={styles.badge}>망분리 대상</span>}
                               {t.hidden && <span className={styles.badge}>쓰지 않음</span>}
                               {editingType(t) && <span className={styles.badge}>수정 중</span>}

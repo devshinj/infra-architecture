@@ -55,7 +55,7 @@
 .composer { margin: 0 12px 12px; height: 72px; }
 .panelFill { flex: 1; min-height: 0; }
 
-/* ── 보조 페이지(용어 사전·망 지식·Claude Code 연결) ──
+/* ── 보조 페이지(용어 사전·망 지식·MCP 연결) ──
  * 머리 여백·제목은 각 화면의 .page/.title(glossary.module.css 등)과 같은 값이다. 거기를 바꾸면 여기도 맞춘다. */
 .page {
   box-sizing: border-box; height: 100%; overflow: hidden; background: var(--bg-canvas); color: var(--text-primary);

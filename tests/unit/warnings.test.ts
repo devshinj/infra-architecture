@@ -104,6 +104,12 @@ test("stored qwen text wins for code rules that still fire", () => {
   expect(mergeWarnings(s).active.find((w) => w.id === "spof:w")!.text).toBe("큐웬 문구");
 });
 
+test("stored text from before automatic particles is shown with the right particle", () => {
+  const s = build([node("w", "was", "WAS")]);
+  s.warnings = [stored("spof:w", "spof", "w", "WAS이(가) 하나뿐이에요")];
+  expect(mergeWarnings(s).active.find((w) => w.id === "spof:w")!.text).toBe("WAS가 하나뿐이에요");
+});
+
 test("stale code warning in state is dropped when the rule no longer fires", () => {
   const s = build([node("w", "was", "WAS", "r")], [["r", "redundancy_group", null]]);
   s.warnings = [stored("spof:w", "spof", "w", "옛 문구")];

@@ -359,6 +359,10 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
   // 다음 채택이 바깥(Claude Code) 변경을 불러온 것인가: 그때만 나타남·사라짐 효과를 낸다.
   // "poll" 은 물어서 저절로, "load" 는 [불러오기]를 눌러서. 저절로 온 것은 이력 보기·비교 중이면 현재로 돌아올 때까지 미룬다.
   const remoteAdopt = useRef<null | "poll" | "load">(null);
+  // 바깥 변경을 채택한 뒤에 푼다(채택은 렌더 중이라 거기서 풀면 StrictMode 두 번째 렌더가 유령·빛점을 놓친다).
+  useEffect(() => {
+    remoteAdopt.current = null;
+  }, [current.number]);
   // Import/restore bring a new board: stop treating the next adoption as the after-chat refresh.
   const expectNewBoard = () => {
     adoptAfterChat.current = false;
@@ -417,8 +421,8 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
   const deferRemote = remoteAdopt.current === "poll" && !live;
   if (!chat.busy && latest.number !== current.number && !deferRemote) {
     // 바깥 변경: 지워질 노드·연결은 GhostLayer 가 이 커밋 직전 화면에서 떠서 유령으로, 새 노드는 대화와 같은 나타나는 효과로.
+    // 렌더 중이라 읽기만 한다(푸는 것은 current.number 가 바뀐 뒤의 effect): StrictMode 두 번째 렌더도 같은 판단을 하게.
     if (remoteAdopt.current) {
-      remoteAdopt.current = null;
       if (live) {
         const { added, removed } = diffStates(current.state, latest.state);
         const nodes = [...removed].filter((id) => id in current.state.nodes);

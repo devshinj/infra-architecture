@@ -46,7 +46,8 @@ test("등급별 묶음과 기본 제공 표시", () => {
   expect(screen.getByRole("heading", { name: "망 지식" })).toBeInTheDocument();
   for (const g of ["폐쇄", "내부", "경계", "외부"]) expect(screen.getByRole("heading", { name: g })).toBeInTheDocument();
   const internal = within(screen.getByRole("button", { name: /업무망/ }));
-  expect(internal.getByText("기본 제공")).toBeInTheDocument();
+  // 기본 제공은 줄마다 되풀이돼 표시하지 않는다(직접 추가·사용자가 고침만).
+  expect(internal.queryByText("기본 제공")).not.toBeInTheDocument();
   expect(within(screen.getByRole("button", { name: /DMZ/ })).getByText("사용자가 고침")).toBeInTheDocument();
   expect(within(screen.getByRole("button", { name: /협력사망/ })).getByText("직접 추가")).toBeInTheDocument();
   expect(within(screen.getByRole("button", { name: /인터넷/ })).getByText("쓰지 않음")).toBeInTheDocument();

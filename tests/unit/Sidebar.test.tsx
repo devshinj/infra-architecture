@@ -50,16 +50,16 @@ test("망 지식 link is current only on /network, in expanded and rail forms", 
   window.localStorage.removeItem("infrasketch.sidebarCollapsed");
 });
 
-test("Claude Code 연결 link is current only on /claude-code", () => {
-  path = "/claude-code";
+test("MCP 연결 link is current only on /mcp", () => {
+  path = "/mcp";
   render(<Sidebar projects={[]} userName="a" />);
-  const link = screen.getByRole("link", { name: "Claude Code 연결" });
-  expect(link).toHaveAttribute("href", "/claude-code");
+  const link = screen.getByRole("link", { name: "MCP 연결" });
+  expect(link).toHaveAttribute("href", "/mcp");
   expect(link).toHaveAttribute("aria-current", "page");
   cleanup();
   path = "/";
   render(<Sidebar projects={[]} userName="a" />);
-  expect(screen.getByRole("link", { name: "Claude Code 연결" })).not.toHaveAttribute("aria-current");
+  expect(screen.getByRole("link", { name: "MCP 연결" })).not.toHaveAttribute("aria-current");
 });
 
 // ---- 접는 사이드바 (P3D Task 6) ----
@@ -175,4 +175,17 @@ test("app layout wraps page content in a main landmark (resizer and glossary too
   const main = readFileSync(`${process.cwd()}/src/ui/ShellMain.tsx`, "utf8");
   // 「본문으로 건너뛰기」 도착점이라 id 와 tabIndex -1 을 가진다.
   expect(main).toContain("<main id={MAIN_ID} tabIndex={-1} className={styles.main}");
+});
+
+test("프로젝트 줄의 '구성도 N' 은 접혀 있을 때만 보인다(보조기기에는 늘 알린다)", () => {
+  path = "/";
+  render(<Sidebar projects={[{ id: "p", name: "프로젝트A", diagrams: [{ id: "d1", name: "첫 구성도" }, { id: "d2", name: "둘째" }] }]} userName="a" />);
+  const head = screen.getByRole("button", { name: "프로젝트A, 구성도 2개" });
+  expect(head).toHaveAttribute("aria-expanded", "true");
+  expect(within(head).queryByText("구성도 2")).toBeNull();
+  expect(head).toHaveAccessibleName("프로젝트A, 구성도 2개");
+  fireEvent.click(head);
+  expect(head).toHaveAttribute("aria-expanded", "false");
+  expect(within(head).getByText("구성도 2")).toBeInTheDocument();
+  expect(head).toHaveAccessibleName("프로젝트A, 구성도 2개");
 });

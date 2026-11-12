@@ -153,9 +153,9 @@ export function InfoCard({ state, readOnly, busy, open, onOpenChange, scrollToWa
         {/* 좁으면 항목 사이에서 줄을 바꾼다(숫자를 말줄임으로 자르지 않는다). 항목 사이는 가운뎃점 대신 머리카락 세로선(CSS). */}
         <span id={countsId} className={styles.line}>
           <span className={styles.title}>구성 정보</span>{" "}
-          <span className={styles.seg}>채워야 할 정보 <Count n={missing} /></span>{" "}
-          <span className={styles.seg}>주의 <Count n={warnings.length} /></span>{" "}
-          <span className={styles.seg}>미확정 가정 <Count n={unconfirmed} /></span>
+          <span className={styles.seg}><span className={styles.segName}>채워야 할 정보</span> <Count n={missing} /></span>{" "}
+          <span className={styles.seg}><span className={styles.segName}>주의</span> <Count n={warnings.length} /></span>{" "}
+          <span className={styles.seg}><span className={styles.segName}>미확정 가정</span> <Count n={unconfirmed} /></span>
         </span>
         <Chevron open={open} />
       </button>

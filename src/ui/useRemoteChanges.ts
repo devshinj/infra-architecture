@@ -6,7 +6,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 export const POLL_MS = 3000;
 
 /** 바뀐 것을 알려 주는 안내와 버튼 글. */
-export const REMOTE_CHANGED = "Claude Code가 구성도를 바꿨어요";
+export const REMOTE_CHANGED = "MCP로 연결한 도구가 구성도를 바꿨어요";
 export const REMOTE_LOAD = "불러오기";
 
 export interface UseRemoteChangesInput {

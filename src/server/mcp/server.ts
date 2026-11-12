@@ -169,7 +169,7 @@ export function createMcpServer(userId: string): McpServer {
           .min(1)
           .max(COMMANDS_MAX)
           .describe(`명령 객체 목록(1~${COMMANDS_MAX}개). 명령 하나가 배열 원소 하나예요.`),
-        summary: z.string().max(SUMMARY_MAX).optional().describe(`이력에 남길 한 줄(${SUMMARY_MAX}자까지). 비우면 "Claude Code에서 N곳 바꿈"`),
+        summary: z.string().max(SUMMARY_MAX).optional().describe(`이력에 남길 한 줄(${SUMMARY_MAX}자까지). 비우면 "MCP로 N곳 바꿈"`),
         dry_run: z.boolean().optional().describe("true 면 검사만 하고 저장하지 않아요"),
       },
     },

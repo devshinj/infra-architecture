@@ -129,6 +129,9 @@ const VIEW_OPTIONS: { key: ToggleKey; label: string; desc: string }[] = [
   { key: "hoverLabels", label: "연결 이름은 마우스를 올릴 때만", desc: "캔버스를 깔끔하게 보여요" },
   { key: "showMissingBadges", label: "빠진 정보 숫자", desc: "노드마다 채워야 할 정보 개수를 보여요" },
 ];
+/** 손가락으로 쓰는 화면(마우스 올리기가 없다)에서 hoverLabels 를 부르는 이름. 연결을 누르면 이름이 보인다. */
+const HOVER_LABELS_TOUCH = "연결 이름은 누를 때만";
+const isTouch = () => typeof window !== "undefined" && !!window.matchMedia?.("(pointer: coarse)").matches;
 
 /** The id actually drawn for `id`: itself, or its outermost collapsed ancestor group. */
 const drawnId = (state: DiagramState, collapsed: Set<string>, id: string | null): string | null =>
@@ -149,18 +152,18 @@ const IconFlow = () => <Icon><path d="M1.5 8h3l2-4 3 8 2-4h3" /></Icon>;
 const IconChevron = () => <svg className="canvas__tool-chevron" width="8" height="8" viewBox="0 0 8 8" aria-hidden="true" focusable="false" {...stroke}><path d="M1.5 3 4 5.5 6.5 3" /></svg>;
 
 /** `보기 ▾`: 누르면 `보기 옵션` 팝오버가 열린다. 항목마다 체크와 한 줄 설명. */
-function ViewMenu({ options, onFlip, extra }: { options: CanvasOptions; onFlip(key: ToggleKey): void; extra?: React.ReactNode }) {
+function ViewMenu({ options, onFlip, extra, compact }: { options: CanvasOptions; onFlip(key: ToggleKey): void; extra?: React.ReactNode; compact: boolean }) {
   const { open, setOpen, root, trigger } = usePopover('input[type="checkbox"]');
   return (
     <div ref={root} className="canvas__view">
-      <button ref={trigger} type="button" className="canvas__tool" aria-haspopup="dialog" aria-expanded={open} onClick={() => setOpen((v) => !v)}>
+      <button ref={trigger} type="button" className="canvas__tool" title={compact ? "보기" : undefined} aria-haspopup="dialog" aria-expanded={open} onClick={() => setOpen((v) => !v)}>
         <IconEye />
         <span>보기</span>
         <IconChevron />
       </button>
       {open && (
         <div className="canvas__pop" role="dialog" aria-label="보기 옵션">
-          {VIEW_OPTIONS.map((o) => (
+          {VIEW_OPTIONS.map((o) => (o.key === "hoverLabels" && isTouch() ? { ...o, label: HOVER_LABELS_TOUCH } : o)).map((o) => (
             <label key={o.key} className="canvas__opt">
               <input type="checkbox" checked={options[o.key]} aria-labelledby={`view-opt-name-${o.key}`} aria-describedby={`view-opt-${o.key}`} onChange={() => onFlip(o.key)} />
               <span className="canvas__opt-text">
@@ -224,16 +227,28 @@ export function Canvas(props: CanvasProps) {
   // 좁은 화면에서는 두 줄로 접히므로 크기가 바뀔 때마다 다시 잰다. 첫 맞춤 전에 값이 있도록 레이아웃 효과에서 잰다.
   const toolbarRef = useRef<HTMLDivElement>(null);
   const [toolbarBottom, setToolbarBottom] = useState(0);
+  // 이름을 붙인 채로는 한 줄에 안 들어가면(띠가 좁거나 오른쪽 패널이 넓을 때) 아이콘만 보인다. 이름은 툴팁과 보조기기로.
+  // 이름을 붙여 다시 재 보고 정하므로 넓어지면 이름이 돌아온다. data-compact 는 CSS 가, compact 는 툴팁이 쓴다.
+  const [compact, setCompact] = useState(false);
   useLayoutEffect(() => {
     const el = toolbarRef.current;
     if (!el) return;
-    const measure = () => setToolbarBottom(el.offsetHeight > 0 ? el.offsetTop + el.offsetHeight : 0);
+    const measure = () => {
+      el.removeAttribute("data-compact");
+      const kids = [...el.children] as HTMLElement[];
+      const wrapped = kids.some((k) => Math.abs(k.offsetTop - kids[0]!.offsetTop) > 4);
+      if (wrapped) el.setAttribute("data-compact", "");
+      setCompact(wrapped);
+      setToolbarBottom(el.offsetHeight > 0 ? el.offsetTop + el.offsetHeight : 0);
+    };
     measure();
     if (typeof ResizeObserver === "undefined") return;
     const ro = new ResizeObserver(measure);
     ro.observe(el);
+    if (rootRef.current) ro.observe(rootRef.current);
     return () => ro.disconnect();
   }, []);
+  const tip = (label: string) => (compact ? label : undefined);
   const parentInsets = props.cameraInsets ?? NO_INSETS;
   const insets = useMemo<Insets>(() => (toolbarBottom > 0 ? { ...parentInsets, top: Math.max(parentInsets.top ?? 0, toolbarBottom + TOOLBAR_GAP) } : parentInsets), [parentInsets, toolbarBottom]);
   // 다시 배치하는 중(settled 아님)에는 화면과 배치가 어긋날 수 있어 막는다.
@@ -256,15 +271,15 @@ export function Canvas(props: CanvasProps) {
     <div ref={rootRef} className="canvas">
       <div ref={toolbarRef} className="canvas__toolbar" role="toolbar" aria-label="캔버스 도구">
         <div className="canvas__group" role="group" aria-label="보기">
-          <ViewMenu options={options} onFlip={flip} {...(props.viewMenuExtra ? { extra: props.viewMenuExtra } : {})} />
+          <ViewMenu options={options} onFlip={flip} compact={compact} {...(props.viewMenuExtra ? { extra: props.viewMenuExtra } : {})} />
         </div>
         <span className="canvas__sep" role="separator" aria-orientation="vertical" />
         <div className="canvas__group" role="group" aria-label="편집">
-          <button type="button" className="canvas__tool" aria-pressed={editMode} onClick={() => props.onEditModeChange(!editMode)}>
+          <button type="button" className="canvas__tool" title={tip("위치 옮기기")} aria-pressed={editMode} onClick={() => props.onEditModeChange(!editMode)}>
             <IconMove />
             <span>위치 옮기기</span>
           </button>
-          <button type="button" className="canvas__tool" disabled={autoArrangeDisabled} onClick={onAutoArrange}>
+          <button type="button" className="canvas__tool" title={tip("자동 정렬")} disabled={autoArrangeDisabled} onClick={onAutoArrange}>
             <IconArrange />
             <span>자동 정렬</span>
           </button>
@@ -275,14 +290,14 @@ export function Canvas(props: CanvasProps) {
             <IconFit />
             <span>전체 보기</span>
           </button>
-          <button type="button" className="canvas__tool" aria-pressed={motion} onClick={() => props.onMotionChange(!motion)}>
+          <button type="button" className="canvas__tool" title={tip("흐름 표시")} aria-pressed={motion} onClick={() => props.onMotionChange(!motion)}>
             <IconFlow />
             <span>흐름 표시</span>
           </button>
         </div>
         <span className="canvas__sep" role="separator" aria-orientation="vertical" />
         <div className="canvas__group" role="group" aria-label="이미지">
-          <ExportMenu disabled={exportBlocked} {...(empty ? {} : { disabledReason: view.layoutFailed ? EXPORT_LAYOUT_FAILED_REASON : EXPORT_LAYOUT_PENDING_REASON })} onExport={onExport} />
+          <ExportMenu disabled={exportBlocked} {...(empty ? {} : { disabledReason: view.layoutFailed ? EXPORT_LAYOUT_FAILED_REASON : EXPORT_LAYOUT_PENDING_REASON })} onExport={onExport} compact={compact} />
         </div>
       </div>
       {empty ? (

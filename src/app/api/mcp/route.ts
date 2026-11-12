@@ -8,7 +8,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const NO_KEY = "키가 맞지 않아요.";
-const WRONG_KEY = "키가 맞지 않거나 지워졌어요. Claude Code 연결 화면에서 새 키를 만들어 다시 등록해 주세요.";
+const WRONG_KEY = "키가 맞지 않거나 지워졌어요. InfraSketch 의 MCP 연결 화면에서 새 키를 만들어 다시 등록해 주세요.";
 const GENERIC = "요청을 처리하지 못했어요. 잠시 뒤 다시 시도해 주세요.";
 
 /** "Bearer <키>" 에서 키만 꺼낸다. 키·헤더는 로그에 쓰지 않는다. */

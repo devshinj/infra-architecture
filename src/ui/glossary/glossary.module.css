@@ -65,8 +65,6 @@
   .legendHead { display: none; }
   .item { grid-template-columns: minmax(0, 1fr) max-content; row-gap: 4px; }
   .item .snippet { grid-column: 1 / -1; grid-row: 2; }
-  /* 좁은 화면: 기본 제공은 줄마다 되풀이하지 않는다(AI가 추가만 남긴다). */
-  .item [data-source="seed"] { display: none; }
   .notesEmpty { display: none; }
   .head { flex-wrap: wrap; row-gap: 2px; }
   .item { padding: 12px; }

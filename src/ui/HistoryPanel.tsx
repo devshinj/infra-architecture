@@ -26,7 +26,7 @@ export interface HistoryPanelProps {
   disabled?: boolean;
 }
 
-const SOURCE_LABEL: Record<VersionRow["source"], string> = { import: "가져오기", restore: "되돌리기", ai: "AI", form: "직접 입력", mcp: "Claude Code에서" };
+const SOURCE_LABEL: Record<VersionRow["source"], string> = { import: "가져오기", restore: "되돌리기", ai: "AI", form: "직접 입력", mcp: "MCP로" };
 
 /**
  * 되돌려진 버전들: 그 버전 뒤의 되돌리기 가운데 마지막 것이 그 버전보다 앞 버전으로 갔으면(restoredFrom < v) 그 버전의
@@ -67,7 +67,7 @@ export function HistoryPanel({ versions, onView, onRestore, onCompare, viewing =
           <li key={v.number} className={styles.version} data-viewing={viewing === v.number || undefined}>
             <button type="button" className={styles.versionRow} aria-expanded={open} onClick={() => setSelected(open ? null : v.number)}>
               <span className={styles.versionNo}>v{v.number}</span>
-              <span>{v.source === "restore" && v.via === "mcp" ? "되돌리기 · Claude Code에서" : SOURCE_LABEL[v.source]}</span>
+              <span>{v.source === "restore" && v.via === "mcp" ? "되돌리기 · MCP로" : SOURCE_LABEL[v.source]}</span>
               {v.source === "restore" && v.restoredFrom !== null && <span className={styles.relText}>v{v.restoredFrom}에서</span>}
               {v.summary && (
                 <span className={`${styles.relText} ${styles.versionSummary}`} title={v.summary}>

@@ -98,13 +98,13 @@ npm run eval:intent -- --update      # 지금 결과를 기준으로 저장
 
 점검 구성도(`tests/fixtures/intent/diagram.json`, 업무망·인터넷망·흐름 3개)에 `cases.json` 의 문장들을 대화 한 차례와 같은 순서(빠진 정보·참조 노드 → Clef 분류 → 의도에 맞는 지시문 → Qwen 명령)로 돌려, 의도가 기대와 같은지와 Qwen 이 기대한 명령(흐름·구성·연결 값·노드 속성, 질문엔 명령 없음)을 냈는지 표로 보여 줍니다. `baseline.json` 보다 나빠진 문장이 있으면 따로 보여 주고 0 이 아닌 코드로 끝납니다. Clef·Qwen 프롬프트를 고친 뒤에 돌리세요. `npm test`·CI 에는 포함되지 않습니다.
 
-## Claude Code 연동
+## MCP 연결 (Claude Code·Cursor 등)
 
-Claude Code 에서 내 구성도를 읽고 고치게 할 수 있습니다. 앱이 `/api/mcp` 로 MCP 서버(Streamable HTTP)를 열어 두고, 키로 누구의 구성도인지 가립니다. 이 길은 Qwen·Clef 를 부르지 않습니다.
+MCP 를 쓰는 도구(Claude Code·Cursor 등)에서 내 구성도를 읽고 고치게 할 수 있습니다. 앱이 `/api/mcp` 로 MCP 서버(Streamable HTTP)를 열어 두고, 키로 누구의 구성도인지 가립니다. 이 길은 Qwen·Clef 를 부르지 않습니다.
 
-1. 앱에 로그인해 왼쪽 아래 계정 영역(사이드바가 접혀 있으면 "계정" 버튼)의 **Claude Code 연결**(`/claude-code`)로 갑니다.
+1. 앱에 로그인해 왼쪽 아래 계정 영역(사이드바가 접혀 있으면 "계정" 버튼)의 **MCP 연결**(`/mcp`, 예전 주소 `/claude-code` 는 이리로 옮겨 줍니다)로 갑니다.
 2. 키 이름을 적고 **키 만들기**를 누릅니다. 키(`isk_...`)는 **만들 때 한 번만** 보입니다. 닫으면 다시 볼 수 없으니 바로 복사하세요. 잃어버리면 지우고 새로 만드세요.
-3. Claude Code 터미널에서 아래 명령을 실행합니다. 화면의 "설정 예 복사"가 주소와 키를 채워 줍니다.
+3. 화면 오른쪽 「연결 방법」에 주소·헤더와 예가 있습니다. Claude Code 는 터미널에서 아래 명령을(「명령 복사」), 설정 파일을 쓰는 도구는 `mcpServers` 설정을(「설정 복사」) 씁니다. 키를 막 만들었으면 키가 채워져 있습니다.
 
    ```bash
    claude mcp add --transport http infrasketch <앱 주소>/api/mcp --header "Authorization: Bearer <키>"
@@ -112,7 +112,7 @@ Claude Code 에서 내 구성도를 읽고 고치게 할 수 있습니다. 앱�
 
    키를 지웠거나 "키가 맞지 않아요" 오류가 나면 새 키를 만들고, `claude mcp remove infrasketch` 를 실행한 뒤 위 명령을 새 키로 다시 실행하세요.
 
-열어 둔 구성도는 Claude Code 가 바꾼 것을 몇 초 안에 보여 주고, 이력에는 "Claude Code에서"로 남습니다.
+열어 둔 구성도는 연결한 도구가 바꾼 것을 몇 초 안에 보여 주고, 이력에는 "MCP로"로 남습니다.
 
 도구 10개:
 

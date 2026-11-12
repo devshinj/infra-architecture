@@ -38,6 +38,8 @@ export interface ExportMenuProps {
   disabled: boolean;
   disabledReason?: string;
   onExport(format: ExportFormat, background: ExportBackground): Promise<void>;
+  /** 도구 모음이 아이콘만 보일 때 참: 이름을 툴팁(title)으로 준다. */
+  compact?: boolean;
 }
 
 type Note = { kind: "busy" | "done" | "failed" } | null;
@@ -46,7 +48,7 @@ type Note = { kind: "busy" | "done" | "failed" } | null;
  * `이미지 저장 ▾`: 형식(PNG·SVG)마다 바탕(어두운·흰) 두 항목을 묶은 메뉴. 고르면 닫히고, 만드는 동안 버튼은 막히며
  * 진행·완료·실패를 도구 모음 아래에 알린다.
  */
-export function ExportMenu({ disabled, disabledReason = EXPORT_EMPTY_REASON, onExport }: ExportMenuProps) {
+export function ExportMenu({ disabled, disabledReason = EXPORT_EMPTY_REASON, onExport, compact = false }: ExportMenuProps) {
   const { open, setOpen, root, trigger } = usePopover('[role="menuitem"]');
   const [note, setNote] = useState<Note>(null);
   const reasonId = useId();
@@ -92,7 +94,7 @@ export function ExportMenu({ disabled, disabledReason = EXPORT_EMPTY_REASON, onE
         aria-disabled={busy || undefined}
         aria-busy={busy || undefined}
         disabled={disabled}
-        title={disabled ? disabledReason : undefined}
+        title={disabled ? disabledReason : compact ? (busy ? EXPORT_BUSY_MESSAGE : EXPORT_LABEL) : undefined}
         aria-describedby={disabled ? reasonId : undefined}
         onClick={() => {
           if (busy) return;

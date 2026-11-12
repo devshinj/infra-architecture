@@ -1,6 +1,6 @@
 import { isDirectCrossing } from "./boundary";
 import { categoryOf } from "./catalog";
-import { eulReul, euro, iGa } from "./josa";
+import { eulReul, euro, fixLegacyJosa, iGa } from "./josa";
 import { isManaged, MULTI_AZ_KINDS, yesNo } from "./managed";
 import type { NetworkKnowledge } from "./network";
 import { evaluateNetworkRules, LINK_RULES } from "./networkRules";
@@ -288,10 +288,11 @@ export function mergeWarnings(state: DiagramState, knowledge?: NetworkKnowledge)
   const merged: Warning[] = evaluateRules(state, knowledge).map((w) => {
     const s = storedById.get(w.id);
     // 망연계 예상·AZ 경고는 저장된 문구로 덮지 않는다(종류·지식·AZ 값이 바뀌면 문구도 달라진다).
-    return s && !FIXED_TEXT_RULES.includes(w.rule) ? { ...w, text: s.text } : w;
+    // 저장된 문구는 조사를 자동으로 고르기 전의 것일 수 있어("이(가)") 보일 때 고친다.
+    return s && !FIXED_TEXT_RULES.includes(w.rule) ? { ...w, text: fixLegacyJosa(s.text) } : w;
   });
   for (const w of stored) {
-    if (w.rule === "db_exposed" && state.nodes[w.nodeId] && !merged.some((m) => m.id === w.id)) merged.push(w);
+    if (w.rule === "db_exposed" && state.nodes[w.nodeId] && !merged.some((m) => m.id === w.id)) merged.push({ ...w, text: fixLegacyJosa(w.text) });
   }
   const ignoredIds = new Set(state.ignoredWarnings ?? []);
   return { active: merged.filter((w) => !ignoredIds.has(w.id)), ignored: merged.filter((w) => ignoredIds.has(w.id)) };
