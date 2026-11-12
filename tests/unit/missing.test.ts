@@ -160,3 +160,23 @@ describe("망 종류 빠진 정보", () => {
     expect(r.items.map((i) => i.targetId)).toEqual(["zb"]);
   });
 });
+
+test("managed services are not asked for server-only fields (hostname, CPU, RAM, IP, VIP, brokers…)", () => {
+  const node = (id: string, kind: string, attrs: Record<string, string | number | null>) => ({ id, kind, label: id, parent: null, attrs }) as never;
+  const s: DiagramState = {
+    ...emptyState(),
+    nodes: {
+      rds: node("rds", "db_rdb", { managed: "yes" }),
+      alb: node("alb", "lb_l7", { managed: "yes" }),
+      sqs: node("sqs", "queue", { managed: "yes" }),
+      self: node("self", "db_rdb", {}),
+    },
+  };
+  const keysOf = (id: string) => computeMissing(s).items.filter((i) => i.targetId === id).map((i) => i.key);
+  expect(keysOf("rds")).toEqual(["replication", "version"]);
+  expect(keysOf("alb")).toEqual(["port", "rules"]);
+  expect(keysOf("sqs")).toEqual(["version"]);
+  // 직접 운영하는 DB 는 그대로 서버 칸을 묻는다.
+  expect(keysOf("self")).toEqual(["cpu", "ram", "ip", "replication", "version"]);
+  expect(requiredKeysFor(s, "node", "rds")).toEqual(["replication", "version"]);
+});

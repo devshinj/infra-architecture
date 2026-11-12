@@ -200,3 +200,67 @@ test("warningDelta counts new, resolved and all active warnings (ignored ones ar
   expect(warningDelta(ignored, routed).resolved).toBe(1);
   expect(warningDelta(direct, direct)).toEqual({ fresh: 0, resolved: 0, now: before.length });
 });
+
+// ── 클라우드 이중화: 관리형 서비스·AZ 분산 ──
+const cloud: [string, GroupKind, string | null][] = [["region", "cloud_region", null], ["vpc", "vpc", "region"], ["priv", "subnet_private", "vpc"]];
+const withAttrs = (n: DNode, attrs: DNode["attrs"]): DNode => ({ ...n, attrs });
+const warnOf = (s: DiagramState, id: string) => evaluateRules(s).find((w) => w.id === id);
+
+test("on-prem spof text: differently named nodes of one kind are each 1대뿐, not 'outside the group'", () => {
+  const dbs = build([node("a", "db_rdb", "주문 DB"), node("b", "db_rdb", "결제 DB")]);
+  expect(warnOf(dbs, "spof:a")!.text).toContain("1대뿐");
+  expect(warnOf(dbs, "spof:b")!.text).toContain("1대뿐");
+});
+
+test("managed load balancer / DB proxy / compute inside a VPC raise no redundancy warning", () => {
+  for (const kind of ["lb_l7", "lb_l4", "db_proxy", "app_server"] as NodeKind[]) {
+    const s = build([withAttrs(node("m", kind, "M", "priv"), { managed: "yes" })], cloud);
+    expect(ids(s).filter((id) => id.endsWith(":m") && !id.startsWith("unused_passthrough"))).toEqual([]);
+  }
+  // 같은 ALB 라도 관리형 표시가 없으면 직접 운영하는 서버로 보고 묶음 밖이라 알린다.
+  const plain = build([node("alb", "lb_l7", "ALB", "priv")], cloud);
+  expect(ids(plain).filter((id) => !id.startsWith("unused_passthrough"))).toEqual(["spof_cloud:alb"]);
+});
+
+test("managed DB/cache: multi_az yes is fine, no warns, unknown is a check", () => {
+  const db = (attrs: DNode["attrs"]) => build([withAttrs(node("d", "db_rdb", "RDS", "priv"), { managed: "yes", ...attrs })], cloud);
+  expect(ids(db({ multi_az: "yes" }))).toEqual([]);
+  expect(warnOf(db({ multi_az: "no" }), "multi_az:d")).toMatchObject({ level: "warn", text: "RDS이(가) 한 AZ 에만 있어 그 AZ 가 멈추면 데이터도 쓸 수 없어요." });
+  expect(warnOf(db({}), "multi_az:d")).toMatchObject({ level: "check", text: "RDS이(가) 여러 AZ 에 복제(Multi-AZ)되는지 알 수 없어요." });
+  const cache = build([withAttrs(node("c", "cache", "ElastiCache", "priv"), { managed: "예", multi_az: null })], cloud);
+  expect(warnOf(cache, "multi_az:c")!.level).toBe("check");
+});
+
+test("self-run cloud server outside a group warns spof_cloud with the AZ guide", () => {
+  const s = build([node("w", "was", "Admin App", "priv")], cloud);
+  const w = warnOf(s, "spof_cloud:w")!;
+  expect(w.text).toBe("Admin App이(가) 1대뿐이라 멈추면 서비스도 멈춰요.");
+  expect(w.guide).toContain("서로 다른 AZ");
+  expect(w.guide).not.toContain("VIP");
+  expect(ids(s)).not.toContain("spof:w");
+});
+
+test("self-run cloud group: one az_spread per group — warn when all in one AZ, check when an AZ is unknown, none when spread", () => {
+  const groups: [string, GroupKind, string | null][] = [...cloud, ["asg", "redundancy_group", "priv"]];
+  const pair = (a: string | null, b: string | null) =>
+    build([withAttrs(node("w2", "was", "WAS #2", "asg"), { az: b }), withAttrs(node("w1", "was", "WAS #1", "asg"), { az: a })], groups);
+  expect(ids(pair("2a", "2c"))).toEqual([]);
+  const same = evaluateRules(pair("2a", "2a"));
+  expect(same.map((w) => w.id)).toEqual(["az_spread:w1"]);
+  expect(same[0]).toMatchObject({ level: "warn", text: "asg의 서버가 모두 AZ 2a에 있어 그 AZ 가 멈추면 함께 멈춰요." });
+  const unknown = evaluateRules(pair("2a", null));
+  expect(unknown.map((w) => [w.id, w.level])).toEqual([["az_spread:w1", "check"]]);
+});
+
+test("confirmed 이중화 없음 also turns the cloud redundancy rules off", () => {
+  const s = build([node("w", "was", "WAS", "priv"), withAttrs(node("d", "db_rdb", "RDS", "priv"), { managed: "yes" })], cloud);
+  expect(ids(s).sort()).toEqual(["multi_az:d", "spof_cloud:w"]);
+  s.assumptions.redundancy = { key: "redundancy", value: "이중화 없음", confirmed: true };
+  expect(ids(s)).toEqual([]);
+});
+
+test("multi_az / az_spread texts are recomputed, never replaced by a stored text", () => {
+  const s = build([withAttrs(node("d", "db_rdb", "RDS", "priv"), { managed: "yes", multi_az: "no" })], cloud);
+  s.warnings = [stored("multi_az:d", "multi_az", "d", "예전: 알 수 없어요")];
+  expect(mergeWarnings(s).active[0]!.text).toContain("한 AZ 에만");
+});

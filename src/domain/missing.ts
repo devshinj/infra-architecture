@@ -1,5 +1,6 @@
 import { crossesBoundary } from "./boundary";
 import { NODE_KINDS } from "./catalog";
+import { isManaged, SERVER_ONLY_ATTRS } from "./managed";
 import type { NetworkKnowledge } from "./network";
 import type { DNode, DiagramState, Edge } from "./types";
 
@@ -35,6 +36,9 @@ export const FIELD_LABELS: Record<string, string> = {
   payload: "전달물",
   direction: "방향",
   net_type: "망 종류",
+  az: "AZ",
+  managed: "관리형",
+  multi_az: "Multi-AZ",
 };
 
 export interface MissingItem {
@@ -50,8 +54,10 @@ const labelOf = (key: string) => FIELD_LABELS[key] ?? key;
 /** 빈 칸 판정: undefined·null·공백뿐인 문자열. 배지와 설명 패널이 같은 기준을 쓴다. */
 export const isEmpty = (v: unknown) => v === undefined || v === null || (typeof v === "string" && v.trim() === "");
 
+/** 관리형 서비스(ALB·RDS·S3 등)는 서버 칸(hostname·CPU·RAM·IP·VIP 등)을 묻지 않는다. 사업자가 운영해 정할 수 없거나 없는 값이다. */
 function requiredKeysForNode(node: DNode): string[] {
-  return NODE_KINDS.find((k) => k.kind === node.kind)?.requiredAttrs.slice() ?? [];
+  const keys = NODE_KINDS.find((k) => k.kind === node.kind)?.requiredAttrs.slice() ?? [];
+  return isManaged(node) ? keys.filter((k) => !SERVER_ONLY_ATTRS.has(k)) : keys;
 }
 
 // 흐름을 그리는 연결(request·async)만 프로토콜/포트를 요구한다. 망 경계를 넘으면 전달물·방향도 요구한다.
