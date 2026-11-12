@@ -45,6 +45,8 @@ const ROOT = "__root";
 const CHANNEL_MARGIN = 24; // main 오른쪽 끝 ↔ 첫 통로, 마지막 통로 ↔ 외부 열
 const CHANNEL_STEP = 16; // 통로끼리 간격 (spacing.edgeEdge)
 const LINE_GAP = 16; // 공유 조각이 아닌 서로 다른 선이 나란히 지날 때 띄울 최소 간격
+const GAP_ROUNDS = 4; // 붐비는 외부 연결 줄을 위해 틈을 벌리는 횟수(한 번에 LINE_GAP)
+const END_GAP_TRIM = 8; // 이보다 짧게 나란한 것은 붐빈다고 보지 않는다(선 끝 모임, layoutMetrics 의 END_TRIM 과 같다)
 const ROW_GAP_TIGHT = 5; // LINE_GAP 줄이 다음 층까지 밀려날 때 외부 연결의 가로 토막이 다른 가로 토막과 띄우는 간격(예전 값, 6px 부터 붙는다)
 export const CONTENT_WIDTH = NODE.maxWidth - NODE.padLeft - NODE.padRight;
 
@@ -168,6 +170,42 @@ function pathMidpoint(points: Pt[]): Pt | undefined {
 }
 
 interface ElkRun { rects: Map<string, Rect>; edges: Map<string, Pt[]> }
+
+/** 세로 구간(lo ≤ y ≤ hi). */
+type Span = { lo: number; hi: number };
+/** 겹치는 구간을 하나로 합친다(같은 틈을 두 번 벌리지 않게). */
+function mergeSpans(spans: Span[]): Span[] {
+  const out: Span[] = [];
+  for (const sp of [...spans].sort((a, b) => a.lo - b.lo)) {
+    const last = out.at(-1);
+    if (last && sp.lo <= last.hi) last.hi = Math.max(last.hi, sp.hi);
+    else out.push({ ...sp });
+  }
+  return out;
+}
+
+const cloneRun = (run: ElkRun): ElkRun => ({
+  rects: new Map([...run.rects].map(([k, r]) => [k, { ...r }])),
+  edges: new Map([...run.edges].map(([k, pts]) => [k, pts.map((p) => ({ ...p }))])),
+});
+
+/**
+ * span 안에서 어느 노드(isNode)도 가로지르지 않는 첫 y 를 골라 그 아래를 dy 만큼 내려 틈을 넓힌다: y 보다 아래에서
+ * 시작하는 상자와 선의 점은 내려가고, y 를 걸친 영역은 그만큼 길어진다. 위아래 순서가 그대로라 교차·꺾임이 바뀌지 않는다.
+ * 그런 y 가 없으면 false.
+ */
+function openGap(run: ElkRun, span: Span, dy: number, isNode: (id: string) => boolean): boolean {
+  const boxes = [...run.rects].filter(([id]) => isNode(id)).map(([, r]) => r);
+  let y = Math.ceil(span.lo);
+  while (y <= span.hi && boxes.some((r) => r.y - 2 < y && r.y + r.height + 2 > y)) y++;
+  if (y > span.hi) return false;
+  for (const r of run.rects.values()) {
+    if (r.y >= y) r.y += dy;
+    else if (r.y + r.height > y) r.height += dy;
+  }
+  for (const pts of run.edges.values()) for (const p of pts) if (p.y > y) p.y += dy;
+  return true;
+}
 
 function translate(run: ElkRun, dx: number, dy: number): void {
   for (const r of run.rects.values()) {
@@ -408,22 +446,30 @@ export async function layoutDiagram(g: DisplayGraph, pinned: Record<string, { x:
   const laneSet = new Set(laneIds);
   const mainTops = new Set([...groups, ...nodes].filter((x) => parentOf(x.id) === null && !laneSet.has(x.id)).map((x) => x.id));
   const main = await runElk(mainTops);
-  const rects = new Map(main.rects);
-  const points = new Map(main.edges);
-
   const inLane = (id: string) => laneSet.has(topOf(id));
   const cross = g.edges.filter((e) => inLane(e.from) !== inLane(e.to));
-  const mainRight = Math.max(0, ...[...main.rects.values()].map((r) => r.x + r.width));
+  const laneRuns = await Promise.all(laneIds.map(async (id) => ({ id, run: await runElk(new Set([id])) })));
+
+  // 본 흐름(main) 배치 한 벌에서 외부 열을 쌓고 모든 선을 그린다. 외부 연결 줄이 붐비면 아래에서 그 틈을 벌린
+  // 본 흐름으로 다시 부른다(openGap). crowd 는 벌릴 자리(y), crowdPx 는 다른 선과 16px 미만으로 나란한 외부 연결 길이.
+  type Routed = { rects: Map<string, Rect>; points: Map<string, Pt[]>; degraded: Set<string>; crowd: Span[]; crowdPx: number; score: number[] };
+  const route = (base: ElkRun): Routed => {
+  const rects = new Map(base.rects);
+  const points = new Map(base.edges);
+  const crowd: Span[] = [];
+  let crowdPx = 0;
+  let laneScore: number[] = [0, 0, 0];
+  const mainRight = Math.max(0, ...[...base.rects.values()].map((r) => r.x + r.width));
   if (laneIds.length > 0) {
     const laneX = mainRight + 2 * CHANNEL_MARGIN + Math.max(0, cross.length - 1) * CHANNEL_STEP;
     // Stack lane groups top→down, each near the highest main node it talks to.
     const wantY = (laneTop: string): number => {
       const ys = cross
         .flatMap((e) => (topOf(e.from) === laneTop ? [e.to] : topOf(e.to) === laneTop ? [e.from] : []))
-        .map((id) => main.rects.get(id)!.y);
+        .map((id) => base.rects.get(id)!.y);
       return ys.length > 0 ? Math.min(...ys) : 0;
     };
-    const lane = await Promise.all(laneIds.map(async (id) => ({ id, run: await runElk(new Set([id])), want: wantY(id) })));
+    const lane = laneRuns.map(({ id, run }) => ({ id, run: cloneRun(run), want: wantY(id) }));
     lane.sort((a, b) => a.want - b.want);
     let nextY = 0;
     for (const { id, run, want } of lane) {
@@ -529,14 +575,16 @@ export async function layoutDiagram(g: DisplayGraph, pinned: Record<string, { x:
       const runCrossings = (xa: number, xb: number, y: number): number => cols.filter((c) => inside(c.x, xa, xb) && inside(y, c.y1, c.y2)).length;
 
       // 세로 토막의 x 후보: 노드 가운데, 같은 노드에서 나가는 선이 이미 쓰는 세로줄(가까운 순), 그다음 가운데에서 2px 씩.
+      // 가운데를 비킬 때는 통로 쪽(오른쪽)을 먼저 본다: 왼쪽으로 비키면 오른쪽으로 가는 가로 토막이 같은 노드의 가운데
+      // 세로줄(그 노드의 다른 선)을 가로지른다.
       const stubXs = (id: string, m: Rect): number[] => {
         const c = m.x + m.width / 2;
         if (!wide) return [c];
         const own = cols.filter((k) => k.nodes.includes(id) && k.x > m.x && k.x < m.x + m.width && (Math.abs(k.y1 - m.y - m.height) < 0.5 || Math.abs(k.y2 - m.y) < 0.5));
         const out = [c, ...[...new Set(own.map((k) => k.x))].sort((a, b) => Math.abs(a - c) - Math.abs(b - c))];
         for (let k = 2; c - k >= m.x + 8 || c + k <= m.x + m.width - 8; k += 2) {
-          if (c - k >= m.x + 8) out.push(c - k);
           if (c + k <= m.x + m.width - 8) out.push(c + k);
+          if (c - k >= m.x + 8) out.push(c - k);
         }
         return out;
       };
@@ -550,11 +598,16 @@ export async function layoutDiagram(g: DisplayGraph, pinned: Record<string, { x:
           for (const dir of [1, -1] as const) {
             const y0 = dir === 1 ? m.y + m.height : m.y;
             const y = y0 + dir * d;
-            const x = xs.find((cx) => colClear(cx, y0, y, mainId));
-            if (x !== undefined && clear({ x, y: y0 + dir * 5 }, { x, y }, obstacles) && clearRow({ x, y }, { x: channelX, y }, gap)) {
+            // 이 줄에 닿는 세로 토막 자리 가운데 교차가 가장 적은 곳(같으면 앞 후보). 예전 길찾기는 가운데 하나뿐이다.
+            let found: Exit | null = null;
+            for (const x of xs) {
+              if (!colClear(x, y0, y, mainId) || !clear({ x, y: y0 + dir * 5 }, { x, y }, obstacles) || !clearRow({ x, y }, { x: channelX, y }, gap)) continue;
               const stub = stubCrossings(x, y0, y);
-              return { x, y, y0, stub, n: stub + runCrossings(x, channelX, y) };
+              const n = stub + runCrossings(x, channelX, y);
+              if (!found || n < found.n) found = { x, y, y0, stub, n };
+              if (n === 0) break;
             }
+            if (found) return found;
           }
         }
         return null;
@@ -591,8 +644,11 @@ export async function layoutDiagram(g: DisplayGraph, pinned: Record<string, { x:
         return null;
       };
 
+      // 위 노드부터. 같은 높이면 통로에 가까운(오른쪽) 노드부터: 그 선이 노드 가까운 줄을 먼저 쓰고 왼쪽 노드의 선이
+      // 그 아래 줄로 지나가야 오른쪽 노드의 세로 토막이 왼쪽 선을 가로지르지 않는다.
+      const mainOf = (e: { from: string; to: string }) => rects.get(inLane(e.from) ? e.to : e.from)!;
       [...cross]
-        .sort((a, b) => rects.get(inLane(a.from) ? a.to : a.from)!.y - rects.get(inLane(b.from) ? b.to : b.from)!.y)
+        .sort((a, b) => mainOf(a).y - mainOf(b).y || mainOf(b).x - mainOf(a).x)
         .forEach((e, i) => {
           const fromLane = inLane(e.from);
           const mainId = fromLane ? e.to : e.from;
@@ -646,11 +702,71 @@ export async function layoutDiagram(g: DisplayGraph, pinned: Record<string, { x:
     const oldRun = routeLanes(false);
     const [rs, os] = [score(roomyRun), score(oldRun)];
     const run = rs.every((v, i) => v <= os[i]!) ? roomyRun : oldRun;
+    laneScore = run === roomyRun ? rs : os;
     for (const [id, pts] of run.routes) points.set(id, pts);
     for (const id of run.degraded) degraded.add(id);
     // Edges between two different lane groups (rare): a plain elbow.
     for (const e of g.edges) if (!points.has(e.id)) points.set(e.id, elbowRoute(rects.get(e.from)!, rects.get(e.to)!));
+
+    // 붐비는 외부 연결 줄: 본 흐름 안의 가로 토막이 다른 선의 가로 토막과 16px 미만으로 나란하면, 그 선이 나온 노드
+    // 바로 아래(위로 나갔으면 바로 위)를 벌릴 자리로 적는다. 외부 열 쪽(통로 오른쪽)은 보지 않는다.
+    const rowsOf = (pts: Pt[]) => segsOf(pts).filter((u) => Math.abs(u.a.y - u.b.y) < 0.5 && Math.abs(u.a.x - u.b.x) > 1);
+    const others = [...points].map(([id, pts]) => ({ id, rows: rowsOf(pts) }));
+    for (const [id, pts] of run.routes) {
+      if (run.degraded.has(id)) continue;
+      const e = edgeById.get(id)!;
+      const mainId = inLane(e.from) ? e.to : e.from;
+      const m = rects.get(mainId)!;
+      for (const u of rowsOf(pts)) {
+        const [ua, ub] = [Math.min(u.a.x, u.b.x), Math.max(u.a.x, u.b.x)];
+        if (ua >= mainRight) continue;
+        let px = 0;
+        const near: number[] = [u.a.y];
+        for (const o of others) {
+          if (o.id === id) continue;
+          for (const v of o.rows) {
+            const gap = Math.abs(v.a.y - u.a.y);
+            if (gap <= 0.5 || gap >= LINE_GAP) continue;
+            const ov = Math.min(ub, Math.max(v.a.x, v.b.x)) - Math.max(ua, Math.min(v.a.x, v.b.x));
+            if (ov <= END_GAP_TRIM) continue;
+            px = Math.max(px, ov);
+            near.push(v.a.y);
+          }
+        }
+        if (px === 0) continue;
+        crowdPx += px;
+        // 벌릴 자리: 노드와 붐비는 줄들 사이(아래로 나갔으면 노드 바닥 ~ 가장 아래 줄, 위로 나갔으면 가장 위 줄 ~ 노드 위).
+        crowd.push(u.a.y > m.y + m.height ? { lo: m.y + m.height + 1, hi: Math.max(...near) - 1 } : { lo: Math.min(...near) + 1, hi: m.y - 1 });
+      }
+    }
   }
+
+  return { rects, points, degraded, crowd: mergeSpans(crowd), crowdPx, score: laneScore };
+  };
+
+  // 외부 연결 줄이 노드 사이 한 틈에 몰려 16px 를 못 지키면, 그 틈 아래 전체를 LINE_GAP 만큼 내려 틈을 넓히고 다시 그린다.
+  // 위아래 순서는 그대로 두고 늘리기만 하므로 본 흐름 선의 교차·꺾임은 그대로다. 외부 연결이 꺾은선이 되거나 교차가
+  // 늘면 받아들이지 않는다. 사용자가 옮겨 둔(고정) 노드가 있으면 그 자리와 어긋나므로 하지 않는다.
+  let best = route(cloneRun(main));
+  if (laneIds.length > 0 && Object.keys(pinned).length === 0) {
+    // 한 번에 LINE_GAP 씩 벌려 보고, 교차·꺾은선이 처음보다 늘지 않은 것 가운데 붐빔이 가장 적은 것을 쓴다.
+    const first = best;
+    let base = cloneRun(main);
+    let cur = best;
+    for (let round = 0; round < GAP_ROUNDS && cur.crowd.length > 0; round++) {
+      const next = cloneRun(base);
+      // 아래 자리부터 벌려야 위 자리의 y 가 그대로다.
+      const opened = [...cur.crowd].sort((a, b) => b.lo - a.lo).filter((sp) => openGap(next, sp, LINE_GAP, (id) => !!g.nodes[id])).length;
+      if (opened === 0) break;
+      const cand = route(next);
+      const notWorse = cand.degraded.size <= first.degraded.size && cand.score.every((v, i) => v <= first.score[i]!);
+      if (!notWorse) break;
+      if (cand.crowdPx < best.crowdPx) best = cand;
+      cur = cand;
+      base = next;
+    }
+  }
+  const { rects, points, degraded } = best;
 
   const out: Layout = { nodes: {}, groups: {}, edges: [], width: 0, height: 0 };
   for (const grp of groups) out.groups[grp.id] = { id: grp.id, parent: parentOf(grp.id), ...rects.get(grp.id)! };

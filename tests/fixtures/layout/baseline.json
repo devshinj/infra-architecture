@@ -1,7 +1,7 @@
 {
   "s1": {
     "default": {
-      "crossings": 2,
+      "crossings": 1,
       "sharedPx": 30,
       "parallelPx": 0,
       "throughNode": 0,
@@ -10,7 +10,7 @@
       "zoneHeadCrossings": 2
     },
     "expanded": {
-      "crossings": 2,
+      "crossings": 1,
       "sharedPx": 30,
       "parallelPx": 0,
       "throughNode": 0,
@@ -61,8 +61,8 @@
   },
   "s4": {
     "default": {
-      "crossings": 29,
-      "sharedPx": 760,
+      "crossings": 26,
+      "sharedPx": 512,
       "parallelPx": 0,
       "throughNode": 0,
       "bends": 80,
@@ -70,8 +70,8 @@
       "zoneHeadCrossings": 7
     },
     "expanded": {
-      "crossings": 29,
-      "sharedPx": 760,
+      "crossings": 26,
+      "sharedPx": 512,
       "parallelPx": 0,
       "throughNode": 0,
       "bends": 80,
@@ -101,21 +101,21 @@
   },
   "state-25": {
     "default": {
-      "crossings": 10,
-      "sharedPx": 350,
-      "parallelPx": 934,
+      "crossings": 2,
+      "sharedPx": 328,
+      "parallelPx": 88,
       "throughNode": 0,
       "bends": 45,
-      "aspect": 2.115590717299578,
+      "aspect": 2.0465102040816325,
       "zoneHeadCrossings": 4
     },
     "expanded": {
-      "crossings": 10,
-      "sharedPx": 350,
-      "parallelPx": 934,
+      "crossings": 2,
+      "sharedPx": 328,
+      "parallelPx": 88,
       "throughNode": 0,
       "bends": 45,
-      "aspect": 2.115590717299578,
+      "aspect": 2.0465102040816325,
       "zoneHeadCrossings": 4
     }
   },
@@ -131,11 +131,11 @@
     },
     "expanded": {
       "crossings": 69,
-      "sharedPx": 7756,
-      "parallelPx": 4614,
+      "sharedPx": 7852,
+      "parallelPx": 0,
       "throughNode": 0,
       "bends": 155,
-      "aspect": 4.131359060402684,
+      "aspect": 4.076639072847682,
       "zoneHeadCrossings": 13
     }
   },
@@ -150,12 +150,12 @@
       "zoneHeadCrossings": 0
     },
     "expanded": {
-      "crossings": 136,
-      "sharedPx": 21846,
-      "parallelPx": 2816,
+      "crossings": 124,
+      "sharedPx": 21838,
+      "parallelPx": 0,
       "throughNode": 0,
       "bends": 333,
-      "aspect": 8.122311320754717,
+      "aspect": 7.922990797546012,
       "zoneHeadCrossings": 25
     }
   },
