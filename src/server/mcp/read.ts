@@ -107,7 +107,7 @@ function networkGuideSection(k: NetworkKnowledge, restLength: number): string {
 }
 
 /**
- * get_guide 가 돌려주는 그리기 안내서(2만 자 이하). 규칙 글은 Qwen 프롬프트와 공용 모듈(drawing/rules)을 쓰고,
+ * get_guide 가 돌려주는 그리기 안내서(2만4천 자 이하). 규칙 글은 Qwen 프롬프트와 공용 모듈(drawing/rules)을 쓰고,
  * 거기 쓰인 Qwen 쪽 이름은 용어 풀이 절에서 MCP 말로 바꿔 준다. 망 지식은 사용자 것을 담되 길면 줄인다.
  */
 export function buildGuide(k: NetworkKnowledge): string {

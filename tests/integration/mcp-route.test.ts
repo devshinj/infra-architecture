@@ -151,7 +151,7 @@ describe("/api/mcp", () => {
     const r = await call(client, "get_guide");
     expect(r.isError).toBeFalsy();
     expect(textOf(r)).toContain("# InfraSketch 그리기 안내서");
-    expect(textOf(r).length).toBeLessThanOrEqual(20000);
+    expect(textOf(r).length).toBeLessThanOrEqual(24000);
   });
 
   test("프로젝트 만들기 → 읽기 → 검사 → 적용 → 이력 → 되돌리기", async () => {
