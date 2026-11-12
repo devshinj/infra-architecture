@@ -72,14 +72,16 @@ export interface FitOptions {
   minZoom?: number;
   /** 줌을 이 값으로 정한다(이어 맞추기에서 더 당기지 않을 때). minZoom 보다 앞선다. */
   zoom?: number;
-  /** 다 담지 못할 때 가로로 가운데에 둘 곳(맨 윗줄 노드: 사용자·클라이언트). 없으면 `b` 의 가운데. */
+  /** 다 담지 못할 때 가운데가 띠 안에 남아야 하는 곳(맨 윗줄 노드: 사용자·클라이언트). 없으면 `b`. */
   anchor?: Rect | null;
 }
 
 /**
  * The viewport that frames `b` in the box between the insets, zoom clamped to [max(MIN_ZOOM, minZoom), maxZoom].
  * When `b` does not fit at that zoom on an axis, that axis is not centred: vertically the top of `b` sits EDGE_GAP_PX
- * below the top inset; horizontally `anchor` is centred, clamped so no empty space shows beyond `b`'s left/right edge.
+ * below the top inset; horizontally the left of `b` sits EDGE_GAP_PX right of the left inset (clear of the sidebar),
+ * shifted left only as far as needed to keep the centre of `anchor` inside the box, and never so far that empty space
+ * shows beyond `b`'s right edge.
  */
 export function fitViewport(b: Rect, size: { width: number; height: number }, insets: Insets, maxZoom: number, opts: FitOptions = {}): Viewport {
   const top = insets.top ?? 0;
@@ -96,11 +98,13 @@ export function fitViewport(b: Rect, size: { width: number; height: number }, in
   let x = insets.left + vw / 2 - (b.x + b.width / 2) * zoom;
   if (!fitsX) {
     const a = opts.anchor ?? b;
-    const want = insets.left + vw / 2 - (a.x + a.width / 2) * zoom;
-    // 왼쪽 끝이 띠 왼쪽 여백보다 안으로 들어오지 않고, 오른쪽 끝이 띠 오른쪽 여백보다 안으로 들어오지 않게.
+    // 왼쪽부터 읽는다: 구성도 왼쪽 끝을 띠 왼쪽(사이드바 바로 옆)에 둔다. 넘치는 쪽은 오른쪽 패널 밑이다.
+    // 다만 기준 줄(anchor: 사용자·클라이언트 줄)의 가운데는 띠 안에 둔다: 가운데가 띠 오른쪽 여백을 넘으면
+    // 그만큼만 왼쪽으로 민다. 오른쪽 끝 너머 빈 곳은 보이지 않게 한다.
     const most = insets.left + EDGE_GAP_PX - b.x * zoom;
     const least = insets.left + vw - EDGE_GAP_PX - (b.x + b.width) * zoom;
-    x = Math.min(most, Math.max(least, want));
+    const anchorMid = insets.left + vw - EDGE_GAP_PX - (a.x + a.width / 2) * zoom;
+    x = Math.max(least, Math.min(most, anchorMid));
   }
   const y = fitsY ? top + vh / 2 - (b.y + b.height / 2) * zoom : top + EDGE_GAP_PX - b.y * zoom;
   return { x, y, zoom };
