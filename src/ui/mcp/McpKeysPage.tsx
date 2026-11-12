@@ -181,7 +181,7 @@ export function McpKeysPage({ initialKeys }: { initialKeys: McpKeyRow[] }) {
           <ol className={styles.steps}>
             <li>
               <b>키 만들기</b>
-              <span>왼쪽에서 키 이름을 적고 만든다. 키는 그때 한 번만 보인다.</span>
+              <span>「새 키 만들기」에서 키 이름을 적고 만든다. 키는 그때 한 번만 보인다.</span>
             </li>
             <li>
               <b>도구에 서버 등록</b>
