@@ -17,6 +17,7 @@ Claude Code 로 InfraSketch MCP(`/api/mcp`)를 써서 VMS 구성도를 그려 �
 | C-2 WebRTC 방향 | 용도로 나눈다: 보기만 하는 원격 시청은 영상이 흐르는 방향(media_server → 단말, 망을 넘으면 direction one_way), 서로 주고받는 통화·회의는 단말 → media_server(망을 넘으면 direction two_way). |
 | C-3 관제 화면 | (C 묶음에 포함) 스트리밍 분배 서버(media_server)를 두는 대규모 구성이면 관제 화면은 그 분배 서버에서 영상을 받는다. |
 | D 영상관제 패턴 | `src/domain/patterns.ts` 에 패턴 하나 추가 → Qwen 프롬프트와 MCP 가이드 둘 다 반영. VMS 핵심(녹화·VMS 관리·저장)은 **영상망**, 관제 화면·요원은 통합관제망(방화벽), 원격 시청은 DMZ 미디어 서버, 업무망은 망연계. |
+| D 후속 (같은 날) | 패턴을 둘로 나눈다: 「영상관제(지자체 통합관제)」(위 배치)와 「영상관제(일반 시설)」(통합관제망·망연계 없이 영상망 하나, 사무망은 방화벽, 밖은 VPN·DMZ 미디어 서버). 관제 화면은 녹화서버(대규모면 스트리밍 분배 서버)에서 영상을 받고, 관제 요원은 VMS 에 접속한다고 나눠 쓴다. VMS 는 작은 구성이면 video_recorder 가 겸하고, 녹화서버가 여러 대인 대규모면 VMS 관리서버를 app_server 로 따로 둔다(카탈로그 그대로). |
 | E 이름 | `create_project` 에 선택 인자 `diagram_name`(없으면 "새 구성도"). 이름 검사(깨진 글자 U+FFFD·제어 문자 거절)는 서버 공용(`src/server/projects.ts` cleanName) — 앱 화면과 MCP 모두. |
 | F 용어 사전 | 새 MCP 도구 `lookup_terms(text)` — 앱 대화와 같은 `matchUserTerms` 결과. 가이드에 「그리기 전에 요청 글로 한 번 부른다」를 적는다. |
 | 가이드 길이 | `GUIDE_MAX` 를 20000 → 24000 으로 올린다. 기본(seed) 망 지식은 줄이지 않는다. |
