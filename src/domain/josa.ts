@@ -25,6 +25,28 @@ const DIGIT: Record<string, Final> = {
 };
 
 const TRAILING = /[\s)\]}"'’”」』>]+$/;
+const VOWELS = "aeiou";
+
+/**
+ * 소문자로 끝나는 영어 낱말의 끝소리(외래어 표기 어림).
+ * - m·n·l 은 받침(…엄·…언·…엘), ng 는 ㅇ 받침.
+ * - p·b·k·c·t 는 바로 앞이 짧은 모음 하나일 때만 받침(앱·웹·랙·맥·톰캣·봇·소켓), 같은 글자가 겹쳐도 받침(App·Hook 의 ck/oo 는 아래).
+ *   앞이 자음이면 "으"가 붙어 받침 없음(네트워크·디스크·클라이언트·싱크·헬프). t 는 앞이 모음 둘이어도 받침 없음(부트·루트).
+ * - 그 밖(s·d·g·r·x·y·e …)은 받침 없음(레디스·클라우드·로그·서버·엔진엑스·게이트웨이).
+ */
+function latinWordFinal(w: string): Final {
+  const word = w.split(/[^A-Za-z]+/).at(-1)!.toLowerCase();
+  const ch = word.at(-1)!;
+  if (word.endsWith("ng")) return { has: true, rieul: false };
+  if ("mnl".includes(ch)) return { has: true, rieul: ch === "l" };
+  if (!"pbkct".includes(ch) || word.length < 2) return { has: false, rieul: false };
+  const prev = word.at(-2)!;
+  const prev2 = word.at(-3) ?? "";
+  if (prev === ch || (ch === "k" && prev === "c")) return { has: true, rieul: false }; // App·Webb·Rack
+  if (!VOWELS.includes(prev)) return { has: false, rieul: false }; // Network·Disk·Client·Sync·Help
+  if (ch === "t" && VOWELS.includes(prev2)) return { has: false, rieul: false }; // Boot·Root
+  return { has: true, rieul: false }; // Web·Mac·Tomcat·Bot·Hook·Deep
+}
 
 function finalOf(word: string): Final {
   const w = word.replace(TRAILING, "");
@@ -44,13 +66,8 @@ function finalOf(word: string): Final {
     // 대문자로 끝나면 약어로 보고 글자 이름으로 읽는다: 엘·엠·엔·알만 받침(ALB 비, MySQL 엘, MongoDB 비).
     return { has: "LMNR".includes(ch), rieul: ch === "L" || ch === "R" };
   }
-  if (/[a-z]/.test(ch)) {
-    // 소문자로 끝나면 낱말로 읽는다: 앱(App)·웹(Web)·랙(Rack)·맥(Mac)·…엄·…언·…엘·…잉(ng) 은 받침,
-    // 나머지(…스·…트·…드·…서·…이)는 받침 없음(Redis·Client·Server·Gateway).
-    const tail = w.slice(-2).toLowerCase();
-    if (tail === "ng") return { has: true, rieul: false };
-    return { has: "pbkcmnl".includes(ch), rieul: ch === "l" };
-  }
+  // 소문자로 끝나면 낱말로 소리 내어 읽는다(latinWordFinal).
+  if (/[a-z]/.test(ch)) return latinWordFinal(w);
   return { has: true, rieul: false };
 }
 

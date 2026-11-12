@@ -44,6 +44,15 @@ test("Latin names: L·M·N ends take the consonant form, others the vowel form",
   expect(iGa("Load Balancer")).toBe("Load Balancer가");
   expect(iGa("API Client")).toBe("API Client가");
   expect(euro("Ingress Controlling")).toBe("Ingress Controlling으로");
+  // 짧은 모음 뒤 p·b·k·c·t 는 받침, 앞이 자음이거나 긴 모음(t)이면 받침 없음.
+  expect(iGa("Tomcat")).toBe("Tomcat이");
+  expect(iGa("Slack Bot")).toBe("Slack Bot이");
+  expect(iGa("Network")).toBe("Network가");
+  expect(iGa("Spring Boot")).toBe("Spring Boot가");
+  expect(iGa("Disk")).toBe("Disk가");
+  expect(iGa("Mac")).toBe("Mac이");
+  expect(iGa("Webhook")).toBe("Webhook이");
+  expect(iGa("Log")).toBe("Log가");
   // 대문자로 끝나는 약어는 글자 이름: R(알)은 ㄹ 받침.
   expect(iGa("MongoDB")).toBe("MongoDB가");
   expect(euro("ELB-R")).toBe("ELB-R로");
