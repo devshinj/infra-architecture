@@ -1,6 +1,6 @@
 ---
 title: "NotFoundError"
-sidebar_position: 108
+sidebar_position: 124
 sidebar_label: "핵심 노드: NotFoundError"
 ---
 # NotFoundError
@@ -9,7 +9,7 @@ sidebar_label: "핵심 노드: NotFoundError"
 
 > God node · 36 connections · `src/server/projects.ts`
 
-**Community:** [ValidationError](ValidationError.md)
+**Community:** [ask/route.ts](ask-route.ts.md)
 
 ## Connections by Relation
 
@@ -34,8 +34,8 @@ sidebar_label: "핵심 노드: NotFoundError"
 - [(app)/actions.ts](app-actions.ts.md) `EXTRACTED`
 - [pipeline.ts](pipeline.ts.md) `EXTRACTED`
 - ask.ts `EXTRACTED`
-- server/network.ts `EXTRACTED`
-- server/flows.ts `EXTRACTED`
+- [server/network.ts](server-network.ts.md) `EXTRACTED`
+- [server/flows.ts](server-flows.ts.md) `EXTRACTED`
 - [glossary.ts](glossary.ts.md) `EXTRACTED`
 - [\[sessionId\]/route.ts]([sessionId]-route.ts.md) `EXTRACTED`
 - [ask/route.ts](ask-route.ts.md) `EXTRACTED`
@@ -53,8 +53,8 @@ sidebar_label: "핵심 노드: NotFoundError"
 - .constructor() `EXTRACTED`
 
 ### references
-- Task 6: 읽기 서비스와 안내서 `INFERRED`
 - Task 4: 서버 설명 생성 `INFERRED`
+- Task 6: 읽기 서비스와 안내서 `INFERRED`
 - Task 2: 용어 사전 시드와 서버 함수 `INFERRED`
 - Task 5: DB와 서버 — 망 지식 테이블, 기본 제공 채우기, 읽기·고치기 `INFERRED`
 - Task 3: 키 만들기·확인 `INFERRED`

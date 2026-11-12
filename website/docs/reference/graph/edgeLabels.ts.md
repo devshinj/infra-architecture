@@ -1,6 +1,6 @@
 ---
 title: "edgeLabels.ts"
-sidebar_position: 22
+sidebar_position: 18
 ---
 # edgeLabels.ts
 
@@ -40,8 +40,9 @@ sidebar_position: 22
 ## Relationships
 
 - [EdgeLayer.tsx](EdgeLayer.tsx.md) (17 shared connections)
-- [layout.ts](layout.ts.md) (3 shared connections)
+- [textWidth](textWidth.md) (2 shared connections)
 - [useCamera.ts](useCamera.ts.md) (1 shared connections)
+- [layout.ts](layout.ts.md) (1 shared connections)
 - [exportImage.ts](exportImage.ts.md) (1 shared connections)
 
 ## Source Files

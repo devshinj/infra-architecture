@@ -1,6 +1,6 @@
 ---
 title: "auth"
-sidebar_position: 111
+sidebar_position: 127
 sidebar_label: "핵심 노드: auth"
 ---
 # auth
@@ -9,7 +9,7 @@ sidebar_label: "핵심 노드: auth"
 
 > God node · 34 connections · `src/auth.ts`
 
-**Community:** [\[sessionId\]/route.ts]([sessionId]-route.ts.md)
+**Community:** [NetworkKnowledgePage.tsx](NetworkKnowledgePage.tsx.md)
 
 ## Connections by Relation
 

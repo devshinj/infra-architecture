@@ -1,6 +1,6 @@
 ---
 title: "segments.ts"
-sidebar_position: 53
+sidebar_position: 52
 ---
 # segments.ts
 
@@ -12,7 +12,7 @@ sidebar_position: 53
 
 - **segments.ts** (23 connections) — `src/canvas/segments.ts`
 - **buildSegmentBundles()** (11 connections) — `src/canvas/segments.ts`
-- **EdgeKind** (10 connections) — `src/domain/catalog.ts`
+- **EdgeKind** (11 connections) — `src/domain/catalog.ts`
 - **buildSegs()** (5 connections) — `src/canvas/segments.ts`
 - **normalize()** (5 connections) — `src/canvas/segments.ts`
 - **rp()** (5 connections) — `src/canvas/segments.ts`
@@ -33,16 +33,16 @@ sidebar_position: 53
 
 ## Relationships
 
+- [motion.ts](motion.ts.md) (5 shared connections)
 - [EdgeLayer.tsx](EdgeLayer.tsx.md) (4 shared connections)
-- [motion.ts](motion.ts.md) (4 shared connections)
-- [catalog.ts](catalog.ts.md) (3 shared connections)
+- [types.ts](types.ts.md) (3 shared connections)
 - [layoutMetrics.ts](layoutMetrics.ts.md) (2 shared connections)
-- [display.ts](display.ts.md) (2 shared connections)
-- [exportImage.ts](exportImage.ts.md) (1 shared connections)
+- [catalog.ts](catalog.ts.md) (2 shared connections)
+- [display.ts](display.ts.md) (1 shared connections)
 - [InfraSketch 설계 문서](InfraSketch_설계_문서.md) (1 shared connections)
 - [domain/warnings.ts](domain-warnings.ts.md) (1 shared connections)
 - [domain/apply.ts](domain-apply.ts.md) (1 shared connections)
-- [getOwnedDiagram](getOwnedDiagram.md) (1 shared connections)
+- [index.ts](index.ts.md) (1 shared connections)
 
 ## Source Files
 
@@ -53,7 +53,7 @@ sidebar_position: 53
 
 ## Audit Trail
 
-- EXTRACTED: 53 (93%)
+- EXTRACTED: 54 (93%)
 - INFERRED: 4 (7%)
 - AMBIGUOUS: 0 (0%)
 

@@ -1,12 +1,12 @@
 ---
 title: "Canvas.tsx"
-sidebar_position: 3
+sidebar_position: 2
 ---
 # Canvas.tsx
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 60 nodes · cohesion 0.06
+> 59 nodes · cohesion 0.07
 
 ## Key Concepts
 
@@ -16,12 +16,13 @@ sidebar_position: 3
 - **CanvasProps** (17 connections) — `src/canvas/Canvas.tsx`
 - **roving.ts** (16 connections) — `src/canvas/roving.ts`
 - **emphasis.ts** (9 connections) — `src/canvas/emphasis.ts`
-- **Task 5: 화면 — 경고 배지, 설명 패널 "주의할 점", 대화 줄** (6 connections) — `docs/superpowers/plans/2026-10-30-infrasketch-phase3b-warnings.md`
+- **Task 5: 화면 — 경고 배지, 설명 패널 "주의할 점", 대화 줄** (7 connections) — `docs/superpowers/plans/2026-10-30-infrasketch-phase3b-warnings.md`
 - **Icon()** (6 connections) — `src/canvas/Canvas.tsx`
 - **displayEdgeFor()** (6 connections) — `src/canvas/display.ts`
 - **emphasisOf()** (6 connections) — `src/canvas/emphasis.ts`
 - **ariaLabels.ts** (5 connections) — `src/canvas/ariaLabels.ts`
 - **ViewMenu()** (5 connections) — `src/canvas/Canvas.tsx`
+- **outermostCollapsedAncestor()** (4 connections) — `src/canvas/display.ts`
 - **flowEmphasis()** (4 connections) — `src/canvas/emphasis.ts`
 - **litZones()** (4 connections) — `src/canvas/emphasis.ts`
 - **step()** (4 connections) — `src/canvas/roving.ts`
@@ -32,22 +33,21 @@ sidebar_position: 3
 - **zoneDescription()** (3 connections) — `src/canvas/ariaLabels.ts`
 - **.onOptionsChange()** (3 connections) — `src/canvas/Canvas.tsx`
 - **.onWarnBadgeClick()** (3 connections) — `src/canvas/Canvas.tsx`
+- **drawnId()** (3 connections) — `src/canvas/Canvas.tsx`
 - **IconArrange()** (3 connections) — `src/canvas/Canvas.tsx`
-- **IconEye()** (3 connections) — `src/canvas/Canvas.tsx`
-- **IconFit()** (3 connections) — `src/canvas/Canvas.tsx`
-- *... and 35 more nodes in this community*
+- *... and 34 more nodes in this community*
 
 ## Relationships
 
-- [display.ts](display.ts.md) (19 shared connections)
-- [catalog.ts](catalog.ts.md) (13 shared connections)
-- [ExportMenu.tsx](ExportMenu.tsx.md) (12 shared connections)
+- [display.ts](display.ts.md) (15 shared connections)
 - [useCamera.ts](useCamera.ts.md) (12 shared connections)
+- [ExportMenu.tsx](ExportMenu.tsx.md) (11 shared connections)
+- [catalog.ts](catalog.ts.md) (11 shared connections)
+- [EdgePanels.tsx](EdgePanels.tsx.md) (8 shared connections)
 - [EdgeLayer.tsx](EdgeLayer.tsx.md) (7 shared connections)
-- [exportImage.ts](exportImage.ts.md) (6 shared connections)
-- [domain/warnings.ts](domain-warnings.ts.md) (6 shared connections)
-- [EdgePanels.tsx](EdgePanels.tsx.md) (4 shared connections)
-- [layout.ts](layout.ts.md) (4 shared connections)
+- [types.ts](types.ts.md) (7 shared connections)
+- [exportImage.ts](exportImage.ts.md) (5 shared connections)
+- [domain/warnings.ts](domain-warnings.ts.md) (4 shared connections)
 - [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (4 shared connections)
 - [(app)/actions.ts](app-actions.ts.md) (3 shared connections)
 - [ZoneTypePicker.tsx](ZoneTypePicker.tsx.md) (3 shared connections)
@@ -67,7 +67,7 @@ sidebar_position: 3
 ## Audit Trail
 
 - EXTRACTED: 219 (96%)
-- INFERRED: 9 (4%)
+- INFERRED: 10 (4%)
 - AMBIGUOUS: 0 (0%)
 
 ---

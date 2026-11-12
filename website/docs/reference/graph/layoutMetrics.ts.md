@@ -1,17 +1,18 @@
 ---
 title: "layoutMetrics.ts"
-sidebar_position: 60
+sidebar_position: 48
 ---
 # layoutMetrics.ts
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 19 nodes · cohesion 0.18
+> 22 nodes · cohesion 0.15
 
 ## Key Concepts
 
 - **layoutMetrics.ts** (30 connections) — `src/canvas/layoutMetrics.ts`
 - **measureLayout()** (11 connections) — `src/canvas/layoutMetrics.ts`
+- **defaultDisplayOptions()** (6 connections) — `src/canvas/display.ts`
 - **defaultViewLayout()** (6 connections) — `src/canvas/layoutMetrics.ts`
 - **rectHit()** (4 connections) — `src/canvas/layoutMetrics.ts`
 - **Task 1: 배치 측정 모듈과 기준선 테스트** (3 connections) — `docs/superpowers/plans/2026-11-04-layout-harmony-stage1.md`
@@ -19,6 +20,8 @@ sidebar_position: 60
 - **lo()** (3 connections) — `src/canvas/layoutMetrics.ts`
 - **viewLayout()** (3 connections) — `src/canvas/layoutMetrics.ts`
 - **zoneHeadPill()** (3 connections) — `src/canvas/layoutMetrics.ts`
+- **optionsFor()** (3 connections) — `src/ui/DiagramWorkspace.tsx`
+- **initialCollapsed()** (2 connections) — `src/canvas/display.ts`
 - **isH()** (2 connections) — `src/canvas/layoutMetrics.ts`
 - **isV()** (2 connections) — `src/canvas/layoutMetrics.ts`
 - **segsOf()** (2 connections) — `src/canvas/layoutMetrics.ts`
@@ -32,23 +35,27 @@ sidebar_position: 60
 
 ## Relationships
 
-- [display.ts](display.ts.md) (8 shared connections)
-- [layout.ts](layout.ts.md) (6 shared connections)
+- [display.ts](display.ts.md) (6 shared connections)
+- [types.ts](types.ts.md) (4 shared connections)
+- [layout.ts](layout.ts.md) (3 shared connections)
+- [textWidth](textWidth.md) (3 shared connections)
+- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (2 shared connections)
 - [segments.ts](segments.ts.md) (2 shared connections)
-- [exportImage.ts](exportImage.ts.md) (1 shared connections)
-- [DiagramState](DiagramState.md) (1 shared connections)
+- [flowSuggest.ts](flowSuggest.ts.md) (1 shared connections)
 - [useCamera.ts](useCamera.ts.md) (1 shared connections)
-- [getOwnedDiagram](getOwnedDiagram.md) (1 shared connections)
+- [(app)/actions.ts](app-actions.ts.md) (1 shared connections)
 
 ## Source Files
 
 - `docs/superpowers/plans/2026-11-04-layout-harmony-stage1.md`
+- `src/canvas/display.ts`
 - `src/canvas/layoutMetrics.ts`
+- `src/ui/DiagramWorkspace.tsx`
 
 ## Audit Trail
 
-- EXTRACTED: 46 (92%)
-- INFERRED: 4 (8%)
+- EXTRACTED: 53 (93%)
+- INFERRED: 4 (7%)
 - AMBIGUOUS: 0 (0%)
 
 ---

@@ -1,6 +1,6 @@
 ---
 title: "domain/apply.ts"
-sidebar_position: 47
+sidebar_position: 62
 ---
 # domain/apply.ts
 
@@ -16,8 +16,8 @@ sidebar_position: 47
 - **Task 4: 차례 끝 정리 공용화와 코드 경고 점검** (9 connections) — `docs/superpowers/plans/2026-11-09-mcp-server.md`
 - **recordReplaced()** (9 connections) — `src/domain/linkGuess.ts`
 - **revertLinkGuess()** (9 connections) — `src/domain/linkGuess.ts`
+- **Task 4: 되돌리기 도메인 — 대신한 연결 기록, 되돌리기, 흐름 단계 나누기·합치기** (7 connections) — `docs/superpowers/plans/2026-11-06-network-knowledge-link-guess.md`
 - **splitsFor()** (7 connections) — `src/domain/linkGuess.ts`
-- **Task 4: 되돌리기 도메인 — 대신한 연결 기록, 되돌리기, 흐름 단계 나누기·합치기** (6 connections) — `docs/superpowers/plans/2026-11-06-network-knowledge-link-guess.md`
 - **has()** (6 connections) — `src/domain/linkGuess.ts`
 - **incident()** (5 connections) — `src/domain/linkGuess.ts`
 - **StepSplit** (4 connections) — `src/domain/linkGuess.ts`
@@ -32,17 +32,17 @@ sidebar_position: 47
 ## Relationships
 
 - [domain/apply.ts](domain-apply.ts.md) (9 shared connections)
-- [getOwnedDiagram](getOwnedDiagram.md) (9 shared connections)
-- [mcp/apply.ts](mcp-apply.ts.md) (7 shared connections)
-- [pipeline.ts](pipeline.ts.md) (5 shared connections)
+- [pipeline.ts](pipeline.ts.md) (6 shared connections)
+- [flowSuggest.ts](flowSuggest.ts.md) (5 shared connections)
+- [getOwnedDiagram](getOwnedDiagram.md) (5 shared connections)
+- [mcp/apply.ts](mcp-apply.ts.md) (5 shared connections)
 - [chat/warnings.ts](chat-warnings.ts.md) (4 shared connections)
-- [DiagramState](DiagramState.md) (4 shared connections)
-- [domain/flows.ts](domain-flows.ts.md) (3 shared connections)
+- [types.ts](types.ts.md) (4 shared connections)
+- [DiagramState](DiagramState.md) (2 shared connections)
+- [Review Focus](Review_Focus.md) (1 shared connections)
+- [index.ts](index.ts.md) (1 shared connections)
 - [read.ts](read.ts.md) (1 shared connections)
 - [domain/explain.ts](domain-explain.ts.md) (1 shared connections)
-- [NodeInfo.tsx](NodeInfo.tsx.md) (1 shared connections)
-- [domain/warnings.ts](domain-warnings.ts.md) (1 shared connections)
-- [segments.ts](segments.ts.md) (1 shared connections)
 
 ## Source Files
 
@@ -55,8 +55,8 @@ sidebar_position: 47
 
 ## Audit Trail
 
-- EXTRACTED: 69 (80%)
-- INFERRED: 17 (20%)
+- EXTRACTED: 69 (79%)
+- INFERRED: 18 (21%)
 - AMBIGUOUS: 0 (0%)
 
 ---

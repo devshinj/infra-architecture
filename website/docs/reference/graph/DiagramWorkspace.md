@@ -1,6 +1,6 @@
 ---
 title: "DiagramWorkspace()"
-sidebar_position: 105
+sidebar_position: 121
 sidebar_label: "핵심 노드: DiagramWorkspace()"
 ---
 # DiagramWorkspace()
@@ -24,10 +24,10 @@ sidebar_label: "핵심 노드: DiagramWorkspace()"
 - checkFlow() `EXTRACTED`
 - useShell() `EXTRACTED`
 - useExplanations() `EXTRACTED`
+- isFlowCommand() `EXTRACTED`
 - RightPanel() `EXTRACTED`
 - useSessions() `EXTRACTED`
 - DiagramPage() `EXTRACTED`
-- isFlowCommand() `EXTRACTED`
 - restoreVersionAction() `EXTRACTED`
 - Legend() `EXTRACTED`
 - GhostLayer `EXTRACTED`

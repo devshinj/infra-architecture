@@ -1,12 +1,12 @@
 ---
 title: "(app)/actions.ts"
-sidebar_position: 17
+sidebar_position: 11
 ---
 # (app)/actions.ts
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 36 nodes · cohesion 0.14
+> 39 nodes · cohesion 0.12
 
 ## Key Concepts
 
@@ -19,11 +19,11 @@ sidebar_position: 17
 - **getVersionAction()** (7 connections) — `src/app/(app)/actions.ts`
 - **saveFieldsAction()** (7 connections) — `src/app/(app)/actions.ts`
 - **setWarningIgnoredAction()** (7 connections) — `src/app/(app)/actions.ts`
-- **getVersion()** (7 connections) — `src/server/versions.ts`
 - **LinkGuessPart()** (7 connections) — `src/ui/NodeInfo.tsx`
 - **clearPinnedAction()** (6 connections) — `src/app/(app)/actions.ts`
 - **confirmAssumptionAction()** (6 connections) — `src/app/(app)/actions.ts`
 - **confirmLinkGuessAction()** (6 connections) — `src/app/(app)/actions.ts`
+- **deleteMcpKeyAction()** (6 connections) — `src/app/(app)/actions.ts`
 - **importSampleAction()** (6 connections) — `src/app/(app)/actions.ts`
 - **listVersionsAction()** (6 connections) — `src/app/(app)/actions.ts`
 - **rejectLinkGuessAction()** (6 connections) — `src/app/(app)/actions.ts`
@@ -35,21 +35,21 @@ sidebar_position: 17
 - **createMcpKeyAction()** (5 connections) — `src/app/(app)/actions.ts`
 - **listMcpKeysAction()** (5 connections) — `src/app/(app)/actions.ts`
 - **createMcpKey()** (5 connections) — `src/server/mcpKeys.ts`
-- *... and 11 more nodes in this community*
+- *... and 14 more nodes in this community*
 
 ## Relationships
 
-- [NetworkKnowledgePage.tsx](NetworkKnowledgePage.tsx.md) (41 shared connections)
-- [getOwnedDiagram](getOwnedDiagram.md) (34 shared connections)
-- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (19 shared connections)
-- [useFlows](useFlows.md) (16 shared connections)
-- [projects.ts](projects.ts.md) (13 shared connections)
-- [Sidebar.tsx](Sidebar.tsx.md) (13 shared connections)
-- [GlossaryPage.tsx](GlossaryPage.tsx.md) (12 shared connections)
-- [ValidationError](ValidationError.md) (12 shared connections)
-- [mcpKeys.ts](mcpKeys.ts.md) (7 shared connections)
-- [\[sessionId\]/route.ts]([sessionId]-route.ts.md) (7 shared connections)
-- [versions.ts](versions.ts.md) (7 shared connections)
+- [getOwnedDiagram](getOwnedDiagram.md) (32 shared connections)
+- [Task 9: 망 지식 화면](Task_9-_망_지식_화면.md) (22 shared connections)
+- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (18 shared connections)
+- [Sidebar.tsx](Sidebar.tsx.md) (17 shared connections)
+- [GlossaryPage.tsx](GlossaryPage.tsx.md) (16 shared connections)
+- [server/network.ts](server-network.ts.md) (13 shared connections)
+- [projects.ts](projects.ts.md) (12 shared connections)
+- [useFlows](useFlows.md) (11 shared connections)
+- [schema.ts](schema.ts.md) (11 shared connections)
+- [mcpKeys.ts](mcpKeys.ts.md) (9 shared connections)
+- [NetworkKnowledgePage.tsx](NetworkKnowledgePage.tsx.md) (9 shared connections)
 - [NodeInfo.tsx](NodeInfo.tsx.md) (7 shared connections)
 
 ## Source Files
@@ -67,8 +67,8 @@ sidebar_position: 17
 
 ## Audit Trail
 
-- EXTRACTED: 317 (97%)
-- INFERRED: 9 (3%)
+- EXTRACTED: 321 (97%)
+- INFERRED: 11 (3%)
 - AMBIGUOUS: 0 (0%)
 
 ---

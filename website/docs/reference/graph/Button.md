@@ -1,6 +1,6 @@
 ---
 title: "Button()"
-sidebar_position: 107
+sidebar_position: 123
 sidebar_label: "핵심 노드: Button()"
 ---
 # Button()
@@ -9,7 +9,7 @@ sidebar_label: "핵심 노드: Button()"
 
 > God node · 44 connections · `src/ui/Button.tsx`
 
-**Community:** [NetworkKnowledgePage.tsx](NetworkKnowledgePage.tsx.md)
+**Community:** [ResetPasswordForm.tsx](ResetPasswordForm.tsx.md)
 
 ## Connections by Relation
 

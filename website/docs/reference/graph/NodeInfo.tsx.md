@@ -1,18 +1,17 @@
 ---
 title: "NodeInfo.tsx"
-sidebar_position: 21
+sidebar_position: 22
 ---
 # NodeInfo.tsx
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 33 nodes · cohesion 0.10
+> 32 nodes · cohesion 0.10
 
 ## Key Concepts
 
 - **NodeInfo.tsx** (62 connections) — `src/ui/NodeInfo.tsx`
 - **NodeInfo()** (19 connections) — `src/ui/NodeInfo.tsx`
-- **Flow** (11 connections) — `src/domain/flows.ts`
 - **NodeInfoProps** (10 connections) — `src/ui/NodeInfo.tsx`
 - **isEmpty()** (5 connections) — `src/domain/missing.ts`
 - **AskNode.tsx** (5 connections) — `src/ui/explain/AskNode.tsx`
@@ -35,35 +34,35 @@ sidebar_position: 21
 - **.onSelect()** (2 connections) — `src/ui/NodeInfo.tsx`
 - **onOpen()** (2 connections) — `src/ui/NodeInfo.tsx`
 - **PARTIAL_UNDO** (2 connections) — `src/ui/NodeInfo.tsx`
-- *... and 8 more nodes in this community*
+- **.onFocusHandled()** (1 connections) — `src/ui/explain/AskNode.tsx`
+- *... and 7 more nodes in this community*
 
 ## Relationships
 
 - [(app)/actions.ts](app-actions.ts.md) (7 shared connections)
-- [domain/warnings.ts](domain-warnings.ts.md) (6 shared connections)
+- [flowSuggest.ts](flowSuggest.ts.md) (7 shared connections)
 - [Explanation.tsx](Explanation.tsx.md) (6 shared connections)
 - [RightPanel.tsx](RightPanel.tsx.md) (6 shared connections)
-- [domain/flows.ts](domain-flows.ts.md) (4 shared connections)
+- [EdgePanels.tsx](EdgePanels.tsx.md) (5 shared connections)
+- [MissingChecklist.tsx](MissingChecklist.tsx.md) (5 shared connections)
+- [missing.ts](missing.ts.md) (4 shared connections)
+- [types.ts](types.ts.md) (4 shared connections)
+- [ResetPasswordForm.tsx](ResetPasswordForm.tsx.md) (4 shared connections)
 - [ZoneTypePicker.tsx](ZoneTypePicker.tsx.md) (4 shared connections)
-- [missing.ts](missing.ts.md) (3 shared connections)
-- [NetworkKnowledgePage.tsx](NetworkKnowledgePage.tsx.md) (3 shared connections)
-- [InfoCard.tsx](InfoCard.tsx.md) (3 shared connections)
-- [EdgePanels.tsx](EdgePanels.tsx.md) (3 shared connections)
-- [catalog.ts](catalog.ts.md) (3 shared connections)
-- [flowSuggest.ts](flowSuggest.ts.md) (2 shared connections)
+- [domain/warnings.ts](domain-warnings.ts.md) (3 shared connections)
+- [catalog.ts](catalog.ts.md) (2 shared connections)
 
 ## Source Files
 
 - `docs/superpowers/plans/2026-11-01-infrasketch-phase3c2-ask-node.md`
-- `src/domain/flows.ts`
 - `src/domain/missing.ts`
 - `src/ui/NodeInfo.tsx`
 - `src/ui/explain/AskNode.tsx`
 
 ## Audit Trail
 
-- EXTRACTED: 120 (98%)
-- INFERRED: 3 (2%)
+- EXTRACTED: 111 (97%)
+- INFERRED: 3 (3%)
 - AMBIGUOUS: 0 (0%)
 
 ---

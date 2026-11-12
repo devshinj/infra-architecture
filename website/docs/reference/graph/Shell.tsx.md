@@ -1,21 +1,18 @@
 ---
 title: "Shell.tsx"
-sidebar_position: 43
+sidebar_position: 50
 ---
 # Shell.tsx
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 24 nodes · cohesion 0.15
+> 21 nodes · cohesion 0.15
 
 ## Key Concepts
 
 - **Shell.tsx** (26 connections) — `src/ui/Shell.tsx`
 - **(app)/layout.tsx** (12 connections) — `src/app/(app)/layout.tsx`
-- **useShell()** (12 connections) — `src/ui/Shell.tsx`
-- **src_ui_app_module** (11 connections)
 - **(app)/page.tsx** (10 connections) — `src/app/(app)/page.tsx`
-- **ShellMain.tsx** (7 connections) — `src/ui/ShellMain.tsx`
 - **AppLayout()** (6 connections) — `src/app/(app)/layout.tsx`
 - **Home()** (5 connections) — `src/app/(app)/page.tsx`
 - **listProjects()** (5 connections) — `src/server/projects.ts`
@@ -37,18 +34,16 @@ sidebar_position: 43
 
 ## Relationships
 
-- [Sidebar.tsx](Sidebar.tsx.md) (9 shared connections)
-- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (6 shared connections)
-- [NetworkKnowledgePage.tsx](NetworkKnowledgePage.tsx.md) (5 shared connections)
-- [\[sessionId\]/route.ts]([sessionId]-route.ts.md) (4 shared connections)
+- [NetworkKnowledgePage.tsx](NetworkKnowledgePage.tsx.md) (8 shared connections)
+- [PageSkeleton.tsx](PageSkeleton.tsx.md) (6 shared connections)
+- [ResetPasswordForm.tsx](ResetPasswordForm.tsx.md) (5 shared connections)
+- [Sidebar.tsx](Sidebar.tsx.md) (4 shared connections)
 - [projects.ts](projects.ts.md) (4 shared connections)
-- [PageSkeleton.tsx](PageSkeleton.tsx.md) (4 shared connections)
-- [ChatPanel.tsx](ChatPanel.tsx.md) (3 shared connections)
-- [ResetPasswordForm.tsx](ResetPasswordForm.tsx.md) (2 shared connections)
 - [auth.ts](auth.ts.md) (2 shared connections)
-- [mcpKeys.ts](mcpKeys.ts.md) (2 shared connections)
-- [ExportMenu.tsx](ExportMenu.tsx.md) (2 shared connections)
-- [RightPanel.tsx](RightPanel.tsx.md) (1 shared connections)
+- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (2 shared connections)
+- [EdgePanels.tsx](EdgePanels.tsx.md) (2 shared connections)
+- [ChatPanel.tsx](ChatPanel.tsx.md) (1 shared connections)
+- [ShellValue](ShellValue.md) (1 shared connections)
 
 ## Source Files
 
@@ -61,7 +56,7 @@ sidebar_position: 43
 
 ## Audit Trail
 
-- EXTRACTED: 87 (100%)
+- EXTRACTED: 67 (100%)
 - INFERRED: 0 (0%)
 - AMBIGUOUS: 0 (0%)
 

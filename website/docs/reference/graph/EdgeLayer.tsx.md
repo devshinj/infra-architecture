@@ -1,6 +1,6 @@
 ---
 title: "EdgeLayer.tsx"
-sidebar_position: 31
+sidebar_position: 32
 ---
 # EdgeLayer.tsx
 
@@ -41,16 +41,16 @@ sidebar_position: 31
 
 - [edgeLabels.ts](edgeLabels.ts.md) (17 shared connections)
 - [Canvas.tsx](Canvas.tsx.md) (7 shared connections)
-- [display.ts](display.ts.md) (7 shared connections)
-- [layout.ts](layout.ts.md) (6 shared connections)
-- [domain/flows.ts](domain-flows.ts.md) (5 shared connections)
-- [Legend.tsx](Legend.tsx.md) (5 shared connections)
-- [motion.ts](motion.ts.md) (5 shared connections)
+- [motion.ts](motion.ts.md) (6 shared connections)
+- [textWidth](textWidth.md) (5 shared connections)
+- [display.ts](display.ts.md) (5 shared connections)
+- [EdgePanels.tsx](EdgePanels.tsx.md) (5 shared connections)
 - [segments.ts](segments.ts.md) (4 shared connections)
-- [EdgePanels.tsx](EdgePanels.tsx.md) (4 shared connections)
-- [catalog.ts](catalog.ts.md) (2 shared connections)
-- [useCamera.ts](useCamera.ts.md) (1 shared connections)
-- [ExportMenu.tsx](ExportMenu.tsx.md) (1 shared connections)
+- [types.ts](types.ts.md) (4 shared connections)
+- [Legend.tsx](Legend.tsx.md) (3 shared connections)
+- [flowSuggest.ts](flowSuggest.ts.md) (3 shared connections)
+- [FlowPanel.tsx](FlowPanel.tsx.md) (1 shared connections)
+- [networkRules.ts](networkRules.ts.md) (1 shared connections)
 
 ## Source Files
 

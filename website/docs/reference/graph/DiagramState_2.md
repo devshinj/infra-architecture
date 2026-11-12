@@ -1,19 +1,19 @@
 ---
 title: "DiagramState"
-sidebar_position: 112
+sidebar_position: 128
 ---
 # DiagramState
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> God node · 63 connections · `src/domain/types.ts`
+> God node · 64 connections · `src/domain/types.ts`
 
-**Community:** [DiagramState](DiagramState.md)
+**Community:** [flowSuggest.ts](flowSuggest.ts.md)
 
 ## Connections by Relation
 
 ### contains
-- types.ts `EXTRACTED`
+- [types.ts](types.ts.md) `EXTRACTED`
 
 ### imports
 - [(app)/actions.ts](app-actions.ts.md) `EXTRACTED`
@@ -26,17 +26,17 @@ sidebar_position: 112
 - server/explain.ts `EXTRACTED`
 - [NodeInfo.tsx](NodeInfo.tsx.md) `EXTRACTED`
 - ask.ts `EXTRACTED`
-- server/network.ts `EXTRACTED`
+- [server/network.ts](server-network.ts.md) `EXTRACTED`
 - [read.ts](read.ts.md) `EXTRACTED`
 - [schema.ts](schema.ts.md) `EXTRACTED`
-- [flowSuggest.ts](flowSuggest.ts.md) `EXTRACTED`
-- server/flows.ts `EXTRACTED`
-- [domain/flows.ts](domain-flows.ts.md) `EXTRACTED`
 - [domain/warnings.ts](domain-warnings.ts.md) `EXTRACTED`
+- [flowSuggest.ts](flowSuggest.ts.md) `EXTRACTED`
+- [server/flows.ts](server-flows.ts.md) `EXTRACTED`
+- domain/flows.ts `EXTRACTED`
+- [samples.ts](samples.ts.md) `EXTRACTED`
 - [chat/warnings.ts](chat-warnings.ts.md) `EXTRACTED`
-- [versions.ts](versions.ts.md) `EXTRACTED`
-- [MissingChecklist.tsx](MissingChecklist.tsx.md) `EXTRACTED`
-- *…and 25 more `imports` connection(s) not listed (lowest-degree first to go)*
+- versions.ts `EXTRACTED`
+- *…and 26 more `imports` connection(s) not listed (lowest-degree first to go)*
 
 ### references
 - CanvasProps `EXTRACTED`
@@ -47,7 +47,7 @@ sidebar_position: 112
 - MissingChecklistProps `EXTRACTED`
 - DiagramWorkspaceProps `EXTRACTED`
 - .applyFlowOps() `EXTRACTED`
-- 흐름 보기와 망 경계 표시 Implementation Plan `INFERRED`
+- [흐름 보기와 망 경계 표시 Implementation Plan](흐름_보기와_망_경계_표시_Implementation_Plan.md) `INFERRED`
 - .getLatestState() `EXTRACTED`
 - .getLatestState() `EXTRACTED`
 - .flush() `EXTRACTED`

@@ -1,21 +1,21 @@
 ---
 title: "getOwnedDiagram"
-sidebar_position: 16
+sidebar_position: 24
 ---
 # getOwnedDiagram
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 37 nodes · cohesion 0.19
+> 31 nodes · cohesion 0.25
 
 ## Key Concepts
 
-- **types.ts** (78 connections) — `src/domain/types.ts`
+- **ValidationError** (57 connections) — `src/server/projects.ts`
 - **getOwnedDiagram()** (53 connections) — `src/server/projects.ts`
+- **emptyState()** (31 connections) — `src/domain/types.ts`
 - **withDiagramLock()** (31 connections) — `src/server/chat/lock.ts`
 - **createVersion()** (31 connections) — `src/server/versions.ts`
 - **getLatestState()** (30 connections) — `src/server/versions.ts`
-- **emptyState()** (29 connections) — `src/domain/types.ts`
 - **server/linkGuess.ts** (29 connections) — `src/server/linkGuess.ts`
 - **fields.ts** (23 connections) — `src/server/fields.ts`
 - **zoneType.ts** (17 connections) — `src/server/zoneType.ts`
@@ -23,10 +23,7 @@ sidebar_position: 16
 - **ignore.ts** (15 connections) — `src/server/ignore.ts`
 - **lock.ts** (13 connections) — `src/server/chat/lock.ts`
 - **saveFieldsFor()** (13 connections) — `src/server/fields.ts`
-- **listFlows()** (13 connections) — `src/server/flows.ts`
 - **server/assumptions.ts** (12 connections) — `src/server/assumptions.ts`
-- **restoreMcpVersion()** (12 connections) — `src/server/mcp/apply.ts`
-- **rewriteFlows()** (11 connections) — `src/server/flows.ts`
 - **BUSY_MESSAGE** (10 connections) — `src/server/chat/busy.ts`
 - **setWarningIgnoredFor()** (10 connections) — `src/server/ignore.ts`
 - **removeNoLinkFor()** (10 connections) — `src/server/linkGuess.ts`
@@ -35,28 +32,30 @@ sidebar_position: 16
 - **confirmLinkGuessFor()** (9 connections) — `src/server/linkGuess.ts`
 - **duplicateDiagram()** (9 connections) — `src/server/projects.ts`
 - **noLinkKey()** (8 connections) — `src/domain/assumptions.ts`
-- *... and 12 more nodes in this community*
+- **Task 7: 서버 액션 — 망 종류 확인·바꾸기, 망연계 맞아요·아니에요** (7 connections) — `docs/superpowers/plans/2026-11-06-network-knowledge-link-guess.md`
+- **confirmAssumption()** (6 connections) — `src/domain/assumptions.ts`
+- **busy.ts** (6 connections) — `src/server/chat/busy.ts`
+- *... and 6 more nodes in this community*
 
 ## Relationships
 
-- [(app)/actions.ts](app-actions.ts.md) (34 shared connections)
-- [pipeline.ts](pipeline.ts.md) (26 shared connections)
-- [projects.ts](projects.ts.md) (20 shared connections)
-- [mcp/apply.ts](mcp-apply.ts.md) (18 shared connections)
-- [read.ts](read.ts.md) (17 shared connections)
-- [ValidationError](ValidationError.md) (16 shared connections)
-- [domain/assumptions.ts](domain-assumptions.ts.md) (15 shared connections)
-- [domain/flows.ts](domain-flows.ts.md) (14 shared connections)
-- [useFlows](useFlows.md) (13 shared connections)
-- [ask/route.ts](ask-route.ts.md) (12 shared connections)
-- [\[sessionId\]/route.ts]([sessionId]-route.ts.md) (11 shared connections)
-- [domain/apply.ts](domain-apply.ts.md) (10 shared connections)
+- [(app)/actions.ts](app-actions.ts.md) (32 shared connections)
+- [projects.ts](projects.ts.md) (24 shared connections)
+- [pipeline.ts](pipeline.ts.md) (20 shared connections)
+- [server/flows.ts](server-flows.ts.md) (18 shared connections)
+- [ask/route.ts](ask-route.ts.md) (18 shared connections)
+- [mcp/apply.ts](mcp-apply.ts.md) (16 shared connections)
+- [read.ts](read.ts.md) (15 shared connections)
+- [\[sessionId\]/route.ts]([sessionId]-route.ts.md) (12 shared connections)
+- [server/network.ts](server-network.ts.md) (12 shared connections)
+- [schema.ts](schema.ts.md) (11 shared connections)
+- [types.ts](types.ts.md) (10 shared connections)
+- [flowSuggest.ts](flowSuggest.ts.md) (9 shared connections)
 
 ## Source Files
 
 - `docs/superpowers/plans/2026-10-30-infrasketch-phase3b-warnings.md`
 - `docs/superpowers/plans/2026-11-06-network-knowledge-link-guess.md`
-- `src/app/(app)/actions.ts`
 - `src/domain/assumptions.ts`
 - `src/domain/linkGuess.ts`
 - `src/domain/networkRules.ts`
@@ -65,18 +64,16 @@ sidebar_position: 16
 - `src/server/chat/busy.ts`
 - `src/server/chat/lock.ts`
 - `src/server/fields.ts`
-- `src/server/flows.ts`
 - `src/server/ignore.ts`
 - `src/server/linkGuess.ts`
-- `src/server/mcp/apply.ts`
 - `src/server/projects.ts`
 - `src/server/versions.ts`
 - `src/server/zoneType.ts`
 
 ## Audit Trail
 
-- EXTRACTED: 402 (95%)
-- INFERRED: 22 (5%)
+- EXTRACTED: 347 (94%)
+- INFERRED: 23 (6%)
 - AMBIGUOUS: 0 (0%)
 
 ---

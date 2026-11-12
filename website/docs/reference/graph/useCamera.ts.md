@@ -42,12 +42,13 @@ sidebar_position: 30
 - [Canvas.tsx](Canvas.tsx.md) (12 shared connections)
 - [layout.ts](layout.ts.md) (5 shared connections)
 - [FlyLayer.tsx](FlyLayer.tsx.md) (3 shared connections)
-- [display.ts](display.ts.md) (2 shared connections)
 - [exportImage.ts](exportImage.ts.md) (2 shared connections)
+- [display.ts](display.ts.md) (1 shared connections)
 - [edgeLabels.ts](edgeLabels.ts.md) (1 shared connections)
 - [EdgeLayer.tsx](EdgeLayer.tsx.md) (1 shared connections)
 - [layoutMetrics.ts](layoutMetrics.ts.md) (1 shared connections)
-- [ExportMenu.tsx](ExportMenu.tsx.md) (1 shared connections)
+- [overlap.ts](overlap.ts.md) (1 shared connections)
+- [EdgePanels.tsx](EdgePanels.tsx.md) (1 shared connections)
 
 ## Source Files
 

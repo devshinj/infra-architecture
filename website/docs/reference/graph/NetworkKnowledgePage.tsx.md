@@ -1,74 +1,71 @@
 ---
 title: "NetworkKnowledgePage.tsx"
-sidebar_position: 2
+sidebar_position: 27
 ---
 # NetworkKnowledgePage.tsx
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 77 nodes · cohesion 0.06
+> 29 nodes · cohesion 0.12
 
 ## Key Concepts
 
-- **server/network.ts** (59 connections) — `src/server/network.ts`
 - **NetworkKnowledgePage.tsx** (49 connections) — `src/ui/network/NetworkKnowledgePage.tsx`
-- **Button()** (44 connections) — `src/ui/Button.tsx`
-- **domain/network.ts** (31 connections) — `src/domain/network.ts`
+- **auth** (34 connections) — `src/auth.ts`
 - **NetworkKnowledgePage()** (21 connections) — `src/ui/network/NetworkKnowledgePage.tsx`
-- **NetworkKnowledge** (17 connections) — `src/domain/network.ts`
-- **pairKey()** (17 connections) — `src/domain/network.ts`
-- **DialogView()** (14 connections) — `src/ui/dialogs.tsx`
-- **network-seed.ts** (12 connections) — `src/domain/network-seed.ts`
-- **addNetworkType()** (12 connections) — `src/server/network.ts`
-- **Task 9: 망 지식 화면** (11 connections) — `docs/superpowers/plans/2026-11-06-network-knowledge-link-guess.md`
-- **reqString()** (11 connections) — `src/app/(app)/actions.ts`
-- **updateNetworkType()** (11 connections) — `src/server/network.ts`
-- **addNetworkTypeAction()** (10 connections) — `src/app/(app)/actions.ts`
-- **updateNetworkTypeAction()** (10 connections) — `src/app/(app)/actions.ts`
-- **upsertNetworkRuleAction()** (9 connections) — `src/app/(app)/actions.ts`
+- **useShell()** (12 connections) — `src/ui/Shell.tsx`
 - **network/page.tsx** (9 connections) — `src/app/(app)/network/page.tsx`
-- **requiredMethod()** (9 connections) — `src/domain/network.ts`
-- **listNetworkRules()** (9 connections) — `src/server/network.ts`
-- **bad()** (8 connections) — `src/app/(app)/actions.ts`
 - **countNetworkTypeUsageAction()** (8 connections) — `src/app/(app)/actions.ts`
-- **deleteNetworkRuleAction()** (8 connections) — `src/app/(app)/actions.ts`
-- **deleteNetworkTypeAction()** (8 connections) — `src/app/(app)/actions.ts`
-- **setNetworkTypeHiddenAction()** (8 connections) — `src/app/(app)/actions.ts`
-- **GRADE_LABELS** (8 connections) — `src/domain/network.ts`
-- *... and 52 more nodes in this community*
+- **useNotesPanel.ts** (8 connections) — `src/ui/useNotesPanel.ts`
+- **listNetworkTypes()** (7 connections) — `src/server/network.ts`
+- **useNotesPanel()** (7 connections) — `src/ui/useNotesPanel.ts`
+- **closeOnEscape()** (6 connections) — `src/ui/useNotesPanel.ts`
+- **NetworkKnowledge()** (5 connections) — `src/app/(app)/network/page.tsx`
+- **userId()** (4 connections) — `src/app/(app)/actions.ts`
+- **RuleForm()** (4 connections) — `src/ui/network/NetworkKnowledgePage.tsx`
+- **TypeForm()** (4 connections) — `src/ui/network/NetworkKnowledgePage.tsx`
+- **toInput()** (3 connections) — `src/ui/network/NetworkKnowledgePage.tsx`
+- **gradeLabel()** (2 connections) — `src/ui/network/NetworkKnowledgePage.tsx`
+- **sameDraft()** (2 connections) — `src/ui/network/NetworkKnowledgePage.tsx`
+- **sourceLabel()** (2 connections) — `src/ui/network/NetworkKnowledgePage.tsx`
+- **splitAliases()** (2 connections) — `src/ui/network/NetworkKnowledgePage.tsx`
+- **toTypeDraft()** (2 connections) — `src/ui/network/NetworkKnowledgePage.tsx`
+- **motion()** (2 connections) — `src/ui/useNotesPanel.ts`
+- **src_ui_network_knowledge_module** (1 connections)
+- **EMPTY_TYPE** (1 connections) — `src/ui/network/NetworkKnowledgePage.tsx`
+- **GRADES** (1 connections) — `src/ui/network/NetworkKnowledgePage.tsx`
+- **Message** (1 connections) — `src/ui/network/NetworkKnowledgePage.tsx`
+- *... and 4 more nodes in this community*
 
 ## Relationships
 
-- [(app)/actions.ts](app-actions.ts.md) (41 shared connections)
-- [ValidationError](ValidationError.md) (26 shared connections)
-- [domain/flows.ts](domain-flows.ts.md) (14 shared connections)
-- [mcpKeys.ts](mcpKeys.ts.md) (12 shared connections)
-- [schema.ts](schema.ts.md) (11 shared connections)
-- [drawing/rules.ts](drawing-rules.ts.md) (11 shared connections)
-- [GlossaryPage.tsx](GlossaryPage.tsx.md) (9 shared connections)
-- [pipeline.ts](pipeline.ts.md) (7 shared connections)
-- [ResetPasswordForm.tsx](ResetPasswordForm.tsx.md) (5 shared connections)
-- [prompt.ts](prompt.ts.md) (5 shared connections)
-- [read.ts](read.ts.md) (5 shared connections)
-- [Shell.tsx](Shell.tsx.md) (5 shared connections)
+- [Task 9: 망 지식 화면](Task_9-_망_지식_화면.md) (17 shared connections)
+- [server/network.ts](server-network.ts.md) (11 shared connections)
+- [(app)/actions.ts](app-actions.ts.md) (9 shared connections)
+- [GlossaryPage.tsx](GlossaryPage.tsx.md) (8 shared connections)
+- [Shell.tsx](Shell.tsx.md) (8 shared connections)
+- [mcpKeys.ts](mcpKeys.ts.md) (7 shared connections)
+- [ResetPasswordForm.tsx](ResetPasswordForm.tsx.md) (6 shared connections)
+- [\[sessionId\]/route.ts]([sessionId]-route.ts.md) (6 shared connections)
+- [ask/route.ts](ask-route.ts.md) (5 shared connections)
+- [server/flows.ts](server-flows.ts.md) (4 shared connections)
+- [drawing/rules.ts](drawing-rules.ts.md) (4 shared connections)
+- [explain/route.ts](explain-route.ts.md) (3 shared connections)
 
 ## Source Files
 
-- `docs/superpowers/plans/2026-11-06-network-knowledge-link-guess.md`
 - `src/app/(app)/actions.ts`
 - `src/app/(app)/network/page.tsx`
-- `src/domain/network-seed.ts`
-- `src/domain/network.ts`
+- `src/auth.ts`
 - `src/server/network.ts`
-- `src/ui/Button.tsx`
-- `src/ui/dialogs.tsx`
+- `src/ui/Shell.tsx`
 - `src/ui/network/NetworkKnowledgePage.tsx`
 - `src/ui/useNotesPanel.ts`
 
 ## Audit Trail
 
-- EXTRACTED: 390 (96%)
-- INFERRED: 15 (4%)
+- EXTRACTED: 150 (99%)
+- INFERRED: 2 (1%)
 - AMBIGUOUS: 0 (0%)
 
 ---

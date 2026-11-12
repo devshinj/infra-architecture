@@ -1,6 +1,6 @@
 ---
 title: "lockedTurn()"
-sidebar_position: 106
+sidebar_position: 122
 sidebar_label: "핵심 노드: lockedTurn()"
 ---
 # lockedTurn()
@@ -14,9 +14,9 @@ sidebar_label: "핵심 노드: lockedTurn()"
 ## Connections by Relation
 
 ### calls
+- emptyState() `EXTRACTED`
 - createVersion() `EXTRACTED`
 - getLatestState() `EXTRACTED`
-- emptyState() `EXTRACTED`
 - computeMissing() `EXTRACTED`
 - applyCommand() `EXTRACTED`
 - getNetworkKnowledge() `EXTRACTED`
@@ -27,9 +27,9 @@ sidebar_label: "핵심 노드: lockedTurn()"
 - parseCommand() `EXTRACTED`
 - buildMessages() `EXTRACTED`
 - settleTurn() `EXTRACTED`
+- isFlowCommand() `EXTRACTED`
 - rewriteFlows() `EXTRACTED`
 - createEdgeCoalescer() `EXTRACTED`
-- isFlowCommand() `EXTRACTED`
 - normalizeAiCommand() `EXTRACTED`
 - createThinkStripper() `EXTRACTED`
 - applyFlowOps() `EXTRACTED`

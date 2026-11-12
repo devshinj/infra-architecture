@@ -1,6 +1,6 @@
 ---
 title: "Review Focus"
-sidebar_position: 116
+sidebar_position: 132
 ---
 # Review Focus
 
@@ -22,7 +22,7 @@ sidebar_position: 116
 
 ## Relationships
 
-- [InfoCard.tsx](InfoCard.tsx.md) (1 shared connections)
+- [MissingChecklist.tsx](MissingChecklist.tsx.md) (1 shared connections)
 - [display.ts](display.ts.md) (1 shared connections)
 
 ## Source Files
