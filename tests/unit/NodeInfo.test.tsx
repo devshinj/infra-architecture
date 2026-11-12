@@ -139,6 +139,9 @@ test("관리형 칸이 없으면 제품명으로 알아보고 그렇다고 밝�
   expect(within(sec).getByText(/이름으로 판단/)).toBeInTheDocument();
   expect(within(sec).queryByText("Multi-AZ")).not.toBeInTheDocument();
   expect(screen.queryByText("CPU")).not.toBeInTheDocument();
+  // 관리형 LB 는 SW 를 묻지 않으므로 빈 SW 줄과 스펙 절이 없다. 묻는 칸(포트·방화벽 규칙)은 비어 있으면 미입력이다.
+  expect(screen.queryByRole("heading", { name: "스펙 · SW" })).not.toBeInTheDocument();
+  expect(within(screen.getByRole("heading", { name: "기타 정보" }).closest("section")!).getAllByText("미입력")).toHaveLength(2);
   rerender(<NodeInfo state={named("lb_l7", "ALB", { managed: "no" })} selectedId="n1" onSelect={vi.fn()} />);
   expect(screen.getByRole("heading", { name: "서버 정보" })).toBeInTheDocument();
   expect(screen.getByText("CPU")).toBeInTheDocument();

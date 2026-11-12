@@ -8,7 +8,7 @@ import { MEDIUM_LABELS } from "@/canvas/mediumMark";
 import { categoryOf, EDGE_KINDS, GROUP_KINDS, NODE_KINDS } from "@/domain/catalog";
 import { flowsThrough, type Flow } from "@/domain/flows";
 import { managedBasis, MULTI_AZ_KINDS, SERVER_ONLY_ATTRS, yesNo } from "@/domain/managed";
-import { FIELD_LABELS, isEmpty } from "@/domain/missing";
+import { FIELD_LABELS, isEmpty, requiredKeysFor } from "@/domain/missing";
 import type { DiagramState, DNode, Warning } from "@/domain/types";
 import { mergeWarnings } from "@/domain/warnings";
 
@@ -59,8 +59,6 @@ const SPEC_FIELDS: [string, string][] = [["sw", "SW"], ["cpu", "CPU"], ["ram", "
 const SERVER_FIELDS: [string, string][] = [["hostname", "호스트명"], ["ip", "IP"], ["vip", "VIP"], ["az", "AZ"]];
 const MISSING = "미입력";
 const UNKNOWN = "모름";
-/** 관리형 노드에서 비어 있으면 감추는 칸: 서버 칸과 AZ(사업자가 여러 AZ 에 둔다). SW·Multi-AZ 는 비어도 보인다. */
-const MANAGED_HIDE_EMPTY: ReadonlySet<string> = new Set([...SERVER_ONLY_ATTRS, "az"]);
 /** Multi-AZ 칸 값: 예/아니오로 읽히면 한국어로, 아니면 적힌 그대로(비었으면 그대로 비워 미입력으로 보인다). */
 const multiAzText = (v: unknown) => {
   const yn = yesNo(v);
@@ -298,8 +296,12 @@ export function NodeInfo({ state, selectedId, onSelect, onMention, mentionDisabl
   const chips = [...new Set(relations.map((r) => r.otherId))].filter((id) => state.nodes[id]);
   // 관리형 서비스(ALB·RDS 등): 서버 칸(CPU·RAM·IP 등)과 AZ 는 비어 있으면 줄째 빼고, 서버 정보 대신 운영 정보로 보인다.
   const managed = managedBasis(node);
-  const hideEmpty = managed ? MANAGED_HIDE_EMPTY : undefined;
   const serverFields: [string, string][] = managed && MULTI_AZ_KINDS.includes(node.kind) ? [...SERVER_FIELDS, ["multi_az", "Multi-AZ"]] : SERVER_FIELDS;
+  // 관리형은 채워야 할 정보가 묻는 칸만 비어 있어도 보인다(ALB 의 SW·CPU 처럼 묻지 않는 칸은 비면 뺀다). Multi-AZ 는 주의가 묻는 칸이라 늘 보인다.
+  const required = new Set(requiredKeysFor(state, "node", node.id) ?? []);
+  const hideEmpty = managed
+    ? new Set([...SPEC_FIELDS, ...SERVER_FIELDS].map(([k]) => k).filter((k) => !required.has(k)).concat([...SERVER_ONLY_ATTRS]))
+    : undefined;
   // 서버·스펙 두 구역에 없는 필수 칸은 따로 모아 보여 준다.
   const shown = new Set([...SPEC_FIELDS, ...serverFields].map(([k]) => k));
   const otherFields: [string, string][] = (NODE_KINDS.find((k) => k.kind === node.kind)?.requiredAttrs ?? [])
