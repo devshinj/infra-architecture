@@ -8,8 +8,10 @@
   left: calc(var(--canvas-inset-left, var(--panel-gap)) + var(--safe-l, 0px));
   bottom: calc(var(--panel-gap) + var(--safe-b, 0px));
   z-index: 30;
-  width: 300px;
-  /* 오른쪽 떠 있는 패널(--canvas-inset-right)까지는 넘지 않는다: 좁은 태블릿 너비에서는 카드가 줄어든다. */
+  /* 접힌 줄(구성 정보 · 채워야 할 정보 · 주의 · 미확정 가정)이 한 줄에 들어가는 너비. 펼친 내용(.body)은 너비 계산에 끼지 않는다. */
+  width: max-content;
+  min-width: 300px;
+  /* 오른쪽 떠 있는 패널(--canvas-inset-right)까지는 넘지 않는다: 좁은 태블릿 너비에서는 카드가 줄어들고 접힌 줄은 항목 사이에서 줄을 바꾼다. */
   max-width: calc(100% - var(--canvas-inset-left, var(--panel-gap)) - max(var(--panel-gap), var(--canvas-inset-right, 0px)) - var(--safe-l, 0px) - var(--safe-r, 0px));
   max-height: 70%;
   box-sizing: border-box;
@@ -53,7 +55,8 @@
 .chevron { flex: none; color: var(--text-secondary); }
 .chevron[data-open] { transform: rotate(180deg); }
 
-.body { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+/* inline-size 가둠: 긴 주의 문구·가정 칩이 카드를 넓히지 않고 접힌 줄이 정한 너비 안에서 줄을 바꾼다. */
+.body { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; contain: inline-size; }
 .section { padding: 12px 16px; }
 .section + .section { border-top: 1px solid var(--glass-line); }
 .heading:focus { outline: none; }

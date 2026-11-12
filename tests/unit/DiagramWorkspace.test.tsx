@@ -395,9 +395,9 @@ test("fit padding accounts for floating panels", () => {
   expect(hookState.insets.at(-1)).toEqual({ left: 264, right: 384, bottom: 66 });
   fireEvent.keyDown(screen.getByRole("separator", { name: "대화 패널 너비" }), { key: "ArrowLeft" });
   expect(hookState.insets.at(-1)).toEqual({ left: 264, right: 400, bottom: 66 });
-  // 카드를 펼치면 카메라가 피할 장애물(카드 폭 300 + 여백 12)이 함께 간다.
+  // 카드를 펼치면 카메라가 피할 장애물(재기 전 카드 폭 기본값 380 + 여백 12)이 함께 간다.
   fireEvent.click(screen.getByRole("button", { name: "구성 정보 펼치기" }));
-  expect(hookState.insets.at(-1)).toMatchObject({ left: 264, right: 400, bottom: 66, card: { width: 312 } });
+  expect(hookState.insets.at(-1)).toMatchObject({ left: 264, right: 400, bottom: 66, card: { width: 392 } });
   fireEvent.click(screen.getByRole("button", { name: "구성 정보 접기" }));
   expect(hookState.insets.at(-1)).toEqual({ left: 264, right: 400, bottom: 66 });
   cleanup();

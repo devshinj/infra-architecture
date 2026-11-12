@@ -95,9 +95,9 @@ export const MOBILE_VIEW_KEY = "infrasketch.mobileView";
 const COMPACT_WIDTH = 900;
 const CANVAS_ID = "workspace-canvas";
 
-/** 구성 정보 카드의 접힌 줄 높이·카드 너비(재기 전 기본값, infoCard.module.css 와 맞춘다). */
+/** 구성 정보 카드의 접힌 줄 높이·카드 너비(재기 전 기본값). 카드는 접힌 줄이 한 줄에 드는 너비(infoCard.module.css)라 대략 값이다. */
 const CARD_LINE_HEIGHT = 42;
-const CARD_WIDTH = 300;
+const CARD_WIDTH = 380;
 
 // showMissingBadges 는 브라우저 설정이라 여기서는 항상 끈 값이고, 실제 값은 아래 showMissing 상태가 덮어쓴다.
 const optionsFor = (state: DiagramState): CanvasOptions => ({ ...defaultDisplayOptions(state), hoverLabels: true, showMissingBadges: false });
