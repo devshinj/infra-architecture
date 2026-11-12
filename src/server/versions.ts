@@ -2,6 +2,7 @@ import { and, desc, eq, sql } from "drizzle-orm";
 
 import { db, type Tx } from "@/db/client";
 import { diagramVersions, type VersionSource, type VersionStatus } from "@/db/schema";
+import { euro } from "@/domain/josa";
 import type { DiagramState } from "@/domain/types";
 import { createMessage } from "@/server/chat/messages";
 
@@ -120,6 +121,6 @@ export async function restoreVersionWithMessage(
   number: number,
 ): Promise<{ number: number }> {
   const r = await restoreVersion(diagramId, number);
-  await createMessage(diagramId, "system", `v${number}로 되돌림 (새 버전 v${r.number})`);
+  await createMessage(diagramId, "system", `${euro(`v${number}`)} 되돌림 (새 버전 v${r.number})`);
   return r;
 }

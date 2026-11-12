@@ -23,6 +23,11 @@ test("digits are read aloud (일·이·삼…, 10 십)", () => {
   expect(euro("WAS #1")).toBe("WAS #1로");
   expect(euro("WAS #3")).toBe("WAS #3으로");
   expect(euro("v20")).toBe("v20으로");
+  // 되돌리기 기록 줄: "v10으로 되돌림", "v6으로", "v8로"(팔), "v2로"(이).
+  expect(euro("v10")).toBe("v10으로");
+  expect(euro("v6")).toBe("v6으로");
+  expect(euro("v8")).toBe("v8로");
+  expect(euro("v2")).toBe("v2로");
 });
 
 test("Latin names: L·M·N ends take the consonant form, others the vowel form", () => {
