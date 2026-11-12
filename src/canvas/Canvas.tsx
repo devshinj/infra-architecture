@@ -129,6 +129,9 @@ const VIEW_OPTIONS: { key: ToggleKey; label: string; desc: string }[] = [
   { key: "hoverLabels", label: "연결 이름은 마우스를 올릴 때만", desc: "캔버스를 깔끔하게 보여요" },
   { key: "showMissingBadges", label: "빠진 정보 숫자", desc: "노드마다 채워야 할 정보 개수를 보여요" },
 ];
+/** 손가락으로 쓰는 화면(마우스 올리기가 없다)에서 hoverLabels 를 부르는 이름. 연결을 누르면 이름이 보인다. */
+const HOVER_LABELS_TOUCH = "연결 이름은 누를 때만";
+const isTouch = () => typeof window !== "undefined" && !!window.matchMedia?.("(pointer: coarse)").matches;
 
 /** The id actually drawn for `id`: itself, or its outermost collapsed ancestor group. */
 const drawnId = (state: DiagramState, collapsed: Set<string>, id: string | null): string | null =>
@@ -160,7 +163,7 @@ function ViewMenu({ options, onFlip, extra }: { options: CanvasOptions; onFlip(k
       </button>
       {open && (
         <div className="canvas__pop" role="dialog" aria-label="보기 옵션">
-          {VIEW_OPTIONS.map((o) => (
+          {VIEW_OPTIONS.map((o) => (o.key === "hoverLabels" && isTouch() ? { ...o, label: HOVER_LABELS_TOUCH } : o)).map((o) => (
             <label key={o.key} className="canvas__opt">
               <input type="checkbox" checked={options[o.key]} aria-labelledby={`view-opt-name-${o.key}`} aria-describedby={`view-opt-${o.key}`} onChange={() => onFlip(o.key)} />
               <span className="canvas__opt-text">

@@ -61,7 +61,9 @@ test("search and unreviewed filter", async () => {
   expect(within(rows[0]!).getByText("AI 설명")).toBeInTheDocument();
   expect(within(rows[0]!).getByText("AI가 추가")).toBeInTheDocument();
   await userEvent.click(screen.getByRole("checkbox", { name: "AI 설명만" }));
-  expect(within(screen.getByRole("button", { name: /Redis/ })).getByText("기본 제공")).toBeInTheDocument();
+  // 출처 칸: 기본 제공은 비우고 AI 가 더한 것만 적는다.
+  expect(within(screen.getByRole("button", { name: /Redis/ })).queryByText("기본 제공")).not.toBeInTheDocument();
+  expect(within(screen.getByRole("button", { name: /Kafka/ })).getByText("AI가 추가")).toBeInTheDocument();
 });
 
 test("edit saves and shows errors", async () => {

@@ -839,3 +839,17 @@ test("a step inside one collapsed zone lights that collapsed box", async () => {
   await waitFor(() => expect(nodeEl(container, "client-web")!.querySelector(".node--dimmed")).not.toBeNull());
   expect(groupEl(container, "idc-main")!.classList.contains("group--dimmed")).toBe(false);
 });
+
+test("손가락으로 쓰는 화면에서는 연결 이름 옵션을 '누를 때만'이라고 부른다", () => {
+  const original = window.matchMedia;
+  window.matchMedia = ((q: string) => ({ matches: q === "(pointer: coarse)", media: q, addEventListener() {}, removeEventListener() {} })) as unknown as typeof window.matchMedia;
+  try {
+    render(<Canvas {...baseProps(emptyState())} />);
+    fireEvent.click(screen.getByRole("button", { name: "보기" }));
+    const pop = screen.getByRole("dialog", { name: "보기 옵션" });
+    expect(within(pop).getByRole("checkbox", { name: "연결 이름은 누를 때만" })).toHaveAccessibleDescription("캔버스를 깔끔하게 보여요");
+    expect(within(pop).queryByRole("checkbox", { name: "연결 이름은 마우스를 올릴 때만" })).toBeNull();
+  } finally {
+    window.matchMedia = original;
+  }
+});

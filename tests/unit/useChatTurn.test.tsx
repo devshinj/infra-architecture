@@ -67,7 +67,7 @@ test("done adds the summary line and calls onDone", async () => {
   vi.stubGlobal("fetch", vi.fn(async () => streamOf([nd([done()])])));
   const h = setup();
   await act(() => h.result.current.send("x"));
-  expect(h.result.current.lines.at(-1)).toMatchObject({ kind: "summary", text: "노드 3 · 연결 1 · 2곳 바꿨어요" });
+  expect(h.result.current.lines.at(-1)).toMatchObject({ kind: "summary", text: "2곳 바꿨어요" });
   expect(h.onDone).toHaveBeenCalledTimes(1);
 });
 
@@ -149,7 +149,7 @@ test("no missing-info line even when missing > 0 (the canvas card shows it)", as
   vi.stubGlobal("fetch", vi.fn(async () => streamOf([nd([done({ missing: 6 })])])));
   const h = setup();
   await act(() => h.result.current.send("x"));
-  expect(h.result.current.lines.at(-1)).toMatchObject({ kind: "summary", text: "노드 3 · 연결 1 · 2곳 바꿨어요" });
+  expect(h.result.current.lines.at(-1)).toMatchObject({ kind: "summary", text: "2곳 바꿨어요" });
   expect(h.result.current.lines.some((l) => l.text.startsWith("빠진 정보"))).toBe(false);
 });
 
@@ -188,7 +188,7 @@ test("warnings event adds one 주의 N chip after the summary", async () => {
   const h = setup();
   await act(() => h.result.current.send("x"));
   expect(h.result.current.lines.slice(-2).map((l) => [l.kind, l.text])).toEqual([
-    ["summary", "노드 3 · 연결 1 · 2곳 바꿨어요"],
+    ["summary", "2곳 바꿨어요"],
     ["warning", "주의 2"],
   ]);
 });

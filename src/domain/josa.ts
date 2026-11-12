@@ -84,3 +84,22 @@ export const euro = (word: string) => {
   const f = finalOf(word);
   return `${word}${f.has && !f.rieul ? "으로" : "로"}`;
 };
+
+const LEGACY_PAIR = /( *)(이\(가\)|을\(를\)|은\(는\)|과\(와\)|\(으\)로)/g;
+const PICK: Record<string, (word: string) => string> = { "이(가)": iGa, "을(를)": eulReul, "은(는)": eunNeun, "과(와)": gwaWa, "(으)로": euro };
+const LEGACY_RESTORE = /\bv(\d+)(?:으로|로)( 되돌림)/g;
+
+/**
+ * 조사를 자동으로 고르기 전에 저장된 글을 보일 때 고친다(DB 는 그대로).
+ * - "이(가)·을(를)·은(는)·과(와)·(으)로": 바로 앞 글자로 고른다. 앞에 띄어 썼으면("API #1 이(가)") 붙여 쓴다.
+ * - 되돌리기 기록 "v6로 되돌림" → "v6으로 되돌림".
+ */
+export function fixLegacyJosa(text: string): string {
+  return text
+    .replace(LEGACY_PAIR, (m: string, _sp: string, pair: string, offset: number, whole: string) => {
+      const before = whole.slice(0, offset);
+      if (before.trim() === "") return m;
+      return PICK[pair]!(before).slice(before.length);
+    })
+    .replace(LEGACY_RESTORE, (_m: string, n: string, rest: string) => `${euro(`v${n}`)}${rest}`);
+}
