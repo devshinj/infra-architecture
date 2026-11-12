@@ -18,3 +18,9 @@ test-results/
 tsconfig.tsbuildinfo
 .omo/
 .serena/
+
+# Claude Code: 개인 설정은 올리지 않는다(팀 공용은 .claude/settings.json).
+.claude/settings.local.json
+# skills CLI 로 설치한 외부 스킬 설치본. skills-lock.json 으로 다시 설치한다.
+.agents/
+.claude/skills/design-taste-frontend
