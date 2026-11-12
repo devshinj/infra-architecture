@@ -7,6 +7,7 @@ export const MEDIUM_LABELS: Record<MarkedMedium, string> = {
   wireless: "근거리 무선",
   video: "영상 스트림",
   media: "실시간 미디어",
+  serial: "유선 직렬",
 };
 
 /** 표지 원의 반지름(px). */
@@ -33,7 +34,7 @@ export function pointAlong(points: Pt[], frac: number): Pt | null {
   return null;
 }
 
-// 반지름 7 원 안에 들어가는 기호. 무선: 점과 퍼지는 호 두 줄, 영상: 재생 세모, 미디어: 소리 막대 셋.
+// 반지름 7 원 안에 들어가는 기호. 무선: 점과 퍼지는 호 두 줄, 영상: 재생 세모, 미디어: 소리 막대 셋, 직렬: 네모 펄스.
 const GLYPH: Record<MarkedMedium, React.ReactNode> = {
   wireless: (
     <>
@@ -43,6 +44,7 @@ const GLYPH: Record<MarkedMedium, React.ReactNode> = {
   ),
   video: <path className="edge-medium__fill" d="M-2,-3.2 L3.4,0 L-2,3.2 Z" />,
   media: <path className="edge-medium__stroke" d="M-3,-1.5 V1.5 M0,-3.5 V3.5 M3,-1.5 V1.5" />,
+  serial: <path className="edge-medium__stroke" d="M-4.4,1.6 H-2.2 V-1.6 H0 V1.6 H2.2 V-1.6 H4.4" />,
 };
 
 /** 선 위에 다는 통신 수단 표지: 바탕색 원 위에 기호. 내보낸 그림에도 남는다. */

@@ -1,0 +1,76 @@
+import { assume, edge, flow, group, managed, node, type Sample } from "./dsl";
+
+const API = { sw: "Spring Boot 3", os: "Amazon Linux 2023", cpu: "2 vCPU", ram: "8GB", disk: "50GB", hostname: null, ip: null };
+
+/** AWS 쇼핑몰. 관리형 ALB·RDS·ElastiCache 와 두 AZ 로 나눈 API 묶음. 관리자 앱은 1대뿐이다(의도된 경고). */
+export const AWS_SHOP: Sample = {
+  id: "aws-shop",
+  title: "AWS 쇼핑몰",
+  commands: [
+    assume("environment", "클라우드(AWS)"),
+    assume("scale", "월간 활성 사용자 10만 명"),
+    assume("redundancy", "API 는 두 AZ 에 나눠 두고, DB·캐시는 Multi-AZ"),
+    assume("external", "PG사 결제, 카카오 로그인"),
+
+    group("region", "cloud_region", "AWS 서울 리전"),
+    group("vpc", "vpc", "쇼핑몰 VPC", "region"),
+    group("pub", "subnet_public", "공개 서브넷", "vpc"),
+    group("app", "subnet_private", "앱 서브넷", "vpc"),
+    group("api-asg", "redundancy_group", "API Auto Scaling 그룹", "app"),
+    group("data", "subnet_private", "데이터 서브넷", "vpc"),
+    group("ext", "external_service", "외부 서비스"),
+
+    node("user", "client_web", "고객 브라우저", null),
+    node("mobile", "client_mobile", "고객 앱", null),
+    node("operator", "admin_user", "운영자", null),
+    node("cdn", "cdn", "CloudFront", null, "CDN", managed()),
+    node("waf", "waf", "AWS WAF", null, "웹 방화벽", managed()),
+    node("s3", "object_storage", "S3", "region", "상품 이미지", { ...managed(), sw: "Amazon S3", replication: "리전 안 여러 AZ 자동 저장", version: null }),
+    node("alb", "lb_l7", "ALB", "pub", "L7 로드밸런서", { ...managed(), port: "443", rules: "경로별로 API·관리자 앱 대상 그룹에 전달" }),
+    node("nat", "nat", "NAT 게이트웨이", "pub", undefined, managed()),
+    node("api-1", "app_server", "API #1", "api-asg", "Spring Boot 3", { ...API, az: "2a" }),
+    node("api-2", "app_server", "API #2", "api-asg", "Spring Boot 3", { ...API, az: "2c" }),
+    node("admin-app", "app_server", "관리자 앱", "app", "Spring Boot 3", { ...API, az: "2a" }),
+    node("redis", "cache", "ElastiCache", "data", "Redis 7 · 세션·상품 캐시", { ...managed("yes"), sw: "Redis", version: "7.1", replication: "주·복제본(Multi-AZ)", cpu: null, ram: null, ip: null }),
+    node("rds", "db_rdb", "RDS MySQL", "data", "주문·회원", { ...managed("yes"), sw: "MySQL", version: "8.0", replication: "동기(대기 복제본)", cpu: null, ram: null, ip: null }),
+    node("pg", "external_pg", "PG사", "ext", "결제 승인", { integration: "REST API" }),
+    node("kakao", "external_auth", "카카오 로그인", "ext", undefined, { integration: "OAuth 2.0" }),
+
+    edge("user", "cdn", "request", "HTTPS 443"),
+    edge("mobile", "cdn", "request", "HTTPS 443"),
+    edge("operator", "cdn", "request", "HTTPS 443"),
+    edge("cdn", "s3", "request", "정적 파일"),
+    edge("cdn", "waf", "request", "HTTPS 443"),
+    edge("waf", "alb", "request", "HTTPS 443"),
+    edge("alb", "api-1", "request", "HTTP 8080"),
+    edge("alb", "api-2", "request", "HTTP 8080"),
+    edge("alb", "admin-app", "request", "HTTP 8080"),
+    edge("api-1", "redis", "request", "Redis 6379"),
+    edge("api-2", "redis", "request", "Redis 6379"),
+    edge("api-1", "rds", "request", "MySQL 3306"),
+    edge("api-2", "rds", "request", "MySQL 3306"),
+    edge("admin-app", "rds", "request", "MySQL 3306"),
+    edge("api-1", "nat", "request", "HTTPS 443"),
+    edge("api-2", "nat", "request", "HTTPS 443"),
+    edge("nat", "pg", "request", "결제 승인 HTTPS"),
+    edge("nat", "kakao", "request", "토큰 확인 HTTPS"),
+
+    flow("product-view", "상품 보기", "user", "고객이 상품 상세를 연다.", "상품 정보를 화면에 돌려준다.", [
+      ["user", "cdn", "상품 요청", "고객 브라우저가 CloudFront 로 상품 페이지를 요청한다."],
+      ["cdn", "waf", "검사", "AWS WAF 가 악성 요청을 걸러 낸다."],
+      ["waf", "alb", "전달", "검사를 통과한 요청이 ALB 로 간다."],
+      ["alb", "api-1", "API 배분", "ALB 가 API 묶음 가운데 한 대로 요청을 나눈다."],
+      ["api-1", "redis", "캐시 조회", "API 가 ElastiCache 에서 상품 정보를 먼저 찾는다."],
+      ["api-1", "rds", "DB 조회", "캐시에 없으면 RDS 에서 읽어 캐시에 채운다."],
+    ]),
+    flow("checkout", "결제", "user", "고객이 앱에서 주문을 결제한다.", "결제 결과와 주문 번호를 돌려준다.", [
+      ["mobile", "cdn", "결제 요청", "고객 앱이 CloudFront 로 결제 요청을 보낸다."],
+      ["cdn", "waf", "검사", "AWS WAF 가 요청을 검사한다."],
+      ["waf", "alb", "전달", "요청이 ALB 로 간다."],
+      ["alb", "api-2", "API 배분", "ALB 가 API 한 대로 요청을 나눈다."],
+      ["api-2", "rds", "주문 저장", "API 가 주문을 RDS 에 저장한다."],
+      ["api-2", "nat", "외부 호출", "API 가 NAT 게이트웨이를 거쳐 밖으로 나간다."],
+      ["nat", "pg", "결제 승인", "PG사에 결제 승인을 요청한다."],
+    ]),
+  ],
+};

@@ -1,6 +1,9 @@
 import type { NodeKind } from "./catalog";
 import type { DiagramState, Edge } from "./types";
 
+/** 망을 거치지 않고 두 기기를 바로 잇는 통신 수단(근거리 무선·유선 직렬). 망 사이 통신으로 보지 않는다. */
+export const isLocalLink = (medium: Edge["medium"]): boolean => medium === "wireless" || medium === "serial";
+
 /** 망 경계를 정당하게 넘겨 주는 노드 종류: 방화벽·망연계 솔루션·VPN. */
 export const BOUNDARY_NODE_KINDS: ReadonlySet<NodeKind> = new Set<NodeKind>(["firewall", "network_link", "vpn"]);
 
@@ -23,8 +26,8 @@ export function networkZoneOf(state: DiagramState, nodeId: string): string | nul
 export function crossesBoundary(state: DiagramState, edge: Edge): boolean {
   if (!Object.values(state.groups).some((g) => g.groupKind === "network_zone")) return false;
   if (!state.nodes[edge.from] || !state.nodes[edge.to]) return false;
-  // 근거리 무선(BLE·NFC 등)은 기기끼리 바로 붙는 연결이라 망을 넘는 통신으로 보지 않는다.
-  if (edge.medium === "wireless") return false;
+  // 근거리 무선(BLE·NFC 등)·유선 직렬(RS-485 등)은 기기끼리 바로 붙는 연결이라 망을 넘는 통신으로 보지 않는다.
+  if (isLocalLink(edge.medium)) return false;
   return networkZoneOf(state, edge.from) !== networkZoneOf(state, edge.to);
 }
 

@@ -1,5 +1,6 @@
 import { isDirectCrossing } from "./boundary";
 import { categoryOf } from "./catalog";
+import { isManaged, yesNo } from "./managed";
 import type { NetworkKnowledge } from "./network";
 import { evaluateNetworkRules, LINK_RULES } from "./networkRules";
 import type { DNode, DiagramState, Edge, Warning, WarningLevel } from "./types";
@@ -18,6 +19,17 @@ interface Rule {
 const PUBLIC_GROUPS = ["subnet_public", "dmz"];
 export const DATA_KINDS = ["db_rdb", "db_nosql", "cache", "search", "db_proxy", "file_storage"];
 const SPOF_KINDS = ["web_server", "was", "app_server", "db_rdb", "db_nosql", "lb_l4", "lb_l7", "db_proxy", "cache"];
+/** 이 영역 안에 있으면 클라우드 노드로 본다(환경 가정은 자유 문장이라 쓰지 않는다). */
+const CLOUD_GROUPS = ["cloud_region", "vpc"];
+/** 관리형이면 여러 AZ 복제를 따로 켜야 하는 종류(RDS·Aurora·ElastiCache 등). 나머지 관리형(ALB·NLB·RDS Proxy 등)은 사업자가 이중화한다. */
+const MULTI_AZ_KINDS = ["db_rdb", "db_nosql", "cache"];
+
+const azOf = (n: DNode): string | null => {
+  const v = n.attrs.az;
+  return v === undefined || v === null || String(v).trim() === "" ? null : String(v).trim();
+};
+/** "WAS #2"·"WAS 2" 의 끝 번호를 뗀 이름. 같은 역할 서버인지 볼 때 쓴다. */
+const baseLabel = (label: string) => label.replace(/\s*#?\s*\d+$/, "").trim();
 /** 통신이 지나가야 쓸모 있는 노드. 연결이 하나도 없으면 놓기만 하고 길을 안 바꾼 것이다. */
 const PASSTHROUGH_KINDS = ["firewall", "waf", "lb_l4", "lb_l7", "api_gateway", "nat", "vpn", "network_link", "cdn"];
 
@@ -36,6 +48,40 @@ function ancestorKinds(state: DiagramState, node: DNode): string[] {
   return kinds;
 }
 
+/** 노드에서 가장 가까운 redundancy_group 영역 id. */
+function nearestRedundancy(state: DiagramState, node: DNode): string | null {
+  const seen = new Set<string>();
+  for (let cur = node.parent; cur && !seen.has(cur); ) {
+    seen.add(cur);
+    const g = state.groups[cur];
+    if (!g) break;
+    if (g.groupKind === "redundancy_group") return g.id;
+    cur = g.parent;
+  }
+  return null;
+}
+
+/**
+ * 묶음 밖 노드의 문구. 같은 역할 서버(같은 종류이고 이름이 끝 번호만 다른 것, 예: WAS #1·WAS #2)가 따로 있으면
+ * "1대뿐"은 사실과 달라 묶음에 없다고 말한다. 이름이 다른 같은 종류(주문 DB·결제 DB, 관리자 앱·API #1)는 같은 역할로 세지 않는다.
+ */
+function hasPeer(state: DiagramState, node: DNode): boolean {
+  const base = baseLabel(node.label);
+  return Object.values(state.nodes).some((n) => n.id !== node.id && n.kind === node.kind && baseLabel(n.label) === base);
+}
+
+/** 클라우드에서 직접 운영하는 묶음 구성원(관리형 제외). */
+function membersOf(state: DiagramState, groupId: string): DNode[] {
+  return Object.values(state.nodes)
+    .filter((n) => SPOF_KINDS.includes(n.kind) && !isManaged(n) && nearestRedundancy(state, n) === groupId)
+    .sort((a, b) => a.label.localeCompare(b.label, "ko", { numeric: true }) || (a.id < b.id ? -1 : 1));
+}
+
+const groupLabel = (state: DiagramState, node: DNode) => {
+  const g = nearestRedundancy(state, node);
+  return g ? (state.groups[g]?.label ?? g) : node.label;
+};
+
 export const RULES: Rule[] = [
   {
     rule: "db_public",
@@ -48,12 +94,48 @@ export const RULES: Rule[] = [
     rule: "spof",
     level: "warn",
     patternId: "web-was-db",
-    // 규칙은 "이중화 묶음 밖"이다. 같은 종류가 2대 이상이면 "1대뿐"은 사실과 달라 묶음에 없다고 말한다.
+    // 온프레미스(클라우드 영역 밖) 규칙: "이중화 묶음(VIP) 밖"이다.
     template: (s, { node }) =>
-      Object.values(s.nodes).filter((n) => n.kind === node.kind).length >= 2
+      hasPeer(s, node)
         ? `${node.label}이(가) 이중화 묶음(VIP)에 들어 있지 않아 멈춰도 대신할 서버로 넘어가지 않아요.`
         : `${node.label}이(가) 1대뿐이라 멈추면 서비스도 멈춰요.`,
     guide: "같은 역할 서버를 2대 이상 두고 이중화 묶음(VIP)으로 묶으세요.",
+  },
+  {
+    rule: "spof_cloud",
+    level: "warn",
+    patternId: "lb-autoscale",
+    // 클라우드에서 직접 운영하는 서버가 묶음(Auto Scaling·대상 그룹) 밖에 있다. 관리형은 여기 오지 않는다.
+    template: (s, { node }) =>
+      hasPeer(s, node)
+        ? `${node.label}이(가) 같은 역할 서버 묶음에 들어 있지 않아 멈춰도 대신할 서버로 넘어가지 않아요.`
+        : `${node.label}이(가) 1대뿐이라 멈추면 서비스도 멈춰요.`,
+    guide: "같은 역할 서버를 2대 이상 서로 다른 AZ 에 두고 Auto Scaling 그룹(대상 그룹)으로 묶으세요.",
+  },
+  {
+    rule: "az_spread",
+    level: "warn",
+    patternId: "lb-autoscale",
+    // 묶음 하나에 경고 하나(첫 구성원 노드에 붙인다). AZ 를 모르는 구성원이 있으면 확인 필요다.
+    template: (s, { node }) => {
+      const g = nearestRedundancy(s, node);
+      const azs = g ? membersOf(s, g).map(azOf) : [azOf(node)];
+      const name = groupLabel(s, node);
+      return azs.some((a) => a === null)
+        ? `${name}의 서버들이 서로 다른 AZ 에 나뉘어 있는지 알 수 없어요.`
+        : `${name}의 서버가 모두 AZ ${azs[0]}에 있어 그 AZ 가 멈추면 함께 멈춰요.`;
+    },
+    guide: "묶음 안 서버를 2개 이상의 AZ 에 나눠 두고, 노드마다 AZ 를 적으세요.",
+  },
+  {
+    rule: "multi_az",
+    level: "warn",
+    patternId: "dr",
+    template: (_s, { node }) =>
+      yesNo(node.attrs.multi_az) === "no"
+        ? `${node.label}이(가) 한 AZ 에만 있어 그 AZ 가 멈추면 데이터도 쓸 수 없어요.`
+        : `${node.label}이(가) 여러 AZ 에 복제(Multi-AZ)되는지 알 수 없어요.`,
+    guide: "관리형 DB·캐시는 Multi-AZ(다른 AZ 의 대기 복제본)를 켜고, 노드의 Multi-AZ 칸에 적으세요.",
   },
   {
     rule: "no_firewall",
@@ -95,19 +177,62 @@ export const RULES: Rule[] = [
 
 const ruleOf = (name: string) => RULES.find((r) => r.rule === name)!;
 
-function make(state: DiagramState, rule: Rule, node: DNode, edge?: Edge): Warning {
+/**
+ * 문구를 늘 새로 계산하는 규칙. 지난 문구를 이어 쓰지도, Qwen 으로 다듬지도 않는다.
+ * 같은 id 로 확인 필요↔경고가 바뀌거나 문구에 AZ 값이 들어가, 지난 문구가 사실과 달라질 수 있다.
+ */
+export const FIXED_TEXT_RULES: readonly string[] = [...LINK_RULES, "az_spread", "multi_az"];
+
+function make(state: DiagramState, rule: Rule, node: DNode, edge?: Edge, level: WarningLevel = rule.level): Warning {
   return {
     id: `${rule.rule}:${edge ? edge.id : node.id}`,
     rule: rule.rule,
     nodeId: node.id,
     ...(edge ? { edgeId: edge.id } : {}),
-    level: rule.level,
+    level,
     text: rule.template(state, { node, edge }),
     guide: rule.guide,
   };
 }
 
-/** 코드 규칙 6개를 평가한다. db_exposed 는 Clef 전용이라 여기서 만들지 않는다. */
+/**
+ * 이중화 점검. 클라우드 영역(cloud_region·vpc) 밖은 온프레미스 규칙(VIP 묶음), 안은 클라우드 규칙이다.
+ * - 관리형(attrs.managed=yes) LB·컴퓨트·DB 중계는 사업자가 여러 AZ 로 이중화하므로 보지 않는다.
+ * - 관리형 DB·캐시는 attrs.multi_az 를 본다: no 면 경고, 모르면 확인 필요.
+ * - 직접 운영하는 서버는 묶음 밖이면 spof_cloud, 묶음 안이면 구성원의 AZ 가 2곳 이상인지 본다(모르면 확인 필요).
+ */
+function redundancyWarnings(state: DiagramState): Warning[] {
+  const out: Warning[] = [];
+  const checkedGroups = new Set<string>();
+  for (const n of Object.values(state.nodes)) {
+    if (!SPOF_KINDS.includes(n.kind)) continue;
+    const kinds = ancestorKinds(state, n);
+    if (!kinds.some((k) => CLOUD_GROUPS.includes(k))) {
+      if (!kinds.includes("redundancy_group")) out.push(make(state, ruleOf("spof"), n));
+      continue;
+    }
+    if (isManaged(n)) {
+      if (!MULTI_AZ_KINDS.includes(n.kind)) continue;
+      const multi = yesNo(n.attrs.multi_az);
+      if (multi !== "yes") out.push(make(state, ruleOf("multi_az"), n, undefined, multi === "no" ? "warn" : "check"));
+      continue;
+    }
+    const g = nearestRedundancy(state, n);
+    if (!g) {
+      out.push(make(state, ruleOf("spof_cloud"), n));
+      continue;
+    }
+    if (checkedGroups.has(g)) continue;
+    checkedGroups.add(g);
+    const members = membersOf(state, g);
+    const azs = members.map(azOf);
+    if (azs.some((a) => a === null)) out.push(make(state, ruleOf("az_spread"), members[0]!, undefined, "check"));
+    else if (new Set(azs).size < 2) out.push(make(state, ruleOf("az_spread"), members[0]!));
+  }
+  return out;
+}
+
+/** 코드 규칙을 평가한다. db_exposed 는 Clef 전용이라 여기서 만들지 않는다. */
 export function evaluateRules(state: DiagramState, knowledge?: NetworkKnowledge): Warning[] {
   const nodes = Object.values(state.nodes);
   const edges = Object.values(state.edges);
@@ -121,12 +246,7 @@ export function evaluateRules(state: DiagramState, knowledge?: NetworkKnowledge)
   const redundancy = state.assumptions.redundancy;
   // 이중화 가정 값과 상관없이 redundancy_group 밖의 단일 노드는 경고한다. 사용자가 "이중화 없음"을 확정(의도)했을 때만 끈다.
   const spofOff = !!redundancy && redundancy.value === "이중화 없음" && redundancy.confirmed;
-  if (!spofOff) {
-    const spof = ruleOf("spof");
-    for (const n of nodes) {
-      if (SPOF_KINDS.includes(n.kind) && !ancestorKinds(state, n).includes("redundancy_group")) out.push(make(state, spof, n));
-    }
-  }
+  if (!spofOff) out.push(...redundancyWarnings(state));
 
   const noFw = ruleOf("no_firewall");
   for (const e of edges) {
@@ -168,8 +288,8 @@ export function mergeWarnings(state: DiagramState, knowledge?: NetworkKnowledge)
   const storedById = new Map(stored.map((w) => [w.id, w]));
   const merged: Warning[] = evaluateRules(state, knowledge).map((w) => {
     const s = storedById.get(w.id);
-    // 망연계 예상 경고는 저장된 문구로 덮지 않는다(종류·지식이 바뀌면 문구도 달라진다).
-    return s && !(LINK_RULES as readonly string[]).includes(w.rule) ? { ...w, text: s.text } : w;
+    // 망연계 예상·AZ 경고는 저장된 문구로 덮지 않는다(종류·지식·AZ 값이 바뀌면 문구도 달라진다).
+    return s && !FIXED_TEXT_RULES.includes(w.rule) ? { ...w, text: s.text } : w;
   });
   for (const w of stored) {
     if (w.rule === "db_exposed" && state.nodes[w.nodeId] && !merged.some((m) => m.id === w.id)) merged.push(w);

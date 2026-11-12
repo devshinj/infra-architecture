@@ -1,7 +1,6 @@
 import type { DiagramState, DNode, Warning, WarningLevel } from "@/domain/types";
 import type { NetworkKnowledge } from "@/domain/network";
-import { LINK_RULES } from "@/domain/networkRules";
-import { DATA_KINDS, evaluateRules, RULES } from "@/domain/warnings";
+import { DATA_KINDS, evaluateRules, FIXED_TEXT_RULES, RULES } from "@/domain/warnings";
 import type { ClefClient } from "@/server/llm/clef";
 import { noulProbability } from "@/server/llm/clef";
 import { createJsonlParser } from "@/server/llm/jsonl";
@@ -18,8 +17,8 @@ const WARN_AT = 0.8;
 const CHECK_AT = 0.5;
 
 const EXPOSED = RULES.find((r) => r.rule === "db_exposed")!;
-const LINK_RULE_SET: ReadonlySet<string> = new Set(LINK_RULES);
-const isLinkRule = (rule: string) => LINK_RULE_SET.has(rule);
+const FIXED_RULE_SET: ReadonlySet<string> = new Set(FIXED_TEXT_RULES);
+const isFixedText = (rule: string) => FIXED_RULE_SET.has(rule);
 
 /**
  * 대상 노드와 이웃(조상 그룹·연결 상대)을 요약한 줄들.
@@ -214,7 +213,7 @@ export async function checkWarnings(
   let warnings = mergeWarnings(code, exposed, prevById);
 
   const isNew = (w: Warning) => !prevById.has(w.id);
-  const needText = warnings.filter((w) => isNew(w) && !isLinkRule(w.rule));
+  const needText = warnings.filter((w) => isNew(w) && !isFixedText(w.rule));
   if (deps.qwen && needText.length && !signal.aborted) {
     const items = needText.map((w) => ({ id: w.id, rule: w.rule, facts: `정해진 문구 ${JSON.stringify(w.text)} | ${describeTarget(state, state.nodes[w.nodeId]!)}` }));
     const texts = await writeTexts(deps.qwen, items, signal, opts.textTimeoutMs ?? TEXT_TIMEOUT_MS);
@@ -252,9 +251,9 @@ const unjudged = (state: DiagramState, flagged: Set<string>) =>
 /** 코드 규칙 뒤에 db_exposed 를 붙이고, 이미 알린 경고는 지난 문구를 다시 쓴다. */
 function mergeWarnings(code: Warning[], exposed: Warning[], prevById: Map<string, Warning>): Warning[] {
   const merged = [...code, ...exposed.filter((w) => !code.some((c) => c.id === w.id))];
-  // 연결 방식 예상(link_*) 문구는 정해진 문구다. 지난 문구를 이어 쓰지도, Qwen 으로 다듬지도 않는다(늘 새로 계산한 그대로).
+  // 연결 방식 예상(link_*)·AZ 경고 문구는 정해진 문구다. 지난 문구를 이어 쓰지도, Qwen 으로 다듬지도 않는다(늘 새로 계산한 그대로).
   return merged.map((w) => {
-    if (isLinkRule(w.rule)) return w;
+    if (isFixedText(w.rule)) return w;
     const t = prevById.get(w.id)?.text;
     return typeof t === "string" ? { ...w, text: t } : w;
   });

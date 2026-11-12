@@ -25,7 +25,7 @@ afterEach(cleanup);
 const build = (cmds: Command[]) => applyCommands(emptyState(), cmds).state;
 
 /** 휴대폰 앱(망 밖) ↔ 밴드(기기망) ↔ 서버(업무망). */
-const field = (medium?: "wireless") =>
+const field = (medium?: "wireless" | "serial") =>
   build([
     { op: "add_group", id: "iot", group_kind: "network_zone", label: "기기망", parent: null },
     { op: "add_group", id: "biz", group_kind: "network_zone", label: "업무망", parent: null },
@@ -49,6 +49,8 @@ describe("연결의 통신 수단(medium)", () => {
     expect(normalizeAiCommand({ ...edge, medium: "BLE" })).toMatchObject({ medium: "wireless" });
     expect(normalizeAiCommand({ ...edge, medium: "RTSP" })).toMatchObject({ medium: "video" });
     expect(normalizeAiCommand({ ...edge, medium: "WebRTC" })).toMatchObject({ medium: "media" });
+    expect(normalizeAiCommand({ ...edge, medium: "RS-485" })).toMatchObject({ medium: "serial" });
+    expect(normalizeAiCommand({ ...edge, medium: "OSDP" })).toMatchObject({ medium: "serial" });
     expect(normalizeAiCommand({ ...edge, medium: "광케이블" })).not.toHaveProperty("medium");
     expect(normalizeAiCommand({ ...edge, medium: null })).not.toHaveProperty("medium");
   });
@@ -69,6 +71,14 @@ describe("연결의 통신 수단(medium)", () => {
     expect(crossingPaths(ble)).toHaveLength(0);
     expect(evaluateRules(plain).some((w) => w.edgeId === "e-ble")).toBe(true);
     expect(evaluateRules(ble).some((w) => w.edgeId === "e-ble")).toBe(false);
+  });
+
+  test("유선 직렬(RS-485 등)도 기기끼리 바로 붙는 연결이라 망을 넘는 통신으로 보지 않는다", () => {
+    const wire = field("serial");
+    expect(wire.edges["e-ble"].medium).toBe("serial");
+    expect(crossesBoundary(wire, wire.edges["e-ble"])).toBe(false);
+    expect(crossingPaths(wire)).toHaveLength(0);
+    expect(evaluateRules(wire).some((w) => w.edgeId === "e-ble")).toBe(false);
   });
 
   test("화면용 연결에는 표지를 다는 수단만 싣는다(ip 는 뺀다)", () => {

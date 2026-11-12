@@ -64,8 +64,10 @@ export const DRAW_RULE_GROUPS = [
 - 요청이 애매하면 가정하고 set_assumption 으로 그 가정을 먼저 밝힌다.
 - 이미 확정된 가정은 바꾸지 않는다. 요약에 (확정) 표시가 붙은 가정은 set_assumption 으로 다시 내지 않는다.
 - 그룹을 먼저, 그 안의 노드를 다음, 연결은 양 끝 노드가 생긴 뒤에 출력한다.
-- 이중화 서버는 redundancy_group 그룹으로 묶고 label 에 VIP 를 적는다(예: "WAS VIP"). 2대 이상이면 몇 대든 하나의 redundancy_group 으로 묶는다.
-- AZ(가용 영역)는 az 그룹을 만들지 않는다. 대신 서브넷·노드의 attrs.az 속성(예: "az":"2a")으로 표시한다.
+- 이중화 서버는 redundancy_group 그룹으로 묶는다. 2대 이상이면 몇 대든 하나의 redundancy_group 으로 묶는다. 온프레미스는 label 에 VIP 를 적고(예: "WAS VIP"), 클라우드(cloud_region·vpc 안)는 VIP 대신 Auto Scaling 그룹·대상 그룹 이름을 적는다(예: "WAS Auto Scaling 그룹").
+- 클라우드 사업자가 운영하는 관리형 서비스(ALB·NLB·RDS·Aurora·ElastiCache·RDS Proxy·DynamoDB 등)는 attrs.managed 를 "yes" 로 쓰고 redundancy_group 으로 묶지 않는다(사업자가 여러 AZ 로 이중화한다). 직접 설치해 운영하는 서버(EC2 위 Nginx·MySQL 등)에는 managed 를 쓰지 않는다.
+- 관리형 DB·캐시(RDS·Aurora·ElastiCache·DocumentDB 등)는 여러 AZ 복제 여부를 attrs.multi_az 에 "yes" 또는 "no" 로 쓴다. 사용자가 Multi-AZ·복제본을 말했거나 DynamoDB 처럼 늘 여러 AZ 에 복제되는 서비스면 "yes", 단일 AZ 라고 했으면 "no", 근거가 없으면 null 로 둔다.
+- AZ(가용 영역)는 az 그룹을 만들지 않는다. 대신 노드의 attrs.az 속성(예: "az":"2a")으로 표시한다. 클라우드에서 직접 운영하는 이중화 서버는 서로 다른 AZ 에 나눠 두고 노드마다 az 를 쓴다.
 - 외부 서비스는 external_service 그룹 안에 접점 노드(external_api/external_auth/external_pg)로 그린다.
 - 영역(그룹)의 이름·상위 영역은 바꿀 수 없다.`,
   `- 환경(environment)이나 배포 방식(deploy) 가정이 바뀌면 이 순서로 바꾼다: ① 새 가정에 맞는 영역을 add_group 으로 만든다 ② 새 구성에서도 쓰는 노드(WAS·DB 등)는 지우지 말고 update_node 의 parent 로 새 영역에 옮긴다 ③ 그 뒤에 남은 맞지 않는 노드는 remove_node, 영역은 remove_group 으로 지운다. remove_group 은 안의 노드까지 지우므로 옮길 노드를 먼저 옮긴다.
@@ -89,8 +91,8 @@ export const DRAW_RULE_GROUPS = [
 - Kafka/MSK/Kinesis 는 stream, SQS/RabbitMQ 는 queue.
 - CDN, WAF, DNS 처럼 VPC 밖 전역 서비스는 VPC 밖(리전 그룹 또는 최상위)에 둔다.
 - 사용자(client_*)에서 시작하는 진입 연결을 반드시 그린다.
-- medium(통신 수단)은 보통의 IP 통신이 아닐 때만 쓴다: 근거리 무선(BLE·NFC·Zigbee 등)은 wireless, 카메라 영상 스트림(RTSP 등)은 video, 실시간 영상·음성(WebRTC)은 media. 프로토콜 이름은 label 에 적는다(예: "BLE(GATT)", "RTSP", "SRTP/UDP"). video·media 연결은 영상·음성이 흐르는 방향으로 그린다.
-- wireless 연결은 망·방화벽을 거치지 않고 두 기기를 바로 잇는다. BLE·Zigbee·NFC 만 쓰는 기기(iot_device)는 서버에 바로 잇지 않고 휴대폰 앱(client_mobile)이나 iot_gateway 를 거친다.
+- medium(통신 수단)은 보통의 IP 통신이 아닐 때만 쓴다: 근거리 무선(BLE·NFC·Zigbee 등)은 wireless, 카메라 영상 스트림(RTSP 등)은 video, 실시간 영상·음성(WebRTC)은 media, 기기와 컨트롤러를 바로 잇는 RS-485·RS-232 직렬 선(OSDP·Wiegand·Modbus RTU 등)은 serial. 프로토콜 이름은 label 에 적는다(예: "BLE(GATT)", "RTSP", "SRTP/UDP", "OSDP(RS-485)"). video·media 연결은 영상·음성이 흐르는 방향으로 그린다.
+- wireless·serial 연결은 망·방화벽을 거치지 않고 두 기기를 바로 잇는다. BLE·Zigbee·NFC 만 쓰는 기기(iot_device)는 서버에 바로 잇지 않고 휴대폰 앱(client_mobile)이나 iot_gateway 를 거친다.
 - 기기·게이트웨이는 mqtt_broker 로 먼저 건다(기기 → 브로커, 예: "MQTT/TLS 8883"). 브로커에서 기기로 내려가는 연결은 따로 그리지 않는다. 브로커에서 뒤쪽 처리로 가는 연결은 async 다.
 - 카메라(camera)는 video_recorder(NVR·VMS)에 video 로 잇고, 관제 화면(control_display)은 video_recorder 에서 영상을 받는다. 카메라를 관제 화면이나 인터넷에 바로 잇지 않는다. 밖에서 볼 때는 경계 구역의 media_server 를 거친다.
 - 영상 분석·LLM·임베딩 서빙은 model_server 로 그리고 attrs 의 model·gpu 에 값을 쓴다. GPU 를 따로 노드로 만들지 않는다.

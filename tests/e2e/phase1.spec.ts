@@ -1,5 +1,8 @@
 import { expect, test, type Page } from "@playwright/test";
 
+// "IDC WEB-WAS-DB 이중화" 샘플(src/domain/samples/idc-3tier.ts)의 노드 수.
+const IDC_NODES = 12;
+
 const uid = () => Math.random().toString(36).slice(2, 8);
 
 async function signup(page: Page, name: string) {
@@ -36,16 +39,16 @@ test("가입 → 프로젝트·구성도 → 샘플 → 선택 → 편집 이동
 
   await importSample(page, "IDC WEB-WAS-DB 이중화");
   const nodes = page.locator(".react-flow__node-infra");
-  await expect(nodes).toHaveCount(9);
+  await expect(nodes).toHaveCount(IDC_NODES);
 
-  await page.getByTitle("WAS#1").click();
+  await page.getByTitle("WAS #1").click();
   await expect(page.getByRole("tab", { name: "설명", selected: true })).toBeVisible();
   // 곧은 세로 토막은 폭이 0 이라 첫 연결의 모양에 기대지 않고, 보이는 흐린 연결이 있는지 본다.
   await expect(page.locator(".edge--dim").filter({ visible: true }).first()).toBeVisible();
 
-  // 편집 모드에서 드래그 → 새로고침 후 위치 유지
+  // 편집 모드에서 드래그 → 새로고침 후 위치 유지. 1280×720 기본 화면에서 WAS 줄은 아래로 벗어나 있어 맨 윗줄의 WEB #1 을 끈다.
   await page.getByRole("button", { name: "위치 옮기기" }).click();
-  const was = page.locator(".react-flow__node-infra", { has: page.getByTitle("WAS#1") });
+  const was = page.locator(".react-flow__node-infra", { has: page.getByTitle("WEB #1") });
   const before = (await was.boundingBox())!;
   const cx = before.x + before.width / 2;
   const cy = before.y + before.height / 2;
@@ -57,8 +60,8 @@ test("가입 → 프로젝트·구성도 → 샘플 → 선택 → 편집 이동
   await page.mouse.up();
   await saved; // savePinnedAction 응답을 기다린다
   await page.reload();
-  await expect(nodes).toHaveCount(9);
-  const after = (await page.locator(".react-flow__node-infra", { has: page.getByTitle("WAS#1") }).boundingBox())!;
+  await expect(nodes).toHaveCount(IDC_NODES);
+  const after = (await page.locator(".react-flow__node-infra", { has: page.getByTitle("WEB #1") }).boundingBox())!;
   expect(Math.hypot(after.x - before.x, after.y - before.y)).toBeGreaterThan(40);
 
   // 샘플 하나 더 → 이력 v3 → v2 로 되돌리기 → v4
@@ -67,13 +70,13 @@ test("가입 → 프로젝트·구성도 → 샘플 → 선택 → 편집 이동
   await page.getByPlaceholder(/만들고 싶은 서비스/).fill("AWS 쇼핑몰 구성도 그려줘");
   await page.getByRole("button", { name: "보내기" }).click();
   await expect(page.getByText(/노드 \d+ · 연결 \d+ · (?:\d+곳 바꿨어요|바꾼 곳이 없어요)/)).toBeVisible({ timeout: 30_000 });
-  await expect(nodes).not.toHaveCount(9);
+  await expect(nodes).not.toHaveCount(IDC_NODES);
   await page.getByRole("tab", { name: "이력" }).click();
   await expect(page.getByText("v3", { exact: true })).toBeVisible();
   await page.getByText("v2", { exact: true }).click();
   await page.getByRole("button", { name: "이 버전으로 되돌리기" }).click();
   await expect(page.getByText("v4", { exact: true })).toBeVisible();
-  await expect(nodes).toHaveCount(9);
+  await expect(nodes).toHaveCount(IDC_NODES);
 });
 
 test("다른 사용자는 남의 구성도 URL 에서 404", async ({ browser }) => {

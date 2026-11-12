@@ -8,9 +8,9 @@ export type EdgePayload = (typeof EDGE_PAYLOADS)[number];
 /**
  * 통신 수단. 없으면 보통의 IP 통신으로 본다("ip" 는 잘못 붙은 값을 되돌릴 때 쓴다).
  * wireless: 망을 거치지 않고 기기끼리 바로 붙는 근거리 무선(BLE·NFC·Zigbee 등), video: 끊기지 않고 흐르는 영상 스트림(RTSP 등),
- * media: 실시간 영상·음성(WebRTC 의 SRTP 등).
+ * media: 실시간 영상·음성(WebRTC 의 SRTP 등), serial: 기기와 컨트롤러를 바로 잇는 유선 직렬 선(RS-485·RS-232 의 OSDP·Wiegand·Modbus RTU 등).
  */
-export const EDGE_MEDIA = ["ip", "wireless", "video", "media"] as const;
+export const EDGE_MEDIA = ["ip", "wireless", "video", "media", "serial"] as const;
 export type EdgeMedium = (typeof EDGE_MEDIA)[number];
 
 export const EDGE_DIRECTIONS = ["one_way", "two_way"] as const;
