@@ -30,7 +30,7 @@ async function send(page: Page, text: string) {
 }
 
 async function buildS1(page: Page) {
-  await send(page, "결제랑 카카오 로그인 붙는 쇼핑몰");
+  await send(page, "AWS 에 결제랑 카카오 로그인 붙는 쇼핑몰");
   await expect(nodes(page)).toHaveCount(S1_NODE_COUNT, { timeout: 30_000 });
   await expect(page.getByText(DONE)).toBeVisible({ timeout: 30_000 });
 }
@@ -102,7 +102,7 @@ test("long name shows tooltip on hover", async ({ page }) => {
 
 test("warning item moves to node and opens explanation", async ({ page }) => {
   await setup(page);
-  await send(page, "공개DB 붙은 서비스");
+  await send(page, "AWS 에 공개DB 붙은 서비스");
   const pubDb = nodes(page).filter({ has: page.getByTitle("공개 DB") });
   await expect(pubDb.getByRole("button", { name: /^경고 \d+개$/ })).toBeVisible({ timeout: 30_000 });
   if ((await cardToggle(page).getAttribute("aria-expanded")) !== "true") await cardToggle(page).click();

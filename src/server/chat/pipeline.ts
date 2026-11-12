@@ -14,6 +14,7 @@ import type { QwenClient } from "@/server/llm/qwen";
 import { getOwnedDiagram, NotFoundError, ValidationError } from "@/server/projects";
 import { createVersion, getLatestState } from "@/server/versions";
 import { applyFlowOps, listFlows, rewriteFlows } from "@/server/flows";
+import { choiceValue, choicesNote, CLARIFY_AUTO, CLARIFY_REPLY, detectForks, validChoices, type ClarifyQuestion } from "@/domain/clarify";
 import { matchUserTerms } from "@/server/glossary";
 import { getNetworkKnowledge } from "@/server/network";
 
@@ -66,6 +67,8 @@ interface TurnArgs {
   diagramId: string;
   text: string;
   session?: ChatSessionTarget;
+  /** 되묻기에 고른 답. 있으면 직전에 되물은 요청을 이 답으로 그린다. */
+  choices?: Record<string, string>;
   signal: AbortSignal;
   emit(e: ChatEvent): void;
 }
@@ -179,9 +182,10 @@ async function lockedTurn(args: TurnArgs, sessionId: string | null, followUp: bo
   const turnStartState = state;
   const prevWarnings = latest?.state.warnings; // 차례 시작 상태의 경고
   // 이 대화 줄기만 본다(다른 구성도 대화 세션·질문 세션 글은 섞지 않는다).
+  const rows = sessionId === null || followUp ? await listMessages(diagramId, HISTORY_FETCH, sessionId, { withCommands: true }) : [];
   const history =
-    sessionId === null || followUp
-      ? (await listMessages(diagramId, HISTORY_FETCH, sessionId, { withCommands: true }))
+    rows.length > 0
+      ? rows
           .filter((m) => m.role === "user" || m.role === "assistant")
           .map(
             (m): HistoryItem => ({
@@ -193,7 +197,11 @@ async function lockedTurn(args: TurnArgs, sessionId: string | null, followUp: bo
           )
       : [];
   const lastAssistant = history.findLast((m) => m.role === "assistant")?.content;
-  const { clean, mentions } = parseMentions(args.text, state);
+  // 되묻기에 답한 차례: 이 대화의 마지막 AI 글이 되물은 것이면 그때의 요청을 고른 답과 함께 그린다.
+  const picked = validChoices(args.choices);
+  const lastRow = rows.findLast((m) => m.role === "assistant");
+  const pendingText = Object.keys(picked).length > 0 ? (lastRow?.meta?.clarify?.text ?? null) : null;
+  const { clean, mentions } = parseMentions(pendingText ?? args.text, state);
   const userMsg = await createMessage(diagramId, "user", args.text, { mentions: mentions.map((m) => m.id) }, sessionId);
 
   const counts = () => ({ nodes: Object.keys(state.nodes).length, edges: Object.keys(state.edges).length });
@@ -217,9 +225,10 @@ async function lockedTurn(args: TurnArgs, sessionId: string | null, followUp: bo
   // 망 종류(영역 항목)는 AI 가 프롬프트의 망 지식으로 추정하므로 넘기지 않는다.
   const openMissing = computeMissing(state).items.filter((m) => !m.unknown && m.targetKind !== "group");
   const openItems = clefOpenItems(state, openMissing, { text: clean, lastAssistant, mentionIds: mentions.map((m) => m.id) });
-  const intent: Intent | null = await resolveIntent(args.text, () =>
-    deps.clef.classifyIntent(clean, { lastAssistant, openItems }, signal),
-  );
+  // 되묻기에 답한 차례는 분류하지 않는다(이미 구성 변경으로 분류된 요청을 이어 그린다).
+  const intent: Intent | null = pendingText
+    ? "structure_change"
+    : await resolveIntent(args.text, () => deps.clef.classifyIntent(clean, { lastAssistant, openItems }, signal));
   emit({ t: "start", messageId: userMsg.id, intent });
 
   const says: string[] = [];
@@ -233,6 +242,8 @@ async function lockedTurn(args: TurnArgs, sessionId: string | null, followUp: bo
   let plainLines = 0; // 명령 모드에서 일반 글이라 say 로 보여 준 줄 수(서버 로그용)
   // 명령 경로 차례에 실제로 적용한 명령. 다음 차례 기록에 JSON 줄로 다시 보낸다(명령 경로가 아니면 undefined).
   let turnCommands: Command[] | undefined;
+  // 그리기 전에 물을 갈림길. 구성 변경 요청이고, 방금 되묻기에 답한 차례가 아닐 때만 본다.
+  const forks: ClarifyQuestion[] = intent === "structure_change" && !pendingText ? detectForks(clean, state) : [];
   const tally = createSkipTally();
   let status: "complete" | "aborted" | "error" = "complete";
   const skip = (reason: string, key: string) => {
@@ -249,6 +260,11 @@ async function lockedTurn(args: TurnArgs, sessionId: string | null, followUp: bo
     says.push(LAYOUT_REPLY);
     emit({ t: "say", text: LAYOUT_REPLY });
     emit({ t: "relayout" });
+  } else if (forks.length > 0) {
+    // AI 를 부르지 않고 선택지만 보낸다. 구성은 그대로라 버전도 만들지 않는다.
+    says.push(CLARIFY_REPLY);
+    emit({ t: "say", text: CLARIFY_REPLY });
+    emit({ t: "clarify", questions: forks });
   } else {
     const answerMode = intent === "question" || intent === "other";
     // 흐름 목록을 못 읽어도 차례는 이어 간다(흐름 없이 프롬프트를 만든다).
@@ -262,7 +278,24 @@ async function lockedTurn(args: TurnArgs, sessionId: string | null, followUp: bo
       return [];
     });
     const network = { ...(knowledge ? { network: knowledge } : {}), ...(terms.length ? { terms } : {}) };
-    const messages = buildMessages({ intent, text: clean, state, mentions, history, missing: openMissing, flows, ...network });
+    // 되묻기에 고른 답은 가정으로 먼저 남기고(다시 묻지 않게), 요청 글 끝에 붙여 AI 에게 알린다.
+    const choiceCmds: Command[] = [];
+    if (pendingText) {
+      for (const [key, value] of Object.entries(picked)) {
+        const cmd: Command = { op: "set_assumption", key, value: choiceValue(value) };
+        const r = applyCommand(state, cmd);
+        if (!r.ok) continue;
+        state = r.state;
+        choiceCmds.push(cmd);
+        applied++;
+        assumed++;
+        emit({ t: "cmd", cmd });
+      }
+    }
+    // 사용자가 직접 고른 가정은 이 차례에 AI 가 바꾸지 못한다(맡긴 것은 AI 가 제 값으로 쓴다).
+    const lockedKeys = new Set(choiceCmds.filter((c) => c.op === "set_assumption" && picked[c.key] !== CLARIFY_AUTO).map((c) => (c.op === "set_assumption" ? c.key : "")));
+    const drawText = choiceCmds.length > 0 ? `${clean}\n\n${choicesNote(picked)}` : clean;
+    const messages = buildMessages({ intent, text: drawText, state, mentions, history, missing: openMissing, flows, ...network });
     const keepText = !asksStepText(clean);
     emit({ t: "status", phase: "thinking" });
 
@@ -277,7 +310,7 @@ async function lockedTurn(args: TurnArgs, sessionId: string | null, followUp: bo
     };
     // 이미 있는 흐름 id 의 add_flow 는 그 흐름을 고치는 update_flow 로 받는다(모델이 고치기를 add_flow 로 쓰는 일이 있다).
     const retargetFlow = createFlowRetarget(flows.map((f) => f.id));
-    const appliedCmds: Command[] = [];
+    const appliedCmds: Command[] = [...choiceCmds];
     if (!answerMode) turnCommands = appliedCmds;
     const applyOne = (raw: Command) => {
       if (isFlowCommand(raw)) {
@@ -289,6 +322,7 @@ async function lockedTurn(args: TurnArgs, sessionId: string | null, followUp: bo
         return;
       }
       const cmd = raw;
+      if (cmd.op === "set_assumption" && lockedKeys.has(cmd.key)) return;
       // 지식에 없는 종류(지운·숨긴 것)가 붙은 망은 종류 없음으로 보고 AI 가 다시 붙이게 한다.
       const r = applyCommand(state, cmd, knowledge ? { netTypes: knowledge.types } : {});
       if (!r.ok) return skip(`적용할 수 없는 명령(${cmd.op}) ${r.error}`, skipKey("apply", cmd.op, r.error));
@@ -386,7 +420,7 @@ async function lockedTurn(args: TurnArgs, sessionId: string | null, followUp: bo
             const n = part + 1;
             console.info("[chat] output cut by length, continuing", { diagramId, part: n });
             emit({ t: "status", phase: "drawing", part: { n, of: MAX_CONTINUATIONS + 1 } });
-            msgs = buildMessages({ intent, text: clean, state, mentions, history, missing: openMissing, continuation: true, flows, ...network });
+            msgs = buildMessages({ intent, text: drawText, state, mentions, history, missing: openMissing, continuation: true, flows, ...network });
           }
         };
         await draw(messages);
@@ -394,7 +428,7 @@ async function lockedTurn(args: TurnArgs, sessionId: string | null, followUp: bo
         if (intent === "structure_change" && applied === 0 && edges.pending() === 0) {
           console.info("[chat] no change on a structure request, retrying once", { diagramId });
           emit({ t: "status", phase: "drawing", retry: true });
-          await draw(buildMessages({ intent, text: clean, state, mentions, history, missing: openMissing, retry: true, flows, ...network }));
+          await draw(buildMessages({ intent, text: drawText, state, mentions, history, missing: openMissing, retry: true, flows, ...network }));
         }
       }
     } catch (err) {
@@ -479,6 +513,7 @@ async function lockedTurn(args: TurnArgs, sessionId: string | null, followUp: bo
     version,
     status,
     says,
+    ...(forks.length > 0 ? { clarify: { questions: forks, text: args.text } } : {}),
     ...(flowsSaved > 0 ? { flows: flowsSaved } : {}),
     ...(changed + assumed > 0 && missing > 0 ? { missing } : {}),
     ...(fresh.length > 0 ? { warnings: fresh } : {}),

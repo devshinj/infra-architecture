@@ -39,7 +39,7 @@ const flowItems = (page: Page) => page.getByRole("region", { name: /사용자 �
 /** 쇼핑몰(s1)을 그리고 첫 그림 뒤 자동 제안된 흐름 3개가 흐름 탭에 들어올 때까지 기다린다. */
 async function drawS1WithSuggestions(page: Page) {
   await setup(page);
-  await send(page, "결제랑 카카오 로그인 붙는 쇼핑몰");
+  await send(page, "AWS 에 결제랑 카카오 로그인 붙는 쇼핑몰");
   await expect(nodes(page)).toHaveCount(S1_NODE_COUNT, { timeout: 30_000 });
   await expect(page.getByText(SUMMARY)).toBeVisible({ timeout: 30_000 });
   await page.getByRole("tab", { name: "흐름" }).click();

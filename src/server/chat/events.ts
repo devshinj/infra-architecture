@@ -1,4 +1,5 @@
 /** 대화 이벤트·메시지 메타. 클라이언트도 쓰므로 서버 모듈을 import 하지 않는다. */
+import type { ClarifyQuestion } from "@/domain/clarify";
 import type { Command } from "@/domain/commands";
 import type { Warning } from "@/domain/types";
 import type { WarningCounts } from "@/domain/warnings";
@@ -26,6 +27,8 @@ export const NODE_GONE_MESSAGE = "이 노드는 지금 구성도에 없어서 �
 
 export interface MessageMeta {
   intent?: string;
+  /** 그리기 전에 되물은 차례: 물은 것과, 답을 받으면 그릴 원래 요청 글. */
+  clarify?: { questions: ClarifyQuestion[]; text: string };
   /** 적용한 명령 수(가정·흐름 명령 포함). */
   applied?: number;
   /** 그중 구성을 바꾼 명령 수(isStructural). 없으면(옛 메시지) applied 로 본다. */
@@ -76,6 +79,8 @@ export type ChatEvent =
   | { t: "warnings"; items: Warning[] } // 새 경고만, done 앞
   | { t: "open_history" }
   | { t: "relayout" } // 고정 위치를 풀고 다시 배치(구성도 재정렬 요청)
+  // 그리기 전에 되묻기: 구성은 바꾸지 않고 선택지를 보낸다. 답은 다음 차례의 choices 로 온다.
+  | { t: "clarify"; questions: ClarifyQuestion[] }
   | { t: "handoff"; text: string } // 노드 질문의 구성 변경 요청(사용자 글 그대로)
   | {
       t: "done";

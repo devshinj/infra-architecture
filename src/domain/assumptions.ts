@@ -8,6 +8,12 @@ export const ASSUMPTION_LABELS: Record<string, string> = {
   deploy: "배포 방식",
   replication: "데이터 복제",
   external: "외부 연동",
+  // 아래는 그리기 전에 되묻는 갈림길(domain/clarify.ts)이 남기는 가정이다.
+  call_mode: "통화 방식",
+  llm_serving: "LLM 위치",
+  video_site: "관제 대상",
+  iot_link: "기기 연결",
+  net_separation: "망분리",
 };
 
 export const ASSUMPTION_CHOICES: Record<string, string[]> = {
@@ -17,6 +23,11 @@ export const ASSUMPTION_CHOICES: Record<string, string[]> = {
   deploy: ["VM", "컨테이너", "Kubernetes", "서버리스"],
   replication: ["복제 없음", "비동기 복제", "동기 복제"],
   external: ["외부 연동 없음", "외부 연동 있음"],
+  call_mode: ["1:1 통화(단말끼리 직접)", "다자간(미디어 서버 경유)", "방송형(한 명이 송출)"],
+  llm_serving: ["외부 LLM API", "사내 서빙(GPU 서버)"],
+  video_site: ["지자체 통합관제센터", "일반 시설(사옥·공장·매장 등)"],
+  iot_link: ["휴대폰 앱 경유(BLE)", "게이트웨이 경유", "기기가 직접 클라우드로(Wi-Fi·LTE)"],
+  net_separation: ["공공·금융(망분리 대상)", "일반 기업(망분리 대상 아님)"],
 };
 
 /** Marks an assumption confirmed (new keys allowed). Pure: the input state is not mutated. */

@@ -34,7 +34,7 @@ const warnCount = async (page: Page) => Number(/(\d+)개/.exec((await warnBadge(
 
 test("warnings: chat chip, card list, badge, ignore, restore", async ({ page }) => {
   await setup(page);
-  await send(page, "공개DB 붙은 서비스");
+  await send(page, "AWS 에 공개DB 붙은 서비스");
   // 점검 중 단계(위험 요소 점검)는 아주 짧게 지나갈 수 있어 관찰을 요구하지 않는다. 결과 줄만 본다.
   await expect(cautionChips(page).first()).toBeVisible({ timeout: 30_000 });
   await expect(page.getByText(SUMMARY)).toBeVisible();

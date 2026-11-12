@@ -10,16 +10,17 @@ import { FLY_ORIGIN_ATTR } from "../FlyLayer";
 import { useShell } from "../Shell";
 
 import styles from "./chat.module.css";
+import { ClarifyCard } from "./ClarifyCard";
 import { type Mention, MentionInput, type MentionInputHandle } from "./MentionInput";
 import { SessionPicker, type SessionPickerProps } from "./SessionPicker";
-import type { ChatLine, ProgressCard } from "./useChatTurn";
+import type { ChatLine, ProgressCard, SendOptions } from "./useChatTurn";
 
 export type LlmHealth = { qwen: string; clef: string };
 
 export interface ChatPanelProps {
   lines: ChatLine[];
   busy: boolean;
-  onSend(text: string): void;
+  onSend(text: string, opts?: SendOptions): void;
   onStop(): void;
   health: LlmHealth | null;
   disabledReason?: string;
@@ -241,9 +242,10 @@ export function ChatPanel({
     const a = document.activeElement;
     if (!a || a === document.body || composer.current?.contains(a)) mentionRef.current?.focus();
   }, [busy, mentionRef]);
-  const send = (text: string) => {
+  const send = (text: string, opts?: SendOptions) => {
     refocus.current = !!composer.current?.contains(document.activeElement);
-    onSend(text);
+    if (opts) onSend(text, opts);
+    else onSend(text);
   };
 
   // 세션을 바꾸면 입력칸이 새로 그려져 비므로 보내기도 비활성으로 돌린다.
@@ -267,6 +269,8 @@ export function ChatPanel({
   const blocked = busy || elsewhereBusy || loading || !!disabledReason;
   // 보낼 수 있을 때만 금색. 비었거나 차례가 도는 동안은 무채색 비활성(중단이 그때의 동작이다).
   const canSubmit = !blocked && hasContent;
+  // 되묻기 카드는 대화의 마지막 줄일 때만 고를 수 있다(뒤에 다른 말이 이어졌으면 지난 질문이다).
+  const openClarifyId = lines.at(-1)?.kind === "clarify" ? lines.at(-1)!.id : null;
   const lastCard = lines.findLast((l) => l.kind === "card" && l.card)?.card;
   const down = health !== null && health.qwen !== "ok";
 
@@ -307,6 +311,17 @@ export function ChatPanel({
   /** 말풍선·본문 한 줄. inTurn: AI 메시지 안의 줄(안내 글은 왼쪽 작은 글, 밖이면 가운데). */
   const renderLine = (l: ChatLine, inTurn: boolean) => {
     if (CHIP_KINDS.has(l.kind)) return <div key={l.id}>{renderChip(l)}</div>;
+    if (l.kind === "clarify") {
+      if (ask || !l.clarify) return null;
+      return (
+        <ClarifyCard
+          key={l.id}
+          questions={l.clarify}
+          disabled={blocked || l.id !== openClarifyId}
+          onSubmit={(summary, choices) => send(summary, { choices })}
+        />
+      );
+    }
     if (l.kind === "handoff") {
       if (!ask) return null;
       return (

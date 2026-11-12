@@ -126,6 +126,11 @@ export function messagesToLines(rows: Row[]): ChatLine[] {
       answer = m.content.slice(joined.length).replace(/^\n/, "");
     }
     if (answer.trim()) out.push({ id: m.id, kind: "assistant", text: answer, meta, ...t });
+    // 그리기 전에 되물은 차례: 선택 카드만 두고 요약 칩은 두지 않는다.
+    if (meta.clarify) {
+      out.push({ id: `${m.id}-clarify`, kind: "clarify", text: "", clarify: meta.clarify.questions, ...t });
+      continue;
+    }
     // 질문 세션에서 구성도 대화로 넘긴 답: 바로 앞 사용자 글을 넘기는 버튼. 요약 칩은 두지 않는다.
     if (meta.handoff) {
       // 저장된 넘긴 글(meta.handoffText)을 먼저 쓰고, 옛 줄은 앞 사용자 글로. 둘 다 비면 버튼 없이 안내 글만 둔다.

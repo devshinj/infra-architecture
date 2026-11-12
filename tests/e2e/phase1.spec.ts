@@ -64,7 +64,7 @@ test("가입 → 프로젝트·구성도 → 샘플 → 선택 → 편집 이동
   // 샘플 하나 더 → 이력 v3 → v2 로 되돌리기 → v4
   // 2단계부터 샘플 불러오기는 빈 구성도에서만 보인다. 두 번째 버전은 (가짜 AI 서버로) 대화 생성으로 만든다.
   await page.getByRole("tab", { name: "대화" }).click();
-  await page.getByPlaceholder(/만들고 싶은 서비스/).fill("쇼핑몰 구성도 그려줘");
+  await page.getByPlaceholder(/만들고 싶은 서비스/).fill("AWS 쇼핑몰 구성도 그려줘");
   await page.getByRole("button", { name: "보내기" }).click();
   await expect(page.getByText(/노드 \d+ · 연결 \d+ · (?:\d+곳 바꿨어요|바꾼 곳이 없어요)/)).toBeVisible({ timeout: 30_000 });
   await expect(nodes).not.toHaveCount(9);
