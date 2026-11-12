@@ -7,6 +7,12 @@ import { COMMAND_EXAMPLES, DRAW_RULES, GUIDE_ONLY_LINES, KIND_BLOCK, networkGuid
 import { ATTR_LIST, SYSTEM_PROMPT } from "@/server/chat/prompt";
 
 describe("그리기 규칙 공용 모듈", () => {
+  test("영상·미디어 연결 규칙이 공용 글에 있다", () => {
+    expect(DRAW_RULES).toContain("direction 만 쓴다");
+    expect(DRAW_RULES).toContain("보기만 하는 원격 시청은");
+    expect(DRAW_RULES).toContain("스트리밍 분배 서버(media_server)");
+  });
+
   test("Qwen 전용 줄은 공용 글에 없다", () => {
     for (const text of [DRAW_RULES, COMMAND_EXAMPLES]) {
       expect(text).not.toContain('"op":"say"');

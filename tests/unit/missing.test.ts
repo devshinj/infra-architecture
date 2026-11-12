@@ -115,6 +115,15 @@ test("crossing edge without payload/direction adds two items labelled 전달물/
   expect(requiredKeysFor(crossState(), "edge", "e")).toEqual(["label", "payload", "direction"]);
 });
 
+test("망을 넘는 video·media 연결은 전달물을 묻지 않고 방향만 묻는다", () => {
+  for (const medium of ["video", "media"] as const) {
+    const s = crossState({ medium });
+    expect(edgeItems(s).map((i) => i.key)).toEqual(["direction"]);
+    expect(requiredKeysFor(s, "edge", "e")).toEqual(["label", "direction"]);
+  }
+  expect(edgeItems(crossState({ medium: "ip" })).map((i) => i.key)).toEqual(["payload", "direction"]);
+});
+
 test("filled values clear them", () => {
   expect(edgeItems(crossState({ payload: "api", direction: "one_way" }))).toEqual([]);
   expect(edgeItems(crossState({ payload: "file" })).map((i) => i.key)).toEqual(["direction"]);

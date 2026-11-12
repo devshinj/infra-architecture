@@ -74,7 +74,7 @@ export const DRAW_RULE_GROUPS = [
 - k8s_cluster 는 그룹(group_kind)으로만 쓴다. 노드 kind 로 쓰지 않는다.
 - 사용자가 모르는 값(IP, hostname, 스펙)은 null 로 둔다. 지어내지 않는다.
 - 업무망·인터넷망처럼 분리된 망은 network_zone 영역으로 그리고 망 이름을 label 에 쓴다.
-- 서로 다른 망을 잇는 통신은 방화벽(firewall)·망연계 솔루션(network_link)·VPN 노드를 거치게 그리고, 망을 넘는 연결에는 payload(api 또는 file)와 direction(one_way 또는 two_way)을 쓴다. 같은 망 안의 연결에는 사용자가 말하지 않은 payload·direction 을 쓰지 않는다.
+- 서로 다른 망을 잇는 통신은 방화벽(firewall)·망연계 솔루션(network_link)·VPN 노드를 거치게 그리고, 망을 넘는 연결에는 payload(api 또는 file)와 direction(one_way 또는 two_way)을 쓴다. 단, medium 이 video·media 인 영상·음성 연결에는 payload 를 쓰지 않고 direction 만 쓴다. 같은 망 안의 연결에는 사용자가 말하지 않은 payload·direction 을 쓰지 않는다.
 - 방화벽·WAF·로드밸런서·API 게이트웨이·망연계·VPN 처럼 통신이 거쳐 가는 노드를 넣으면, 그 노드가 지킬 기존 연결을 remove_edge 하고 앞 노드 → 새 노드 → 뒤 노드로 다시 잇는다(예: 웹 서버 → WAS 를 웹 서버 → 방화벽 → WAS 로). 연결 없이 노드만 놓지 않는다.
 - network_zone 영역에는 set_zone_type 으로 망 종류를 붙인다. type 은 "망 종류:" 목록의 key 만 쓰고, 맞는 것이 없거나 근거가 없으면 쓰지 않는다. 요약에 type=…(확정) 이 붙은 망은 바꾸지 않는다. 종류가 없는 기존 망도 이번 요청에 근거가 있으면 붙인다.
 - 이번 요청에서 새로 그리거나 종류를 붙인 망처럼 "망 짝 규칙"에 없는 짝은 두 망 종류로 따져 "기관 규칙"을 먼저, 없으면 "기본 짝 규칙", 그것도 없으면 "등급 규칙"을 망 짝 규칙으로 쓴다.
@@ -91,12 +91,12 @@ export const DRAW_RULE_GROUPS = [
 - Kafka/MSK/Kinesis 는 stream, SQS/RabbitMQ 는 queue.
 - CDN, WAF, DNS 처럼 VPC 밖 전역 서비스는 VPC 밖(리전 그룹 또는 최상위)에 둔다.
 - 사용자(client_*)에서 시작하는 진입 연결을 반드시 그린다.
-- medium(통신 수단)은 보통의 IP 통신이 아닐 때만 쓴다: 근거리 무선(BLE·NFC·Zigbee 등)은 wireless, 카메라 영상 스트림(RTSP 등)은 video, 실시간 영상·음성(WebRTC)은 media, 기기와 컨트롤러를 바로 잇는 RS-485·RS-232 직렬 선(OSDP·Wiegand·Modbus RTU 등)은 serial. 프로토콜 이름은 label 에 적는다(예: "BLE(GATT)", "RTSP", "SRTP/UDP", "OSDP(RS-485)"). video·media 연결은 영상·음성이 흐르는 방향으로 그린다.
+- medium(통신 수단)은 보통의 IP 통신이 아닐 때만 쓴다: 근거리 무선(BLE·NFC·Zigbee 등)은 wireless, 카메라 영상 스트림(RTSP 등)은 video, 실시간 영상·음성(WebRTC)은 media, 기기와 컨트롤러를 바로 잇는 RS-485·RS-232 직렬 선(OSDP·Wiegand·Modbus RTU 등)은 serial. 프로토콜 이름은 label 에 적는다(예: "BLE(GATT)", "RTSP", "SRTP/UDP", "OSDP(RS-485)"). video 연결은 영상이 흐르는 방향으로 그리고, media 연결의 방향은 아래 WebRTC 규칙을 따른다.
 - wireless·serial 연결은 망·방화벽을 거치지 않고 두 기기를 바로 잇는다. BLE·Zigbee·NFC 만 쓰는 기기(iot_device)는 서버에 바로 잇지 않고 휴대폰 앱(client_mobile)이나 iot_gateway 를 거친다.
 - 기기·게이트웨이는 mqtt_broker 로 먼저 건다(기기 → 브로커, 예: "MQTT/TLS 8883"). 브로커에서 기기로 내려가는 연결은 따로 그리지 않는다. 브로커에서 뒤쪽 처리로 가는 연결은 async 다.
-- 카메라(camera)는 video_recorder(NVR·VMS)에 video 로 잇고, 관제 화면(control_display)은 video_recorder 에서 영상을 받는다. 카메라를 관제 화면이나 인터넷에 바로 잇지 않는다. 밖에서 볼 때는 경계 구역의 media_server 를 거친다.
+- 카메라(camera)는 video_recorder(NVR·VMS)에 video 로 잇고, 관제 화면(control_display)은 video_recorder 에서 영상을 받는다. 녹화서버 여러 대의 영상을 스트리밍 분배 서버(media_server)로 모아 나눠 주는 대규모 구성이면 관제 화면은 그 분배 서버에서 받는다. 카메라를 관제 화면이나 인터넷에 바로 잇지 않는다. 밖에서 볼 때는 경계 구역의 media_server 를 거친다.
 - 영상 분석·LLM·임베딩 서빙은 model_server 로 그리고 attrs 의 model·gpu 에 값을 쓴다. GPU 를 따로 노드로 만들지 않는다.
-- WebRTC 는 연결 두 개로 그린다: 단말 → signaling_server(request, 예: "WSS 443"), 단말 → media_server(medium media). media 연결은 L7 로드밸런서·WAF·API 게이트웨이·CDN 을 거치지 않는다. 단말끼리 직접 잇는 media 는 1:1 통화일 때만 그린다.
+- WebRTC 는 연결 두 개로 그린다: 단말 → signaling_server(request, 예: "WSS 443")와 media 연결 하나. 서로 주고받는 통화·회의는 단말 → media_server(medium media, 망을 넘으면 direction two_way)로, 보기만 하는 원격 시청은 영상이 흐르는 방향인 media_server → 단말(medium media, 망을 넘으면 direction one_way)로 그린다. media 연결은 L7 로드밸런서·WAF·API 게이트웨이·CDN 을 거치지 않는다. 단말끼리 직접 잇는 media 는 1:1 통화일 때만 그린다.
 - 외부 LLM API 는 external_service 안의 external_api 로 그리고 앱(또는 llm_gateway)에서 밖으로 나가는 request 로 잇는다. 사내 서빙은 앱 → llm_gateway → model_server 순으로 잇는다. 검색 증강(RAG)의 임베딩 저장소는 vector_db 다.
 - AI 에이전트(ai_agent)는 모델(model_server 또는 외부 LLM)과 tool_server(MCP 서버)에 각각 잇는다. 모델에서 tool_server 나 사내 시스템으로 바로 잇지 않는다. tool_server 에서 사내 시스템으로는 그 시스템의 원래 연결로 잇는다.`,
   `- 사용자가 채워야 할 정보의 값을 알려 주면 update_node(attrs) 또는 update_edge(label·payload·direction·medium) 로 그 값만 반영한다. 노드·연결을 새로 만들지 않는다.

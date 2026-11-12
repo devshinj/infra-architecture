@@ -23,7 +23,7 @@ import { diagramUrl } from "./url";
 
 const FIRST_DIAGRAM_NAME = "새 구성도";
 const VERSION_LIST_LIMIT = 50;
-const GUIDE_MAX = 20000;
+const GUIDE_MAX = 24000;
 
 const INTRO = `# InfraSketch 그리기 안내서
 
