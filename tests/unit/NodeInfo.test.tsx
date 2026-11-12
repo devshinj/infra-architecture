@@ -108,6 +108,42 @@ test("기타 정보 is omitted when every required key is already in the other s
   expect(screen.queryByRole("heading", { name: "기타 정보" })).not.toBeInTheDocument();
 });
 
+const named = (kind: string, label: string, attrs: Record<string, string>) => ({
+  ...emptyState(),
+  nodes: { n1: { id: "n1", kind, label, parent: null, attrs } },
+}) as never;
+
+test("관리형 노드는 비어 있는 서버 칸(CPU·RAM·IP 등)과 AZ 를 미입력으로 늘어놓지 않고 운영 정보로 보인다", () => {
+  render(<NodeInfo state={named("db_rdb", "주문 DB", { managed: "yes", sw: "MySQL", multi_az: "yes" })} selectedId="n1" onSelect={vi.fn()} />);
+  for (const label of ["CPU", "RAM", "디스크", "OS", "호스트명", "IP", "VIP", "AZ"]) expect(screen.queryByText(label)).not.toBeInTheDocument();
+  expect(screen.queryByRole("heading", { name: "서버 정보" })).not.toBeInTheDocument();
+  const sec = screen.getByRole("heading", { name: "운영 정보" }).closest("section")!;
+  expect(within(sec).getByText("클라우드 관리형")).toBeInTheDocument();
+  expect(within(sec).queryByText(/이름으로 판단/)).not.toBeInTheDocument();
+  expect(within(sec).getByText("Multi-AZ")).toBeInTheDocument();
+  expect(within(sec).getByText("예")).toBeInTheDocument();
+  expect(screen.getByText("MySQL")).toBeInTheDocument();
+});
+
+test("관리형 노드라도 적힌 서버 칸은 보이고, Multi-AZ 가 비어 있으면 미입력이다", () => {
+  render(<NodeInfo state={named("cache", "캐시", { managed: "yes", az: "2a" })} selectedId="n1" onSelect={vi.fn()} />);
+  const sec = screen.getByRole("heading", { name: "운영 정보" }).closest("section")!;
+  expect(within(sec).getByText("2a")).toBeInTheDocument();
+  const multi = within(sec).getByText("Multi-AZ").closest("div")!;
+  expect(within(multi).getByText("미입력")).toBeInTheDocument();
+});
+
+test("관리형 칸이 없으면 제품명으로 알아보고 그렇다고 밝힌다; 아니오면 서버로 본다", () => {
+  const { rerender } = render(<NodeInfo state={named("lb_l7", "ALB", {})} selectedId="n1" onSelect={vi.fn()} />);
+  const sec = screen.getByRole("heading", { name: "운영 정보" }).closest("section")!;
+  expect(within(sec).getByText(/이름으로 판단/)).toBeInTheDocument();
+  expect(within(sec).queryByText("Multi-AZ")).not.toBeInTheDocument();
+  expect(screen.queryByText("CPU")).not.toBeInTheDocument();
+  rerender(<NodeInfo state={named("lb_l7", "ALB", { managed: "no" })} selectedId="n1" onSelect={vi.fn()} />);
+  expect(screen.getByRole("heading", { name: "서버 정보" })).toBeInTheDocument();
+  expect(screen.getByText("CPU")).toBeInTheDocument();
+});
+
 const risky = (o: { ignored?: string[] } = {}) => ({
   ...emptyState(),
   nodes: {

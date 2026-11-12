@@ -1,6 +1,6 @@
 import { isDirectCrossing } from "./boundary";
 import { categoryOf } from "./catalog";
-import { isManaged, yesNo } from "./managed";
+import { isManaged, MULTI_AZ_KINDS, yesNo } from "./managed";
 import type { NetworkKnowledge } from "./network";
 import { evaluateNetworkRules, LINK_RULES } from "./networkRules";
 import type { DNode, DiagramState, Edge, Warning, WarningLevel } from "./types";
@@ -21,8 +21,6 @@ export const DATA_KINDS = ["db_rdb", "db_nosql", "cache", "search", "db_proxy", 
 const SPOF_KINDS = ["web_server", "was", "app_server", "db_rdb", "db_nosql", "lb_l4", "lb_l7", "db_proxy", "cache"];
 /** 이 영역 안에 있으면 클라우드 노드로 본다(환경 가정은 자유 문장이라 쓰지 않는다). */
 const CLOUD_GROUPS = ["cloud_region", "vpc"];
-/** 관리형이면 여러 AZ 복제를 따로 켜야 하는 종류(RDS·Aurora·ElastiCache 등). 나머지 관리형(ALB·NLB·RDS Proxy 등)은 사업자가 이중화한다. */
-const MULTI_AZ_KINDS = ["db_rdb", "db_nosql", "cache"];
 
 const azOf = (n: DNode): string | null => {
   const v = n.attrs.az;
@@ -197,7 +195,7 @@ function make(state: DiagramState, rule: Rule, node: DNode, edge?: Edge, level: 
 
 /**
  * 이중화 점검. 클라우드 영역(cloud_region·vpc) 밖은 온프레미스 규칙(VIP 묶음), 안은 클라우드 규칙이다.
- * - 관리형(attrs.managed=yes) LB·컴퓨트·DB 중계는 사업자가 여러 AZ 로 이중화하므로 보지 않는다.
+ * - 관리형(attrs.managed=yes, 칸이 비었으면 ALB·RDS 같은 제품명) LB·컴퓨트·DB 중계는 사업자가 여러 AZ 로 이중화하므로 보지 않는다.
  * - 관리형 DB·캐시는 attrs.multi_az 를 본다: no 면 경고, 모르면 확인 필요.
  * - 직접 운영하는 서버는 묶음 밖이면 spof_cloud, 묶음 안이면 구성원의 AZ 가 2곳 이상인지 본다(모르면 확인 필요).
  */

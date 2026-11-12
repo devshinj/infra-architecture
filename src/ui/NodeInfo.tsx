@@ -7,6 +7,7 @@ import { CategoryIcon } from "@/canvas/icons";
 import { MEDIUM_LABELS } from "@/canvas/mediumMark";
 import { categoryOf, EDGE_KINDS, GROUP_KINDS, NODE_KINDS } from "@/domain/catalog";
 import { flowsThrough, type Flow } from "@/domain/flows";
+import { managedBasis, MULTI_AZ_KINDS, SERVER_ONLY_ATTRS, yesNo } from "@/domain/managed";
 import { FIELD_LABELS, isEmpty } from "@/domain/missing";
 import type { DiagramState, DNode, Warning } from "@/domain/types";
 import { mergeWarnings } from "@/domain/warnings";
@@ -58,17 +59,31 @@ const SPEC_FIELDS: [string, string][] = [["sw", "SW"], ["cpu", "CPU"], ["ram", "
 const SERVER_FIELDS: [string, string][] = [["hostname", "호스트명"], ["ip", "IP"], ["vip", "VIP"], ["az", "AZ"]];
 const MISSING = "미입력";
 const UNKNOWN = "모름";
+/** 관리형 노드에서 비어 있으면 감추는 칸: 서버 칸과 AZ(사업자가 여러 AZ 에 둔다). SW·Multi-AZ 는 비어도 보인다. */
+const MANAGED_HIDE_EMPTY: ReadonlySet<string> = new Set([...SERVER_ONLY_ATTRS, "az"]);
+/** Multi-AZ 칸 값: 예/아니오로 읽히면 한국어로, 아니면 적힌 그대로(비었으면 그대로 비워 미입력으로 보인다). */
+const multiAzText = (v: unknown) => {
+  const yn = yesNo(v);
+  return yn === "yes" ? "예" : yn === "no" ? "아니오" : (v as DNode["attrs"][string]);
+};
 
 const kindName = (kind: DNode["kind"]) => NODE_KINDS.find((k) => k.kind === kind)?.labelKo ?? kind;
 const edgeKindName = (kind: string) => EDGE_KINDS.find((k) => k.kind === kind)?.label ?? kind;
 const nameOf = (state: DiagramState, id: string) => state.nodes[id]?.label ?? state.groups[id]?.label ?? id;
 
-function Fields({ title, fields, attrs, unknown }: { title: string; fields: [string, string][]; attrs: DNode["attrs"]; unknown: string[] }) {
+/**
+ * 칸 목록 절. `hideEmpty` 칸은 비어 있으면 줄째 뺀다(관리형 서비스의 서버 칸: 사업자가 운영해 정할 수 없거나 없는 값).
+ * `lead` 는 칸 앞에 붙는 고정 줄(관리형 표시). 보일 줄이 하나도 없으면 절이 없다.
+ */
+function Fields({ title, fields, attrs, unknown, hideEmpty, lead }: { title: string; fields: [string, string][]; attrs: DNode["attrs"]; unknown: string[]; hideEmpty?: ReadonlySet<string>; lead?: React.ReactNode }) {
+  const shown = hideEmpty ? fields.filter(([key]) => !(hideEmpty.has(key) && isEmpty(attrs[key]) && !unknown.includes(key))) : fields;
+  if (shown.length === 0 && !lead) return null;
   return (
     <section className={styles.section}>
       <h3 className={styles.heading}>{title}</h3>
       <dl className={styles.fields}>
-        {fields.map(([key, label]) => {
+        {lead}
+        {shown.map(([key, label]) => {
           const v = attrs[key];
           const empty = isEmpty(v);
           return (
@@ -280,12 +295,25 @@ export function NodeInfo({ state, selectedId, onSelect, onMention, mentionDisabl
       const otherId = incoming ? e.from : e.to;
       return { id: e.id, otherId, text: `${incoming ? "←" : "→"} ${edgeKindName(e.edgeKind)}${e.label ? ` · ${e.label}` : ""}` };
     });
+  const chips = [...new Set(relations.map((r) => r.otherId))].filter((id) => state.nodes[id]);
+  // 관리형 서비스(ALB·RDS 등): 서버 칸(CPU·RAM·IP 등)과 AZ 는 비어 있으면 줄째 빼고, 서버 정보 대신 운영 정보로 보인다.
+  const managed = managedBasis(node);
+  const hideEmpty = managed ? MANAGED_HIDE_EMPTY : undefined;
+  const serverFields: [string, string][] = managed && MULTI_AZ_KINDS.includes(node.kind) ? [...SERVER_FIELDS, ["multi_az", "Multi-AZ"]] : SERVER_FIELDS;
   // 서버·스펙 두 구역에 없는 필수 칸은 따로 모아 보여 준다.
-  const shown = new Set([...SPEC_FIELDS, ...SERVER_FIELDS].map(([k]) => k));
+  const shown = new Set([...SPEC_FIELDS, ...serverFields].map(([k]) => k));
   const otherFields: [string, string][] = (NODE_KINDS.find((k) => k.kind === node.kind)?.requiredAttrs ?? [])
     .filter((k) => !shown.has(k))
     .map((k) => [k, FIELD_LABELS[k] ?? k]);
-  const chips = [...new Set(relations.map((r) => r.otherId))].filter((id) => state.nodes[id]);
+  const managedRow = managed && (
+    <div className={styles.field}>
+      <dt>운영</dt>
+      <dd>
+        클라우드 관리형{managed === "name" && <span className={styles.relText}> · 이름으로 판단</span>}
+      </dd>
+    </div>
+  );
+  const attrsShown = managed ? { ...node.attrs, multi_az: multiAzText(node.attrs.multi_az) } : node.attrs;
 
   return (
     <div className={styles.info}>
@@ -302,9 +330,15 @@ export function NodeInfo({ state, selectedId, onSelect, onMention, mentionDisabl
       {node.guess && <LinkGuessPart nodeId={node.id} {...(linkGuess ? { save: linkGuess } : {})} />}
       {explain && <Explanation key={node.id} {...explain} />}
       <Cautions {...pick((w) => w.nodeId === node.id)} {...caution} />
-      <Fields title="스펙 · SW" fields={SPEC_FIELDS} attrs={node.attrs} unknown={node.unknown ?? []} />
-      <Fields title="서버 정보" fields={SERVER_FIELDS} attrs={node.attrs} unknown={node.unknown ?? []} />
-      {otherFields.length > 0 && <Fields title="기타 정보" fields={otherFields} attrs={node.attrs} unknown={node.unknown ?? []} />}
+      <Fields title="스펙 · SW" fields={SPEC_FIELDS} attrs={node.attrs} unknown={node.unknown ?? []} {...(hideEmpty ? { hideEmpty } : {})} />
+      <Fields
+        title={managed ? "운영 정보" : "서버 정보"}
+        fields={serverFields}
+        attrs={attrsShown}
+        unknown={node.unknown ?? []}
+        {...(hideEmpty ? { hideEmpty, lead: managedRow } : {})}
+      />
+      {otherFields.length > 0 && <Fields title="기타 정보" fields={otherFields} attrs={node.attrs} unknown={node.unknown ?? []} {...(hideEmpty ? { hideEmpty } : {})} />}
       <section className={styles.section}>
         <h3 className={styles.heading}>연관관계</h3>
         {relations.length === 0 ? (

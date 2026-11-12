@@ -217,9 +217,24 @@ test("managed load balancer / DB proxy / compute inside a VPC raise no redundanc
     const s = build([withAttrs(node("m", kind, "M", "priv"), { managed: "yes" })], cloud);
     expect(ids(s).filter((id) => id.endsWith(":m") && !id.startsWith("unused_passthrough"))).toEqual([]);
   }
-  // 같은 ALB 라도 관리형 표시가 없으면 직접 운영하는 서버로 보고 묶음 밖이라 알린다.
-  const plain = build([node("alb", "lb_l7", "ALB", "priv")], cloud);
-  expect(ids(plain).filter((id) => !id.startsWith("unused_passthrough"))).toEqual(["spof_cloud:alb"]);
+  // 관리형 칸이 "아니오"면 이름이 ALB 라도 직접 운영하는 서버로 보고 묶음 밖이라 알린다.
+  const selfRun = build([withAttrs(node("alb", "lb_l7", "ALB", "priv"), { managed: "no" })], cloud);
+  expect(ids(selfRun).filter((id) => !id.startsWith("unused_passthrough"))).toEqual(["spof_cloud:alb"]);
+  // 관리형 칸이 없는 이름 모를 LB 도 직접 운영으로 본다.
+  const plain = build([node("lb", "lb_l7", "사내 LB", "priv")], cloud);
+  expect(ids(plain).filter((id) => !id.startsWith("unused_passthrough"))).toEqual(["spof_cloud:lb"]);
+});
+
+test("managed is read from the product name when the field is empty (diagrams saved before the field, or AI that left it out)", () => {
+  // 옛 구성도의 ALB: 관리형 칸이 없어도 이름으로 관리형이라 이중화 경고를 내지 않는다.
+  const alb = build([node("alb", "lb_l7", "ALB", "priv")], cloud);
+  expect(ids(alb).filter((id) => !id.startsWith("unused_passthrough"))).toEqual([]);
+  // 관리형 DB 는 이름으로 알아보고 Multi-AZ 를 확인한다(spof_cloud 가 아니다).
+  const rds = build([node("rds", "db_rdb", "RDS MySQL", "priv")], cloud);
+  expect(ids(rds)).toEqual(["multi_az:rds"]);
+  // 부제·SW 칸의 제품명도 본다.
+  const cache = build([withAttrs({ ...node("c", "cache", "세션 캐시", "priv"), sub: "Amazon ElastiCache" }, { multi_az: "yes" })], cloud);
+  expect(ids(cache).filter((id) => !id.startsWith("cache_without_db"))).toEqual([]);
 });
 
 test("managed DB/cache: multi_az yes is fine, no warns, unknown is a check", () => {
