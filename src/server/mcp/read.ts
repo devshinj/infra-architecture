@@ -2,6 +2,7 @@ import { desc, eq } from "drizzle-orm";
 
 import { db } from "@/db/client";
 import { diagramVersions } from "@/db/schema";
+import { CLARIFY_AUTO, CLARIFY_KEYS, CLARIFY_MAX, clarifyGuideLines } from "@/domain/clarify";
 import { computeMissing, type MissingItem } from "@/domain/missing";
 import type { NetworkKnowledge } from "@/domain/network";
 import { emptyState, type DiagramState, type Warning } from "@/domain/types";
@@ -52,7 +53,17 @@ commands 는 명령 하나하나를 **배열의 원소**로 담은 목록이에�
 - 모르는 값은 비워 둬요. IP·hostname·스펙처럼 사용자가 알려 주지 않은 값은 지어내지 않고 null 로 두거나 쓰지 않아요.
 - 흐름은 버전과 따로 저장돼요. 흐름만 바꿀 때는 base_version 검사를 받지 않아요(지금 구성으로 검사해요). 구성도 버전을 되돌려도 흐름은 그대로이고, 연결이 사라지면 흐름이 끊겨요. 흐름을 고치기 전에 get_diagram 으로 최신 흐름(flows)을 읽고, 남기는 단계의 글은 그대로 써요.
 - 구성도를 바꿔 흐름이 끊겨도 흐름을 일부러 고치지 않아요. 결과의 끊긴 흐름 목록을 사용자에게 알려요.
-- 이 연결은 지우기·망 지식 고치기·계정 설정은 못 해요.`;
+- 이 연결은 지우기·망 지식 고치기·계정 설정은 못 해요.
+- 빈 구성도에 처음 그릴 때는 흐름 3~5개도 add_flow 로 함께 보내요. 사용자가 시작하는 흐름(origin user)과 시스템 흐름(origin system)을 섞어요. 앱 대화는 처음 그린 뒤 흐름을 자동으로 제안하지만 MCP 로 그리면 그렇지 않아서예요. 그리기 규칙의 "요청에 흐름 이야기가 없으면 흐름 명령을 쓰지 않는다"는 이미 그린 구성도를 고칠 때 이야기예요.`;
+
+const CLARIFY = `## 그리기 전에 물을 것
+
+앱 대화는 아래 갈림길이 요청에 걸리면 그리기 전에 사용자에게 물어요. MCP 로 그릴 때도 같은 때에 사용자에게 물어요. 한 번에 ${CLARIFY_MAX}개까지 묻고, 고르기 어려우면 "${CLARIFY_AUTO}"를 고를 수 있게 해요.
+- 사용자가 고르면 그 값을 set_assumption(key, 고른 값)으로 먼저 보내고 그 값대로 그려요.
+- 사용자가 맡기면 알맞게 정하고, 정한 값을 set_assumption 으로 밝혀요.
+- 그 key 의 가정이 이미 있으면 묻지 않아요.
+
+${clarifyGuideLines().join("\n")}`;
 
 const GLOSSARY = `## 용어 풀이
 
@@ -71,7 +82,7 @@ const GLOSSARY = `## 용어 풀이
 - <KIND>, <GROUP_KIND>, <EDGE_KIND>: 아래 'KIND 허용값' 목록에서 하나를 골라 그 글자 그대로 써요.
 - "영문-소문자-id": 영문 소문자·숫자·하이픈으로 직접 정하는 id 예요(예: was-1). 노드·그룹·연결 id 는 서로 겹치면 안 돼요.
 - e-<from>-<to>: 연결 id 를 정하는 습관 예일 뿐이에요. 양 끝 id 로 e-web-1-was-1 처럼 지어요.
-- "environment|scale|redundancy|deploy|replication|external": 이 가운데 하나를 key 로 써요.
+- "environment|scale|redundancy|deploy|replication|external": 이 가운데 하나를 key 로 써요. '그리기 전에 물을 것'의 key(${CLARIFY_KEYS.filter((k) => k !== "environment").join("·")})와 망연계 거절 no_link:<망 id>--<망 id> 도 key 로 써요.
 - "상위 그룹 id 또는 null"·"그룹 id 또는 null": 이미 있는 그룹 id 를 쓰거나, 최상위면 null 이에요.
 - "망 종류 key 또는 null": 망 지식의 key 를 쓰거나, 종류를 지우려면 null 이에요.
 - ... 와 "..." 같은 말줄임과 예시 값(Tomcat 10 등)은 실제 값으로 바꿔 써요.`;
@@ -117,6 +128,7 @@ export function buildGuide(k: NetworkKnowledge): string {
   const head = [
     INTRO,
     HOW_TO_USE,
+    CLARIFY,
     GLOSSARY,
     `## 명령 예\n\n각 줄이 commands 배열의 원소 하나예요.\n\n${COMMAND_EXAMPLES}`,
     `## 허용값\n\n${KIND_BLOCK}`,

@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest";
 
 import { applyCommands } from "@/domain/apply";
 import { ASSUMPTION_CHOICES, ASSUMPTION_LABELS } from "@/domain/assumptions";
-import { choiceValue, choicesNote, choicesSummary, CLARIFY_AUTO, CLARIFY_AUTO_VALUE, CLARIFY_MAX, detectForks, validChoices } from "@/domain/clarify";
+import { choiceValue, choicesNote, choicesSummary, CLARIFY_AUTO, CLARIFY_AUTO_VALUE, CLARIFY_KEYS, CLARIFY_MAX, clarifyGuideLines, detectForks, validChoices } from "@/domain/clarify";
 import type { Command } from "@/domain/commands";
 import { emptyState } from "@/domain/types";
 
@@ -92,5 +92,22 @@ describe("고른 답 다루기", () => {
       "사용자가 고른 것(그대로 따른다): 통화 방식 = 다자간(미디어 서버 경유)\n사용자가 맡긴 것(알맞게 정하고 set_assumption 으로 밝힌다): LLM 위치(key llm_serving)",
     );
     expect(choicesNote({ llm_serving: "외부 LLM API" })).toBe("사용자가 고른 것(그대로 따른다): LLM 위치 = 외부 LLM API");
+  });
+});
+
+describe("clarifyGuideLines", () => {
+  test("갈림길마다 한 줄, key 와 모든 선택지를 담는다", () => {
+    const lines = clarifyGuideLines();
+    expect(CLARIFY_KEYS).toHaveLength(6);
+    expect(lines).toHaveLength(6);
+    CLARIFY_KEYS.forEach((key, i) => {
+      expect(lines[i]).toContain(`가정 key=${key}`);
+      for (const c of ASSUMPTION_CHOICES[key]) expect(lines[i]).toContain(c);
+    });
+  });
+  test("video_site 줄에 선택지와 이미 정해진 노드가 있다", () => {
+    const line = clarifyGuideLines().find((l) => l.includes("가정 key=video_site"))!;
+    expect(line).toContain("지자체 통합관제센터");
+    expect(line).toContain("camera·video_recorder");
   });
 });

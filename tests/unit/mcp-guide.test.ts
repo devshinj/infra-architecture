@@ -26,6 +26,13 @@ describe("buildGuide", () => {
     expect(guide).toContain("배열의 원소");
   });
 
+  test("그리기 전에 물을 것·첫 그리기 흐름·가정 key 안내가 있다", () => {
+    expect(guide).toContain("## 그리기 전에 물을 것");
+    expect(guide).toContain("가정 key=video_site");
+    expect(guide).toContain("흐름 3~5개");
+    expect(guide).toContain("no_link:");
+  });
+
   test("Qwen 전용 문구는 없다", () => {
     expect(guide).not.toContain('"op":"say"');
     expect(guide).not.toContain("JSON Lines");
