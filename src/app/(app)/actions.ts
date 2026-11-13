@@ -38,6 +38,7 @@ import {
   countZonesUsingType,
   deleteNetworkRule,
   deleteNetworkType,
+  getNetworkKnowledge,
   listNetworkRules,
   listNetworkTypes,
   resetNetworkType,
@@ -47,7 +48,7 @@ import {
   type NetTypeRow,
 } from "@/server/network";
 import { createMcpKey, deleteMcpKey, listMcpKeys } from "@/server/mcpKeys";
-import { getVersion, listVersions, restoreVersionWithMessage } from "@/server/versions";
+import { getVersion, listVersions, restoreVersionWithMessage, type RestoreMessageOpts } from "@/server/versions";
 
 const DIAGRAM_ROUTE = "/p/[projectId]/d/[diagramId]";
 
@@ -171,12 +172,23 @@ export async function importSampleAction(diagramId: string, sampleId: string): P
   });
 }
 
-export async function restoreVersionAction(diagramId: string, number: number): Promise<{ number: number }> {
+/** describeChange: 안내 둘째 줄에 구성 정보 카드 숫자의 변화를 붙인다(이력의 되돌리기). text 는 남긴 안내. */
+export async function restoreVersionAction(
+  diagramId: string,
+  number: number,
+  opts?: { describeChange?: boolean },
+): Promise<{ number: number; text: string }> {
   validVersion(number);
   return run(async (uid) => {
     await getOwnedDiagram(uid, diagramId);
     if ((await getVersion(diagramId, number)) === null) notFound();
-    const r = await restoreVersionWithMessage(diagramId, number);
+    // 카드와 같은 망 지식으로 센다. 못 읽으면 카드도 망 지식 없이 그리므로 없이 센다.
+    let restoreOpts: RestoreMessageOpts = {};
+    if (opts?.describeChange === true) {
+      const knowledge = await getNetworkKnowledge(uid).catch(() => null);
+      restoreOpts = { describeChange: knowledge ? { knowledge } : {} };
+    }
+    const r = await restoreVersionWithMessage(diagramId, number, restoreOpts);
     refreshDiagram();
     return r;
   });

@@ -457,6 +457,43 @@ test("restore while live refits the canvas at once, even after a turn that saved
   vi.mocked(listVersionsAction).mockResolvedValue([]);
 });
 
+test("restore: the info card shows the restored version's assumptions and warnings, not the ones before", async () => {
+  hookState.busy = false;
+  const row = (number: number) => ({ number, source: "ai", status: "complete", restoredFrom: null, createdAt: new Date(0) });
+  vi.mocked(listVersionsAction).mockResolvedValue([row(1), row(2)] as never);
+  const v1 = { ...emptyState(), nodes: Object.fromEntries([web("a")]) };
+  // v2: 가정 둘(미확정) + 캐시만 있는 경고.
+  const v2 = {
+    ...emptyState(),
+    nodes: { ...v1.nodes, c: { id: "c", kind: "cache", label: "c", parent: null, attrs: {} } },
+    assumptions: { environment: { value: "AWS", confirmed: false }, call_mode: { value: "1:1", confirmed: false } },
+  };
+  const counts = () => cardToggle().textContent;
+  // 기준: v1 을 처음부터 열었을 때의 카드 줄.
+  const fresh = render(ui({ number: 1, state: v1 } as never));
+  const expected = counts();
+  fresh.unmount();
+  const { rerender } = render(ui({ number: 2, state: v2 } as never));
+  expect(counts()).not.toBe(expected);
+  expect(counts()).toMatch(/미확정 가정\s*2/);
+  await act(async () => {
+    fireEvent.click(screen.getByRole("tab", { name: "이력" }));
+  });
+  fireEvent.click(await screen.findByRole("button", { name: /v1/ }));
+  hookState.pushLine.mockClear();
+  const notice = "v1로 되돌림 (새 버전 v3)\n주의 1 → 0 · 미확정 가정 2 → 0";
+  vi.mocked(restoreVersionAction).mockReset().mockResolvedValue({ number: 3, text: notice });
+  await act(async () => {
+    fireEvent.click(screen.getByRole("button", { name: "이 버전으로 되돌리기" }));
+  });
+  // 이력의 되돌리기: 서버가 변화를 붙인 안내를 남기고, 같은 줄을 대화에 바로 띄운다.
+  expect(restoreVersionAction).toHaveBeenCalledWith("d", 1, { describeChange: true });
+  await waitFor(() => expect(hookState.pushLine).toHaveBeenCalledWith({ kind: "system", text: notice }));
+  rerender(ui({ number: 3, state: v1 } as never));
+  expect(counts()).toBe(expected);
+  vi.mocked(listVersionsAction).mockResolvedValue([]);
+});
+
 test("add_node during a turn flies a dot from the progress card to the placed node, only on the 대화 tab", () => {
   hookState.busy = true;
   hookState.lines = [{ id: "c", kind: "card", text: "", card: { mode: "build", step: "drawing", changes: 1 }, turn: "t1", at: 0 }];
