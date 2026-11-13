@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 
 import { LIMITS, overLimit, signatureOf } from "@/domain/explain";
-import type { EdgeExplanation, NodeExplanation } from "@/domain/explain";
+import type { EdgeExplanation, GroupExplanation, NodeExplanation } from "@/domain/explain";
 import type { DiagramState } from "@/domain/types";
 
 function makeState(): DiagramState {
@@ -110,3 +110,67 @@ describe("overLimit", () => {
 function order(name: string): number {
   return ["definition", "role", "why", "compare", "adr.decision", "adr.reason", "adr.alternative", "adr.cost"].indexOf(name);
 }
+
+describe("signatureOf for groups", () => {
+  // z(DMZ) 안에 a, 밖의 b·c. a→b·a→c 가 경계를 넘는다.
+  const withZone = (): DiagramState => {
+    const s = makeState();
+    s.groups.z = { id: "z", groupKind: "dmz", label: "DMZ", parent: null };
+    s.nodes.a!.parent = "z";
+    return s;
+  };
+
+  test("follows kind, label, net type, direct members and crossing edges", () => {
+    const base = signatureOf(withZone(), "group", "z");
+    expect(base).toMatch(/^[0-9a-f]{8}$/);
+
+    const kind = withZone();
+    kind.groups.z!.groupKind = "vpc";
+    expect(signatureOf(kind, "group", "z")).not.toBe(base);
+
+    const label = withZone();
+    label.groups.z!.label = "외부 구역";
+    expect(signatureOf(label, "group", "z")).not.toBe(base);
+
+    const net = withZone();
+    net.groups.z!.netType = { key: "admin", source: "ai", confirmed: false };
+    expect(signatureOf(net, "group", "z")).not.toBe(base);
+
+    const member = withZone();
+    member.nodes.a!.label = "결제 WAS";
+    expect(signatureOf(member, "group", "z")).not.toBe(base);
+
+    const outside = withZone();
+    outside.nodes.b!.label = "회원 DB";
+    expect(signatureOf(outside, "group", "z")).not.toBe(base);
+
+    const inner = withZone();
+    inner.nodes.b!.parent = "z"; // a→b 는 더는 경계를 넘지 않는다.
+    expect(signatureOf(inner, "group", "z")).not.toBe(base);
+  });
+
+  test("ignores node attrs that are not part of the zone story", () => {
+    const base = signatureOf(withZone(), "group", "z");
+    const noise = withZone();
+    noise.nodes.a!.attrs.cpu = 99;
+    noise.nodes.b!.attrs.sw = "MySQL";
+    expect(signatureOf(noise, "group", "z")).toBe(base);
+  });
+
+  test("missing group gives null", () => {
+    expect(signatureOf(makeState(), "group", "nope")).toBeNull();
+  });
+});
+
+describe("overLimit for groups", () => {
+  const group = (over: Partial<GroupExplanation> = {}): GroupExplanation => ({
+    kind: "group", term: "DMZ", definition: "d", definitionSource: "glossary", reviewed: true, role: "r", boundary: "b",
+    adr: { decision: "a", reason: "b", alternative: "c", cost: "d" }, ...over,
+  });
+
+  test("checks role, boundary and adr like a node", () => {
+    expect(overLimit(group())).toEqual([]);
+    expect(overLimit(group({ boundary: "x".repeat(LIMITS.boundary + 1), role: "x".repeat(LIMITS.role + 1), adr: { decision: "x".repeat(81), reason: "b", alternative: "c", cost: "d" } })))
+      .toEqual(["role", "boundary", "adr.decision"]);
+  });
+});

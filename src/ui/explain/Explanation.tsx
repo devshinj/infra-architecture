@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-import { normalizeTerm, type EdgeExplanation, type NodeExplanation } from "@/domain/explain";
+import { normalizeTerm, type AnyExplanation, type EdgeExplanation, type GroupExplanation, type NodeExplanation, type TermedExplanation } from "@/domain/explain";
 import { Button } from "@/ui/Button";
 import { SkeletonLines } from "@/ui/skeleton/Skeleton";
 
@@ -12,15 +12,15 @@ import { TermText, underlinePlan, type GlossaryTerm } from "./TermText";
 
 export interface ExplanationProps {
   status: "idle" | "loading" | "ready" | "error";
-  data?: NodeExplanation | EdgeExplanation;
-  partial?: Partial<NodeExplanation>;
+  data?: AnyExplanation;
+  partial?: Partial<TermedExplanation>;
   message?: string;
   terms: GlossaryTerm[];
   onRewrite?(instruction: string): void;
   onRetry?(): void;
   busy?: boolean;
   /** 데이터가 아직 없을 때(loading) 어떤 자리를 그릴지. 기본은 노드. */
-  target?: "node" | "edge";
+  target?: "node" | "edge" | "group";
 }
 
 const LOADING = "설명을 만드는 중…";
@@ -154,7 +154,7 @@ function Details({ parts, children }: { parts: string[]; children: React.ReactNo
 }
 
 /** 정의(+AI 설명 배지)와 사전에 있으면 필요한 이유·비교. 다 만든 설명과, 만드는 중·실패 때 사전 정의에 같이 쓴다. */
-function DefinitionPart({ d, terms, plan }: { d: Partial<NodeExplanation> & { definition: string }; terms: GlossaryTerm[]; plan: Plan }) {
+function DefinitionPart({ d, terms, plan }: { d: Partial<TermedExplanation> & { definition: string }; terms: GlossaryTerm[]; plan: Plan }) {
   return (
     <>
       <Section title="정의">
@@ -183,7 +183,7 @@ function DefinitionPart({ d, terms, plan }: { d: Partial<NodeExplanation> & { de
 }
 
 /** 「자세히」 머리에 적을 안의 절 이름. */
-const detailParts = (d: Partial<NodeExplanation>, adr: boolean) =>
+const detailParts = (d: Partial<TermedExplanation>, adr: boolean) =>
   [d.definition ? "정의" : null, d.why ? "필요한 이유" : null, d.compare ? "비교" : null, adr ? "왜 이렇게 짰나요" : null].filter((x): x is string => x !== null);
 
 /**
@@ -204,14 +204,27 @@ function PlannedText({ text, terms, plan }: { text: string; terms: GlossaryTerm[
   return <TermText text={text} terms={terms} only={plan.get(text) ?? new Set()} />;
 }
 
-function NodeBody({ d, terms }: { d: NodeExplanation; terms: GlossaryTerm[] }) {
+/** 영역 설명의 경계 절 이름. 다 만든 설명과 만드는 중 자리가 같은 이름을 쓴다. */
+const BOUNDARY_TITLE = "경계에서 드나드는 것";
+
+/**
+ * 노드·영역 설명 본문. 역할이 맨 위, 영역은 그 아래 경계. 정의·왜 이렇게 짰나요는 「자세히」 안.
+ * 밑줄 계획은 화면 차례(역할 → 경계 → 정의 → 필요한 이유 → 비교 → ADR)대로 읽는다.
+ */
+function NodeBody({ d, terms }: { d: NodeExplanation | GroupExplanation; terms: GlossaryTerm[] }) {
   const adr = [d.adr.decision, d.adr.reason, d.adr.alternative, d.adr.cost];
-  const plan = makePlan([d.role, d.definition, d.why ?? "", d.compare ?? "", ...adr], terms, d.term ? normalizeTerm(d.term) : undefined);
+  const boundary = d.kind === "group" ? d.boundary : null;
+  const plan = makePlan([d.role, ...(boundary !== null ? [boundary] : []), d.definition, d.why ?? "", d.compare ?? "", ...adr], terms, d.term ? normalizeTerm(d.term) : undefined);
   return (
     <>
       <Section title="이 구성에서의 역할">
         <p className={styles.explainText}><PlannedText text={d.role} terms={terms} plan={plan} /></p>
       </Section>
+      {boundary !== null && (
+        <Section title={BOUNDARY_TITLE}>
+          <p className={styles.explainText}><PlannedText text={boundary} terms={terms} plan={plan} /></p>
+        </Section>
+      )}
       <Details parts={detailParts(d, true)}>
         <DefinitionPart d={d} terms={terms} plan={plan} />
         <Section title="왜 이렇게 짰나요">
@@ -254,6 +267,7 @@ export function Explanation({ status, data, partial, message, terms, onRewrite, 
   if (status === "idle") return null;
 
   const isEdge = (data?.kind ?? target) === "edge";
+  const isGroup = (data?.kind ?? target) === "group";
   // 노드의 사전 정의(만드는 중·실패 때 받아 둔 것).
   const known = !isEdge && partial?.definition ? { ...partial, definition: partial.definition } : null;
 
@@ -274,9 +288,10 @@ export function Explanation({ status, data, partial, message, terms, onRewrite, 
         ) : (
           <>
             {skeleton("이 구성에서의 역할", 0)}
+            {isGroup && skeleton(BOUNDARY_TITLE, 1)}
             <Details parts={known ? detailParts(known, true) : ["정의", "왜 이렇게 짰나요"]}>
-              {known && knownPlan ? <DefinitionPart d={known} terms={terms} plan={knownPlan} /> : skeleton("정의", 1)}
-              {skeleton("왜 이렇게 짰나요", 2)}
+              {known && knownPlan ? <DefinitionPart d={known} terms={terms} plan={knownPlan} /> : skeleton("정의", isGroup ? 2 : 1)}
+              {skeleton("왜 이렇게 짰나요", isGroup ? 3 : 2)}
             </Details>
           </>
         )}
@@ -306,7 +321,7 @@ export function Explanation({ status, data, partial, message, terms, onRewrite, 
   if (!data) return null;
   return (
     <div className={styles.explain}>
-      {data.kind === "node" ? <NodeBody d={data} terms={terms} /> : <EdgeBody d={data} terms={terms} />}
+      {data.kind === "edge" ? <EdgeBody d={data} terms={terms} /> : <NodeBody d={data} terms={terms} />}
       {onRewrite && <Rewrite onRewrite={onRewrite} busy={busy} />}
     </div>
   );

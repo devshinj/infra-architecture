@@ -742,9 +742,9 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
     if (e.key === "Enter" || e.key === " ") {
       if (e.key === " ") e.preventDefault();
       if (e.repeat) return;
-      // 영역: Space 는 접고 펴고, Enter 는 클릭처럼 선택을 푼다.
+      // 영역: Space 는 접고 펴고, Enter 는 이름 알약을 누른 것처럼 고른다(다시 누르면 푼다).
       if (!infra && e.key === " ") toggleGroup(id);
-      else onSelect(infra && id !== selected ? id : null);
+      else onSelect(id !== selected ? id : null);
     } else if (e.key === "Escape") {
       if (selected !== null) onSelect(null);
     } else if (e.key.startsWith("Arrow") && editMode && infra && keyMove.current === null && getNode(id)?.selected) {
@@ -877,13 +877,14 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
           crossing={crossing}
           collapsedRects={collapsedRects}
         />
-        {/* 영역 이름표는 연결선 층 위(stacking.ts): 영역 머리를 지나는 선이 이름 뒤로 지나간다. 누르면 영역 머리를 누른 것과 같다. */}
+        {/* 영역 이름표는 연결선 층 위(stacking.ts): 영역 머리를 지나는 선이 이름 뒤로 지나간다. 누르면 그 영역을 고른다(다시 누르면 푼다). */}
         <ZoneNameLayerPortal
           zones={zoneNames}
           onPillClick={(id) => {
             // 영역 머리를 누르면 영역 래퍼가 포커스를 받았다(다음 Tab 이 돌아올 곳). 알약도 같게 한다.
             for (const el of wrap.current?.querySelectorAll<HTMLElement>(".react-flow__node-zone") ?? []) if (el.dataset.id === id) el.focus({ preventScroll: true });
-            onSelect(null);
+            // 영역 바탕은 선택을 풀고(리전이 캔버스를 다 덮어도 풀 곳이 남는다), 이름 알약은 영역을 고른다.
+            onSelect(id === selected ? null : id);
           }}
           onPillContextMenu={(id, e) => openMenu(id, true, e)}
         />

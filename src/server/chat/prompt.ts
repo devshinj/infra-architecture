@@ -1,6 +1,7 @@
 import { NODE_KINDS } from "@/domain/catalog";
-import { LIMITS, type NodeExplanation } from "@/domain/explain";
+import { LIMITS, type ExplainTargetKind, type TermedExplanation } from "@/domain/explain";
 import type { Flow } from "@/domain/flows";
+import { crossingEdges, groupMembers } from "@/domain/groupInfo";
 import { glossaryBlock, type MatchedTerm } from "@/domain/glossaryMatch";
 import type { MissingItem } from "@/domain/missing";
 import { METHOD_LABELS, pairKey, requiredMethod, type NetworkKnowledge } from "@/domain/network";
@@ -363,6 +364,23 @@ export const EXPLAIN_EDGE_PROMPT = `너는 인프라 아키텍처 구성도 도�
 - 한국어로 쓴다. 제품명(Redis, ALB, Tomcat 등)은 원어 그대로.
 - 주어진 구성에 없는 내용을 지어내지 않는다.`;
 
+export const EXPLAIN_GROUP_PROMPT = `너는 인프라 아키텍처 구성도 도구의 도우미다.
+구성도의 영역(리전·VPC·서브넷·DMZ·망·클러스터 같은 묶음) 하나를 IT 비전공자에게 설명하는 글을 쓴다.
+
+출력 형식:
+- JSON 객체 하나만 출력한다. 다른 글, 코드펜스, 설명 금지.
+- {"definition":"정의","role":"이 구성에서의 역할","boundary":"경계에서 드나드는 것","adr":{"decision":"결정","reason":"이유","alternative":"대안","cost":"대가"}}
+- 사전 정의가 주어지면 definition 키는 쓰지 않는다.
+
+규칙:
+- definition: 이 영역 종류의 정식 명칭·약어 풀이와 분류를 포함한 사전식 정의 한 문장, ${LIMITS.definition}자 이내.
+- role: 일반론이 아니라 이 구성에서 이 영역이 무엇을 묶어 무엇을 하는지, 1~2문장, ${LIMITS.role}자 이내.
+- boundary: 주어진 "경계를 넘는 연결"을 근거로 이 영역 경계에서 무엇이 들어오고 나가는지, 무엇을 막는지, 1~2문장, ${LIMITS.boundary}자 이내. 경계를 넘는 연결이 없으면 바깥과 이어진 연결이 없다고 쓴다.
+- adr: 이 영역을 이렇게 나눈 결정의 요약. decision(결정)·reason(이유)·alternative(대안)·cost(대가) 각 한 줄, 각 ${LIMITS.adr}자 이내.
+- 비유를 쓰지 않는다. 전문용어는 짧게 풀어 쓴다.
+- 한국어로 쓴다. 제품명(Redis, ALB, Tomcat 등)은 원어 그대로.
+- 주어진 구성에 없는 내용을 지어내지 않는다.`;
+
 const kindKo = (kind: string) => NODE_KINDS.find((k) => k.kind === kind)?.labelKo ?? kind;
 
 /** 노드·영역 한 개를 한 줄로. 사용자 글은 JSON.stringify 로 감싼다. */
@@ -391,8 +409,32 @@ function ancestorsOf(state: DiagramState, parent: string | null): string {
   return out.length ? out.join(" < ") : "없음(최상위)";
 }
 
-/** 대상과 이웃(상위 영역·연결 상대)만 담은 요약. */
-export function explainContext(state: DiagramState, kind: "node" | "edge", id: string): string {
+/** 영역 하나: 자신·상위 영역·망 종류·바로 안의 항목·경계를 넘는 연결. */
+function groupContext(state: DiagramState, id: string): string {
+  const g = state.groups[id];
+  if (!g) return `대상 영역 ${JSON.stringify(id)}: 없음`;
+  const lines = [`대상 ${describeEndpoint(state, id)}`, `상위 영역: ${ancestorsOf(state, g.parent)}`];
+  if (g.netType) lines.push(`망 종류: ${g.netType.key}${g.netType.source === "ai" && !g.netType.confirmed ? " (AI 추정, 확인 전)" : ""}`);
+  const members = groupMembers(state, id);
+  lines.push(`안에 든 것: ${members.length ? members.map((m) => describeEndpoint(state, m.id)).join(" / ") : "없음"}`);
+  const crossing = crossingEdges(state, id);
+  if (crossing.length === 0) lines.push("경계를 넘는 연결: 없음");
+  else {
+    lines.push("경계를 넘는 연결:");
+    for (const c of crossing) {
+      const e = state.edges[c.edgeId]!;
+      const how = `${e.id} [${e.edgeKind}] ${JSON.stringify(e.label ?? "")}`;
+      const inside = describeEndpoint(state, c.insideId);
+      const outside = describeEndpoint(state, c.outsideId);
+      lines.push(c.dir === "in" ? `들어오는 연결 ${how}: ${outside} -> ${inside}` : `나가는 연결 ${how}: ${inside} -> ${outside}`);
+    }
+  }
+  return lines.join("\n");
+}
+
+/** 대상과 이웃(상위 영역·연결 상대)만 담은 요약. 영역은 안의 항목과 경계를 넘는 연결까지. */
+export function explainContext(state: DiagramState, kind: ExplainTargetKind, id: string): string {
+  if (kind === "group") return groupContext(state, id);
   if (kind === "edge") {
     const e = state.edges[id];
     if (!e) return `대상 연결 ${JSON.stringify(id)}: 없음`;
@@ -422,7 +464,7 @@ export function explainContext(state: DiagramState, kind: "node" | "edge", id: s
  * instruction(다시 쓰기 요청)·problems(길이 초과·어려움 지적)가 있으면 이전 결과와 함께 다시 쓰라고 한다.
  */
 export function buildExplainMessages(input: {
-  kind: "node" | "edge";
+  kind: ExplainTargetKind;
   state: DiagramState;
   id: string;
   glossaryDefinition?: string;
@@ -433,9 +475,11 @@ export function buildExplainMessages(input: {
   problems?: string[];
 }): ChatMessage[] {
   const parts = [`현재 구성(대상과 이웃):\n${explainContext(input.state, input.kind, input.id)}`];
-  if (input.kind === "node" && input.glossaryDefinition) {
-    parts.push(`사전 정의: ${JSON.stringify(input.glossaryDefinition)}\n정의는 사전에 있으니 definition 키는 쓰지 않는다. 역할·ADR 은 이 정의와 어긋나지 않게 쓴다.`);
-  } else if (input.kind === "node" && input.term) {
+  // 노드·영역은 정의 부분(사전 용어)이 있다. 연결은 없다.
+  const termed = input.kind !== "edge";
+  if (termed && input.glossaryDefinition) {
+    parts.push(`사전 정의: ${JSON.stringify(input.glossaryDefinition)}\n정의는 사전에 있으니 definition 키는 쓰지 않는다. 역할·${input.kind === "group" ? "경계·" : ""}ADR 은 이 정의와 어긋나지 않게 쓴다.`);
+  } else if (termed && input.term) {
     parts.push(`정의할 용어: ${JSON.stringify(input.term)}\ndefinition 은 이 용어의 사전식 정의다.`);
   }
   const problems = input.problems?.filter(Boolean) ?? [];
@@ -448,48 +492,54 @@ export function buildExplainMessages(input: {
     parts.push(redo.join("\n\n"));
   }
   return [
-    { role: "system", content: input.kind === "node" ? EXPLAIN_NODE_PROMPT : EXPLAIN_EDGE_PROMPT },
+    { role: "system", content: input.kind === "node" ? EXPLAIN_NODE_PROMPT : input.kind === "group" ? EXPLAIN_GROUP_PROMPT : EXPLAIN_EDGE_PROMPT },
     { role: "user", content: parts.join("\n\n") },
   ];
 }
 
-// 노드 하나에 대해 물어보기(§6.8). 근거는 대상 노드 요약과 저장된 설명뿐이다.
+// 노드나 영역 하나에 대해 물어보기(§6.8). 근거는 대상 요약과 저장된 설명뿐이다.
 export const ASK_PROMPT = `너는 인프라 아키텍처 구성도 도구의 도우미다.
-사용자가 구성도의 노드 하나에 대해 묻는 말에 한국어로 답한다.
+사용자가 구성도의 노드나 영역 하나에 대해 묻는 말에 한국어로 답한다.
 
 규칙:
 - 일반 글로만 답한다. JSON, 명령, 코드펜스, 마크다운 제목은 쓰지 않는다.
 - 1~4문장으로 짧게 쓴다.
-- 근거는 주어진 "대상 노드"(종류·SW·속성·연결된 노드)와 "설명"(있으면)뿐이다. 거기에 없는 내용은 지어내지 말고 모른다고 말한다.
+- 근거는 주어진 "대상 노드"(종류·SW·속성·연결된 노드) 또는 "대상 영역"(종류·안에 든 것·경계를 넘는 연결)과 "설명"(있으면)뿐이다. 거기에 없는 내용은 지어내지 말고 모른다고 말한다.
 - 제품명(Redis, ALB, Tomcat 등)은 원어 그대로 쓴다.
-- 답에서 노드 id 를 쓰지 말고 노드 이름(label)으로 부른다.
+- 답에서 노드 id 를 쓰지 말고 노드 이름(label)으로 부른다. 영역도 id 대신 이름으로 부른다.
 - 구성에 없는 제품·기술 이름을 새로 꺼내지 않는다. 모르면 이 구성 정보만으로는 알 수 없다고 말한다.
 - 사용자가 구성을 바꿔 달라고 하면 바꾸지 않는다. 구성 변경은 구성도 대화에서 요청해 달라고 짧게 안내한다.`;
 
 /** 설명 항목 한 줄. 줄바꿈을 접어 한 항목이 한 줄이 되게 한다. */
 const oneLine = (t: string) => t.replace(/\s+/g, " ").trim();
 
-function explanationBlock(e: NodeExplanation | undefined): string {
+function explanationBlock(e: TermedExplanation | undefined): string {
   if (!e) return "없음";
   const { decision, reason, alternative, cost } = e.adr;
   return [
     `정의: ${oneLine(e.definition)}`,
     `역할: ${oneLine(e.role)}`,
+    ...(e.kind === "group" ? [`경계: ${oneLine(e.boundary)}`] : []),
     `ADR: 결정 ${oneLine(decision)} / 이유 ${oneLine(reason)} / 대안 ${oneLine(alternative)} / 대가 ${oneLine(cost)}`,
   ].join("\n");
 }
 
-/** 노드 질문 요청. 기록은 그 세션 것만 최근 HISTORY_LIMIT 개. */
+/**
+ * 노드·영역 질문 요청. 기록은 그 세션 것만 최근 HISTORY_LIMIT 개.
+ * nodeId 는 질문 세션의 대상 id 다(노드 질문 세션이 영역도 대상으로 받는다). 영역이면 "대상 영역" 요약을 준다.
+ */
 export function buildAskMessages(input: {
   state: DiagramState;
   nodeId: string;
-  explanation?: NodeExplanation;
+  explanation?: TermedExplanation;
   history: { role: "user" | "assistant"; content: string }[];
   text: string;
   /** 질문에 나온 사전 용어와 정의. 있으면 "질문" 앞에 넣는다. */
   terms?: MatchedTerm[];
 }): ChatMessage[] {
-  const user = `대상 노드:\n${explainContext(input.state, "node", input.nodeId)}\n\n설명:\n${explanationBlock(input.explanation)}\n\n${glossaryBlock(input.terms ?? [])}질문: ${input.text}`;
+  const group = !input.state.nodes[input.nodeId] && !!input.state.groups[input.nodeId];
+  const target = group ? `대상 영역:\n${explainContext(input.state, "group", input.nodeId)}` : `대상 노드:\n${explainContext(input.state, "node", input.nodeId)}`;
+  const user = `${target}\n\n설명:\n${explanationBlock(input.explanation)}\n\n${glossaryBlock(input.terms ?? [])}질문: ${input.text}`;
   return [
     { role: "system", content: ASK_PROMPT },
     ...input.history.slice(-HISTORY_LIMIT).map((h) => ({ role: h.role, content: h.content })),

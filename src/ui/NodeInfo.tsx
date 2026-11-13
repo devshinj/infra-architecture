@@ -7,9 +7,11 @@ import { CategoryIcon } from "@/canvas/icons";
 import { MEDIUM_LABELS } from "@/canvas/mediumMark";
 import { categoryOf, EDGE_KINDS, GROUP_KINDS, NODE_KINDS } from "@/domain/catalog";
 import { flowsThrough, type Flow } from "@/domain/flows";
+import { crossingEdges, groupMembers } from "@/domain/groupInfo";
 import { managedBasis, MULTI_AZ_KINDS, SERVER_ONLY_ATTRS, yesNo } from "@/domain/managed";
 import { FIELD_LABELS, isEmpty, requiredKeysFor } from "@/domain/missing";
-import type { DiagramState, DNode, Warning } from "@/domain/types";
+import { GRADE_LABELS } from "@/domain/network";
+import type { DiagramState, DNode, Group, Warning } from "@/domain/types";
 import { mergeWarnings } from "@/domain/warnings";
 
 import { Button } from "./Button";
@@ -38,8 +40,8 @@ export interface NodeInfoProps {
   warningState?: DiagramState;
   /** 설명 패널 데이터. 없으면 설명 절을 그리지 않는다. */
   explain?: ExplanationProps;
-  /** 노드에 대해 물어보기 입력(노드 전용: 연결선·구역에는 두지 않는다). 없으면 숨긴다. */
-  ask?: Omit<AskNodeProps, "nodeId" | "nodeLabel">;
+  /** 노드·영역에 대해 물어보기 입력(연결선에는 두지 않는다). 없으면 숨긴다. */
+  ask?: Omit<AskNodeProps, "nodeId" | "nodeLabel" | "noun">;
   /** 구성도의 흐름과, 흐름 이름 칩을 눌렀을 때(그 흐름을 켜고 흐름 탭으로). 없으면 지나는 흐름 절을 그리지 않는다. */
   flows?: { list: Flow[]; onOpen(key: string): void };
   /** AI 가 스스로 넣은 망연계 노드의 맞아요·아니에요. 없으면(이력 보기 등) 추정 표시만 보인다. */
@@ -241,12 +243,94 @@ function LinkGuessPart({ nodeId, save }: { nodeId: string; save?: LinkGuessSave 
   );
 }
 
+/** 망 영역에 붙은 망 종류: 이름·등급·망 지식 설명 한 줄. AI 가 붙이고 확인 전이면 AI 추정 표시. 바꾸기·확인은 채워야 할 정보에서 한다. */
+function NetTypePart({ group }: { group: Group }) {
+  const knowledge = useNetworkKnowledge();
+  const t = group.netType;
+  if (!t) return null;
+  const type = knowledge?.types[t.key];
+  const headId = `zone-net-${group.id}`;
+  return (
+    <section className={styles.section} aria-labelledby={headId}>
+      <h3 id={headId} className={styles.heading}>망 종류</h3>
+      <p className={styles.explainText}>
+        {type ? `${type.name} · ${GRADE_LABELS[type.grade]}` : t.key}
+        {t.source === "ai" && !t.confirmed && (
+          <>
+            {" "}
+            <span className={netStyles.badge}>{AI_GUESS_BADGE}</span>
+            <span className={netStyles.srOnly}>{AI_BADGE_SR}</span>
+          </>
+        )}
+      </p>
+      {type?.description && <p className={styles.relText}>{type.description}</p>}
+    </section>
+  );
+}
+
+/** 영역 설명 탭: 망 종류 → 설명 → 안에 든 것 → 경계를 넘는 연결 → 물어보기. */
+function GroupInfo({ state, group, onSelect, onMention, mentionDisabled, explain, ask }: { group: Group } & Pick<NodeInfoProps, "state" | "onSelect" | "onMention" | "mentionDisabled" | "explain" | "ask">) {
+  const members = groupMembers(state, group.id);
+  const crossing = crossingEdges(state, group.id);
+  const membersId = `zone-members-${group.id}`;
+  const crossingId = `zone-crossing-${group.id}`;
+  return (
+    <div className={styles.info}>
+      <header className={styles.head}>
+        <div>
+          <h2 className={styles.title}>{group.label}</h2>
+          <p className={styles.kind}>{GROUP_KINDS.find((k) => k.kind === group.groupKind)?.labelKo ?? group.groupKind}</p>
+        </div>
+        <LinkButton id={group.id} onMention={onMention} disabled={mentionDisabled} />
+      </header>
+      <NetTypePart group={group} />
+      {explain && <Explanation key={group.id} target="group" {...explain} />}
+      <section className={styles.section} aria-labelledby={membersId}>
+        <h3 id={membersId} className={styles.heading}>안에 든 것</h3>
+        {members.length === 0 ? (
+          <p className={styles.missing}>안에 든 것이 없어요.</p>
+        ) : (
+          <div className={styles.chips}>
+            {members.map((m) => (
+              <button key={m.id} type="button" className={styles.chip} onClick={() => onSelect(m.id)}>
+                {m.label}
+              </button>
+            ))}
+          </div>
+        )}
+      </section>
+      {/* 줄마다 연결 방향대로 "보내는 쪽 → 받는 쪽"(누르면 그 연결을 고른다) + 들어옴/나감·종류·라벨. */}
+      <section className={styles.section} aria-labelledby={crossingId}>
+        <h3 id={crossingId} className={styles.heading}>경계를 넘는 연결</h3>
+        {crossing.length === 0 ? (
+          <p className={styles.missing}>영역 밖과 이어진 연결이 없어요.</p>
+        ) : (
+          <ul className={styles.relations}>
+            {crossing.map((c) => {
+              const e = state.edges[c.edgeId]!;
+              return (
+                <li key={c.edgeId} className={styles.relation}>
+                  <button type="button" className={styles.chip} onClick={() => onSelect(c.edgeId)}>
+                    {nameOf(state, e.from)} → {nameOf(state, e.to)}
+                  </button>
+                  <span className={styles.relText}>{`${c.dir === "in" ? "← 들어옴" : "→ 나감"} · ${edgeKindName(e.edgeKind)}${e.label ? ` · ${e.label}` : ""}`}</span>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </section>
+      {ask && <AskNode nodeId={group.id} nodeLabel={group.label} noun="영역" {...ask} />}
+    </div>
+  );
+}
+
 const PAYLOAD_NAME = { api: "API", file: "파일" } as const;
 const DIRECTION_NAME = { one_way: "단방향", two_way: "양방향" } as const;
 
 export function NodeInfo({ state, selectedId, onSelect, onMention, mentionDisabled, warningState, explain, ask, flows, linkGuess, ...caution }: NodeInfoProps) {
   const knowledge = useNetworkKnowledge();
-  if (selectedId === null) return <p className={styles.empty}>캔버스에서 노드를 선택하면 설명이 여기에 표시돼요.</p>;
+  if (selectedId === null) return <p className={styles.empty}>캔버스에서 노드나 영역 이름을 선택하면 설명이 여기에 표시돼요.</p>;
 
   const warnings = mergeWarnings(warningState ?? state, knowledge ?? undefined);
   const pick = (f: (w: Warning) => boolean) => ({ active: warnings.active.filter(f), ignored: warnings.ignored.filter(f) });
@@ -275,15 +359,15 @@ export function NodeInfo({ state, selectedId, onSelect, onMention, mentionDisabl
   const group = state.groups[selectedId];
   if (group) {
     return (
-      <div className={styles.info}>
-        <header className={styles.head}>
-          <div>
-            <h2 className={styles.title}>{group.label}</h2>
-            <p className={styles.kind}>{GROUP_KINDS.find((k) => k.kind === group.groupKind)?.labelKo ?? group.groupKind}</p>
-          </div>
-          <LinkButton id={group.id} onMention={onMention} disabled={mentionDisabled} />
-        </header>
-      </div>
+      <GroupInfo
+        state={state}
+        group={group}
+        onSelect={onSelect}
+        {...(onMention ? { onMention } : {})}
+        {...(mentionDisabled ? { mentionDisabled } : {})}
+        {...(explain ? { explain } : {})}
+        {...(ask ? { ask } : {})}
+      />
     );
   }
 

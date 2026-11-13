@@ -3,7 +3,7 @@ import { describe, expect, test, vi } from "vitest";
 import { NODE_KINDS } from "@/domain/catalog";
 import { normalizeTerm, signatureOf, type NodeExplanation } from "@/domain/explain";
 import { emptyState, type DiagramState } from "@/domain/types";
-import { buildExplainMessages, EXPLAIN_EDGE_PROMPT, EXPLAIN_NODE_PROMPT } from "@/server/chat/prompt";
+import { buildExplainMessages, EXPLAIN_EDGE_PROMPT, EXPLAIN_GROUP_PROMPT, EXPLAIN_NODE_PROMPT } from "@/server/chat/prompt";
 import { explainTarget, type ExplainRepo } from "@/server/explain";
 import type { GlossaryRow } from "@/server/glossary";
 import { EXPLAIN_SCORE_QUESTION, type ClefAnswers, type ClefClient } from "@/server/llm/clef";
@@ -435,5 +435,112 @@ describe("buildExplainMessages", () => {
     }
     for (const k of ['"definition"', '"role"', '"adr"', '"decision"', '"reason"', '"alternative"', '"cost"', "120자", "150자", "80자"]) expect(EXPLAIN_NODE_PROMPT).toContain(k);
     for (const k of ['"flow"', '"method"', '"why"', '"firewall"', "100자"]) expect(EXPLAIN_EDGE_PROMPT).toContain(k);
+  });
+});
+
+describe("explainTarget for groups", () => {
+  const VPC_DEF = "VPC(Virtual Private Cloud)는 클라우드 안에 나만 쓰는 사설 네트워크를 만드는 서비스입니다.";
+  const VPC_ROW = row({ key: normalizeTerm("VPC"), term: "VPC", definition: VPC_DEF, reviewed: true });
+  const BOUNDARY = "밖의 사용자 요청은 L4 로만 들어오고, 안의 WAS 는 밖으로 직접 열리지 않습니다.";
+  const groupJson = (over: Record<string, unknown> = {}) =>
+    JSON.stringify({ role: "서비스 서버들을 한 사설망에 모읍니다.", boundary: BOUNDARY, adr: { decision: "VPC 하나에 모은다", reason: "관리가 쉽다", alternative: "VPC 를 나눈다", cost: "격리가 약하다" }, ...over });
+  // 밖의 사용자가 L4 로 들어온다.
+  const withUser = () => {
+    const s = sample();
+    s.nodes.user = { id: "user", kind: "client_web", label: "사용자", parent: null, attrs: {} };
+    s.edges.e0 = { id: "e0", from: "user", to: "lb", edgeKind: "request", label: "HTTPS" };
+    return s;
+  };
+
+  test("uses the glossary word for the zone kind and writes role, boundary and ADR", async () => {
+    const state = withUser();
+    const { repo, log } = fakeRepo(state, [VPC_ROW]);
+    const { qwen, calls } = fakeQwen(groupJson({ definition: "무시할 정의" }));
+    const { clef, calls: clefCalls } = fakeClef();
+    const r = await explainTarget("u", "d", "group", "vpc", {}, { qwen, clef, repo });
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(r.explanation).toMatchObject({
+      kind: "group",
+      term: "VPC",
+      definition: VPC_DEF,
+      definitionSource: "glossary",
+      reviewed: true,
+      role: "서비스 서버들을 한 사설망에 모읍니다.",
+      boundary: BOUNDARY,
+      adr: { decision: "VPC 하나에 모은다", reason: "관리가 쉽다", alternative: "VPC 를 나눈다", cost: "격리가 약하다" },
+    });
+    expect(r.signature).toBe(signatureOf(state, "group", "vpc"));
+    expect(systemOf(calls[0]!)).toBe(EXPLAIN_GROUP_PROMPT);
+    const user = userOf(calls[0]!);
+    expect(user).toContain(`사전 정의: ${JSON.stringify(VPC_DEF)}`);
+    expect(user).toContain("안에 든 것");
+    expect(user).toContain("경계를 넘는 연결");
+    // 이름 → 종류 용어 순으로 찾는다.
+    expect(log).toContain(`find:${normalizeTerm("서비스 VPC")},vpc`);
+    expect(log.at(-1)).toBe("save:group:vpc");
+    // Clef 는 정의·역할·경계를 함께 읽는다.
+    expect(String(clefCalls[0]!.state)).toContain(BOUNDARY);
+  });
+
+  test("without a glossary entry the AI defines the kind word and it goes into the glossary as 영역", async () => {
+    const { repo, glossary } = fakeRepo(withUser(), []);
+    const { qwen, calls } = fakeQwen(groupJson({ definition: VPC_DEF }));
+    const { clef } = fakeClef();
+    const r = await explainTarget("u", "d", "group", "vpc", {}, { qwen, clef, repo });
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(r.explanation).toMatchObject({ kind: "group", term: "VPC", definition: VPC_DEF, definitionSource: "ai", reviewed: false });
+    expect(userOf(calls[0]!)).toContain('정의할 용어: "VPC"');
+    expect(repo.addAiTerm).toHaveBeenCalledWith("u", expect.objectContaining({ term: "VPC", category: "영역", definition: VPC_DEF }));
+    expect(glossary.map((g) => g.term)).toEqual(["VPC"]);
+  });
+
+  test("a reply without boundary is a format error", async () => {
+    const { repo } = fakeRepo(withUser(), [VPC_ROW]);
+    const { qwen, calls } = fakeQwen(JSON.stringify({ role: "r", adr: { decision: "a", reason: "b", alternative: "c", cost: "d" } }));
+    const { clef } = fakeClef();
+    const r = await explainTarget("u", "d", "group", "vpc", {}, { qwen, clef, repo });
+    expect(r).toMatchObject({ ok: false, partial: { term: "VPC", definition: VPC_DEF, definitionSource: "glossary" } });
+    expect(calls).toHaveLength(2);
+  });
+
+  test("an over-long boundary is sent back with its limit", async () => {
+    const { repo } = fakeRepo(withUser(), [VPC_ROW]);
+    const { qwen, calls } = fakeQwen((_m, i) => (i === 0 ? groupJson({ boundary: "가".repeat(151) }) : groupJson()));
+    const { clef } = fakeClef();
+    const r = await explainTarget("u", "d", "group", "vpc", {}, { qwen, clef, repo });
+    expect(r.ok).toBe(true);
+    expect(userOf(calls[1]!)).toContain("boundary: 150자 이내로 줄일 것(지금 151자)");
+  });
+
+  test("a cached group explanation is returned with the current glossary entry", async () => {
+    const state = withUser();
+    const { repo, cache } = fakeRepo(state, [VPC_ROW]);
+    const { qwen } = fakeQwen(groupJson());
+    const { clef } = fakeClef();
+    await explainTarget("u", "d", "group", "vpc", {}, { qwen, clef, repo });
+    VPC_ROW.definition = "고친 정의";
+    try {
+      const again = await explainTarget("u", "d", "group", "vpc", {}, { qwen: fakeQwen(new Error("부르면 안 됨")).qwen, clef, repo });
+      expect(again).toMatchObject({ ok: true, explanation: { kind: "group", definition: "고친 정의" } });
+      expect(cache.size).toBe(1);
+    } finally {
+      VPC_ROW.definition = VPC_DEF;
+    }
+  });
+
+  test("group context lists direct members and crossing edges", () => {
+    const user = userOf(buildExplainMessages({ kind: "group", state: withUser(), id: "vpc" }));
+    expect(user).toContain('대상 영역 vpc [vpc] "서비스 VPC"');
+    expect(user).toContain("상위 영역: 없음(최상위)");
+    expect(user).toMatch(/안에 든 것: [^\n]*L4[^\n]*WAS#1/);
+    expect(user).toMatch(/들어오는 연결 e0 \[request\] "HTTPS": 노드 user [^\n]* -> 노드 lb /);
+    // 안끼리의 연결은 경계를 넘지 않는다.
+    expect(user).not.toContain("e1 [request]");
+  });
+
+  test("group prompt names its fields and limits", () => {
+    for (const k of ['"definition"', '"role"', '"boundary"', '"adr"', "120자", "150자", "80자", "영역"]) expect(EXPLAIN_GROUP_PROMPT).toContain(k);
   });
 });

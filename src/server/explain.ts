@@ -7,9 +7,12 @@ import {
   LIMITS,
   overLimit,
   signatureOf,
-  termCandidates,
+  targetTermCandidates,
+  type AnyExplanation,
   type EdgeExplanation,
+  type GroupExplanation,
   type TermCandidate,
+  type TermedExplanation,
   type NodeExplanation,
 } from "@/domain/explain";
 import type { DiagramState } from "@/domain/types";
@@ -33,14 +36,17 @@ const CLEF_CAP_MS = 3000;
 // Qwen 요청 1건의 상한.
 const QWEN_TIMEOUT_MS = 30_000;
 
-type Explanation = NodeExplanation | EdgeExplanation;
+type Explanation = AnyExplanation;
 type NodeDraft = { definition?: string; role: string; adr: NodeExplanation["adr"] };
+type GroupDraft = NodeDraft & { boundary: string };
 type EdgeDraft = Omit<EdgeExplanation, "kind">;
-type Draft = NodeDraft | EdgeDraft;
+type Draft = NodeDraft | GroupDraft | EdgeDraft;
+/** 정의 부분(사전 용어)이 있는 대상: 노드·영역. */
+type TermedKind = "node" | "group";
 
 export type ExplainResult =
   | { ok: true; explanation: Explanation; signature: string }
-  | { ok: false; message: string; partial?: Partial<NodeExplanation> };
+  | { ok: false; message: string; partial?: Partial<TermedExplanation> };
 
 /** 설명 생성이 쓰는 저장소 함수. 단위 테스트는 가짜를 넣는다. */
 export interface ExplainRepo {
@@ -141,8 +147,8 @@ function parseObject(text: string): Record<string, unknown> | null {
 /** 비어 있지 않은 문자열이면 다듬어서, 아니면 null. */
 const text = (v: unknown): string | null => (typeof v === "string" && v.trim() !== "" ? v.trim() : null);
 
-/** Qwen 출력 검사. 필수 항목이 비었거나 형식이 틀리면 null. needDefinition 이 거짓이면 definition 은 버린다. */
-function parseDraft(raw: string, kind: "node" | "edge", needDefinition: boolean): Draft | null {
+/** Qwen 출력 검사. 필수 항목이 비었거나 형식이 틀리면 null. needDefinition 이 거짓이면 definition 은 버린다. 영역은 boundary 도 있어야 한다. */
+function parseDraft(raw: string, kind: ExplanationTargetKind, needDefinition: boolean): Draft | null {
   const o = parseObject(raw);
   if (!o) return null;
   if (kind === "edge") {
@@ -159,7 +165,12 @@ function parseDraft(raw: string, kind: "node" | "edge", needDefinition: boolean)
   const alternative = text(adr.alternative);
   const cost = text(adr.cost);
   if (!role || !decision || !reason || !alternative || !cost) return null;
-  const draft: NodeDraft = { role, adr: { decision, reason, alternative, cost } };
+  const draft: NodeDraft | GroupDraft = { role, adr: { decision, reason, alternative, cost } };
+  if (kind === "group") {
+    const boundary = text(o.boundary);
+    if (!boundary) return null;
+    (draft as GroupDraft).boundary = boundary;
+  }
   if (needDefinition) {
     const definition = text(o.definition);
     if (!definition) return null;
@@ -171,15 +182,19 @@ function parseDraft(raw: string, kind: "node" | "edge", needDefinition: boolean)
 /** 캐시된 설명에서 AI 가 쓴 부분만(다시 쓰기의 "이전 결과"). */
 function draftOf(e: unknown): object | undefined {
   if (!e || typeof e !== "object") return undefined;
-  const x = e as Partial<NodeExplanation> & Partial<EdgeExplanation>;
+  const x = e as Partial<NodeExplanation> & Partial<EdgeExplanation> & Partial<GroupExplanation>;
   if (x.kind === "edge") return { flow: x.flow, method: x.method, why: x.why, firewall: x.firewall };
-  if (x.kind === "node") return x.definitionSource === "ai" ? { definition: x.definition, role: x.role, adr: x.adr } : { role: x.role, adr: x.adr };
+  if (x.kind === "node" || x.kind === "group") {
+    const own = x.kind === "group" ? { role: x.role, boundary: x.boundary, adr: x.adr } : { role: x.role, adr: x.adr };
+    return x.definitionSource === "ai" ? { definition: x.definition, ...own } : own;
+  }
   return undefined;
 }
 
 const LIMIT_OF: Record<string, number> = {
   definition: LIMITS.definition,
   role: LIMITS.role,
+  boundary: LIMITS.boundary,
   why: LIMITS.why,
   compare: LIMITS.compare,
   "adr.decision": LIMITS.adr,
@@ -190,19 +205,21 @@ const LIMIT_OF: Record<string, number> = {
 
 /** 길이 초과 지적. 사전에서 온 항목(정의·why·compare)은 다시 써도 바뀌지 않아 빼고 본다. */
 function lengthProblems(e: Explanation): string[] {
-  const fromGlossary = e.kind === "node" && e.definitionSource === "glossary";
+  const fromGlossary = e.kind !== "edge" && e.definitionSource === "glossary";
   return overLimit(e)
     .filter((name) => !(fromGlossary && (name === "definition" || name === "why" || name === "compare")))
     .map((name) => {
       const max = e.kind === "edge" ? LIMITS.edge : LIMIT_OF[name]!;
-      const value = name.startsWith("adr.") ? (e as NodeExplanation).adr[name.slice(4) as keyof NodeExplanation["adr"]] : ((e as unknown as Record<string, string>)[name] ?? "");
+      const value = name.startsWith("adr.") ? (e as TermedExplanation).adr[name.slice(4) as keyof NodeExplanation["adr"]] : ((e as unknown as Record<string, string>)[name] ?? "");
       return `${name}: ${max}자 이내로 줄일 것(지금 ${codePoints(value)}자)`;
     });
 }
 
-/** Clef 가 읽을 글: 노드는 정의+역할, 연결은 네 항목을 이어 붙인다. */
+/** Clef 가 읽을 글: 노드는 정의+역할, 영역은 정의+역할+경계, 연결은 네 항목을 이어 붙인다. */
 function scoredText(e: Explanation): string {
-  return e.kind === "node" ? `${e.definition} ${e.role}` : [e.flow, e.method, e.why, e.firewall].join(" ");
+  if (e.kind === "node") return `${e.definition} ${e.role}`;
+  if (e.kind === "group") return `${e.definition} ${e.role} ${e.boundary}`;
+  return [e.flow, e.method, e.why, e.firewall].join(" ");
 }
 
 /** Clef 점수(0~2). 실패·시간 초과·읽을 수 없는 답이면 null(길이만 본다). */
@@ -263,25 +280,26 @@ function glossaryPart(row: GlossaryRow, source: NodeExplanation["definitionSourc
 }
 
 /**
- * 캐시된 노드 설명에 지금 사전 값을 덮는다. 사전은 생성 뒤에 고쳐지거나 검수될 수 있다(Qwen 은 부르지 않는다).
+ * 캐시된 노드·영역 설명에 지금 사전 값을 덮는다. 사전은 생성 뒤에 고쳐지거나 검수될 수 있다(Qwen 은 부르지 않는다).
  * 서명이 같으면 용어 후보도 같아 생성 때와 같은 항목을 찾는다. 항목이 없어졌으면 저장된 값 그대로다.
  */
-async function withCurrentGlossary(
+async function withCurrentGlossary<T extends TermedExplanation>(
   repo: Pick<ExplainRepo, "findTerm">,
   userId: string,
-  node: DiagramState["nodes"][string],
-  data: NodeExplanation,
-): Promise<NodeExplanation> {
-  const current = await repo.findTerm(userId, termCandidates(node).map((c) => c.key));
+  candidates: TermCandidate[],
+  data: T,
+): Promise<T> {
+  const current = await repo.findTerm(userId, candidates.map((c) => c.key));
   if (!current) return data;
-  const rest: NodeExplanation = { ...data };
+  const rest: T = { ...data };
   delete rest.why;
   delete rest.compare;
   return { ...rest, ...glossaryPart(current, data.definitionSource) };
 }
 
 /**
- * 패널이 보여 주는 것과 같은 캐시된 노드 설명(지금 노드 서명과 맞을 때만, 사전 값을 덮어서).
+ * 패널이 보여 주는 것과 같은 캐시된 설명(지금 서명과 맞을 때만, 사전 값을 덮어서). 질문의 근거로 쓴다.
+ * 대상은 노드이거나 영역이다(노드 질문 세션이 영역도 받는다). 노드를 먼저 본다.
  * 없거나 낡았으면 undefined. 만들지 않고 소유 검사도 하지 않는다(호출자가 한다).
  */
 export async function cachedNodeExplanation(
@@ -290,20 +308,20 @@ export async function cachedNodeExplanation(
   state: DiagramState,
   nodeId: string,
   depsInput: { repo?: Partial<ExplainRepo> } = {},
-): Promise<NodeExplanation | undefined> {
+): Promise<TermedExplanation | undefined> {
   const repo = { ...dbRepo, ...depsInput.repo };
-  const node = state.nodes[nodeId];
-  const signature = signatureOf(state, "node", nodeId);
-  if (!node || !signature) return undefined;
-  const cached = await repo.getCached(diagramId, "node", nodeId);
+  const kind: TermedKind | null = state.nodes[nodeId] ? "node" : state.groups[nodeId] ? "group" : null;
+  const signature = kind ? signatureOf(state, kind, nodeId) : null;
+  if (!kind || !signature) return undefined;
+  const cached = await repo.getCached(diagramId, kind, nodeId);
   if (!cached || cached.signature !== signature) return undefined;
   const data = cached.data as Explanation;
-  return data.kind === "node" ? withCurrentGlossary(repo, userId, node, data) : undefined;
+  return data.kind === kind ? withCurrentGlossary(repo, userId, targetTermCandidates(state, kind, nodeId), data as TermedExplanation) : undefined;
 }
 
 /**
- * 노드·연결 설명을 만든다(또는 캐시에서 돌려준다).
- * 1. 소유·대상 확인 2. 캐시 3. 사전 조회(노드) 4. Qwen JSON 생성(형식 오류는 1회 다시 요청)
+ * 노드·영역·연결 설명을 만든다(또는 캐시에서 돌려준다).
+ * 1. 소유·대상 확인 2. 캐시 3. 사전 조회(노드·영역) 4. Qwen JSON 생성(형식 오류는 1회 다시 요청)
  * 5. 길이·Clef 점수로 최대 2회 다시 쓰기 6. 사전 추가(AI 정의) 7. 저장.
  * 구성도 버전을 만들지 않고 대화 잠금도 잡지 않는다.
  */
@@ -331,21 +349,22 @@ export async function explainTarget(
 
   const cached = await repo.getCached(diagramId, targetKind, targetId);
   const fresh = cached && cached.signature === signature ? cached : null;
+  // 노드·영역은 정의 부분(사전 용어)이 있다.
+  const termed = targetKind !== "edge";
+  const candidates = targetTermCandidates(state, targetKind, targetId);
   if (fresh && !opts.force && !instruction) {
     const data = fresh.data as Explanation;
-    const node = targetKind === "node" ? state.nodes[targetId] : undefined;
-    if (data.kind !== "node" || !node) return { ok: true, explanation: data, signature };
-    return { ok: true, explanation: await withCurrentGlossary(repo, userId, node, data), signature };
+    if (!termed || data.kind !== targetKind) return { ok: true, explanation: data, signature };
+    return { ok: true, explanation: await withCurrentGlossary(repo, userId, candidates, data as TermedExplanation), signature };
   }
 
-  // 노드: 사전 조회. ensureSeeded 를 먼저 해야 시드와 같은 용어를 AI 가 새로 넣지 않는다.
+  // 노드·영역: 사전 조회. ensureSeeded 를 먼저 해야 시드와 같은 용어를 AI 가 새로 넣지 않는다.
   let row: GlossaryRow | null = null;
   let candidate: TermCandidate | undefined;
-  const node = targetKind === "node" ? state.nodes[targetId]! : null;
-  if (node) {
+  if (termed) {
     await repo.ensureSeeded(userId);
-    const candidates = termCandidates(node);
-    candidate = candidates[0];
+    // 사전에 없을 때 정의할 용어. 영역 이름은 보통 고유 이름("서비스 VPC")이라 종류 용어를 먼저 정의한다.
+    candidate = targetKind === "group" ? (candidates.find((c) => c.origin === "kind") ?? candidates[0]) : candidates[0];
     row = await repo.findTerm(userId, candidates.map((c) => c.key));
   }
 
@@ -355,7 +374,7 @@ export async function explainTarget(
   const { qwen } = deps;
   if (!qwen) return fail();
 
-  const needDefinition = !!node && !row;
+  const needDefinition = termed && !row;
   // 사전에 없으면 정의할 용어(쓴 후보)를 이름으로 알려 준다.
   const base = {
     kind: targetKind,
@@ -366,13 +385,15 @@ export async function explainTarget(
     instruction,
   };
 
-  /** 설명 모양으로 조립한다. AI 정의 노드의 용어는 사전에 넣기 전 후보 이름을 쓴다. */
+  const targetLabel = state.nodes[targetId]?.label ?? state.groups[targetId]?.label ?? targetId;
+  /** 설명 모양으로 조립한다. AI 정의 노드·영역의 용어는 사전에 넣기 전 후보 이름을 쓴다. */
   const assemble = (d: Draft, termRow: GlossaryRow | null, source: NodeExplanation["definitionSource"]): Explanation => {
-    if (!node) return { kind: "edge", ...(d as EdgeDraft) };
+    if (!termed) return { kind: "edge", ...(d as EdgeDraft) };
     const nd = d as NodeDraft;
     const def = termRow
       ? glossaryPart(termRow, source)
-      : { term: candidate?.display ?? node.label, definition: nd.definition ?? "", definitionSource: source, reviewed: false };
+      : { term: candidate?.display ?? targetLabel, definition: nd.definition ?? "", definitionSource: source, reviewed: false };
+    if (targetKind === "group") return { kind: "group", ...def, role: nd.role, boundary: (d as GroupDraft).boundary, adr: nd.adr };
     return { kind: "node", ...def, role: nd.role, adr: nd.adr };
   };
   const source = row ? "glossary" : "ai";
@@ -406,12 +427,13 @@ export async function explainTarget(
   }
 
   let finalRow = row;
-  if (node && !row && candidate && candidate.origin !== "sub") {
+  if (termed && !row && candidate && candidate.origin !== "sub") {
     // AI 정의는 미검수로 사전에 넣는다. 같은 용어가 이미 있으면 그 항목을 쓴다.
-    // sub 에서 온 용어는 SW 이름이 아닐 수 있어 이 노드 설명에만 쓰고 사전에 넣지 않는다.
+    // sub(영역은 이름)에서 온 용어는 용어 이름이 아닐 수 있어 이 설명에만 쓰고 사전에 넣지 않는다.
+    const node = state.nodes[targetId];
     finalRow = await repo.addAiTerm(userId, {
       term: candidate.display,
-      category: kindKo(node.kind),
+      category: node ? kindKo(node.kind) : "영역",
       definition: (draft as NodeDraft).definition ?? "",
       why: "",
       compare: "",

@@ -680,13 +680,20 @@ test("held Enter/Space (key repeat) is ignored and Space does not scroll", async
   expect(props.onSelect).toHaveBeenCalledTimes(1);
 });
 
-test("Enter on a zone clears the selection like a click", async () => {
+test("Enter on a zone selects it like its name pill; Enter again or Escape clears it", async () => {
   const props = baseProps();
-  const { container } = render(flowUi(props, { options: { ...props.options, selectedId: "x" } }));
+  const { container, rerender } = render(flowUi(props, { options: { ...props.options, selectedId: "x" } }));
   await waitFor(() => expect(container.querySelector(".react-flow__node-zone")).not.toBeNull());
   const zone = container.querySelector(".react-flow__node-zone") as HTMLElement;
+  const id = zone.getAttribute("data-id")!;
   zone.focus();
   fireEvent.keyDown(zone, { key: "Enter" });
+  expect(props.onSelect).toHaveBeenLastCalledWith(id);
+  rerender(flowUi(props, { options: { ...props.options, selectedId: id } }));
+  fireEvent.keyDown(zone, { key: "Enter" });
+  expect(props.onSelect).toHaveBeenLastCalledWith(null);
+  vi.mocked(props.onSelect).mockClear();
+  fireEvent.keyDown(zone, { key: "Escape" });
   expect(props.onSelect).toHaveBeenCalledWith(null);
 });
 
@@ -783,11 +790,10 @@ test("zone names are drawn in their own layer in the viewport portal, not inside
     expect(z.getAttribute("aria-label")).toBe(pillEl(container, id)!.textContent);
     expect(z.querySelector(".group__toggle-name")).toHaveTextContent(pillEl(container, id)!.textContent!);
   }
-  // 이름 알약을 눌러도 영역 머리를 누른 것과 같다: 고른 것을 풀 뿐 영역을 고르지 않는다.
+  // 이름 알약을 누르면 그 영역을 고른다(영역 바탕은 선택을 푼다).
   const zoneId = zones[zones.length - 1].getAttribute("data-id")!;
   fireEvent.click(pillEl(container, zoneId)!);
-  expect(props.onSelect).toHaveBeenCalledWith(null);
-  expect(props.onSelect).not.toHaveBeenCalledWith(zoneId);
+  expect(props.onSelect).toHaveBeenLastCalledWith(zoneId);
   // 머리를 눌렀을 때처럼 영역 래퍼가 포커스를 받고, 다음 Tab 이 돌아올 곳(tabindex 0)이 된다.
   const wrapper = container.querySelector<HTMLElement>(`.react-flow__node-zone[data-id="${zoneId}"]`)!;
   expect(document.activeElement).toBe(wrapper);
@@ -878,4 +884,14 @@ test("한 줄에 들면 이름을 보이고 툴팁을 겹쳐 두지 않는다", 
   render(<Canvas {...baseProps(emptyState())} />);
   expect(screen.getByRole("toolbar", { name: "캔버스 도구" })).not.toHaveAttribute("data-compact");
   expect(screen.getByRole("button", { name: "자동 정렬" })).not.toHaveAttribute("title");
+});
+
+test("clicking the name pill of the selected zone clears the selection and the zone shows the selected ring", async () => {
+  const props = baseProps();
+  props.options = { ...props.options, selectedId: "was-pair" };
+  const { container } = render(<div style={{ width: 800, height: 600 }}><Canvas {...props} /></div>);
+  await waitFor(() => expect(pillEl(container, "was-pair")).not.toBeNull());
+  expect(container.querySelector('.react-flow__node-zone[data-id="was-pair"] .group')).toHaveClass("group--selected");
+  fireEvent.click(pillEl(container, "was-pair")!);
+  expect(props.onSelect).toHaveBeenLastCalledWith(null);
 });

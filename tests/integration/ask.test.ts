@@ -133,6 +133,23 @@ describe("runAskTurn", () => {
     expect(events.at(-1)).toMatchObject({ t: "done", missing: computeMissing(s).count + 2 });
   });
 
+  test("a zone can be asked about: the session keeps its id and the prompt gives the zone summary", async () => {
+    const ids = await makeOwnedDiagram();
+    const s = sample();
+    s.groups.vpc = { id: "vpc", groupKind: "vpc", label: "서비스 VPC", parent: null };
+    s.nodes["was-1"]!.parent = "vpc";
+    await createVersion(ids.diagramId, s, { source: "import" });
+    const qwen = fakeQwen("서비스 VPC 는 WAS#1 을 담고 있어요.");
+    const { result } = await ask(ids, { nodeId: "vpc", text: "이 영역은 뭐야?" }, { qwen, clef: question });
+    expect(result).toEqual({ status: "ok" });
+    const [row] = await sessionsOf(ids.diagramId);
+    expect(row).toMatchObject({ kind: "node", nodeId: "vpc", nodeLabel: "서비스 VPC" });
+    const user = qwen.calls[0]![1]!.content;
+    expect(user).toContain("대상 영역:");
+    expect(user).toContain("경계를 넘는 연결:");
+    expect(user).not.toContain("대상 노드:");
+  });
+
   test("first question creates a session and streams an answer", async () => {
     const ids = await seeded();
     const qwen = fakeQwen("<think>음</think>WAS#1 은 Tomcat 으로 요청을 처리해요.");

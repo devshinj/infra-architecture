@@ -10,9 +10,9 @@ const SELECT = "Enter 나 Space 로 노드를 선택하거나 선택을 풀고, 
 const NAVIGATE = "화살표 키로 가까운 노드나 영역으로 옮겨 가고, Home 과 End 로 처음과 끝으로 갑니다.";
 const MOVE = "편집 모드에서는 선택한 노드를 화살표 키로 옮길 수 있습니다(Shift 와 함께 누르면 더 크게). 다시 옮겨 다니려면 Esc 로 선택을 푸세요.";
 
-/** 영역 래퍼의 설명: Space 로 접고 펴고, Enter 는 클릭처럼 선택을 푼다. 접기 단추는 따로 Tab 칸이 아니다. */
+/** 영역 래퍼의 설명: Space 로 접고 펴고, Enter 로 영역을 고르거나 푼다(이름 알약을 누른 것과 같다). 접기 단추는 따로 Tab 칸이 아니다. */
 export function zoneDescription(collapsed: boolean): string {
-  return `${collapsed ? "접힌 영역입니다. Space 로 펼치고" : "영역입니다. Space 로 접고"}, Enter 로 선택을 풉니다. ${NAVIGATE}`;
+  return `${collapsed ? "접힌 영역입니다. Space 로 펼치고" : "영역입니다. Space 로 접고"}, Enter 로 영역을 선택하거나 선택을 풀고, Esc 로 선택을 풉니다. ${NAVIGATE}`;
 }
 
 /**

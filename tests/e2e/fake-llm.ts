@@ -4,7 +4,7 @@ import http from "node:http";
 import "./fake-env";
 
 import spike from "../../docs/superpowers/spike/spike-results.json";
-import { ASK_PROMPT, EXPLAIN_EDGE_PROMPT, EXPLAIN_NODE_PROMPT, FLOW_SUGGEST_PROMPT, WARNING_PROMPT } from "../../src/server/chat/prompt";
+import { ASK_PROMPT, EXPLAIN_EDGE_PROMPT, EXPLAIN_GROUP_PROMPT, EXPLAIN_NODE_PROMPT, FLOW_SUGGEST_PROMPT, WARNING_PROMPT } from "../../src/server/chat/prompt";
 import { convertSpikeScenario, type SpikeState } from "../../src/server/samples";
 import { FAKE_PORT } from "./fake-config";
 
@@ -268,8 +268,8 @@ function warningLines(messages: Msg[]): { lines: string[]; delay: number } {
   return { lines: ids.map((id) => JSON.stringify({ id, text: "가짜 경고 문구" })), delay: FAST_MS };
 }
 
-/** 설명 요청: 노드는 역할·ADR(사전 정의가 없을 때만 definition), 연결선은 네 항목. 다시 쓰기 요청이면 역할을 바꾼다. */
-function explainJson(messages: Msg[], kind: "node" | "edge"): string {
+/** 설명 요청: 노드는 역할·ADR(사전 정의가 없을 때만 definition), 영역은 거기에 경계, 연결선은 네 항목. 다시 쓰기 요청이면 역할을 바꾼다. */
+function explainJson(messages: Msg[], kind: "node" | "edge" | "group"): string {
   const user = [...messages].reverse().find((m) => m.role === "user")?.content ?? "";
   if (kind === "edge") {
     return JSON.stringify({ flow: "가짜 요청과 응답", method: "가짜 방식(동기)", why: "가짜 연결 이유", firewall: "가짜 방화벽 규칙" });
@@ -278,6 +278,7 @@ function explainJson(messages: Msg[], kind: "node" | "edge"): string {
     role: user.includes("더 쉽게") ? "다시 쓴 역할" : "가짜 역할",
     adr: { decision: "가짜 결정", reason: "가짜 이유", alternative: "가짜 대안", cost: "가짜 대가" },
   };
+  if (kind === "group") out.boundary = "가짜 경계 설명";
   if (!user.includes("사전 정의:")) out.definition = "가짜 정의입니다.";
   return JSON.stringify(out);
 }
@@ -345,7 +346,7 @@ export function startFakeLlm(): Promise<http.Server> {
       const isWarning = body.messages.some((m) => m.role === "system" && m.content === WARNING_PROMPT);
       const sys = body.messages.find((m) => m.role === "system")?.content;
       const askQuestion = sys === ASK_PROMPT ? ([...body.messages].reverse().find((m) => m.role === "user")?.content.split("질문: ").pop() ?? "") : null;
-      const explainKind = sys === EXPLAIN_NODE_PROMPT ? "node" : sys === EXPLAIN_EDGE_PROMPT ? "edge" : null;
+      const explainKind = sys === EXPLAIN_NODE_PROMPT ? "node" : sys === EXPLAIN_EDGE_PROMPT ? "edge" : sys === EXPLAIN_GROUP_PROMPT ? "group" : null;
       const { lines, delay, finish, tail }: { lines: string[]; delay: number; finish?: "stop" | "length"; tail?: string } = sys === FLOW_SUGGEST_PROMPT
         ? { lines: suggestText(body.messages).includes(`노드 ${NET.link} `) ? netSuggestLines() : s1SuggestLines(), delay: FAST_MS }
         : askQuestion !== null

@@ -275,3 +275,23 @@ test("retry after a failed rewrite re-sends the same instruction", async () => {
   // 다시 쓴 결과로 바뀐다.
   expect(result.current.get("node", "a")).toMatchObject({ status: "ready", data: { definition: "다시 쓴 글" } });
 });
+
+test("a zone is explained only when selected, and its glossary word shows while loading", async () => {
+  const s = mkState(["a", "b"]);
+  // 영역 이름이 사전 별칭과 맞으면 바로 정의를 보인다(서버와 같은 이름 → 종류 용어 순).
+  s.groups.z = { id: "z", groupKind: "vpc", label: "ElastiCache", parent: null };
+  s.nodes.a = { ...s.nodes.a!, parent: "z" };
+  const stored = { "node:a": signatureOf(s, "node", "a")!, "node:b": signatureOf(s, "node", "b")! };
+  const { posts, rerender, result } = setup(stored, { state: s });
+  await waitFor(() => expect(result.current.terms).toHaveLength(1));
+  await flush();
+  expect(posts).toHaveLength(0);
+  expect(result.current.get("group", "z").status).toBe("idle");
+  rerender({ state: s, live: true, busy: false, selectedId: "z" });
+  await waitFor(() => expect(posts).toHaveLength(1));
+  expect(posts[0]!.body).toEqual({ targetKind: "group", targetId: "z" });
+  expect(result.current.get("group", "z")).toMatchObject({ status: "loading", partial: { term: "Redis", definitionSource: "glossary" } });
+  const groupEx = { ...nodeEx("메모리 저장소"), kind: "group", boundary: "a 만 밖과 이어집니다." };
+  await answer(posts[0]!, { ok: true, explanation: groupEx, signature: signatureOf(s, "group", "z") });
+  expect(result.current.get("group", "z")).toMatchObject({ status: "ready", data: groupEx });
+});

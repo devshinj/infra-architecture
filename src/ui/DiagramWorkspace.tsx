@@ -468,10 +468,20 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
   // 설명: 대화가 끝나거나 구성도를 열면 낡은 노드를 차례로 만든다. 이력 보기·비교에서는 멈춘다.
   const explanations = useExplanations({ diagramId, state: shown, live, busy: chat.busy, selectedId: options.selectedId });
   const selId = options.selectedId;
-  const selKind: TargetKind | null = selId === null ? null : shown.nodes[selId] ? "node" : shown.edges[selId] ? "edge" : null;
-  const nodeLabel = (id: string) => shown.nodes[id]?.label ?? id;
+  const selKind: TargetKind | null =
+    selId === null ? null : shown.nodes[selId] ? "node" : shown.edges[selId] ? "edge" : shown.groups[selId] ? "group" : null;
+  // 연결 끝은 영역일 수도 있다.
+  const nodeLabel = (id: string) => shown.nodes[id]?.label ?? shown.groups[id]?.label ?? id;
   const selectionLabel =
-    selId === null ? null : selKind === "node" ? nodeLabel(selId) : selKind === "edge" ? `${nodeLabel(shown.edges[selId]!.from)} → ${nodeLabel(shown.edges[selId]!.to)} 연결` : null;
+    selId === null
+      ? null
+      : selKind === "node"
+        ? nodeLabel(selId)
+        : selKind === "edge"
+          ? `${nodeLabel(shown.edges[selId]!.from)} → ${nodeLabel(shown.edges[selId]!.to)} 연결`
+          : selKind === "group"
+            ? `${shown.groups[selId]!.label} 영역`
+            : null;
   let explain: ExplanationProps | undefined;
   if (selId !== null && selKind !== null) {
     const { rewrite, retry } = explanations;
@@ -665,8 +675,8 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
       alive = false;
     };
   }, [errorLines]);
-  /** 지금 구성도의 노드 이름. 노드가 없으면 null(지워진 노드의 세션). */
-  const labelOf = (nodeId: string) => current.state.nodes[nodeId]?.label ?? null;
+  /** 지금 구성도의 노드·영역 이름(질문 세션은 영역도 대상으로 받는다). 없으면 null(지워진 대상의 세션). */
+  const labelOf = (nodeId: string) => current.state.nodes[nodeId]?.label ?? current.state.groups[nodeId]?.label ?? null;
   /** 차례 밖의 줄(가정 확정 실패 등)을 그 구성도 대화에 쌓는다. */
   const lineSeq = useRef(0);
   const pushDiagramLine = (line: Omit<ChatLine, "id">) => {
@@ -711,7 +721,7 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
     void chat.send(text, { kind: "ask", nodeId: activeSession.nodeId, sessionId: isNew ? null : activeSession.id });
   }; // no history view/compare/restore, edit mode or sample import while the AI answers
 
-  /** 노드에 대해 묻기(설명 패널·우클릭 메뉴가 부른다): 대화 탭으로 가서 새 질문 세션의 첫 차례를 시작한다. */
+  /** 노드·영역에 대해 묻기(설명 패널·우클릭 메뉴가 부른다): 대화 탭으로 가서 새 질문 세션의 첫 차례를 시작한다. */
   const startAsk = (nodeId: string, text: string): boolean => {
     const label = labelOf(nodeId);
     const t = text.trim();
@@ -1182,7 +1192,7 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
             flows={flowPanel}
             {...(narrow ? { externalTabs: { tabIdOf: mobileTabId, request: tabRequest } } : {})}
             {...(explain ? { explain } : {})}
-            {...(selKind === "node"
+            {...(selKind === "node" || selKind === "group"
               ? {
                   ask: {
                     disabled: askLocked,

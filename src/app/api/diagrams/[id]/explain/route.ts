@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 150;
 
 const BodySchema = z.object({
-  targetKind: z.enum(["node", "edge"]),
+  targetKind: z.enum(["node", "edge", "group"]),
   targetId: z.string().min(1).max(200),
   instruction: z.string().optional(),
 });

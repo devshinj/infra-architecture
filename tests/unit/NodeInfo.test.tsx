@@ -6,6 +6,7 @@ import { afterEach, expect, test, vi } from "vitest";
 import { confirmLinkGuessAction, rejectLinkGuessAction } from "@/app/(app)/actions";
 import { type DiagramState, emptyState } from "@/domain/types";
 import { NodeInfo } from "@/ui/NodeInfo";
+import { NetworkKnowledgeProvider } from "@/ui/network/NetworkKnowledgeContext";
 
 import { fx } from "../fixtures/spike";
 
@@ -339,4 +340,89 @@ test("연결 is one section: a row per connection with the other node as a chip,
   expect(onSelect).toHaveBeenCalledWith(expect.stringMatching(/proxy/));
   // 노드 링크 복사는 이름 줄(header) 안의 조용한 단추다.
   expect(screen.getByRole("button", { name: "노드 링크 복사" }).closest("header")).not.toBeNull();
+});
+
+// ---- 영역 고르기 ----
+function zoneState(): DiagramState {
+  const s = emptyState();
+  s.groups.net = { id: "net", groupKind: "network_zone", label: "업무망", parent: null, netType: { key: "admin", source: "ai", confirmed: false } };
+  s.groups.sub = { id: "sub", groupKind: "subnet_private", label: "DB 구역", parent: "net" };
+  s.nodes.was = { id: "was", kind: "was", label: "업무 WAS", parent: "net", attrs: {} };
+  s.nodes.db = { id: "db", kind: "db_rdb", label: "업무 DB", parent: "sub", attrs: {} };
+  s.nodes.user = { id: "user", kind: "client_web", label: "직원 PC", parent: null, attrs: {} };
+  s.edges.e1 = { id: "e1", from: "user", to: "was", edgeKind: "request", label: "HTTPS" };
+  s.edges.e2 = { id: "e2", from: "was", to: "db", edgeKind: "request" };
+  return s;
+}
+const ZONE_KNOWLEDGE = {
+  types: { admin: { key: "admin", name: "행정망", aliases: [], description: "행정기관 업무용 내부망입니다.", grade: "internal" as const, separated: true } },
+  rules: [],
+};
+
+test("a selected zone shows its net type with the AI guess badge, members and crossing edges", async () => {
+  const onSelect = vi.fn();
+  render(
+    <NetworkKnowledgeProvider value={ZONE_KNOWLEDGE}>
+      <NodeInfo state={zoneState()} selectedId="net" onSelect={onSelect} />
+    </NetworkKnowledgeProvider>,
+  );
+  expect(screen.getByRole("heading", { level: 2, name: "업무망" })).toBeInTheDocument();
+  const net = screen.getByRole("region", { name: "망 종류" });
+  expect(net).toHaveTextContent("행정망");
+  expect(net).toHaveTextContent("내부");
+  expect(net).toHaveTextContent("행정기관 업무용 내부망입니다.");
+  expect(net).toHaveTextContent("AI 추정");
+
+  const members = screen.getByRole("region", { name: "안에 든 것" });
+  await userEvent.click(within(members).getByRole("button", { name: "DB 구역" }));
+  expect(onSelect).toHaveBeenLastCalledWith("sub");
+  await userEvent.click(within(members).getByRole("button", { name: "업무 WAS" }));
+  expect(onSelect).toHaveBeenLastCalledWith("was");
+
+  // 안끼리(was→db)는 경계를 넘지 않는다. 줄을 누르면 그 연결을 고른다.
+  const crossing = screen.getByRole("region", { name: "경계를 넘는 연결" });
+  expect(within(crossing).getAllByRole("button")).toHaveLength(1);
+  await userEvent.click(within(crossing).getByRole("button", { name: /직원 PC → 업무 WAS/ }));
+  expect(onSelect).toHaveBeenLastCalledWith("e1");
+  expect(crossing).toHaveTextContent("← 들어옴 · 동기 요청 · HTTPS");
+});
+
+test("a confirmed net type has no AI badge and a zone without net type, members or links says so", () => {
+  const s = zoneState();
+  s.groups.net!.netType = { key: "admin", source: "ai", confirmed: true };
+  const { rerender } = render(
+    <NetworkKnowledgeProvider value={ZONE_KNOWLEDGE}>
+      <NodeInfo state={s} selectedId="net" onSelect={vi.fn()} />
+    </NetworkKnowledgeProvider>,
+  );
+  expect(screen.getByRole("region", { name: "망 종류" })).not.toHaveTextContent("AI 추정");
+  const lonely = emptyState();
+  lonely.groups.z = { id: "z", groupKind: "dmz", label: "DMZ", parent: null };
+  rerender(<NodeInfo state={lonely} selectedId="z" onSelect={vi.fn()} />);
+  expect(screen.queryByRole("region", { name: "망 종류" })).toBeNull();
+  expect(screen.getByText("안에 든 것이 없어요.")).toBeInTheDocument();
+  expect(screen.getByText("영역 밖과 이어진 연결이 없어요.")).toBeInTheDocument();
+});
+
+test("a selected zone shows its explanation with the boundary section and a zone question box", () => {
+  render(
+    <NodeInfo
+      state={zoneState()}
+      selectedId="net"
+      onSelect={vi.fn()}
+      explain={{
+        status: "ready",
+        terms: [],
+        data: {
+          kind: "group", term: "망", definition: "망은 함께 쓰는 네트워크입니다.", definitionSource: "ai", reviewed: false,
+          role: "업무 서버를 묶습니다.", boundary: "직원 PC 의 요청만 들어옵니다.", adr: { decision: "a", reason: "b", alternative: "c", cost: "d" },
+        },
+      }}
+      ask={{ disabled: false, onAsk: vi.fn() }}
+    />,
+  );
+  expect(screen.getByRole("heading", { name: "이 구성에서의 역할" })).toBeInTheDocument();
+  expect(screen.getByRole("heading", { name: "경계에서 드나드는 것" })).toBeInTheDocument();
+  expect(screen.getByText("직원 PC 의 요청만 들어옵니다.")).toBeInTheDocument();
+  expect(screen.getByLabelText("이 영역에 대해 물어보기")).toBeInTheDocument();
 });
