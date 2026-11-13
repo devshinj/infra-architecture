@@ -65,7 +65,7 @@ test("행정망 사례: AI 추정 망연계, 아니에요로 되돌리기, 다�
   await expect(nodes(page)).toHaveCount(ADMIN_NODE_COUNT - 1, { timeout: 15_000 });
   await expect(nodeByTitle(page, "망연계 솔루션")).toHaveCount(0);
   await nodeByTitle(page, "행정망 방화벽").click();
-  const linked = page.locator("section").filter({ has: page.getByRole("heading", { name: "연결된 노드" }) });
+  const linked = page.locator("section").filter({ has: page.getByRole("heading", { name: "연결", exact: true }) });
   await expect(linked.getByRole("button", { name: "GCloud WAS" })).toBeVisible();
   await expect(linked.getByRole("button", { name: "행정망 PC" })).toBeVisible();
   await page.keyboard.press("Escape");

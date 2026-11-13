@@ -29,6 +29,11 @@ async function selectRedis(page: Page) {
   await page.getByRole("button", { name: "전체 보기" }).click();
   await redis(page).click();
   await expect(page.getByRole("tab", { name: "설명" })).toHaveAttribute("aria-selected", "true");
+  // 정의·왜 이렇게 짰나요는 「자세히」 접힘 절 안에 있다(펼친 상태는 기억된다). 접혀 있으면 편다.
+  const details = page.locator("details", { has: page.locator("summary", { hasText: "자세히" }) });
+  await expect(details).toBeVisible({ timeout: 30_000 });
+  if (!(await details.evaluate((d) => (d as HTMLDetailsElement).open))) await details.locator("summary").click();
+  await expect(details).toHaveJSProperty("open", true);
 }
 
 test("explanations and glossary", async ({ page }) => {
