@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef, useState, useTransition } from "react";
+import { type ReactNode, useEffect, useLayoutEffect, useRef, useState, useTransition } from "react";
 
 import styles from "./app.module.css";
 import { Button } from "./Button";
@@ -20,7 +20,7 @@ export type NameDialog = {
   initial: string;
   run(name: string): Promise<string | void>;
 };
-export type DeleteDialog = { kind: "delete"; title: string; message: string; run(): Promise<string | void> };
+export type DeleteDialog = { kind: "delete"; title: string; message: ReactNode; run(): Promise<string | void> };
 export type Dialog = NameDialog | DeleteDialog;
 
 export type RowMenuItem<A extends string> = { action: A; label: string; disabled?: boolean; danger?: boolean };

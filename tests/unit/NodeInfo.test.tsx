@@ -29,8 +29,11 @@ test("NodeInfo shows missing values as 미입력 and connected node chips", asyn
 test("NodeInfo shows the Korean kind name and relation direction", () => {
   render(<NodeInfo state={fx("s2")} selectedId="was-1" onSelect={vi.fn()} />);
   expect(screen.getByText("WAS", { selector: "[data-testid=kind]" })).toBeInTheDocument();
-  expect(screen.getAllByText(/← 동기 요청 · HTTP\/AJP/)).toHaveLength(2);
-  expect(screen.getByText(/→ 동기 요청 · TCP 1521/)).toBeInTheDocument();
+  // 방향은 선으로 그린 화살표(보조기기에는 숨김)와 숨긴 화살표 글자로 보인다: 글자 내용은 그대로 "← 동기 요청 · …".
+  const rows = [...document.querySelectorAll("li")].filter((li) => /동기 요청/.test(li.textContent ?? ""));
+  expect(rows.filter((li) => /← 동기 요청 · HTTP\/AJP/.test(li.textContent!))).toHaveLength(2);
+  expect(rows.filter((li) => /→ 동기 요청 · TCP 1521/.test(li.textContent!))).toHaveLength(1);
+  for (const li of rows) expect(li.querySelector("svg")).toHaveAttribute("aria-hidden", "true");
 });
 
 test("NodeInfo shows an edge's kind, ends and label", () => {

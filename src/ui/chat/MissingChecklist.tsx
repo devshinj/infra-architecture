@@ -8,6 +8,7 @@ import { computeMissing, type MissingItem } from "@/domain/missing";
 import type { DiagramState } from "@/domain/types";
 import { Button } from "@/ui/Button";
 
+import { ArrowPair } from "../Arrow";
 import { useNetworkKnowledge } from "../network/NetworkKnowledgeContext";
 import { ZoneTypePicker } from "../network/ZoneTypePicker";
 import styles from "./chat.module.css";
@@ -54,7 +55,8 @@ export type ChecklistDrafts = Record<string, ChecklistDraft>;
 /** 대상별 블록 펼침. 없으면 접힘이다. */
 export type ChecklistExpanded = Record<string, boolean>;
 type Draft = ChecklistDraft;
-type Block = { targetKind: MissingItem["targetKind"]; targetId: string; title: string; category: Category | null; items: MissingItem[] };
+/** title 은 보조기기 이름에 쓰는 글자, ends 는 연결 블록의 두 끝 이름(화면에는 선 화살표로 그린다). */
+type Block = { targetKind: MissingItem["targetKind"]; targetId: string; title: string; ends?: [string, string]; category: Category | null; items: MissingItem[] };
 
 // 고르는 칸: 화면에는 쉬운 말, 저장 값은 enum.
 const CHOICES: Record<string, { value: string; text: string }[]> = {
@@ -78,10 +80,11 @@ function blocksOf(state: DiagramState, items: MissingItem[]): Block[] {
     let b = map.get(it.targetId);
     if (!b) {
       const edge = it.targetKind === "edge" ? state.edges[it.targetId] : undefined;
-      const title = edge ? `${nameOf(edge.from)} → ${nameOf(edge.to)}` : nameOf(it.targetId);
+      const ends: [string, string] | undefined = edge ? [nameOf(edge.from), nameOf(edge.to)] : undefined;
+      const title = ends ? `${ends[0]} → ${ends[1]}` : nameOf(it.targetId);
       const node = it.targetKind === "node" ? state.nodes[it.targetId] : undefined;
       const category = node ? (NODE_KINDS.find((k) => k.kind === node.kind)?.category ?? null) : null;
-      b = { targetKind: it.targetKind, targetId: it.targetId, title, category, items: [] };
+      b = { targetKind: it.targetKind, targetId: it.targetId, title, ...(ends ? { ends } : {}), category, items: [] };
       map.set(it.targetId, b);
     }
     b.items.push(it);
@@ -226,10 +229,10 @@ export function MissingChecklist({ state, busy, readOnly = false, focusId, focus
               </span>
               {onLocate ? (
                 <button type="button" className={styles.blockTitle} aria-label={`${b.title} 위치 보기`} onClick={() => onLocate(b.targetId)}>
-                  {b.title}
+                  {b.ends ? <ArrowPair a={b.ends[0]} b={b.ends[1]} /> : b.title}
                 </button>
               ) : (
-                <span className={styles.blockTitle}>{b.title}</span>
+                <span className={styles.blockTitle}>{b.ends ? <ArrowPair a={b.ends[0]} b={b.ends[1]} /> : b.title}</span>
               )}
               <span className={styles.blockCount} data-zero={left === 0 || undefined}>
                 {left}

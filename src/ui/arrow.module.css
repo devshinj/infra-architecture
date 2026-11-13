@@ -1,0 +1,3 @@
+/* 글자 사이 방향 화살표(선으로 그린 12×8): 글자 가운데 높이에 맞춘다. 양옆 간격은 곁의 공백 글자가 맡는다. */
+.arrow { display: inline-block; vertical-align: middle; flex: none; }
+.srOnly { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }

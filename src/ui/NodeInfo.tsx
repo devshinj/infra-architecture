@@ -19,6 +19,7 @@ import { AskNode, type AskNodeProps } from "./explain/AskNode";
 import { Explanation, type ExplanationProps } from "./explain/Explanation";
 import { AI_BADGE_SR, AI_GUESS_BADGE } from "./glossary/aiBadge";
 import { useNetworkKnowledge } from "./network/NetworkKnowledgeContext";
+import { Arrow, ArrowMark, ArrowPair } from "./Arrow";
 import netStyles from "./network/network.module.css";
 
 import styles from "./panel.module.css";
@@ -268,19 +269,6 @@ function NetTypePart({ group }: { group: Group }) {
   );
 }
 
-/**
- * 방향 화살표. 글자(→ ←)는 화면 글꼴에서 ">" "<" 처럼 보여 선으로 그린다(연결선 층의 방향 표지와 같은 모양).
- * 꾸밈이라 보조기기에는 숨긴다: 뜻은 곁의 글자(들어옴·나감, 숨긴 "→")가 전한다.
- */
-const ARROW_D = { right: "M1,4 H11 M8,1 L11,4 L8,7", left: "M11,4 H1 M4,1 L1,4 L4,7" } as const;
-function Arrow({ dir }: { dir: keyof typeof ARROW_D }) {
-  return (
-    <svg className={styles.arrow} width="12" height="8" viewBox="0 0 12 8" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <path d={ARROW_D[dir]} />
-    </svg>
-  );
-}
-
 /** 영역 설명 탭: 망 종류 → 설명 → 안에 든 것 → 경계를 넘는 연결 → 물어보기. */
 function GroupInfo({ state, group, onSelect, onMention, mentionDisabled, explain, ask }: { group: Group } & Pick<NodeInfoProps, "state" | "onSelect" | "onMention" | "mentionDisabled" | "explain" | "ask">) {
   const members = groupMembers(state, group.id);
@@ -324,10 +312,7 @@ function GroupInfo({ state, group, onSelect, onMention, mentionDisabled, explain
               return (
                 <li key={c.edgeId} className={styles.relation}>
                   <button type="button" className={styles.chip} onClick={() => onSelect(c.edgeId)}>
-                    {nameOf(state, e.from)}{" "}
-                    <Arrow dir="right" />
-                    <span className={netStyles.srOnly}>→</span>{" "}
-                    {nameOf(state, e.to)}
+                    <ArrowPair a={nameOf(state, e.from)} b={nameOf(state, e.to)} />
                   </button>
                   <span className={styles.relText}>
                     <Arrow dir={c.dir === "in" ? "left" : "right"} />{" "}
@@ -398,7 +383,7 @@ export function NodeInfo({ state, selectedId, onSelect, onMention, mentionDisabl
     .map((e) => {
       const incoming = e.to === node.id;
       const otherId = incoming ? e.from : e.to;
-      return { id: e.id, otherId, text: `${incoming ? "←" : "→"} ${edgeKindName(e.edgeKind)}${e.label ? ` · ${e.label}` : ""}` };
+      return { id: e.id, otherId, incoming, text: `${edgeKindName(e.edgeKind)}${e.label ? ` · ${e.label}` : ""}` };
     });
   // 관리형 서비스(ALB·RDS 등): 서버 칸(CPU·RAM·IP 등)과 AZ 는 비어 있으면 줄째 빼고, 서버 정보 대신 운영 정보로 보인다.
   const managed = managedBasis(node);
@@ -463,7 +448,10 @@ export function NodeInfo({ state, selectedId, onSelect, onMention, mentionDisabl
                 ) : (
                   <span>{nameOf(state, r.otherId)}</span>
                 )}
-                <span className={styles.relText}>{r.text}</span>
+                <span className={styles.relText}>
+                  <ArrowMark dir={r.incoming ? "left" : "right"} />{" "}
+                  {r.text}
+                </span>
               </li>
             ))}
           </ul>

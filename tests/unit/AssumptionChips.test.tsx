@@ -5,6 +5,9 @@ import { afterEach, expect, test, vi } from "vitest";
 
 import { AssumptionChips } from "@/ui/chat/AssumptionChips";
 
+/** 글자가 여러 요소(이름·선 화살표·숨긴 화살표 글자)로 나뉜 덩이를 전체 글자로 찾는다: 그 글자를 다 가진 가장 안쪽 요소. */
+const whole = (text: string) => (_: string, el: Element | null) => !!el && el.textContent === text && ![...el.children].some((c) => c.textContent === text);
+
 afterEach(cleanup);
 
 const A = {
@@ -76,9 +79,12 @@ test("AssumptionChips: no_link 가정은 망 이름 짝으로 보인다", () => 
     "no_link:admin-net--gone": { key: "no_link:admin-net--gone", value: "망연계 없이 통신", confirmed: false },
   };
   render(<AssumptionChips assumptions={assumptions} groups={groups} busy={false} onChoose={vi.fn()} onConfirm={vi.fn()} />);
-  expect(screen.getByText("망연계 없음: 행정망 ↔ GCloud 인터넷망")).toBeInTheDocument();
+  const chip = screen.getByText(whole("망연계 없음: 행정망 ↔ GCloud 인터넷망"));
+  expect(chip).toBeInTheDocument();
+  // 화살표는 글꼴에서 "<>" 처럼 보이는 글자 대신 선으로 그린 SVG(보조기기에는 숨김)다.
+  expect(chip.querySelector("svg")).toHaveAttribute("aria-hidden", "true");
   // 사라진 망은 id 그대로 쓴다.
-  expect(screen.getByText("망연계 없음: 행정망 ↔ gone")).toBeInTheDocument();
+  expect(screen.getByText(whole("망연계 없음: 행정망 ↔ gone"))).toBeInTheDocument();
   // 선택지 칩(펼치는 단추)은 없다.
   expect(screen.queryByRole("button", { name: /망연계 없음/ })).not.toBeInTheDocument();
   expect(screen.queryByText(/no_link:/)).not.toBeInTheDocument();
@@ -100,5 +106,5 @@ test("AssumptionChips: no_link 가정은 지우기 단추로 지운다(이력 �
   expect(screen.getByRole("button", { name })).toBeDisabled();
   rerender(<AssumptionChips assumptions={assumptions} groups={groups} busy={false} readOnly onChoose={vi.fn()} onConfirm={vi.fn()} onRemoveNoLink={onRemoveNoLink} />);
   expect(screen.queryByRole("button", { name })).not.toBeInTheDocument();
-  expect(screen.getByText("망연계 없음: 행정망 ↔ GCloud 인터넷망")).toBeInTheDocument();
+  expect(screen.getByText(whole("망연계 없음: 행정망 ↔ GCloud 인터넷망"))).toBeInTheDocument();
 });

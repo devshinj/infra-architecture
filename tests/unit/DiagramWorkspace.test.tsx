@@ -67,6 +67,9 @@ import { POLL_MS } from "@/ui/useRemoteChanges";
 
 import { KNOWLEDGE, adminCase } from "../fixtures/network";
 
+/** 글자가 여러 요소(이름·선 화살표·숨긴 화살표 글자)로 나뉜 덩이를 전체 글자로 찾는다: 그 글자를 다 가진 가장 안쪽 요소. */
+const whole = (text: string) => (_: string, el: Element | null) => !!el && el.textContent === text && ![...el.children].some((c) => c.textContent === text);
+
 afterEach(() => {
   cleanup();
   vi.unstubAllGlobals();
@@ -1211,12 +1214,12 @@ test("가정 칩에서 망연계 거절 기억을 지우면 서버에 지우고 
   const latest = { number: 1, state: { ...adminCase(), assumptions: { [key]: { key, value: "망연계 없이 통신(사용자 확인)", confirmed: true } } } };
   render(<DiagramWorkspace diagramId="d" name="n" latest={latest as never} initialPinned={{}} samples={[]} knowledge={KNOWLEDGE} />);
   fireEvent.click(cardToggle());
-  expect(screen.getByText("망연계 없음: 행정망 ↔ GCloud 인터넷망")).toBeInTheDocument();
+  expect(screen.getByText(whole("망연계 없음: 행정망 ↔ GCloud 인터넷망"))).toBeInTheDocument();
   await act(async () => {
     fireEvent.click(screen.getByRole("button", { name: "행정망 ↔ GCloud 인터넷망 망연계 없음 기억 지우기" }));
   });
   expect(removeNoLinkAction).toHaveBeenCalledWith("d", key);
-  expect(screen.queryByText("망연계 없음: 행정망 ↔ GCloud 인터넷망")).not.toBeInTheDocument();
+  expect(screen.queryByText(whole("망연계 없음: 행정망 ↔ GCloud 인터넷망"))).not.toBeInTheDocument();
 });
 
 describe("Claude Code 변경 알아채기", () => {
