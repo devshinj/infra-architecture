@@ -1,6 +1,6 @@
 ---
 title: "ValidationError"
-sidebar_position: 119
+sidebar_position: 123
 sidebar_label: "핵심 노드: ValidationError"
 ---
 # ValidationError
@@ -9,7 +9,7 @@ sidebar_label: "핵심 노드: ValidationError"
 
 > God node · 57 connections · `src/server/projects.ts`
 
-**Community:** [getOwnedDiagram](getOwnedDiagram.md)
+**Community:** [server/network.ts](server-network.ts.md)
 
 ## Connections by Relation
 
@@ -26,14 +26,14 @@ sidebar_label: "핵심 노드: ValidationError"
 - confirmAssumptionFor() `EXTRACTED`
 - confirmLinkGuessFor() `EXTRACTED`
 - bad() `EXTRACTED`
+- updateTerm() `EXTRACTED`
+- cleanName() `EXTRACTED`
 - mapNameTaken() `EXTRACTED`
 - removeFlowStep() `EXTRACTED`
 - renameFlow() `EXTRACTED`
-- updateTerm() `EXTRACTED`
 - resetNetworkType() `EXTRACTED`
 - setNetworkTypeHidden() `EXTRACTED`
 - upsertNetworkRule() `EXTRACTED`
-- cleanName() `EXTRACTED`
 - *…and 12 more `calls` connection(s) not listed (lowest-degree first to go)*
 
 ### contains
@@ -43,7 +43,7 @@ sidebar_label: "핵심 노드: ValidationError"
 - [(app)/actions.ts](app-actions.ts.md) `EXTRACTED`
 - [pipeline.ts](pipeline.ts.md) `EXTRACTED`
 - server/explain.ts `EXTRACTED`
-- ask.ts `EXTRACTED`
+- [ask.ts](ask.ts.md) `EXTRACTED`
 - [server/network.ts](server-network.ts.md) `EXTRACTED`
 - [server/flows.ts](server-flows.ts.md) `EXTRACTED`
 - [glossary.ts](glossary.ts.md) `EXTRACTED`

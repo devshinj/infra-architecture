@@ -1,13 +1,13 @@
 ---
 title: "Flow()"
-sidebar_position: 125
+sidebar_position: 128
 sidebar_label: "핵심 노드: Flow()"
 ---
 # Flow()
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> God node · 36 connections · `src/canvas/Canvas.tsx`
+> God node · 38 connections · `src/canvas/Canvas.tsx`
 
 **Community:** [Canvas.tsx](Canvas.tsx.md)
 
@@ -25,16 +25,16 @@ sidebar_label: "핵심 노드: Flow()"
 - emphasisOf() `EXTRACTED`
 - displayEdgeFor() `EXTRACTED`
 - unionRect() `EXTRACTED`
+- zoneHeadPill() `EXTRACTED`
 - warningsByNode() `EXTRACTED`
 - useHoverEmphasis() `EXTRACTED`
 - flowEmphasis() `EXTRACTED`
 - litZones() `EXTRACTED`
+- canvasAriaLabels() `EXTRACTED`
 - step() `EXTRACTED`
 - EdgeLayerPortal() `EXTRACTED`
 - ZoneNameLayerPortal() `EXTRACTED`
-- drawnId() `EXTRACTED`
-- .onOptionsChange() `EXTRACTED`
-- *…and 15 more `calls` connection(s) not listed (lowest-degree first to go)*
+- *…and 17 more `calls` connection(s) not listed (lowest-degree first to go)*
 
 ### contains
 - [Canvas.tsx](Canvas.tsx.md) `EXTRACTED`

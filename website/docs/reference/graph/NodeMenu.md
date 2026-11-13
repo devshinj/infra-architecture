@@ -1,6 +1,6 @@
 ---
 title: "NodeMenu"
-sidebar_position: 104
+sidebar_position: 108
 ---
 # NodeMenu
 
@@ -21,8 +21,8 @@ sidebar_position: 104
 ## Relationships
 
 - [Canvas.tsx](Canvas.tsx.md) (3 shared connections)
-- [EdgePanels.tsx](EdgePanels.tsx.md) (1 shared connections)
-- [NodeInfo.tsx](NodeInfo.tsx.md) (1 shared connections)
+- [ResetPasswordForm.tsx](ResetPasswordForm.tsx.md) (1 shared connections)
+- [Review Focus](Review_Focus.md) (1 shared connections)
 
 ## Source Files
 

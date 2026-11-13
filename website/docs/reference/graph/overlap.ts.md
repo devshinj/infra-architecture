@@ -1,6 +1,6 @@
 ---
 title: "overlap.ts"
-sidebar_position: 102
+sidebar_position: 106
 ---
 # overlap.ts
 
@@ -22,7 +22,7 @@ sidebar_position: 102
 ## Relationships
 
 - [layout.ts](layout.ts.md) (2 shared connections)
-- [display.ts](display.ts.md) (1 shared connections)
+- [layoutMetrics.ts](layoutMetrics.ts.md) (1 shared connections)
 - [useCamera.ts](useCamera.ts.md) (1 shared connections)
 - [InfraSketch 설계 문서](InfraSketch_설계_문서.md) (1 shared connections)
 

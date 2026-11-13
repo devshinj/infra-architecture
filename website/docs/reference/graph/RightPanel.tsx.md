@@ -11,15 +11,15 @@ sidebar_position: 36
 ## Key Concepts
 
 - **RightPanel.tsx** (27 connections) — `src/ui/RightPanel.tsx`
+- **HistoryPanel.tsx** (12 connections) — `src/ui/HistoryPanel.tsx`
 - **RightPanelProps** (12 connections) — `src/ui/RightPanel.tsx`
-- **HistoryPanel.tsx** (11 connections) — `src/ui/HistoryPanel.tsx`
 - **RightPanel()** (10 connections) — `src/ui/RightPanel.tsx`
 - **ChatPanelProps** (9 connections) — `src/ui/chat/ChatPanel.tsx`
 - **HistoryPanel()** (9 connections) — `src/ui/HistoryPanel.tsx`
 - **Tab** (7 connections) — `src/ui/panelTabs.ts`
 - **HistoryPanelProps** (6 connections) — `src/ui/HistoryPanel.tsx`
-- **Task 2: 키 테이블과 버전 칸** (4 connections) — `docs/superpowers/plans/2026-11-09-mcp-server.md`
 - **panelTabs.ts** (4 connections) — `src/ui/panelTabs.ts`
+- **undoneVersions()** (3 connections) — `src/ui/HistoryPanel.tsx`
 - **TABS** (3 connections) — `src/ui/panelTabs.ts`
 - **.onTabChange()** (3 connections) — `src/ui/RightPanel.tsx`
 - **.onCompare()** (2 connections) — `src/ui/HistoryPanel.tsx`
@@ -38,22 +38,21 @@ sidebar_position: 36
 
 ## Relationships
 
-- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (8 shared connections)
+- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (11 shared connections)
+- [ChatPanel.tsx](ChatPanel.tsx.md) (6 shared connections)
 - [NodeInfo.tsx](NodeInfo.tsx.md) (6 shared connections)
-- [FlowPanel.tsx](FlowPanel.tsx.md) (6 shared connections)
-- [ChatPanel.tsx](ChatPanel.tsx.md) (5 shared connections)
-- [ResetPasswordForm.tsx](ResetPasswordForm.tsx.md) (3 shared connections)
-- [PageSkeleton.tsx](PageSkeleton.tsx.md) (3 shared connections)
+- [ResetPasswordForm.tsx](ResetPasswordForm.tsx.md) (5 shared connections)
+- [FlowPanel.tsx](FlowPanel.tsx.md) (5 shared connections)
 - [Explanation.tsx](Explanation.tsx.md) (3 shared connections)
-- [(app)/actions.ts](app-actions.ts.md) (2 shared connections)
-- [EdgePanels.tsx](EdgePanels.tsx.md) (2 shared connections)
-- [flowSuggest.ts](flowSuggest.ts.md) (2 shared connections)
-- [read.ts](read.ts.md) (1 shared connections)
-- [schema.ts](schema.ts.md) (1 shared connections)
+- [PageSkeleton.tsx](PageSkeleton.tsx.md) (2 shared connections)
+- [getOwnedDiagram](getOwnedDiagram.md) (2 shared connections)
+- [useSessions.ts](useSessions.ts.md) (1 shared connections)
+- [SessionPicker.tsx](SessionPicker.tsx.md) (1 shared connections)
+- [versions.ts](versions.ts.md) (1 shared connections)
+- [domain/flows.ts](domain-flows.ts.md) (1 shared connections)
 
 ## Source Files
 
-- `docs/superpowers/plans/2026-11-09-mcp-server.md`
 - `src/ui/HistoryPanel.tsx`
 - `src/ui/RightPanel.tsx`
 - `src/ui/chat/ChatPanel.tsx`
@@ -61,8 +60,8 @@ sidebar_position: 36
 
 ## Audit Trail
 
-- EXTRACTED: 82 (95%)
-- INFERRED: 4 (5%)
+- EXTRACTED: 84 (98%)
+- INFERRED: 2 (2%)
 - AMBIGUOUS: 0 (0%)
 
 ---

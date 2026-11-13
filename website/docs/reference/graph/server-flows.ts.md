@@ -1,17 +1,16 @@
 ---
 title: "server/flows.ts"
-sidebar_position: 39
+sidebar_position: 32
 ---
 # server/flows.ts
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 25 nodes · cohesion 0.13
+> 27 nodes · cohesion 0.11
 
 ## Key Concepts
 
 - **server/flows.ts** (52 connections) — `src/server/flows.ts`
-- **listFlows()** (13 connections) — `src/server/flows.ts`
 - **flows/route.ts** (12 connections) — `src/app/api/diagrams/[id]/flows/route.ts`
 - **head/route.ts** (12 connections) — `src/app/api/diagrams/[id]/head/route.ts`
 - **StoredFlow** (10 connections) — `src/server/flows.ts`
@@ -19,6 +18,7 @@ sidebar_position: 39
 - **byKey()** (8 connections) — `src/server/flows.ts`
 - **removeFlowStep()** (6 connections) — `src/server/flows.ts`
 - **renameFlow()** (6 connections) — `src/server/flows.ts`
+- **BusyError** (5 connections) — `src/server/flows.ts`
 - **confirmFlow()** (5 connections) — `src/server/flows.ts`
 - **deleteFlow()** (5 connections) — `src/server/flows.ts`
 - **getDiagramHead()** (4 connections) — `src/server/flows.ts`
@@ -27,29 +27,30 @@ sidebar_position: 39
 - **FlowSource** (3 connections) — `src/db/schema.ts`
 - **FlowProblem** (3 connections) — `src/domain/flows.ts`
 - **copyFlows()** (3 connections) — `src/server/flows.ts`
+- **.refresh()** (2 connections) — `src/ui/flows/useFlows.ts`
 - **Ctx** (1 connections) — `src/app/api/diagrams/[id]/flows/route.ts`
 - **dynamic** (1 connections) — `src/app/api/diagrams/[id]/flows/route.ts`
 - **runtime** (1 connections) — `src/app/api/diagrams/[id]/flows/route.ts`
 - **Ctx** (1 connections) — `src/app/api/diagrams/[id]/head/route.ts`
 - **dynamic** (1 connections) — `src/app/api/diagrams/[id]/head/route.ts`
 - **runtime** (1 connections) — `src/app/api/diagrams/[id]/head/route.ts`
-- **DiagramHead** (1 connections) — `src/server/flows.ts`
-- **LAST_STEP_MESSAGE** (1 connections) — `src/server/flows.ts`
+- **.constructor()** (1 connections) — `src/server/flows.ts`
+- *... and 2 more nodes in this community*
 
 ## Relationships
 
-- [getOwnedDiagram](getOwnedDiagram.md) (18 shared connections)
-- [flowSuggest.ts](flowSuggest.ts.md) (11 shared connections)
-- [schema.ts](schema.ts.md) (10 shared connections)
-- [useFlows](useFlows.md) (10 shared connections)
+- [(app)/actions.ts](app-actions.ts.md) (15 shared connections)
+- [getOwnedDiagram](getOwnedDiagram.md) (14 shared connections)
+- [server/network.ts](server-network.ts.md) (9 shared connections)
+- [projects.ts](projects.ts.md) (7 shared connections)
 - [mcp/apply.ts](mcp-apply.ts.md) (6 shared connections)
-- [(app)/actions.ts](app-actions.ts.md) (5 shared connections)
-- [read.ts](read.ts.md) (5 shared connections)
-- [NetworkKnowledgePage.tsx](NetworkKnowledgePage.tsx.md) (4 shared connections)
-- [ask/route.ts](ask-route.ts.md) (4 shared connections)
-- [projects.ts](projects.ts.md) (4 shared connections)
-- [pipeline.ts](pipeline.ts.md) (3 shared connections)
+- [\[sessionId\]/route.ts]([sessionId]-route.ts.md) (4 shared connections)
+- [domain/flows.ts](domain-flows.ts.md) (4 shared connections)
+- [versions.ts](versions.ts.md) (4 shared connections)
 - [FlowPanel.tsx](FlowPanel.tsx.md) (3 shared connections)
+- [app/layout.tsx](app-layout.tsx.md) (2 shared connections)
+- [auth.ts](auth.ts.md) (2 shared connections)
+- [schema.ts](schema.ts.md) (2 shared connections)
 
 ## Source Files
 
@@ -58,11 +59,12 @@ sidebar_position: 39
 - `src/db/schema.ts`
 - `src/domain/flows.ts`
 - `src/server/flows.ts`
+- `src/ui/flows/useFlows.ts`
 
 ## Audit Trail
 
-- EXTRACTED: 127 (100%)
-- INFERRED: 0 (0%)
+- EXTRACTED: 120 (99%)
+- INFERRED: 1 (1%)
 - AMBIGUOUS: 0 (0%)
 
 ---

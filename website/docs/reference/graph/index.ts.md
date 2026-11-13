@@ -1,6 +1,6 @@
 ---
 title: "index.ts"
-sidebar_position: 7
+sidebar_position: 8
 ---
 # index.ts
 
@@ -40,17 +40,17 @@ sidebar_position: 7
 ## Relationships
 
 - [types.ts](types.ts.md) (9 shared connections)
-- [flowSuggest.ts](flowSuggest.ts.md) (4 shared connections)
-- [DiagramState](DiagramState.md) (3 shared connections)
-- [commands.ts](commands.ts.md) (3 shared connections)
+- [commands.ts](commands.ts.md) (6 shared connections)
 - [domain/apply.ts](domain-apply.ts.md) (3 shared connections)
+- [domain/flows.ts](domain-flows.ts.md) (3 shared connections)
 - [samples.ts](samples.ts.md) (3 shared connections)
+- [getOwnedDiagram](getOwnedDiagram.md) (2 shared connections)
 - [segments.ts](segments.ts.md) (1 shared connections)
-- [catalog.ts](catalog.ts.md) (1 shared connections)
+- [motion.ts](motion.ts.md) (1 shared connections)
 - [Canvas.tsx](Canvas.tsx.md) (1 shared connections)
-- [MissingChecklist.tsx](MissingChecklist.tsx.md) (1 shared connections)
-- [FlowPanel.tsx](FlowPanel.tsx.md) (1 shared connections)
+- [InfoCard.tsx](InfoCard.tsx.md) (1 shared connections)
 - [networkRules.ts](networkRules.ts.md) (1 shared connections)
+- [domain/explain.ts](domain-explain.ts.md) (1 shared connections)
 
 ## Source Files
 

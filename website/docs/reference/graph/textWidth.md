@@ -1,6 +1,6 @@
 ---
 title: "textWidth"
-sidebar_position: 96
+sidebar_position: 100
 ---
 # textWidth
 
@@ -23,10 +23,10 @@ sidebar_position: 96
 ## Relationships
 
 - [layout.ts](layout.ts.md) (7 shared connections)
-- [EdgeLayer.tsx](EdgeLayer.tsx.md) (5 shared connections)
+- [EdgeLayer.tsx](EdgeLayer.tsx.md) (4 shared connections)
+- [edgeLabels.ts](edgeLabels.ts.md) (3 shared connections)
 - [exportImage.ts](exportImage.ts.md) (3 shared connections)
 - [layoutMetrics.ts](layoutMetrics.ts.md) (3 shared connections)
-- [edgeLabels.ts](edgeLabels.ts.md) (2 shared connections)
 - [catalog.ts](catalog.ts.md) (1 shared connections)
 
 ## Source Files

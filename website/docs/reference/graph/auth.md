@@ -1,6 +1,6 @@
 ---
 title: "auth"
-sidebar_position: 127
+sidebar_position: 131
 sidebar_label: "핵심 노드: auth"
 ---
 # auth
@@ -9,7 +9,7 @@ sidebar_label: "핵심 노드: auth"
 
 > God node · 34 connections · `src/auth.ts`
 
-**Community:** [NetworkKnowledgePage.tsx](NetworkKnowledgePage.tsx.md)
+**Community:** [\[sessionId\]/route.ts]([sessionId]-route.ts.md)
 
 ## Connections by Relation
 
@@ -26,7 +26,7 @@ sidebar_label: "핵심 노드: auth"
 - GET() `EXTRACTED`
 - POST() `EXTRACTED`
 - userId() `EXTRACTED`
-- ClaudeCodeConnection() `EXTRACTED`
+- McpConnection() `EXTRACTED`
 - GET() `EXTRACTED`
 - POST() `EXTRACTED`
 - GET() `EXTRACTED`
@@ -50,7 +50,7 @@ sidebar_label: "핵심 노드: auth"
 - glossary/page.tsx `EXTRACTED`
 - (app)/page.tsx `EXTRACTED`
 - network/page.tsx `EXTRACTED`
-- claude-code/page.tsx `EXTRACTED`
+- mcp/page.tsx `EXTRACTED`
 - health/route.ts `EXTRACTED`
 
 ---

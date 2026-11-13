@@ -1,17 +1,18 @@
 ---
 title: "Legend.tsx"
-sidebar_position: 73
+sidebar_position: 72
 ---
 # Legend.tsx
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 15 nodes · cohesion 0.20
+> 16 nodes · cohesion 0.19
 
 ## Key Concepts
 
-- **Legend.tsx** (20 connections) — `src/ui/canvas/Legend.tsx`
-- **Legend()** (8 connections) — `src/ui/canvas/Legend.tsx`
+- **Legend.tsx** (21 connections) — `src/ui/canvas/Legend.tsx`
+- **Legend()** (7 connections) — `src/ui/canvas/Legend.tsx`
+- **LegendList()** (6 connections) — `src/ui/canvas/Legend.tsx`
 - **MediumMark()** (5 connections) — `src/canvas/mediumMark.tsx`
 - **legendPlacement()** (4 connections) — `src/ui/canvas/Legend.tsx`
 - **src_canvas_edges** (2 connections)
@@ -28,13 +29,11 @@ sidebar_position: 73
 
 ## Relationships
 
+- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (7 shared connections)
 - [types.ts](types.ts.md) (4 shared connections)
 - [EdgeLayer.tsx](EdgeLayer.tsx.md) (3 shared connections)
-- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (3 shared connections)
-- [(app)/actions.ts](app-actions.ts.md) (2 shared connections)
-- [motion.ts](motion.ts.md) (1 shared connections)
-- [EdgePanels.tsx](EdgePanels.tsx.md) (1 shared connections)
-- [catalog.ts](catalog.ts.md) (1 shared connections)
+- [motion.ts](motion.ts.md) (2 shared connections)
+- [ResetPasswordForm.tsx](ResetPasswordForm.tsx.md) (1 shared connections)
 
 ## Source Files
 
@@ -43,7 +42,7 @@ sidebar_position: 73
 
 ## Audit Trail
 
-- EXTRACTED: 36 (100%)
+- EXTRACTED: 40 (100%)
 - INFERRED: 0 (0%)
 - AMBIGUOUS: 0 (0%)
 

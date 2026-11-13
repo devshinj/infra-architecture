@@ -1,41 +1,37 @@
 ---
 title: "ZoneTypePicker.tsx"
-sidebar_position: 88
+sidebar_position: 110
 ---
 # ZoneTypePicker.tsx
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 11 nodes · cohesion 0.24
+> 7 nodes · cohesion 0.33
 
 ## Key Concepts
 
 - **ZoneTypePicker.tsx** (21 connections) — `src/ui/network/ZoneTypePicker.tsx`
-- **aiBadge.ts** (12 connections) — `src/ui/glossary/aiBadge.ts`
-- **AI_BADGE_SR** (7 connections) — `src/ui/glossary/aiBadge.ts`
 - **AI_GUESS_BADGE** (5 connections) — `src/ui/glossary/aiBadge.ts`
 - **ZoneType** (3 connections) — `src/domain/types.ts`
-- **AI_BADGE** (3 connections) — `src/ui/glossary/aiBadge.ts`
 - **ZoneTypePickerProps** (3 connections) — `src/ui/network/ZoneTypePicker.tsx`
-- **AI_SUGGEST_BADGE** (2 connections) — `src/ui/glossary/aiBadge.ts`
 - **src_ui_network_network_module** (2 connections)
 - **.onSaved()** (2 connections) — `src/ui/network/ZoneTypePicker.tsx`
 - **GRADES** (1 connections) — `src/ui/network/ZoneTypePicker.tsx`
 
 ## Relationships
 
-- [MissingChecklist.tsx](MissingChecklist.tsx.md) (6 shared connections)
-- [Explanation.tsx](Explanation.tsx.md) (4 shared connections)
-- [NodeInfo.tsx](NodeInfo.tsx.md) (4 shared connections)
-- [Canvas.tsx](Canvas.tsx.md) (3 shared connections)
-- [EdgePanels.tsx](EdgePanels.tsx.md) (3 shared connections)
+- [InfoCard.tsx](InfoCard.tsx.md) (4 shared connections)
 - [FlowPanel.tsx](FlowPanel.tsx.md) (3 shared connections)
-- [GlossaryPage.tsx](GlossaryPage.tsx.md) (3 shared connections)
+- [ResetPasswordForm.tsx](ResetPasswordForm.tsx.md) (3 shared connections)
 - [types.ts](types.ts.md) (2 shared connections)
+- [NodeInfo.tsx](NodeInfo.tsx.md) (2 shared connections)
 - [(app)/actions.ts](app-actions.ts.md) (2 shared connections)
-- [drawing/rules.ts](drawing-rules.ts.md) (2 shared connections)
-- [ResetPasswordForm.tsx](ResetPasswordForm.tsx.md) (2 shared connections)
+- [missing.ts](missing.ts.md) (2 shared connections)
+- [Canvas.tsx](Canvas.tsx.md) (1 shared connections)
+- [EdgePanels.tsx](EdgePanels.tsx.md) (1 shared connections)
 - [server/network.ts](server-network.ts.md) (1 shared connections)
+- [MissingChecklist.tsx](MissingChecklist.tsx.md) (1 shared connections)
+- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (1 shared connections)
 
 ## Source Files
 
@@ -45,7 +41,7 @@ sidebar_position: 88
 
 ## Audit Trail
 
-- EXTRACTED: 48 (100%)
+- EXTRACTED: 30 (100%)
 - INFERRED: 0 (0%)
 - AMBIGUOUS: 0 (0%)
 

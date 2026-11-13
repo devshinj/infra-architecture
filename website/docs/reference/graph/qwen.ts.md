@@ -1,6 +1,6 @@
 ---
 title: "qwen.ts"
-sidebar_position: 101
+sidebar_position: 105
 ---
 # qwen.ts
 
@@ -22,13 +22,12 @@ sidebar_position: 101
 ## Relationships
 
 - [env.ts](env.ts.md) (3 shared connections)
+- [flowSuggest.ts](flowSuggest.ts.md) (3 shared connections)
 - [prompt.ts](prompt.ts.md) (2 shared connections)
 - [설명 생성과 품질 검사](설명_생성과_품질_검사.md) (2 shared connections)
-- [flowSuggest.ts](flowSuggest.ts.md) (2 shared connections)
 - [pipeline.ts](pipeline.ts.md) (1 shared connections)
 - [chat/warnings.ts](chat-warnings.ts.md) (1 shared connections)
-- [QwenClient](QwenClient.md) (1 shared connections)
-- [2단계 계획: AI 대화](2단계_계획-_AI_대화.md) (1 shared connections)
+- [InfraSketch 설계 문서](InfraSketch_설계_문서.md) (1 shared connections)
 
 ## Source Files
 

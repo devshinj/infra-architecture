@@ -1,6 +1,6 @@
 ---
 title: "A) BLE·IoT 기기 통신 — 구성 지식"
-sidebar_position: 85
+sidebar_position: 87
 ---
 # A) BLE·IoT 기기 통신 — 구성 지식
 

@@ -1,71 +1,69 @@
 ---
 title: "flowSuggest.ts"
-sidebar_position: 8
+sidebar_position: 30
 ---
 # flowSuggest.ts
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 42 nodes · cohesion 0.09
+> 29 nodes · cohesion 0.11
 
 ## Key Concepts
 
-- **DiagramState** (64 connections) — `src/domain/types.ts`
 - **flowSuggest.ts** (53 connections) — `src/server/flowSuggest.ts`
-- **domain/flows.ts** (44 connections) — `src/domain/flows.ts`
 - **suggest/route.ts** (17 connections) — `src/app/api/diagrams/[id]/flows/suggest/route.ts`
 - **suggestFlows()** (14 connections) — `src/server/flowSuggest.ts`
-- **checkFlow()** (13 connections) — `src/domain/flows.ts`
-- **Flow** (12 connections) — `src/domain/flows.ts`
-- **judgeFlowOps()** (9 connections) — `src/domain/flows.ts`
-- **FlowOp** (8 connections) — `src/domain/flows.ts`
+- **QwenClient** (9 connections) — `src/server/llm/qwen.ts`
 - **FlowSuggestRepo** (8 connections) — `src/server/flowSuggest.ts`
-- **toFlowOp()** (7 connections) — `src/domain/commands.ts`
-- **pickFlows()** (7 connections) — `src/server/flowSuggest.ts`
-- **flowsThrough()** (5 connections) — `src/domain/flows.ts`
 - **.applyFlowOps()** (5 connections) — `src/server/flowSuggest.ts`
-- **stepEnd()** (4 connections) — `src/domain/flows.ts`
+- **diagrams** (4 connections) — `src/db/schema.ts`
 - **.getLatestState()** (4 connections) — `src/server/flowSuggest.ts`
 - **POST()** (3 connections) — `src/app/api/diagrams/[id]/flows/suggest/route.ts`
-- **toSteps()** (3 connections) — `src/domain/flows.ts`
 - **FLOW_BUSY_MESSAGE** (3 connections) — `src/server/flows.ts`
-- **complete()** (3 connections) — `src/server/flowSuggest.ts`
 - **.getOwnedDiagram()** (3 connections) — `src/server/flowSuggest.ts`
 - **.listFlows()** (3 connections) — `src/server/flowSuggest.ts`
 - **resolveDeps()** (3 connections) — `src/server/flowSuggest.ts`
-- **Checked** (3 connections) — `src/server/mcp/apply.ts`
-- **problemReason()** (2 connections) — `src/domain/flows.ts`
-- *... and 17 more nodes in this community*
+- **FLOW_SUGGEST_BUSY_MESSAGE** (2 connections) — `src/server/flowSuggest.ts`
+- **FlowSuggestDeps** (2 connections) — `src/server/flowSuggest.ts`
+- **.claimSuggest()** (2 connections) — `src/server/flowSuggest.ts`
+- **.releaseSuggest()** (2 connections) — `src/server/flowSuggest.ts`
+- **.withLock()** (2 connections) — `src/server/flowSuggest.ts`
+- **BodySchema** (1 connections) — `src/app/api/diagrams/[id]/flows/suggest/route.ts`
+- **Ctx** (1 connections) — `src/app/api/diagrams/[id]/flows/suggest/route.ts`
+- **dynamic** (1 connections) — `src/app/api/diagrams/[id]/flows/suggest/route.ts`
+- **maxDuration** (1 connections) — `src/app/api/diagrams/[id]/flows/suggest/route.ts`
+- **runtime** (1 connections) — `src/app/api/diagrams/[id]/flows/suggest/route.ts`
+- **AddFlowOp** (1 connections) — `src/server/flowSuggest.ts`
+- **dbRepo** (1 connections) — `src/server/flowSuggest.ts`
+- *... and 4 more nodes in this community*
 
 ## Relationships
 
-- [mcp/apply.ts](mcp-apply.ts.md) (17 shared connections)
-- [schema.ts](schema.ts.md) (11 shared connections)
-- [server/flows.ts](server-flows.ts.md) (11 shared connections)
-- [getOwnedDiagram](getOwnedDiagram.md) (9 shared connections)
-- [pipeline.ts](pipeline.ts.md) (9 shared connections)
-- [networkRules.ts](networkRules.ts.md) (9 shared connections)
-- [FlowPanel.tsx](FlowPanel.tsx.md) (8 shared connections)
-- [NodeInfo.tsx](NodeInfo.tsx.md) (7 shared connections)
-- [domain/apply.ts](domain-apply.ts.md) (6 shared connections)
-- [prompt.ts](prompt.ts.md) (6 shared connections)
-- [chat/warnings.ts](chat-warnings.ts.md) (5 shared connections)
-- [commands.ts](commands.ts.md) (4 shared connections)
+- [getOwnedDiagram](getOwnedDiagram.md) (7 shared connections)
+- [projects.ts](projects.ts.md) (6 shared connections)
+- [normalize.ts](normalize.ts.md) (4 shared connections)
+- [mcp/apply.ts](mcp-apply.ts.md) (4 shared connections)
+- [server/network.ts](server-network.ts.md) (3 shared connections)
+- [prompt.ts](prompt.ts.md) (3 shared connections)
+- [qwen.ts](qwen.ts.md) (3 shared connections)
+- [env.ts](env.ts.md) (3 shared connections)
+- [domain/explain.ts](domain-explain.ts.md) (3 shared connections)
+- [\[sessionId\]/route.ts]([sessionId]-route.ts.md) (2 shared connections)
+- [schema.ts](schema.ts.md) (2 shared connections)
+- [server/flows.ts](server-flows.ts.md) (2 shared connections)
 
 ## Source Files
 
 - `src/app/api/diagrams/[id]/flows/suggest/route.ts`
-- `src/domain/commands.ts`
-- `src/domain/flows.ts`
-- `src/domain/types.ts`
+- `src/db/schema.ts`
 - `src/server/flowSuggest.ts`
 - `src/server/flows.ts`
-- `src/server/mcp/apply.ts`
+- `src/server/llm/qwen.ts`
 
 ## Audit Trail
 
-- EXTRACTED: 236 (96%)
-- INFERRED: 11 (4%)
+- EXTRACTED: 102 (96%)
+- INFERRED: 4 (4%)
 - AMBIGUOUS: 0 (0%)
 
 ---
