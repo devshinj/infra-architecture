@@ -23,6 +23,8 @@
 /* 이름 줄 오른쪽의 조용한 단추(노드 링크 복사): 이름이 길면 아래로 내려가지 않고 이름이 줄어든다. */
 .headAction { flex: none; margin-left: auto; align-self: flex-start; }
 .relText { color: var(--text-secondary); font-size: 12px; }
+/* 글자 사이 방향 화살표(선으로 그린 12×8): 글자 가운데 높이에 맞춘다. 양옆 간격은 곁의 공백 글자가 맡는다. */
+.arrow { display: inline-block; vertical-align: middle; }
 .chips { display: flex; flex-wrap: wrap; gap: 8px; }
 .chip {
   font: inherit; font-size: 12px; color: var(--text-primary); background: var(--bg-panel-raised);

@@ -268,6 +268,19 @@ function NetTypePart({ group }: { group: Group }) {
   );
 }
 
+/**
+ * 방향 화살표. 글자(→ ←)는 화면 글꼴에서 ">" "<" 처럼 보여 선으로 그린다(연결선 층의 방향 표지와 같은 모양).
+ * 꾸밈이라 보조기기에는 숨긴다: 뜻은 곁의 글자(들어옴·나감, 숨긴 "→")가 전한다.
+ */
+const ARROW_D = { right: "M1,4 H11 M8,1 L11,4 L8,7", left: "M11,4 H1 M4,1 L1,4 L4,7" } as const;
+function Arrow({ dir }: { dir: keyof typeof ARROW_D }) {
+  return (
+    <svg className={styles.arrow} width="12" height="8" viewBox="0 0 12 8" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d={ARROW_D[dir]} />
+    </svg>
+  );
+}
+
 /** 영역 설명 탭: 망 종류 → 설명 → 안에 든 것 → 경계를 넘는 연결 → 물어보기. */
 function GroupInfo({ state, group, onSelect, onMention, mentionDisabled, explain, ask }: { group: Group } & Pick<NodeInfoProps, "state" | "onSelect" | "onMention" | "mentionDisabled" | "explain" | "ask">) {
   const members = groupMembers(state, group.id);
@@ -311,9 +324,15 @@ function GroupInfo({ state, group, onSelect, onMention, mentionDisabled, explain
               return (
                 <li key={c.edgeId} className={styles.relation}>
                   <button type="button" className={styles.chip} onClick={() => onSelect(c.edgeId)}>
-                    {nameOf(state, e.from)} → {nameOf(state, e.to)}
+                    {nameOf(state, e.from)}{" "}
+                    <Arrow dir="right" />
+                    <span className={netStyles.srOnly}>→</span>{" "}
+                    {nameOf(state, e.to)}
                   </button>
-                  <span className={styles.relText}>{`${c.dir === "in" ? "← 들어옴" : "→ 나감"} · ${edgeKindName(e.edgeKind)}${e.label ? ` · ${e.label}` : ""}`}</span>
+                  <span className={styles.relText}>
+                    <Arrow dir={c.dir === "in" ? "left" : "right"} />{" "}
+                    {`${c.dir === "in" ? "들어옴" : "나감"} · ${edgeKindName(e.edgeKind)}${e.label ? ` · ${e.label}` : ""}`}
+                  </span>
                 </li>
               );
             })}

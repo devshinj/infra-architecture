@@ -384,7 +384,12 @@ test("a selected zone shows its net type with the AI guess badge, members and cr
   expect(within(crossing).getAllByRole("button")).toHaveLength(1);
   await userEvent.click(within(crossing).getByRole("button", { name: /직원 PC → 업무 WAS/ }));
   expect(onSelect).toHaveBeenLastCalledWith("e1");
-  expect(crossing).toHaveTextContent("← 들어옴 · 동기 요청 · HTTPS");
+  expect(crossing).toHaveTextContent("들어옴 · 동기 요청 · HTTPS");
+  // 화살표는 글자가 아니라 선으로 그린 SVG 다(글꼴에서 ">" 처럼 보이지 않게). 보조기기에는 숨긴다.
+  expect(crossing.textContent).not.toMatch(/[←]/);
+  const arrows = crossing.querySelectorAll("svg");
+  expect(arrows.length).toBeGreaterThanOrEqual(2);
+  for (const a of arrows) expect(a).toHaveAttribute("aria-hidden", "true");
 });
 
 test("a confirmed net type has no AI badge and a zone without net type, members or links says so", () => {
