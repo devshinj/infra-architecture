@@ -5,7 +5,7 @@ import { ADMIN, ADMIN_NODE_COUNT, WORK_NODE_COUNT } from "./fake-llm";
 
 const uid = () => Math.random().toString(36).slice(2, 8);
 const PLACEHOLDER = "만들고 싶은 서비스나 바꾸고 싶은 점을 말해 주세요. 노드를 오른쪽 클릭하면 참조를 붙일 수 있어요.";
-const SUMMARY = /노드 \d+ · 연결 \d+ · (?:\d+곳 바꿨어요|바꾼 곳이 없어요)/;
+const SUMMARY = /^(?:\d+곳 바꿨어요|바꾼 곳이 없어요)/;
 const LINK_EXPECTED = "사이는 망연계가 필요해요";
 
 async function signup(page: Page) {

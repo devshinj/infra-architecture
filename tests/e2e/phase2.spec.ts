@@ -29,7 +29,7 @@ const nodes = (page: Page) => page.locator(".react-flow__node-infra");
 async function buildS1(page: Page) {
   await send(page, "AWS 에 결제랑 카카오 로그인 붙는 쇼핑몰");
   await expect(nodes(page)).toHaveCount(S1_NODE_COUNT, { timeout: 30_000 });
-  await expect(page.getByText(/노드 \d+ · 연결 \d+ · (?:\d+곳 바꿨어요|바꾼 곳이 없어요)/)).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByText(/^(?:\d+곳 바꿨어요|바꾼 곳이 없어요)/)).toBeVisible({ timeout: 30_000 });
 }
 
 test("대화로 구성도 생성 → 노드가 하나씩 나타남 → 요약·버전", async ({ page }) => {
@@ -50,8 +50,8 @@ test("대화로 구성도 생성 → 노드가 하나씩 나타남 → 요약·�
   expect(seen.size).toBeGreaterThanOrEqual(2);
 
   await expect(nodes(page)).toHaveCount(S1_NODE_COUNT);
-  // 요약 칩과 접힌 완료 카드가 같은 노드 수를 보인다.
-  await expect(page.getByText(new RegExp(`^노드 ${S1_NODE_COUNT} · 연결 \\d+ · \\d+곳 바꿨어요`))).toBeVisible({ timeout: 30_000 });
+  // 요약 칩은 이번 차례가 바꾼 곳만, 접힌 완료 카드는 구성도 전체 노드 수를 보인다.
+  await expect(page.getByText(/^\d+곳 바꿨어요/)).toBeVisible({ timeout: 30_000 });
   await expect(page.getByText(new RegExp(`^완료 · 노드 ${S1_NODE_COUNT} · 연결 \\d+$`))).toBeVisible();
 
   await page.getByRole("tab", { name: "이력" }).click();
@@ -115,7 +115,8 @@ test("출력 한도로 끊긴 응답은 같은 차례에서 이어 그리고 버
   await send(page, "끊김 구성 그려 줘");
   await expect(page.getByText(/^이어서 그리는 중 \(2\/3\)/).first()).toBeVisible({ timeout: 30_000 });
   await expect(nodes(page)).toHaveCount(CUT_NODE_COUNT, { timeout: 30_000 });
-  await expect(page.getByText(new RegExp(`^노드 ${CUT_NODE_COUNT} · 연결 2 · 5곳 바꿨어요`))).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByText(/^5곳 바꿨어요/)).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByText(new RegExp(`^완료 · 노드 ${CUT_NODE_COUNT} · 연결 2$`))).toBeVisible();
   await page.getByRole("tab", { name: "이력" }).click();
   await expect(page.getByText("AI", { exact: true })).toHaveCount(1);
 });

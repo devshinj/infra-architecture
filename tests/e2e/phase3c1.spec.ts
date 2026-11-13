@@ -36,7 +36,7 @@ test("explanations and glossary", async ({ page }) => {
   await page.getByPlaceholder(PLACEHOLDER).fill("AWS 에 결제랑 카카오 로그인 붙는 쇼핑몰");
   await page.getByRole("button", { name: "보내기" }).click();
   await expect(nodes(page)).toHaveCount(S1_NODE_COUNT, { timeout: 30_000 });
-  await expect(page.getByText(/노드 \d+ · 연결 \d+ · (?:\d+곳 바꿨어요|바꾼 곳이 없어요)/)).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByText(/^(?:\d+곳 바꿨어요|바꾼 곳이 없어요)/)).toBeVisible({ timeout: 30_000 });
 
   // 사전에 있는 노드: 시드 정의(기본 제공이라 검수 전이어도 AI 설명 배지 없음), 가짜 역할
   await selectRedis(page);
@@ -84,7 +84,7 @@ test("no page-level scroll", async ({ page }) => {
   await page.getByPlaceholder(PLACEHOLDER).fill("AWS 에 결제랑 카카오 로그인 붙는 쇼핑몰");
   await page.getByRole("button", { name: "보내기" }).click();
   await expect(nodes(page)).toHaveCount(S1_NODE_COUNT, { timeout: 30_000 });
-  await expect(page.getByText(/노드 \d+ · 연결 \d+ · (?:\d+곳 바꿨어요|바꾼 곳이 없어요)/)).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByText(/^(?:\d+곳 바꿨어요|바꾼 곳이 없어요)/)).toBeVisible({ timeout: 30_000 });
   expect((await overflow()).doc).toBeLessThanOrEqual(0);
   await page.getByRole("button", { name: "보기", exact: true }).click();
   await expect(page.getByRole("dialog", { name: "보기 옵션" })).toBeVisible();
