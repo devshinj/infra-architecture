@@ -38,6 +38,11 @@ describe("detectForks", () => {
   test("관제 대상·기기 연결·망분리", () => {
     expect(keys("CCTV 20대를 관제 화면까지 이어 줘", drawn())).toEqual(["video_site"]);
     expect(keys("공장 CCTV 20대를 관제 화면까지 이어 줘", drawn())).toEqual([]);
+    expect(keys("VMS 에서 영상 관제 화면으로 보내 줘", drawn())).toEqual(["video_site"]);
+    // '관제'만 나오면 영상 관제로 보지 않는다(관제지원·보안관제·네트워크 관제).
+    const zonedPortal = build([{ op: "add_group", id: "s", group_kind: "network_zone", label: "S존 업무망", parent: null }]);
+    expect(keys("S존 업무망 그룹 안에 관제지원 그룹을 두고 사용자 포털은 인터넷망에 둬", zonedPortal)).toEqual([]);
+    expect(keys("보안관제 서버를 DMZ 옆에 넣어 줘", drawn())).toEqual([]);
     expect(keys("온도 센서 데이터를 서버로 모아 줘", drawn())).toEqual(["iot_link"]);
     expect(keys("온도 센서 데이터를 게이트웨이로 모아 줘", drawn())).toEqual([]);
     expect(keys("앱이랑 디바이스를 블루투스로 연결해 줘", drawn())).toEqual([]);

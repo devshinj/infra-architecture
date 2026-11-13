@@ -967,8 +967,10 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
     !locked &&
     run(async () => {
       expectNewBoard();
-      await restoreVersionAction(diagramId, number);
+      // 서버가 남긴 안내(구성 정보 숫자의 변화 포함)를 대화에도 바로 띄운다. 새로 고치면 저장된 같은 줄이 보인다.
+      const r = await restoreVersionAction(diagramId, number, { describeChange: true });
       loadVersions();
+      if (r?.text) pushDiagramLine({ kind: "system", text: r.text });
     });
 
   // 결과 줄의 되돌리기: 이 차례가 만든 버전(v) 직전으로. 이력의 되돌리기와 같이 새 버전을 만들고, 대화에 한 줄 남긴다.
