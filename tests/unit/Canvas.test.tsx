@@ -886,6 +886,24 @@ test("한 줄에 들면 이름을 보이고 툴팁을 겹쳐 두지 않는다", 
   expect(screen.getByRole("button", { name: "자동 정렬" })).not.toHaveAttribute("title");
 });
 
+test("a selected zone keeps its inside lit, and the crossing edges with their outside ends", async () => {
+  const props = baseProps();
+  props.options = { ...props.options, selectedId: "private-zone" };
+  const { container } = render(<div style={{ width: 800, height: 600 }}><Canvas {...props} /></div>);
+  await waitFor(() => expect(nodeEl(container, "was-1")).not.toBeNull());
+  // 안의 노드(하위 영역 안까지)와 경계를 넘어 이어진 바깥 끝(web-1·web-2)은 밝고, 그 밖은 흐리다.
+  for (const id of ["was-1", "was-2", "db-proxy", "db-primary", "db-standby", "web-1", "web-2"]) expect(nodeEl(container, id)!.querySelector(".node--dimmed"), id).toBeNull();
+  for (const id of ["client-web", "fw-external"]) expect(nodeEl(container, id)!.querySelector(".node--dimmed"), id).not.toBeNull();
+  // 하위 영역도 밝다.
+  for (const id of ["was-pair", "db-pair"]) expect(groupEl(container, id)!.classList.contains("group--dimmed"), id).toBe(false);
+  // 안끼리·경계를 넘는 선은 밝고, 바깥끼리 선(client-web → fw-external)은 흐리다.
+  const edgeOf = (from: string, to: string) => Object.values(props.state.edges).find((e) => e.from === from && e.to === to)!.id;
+  const seg = (id: string) => container.querySelector(`[data-edge-id="${id}"]`);
+  await waitFor(() => expect(seg(edgeOf("client-web", "fw-external"))).not.toBeNull());
+  expect(seg(edgeOf("client-web", "fw-external"))).toHaveClass("edge--dim");
+  expect(container.querySelectorAll(".edge-seg:not(.edge--dim)").length).toBeGreaterThan(0);
+});
+
 test("clicking the name pill of the selected zone clears the selection and the zone shows the selected ring", async () => {
   const props = baseProps();
   props.options = { ...props.options, selectedId: "was-pair" };

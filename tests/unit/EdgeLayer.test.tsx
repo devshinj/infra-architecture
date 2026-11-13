@@ -33,6 +33,17 @@ const fanOutLayout = lay([
 const fanOutEdges = [de("e1", "alb", "w1"), de("e2", "alb", "w2")];
 const base = { selectedId: null, hoverId: null, hoverLabels: true, motion: false, appearing: new Set<string>(), nodeCount: 3 };
 
+test("a given emphasis (a selected open zone) decides which edges stay lit", () => {
+  const layout = lay([
+    { id: "e1", points: [{ x: 10, y: 10 }, { x: 10, y: 60 }] },
+    { id: "e2", points: [{ x: 100, y: 10 }, { x: 100, y: 60 }] },
+  ]);
+  // 고른 영역 id 는 어느 연결의 끝도 아니지만, 넘겨받은 강조 집합대로 e1 은 밝고 e2 는 흐리다.
+  render(<EdgeLayer layout={layout} edges={[de("e1", "a", "b"), de("e2", "c", "d")]} {...base} selectedId="zone" emphasis={{ nodes: new Set(["zone", "a", "b"]), edges: new Set(["e1"]) }} />);
+  expect(document.querySelector('[data-edge-id="e1"]')).not.toHaveClass("edge--dim");
+  expect(document.querySelector('[data-edge-id="e2"]')).toHaveClass("edge--dim");
+});
+
 test("shared trunk path is rendered once", () => {
   render(<EdgeLayer layout={fanOutLayout} edges={fanOutEdges} {...base} />);
   expect(document.querySelectorAll('[data-seg-shared="true"]')).toHaveLength(1);

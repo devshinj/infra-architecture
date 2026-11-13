@@ -20,6 +20,8 @@ export interface EdgeLayerProps {
   selectedId: string | null;
   /** 고른 노드(또는 접힌 영역)의 상자. 있으면 그 노드에 이어진 같은 이름을 하나로 합쳐 그린다. */
   selectedRect?: Rect;
+  /** 고른 대상의 강조 집합을 Canvas 가 이미 셌으면 그것(펼친 영역을 고른 때: 안쪽과 경계를 넘는 연결). 없으면 selectedId 로 센다. */
+  emphasis?: Emphasis;
   /** 선택이 없을 때 마우스를 올린 노드/연결 id. 선택이 있으면 무시한다. */
   hoverId: string | null;
   /** 연결선(클릭 영역)에 마우스가 들어오면 그 id, 나가면 null. */
@@ -116,7 +118,7 @@ function prefersReducedMotion(): boolean {
   return typeof window !== "undefined" && !!window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
 }
 
-export function EdgeLayer({ layout, edges, selectedId, selectedRect, hoverId, onHover, hoverLabels, motion, appearing, nodeCount, onSelect, flowSteps, crossing, collapsedRects }: EdgeLayerProps) {
+export function EdgeLayer({ layout, edges, selectedId, selectedRect, emphasis, hoverId, onHover, hoverLabels, motion, appearing, nodeCount, onSelect, flowSteps, crossing, collapsedRects }: EdgeLayerProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [hovered, setHovered] = useState<string | null>(null);
 
@@ -143,7 +145,7 @@ export function EdgeLayer({ layout, edges, selectedId, selectedRect, hoverId, on
   // 선택 기준 강조(흐림 22%)와 호버 기준 강조(흐림 45%). 호버는 선택이 없을 때만.
   // 흐름을 보는 동안은 흐름 단계가 선택 강조 자리를 쓰고(같은 겹선·빛), 호버는 쓰지 않는다.
   // 단계는 이미 표시 연결 id 로 맞춰 와 있으므로 연결 집합만 쓴다(노드 흐림은 Canvas 가 한다).
-  const sel = useMemo<Emphasis | null>(() => (steps ? { nodes: new Set(), edges: stepIds } : emphasisOf(edges, selectedId)), [edges, selectedId, steps, stepIds]);
+  const sel = useMemo<Emphasis | null>(() => (steps ? { nodes: new Set(), edges: stepIds } : (emphasis ?? emphasisOf(edges, selectedId))), [edges, selectedId, steps, stepIds, emphasis]);
   const hov = useMemo(() => (selectedId === null && !steps ? emphasisOf(edges, hoverId) : null), [edges, selectedId, hoverId, steps]);
   const incident = useMemo(() => sel?.edges ?? new Set<string>(), [sel]);
   const isSelectedEdge = (e: DisplayEdge) => selectedId !== null && (e.id === selectedId || e.sourceEdgeIds.includes(selectedId));
@@ -161,7 +163,8 @@ export function EdgeLayer({ layout, edges, selectedId, selectedRect, hoverId, on
   // 노드·접힌 영역을 고르면 이어진 연결의 같은 이름을 하나로 합치고, 이름끼리·노드와 겹치지 않게 둔다
   // (연결을 고르거나 호버일 때는 연결마다 그대로). 따로 그리는 것은 합친 이름과 제자리에서 비킨 하나뿐인 이름이다.
   const merged = useMemo(() => {
-    if (steps || !sel || selectedId === null || !selectedRect || edges.some((e) => e.id === selectedId || e.sourceEdgeIds.includes(selectedId))) return [];
+    // 펼친 영역을 고른 때(emphasis)는 이어진 선이 영역 상자에 닿지 않으므로 합치지 않는다.
+    if (steps || emphasis || !sel || selectedId === null || !selectedRect || edges.some((e) => e.id === selectedId || e.sourceEdgeIds.includes(selectedId))) return [];
     const incidentLaid = emphLaid.map((l) => {
       const e = byId.get(l.id)!;
       return { id: l.id, points: l.points, from: e.from, to: e.to, ...(e.label ? { label: e.label } : {}), ...(l.labelAt ? { labelAt: l.labelAt } : {}) };
@@ -174,7 +177,7 @@ export function EdgeLayer({ layout, edges, selectedId, selectedRect, hoverId, on
         return { ...p, moved: p.edgeIds.length === 1 && (!at || off(at.x, p.x) || off(at.y, p.y)) };
       })
       .filter((p) => p.edgeIds.length > 1 || p.moved);
-  }, [steps, sel, selectedId, selectedRect, edges, emphLaid, byId, layout.edges]);
+  }, [steps, emphasis, sel, selectedId, selectedRect, edges, emphLaid, byId, layout.edges]);
   const mergedIds = useMemo(() => new Set(merged.flatMap((p) => p.edgeIds)), [merged]);
 
   // 평소 화면(고른 것·올린 것·흐름 없음, 이름 늘 보임): 같은 끝을 함께 쓰는 같은 이름은 하나만 "<이름> ×N" 으로 남긴다.

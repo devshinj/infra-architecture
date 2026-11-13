@@ -13,7 +13,7 @@ import { AI_BADGE_SR, AI_GUESS_BADGE } from "@/ui/glossary/aiBadge";
 import { canvasAriaLabels, zoneDescription } from "./ariaLabels";
 import "./canvas.css";
 import { EdgeLayerPortal } from "./EdgeLayer";
-import { emphasisOf, flowEmphasis, litZones } from "./emphasis";
+import { emphasisOf, flowEmphasis, litZones, zoneEmphasis } from "./emphasis";
 import { ExportMenu } from "./ExportMenu";
 import { exportDiagramImage, exportFileName, type ExportBackground, type ExportFormat } from "./exportImage";
 import type { GroupBoxData } from "./GroupBox";
@@ -424,7 +424,14 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
     () => (flowKey === null ? null : (JSON.parse(flowKey) as [string, number, string][]).map(([edge, n, short]) => ({ edge, n, short }))),
     [flowKey],
   );
+  const parentOf = useCallback((id: string): string | null => (display.nodes[id] ?? display.groups[id])?.parent ?? null, [display]);
+  // 펼친 영역을 고르면 그 안(깊은 곳까지)과 경계를 넘는 연결까지 밝힌다(영역만 밝고 안이 흐리면 무엇을 골랐는지 안 보인다).
+  const zoneSel = useMemo(() => {
+    const g = selected !== null && !flowStepsIn ? display.groups[selected] : undefined;
+    return g && !g.collapsed ? zoneEmphasis(display.edges, parentOf, [...Object.keys(display.nodes), ...Object.keys(display.groups)], g.id) : null;
+  }, [display, selected, flowStepsIn, parentOf]);
   const sel = useMemo(() => {
+    if (zoneSel) return zoneSel;
     if (!flowStepsIn) return emphasisOf(display.edges, selected);
     // 두 끝이 같은 접힌 영역 안이라 선이 없어진 단계는 그 영역을 밝힌다.
     const loops: string[] = [];
@@ -435,7 +442,7 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
       if (a !== null && a === drawnId(state, options.collapsed, e.to) && display.groups[a]) loops.push(a);
     }
     return flowEmphasis(display.edges, flowStepsIn.map((s) => s.edge), loops);
-  }, [display, selected, flowStepsIn, state, options.collapsed]);
+  }, [display, selected, flowStepsIn, state, options.collapsed, zoneSel]);
   // 흐름 단계를 표시 연결 id 로 맞춘다(묶이거나 접힌 영역으로 이어진 연결도 원래 연결 id 로 찾는다). 없는 연결은 뺀다.
   const flowSteps = useMemo(() => {
     if (!flowStepsIn) return undefined;
@@ -458,10 +465,7 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
     return out;
   }, [display, state]);
   // 고르면 이어진 노드가 없는 영역도 흐린다(호버는 영역을 흐리지 않는다: 선택보다 약하게). 영역 상자와 이름 알약이 함께 쓴다.
-  const lit = useMemo(() => {
-    const parentOf = (id: string): string | null => (display.nodes[id] ?? display.groups[id])?.parent ?? null;
-    return sel ? litZones(parentOf, sel, selected) : null;
-  }, [display, sel, selected]);
+  const lit = useMemo(() => (sel ? litZones(parentOf, sel, selected) : null), [parentOf, sel, selected]);
 
   const computed = useMemo<Node[]>(() => {
     const hov = emphasisOf(display.edges, hoverId, known);
@@ -857,6 +861,7 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
           edges={display.edges}
           selectedId={selected}
           {...(selectedRect ? { selectedRect } : {})}
+          {...(zoneSel ? { emphasis: zoneSel } : {})}
           hoverId={hoverId}
           onHover={(id) => {
             if (id !== null) {
