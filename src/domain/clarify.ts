@@ -72,7 +72,8 @@ const FORKS: readonly Fork[] = [
     key: "video_site",
     question: "어떤 곳의 영상 관제인가요?",
     when: "CCTV·영상 관제·VMS·NVR 을 그리는데, 지자체 통합관제인지 일반 시설인지 말하지 않았을 때",
-    about: /cctv|관제|영상\s*감시|감시\s*카메라|ip\s*카메라|nvr|vms/,
+    // '관제'만으로는 묻지 않는다(관제지원·보안관제·네트워크 관제처럼 영상과 무관하게도 쓴다).
+    about: /cctv|영상\s*관제|영상\s*감시|감시\s*카메라|ip\s*카메라|nvr|vms/,
     said: /지자체|통합\s*관제|시청|구청|군청|도청|공공|일반|사옥|공장|매장|건물|빌딩|병원|학교|아파트|물류|창고|주차/,
     settledBy: ["camera", "video_recorder"],
   },
