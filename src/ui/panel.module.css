@@ -18,6 +18,10 @@
 .field dd { margin: 0; color: var(--text-primary); text-align: right; word-break: break-all; }
 .missing { color: var(--text-secondary) !important; font-style: italic; font-size: 13px; margin: 0; }
 .relations { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 8px; font-size: 13px; color: var(--text-primary); }
+/* 연결 한 줄: 상대 칩(누르면 고른다) + 방향·종류·이름. 좁으면 설명이 칩 아래로 내려간다. */
+.relation { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
+/* 이름 줄 오른쪽의 조용한 단추(노드 링크 복사): 이름이 길면 아래로 내려가지 않고 이름이 줄어든다. */
+.headAction { flex: none; margin-left: auto; align-self: flex-start; }
 .relText { color: var(--text-secondary); font-size: 12px; }
 .chips { display: flex; flex-wrap: wrap; gap: 8px; }
 .chip {
@@ -31,14 +35,20 @@
 .version { border: 1px solid transparent; border-radius: var(--radius-control); }
 .version[data-viewing] { border-color: var(--text-secondary); }
 .versionRow {
-  width: 100%; display: flex; align-items: center; gap: 8px; font: inherit; font-size: 13px;
+  width: 100%; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; font: inherit; font-size: 13px;
   color: var(--text-primary); background: transparent; border: 0; padding: 8px; cursor: pointer; text-align: left;
 }
 .versionRow:hover { background: var(--bg-panel-raised); }
 .versionNo { font-weight: 600; min-width: 28px; }
+/* 요청 글 · 증감: 머리 줄(번호·출처·지금·시각) 아래 줄에 둔다. 두 줄까지 보이고 넘치면 말줄임(전체는 title).
+   한 줄에 욱여넣으면 시각이 두 줄로 꺾이고 증감이 잘린다. 번호 칸(28px + 사이 8px)만큼 들여 출처 글과 줄을 맞춘다. */
+.versionSummary {
+  order: 10; flex: 1 0 100%; min-width: 0; padding-left: 36px; box-sizing: border-box; line-height: 1.5;
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; overflow-wrap: anywhere;
+}
 /* 지금 버전: 연두는 "지금"을 가리킨다(DESIGN.md · One Signal). 글자만 연두, 칠은 없다. */
 .now { flex: none; font-size: 12px; font-weight: 600; color: var(--accent); border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent); border-radius: var(--radius-pill); padding: 0 8px; }
-.time { margin-left: auto; font-size: 12px; color: var(--text-secondary); }
+.time { flex: none; margin-left: auto; font-size: 12px; color: var(--text-secondary); white-space: nowrap; }
 .badge { font-size: 12px; color: var(--text-primary); border: 1px solid var(--state-missing); border-radius: var(--radius-pill); padding: 0 4px; }
 .actions { display: flex; flex-wrap: wrap; gap: 8px; padding: 0 8px 12px; }
 /* 세로로 쌓이는 판 안의 도구 버튼(공용 Button)은 글자 폭만 차지한다. */
@@ -60,6 +70,22 @@
 .slowNote { margin: 0; font-size: 12px; line-height: 1.5; color: var(--text-secondary); }
 .unreviewed { margin-left: 8px; font-size: 12px; color: var(--text-secondary); border: 1px solid var(--line-node); border-radius: var(--radius-pill); padding: 0 4px; white-space: nowrap; }
 .srOnly { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+/* 「자세히」 접힘 절: 머리 줄은 조용한 글자 단추(누를 자리 32px), 펼치면 안의 절이 같은 간격으로 이어진다. */
+.details { display: flex; flex-direction: column; }
+.detailsSummary {
+  display: flex; align-items: center; gap: 6px; min-height: 32px; margin: 0 -8px; padding: 4px 8px; list-style: none;
+  font-size: 12px; font-weight: 500; color: var(--text-primary); border-radius: var(--radius-control); cursor: pointer;
+}
+.detailsSummary::-webkit-details-marker { display: none; }
+.detailsSummary:hover { background: var(--bg-panel-raised); }
+.detailsSummary:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: -2px; }
+.detailsChevron { flex: none; color: var(--text-secondary); }
+.details[open] .detailsChevron { transform: rotate(90deg); }
+.detailsParts { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 400; color: var(--text-secondary); }
+.detailsBody { display: flex; flex-direction: column; gap: 16px; padding-top: 8px; }
+@media (prefers-reduced-motion: no-preference) {
+  .detailsChevron { transition: transform var(--dur-micro) var(--ease-out); }
+}
 .adr { margin: 0; display: flex; flex-direction: column; gap: 8px; }
 .adrRow { display: grid; grid-template-columns: 36px 1fr; gap: 8px; font-size: 13px; line-height: 1.5; }
 .adrRow dt { color: var(--text-secondary); }

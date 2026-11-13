@@ -2,7 +2,7 @@ import "@testing-library/jest-dom/vitest";
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
-const hookState = vi.hoisted(() => ({ send: vi.fn(), busy: false, onCommand: null as null | ((c: unknown) => void), badgeFns: [] as unknown[], warnFns: [] as unknown[], lines: [] as unknown[], insets: [] as unknown[], focus: [] as unknown[], turn: null as null | { onDone(): void; onInterrupted(): void; onRelayout?(): void; onSessionLines?(key: string, fn: (ls: { id: string; kind: string; text: string }[]) => { id: string; kind: string; text: string }[]): void }, pushLine: vi.fn(), pinned: [] as unknown[], fitRequest: [] as unknown[], fitAll: [] as unknown[], placed: null as null | ((locate: (id: string) => { x: number; y: number } | null) => void), flow: [] as unknown[], selected: [] as unknown[], refresh: vi.fn(), rfNodes: false }));
+const hookState = vi.hoisted(() => ({ send: vi.fn(), busy: false, onCommand: null as null | ((c: unknown) => void), badgeFns: [] as unknown[], warnFns: [] as unknown[], lines: [] as unknown[], insets: [] as unknown[], focus: [] as unknown[], turn: null as null | { onDone(): void; onInterrupted(): void; onRelayout?(): void; onSessionLines?(key: string, fn: (ls: { id: string; kind: string; text: string }[]) => { id: string; kind: string; text: string }[]): void }, pushLine: vi.fn(), pinned: [] as unknown[], fitRequest: [] as unknown[], fitAll: [] as unknown[], placed: null as null | ((locate: (id: string) => { x: number; y: number } | null) => void), flow: [] as unknown[], selected: [] as unknown[], turnMarks: [] as unknown[], frames: [] as unknown[], refresh: vi.fn(), rfNodes: false }));
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: hookState.refresh }) }));
 vi.mock("@/app/(app)/actions", () => ({
@@ -17,9 +17,11 @@ vi.mock("@/app/(app)/actions", () => ({
   renameFlowAction: vi.fn(async () => ({ ok: true })), deleteFlowAction: vi.fn(async () => ({ ok: true })), confirmFlowAction: vi.fn(async () => ({ ok: true })), removeFlowStepAction: vi.fn(async () => ({ ok: true })),
 }));
 vi.mock("@/canvas/Canvas", () => ({
-  Canvas: ({ flow, options, state, pinned, fitRequest, fitAllSignal, onAutoArrange, fitKey, cameraInsets, focusRequest, onMention, onAskNode, onBadgeClick, onWarnBadgeClick, onSelect, onImportSample, onPlaced }: { flow?: unknown; options: { selectedId: string | null }; onAskNode?: (id: string) => void;  onPlaced?: (l: (id: string) => { x: number; y: number } | null) => void; onImportSample?: (id: string) => void; state: { nodes: object }; pinned: unknown; fitRequest?: unknown; fitAllSignal?: unknown; onAutoArrange(): void; fitKey?: string; cameraInsets?: unknown; focusRequest?: unknown; onMention?: (id: string) => void; onBadgeClick?: (id: string) => void; onWarnBadgeClick?: (id: string) => void; onSelect: (id: string | null) => void }) => {
+  Canvas: ({ flow, options, state, pinned, fitRequest, fitAllSignal, onAutoArrange, fitKey, cameraInsets, focusRequest, onMention, onAskNode, onBadgeClick, onWarnBadgeClick, onSelect, onImportSample, onPlaced, turnMarks, frameRequest }: { frameRequest?: { ids: string[]; token: number }; turnMarks?: { added: Set<string>; changed: Set<string> }; flow?: unknown; options: { selectedId: string | null }; onAskNode?: (id: string) => void;  onPlaced?: (l: (id: string) => { x: number; y: number } | null) => void; onImportSample?: (id: string) => void; state: { nodes: object }; pinned: unknown; fitRequest?: unknown; fitAllSignal?: unknown; onAutoArrange(): void; fitKey?: string; cameraInsets?: unknown; focusRequest?: unknown; onMention?: (id: string) => void; onBadgeClick?: (id: string) => void; onWarnBadgeClick?: (id: string) => void; onSelect: (id: string | null) => void }) => {
     hookState.flow.push(flow ?? null);
     hookState.selected.push(options.selectedId);
+    hookState.turnMarks.push(turnMarks ?? null);
+    hookState.frames.push(frameRequest ?? null);
     hookState.insets.push(cameraInsets);
     hookState.placed = onPlaced ?? null;
     hookState.pinned.push(pinned);
@@ -60,7 +62,7 @@ import { readFileSync } from "node:fs";
 import { clearPinnedAction, confirmAssumptionAction, getVersionAction, importSampleAction, listVersionsAction, removeFlowStepAction, removeNoLinkAction, restoreVersionAction, saveFieldsAction, setWarningIgnoredAction, setZoneTypeAction } from "@/app/(app)/actions";
 import { emptyState } from "@/domain/types";
 import { DiagramWorkspace } from "@/ui/DiagramWorkspace";
-import { ShellProvider } from "@/ui/Shell";
+import { NARROW_QUERY, ShellProvider } from "@/ui/Shell";
 import { POLL_MS } from "@/ui/useRemoteChanges";
 
 import { KNOWLEDGE, adminCase } from "../fixtures/network";
@@ -395,9 +397,9 @@ test("fit padding accounts for floating panels", () => {
   expect(hookState.insets.at(-1)).toEqual({ left: 264, right: 384, bottom: 66 });
   fireEvent.keyDown(screen.getByRole("separator", { name: "대화 패널 너비" }), { key: "ArrowLeft" });
   expect(hookState.insets.at(-1)).toEqual({ left: 264, right: 400, bottom: 66 });
-  // 카드를 펼치면 카메라가 피할 장애물(카드 폭 300 + 여백 12)이 함께 간다.
+  // 카드를 펼치면 카메라가 피할 장애물(재기 전 카드 폭 기본값 380 + 여백 12)이 함께 간다.
   fireEvent.click(screen.getByRole("button", { name: "구성 정보 펼치기" }));
-  expect(hookState.insets.at(-1)).toMatchObject({ left: 264, right: 400, bottom: 66, card: { width: 312 } });
+  expect(hookState.insets.at(-1)).toMatchObject({ left: 264, right: 400, bottom: 66, card: { width: 392 } });
   fireEvent.click(screen.getByRole("button", { name: "구성 정보 접기" }));
   expect(hookState.insets.at(-1)).toEqual({ left: 264, right: 400, bottom: 66 });
   cleanup();
@@ -452,6 +454,43 @@ test("restore while live refits the canvas at once, even after a turn that saved
   });
   rerender(ui(mk(3, ["a"])));
   expect(screen.getByTestId("fit").textContent).not.toBe(before);
+  vi.mocked(listVersionsAction).mockResolvedValue([]);
+});
+
+test("restore: the info card shows the restored version's assumptions and warnings, not the ones before", async () => {
+  hookState.busy = false;
+  const row = (number: number) => ({ number, source: "ai", status: "complete", restoredFrom: null, createdAt: new Date(0) });
+  vi.mocked(listVersionsAction).mockResolvedValue([row(1), row(2)] as never);
+  const v1 = { ...emptyState(), nodes: Object.fromEntries([web("a")]) };
+  // v2: 가정 둘(미확정) + 캐시만 있는 경고.
+  const v2 = {
+    ...emptyState(),
+    nodes: { ...v1.nodes, c: { id: "c", kind: "cache", label: "c", parent: null, attrs: {} } },
+    assumptions: { environment: { value: "AWS", confirmed: false }, call_mode: { value: "1:1", confirmed: false } },
+  };
+  const counts = () => cardToggle().textContent;
+  // 기준: v1 을 처음부터 열었을 때의 카드 줄.
+  const fresh = render(ui({ number: 1, state: v1 } as never));
+  const expected = counts();
+  fresh.unmount();
+  const { rerender } = render(ui({ number: 2, state: v2 } as never));
+  expect(counts()).not.toBe(expected);
+  expect(counts()).toMatch(/미확정 가정\s*2/);
+  await act(async () => {
+    fireEvent.click(screen.getByRole("tab", { name: "이력" }));
+  });
+  fireEvent.click(await screen.findByRole("button", { name: /v1/ }));
+  hookState.pushLine.mockClear();
+  const notice = "v1로 되돌림 (새 버전 v3)\n주의 1 → 0 · 미확정 가정 2 → 0";
+  vi.mocked(restoreVersionAction).mockReset().mockResolvedValue({ number: 3, text: notice });
+  await act(async () => {
+    fireEvent.click(screen.getByRole("button", { name: "이 버전으로 되돌리기" }));
+  });
+  // 이력의 되돌리기: 서버가 변화를 붙인 안내를 남기고, 같은 줄을 대화에 바로 띄운다.
+  expect(restoreVersionAction).toHaveBeenCalledWith("d", 1, { describeChange: true });
+  await waitFor(() => expect(hookState.pushLine).toHaveBeenCalledWith({ kind: "system", text: notice }));
+  rerender(ui({ number: 3, state: v1 } as never));
+  expect(counts()).toBe(expected);
   vi.mocked(listVersionsAction).mockResolvedValue([]);
 });
 
@@ -735,7 +774,7 @@ test("the workspace has a single h1 with the diagram name", () => {
 
 // ── 좁은 화면(휴대폰): 아래 탭 막대로 구성도·대화·설명·이력을 한 화면씩 본다 ──
 const stubNarrow = () =>
-  vi.stubGlobal("matchMedia", (q: string) => ({ matches: q === "(max-width: 640px)", media: q, addEventListener() {}, removeEventListener() {} }));
+  vi.stubGlobal("matchMedia", (q: string) => ({ matches: q === NARROW_QUERY, media: q, addEventListener() {}, removeEventListener() {} }));
 const narrowUi = (latest: ReturnType<typeof mk> | ReturnType<typeof two>) => <ShellProvider>{ui(latest as never)}</ShellProvider>;
 const bottomTabs = () => screen.getByRole("tablist", { name: "작업 화면" });
 const bottomTab = (name: string | RegExp) => within(bottomTabs()).getByRole("tab", { name });
@@ -1204,7 +1243,7 @@ describe("Claude Code 변경 알아채기", () => {
   const claudeWrote = (n: number) => {
     head = { ...head, version: n, mcpVersion: n };
   };
-  const notice = () => screen.queryByText("Claude Code가 구성도를 바꿨어요");
+  const notice = () => screen.queryByText("MCP로 연결한 도구가 구성도를 바꿨어요");
   const versionRows = (...ns: number[]) => ns.map((number) => ({ number, source: "ai", status: "complete", restoredFrom: null, createdAt: new Date(0) }));
   /** 화면에 그려진 노드처럼 크기를 준다(유령은 크기 0 인 것을 뜨지 않는다). */
   const drawNodes = () => {
@@ -1469,4 +1508,84 @@ test("selecting a node is announced to screen readers (the panel switches to 설
   expect(live).toHaveTextContent("a 선택됨. 설명 탭에서 볼 수 있어요.");
   fireEvent.click(screen.getByRole("button", { name: "선택해제" }));
   expect(live).toHaveTextContent("");
+});
+
+test("after a turn that changed the diagram, added and changed nodes stay marked until the next click", () => {
+  hookState.busy = false;
+  hookState.lines = [];
+  hookState.turnMarks.length = 0;
+  stubFetch();
+  const { rerender } = render(ui(mkw(1, ["a", "b"])));
+  // 차례 시작: 그 직전 구성(a·b)을 기준으로 잡는다.
+  hookState.busy = true;
+  rerender(ui(mkw(1, ["a", "b"])));
+  hookState.busy = false;
+  act(() => (hookState.turn!.onDone as (e: unknown) => void)({ t: "done", version: 2, status: "complete", applied: 2, changed: 2, skipped: 0 }));
+  const v2 = mkw(2, ["a", "b", "x"]);
+  v2.state.nodes.b = { ...v2.state.nodes.b!, label: "B 서버" };
+  rerender(ui(v2));
+  const marks = hookState.turnMarks.at(-1) as { added: Set<string>; changed: Set<string> };
+  expect([...marks.added]).toEqual(["x"]);
+  expect([...marks.changed]).toEqual(["b"]);
+  // 다음 조작(빈 곳 누르기)에서 걷힌다.
+  fireEvent.click(screen.getByRole("button", { name: "선택해제" }));
+  expect(hookState.turnMarks.at(-1)).toBeNull();
+});
+
+test("바뀐 곳 보기 frames the changed nodes and its 추가 n button steps through them", async () => {
+  hookState.busy = false;
+  hookState.frames.length = 0;
+  hookState.focus.length = 0;
+  vi.mocked(getVersionAction).mockReset().mockResolvedValue(mk(1, ["a"]).state as never);
+  hookState.lines = [{ id: "s2", kind: "summary", text: "노드 3 · 2곳 바꿨어요", turn: "t2", version: 2, changed: 2 }];
+  render(ui(mk(2, ["a", "x", "y"])));
+  fireEvent.click(screen.getByRole("button", { name: "바뀐 곳 보기" }));
+  const step = await screen.findByRole("button", { name: /^추가 2곳 가운데 1번째로 가기/ });
+  // 들어가면 바뀐 노드(x·y)에 맞추라고 캔버스에 알린다.
+  expect((hookState.frames.at(-1) as { ids: string[] }).ids.sort()).toEqual(["x", "y"]);
+  fireEvent.click(step);
+  expect((hookState.focus.at(-1) as { id: string }).id).toBe("x");
+  fireEvent.click(screen.getByRole("button", { name: /^추가 2곳 가운데 2번째로 가기/ }));
+  expect((hookState.focus.at(-1) as { id: string }).id).toBe("y");
+  // 지운 것·바뀐 것이 없으면 그 단추는 누를 수 없다.
+  expect(screen.getByRole("button", { name: "삭제 0" })).toBeDisabled();
+  hookState.lines = [];
+});
+
+test("inside the shell, 대화로·캔버스로 건너뛰기 go into the shell's skip slot (before the sidebar)", () => {
+  hookState.busy = false;
+  const slot = document.createElement("div");
+  slot.id = "skip-links";
+  const sidebar = document.createElement("nav");
+  sidebar.innerHTML = "<button>프로젝트</button>";
+  document.body.prepend(sidebar);
+  document.body.prepend(slot);
+  try {
+    render(ui(mk(1, ["a"])));
+    const inSlot = [...slot.querySelectorAll("button")].map((b) => b.textContent);
+    expect(inSlot).toEqual(["대화로 건너뛰기", "캔버스로 건너뛰기"]);
+    // 문서 차례에서 사이드바보다 앞이다(첫 Tab 칸).
+    const all = [...document.querySelectorAll("button")];
+    expect(all.indexOf(slot.querySelector("button")!)).toBeLessThan(all.indexOf(sidebar.querySelector("button")!));
+  } finally {
+    slot.remove();
+    sidebar.remove();
+  }
+});
+
+test("narrow: no floating legend over the canvas (it lives in the 보기 menu); wide keeps it", () => {
+  hookState.busy = false;
+  window.sessionStorage.clear();
+  stubNarrow();
+  const { unmount } = render(narrowUi(two()));
+  expect(screen.queryByRole("complementary", { name: "연결 범례" })).toBeNull();
+  unmount();
+  vi.unstubAllGlobals();
+  render(ui(two() as never));
+  expect(screen.getByRole("complementary", { name: "연결 범례" })).toBeInTheDocument();
+});
+
+test("NARROW_QUERY covers phones held sideways (short landscape) as well as narrow portrait", () => {
+  expect(NARROW_QUERY).toContain("(max-width: 640px)");
+  expect(NARROW_QUERY).toContain("(max-height: 480px) and (orientation: landscape)");
 });

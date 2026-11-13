@@ -25,6 +25,7 @@ const eslintConfig = [
       "docs/**",
       "website/**",
       ".claude/**",
+      ".agents/**",
     ],
   },
 ];

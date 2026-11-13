@@ -33,8 +33,12 @@ function assertUuid(id: string): void {
 
 const NAME_MAX = 60;
 
+// 깨진 글자(U+FFFD)·제어 문자·줄/문단 구분자는 이름에 못 쓴다.
+const BAD_NAME_CHAR = /[\uFFFD\p{Cc}\u2028\u2029]/u;
+
 function cleanName(name: string): string {
   const n = name.trim();
+  if (BAD_NAME_CHAR.test(n)) throw new ValidationError("이름에 쓸 수 없는 글자(깨진 글자·제어 문자)가 있어요");
   if (n.length < 1 || n.length > NAME_MAX) throw new ValidationError("이름은 1~60자로 입력해 주세요");
   return n;
 }

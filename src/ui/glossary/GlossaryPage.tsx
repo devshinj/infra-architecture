@@ -169,7 +169,8 @@ export function GlossaryPage({ initial }: { initial: GlossaryItem[] }) {
                     </span>
                     <span className={styles.meta}>{t.category}</span>
                     <span className={styles.snippet}>{t.definition}</span>
-                    <span className={styles.meta} data-source={t.source}>{t.source === "seed" ? "기본 제공" : "AI가 추가"}</span>
+                    {/* 출처: 기본 제공은 거의 모든 줄이라 비우고(빈 칸 = 기본), AI 가 더한 것만 적는다. */}
+                    <span className={styles.meta} data-source={t.source}>{t.source === "seed" ? "" : "AI가 추가"}</span>
                   </button>
                 </li>
               ))}

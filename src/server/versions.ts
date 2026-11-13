@@ -2,7 +2,10 @@ import { and, desc, eq, sql } from "drizzle-orm";
 
 import { db, type Tx } from "@/db/client";
 import { diagramVersions, type VersionSource, type VersionStatus } from "@/db/schema";
-import type { DiagramState } from "@/domain/types";
+import { infoChangeText, infoCounts } from "@/domain/infoCounts";
+import { euro } from "@/domain/josa";
+import type { NetworkKnowledge } from "@/domain/network";
+import { emptyState, type DiagramState } from "@/domain/types";
 import { createMessage } from "@/server/chat/messages";
 
 export interface CreateVersionOpts {
@@ -114,12 +117,25 @@ export async function restoreVersion(diagramId: string, number: number): Promise
   return { number: created };
 }
 
-/** 되돌리기 + 대화에 시스템 메시지를 남긴다. 소유권은 호출자가 확인한다. */
+export interface RestoreMessageOpts {
+  /** 주어지면 안내 둘째 줄에 구성 정보 카드 숫자의 변화를 붙인다(이력의 되돌리기). knowledge 는 카드와 같은 망 지식. */
+  describeChange?: { knowledge?: NetworkKnowledge };
+}
+
+/** 되돌리기 + 대화에 시스템 메시지를 남긴다. 소유권은 호출자가 확인한다. text 는 남긴 메시지(화면이 바로 띄운다). */
 export async function restoreVersionWithMessage(
   diagramId: string,
   number: number,
-): Promise<{ number: number }> {
+  opts: RestoreMessageOpts = {},
+): Promise<{ number: number; text: string }> {
+  const before = opts.describeChange ? await getLatestState(diagramId) : null;
   const r = await restoreVersion(diagramId, number);
-  await createMessage(diagramId, "system", `v${number}로 되돌림 (새 버전 v${r.number})`);
-  return r;
+  let text = `${euro(`v${number}`)} 되돌림 (새 버전 v${r.number})`;
+  if (opts.describeChange) {
+    const k = opts.describeChange.knowledge;
+    const after = await getVersion(diagramId, r.number);
+    if (after) text += `\n${infoChangeText(infoCounts(before?.state ?? emptyState(), k), infoCounts(after, k))}`;
+  }
+  await createMessage(diagramId, "system", text);
+  return { number: r.number, text };
 }

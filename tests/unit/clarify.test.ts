@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest";
 
 import { applyCommands } from "@/domain/apply";
 import { ASSUMPTION_CHOICES, ASSUMPTION_LABELS } from "@/domain/assumptions";
-import { choiceValue, choicesNote, choicesSummary, CLARIFY_AUTO, CLARIFY_AUTO_VALUE, CLARIFY_MAX, detectForks, validChoices } from "@/domain/clarify";
+import { choiceValue, choicesNote, choicesSummary, CLARIFY_AUTO, CLARIFY_AUTO_VALUE, CLARIFY_KEYS, CLARIFY_MAX, clarifyGuideLines, detectForks, validChoices } from "@/domain/clarify";
 import type { Command } from "@/domain/commands";
 import { emptyState } from "@/domain/types";
 
@@ -38,6 +38,11 @@ describe("detectForks", () => {
   test("관제 대상·기기 연결·망분리", () => {
     expect(keys("CCTV 20대를 관제 화면까지 이어 줘", drawn())).toEqual(["video_site"]);
     expect(keys("공장 CCTV 20대를 관제 화면까지 이어 줘", drawn())).toEqual([]);
+    expect(keys("VMS 에서 영상 관제 화면으로 보내 줘", drawn())).toEqual(["video_site"]);
+    // '관제'만 나오면 영상 관제로 보지 않는다(관제지원·보안관제·네트워크 관제).
+    const zonedPortal = build([{ op: "add_group", id: "s", group_kind: "network_zone", label: "S존 업무망", parent: null }]);
+    expect(keys("S존 업무망 그룹 안에 관제지원 그룹을 두고 사용자 포털은 인터넷망에 둬", zonedPortal)).toEqual([]);
+    expect(keys("보안관제 서버를 DMZ 옆에 넣어 줘", drawn())).toEqual([]);
     expect(keys("온도 센서 데이터를 서버로 모아 줘", drawn())).toEqual(["iot_link"]);
     expect(keys("온도 센서 데이터를 게이트웨이로 모아 줘", drawn())).toEqual([]);
     expect(keys("앱이랑 디바이스를 블루투스로 연결해 줘", drawn())).toEqual([]);
@@ -92,5 +97,22 @@ describe("고른 답 다루기", () => {
       "사용자가 고른 것(그대로 따른다): 통화 방식 = 다자간(미디어 서버 경유)\n사용자가 맡긴 것(알맞게 정하고 set_assumption 으로 밝힌다): LLM 위치(key llm_serving)",
     );
     expect(choicesNote({ llm_serving: "외부 LLM API" })).toBe("사용자가 고른 것(그대로 따른다): LLM 위치 = 외부 LLM API");
+  });
+});
+
+describe("clarifyGuideLines", () => {
+  test("갈림길마다 한 줄, key 와 모든 선택지를 담는다", () => {
+    const lines = clarifyGuideLines();
+    expect(CLARIFY_KEYS).toHaveLength(6);
+    expect(lines).toHaveLength(6);
+    CLARIFY_KEYS.forEach((key, i) => {
+      expect(lines[i]).toContain(`가정 key=${key}`);
+      for (const c of ASSUMPTION_CHOICES[key]) expect(lines[i]).toContain(c);
+    });
+  });
+  test("video_site 줄에 선택지와 이미 정해진 노드가 있다", () => {
+    const line = clarifyGuideLines().find((l) => l.includes("가정 key=video_site"))!;
+    expect(line).toContain("지자체 통합관제센터");
+    expect(line).toContain("camera·video_recorder");
   });
 });

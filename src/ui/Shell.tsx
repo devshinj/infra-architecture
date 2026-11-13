@@ -11,11 +11,16 @@ export const SIDEBAR_WIDTH = 240;
 export const RAIL_WIDTH = 56;
 export const PANEL_GAP = 12;
 export const SIDEBAR_COLLAPSED_KEY = "infrasketch.sidebarCollapsed";
+/** 셸 맨 앞 건너뛰기 자리(화면별 건너뛰기를 포털로 넣는다)와 본문 id. */
+export const SKIP_SLOT_ID = "skip-links";
+export const MAIN_ID = "main";
 /**
- * 휴대폰 너비. 이보다 좁으면 사이드바는 위 막대의 ☰ 서랍이 되고, 작업 화면은 아래 탭 막대로 한 화면씩 본다
- * (app.module.css 의 같은 미디어 쿼리가 첫 칠을 맞춘다). 저장값이 없으면 접힌 채로 시작해, 넓혀도 레일로 남는다.
+ * 휴대폰 화면: 세로(너비 640px 이하)와 가로(높이 480px 이하의 가로 방향). 이러면 사이드바는 위 막대의 ☰ 서랍이 되고,
+ * 작업 화면은 아래 탭 막대로 한 화면씩 본다(app.module.css 등의 같은 미디어 쿼리가 첫 칠을 맞춘다 — 함께 고칠 것).
+ * 가로 휴대폰을 넣은 까닭: 데스크톱 배치면 오른쪽 패널이 화면 절반을 가려 캔버스가 300px 띠만 남는다.
+ * 저장값이 없으면 접힌 채로 시작해, 넓혀도 레일로 남는다.
  */
-export const NARROW_QUERY = "(max-width: 640px)";
+export const NARROW_QUERY = "(max-width: 640px), (max-height: 480px) and (orientation: landscape)";
 /** 태블릿 너비(641–900px)까지: 저장값이 없으면 사이드바를 레일로 접은 채 시작해 캔버스·패널 자리를 남긴다. */
 export const COMPACT_QUERY = "(max-width: 900px)";
 
@@ -85,6 +90,13 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
   return (
     <ShellContext.Provider value={value}>
       <div className={styles.shell} style={{ "--shell-inset-left": `${value.sidebarExtent}px` } as React.CSSProperties}>
+        {/* 건너뛰기: 사이드바보다 앞, 화면의 첫 Tab 칸. 구성도 화면은 이 자리에 대화·캔버스로 건너뛰기를 넣고(포털),
+            다른 화면은 본문으로 건너뛰기 하나. 포커스를 받을 때만 보인다. */}
+        <div id={SKIP_SLOT_ID} className={styles.skipSlot}>
+          <a href={`#${MAIN_ID}`} className={`${styles.skipLink} ${styles.skipDefault}`}>
+            본문으로 건너뛰기
+          </a>
+        </div>
         {children}
       </div>
     </ShellContext.Provider>

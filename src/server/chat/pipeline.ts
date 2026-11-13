@@ -6,6 +6,7 @@ import { asksStepText, FLOW_LIMITS, keepStepText, type FlowOp } from "@/domain/f
 import { splitFlowSteps, type StepSplit } from "@/domain/linkGuess";
 import type { NetworkKnowledge } from "@/domain/network";
 import { emptyState, type DiagramState, type Warning } from "@/domain/types";
+import { turnVersionSummary } from "@/domain/versionSummary";
 import { warningDelta, type WarningCounts } from "@/domain/warnings";
 import type { ClefClient, Intent } from "@/server/llm/clef";
 import { createJsonlParser } from "@/server/llm/jsonl";
@@ -468,10 +469,12 @@ async function lockedTurn(args: TurnArgs, sessionId: string | null, followUp: bo
     // 주의 칩: 새 경고만 세면 그대로 남은 경고·해결한 경고가 안 보인다. 화면 경고(무시 제외) 전후로 센다.
     const delta = warningDelta(turnStartState, state, knowledge ?? undefined);
     if (delta.fresh > 0 || delta.resolved > 0) warningCounts = delta;
+    // 이력 한 줄: 사용자 요청 글(노드 참조는 이름으로) · 증감. 되묻기에 답한 차례면 처음 요청 글이다.
     const v = await createVersion(diagramId, state, {
       source: "ai",
       status: status === "complete" ? "complete" : "aborted",
       messageId: userMsg.id,
+      summary: turnVersionSummary(clean, turnStartState, state),
     });
     version = v.number;
   }

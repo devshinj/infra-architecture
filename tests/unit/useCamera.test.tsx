@@ -282,19 +282,21 @@ test("READABLE_ZOOM keeps node names at 10px or more", () => {
   expect(14 * READABLE_ZOOM).toBeCloseTo(10);
 });
 
-test("a diagram too big for the readable zoom shows its top row, centred, without empty space past its edges", () => {
+test("a diagram too big for the readable zoom starts at the left of the strip (clear of the sidebar), keeping its top row's centre in view", () => {
   const big: Rect = { x: 0, y: 0, width: 3000, height: 2000 };
   const insets = { left: 100, right: 100, top: 60, bottom: 40 };
-  const row = { x: 1400, y: 0, width: 200, height: 50 };
-  const v = fitViewport(big, SIZE, insets, 2, { minZoom: READABLE_ZOOM, anchor: row });
+  const v = fitViewport(big, SIZE, insets, 2, { minZoom: READABLE_ZOOM, anchor: { x: 300, y: 0, width: 200, height: 50 } });
   expect(v.zoom).toBeCloseTo(READABLE_ZOOM);
   // 위쪽 끝은 도구 모음 아래 EDGE_GAP_PX 에.
   expect(big.y * v.zoom + v.y).toBeCloseTo(60 + EDGE_GAP_PX);
-  // 맨 윗줄 가운데(1500)가 띠 가운데(100 + 800/2)에.
-  expect(1500 * v.zoom + v.x).toBeCloseTo(500);
-  // 맨 윗줄이 왼쪽 끝에 붙어 있으면 왼쪽 빈 곳이 보이지 않게 구성도 왼쪽 끝을 띠 왼쪽(+여백)에 둔다.
-  const left = fitViewport(big, SIZE, insets, 2, { minZoom: READABLE_ZOOM, anchor: { x: 0, y: 0, width: 100, height: 50 } });
-  expect(big.x * left.zoom + left.x).toBeCloseTo(100 + EDGE_GAP_PX);
+  // 맨 윗줄 가운데가 띠 안에 들면 구성도 왼쪽 끝을 띠 왼쪽(+여백)에 둔다: 사이드바 밑에 깔리는 노드가 없다.
+  expect(big.x * v.zoom + v.x).toBeCloseTo(100 + EDGE_GAP_PX);
+  // 맨 윗줄이 오른쪽 멀리 있으면 그 가운데(1500)가 띠 오른쪽 여백(100 + 800 - 16)에 닿을 만큼만 왼쪽으로 민다.
+  const far = fitViewport(big, SIZE, insets, 2, { minZoom: READABLE_ZOOM, anchor: { x: 1400, y: 0, width: 200, height: 50 } });
+  expect(1500 * far.zoom + far.x).toBeCloseTo(100 + 800 - EDGE_GAP_PX);
+  // 맨 윗줄이 오른쪽 끝에 붙어 있어도 구성도 오른쪽 끝 너머 빈 곳이 띠 오른쪽 여백보다 넓게 보이지 않는다.
+  const edge = fitViewport(big, SIZE, insets, 2, { minZoom: READABLE_ZOOM, anchor: { x: 2900, y: 0, width: 100, height: 50 } });
+  expect((big.x + big.width) * edge.zoom + edge.x).toBeGreaterThanOrEqual(100 + 800 - EDGE_GAP_PX - 0.5);
   // 가로는 담기고 세로만 넘치면 가로는 가운데, 세로는 위쪽.
   const narrowTall: Rect = { x: 0, y: 0, width: 300, height: 3000 };
   const t = fitViewport(narrowTall, SIZE, insets, 2, { minZoom: READABLE_ZOOM });
@@ -409,4 +411,20 @@ test("자동 정렬 after 전체 보기 fits again by the readable rule", () => 
   r.update({ rects: { ...rects, c: box(9000, 0) } });
   act(() => vi.advanceTimersByTime(1000));
   expect(r.setViewport).toHaveBeenCalledTimes(1);
+});
+
+test("fitTo frames a rect at the readable zoom or closer (max 1) and cancels a scheduled follow", () => {
+  const r = rig({ rects: { a: box(0, 0) } });
+  act(() => r.hook.result.current.fitTo(box(400, 300)));
+  const v = r.vp();
+  expect(v.zoom).toBeLessThanOrEqual(1);
+  expect(v.zoom).toBeGreaterThanOrEqual(READABLE_ZOOM);
+  expect(v).toEqual(fitViewport(box(400, 300), SIZE, { left: 0, right: 0 }, 1, { minZoom: READABLE_ZOOM }));
+});
+
+test("overview (phones): the board fit frames the whole diagram even below the readable zoom", () => {
+  const rects = { a: box(0, 0), b: box(1450, 0), z: box(0, 3000) };
+  const r = rig({ rects, overview: true });
+  expect(r.vp().zoom).toBeLessThan(READABLE_ZOOM);
+  expect(r.vp()).toEqual(fitViewport(unionRectOf(rects), SIZE, { left: 0, right: 0 }, 2));
 });

@@ -28,6 +28,8 @@ interface Fork {
   /** 가정 key. 이름과 선택지는 ASSUMPTION_LABELS·ASSUMPTION_CHOICES 에 있다. */
   key: string;
   question: string;
+  /** 사람이 읽는 "묻는 때"(MCP 안내서에 실린다). */
+  when: string;
   /** 요청에 이 갈림길이 걸렸는가. */
   about: RegExp | ((text: string, state: DiagramState) => boolean);
   /** 요청이 이미 선택을 말했는가. */
@@ -45,6 +47,7 @@ const FORKS: readonly Fork[] = [
   {
     key: "environment",
     question: "어디에 올리는 구성인가요?",
+    when: "빈 구성도에 서비스·시스템 전체를 처음 그리는데, 요청에 클라우드·IDC·온프레미스·하이브리드처럼 올릴 곳이 없을 때",
     // 빈 구성도에 서비스·시스템 전체를 처음 그릴 때만(노드 하나 넣는 요청에는 묻지 않는다).
     about: (t, s) => isEmpty(s) && WHOLE_SYSTEM.test(t),
     said: /aws|azure|gcp|클라우드|cloud|idc|온프레미스|온프렘|on-?prem|사내|전산실|데이터\s*센터|하이브리드|ec2|vpc|쿠버네티스|k8s|eks|서버리스/,
@@ -52,6 +55,7 @@ const FORKS: readonly Fork[] = [
   {
     key: "call_mode",
     question: "실시간 영상·음성은 어떤 방식인가요?",
+    when: "화상·영상 통화·회의·라이브 방송을 그리는데, 1:1·다자간·방송형 가운데 무엇인지 말하지 않았을 때",
     about: /화상|영상\s*통화|음성\s*통화|영상\s*회의|webrtc|라이브\s*방송|실시간\s*방송/,
     said: /1\s*:\s*1|일대일|1\s*대\s*1|다자|그룹|단체|여러\s*명|\d+\s*명|\d+\s*인|sfu|mcu|p2p|방송|송출|웨비나/,
     settledBy: ["media_server", "signaling_server"],
@@ -59,6 +63,7 @@ const FORKS: readonly Fork[] = [
   {
     key: "llm_serving",
     question: "LLM 은 어디에서 돌리나요?",
+    when: "LLM·챗봇·RAG·AI 에이전트를 그리는데, 외부 API 인지 사내 서빙인지 말하지 않았을 때",
     about: /llm|챗봇|생성형|gpt|rag|에이전트|agent|언어\s*모델|ai\s*(비서|상담|검색|기능|서비스|모델)/,
     said: /외부|openai|claude|gemini|bedrock|사내|자체|내부|vllm|ollama|온프레미스|gpu|모델\s*서버|서빙|호스팅/,
     settledBy: ["model_server", "llm_gateway"],
@@ -66,13 +71,16 @@ const FORKS: readonly Fork[] = [
   {
     key: "video_site",
     question: "어떤 곳의 영상 관제인가요?",
-    about: /cctv|관제|영상\s*감시|감시\s*카메라|ip\s*카메라|nvr|vms/,
+    when: "CCTV·영상 관제·VMS·NVR 을 그리는데, 지자체 통합관제인지 일반 시설인지 말하지 않았을 때",
+    // '관제'만으로는 묻지 않는다(관제지원·보안관제·네트워크 관제처럼 영상과 무관하게도 쓴다).
+    about: /cctv|영상\s*관제|영상\s*감시|감시\s*카메라|ip\s*카메라|nvr|vms/,
     said: /지자체|통합\s*관제|시청|구청|군청|도청|공공|일반|사옥|공장|매장|건물|빌딩|병원|학교|아파트|물류|창고|주차/,
     settledBy: ["camera", "video_recorder"],
   },
   {
     key: "iot_link",
     question: "기기는 무엇을 거쳐 서버에 닿나요?",
+    when: "IoT·센서·웨어러블 기기를 그리는데, 기기가 무엇을 거쳐 서버에 닿는지(BLE·게이트웨이·직접) 말하지 않았을 때",
     about: /iot|사물\s*인터넷|센서|웨어러블|스마트\s*(밴드|워치|홈|팜|팩토리)|비콘|디바이스/,
     said: /ble|블루투스|bluetooth|게이트웨이|허브|wi-?fi|와이파이|lte|5g|셀룰러|직접|zigbee|지그비|lora|mqtt|nfc|thread|matter/,
     settledBy: ["iot_device", "iot_gateway"],
@@ -80,6 +88,7 @@ const FORKS: readonly Fork[] = [
   {
     key: "net_separation",
     question: "망분리 대상 기관인가요?",
+    when: "아직 망을 그리지 않았고 요청에 업무망·내부망과 인터넷·클라우드·DMZ 가 함께 나오는데, 망분리 대상 기관인지 말하지 않았을 때",
     // 내부 망과 바깥이 함께 나왔고 아직 망을 그리지 않았을 때.
     about: (t, s) => !hasZone(s) && /업무망|내부망|사내망/.test(t) && /인터넷|외부망|클라우드|dmz/.test(t),
     said: /공공|금융|은행|증권|보험|카드사|지자체|기관|부처|공단|공사|병원|일반\s*기업|민간|스타트업|망\s*연계|망\s*분리|방화벽으로|행정망/,
@@ -89,6 +98,17 @@ const FORKS: readonly Fork[] = [
 const KEYS: ReadonlySet<string> = new Set(FORKS.map((f) => f.key));
 const labelOf = (key: string) => ASSUMPTION_LABELS[key] ?? key;
 const choicesOf = (key: string) => ASSUMPTION_CHOICES[key] ?? [];
+
+/** 묻는 갈림길의 가정 key(차례대로). */
+export const CLARIFY_KEYS: readonly string[] = FORKS.map((f) => f.key);
+
+/** MCP 안내서용: 갈림길마다 한 줄(질문·key·선택지·묻는 때). */
+export function clarifyGuideLines(): string[] {
+  return FORKS.map((f) => {
+    const base = `- ${f.question} 가정 key=${f.key}. 선택지: ${choicesOf(f.key).join(" / ")}. 묻는 때: ${f.when}.`;
+    return f.settledBy ? `${base} 구성도에 ${f.settledBy.join("·")} 노드가 있으면 이미 정해진 것이라 묻지 않아요.` : base;
+  });
+}
 
 /**
  * 그리기 요청(text)에서 물어야 할 갈림길. 요청에 그 주제가 나왔고, 선택을 말하지 않았고,

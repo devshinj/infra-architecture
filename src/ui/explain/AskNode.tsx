@@ -7,6 +7,8 @@ import styles from "../panel.module.css";
 export interface AskNodeProps {
   nodeId: string;
   nodeLabel: string;
+  /** 무엇에 대해 묻나. 영역이면 "영역"(입력칸 이름·예시가 바뀐다). 기본은 노드. */
+  noun?: "노드" | "영역";
   disabled: boolean;
   /** 막혔을 때 입력 아래에 보이는 안내. */
   disabledReason?: string;
@@ -18,8 +20,8 @@ export interface AskNodeProps {
   onFocusHandled?(): void;
 }
 
-/** 노드 설명 맨 아래 한 줄 입력: 보내면 그 노드에 대한 새 질문 세션이 열린다. */
-export function AskNode({ nodeId, nodeLabel, disabled, disabledReason, onAsk, focusToken, onFocusHandled }: AskNodeProps) {
+/** 노드·영역 설명 맨 아래 한 줄 입력: 보내면 그 대상에 대한 새 질문 세션이 열린다. */
+export function AskNode({ nodeId, nodeLabel, noun = "노드", disabled, disabledReason, onAsk, focusToken, onFocusHandled }: AskNodeProps) {
   const [text, setText] = useState("");
   const input = useRef<HTMLInputElement>(null);
   const handled = useRef(onFocusHandled);
@@ -43,7 +45,7 @@ export function AskNode({ nodeId, nodeLabel, disabled, disabledReason, onAsk, fo
 
   return (
     <section className={styles.section} aria-label={`${nodeLabel} 질문`}>
-      <label htmlFor={id} className={styles.heading}>이 노드에 대해 물어보기</label>
+      <label htmlFor={id} className={styles.heading}>이 {noun}에 대해 물어보기</label>
       <div className={styles.ask}>
         <input
           ref={input}
@@ -51,7 +53,7 @@ export function AskNode({ nodeId, nodeLabel, disabled, disabledReason, onAsk, fo
           className={styles.askInput}
           value={text}
           disabled={disabled}
-          placeholder="예: 이 서버는 왜 두 대예요?"
+          placeholder={noun === "영역" ? "예: 이 영역은 왜 따로 나눴어요?" : "예: 이 서버는 왜 두 대예요?"}
           aria-describedby={disabled && disabledReason ? reasonId : undefined}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={(e) => {

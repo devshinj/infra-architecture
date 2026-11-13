@@ -9,8 +9,8 @@ import { KNOWLEDGE } from "../fixtures/network";
 describe("buildGuide", () => {
   const guide = buildGuide(KNOWLEDGE);
 
-  test("seed 지식으로 20000자 이하", () => {
-    expect(guide.length).toBeLessThanOrEqual(20000);
+  test("seed 지식으로 24000자 이하", () => {
+    expect(guide.length).toBeLessThanOrEqual(24000);
   });
 
   test("사용법 문구가 들어 있다", () => {
@@ -20,8 +20,18 @@ describe("buildGuide", () => {
     expect(guide).toContain("흐름만 바꿀 때는 base_version 검사를 받지 않아요");
     expect(guide).toContain("흐름을 고치기 전에 get_diagram 으로 최신 흐름");
     expect(guide).toContain("base_version");
+    expect(guide).toContain("diagram_name");
+    expect(guide).toContain("lookup_terms");
     expect(guide).toContain("dry_run");
     expect(guide).toContain("배열의 원소");
+  });
+
+  test("그리기 전에 물을 것·첫 그리기 흐름·가정 key 안내가 있다", () => {
+    expect(guide).toContain("## 그리기 전에 물을 것");
+    expect(guide).toContain("가정 key=video_site");
+    expect(guide).toContain("흐름 3~5개");
+    expect(guide).toContain("no_link:");
+    expect(guide).toContain("key(call_mode·llm_serving·video_site·iot_link·net_separation)");
   });
 
   test("Qwen 전용 문구는 없다", () => {
@@ -50,7 +60,7 @@ describe("buildGuide", () => {
     expect(guide).not.toContain("길어서 줄였어요");
   });
 
-  test("아주 큰 지식도 2만 자 이하, 기본 등급 규칙과 줄임 안내는 남는다", () => {
+  test("아주 큰 지식도 2만4천 자 이하, 기본 등급 규칙과 줄임 안내는 남는다", () => {
     const types: Record<string, NetType> = {};
     for (let i = 0; i < 500; i++) {
       const key = `big-net-${String(i).padStart(3, "0")}`;
@@ -60,14 +70,14 @@ describe("buildGuide", () => {
     const rules: NetRule[] = keys.slice(1).map((b, i) => ({ a: keys[0]!, b, method: "firewall", note: `긴 근거 ${i} `.repeat(10) }));
     for (let i = 0; i < 500 - rules.length; i++) rules.push({ a: keys[1]!, b: keys[2 + (i % 100)]!, method: "none" });
     const text = buildGuide({ types, rules });
-    expect(text.length).toBeLessThanOrEqual(20000);
+    expect(text.length).toBeLessThanOrEqual(24000);
     expect(text).toContain("등급 규칙(기관 규칙·기본 짝 규칙이 없을 때):");
     expect(text).toContain("길어서 줄였어요");
     expect(text).toContain("get_diagram 의 zones");
     expect(text).toContain("망 종류 500개");
   });
 
-  test("종류 30개·기관 규칙 30개를 더해도 20000자 이하", () => {
+  test("종류 30개·기관 규칙 30개를 더해도 24000자 이하", () => {
     const types: Record<string, NetType> = { ...KNOWLEDGE.types };
     for (let i = 0; i < 30; i++) {
       const key = `extra-net-${i}`;
@@ -81,6 +91,6 @@ describe("buildGuide", () => {
     const big: NetworkKnowledge = { types, rules };
     const text = buildGuide(big);
     expect(text).toContain("extra-net-29");
-    expect(text.length).toBeLessThanOrEqual(20000);
+    expect(text.length).toBeLessThanOrEqual(24000);
   });
 });

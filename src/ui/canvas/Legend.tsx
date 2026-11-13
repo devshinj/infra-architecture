@@ -155,7 +155,17 @@ export function Legend({ hideAux, empty = false, bottom, onMeasure }: LegendProp
       </button>
       {open && (
         <div id="legend-body" className={styles.body}>
-          <h3 className={styles.heading}>연결 범례</h3>
+          <h2 className={styles.heading}>연결 범례</h2>
+          <LegendList hideAux={hideAux} />
+        </div>
+      )}
+    </aside>
+  );
+}
+
+/** 범례 목록(연결 종류·통신 수단·점·화살표). 떠 있는 범례와, 좁은 화면의 「보기」 메뉴가 같이 쓴다. */
+export function LegendList({ hideAux }: { hideAux: boolean }) {
+  return (
           <ul className={styles.list}>
             {EDGE_KINDS.map((k) => (
               <li key={k.kind} className={styles.row}>
@@ -178,7 +188,7 @@ export function Legend({ hideAux, empty = false, bottom, onMeasure }: LegendProp
                 <path className="edge-line edge-line--request" d="M3 7H37" />
                 <path className="motion-path motion-comet--head" d="M22 7H28" />
               </svg>
-              <span className={styles.text}>움직이는 금색 점: 요청이 흘러가는 방향</span>
+              <span className={styles.text}>움직이는 연두 점: 요청이 흘러가는 방향</span>
             </li>
             <li className={styles.row}>
               <svg className={styles.sample} width={40} height={14} viewBox="0 0 40 14" aria-hidden="true">
@@ -195,8 +205,5 @@ export function Legend({ hideAux, empty = false, bottom, onMeasure }: LegendProp
               <span className={styles.text}>화살표: 연결이 향하는 쪽</span>
             </li>
           </ul>
-        </div>
-      )}
-    </aside>
   );
 }

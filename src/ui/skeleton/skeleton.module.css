@@ -55,7 +55,7 @@
 .composer { margin: 0 12px 12px; height: 72px; }
 .panelFill { flex: 1; min-height: 0; }
 
-/* ── 보조 페이지(용어 사전·망 지식·Claude Code 연결) ──
+/* ── 보조 페이지(용어 사전·망 지식·MCP 연결) ──
  * 머리 여백·제목은 각 화면의 .page/.title(glossary.module.css 등)과 같은 값이다. 거기를 바꾸면 여기도 맞춘다. */
 .page {
   box-sizing: border-box; height: 100%; overflow: hidden; background: var(--bg-canvas); color: var(--text-primary);
@@ -77,7 +77,7 @@
 /* 대화 패널 안: 세션을 바꿀 때 줄 자리. */
 .inline { display: flex; flex-direction: column; gap: 20px; }
 
-@media (max-width: 640px) {
+@media (max-width: 640px), (max-height: 480px) and (orientation: landscape) {
   .stage { padding: 16px; }
   .sheet { gap: 16px; }
   .page { padding: 16px; }

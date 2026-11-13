@@ -58,11 +58,11 @@ test("reload renders the same structure with a collapsed done card", () => {
     ["card", ""],
     ["progress", "웹 서버를 놓을게요"],
     ["progress", "DB 를 붙일게요"],
-    ["summary", "노드 3 · 연결 2 · 5곳 바꿨어요"],
+    ["summary", "5곳 바꿨어요"],
     ["user", "뭐야?"],
     ["assistant", "로드밸런서예요"],
     ["card", ""],
-    ["summary", "중단됨 · 노드 4 · 연결 2 · 1곳 바꿨어요"],
+    ["summary", "중단됨 · 1곳 바꿨어요"],
   ]);
   expect(lines[1]!.card).toEqual({ mode: "build", step: "checking", changes: 0, end: "done", nodes: 3, edges: 2 });
   expect(lines[7]!.card).toMatchObject({ end: "aborted" });
@@ -131,9 +131,9 @@ test("summary: nothing applied but commands skipped says the reply could not be 
   expect(summaryText({ version: null, status: "complete", applied: 0, skipped: 0 }, false, "missing_info_answer")).toBe("변경 사항이 없어요.");
   expect(summaryText({ version: null, status: "complete", applied: 0, skipped: 2 }, false, "layout")).toBeNull();
   // 건너뛴 수는 보이지 않고, 바꾼 곳 수만 쉬운 말로 보인다.
-  expect(summaryText({ version: 2, status: "complete", applied: 4, skipped: 35, nodes: 12, edges: 15 }, false)).toBe("노드 12 · 연결 15 · 4곳 바꿨어요");
+  expect(summaryText({ version: 2, status: "complete", applied: 4, skipped: 35, nodes: 12, edges: 15 }, false)).toBe("4곳 바꿨어요");
   expect(summaryText({ version: 2, status: "aborted", applied: 0, skipped: 3 }, false)).toBe("중단됨 · 바꾼 곳이 없어요");
-  expect(summaryText({ version: 3, status: "complete", applied: 0, skipped: 2, nodes: 5, edges: 4 }, false)).toBe("노드 5 · 연결 4 · 바꾼 곳이 없어요");
+  expect(summaryText({ version: 3, status: "complete", applied: 0, skipped: 2, nodes: 5, edges: 4 }, false)).toBe("바꾼 곳이 없어요");
   const lines = messagesToLines([
     { id: "u1", role: "user", content: "IP는 10.0.2.11", meta: {} },
     { id: "a1", role: "assistant", content: "", meta: { intent: "missing_info_answer", applied: 0, skipped: 1, version: null, status: "complete" } },
@@ -165,11 +165,11 @@ test("summary: assumptions are applied and versioned but are not counted as chan
   expect(summaryText(onlyAssumption, false, "structure_change")).toBe(msg);
   expect(keepsCard(onlyAssumption)).toBe(false);
   // 글이 있거나 구성 변경 요청이 아니면 바꾼 곳이 없다고만 보인다.
-  expect(summaryText(onlyAssumption, true, "structure_change")).toBe("노드 50 · 연결 60 · 바꾼 곳이 없어요");
-  expect(summaryText(onlyAssumption, false, "missing_info_answer")).toBe("노드 50 · 연결 60 · 바꾼 곳이 없어요");
+  expect(summaryText(onlyAssumption, true, "structure_change")).toBe("바꾼 곳이 없어요");
+  expect(summaryText(onlyAssumption, false, "missing_info_answer")).toBe("바꾼 곳이 없어요");
   // 가정 + 노드 둘: 바꾼 곳은 둘.
   const mixed = { ...onlyAssumption, applied: 3, changed: 2 };
-  expect(summaryText(mixed, false, "structure_change")).toBe("노드 50 · 연결 60 · 2곳 바꿨어요");
+  expect(summaryText(mixed, false, "structure_change")).toBe("2곳 바꿨어요");
   expect(keepsCard(mixed)).toBe(true);
   // 옛 메시지(changed 없음)는 applied 로 센다.
   expect(summaryText({ version: 2, status: "complete", applied: 4, skipped: 0 }, false, "structure_change")).toBe("4곳 바꿨어요");
@@ -205,18 +205,18 @@ test("old messages without changed render exactly as before", () => {
 test("summary mentions 흐름 1개 바꿨어요", () => {
   // 구성과 흐름을 함께 바꾼 차례
   expect(summaryText({ version: 2, status: "complete", applied: 3, changed: 2, flows: 1, skipped: 0, nodes: 3, edges: 2 }, false, "structure_change")).toBe(
-    "노드 3 · 연결 2 · 2곳 바꿨어요 · 흐름 1개 바꿨어요",
+    "2곳 바꿨어요 · 흐름 1개 바꿨어요",
   );
   // 흐름만 바꾼 차례: 버전이 없어도 반영 못 함·변경 없음으로 보이지 않는다.
   expect(summaryText({ version: null, status: "complete", applied: 1, changed: 0, flows: 1, skipped: 0, nodes: 3, edges: 2 }, false, "structure_change")).toBe(
-    "노드 3 · 연결 2 · 흐름 1개 바꿨어요",
+    "흐름 1개 바꿨어요",
   );
   expect(summaryText({ version: null, status: "complete", applied: 2, changed: 0, flows: 2, skipped: 1 }, false)).toBe("흐름 2개 바꿨어요");
   // 다시 불러와도 같다(meta.flows).
   const lines = messagesToLines([
     { id: "a1", role: "assistant", content: "", meta: { intent: "structure_change", applied: 1, changed: 0, flows: 1, skipped: 0, version: null, status: "complete", says: [], nodes: 3, edges: 2 } },
   ]);
-  expect(lines.map((l) => [l.kind, l.text])).toEqual([["summary", "노드 3 · 연결 2 · 흐름 1개 바꿨어요"]]);
+  expect(lines.map((l) => [l.kind, l.text])).toEqual([["summary", "흐름 1개 바꿨어요"]]);
 });
 
 test("reloaded summary lines carry the turn's version and changed count (for 바뀐 곳 보기 · 되돌리기)", () => {
@@ -247,4 +247,9 @@ test("reloaded messages use saved warning counts for the chip", () => {
     { id: "a1", role: "assistant", content: "", meta: { intent: "structure_change", applied: 8, changed: 8, skipped: 0, version: 4, status: "complete", warnings: [], warningCounts: { fresh: 0, resolved: 4, now: 2 } } },
   ]);
   expect(lines.find((l) => l.kind === "warning")?.text).toBe("주의 4 해결 · 지금 모두 2");
+});
+
+test("예전에 저장된 되돌리기 안내 줄은 조사를 고쳐 보인다", () => {
+  const lines = messagesToLines([{ id: "m1", role: "system", content: "v6로 되돌림 (새 버전 v9)", meta: {} }]);
+  expect(lines.map((l) => [l.kind, l.text])).toEqual([["system", "v6으로 되돌림 (새 버전 v9)"]]);
 });

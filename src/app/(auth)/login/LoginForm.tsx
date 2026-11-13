@@ -6,7 +6,7 @@ import { loginAction } from "@/server/auth/actions";
 import { MESSAGES, normalizeUsername } from "@/server/auth/rules";
 import { Logo } from "@/ui/brand/Logo";
 
-import { AuthField, AuthSubmit } from "../_components/AuthField";
+import { AuthField, AuthSubmit, FormAlert } from "../_components/AuthField";
 import { useAuthForm, type FieldErrors } from "../_components/useAuthForm";
 import { AuthStage } from "../_components/AuthStage";
 import styles from "../auth.module.css";
@@ -43,11 +43,7 @@ export function LoginForm({ notice }: { notice?: string }) {
           autoComplete="current-password"
           error={errors.password}
         />
-        {errors.form && (
-          <p className={styles.alert} role="alert">
-            {errors.form}
-          </p>
-        )}
+        <FormAlert message={errors.form} />
         <AuthSubmit pending={pending} label="로그인" pendingLabel="로그인하는 중…" />
         <div className={styles.links}>
           <Link href="/signup">회원가입</Link>

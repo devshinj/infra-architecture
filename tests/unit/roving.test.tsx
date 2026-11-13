@@ -127,7 +127,7 @@ test("in edit mode arrows move focus from an unselected node, and move only the 
   expect(document.activeElement).toBe(sel);
 });
 
-test("zones are named and described; Space folds the focused zone, Enter still clears the selection", async () => {
+test("zones are named and described; Space folds the focused zone, Enter selects it", async () => {
   const p = baseProps();
   p.options = { ...p.options, selectedId: "was-1" };
   const { container } = render(ui(p));
@@ -135,7 +135,7 @@ test("zones are named and described; Space folds the focused zone, Enter still c
   const zone = container.querySelector<HTMLElement>('.react-flow__node-zone[data-id="was-pair"]')!;
   const label = p.state.groups["was-pair"].label;
   expect(zone).toHaveAttribute("aria-label", label);
-  expect(document.getElementById(zone.getAttribute("aria-describedby")!)?.textContent).toMatch(/^영역입니다\. Space 로 접고, Enter 로 선택을 풉니다\./);
+  expect(document.getElementById(zone.getAttribute("aria-describedby")!)?.textContent).toMatch(/^영역입니다\. Space 로 접고, Enter 로 영역을 선택하거나 선택을 풀고/);
   expect(zone.querySelector(".group__toggle")).toHaveAccessibleName(`${label} 접기`);
   zone.focus();
   const space = new KeyboardEvent("keydown", { key: " ", bubbles: true, cancelable: true });
@@ -144,7 +144,7 @@ test("zones are named and described; Space folds the focused zone, Enter still c
   expect(p.onOptionsChange).toHaveBeenCalledWith(expect.objectContaining({ collapsed: new Set([...p.options.collapsed, "was-pair"]) }));
   expect(p.onSelect).not.toHaveBeenCalled();
   fireEvent.keyDown(zone, { key: "Enter" });
-  expect(p.onSelect).toHaveBeenCalledWith(null);
+  expect(p.onSelect).toHaveBeenCalledWith("was-pair");
 });
 
 test("arrows and Home/End with Alt, Ctrl or Cmd are left to the browser", async () => {

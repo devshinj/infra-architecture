@@ -20,7 +20,7 @@ export interface GhostLayerProps {
   request: GhostRequest | null;
   /** 노드·연결을 찾을 작업 화면. */
   root: RefObject<HTMLElement | null>;
-  /** 캔버스 `움직임`. 꺼졌거나 prefers-reduced-motion: reduce 면 그리지 않는다. */
+  /** 움직임 허용. 꺼졌거나 prefers-reduced-motion: reduce 면 그리지 않는다. 작업 화면은 「흐름 표시」와 상관없이 켠다. */
   motion: boolean;
 }
 

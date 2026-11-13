@@ -42,7 +42,7 @@ export const IOT_CONTROL: Sample = {
       edge(id, "display", "request", "관제 알림 WSS"),
     ]),
     edge("camera", "nvr", "request", "RTSP", { medium: "video" }),
-    edge("nvr", "fw", "request", "RTSP 554", { ...CROSS, medium: "video" }),
+    edge("nvr", "fw", "request", "RTSP 554", { direction: "one_way", medium: "video" }),
     edge("fw", "display", "request", "RTSP 554", { medium: "video" }),
 
     flow("sensor-alert", "센서 이상 알림", "system", "센서 값이 기준을 넘으면 관제 화면에 알린다.", "관제 화면에 경보를 띄우고 값을 남긴다.", [

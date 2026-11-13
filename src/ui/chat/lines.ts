@@ -1,4 +1,5 @@
 import type { MessageRole } from "@/db/schema";
+import { fixLegacyJosa } from "@/domain/josa";
 import type { Warning } from "@/domain/types";
 import type { WarningCounts } from "@/domain/warnings";
 import type { MessageMeta } from "@/server/chat/events";
@@ -47,6 +48,7 @@ const changedOf = (r: Pick<TurnResult, "applied" | "changed">) => r.changed ?? r
  * 그 밖에 바뀐 것이 없으면 "변경 사항이 없어요.", 답만 한 차례면 없음.
  * 재정렬(layout) 차례는 "다시 정렬했어요" 안내와 어긋나므로 칩을 두지 않는다.
  * 흐름을 저장했으면 `흐름 N개 바꿨어요`를 덧붙인다. 흐름만 바꾼 차례(버전 없음)도 반영한 것으로 본다.
+ * 구성도 전체 노드·연결 수는 진행 카드(`완료 · 노드 N · 연결 N`)가 보이므로 여기서는 이번 차례가 바꾼 것만 말한다.
  */
 export function summaryText(r: TurnResult, hadAnswer: boolean, intent?: string | null): string | null {
   // 옛 메시지(changed 없음)는 예전 규칙 그대로 보인다.
@@ -61,8 +63,7 @@ export function summaryText(r: TurnResult, hadAnswer: boolean, intent?: string |
   }
   const flowText = flows > 0 ? `흐름 ${flows}개 바꿨어요` : null;
   const counts = changed > 0 ? `${changed}곳 바꿨어요` : flowText ? null : "바꾼 곳이 없어요";
-  const parts = [...(r.nodes === undefined || r.edges === undefined ? [] : [`노드 ${r.nodes}`, `연결 ${r.edges}`]), counts, flowText].filter((p) => p !== null);
-  const base = parts.join(" · ");
+  const base = [counts, flowText].filter((p) => p !== null).join(" · ");
   return r.status === "aborted" ? `중단됨 · ${base}` : base;
 }
 
@@ -72,8 +73,7 @@ function legacySummaryText(r: TurnResult, hadAnswer: boolean, intent?: string | 
     if (r.skipped > 0 && intent !== "layout") return NOT_APPLIED_MESSAGE;
     return hadAnswer || intent === "layout" ? null : "변경 사항이 없어요.";
   }
-  const counts = r.applied > 0 ? `${r.applied}곳 바꿨어요` : "바꾼 곳이 없어요";
-  const base = r.nodes === undefined || r.edges === undefined ? counts : `노드 ${r.nodes} · 연결 ${r.edges} · ${counts}`;
+  const base = r.applied > 0 ? `${r.applied}곳 바꿨어요` : "바꾼 곳이 없어요";
   return r.status === "aborted" ? `중단됨 · ${base}` : base;
 }
 
@@ -96,7 +96,9 @@ export function messagesToLines(rows: Row[]): ChatLine[] {
     const at = timeOf(m.createdAt);
     if (m.role === "user") lastUser = m.content;
     if (m.role !== "assistant") {
-      out.push({ id: m.id, kind: m.role, text: m.content, meta: m.meta, ...(at !== undefined ? { at } : {}) });
+      // 안내 줄(되돌림 등)은 예전에 저장된 조사("v6로 되돌림")를 보일 때 고친다. 사용자 글은 그대로.
+      const text = m.role === "system" ? fixLegacyJosa(m.content) : m.content;
+      out.push({ id: m.id, kind: m.role, text, meta: m.meta, ...(at !== undefined ? { at } : {}) });
       continue;
     }
     const t = { turn: m.id, ...(at !== undefined ? { at } : {}) };

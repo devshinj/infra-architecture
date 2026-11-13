@@ -2,6 +2,7 @@ import { desc, eq } from "drizzle-orm";
 
 import { db } from "@/db/client";
 import { diagramVersions } from "@/db/schema";
+import { CLARIFY_AUTO, CLARIFY_KEYS, CLARIFY_MAX, clarifyGuideLines } from "@/domain/clarify";
 import { computeMissing, type MissingItem } from "@/domain/missing";
 import type { NetworkKnowledge } from "@/domain/network";
 import { emptyState, type DiagramState, type Warning } from "@/domain/types";
@@ -9,6 +10,8 @@ import { mergeWarnings } from "@/domain/warnings";
 import { baseRuleBlock, COMMAND_EXAMPLES, DRAW_RULES, gradeRuleLines, KIND_BLOCK, networkTypeLines, patternBlock, userRuleLines } from "@/server/drawing/rules";
 import { GRADE_LABELS } from "@/domain/network";
 import { listFlows, type StoredFlow } from "@/server/flows";
+import type { MatchedTerm } from "@/domain/glossaryMatch";
+import { matchUserTerms } from "@/server/glossary";
 import { getNetworkKnowledge } from "@/server/network";
 import {
   createDiagram,
@@ -23,7 +26,7 @@ import { diagramUrl } from "./url";
 
 const FIRST_DIAGRAM_NAME = "새 구성도";
 const VERSION_LIST_LIMIT = 50;
-const GUIDE_MAX = 20000;
+const GUIDE_MAX = 24000;
 
 const INTRO = `# InfraSketch 그리기 안내서
 
@@ -32,11 +35,12 @@ InfraSketch 는 인프라 구성도를 그리고 고치는 웹 도구예요. 이
 
 const HOW_TO_USE = `## 쓰는 순서
 
-1. list_projects 로 프로젝트와 구성도를 찾아요. 없으면 create_project 나 create_diagram 으로 만들어요.
-2. get_diagram 으로 구성도를 읽어요. 이때 받은 version 이 base_version 이에요.
-3. apply_commands 로 바꿀 부분만 보내요. base_version 에는 get_diagram 의 version 을 그대로 써요.
-4. 먼저 dry_run 으로 확인할 수 있어요. dry_run 은 검사만 하고 저장하지 않아요.
-5. 구성도가 바뀌었으면 get_diagram 으로 다시 읽고 고쳐요. 그사이 사용자가 브라우저에서 고쳤을 수 있어서, 구성을 바꾸는 명령은 버전이 다르면 저장되지 않아요.
+1. list_projects 로 프로젝트와 구성도를 찾아요. 없으면 create_project 나 create_diagram 으로 만들어요. create_project 는 첫 구성도를 함께 만드니 그 이름은 diagram_name 으로 정하고, 같은 프로젝트에 create_diagram 을 또 부르지 않아요(빈 구성도가 남아요).
+2. 그리기 전에 요청마다 사용자 요청 글로 lookup_terms 를 불러요. 나온 말은 그 뜻대로 그려요(예: 사내에서 정한 장비·망 이름). 요청이 '그리기 전에 물을 것'의 갈림길에 걸리면 그리기 전에 먼저 물어요.
+3. get_diagram 으로 구성도를 읽어요. 이때 받은 version 이 base_version 이에요.
+4. apply_commands 로 바꿀 부분만 보내요. base_version 에는 get_diagram 의 version 을 그대로 써요.
+5. 먼저 dry_run 으로 확인할 수 있어요. dry_run 은 검사만 하고 저장하지 않아요.
+6. 구성도가 바뀌었으면 get_diagram 으로 다시 읽고 고쳐요. 그사이 사용자가 브라우저에서 고쳤을 수 있어서, 구성을 바꾸는 명령은 버전이 다르면 저장되지 않아요.
 
 ## 명령 보내는 방식
 
@@ -49,7 +53,17 @@ commands 는 명령 하나하나를 **배열의 원소**로 담은 목록이에�
 - 모르는 값은 비워 둬요. IP·hostname·스펙처럼 사용자가 알려 주지 않은 값은 지어내지 않고 null 로 두거나 쓰지 않아요.
 - 흐름은 버전과 따로 저장돼요. 흐름만 바꿀 때는 base_version 검사를 받지 않아요(지금 구성으로 검사해요). 구성도 버전을 되돌려도 흐름은 그대로이고, 연결이 사라지면 흐름이 끊겨요. 흐름을 고치기 전에 get_diagram 으로 최신 흐름(flows)을 읽고, 남기는 단계의 글은 그대로 써요.
 - 구성도를 바꿔 흐름이 끊겨도 흐름을 일부러 고치지 않아요. 결과의 끊긴 흐름 목록을 사용자에게 알려요.
-- 이 연결은 지우기·망 지식 고치기·계정 설정은 못 해요.`;
+- 이 연결은 지우기·망 지식 고치기·계정 설정은 못 해요.
+- 빈 구성도에 처음 그릴 때는 흐름 3~5개도 add_flow 로 함께 보내요. 사용자가 시작하는 흐름(origin user)과 시스템 흐름(origin system)을 섞어요. 앱 대화는 처음 그린 뒤 흐름을 자동으로 제안하지만 MCP 로 그리면 그렇지 않아서예요. 그리기 규칙의 "요청에 흐름 이야기가 없으면 흐름 명령을 쓰지 않는다"는 이미 그린 구성도를 고칠 때 이야기예요.`;
+
+const CLARIFY = `## 그리기 전에 물을 것
+
+앱 대화는 아래 갈림길이 요청에 걸리면 그리기 전에 사용자에게 물어요. MCP 로 그릴 때도 같은 때에 사용자에게 물어요. 한 번에 ${CLARIFY_MAX}개까지 묻고, 고르기 어려우면 "${CLARIFY_AUTO}"를 고를 수 있게 해요.
+- 사용자가 고르면 그 값을 set_assumption(key, 고른 값)으로 먼저 보내고 그 값대로 그려요.
+- 사용자가 맡기면 알맞게 정하고, 정한 값을 set_assumption 으로 밝혀요.
+- 그 key 의 가정이 이미 있으면 묻지 않아요.
+
+${clarifyGuideLines().join("\n")}`;
 
 const GLOSSARY = `## 용어 풀이
 
@@ -68,7 +82,7 @@ const GLOSSARY = `## 용어 풀이
 - <KIND>, <GROUP_KIND>, <EDGE_KIND>: 아래 'KIND 허용값' 목록에서 하나를 골라 그 글자 그대로 써요.
 - "영문-소문자-id": 영문 소문자·숫자·하이픈으로 직접 정하는 id 예요(예: was-1). 노드·그룹·연결 id 는 서로 겹치면 안 돼요.
 - e-<from>-<to>: 연결 id 를 정하는 습관 예일 뿐이에요. 양 끝 id 로 e-web-1-was-1 처럼 지어요.
-- "environment|scale|redundancy|deploy|replication|external": 이 가운데 하나를 key 로 써요.
+- "environment|scale|redundancy|deploy|replication|external": 이 가운데 하나를 key 로 써요. '그리기 전에 물을 것'의 key(${CLARIFY_KEYS.filter((k) => k !== "environment").join("·")})와 망연계 거절 no_link:<망 id>--<망 id> 도 key 로 써요.
 - "상위 그룹 id 또는 null"·"그룹 id 또는 null": 이미 있는 그룹 id 를 쓰거나, 최상위면 null 이에요.
 - "망 종류 key 또는 null": 망 지식의 key 를 쓰거나, 종류를 지우려면 null 이에요.
 - ... 와 "..." 같은 말줄임과 예시 값(Tomcat 10 등)은 실제 값으로 바꿔 써요.`;
@@ -107,13 +121,14 @@ function networkGuideSection(k: NetworkKnowledge, restLength: number): string {
 }
 
 /**
- * get_guide 가 돌려주는 그리기 안내서(2만 자 이하). 규칙 글은 Qwen 프롬프트와 공용 모듈(drawing/rules)을 쓰고,
+ * get_guide 가 돌려주는 그리기 안내서(2만4천 자 이하). 규칙 글은 Qwen 프롬프트와 공용 모듈(drawing/rules)을 쓰고,
  * 거기 쓰인 Qwen 쪽 이름은 용어 풀이 절에서 MCP 말로 바꿔 준다. 망 지식은 사용자 것을 담되 길면 줄인다.
  */
 export function buildGuide(k: NetworkKnowledge): string {
   const head = [
     INTRO,
     HOW_TO_USE,
+    CLARIFY,
     GLOSSARY,
     `## 명령 예\n\n각 줄이 commands 배열의 원소 하나예요.\n\n${COMMAND_EXAMPLES}`,
     `## 허용값\n\n${KIND_BLOCK}`,
@@ -130,8 +145,12 @@ export async function listProjectsForMcp(userId: string): Promise<McpProject[]> 
   return listProjectsWithVersions(userId);
 }
 
-export async function createProjectForMcp(userId: string, name: string): Promise<{ projectId: string; diagramId: string }> {
-  const r = await createProjectWithDiagram(userId, name, FIRST_DIAGRAM_NAME);
+export async function createProjectForMcp(
+  userId: string,
+  name: string,
+  diagramName?: string,
+): Promise<{ projectId: string; diagramId: string }> {
+  const r = await createProjectWithDiagram(userId, name, diagramName?.trim() ? diagramName : FIRST_DIAGRAM_NAME);
   return { projectId: r.id, diagramId: r.diagramId };
 }
 
@@ -207,4 +226,9 @@ export async function listVersionsForMcp(userId: string, diagramId: string): Pro
     .orderBy(desc(diagramVersions.number))
     .limit(VERSION_LIST_LIMIT);
   return rows.map((r) => ({ ...r, createdAt: r.createdAt.toISOString() }));
+}
+
+/** 요청 글에 나온 말을 이 계정의 용어 사전에서 찾는다(앱 대화와 같은 매칭, 6개까지). */
+export function lookupTermsForMcp(userId: string, text: string): Promise<MatchedTerm[]> {
+  return matchUserTerms(userId, text);
 }

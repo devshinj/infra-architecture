@@ -41,10 +41,12 @@ interface AskArgs {
   emit(e: ChatEvent): void;
 }
 
-const hasNode = (state: DiagramState | undefined, nodeId: string) => !!state && Object.hasOwn(state.nodes, nodeId);
+// 질문 대상은 노드이거나 영역이다. 노드 질문 세션(kind "node")의 node_id 에 영역 id 도 담는다(DB 를 바꾸지 않는다).
+const hasNode = (state: DiagramState | undefined, nodeId: string) => !!state && (Object.hasOwn(state.nodes, nodeId) || Object.hasOwn(state.groups, nodeId));
+const labelOf = (state: DiagramState, nodeId: string) => state.nodes[nodeId]?.label ?? state.groups[nodeId]!.label;
 
 /**
- * 노드 하나에 대해 묻는 차례(§6.8). 구성도는 바꾸지 않고 버전도 만들지 않는다.
+ * 노드나 영역 하나에 대해 묻는 차례(§6.8). 구성도는 바꾸지 않고 버전도 만들지 않는다.
  * 구성도 대화와 같은 잠금을 써서 한 구성도에 한 차례만 돈다.
  * 노드가 지금 구성도에 없으면 `gone`(세션을 만들지 않는다), 잠금을 얻지 못하면 `busy`.
  * 남의 구성도·세션은 NotFoundError, 세션의 노드와 nodeId 가 다르면 ValidationError 를 던진다.
@@ -90,7 +92,7 @@ async function lockedAsk(args: AskArgs, existing: SessionRow | null, deps: ChatD
 
   let session = existing;
   if (!session) {
-    session = await createSession(diagramId, { kind: "node", nodeId, nodeLabel: state.nodes[nodeId]!.label }, args.text);
+    session = await createSession(diagramId, { kind: "node", nodeId, nodeLabel: labelOf(state, nodeId) }, args.text);
     emit({ t: "session", session: sessionPayload(session) });
   }
   const sessionId = session.id;

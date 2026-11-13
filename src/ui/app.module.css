@@ -64,13 +64,18 @@
   flex: 1; min-width: 0; text-align: left; font: inherit; font-size: 13px; color: var(--text-primary);
   background: transparent; border: 0; padding: 8px; cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
-.projectMain { display: flex; align-items: center; gap: 8px; }
+/* 프로젝트 = 묶음 머리말(폴더 + 12px 굵게 흐린 글자), 구성도 = 열어 볼 항목(구성도 그림 + 13px 본문, 더 들여씀). */
+.projectMain, .diagramMain { display: flex; align-items: center; gap: 8px; }
+.projectMain { font-size: 12px; font-weight: 600; color: var(--text-secondary); }
+.projectMain:hover, .currentProject .projectMain { color: var(--text-primary); }
 .caret { flex: none; color: var(--text-secondary); }
+.rowIcon { flex: none; color: var(--text-secondary); }
 .rowName { display: block; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.count { flex: none; font-size: 12px; font-weight: 400; color: var(--text-secondary); }
-.diagramRow { margin-left: 12px; }
+/* 접혀 있을 때만: "구성도 N". */
+.count { flex: none; font-size: 12px; font-weight: 400; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+.diagramRow { margin-left: 20px; }
 .addRow {
-  display: block; width: calc(100% - 12px); margin-left: 12px; text-align: left; font: inherit; font-size: 12px;
+  display: block; width: calc(100% - 20px); margin-left: 20px; text-align: left; font: inherit; font-size: 12px;
   color: var(--text-secondary); background: transparent; border: 0; border-radius: var(--radius-control); padding: 4px 8px; cursor: pointer;
 }
 .addRow:hover { color: var(--text-primary); background: var(--bg-panel-raised); }
@@ -103,7 +108,7 @@
 .sideFoot { padding: 8px; border-top: 1px solid var(--glass-line); display: flex; flex-direction: column; gap: 8px; }
 .user { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; font-size: 12px; color: var(--text-secondary); padding: 0 4px; }
 .user span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-/* 펼친 사이드바 바닥: 새 프로젝트, 그 아래 화면 링크 셋(용어 사전·망 지식·Claude Code 연결)을 한 묶음으로, 계정 줄은 제 이음매 아래. */
+/* 펼친 사이드바 바닥: 새 프로젝트, 그 아래 화면 링크 셋(용어 사전·망 지식·MCP 연결)을 한 묶음으로, 계정 줄은 제 이음매 아래. */
 .pageLinks { display: flex; flex-direction: column; gap: 4px; }
 .userSeam { flex: none; padding: 8px 12px; border-top: 1px solid var(--glass-line); }
 /* 버튼 모양은 공용 Button(button.module.css)이 정한다. */
@@ -140,9 +145,15 @@
 .error { margin: 0; color: var(--state-missing-text); font-size: 12px; }
 
 .workspace { position: relative; height: 100%; min-height: 0; }
-/* 대화로 건너뛰기: 키보드 포커스를 받기 전에는 숨기고(보조기기는 읽는다), 받으면 캔버스 왼쪽 위에 떠 있는 판 단추로 보인다. */
+/*
+ * 건너뛰기(셸 맨 앞 자리): 키보드 포커스를 받기 전에는 숨기고(보조기기는 읽는다), 받으면 사이드바 바로 옆 위에 떠 있는 판 단추로 보인다.
+ * 구성도 화면이 자기 건너뛰기(대화·캔버스)를 넣으면 기본 「본문으로 건너뛰기」는 뺀다.
+ */
+.skipSlot { display: contents; }
+.skipSlot:has(.skipCustom) .skipDefault { display: none; }
 .skipLink {
-  position: absolute; z-index: 60; top: var(--panel-gap); left: calc(max(var(--panel-gap), var(--canvas-inset-left, 0px)) + var(--safe-l, 0px));
+  position: fixed; z-index: 60; top: calc(var(--panel-gap) + var(--safe-t, 0px)); left: calc(var(--shell-inset-left, 0px) + var(--panel-gap) + var(--safe-l, 0px));
+  text-decoration: none;
   font: inherit; font-size: 13px; font-weight: 600; color: var(--text-primary); white-space: nowrap; cursor: pointer;
   padding: 8px 16px; min-height: 36px; border-radius: var(--radius-control);
   background: var(--glass-bg); border: 1px solid var(--glass-line);
@@ -166,8 +177,19 @@
   margin: var(--panel-gap) calc(var(--canvas-inset-right, 0px) + var(--safe-r, 0px)) 0 calc(var(--canvas-inset-left, 0px) + var(--safe-l, 0px));
   background: var(--color-paper-2); border: 1px solid var(--line-node); border-radius: var(--radius-surface); color: var(--text-primary);
 }
-.legend { display: flex; gap: 12px; margin-left: auto; font-size: 12px; color: var(--text-secondary); }
+.legend { display: flex; gap: 4px; margin-left: auto; font-size: 12px; color: var(--text-secondary); }
 .legend span { display: inline-flex; align-items: center; gap: 4px; }
+/* 비교 띠의 「추가 n」 단추: 누를 때마다 그 종류의 다음 항목으로 간다. 조용한 글자 단추(Quiet)와 같은 칠·모서리. */
+.diffStep {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 28px; padding: 4px 8px;
+  font: inherit; font-size: 12px; color: var(--text-secondary); background: transparent; border: 0; border-radius: var(--radius-control); cursor: pointer;
+  font-variant-numeric: tabular-nums;
+}
+.diffStep:hover:not(:disabled) { color: var(--text-primary); background: var(--bg-panel-raised); }
+.diffStep:active:not(:disabled) { background: var(--line-node); }
+.diffStep:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+.diffStep:disabled { cursor: default; opacity: 0.55; }
+.diffAt { color: var(--text-primary); }
 .swatch { width: 14px; height: 10px; border-radius: 3px; border: 1.5px solid; box-sizing: border-box; }
 .swAdded { border-color: var(--cat-data); }
 .swChanged { border-color: var(--accent); }
@@ -198,7 +220,7 @@
  * 구성도·대화·설명·이력을 한 화면씩 본다. 막대 내용과 서랍은 하이드레이션 뒤에 그려지므로, 그 자리(띠)와
  * 숨길 넓은 화면 요소는 여기서 첫 칠부터 맞춘다(넓은 화면 마크업이 먼저 와도 사이드바·패널이 캔버스를 덮지 않는다).
  */
-@media (max-width: 640px) {
+@media (max-width: 640px), (max-height: 480px) and (orientation: landscape) {
   .shell {
     --topbar-h: calc(48px + env(safe-area-inset-top));
     --tabbar-h: calc(56px + env(safe-area-inset-bottom));
@@ -270,6 +292,7 @@
 .drawerNav .sideHead { padding: 4px 4px 4px 16px; }
 .drawerNav .iconBtn { width: 44px; height: 44px; border-radius: var(--radius-control); }
 .drawerNav .rowMain { min-height: 44px; padding: 8px; font-size: 14px; }
+.drawerNav .projectMain { font-size: 13px; }
 .drawerNav .menuBtn { min-width: 44px; min-height: 44px; }
 .drawerNav .addRow { min-height: 44px; font-size: 13px; }
 .drawerNav .sideLink { min-height: 44px; box-sizing: border-box; display: flex; align-items: center; font-size: 14px; }

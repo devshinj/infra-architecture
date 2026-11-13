@@ -1,7 +1,7 @@
 "use client";
 
 import styles from "./app.module.css";
-import { useShell } from "./Shell";
+import { MAIN_ID, useShell } from "./Shell";
 import { WorkspaceSkeleton } from "./skeleton/WorkspaceSkeleton";
 
 /**
@@ -12,7 +12,8 @@ import { WorkspaceSkeleton } from "./skeleton/WorkspaceSkeleton";
 export function ShellMain({ children }: { children: React.ReactNode }) {
   const { navigating } = useShell();
   return (
-    <main className={styles.main} data-navigating={navigating || undefined}>
+    // 「본문으로 건너뛰기」의 도착점: 포커스를 받을 수 있게 tabIndex -1(Tab 차례에는 들지 않는다).
+    <main id={MAIN_ID} tabIndex={-1} className={styles.main} data-navigating={navigating || undefined}>
       {children}
       {navigating && (
         <div className={styles.navSkeleton}>

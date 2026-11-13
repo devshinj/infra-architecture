@@ -140,3 +140,58 @@ test("keepEdges keeps a hidden aux edge (flow step) while hideAux is on", () => 
   expect(buildDisplayGraph(state, opts).edges.some((e) => e.id === aux.id)).toBe(false);
   expect(buildDisplayGraph(state, { ...opts, keepEdges: new Set([aux.id]) }).edges.some((e) => e.id === aux.id)).toBe(true);
 });
+
+// ── 이중화 묶음 경계 합치기 · 출구선 ──
+const pool = (extra: Command[] = []) =>
+  applyCommands(emptyState(), [
+    { op: "add_group", id: "asg", group_kind: "redundancy_group", label: "API 묶음", parent: null },
+    { op: "add_node", id: "a1", kind: "app_server", label: "API #1", parent: "asg" },
+    { op: "add_node", id: "a2", kind: "app_server", label: "API #2", parent: "asg" },
+    { op: "add_node", id: "db", kind: "db_rdb", label: "DB", parent: null },
+    { op: "add_node", id: "nat", kind: "nat", label: "NAT", parent: null },
+    { op: "add_edge", id: "e1", from: "a1", to: "db", edge_kind: "request", label: "TCP 3306" },
+    { op: "add_edge", id: "e2", from: "a2", to: "db", edge_kind: "request", label: "TCP 3306" },
+    ...extra,
+  ]).state;
+
+test("members of an expanded redundancy group sending to the same outside target merge into one group→target edge", () => {
+  const s = pool();
+  const g = buildDisplayGraph(s, defaultDisplayOptions(s));
+  const toDb = g.edges.filter((e) => e.to === "db");
+  expect(toDb).toEqual([expect.objectContaining({ id: "e1", from: "asg", to: "db", label: "TCP 3306", sourceEdgeIds: ["e1", "e2"], origins: { e1: "a1", e2: "a2" } })]);
+});
+
+test("no group merge for a single sender, an inside target, a collapsed group, aux edges, or with merging off", () => {
+  const single = pool([{ op: "remove_edge", id: "e2" }]);
+  expect(buildDisplayGraph(single, defaultDisplayOptions(single)).edges.map((e) => [e.from, e.to])).toEqual([["a1", "db"]]);
+  const inside = pool([
+    { op: "add_node", id: "a3", kind: "app_server", label: "API #3", parent: "asg" },
+    { op: "add_edge", id: "i1", from: "a1", to: "a3", edge_kind: "request" },
+    { op: "add_edge", id: "i2", from: "a2", to: "a3", edge_kind: "request" },
+  ]);
+  const gi = buildDisplayGraph(inside, defaultDisplayOptions(inside));
+  expect(gi.edges.filter((e) => e.to === "a3").map((e) => e.from).sort()).toEqual(["a1", "a2"]);
+  const s = pool();
+  const collapsed = buildDisplayGraph(s, { ...defaultDisplayOptions(s), collapsed: new Set(["asg"]) });
+  expect(collapsed.edges.find((e) => e.to === "db")?.origins).toBeUndefined();
+  const aux = pool([
+    { op: "add_edge", id: "x1", from: "a1", to: "nat", edge_kind: "aux" },
+    { op: "add_edge", id: "x2", from: "a2", to: "nat", edge_kind: "aux" },
+  ]);
+  const ga = buildDisplayGraph(aux, { ...defaultDisplayOptions(aux), hideAux: false });
+  expect(ga.edges.filter((e) => e.to === "nat").map((e) => e.from).sort()).toEqual(["a1", "a2"]);
+  expect(buildDisplayGraph(s, { ...defaultDisplayOptions(s), mergeDuplicates: false }).edges.map((e) => e.from).sort()).toEqual(["a1", "a2"]);
+});
+
+test("edges touching a NAT gateway are egress lines, including a merged group edge", () => {
+  const s = pool([
+    { op: "add_node", id: "pg", kind: "external_pg", label: "PG", parent: null },
+    { op: "add_edge", id: "n1", from: "a1", to: "nat", edge_kind: "request" },
+    { op: "add_edge", id: "n2", from: "a2", to: "nat", edge_kind: "request" },
+    { op: "add_edge", id: "n3", from: "nat", to: "pg", edge_kind: "request" },
+  ]);
+  const g = buildDisplayGraph(s, defaultDisplayOptions(s));
+  const egress = g.edges.filter((e) => e.egress).map((e) => `${e.from}>${e.to}`).sort();
+  expect(egress).toEqual(["asg>nat", "nat>pg"]);
+  expect(g.edges.find((e) => e.to === "db")?.egress).toBeUndefined();
+});

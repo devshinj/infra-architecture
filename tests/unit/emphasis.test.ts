@@ -78,3 +78,20 @@ test("nodes are step endpoints", () => {
   const none = flowEmphasis(edges, ["gone"]);
   expect(none.nodes.size + none.edges.size).toBe(0);
 });
+
+// 묶음 경계에서 합친 연결(asg → db, a1·a2 가 보냄).
+const mergedEdge = { id: "e1", from: "asg", to: "db", edgeKind: "request" as const, sourceEdgeIds: ["e1", "e2"], origins: { e1: "a1", e2: "a2" } };
+
+test("a merged group edge is incident to each sending member, and its target lights every member", () => {
+  const member = emphasisOf([mergedEdge], "a1")!;
+  expect([...member.edges]).toEqual(["e1"]);
+  expect(member.nodes.has("a2")).toBe(false);
+  const target = emphasisOf([mergedEdge], "db")!;
+  expect([...target.nodes].sort()).toEqual(["a1", "a2", "asg", "db"]);
+  // 원래 연결 하나를 고르면 그 연결을 보낸 구성원만, 합친 연결 자체면 구성원 모두.
+  expect([...emphasisOf([mergedEdge], "e2")!.nodes].sort()).toEqual(["a2", "asg", "db"]);
+});
+
+test("flow emphasis lights the member a merged step actually leaves from", () => {
+  expect([...flowEmphasis([mergedEdge], ["e2"]).nodes].sort()).toEqual(["a2", "asg", "db"]);
+});

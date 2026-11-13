@@ -22,6 +22,8 @@ import { displayEdgeFor, outermostCollapsedAncestor, type DisplayGraph, type Dis
 import type { Layout, Rect } from "./layout";
 import { NodeMenu } from "./NodeMenu";
 import { nodeTypes } from "./nodeTypes";
+import { zoneHeadPill } from "./layoutMetrics";
+import { offscreenHints, type OffscreenTarget } from "./offscreen";
 import { NAV_KEYS, navItems, readingOrder, step, tabStop } from "./roving";
 import { NODE_Z, zoneZ } from "./stacking";
 import { prefersReducedMotion, unionRect, useCamera, type Insets, type Viewport } from "./useCamera";
@@ -32,6 +34,8 @@ import { ZoneNameLayerPortal, type ZoneName } from "./ZoneNameLayer";
 
 export type CanvasOptions = DisplayOptions & { hoverLabels: boolean; showMissingBadges: boolean };
 export type DiffMarks = { added: Set<string>; removed: Set<string>; changed: Set<string> };
+/** 방금 끝난 대화 차례가 더하거나 바꾼 노드. 비교 화면과 같은 테두리로 표시하되 배지는 그대로 둔다. */
+export type TurnMarks = { added: Set<string>; changed: Set<string> };
 type Pinned = Record<string, { x: number; y: number }>;
 
 export interface CanvasProps {
@@ -57,6 +61,8 @@ export interface CanvasProps {
   onMotionChange(v: boolean): void;
   /** Compare mode: ids to outline as added / removed (ghost) / changed. Only nodes are marked. */
   diffMarks?: DiffMarks;
+  /** 실시간 화면: 방금 끝난 차례의 추가·변경 노드(다음 조작까지). diffMarks 가 있으면 그쪽이 이긴다. */
+  turnMarks?: TurnMarks;
   /** Changes when the shown diagram version/mode changes; the view is re-fitted. */
   fitKey?: string;
   /** A chat turn is assembling the diagram: the camera follows calmly (see useCamera). */
@@ -74,6 +80,12 @@ export interface CanvasProps {
    * 선택은 바꾸지 않는다. 접힌 영역 안이면 그려진 바깥 영역으로 간다.
    */
   focusRequest?: { id: string; token: number };
+  /** 바뀐 곳 맞춤: 이 노드·영역들을 담게 카메라를 맞춘다. 새 배치가 끝난 뒤 한 번(토큰마다). */
+  frameRequest?: { ids: string[]; token: number };
+  /** 한눈 보기(휴대폰): 처음 열 때를 비롯한 자동 맞춤이 구성도 전체를 담는다(읽을 수 있는 줌 바닥 없이). */
+  overview?: boolean;
+  /** 「보기」 메뉴 아래에 덧붙일 내용(좁은 화면의 범례). */
+  viewMenuExtra?: React.ReactNode;
   /** Click on a node's missing-info badge (open the 구성 정보 card at that node). */
   onBadgeClick?(nodeId: string): void;
   /** Click on a node's warning badge (select the node → 설명 탭 주의할 점). */
@@ -117,6 +129,9 @@ const VIEW_OPTIONS: { key: ToggleKey; label: string; desc: string }[] = [
   { key: "hoverLabels", label: "연결 이름은 마우스를 올릴 때만", desc: "캔버스를 깔끔하게 보여요" },
   { key: "showMissingBadges", label: "빠진 정보 숫자", desc: "노드마다 채워야 할 정보 개수를 보여요" },
 ];
+/** 손가락으로 쓰는 화면(마우스 올리기가 없다)에서 hoverLabels 를 부르는 이름. 연결을 누르면 이름이 보인다. */
+const HOVER_LABELS_TOUCH = "연결 이름은 누를 때만";
+const isTouch = () => typeof window !== "undefined" && !!window.matchMedia?.("(pointer: coarse)").matches;
 
 /** The id actually drawn for `id`: itself, or its outermost collapsed ancestor group. */
 const drawnId = (state: DiagramState, collapsed: Set<string>, id: string | null): string | null =>
@@ -131,23 +146,24 @@ const Icon = ({ children }: { children: React.ReactNode }) => (
 const IconEye = () => <Icon><path d="M1.5 8s2.4-4.5 6.5-4.5S14.5 8 14.5 8 12.1 12.5 8 12.5 1.5 8 1.5 8Z" /><circle cx="8" cy="8" r="1.8" /></Icon>;
 const IconMove = () => <Icon><path d="M8 1.5v13M1.5 8h13M8 1.5 6.2 3.3M8 1.5l1.8 1.8M8 14.5l-1.8-1.8M8 14.5l1.8-1.8M1.5 8l1.8-1.8M1.5 8l1.8 1.8M14.5 8l-1.8-1.8M14.5 8l-1.8 1.8" /></Icon>;
 const IconArrange = () => <Icon><rect x="2" y="2" width="5" height="4" rx="1" /><rect x="9" y="2" width="5" height="4" rx="1" /><rect x="5.5" y="10" width="5" height="4" rx="1" /><path d="M4.5 6v2h7V6M8 8v2" /></Icon>;
+const IconArrow = ({ left = false }: { left?: boolean }) => <Icon>{left ? <path d="M13.5 8h-11M6.5 4 2.5 8l4 4" /> : <path d="M2.5 8h11M9.5 4l4 4-4 4" />}</Icon>;
 const IconFit = () => <Icon><path d="M2 5.5V2h3.5M10.5 2H14v3.5M14 10.5V14h-3.5M5.5 14H2v-3.5" /></Icon>;
 const IconFlow = () => <Icon><path d="M1.5 8h3l2-4 3 8 2-4h3" /></Icon>;
 const IconChevron = () => <svg className="canvas__tool-chevron" width="8" height="8" viewBox="0 0 8 8" aria-hidden="true" focusable="false" {...stroke}><path d="M1.5 3 4 5.5 6.5 3" /></svg>;
 
 /** `보기 ▾`: 누르면 `보기 옵션` 팝오버가 열린다. 항목마다 체크와 한 줄 설명. */
-function ViewMenu({ options, onFlip }: { options: CanvasOptions; onFlip(key: ToggleKey): void }) {
+function ViewMenu({ options, onFlip, extra, compact }: { options: CanvasOptions; onFlip(key: ToggleKey): void; extra?: React.ReactNode; compact: boolean }) {
   const { open, setOpen, root, trigger } = usePopover('input[type="checkbox"]');
   return (
     <div ref={root} className="canvas__view">
-      <button ref={trigger} type="button" className="canvas__tool" aria-haspopup="dialog" aria-expanded={open} onClick={() => setOpen((v) => !v)}>
+      <button ref={trigger} type="button" className="canvas__tool" title={compact ? "보기" : undefined} aria-haspopup="dialog" aria-expanded={open} onClick={() => setOpen((v) => !v)}>
         <IconEye />
         <span>보기</span>
         <IconChevron />
       </button>
       {open && (
         <div className="canvas__pop" role="dialog" aria-label="보기 옵션">
-          {VIEW_OPTIONS.map((o) => (
+          {VIEW_OPTIONS.map((o) => (o.key === "hoverLabels" && isTouch() ? { ...o, label: HOVER_LABELS_TOUCH } : o)).map((o) => (
             <label key={o.key} className="canvas__opt">
               <input type="checkbox" checked={options[o.key]} aria-labelledby={`view-opt-name-${o.key}`} aria-describedby={`view-opt-${o.key}`} onChange={() => onFlip(o.key)} />
               <span className="canvas__opt-text">
@@ -156,6 +172,8 @@ function ViewMenu({ options, onFlip }: { options: CanvasOptions; onFlip(key: Tog
               </span>
             </label>
           ))}
+          {/* 좁은 화면: 떠 있는 범례 대신 이 메뉴 안에 범례를 둔다(캔버스 바닥을 비운다). */}
+          {extra && <div className="canvas__pop-extra">{extra}</div>}
         </div>
       )}
     </div>
@@ -209,16 +227,28 @@ export function Canvas(props: CanvasProps) {
   // 좁은 화면에서는 두 줄로 접히므로 크기가 바뀔 때마다 다시 잰다. 첫 맞춤 전에 값이 있도록 레이아웃 효과에서 잰다.
   const toolbarRef = useRef<HTMLDivElement>(null);
   const [toolbarBottom, setToolbarBottom] = useState(0);
+  // 이름을 붙인 채로는 한 줄에 안 들어가면(띠가 좁거나 오른쪽 패널이 넓을 때) 아이콘만 보인다. 이름은 툴팁과 보조기기로.
+  // 이름을 붙여 다시 재 보고 정하므로 넓어지면 이름이 돌아온다. data-compact 는 CSS 가, compact 는 툴팁이 쓴다.
+  const [compact, setCompact] = useState(false);
   useLayoutEffect(() => {
     const el = toolbarRef.current;
     if (!el) return;
-    const measure = () => setToolbarBottom(el.offsetHeight > 0 ? el.offsetTop + el.offsetHeight : 0);
+    const measure = () => {
+      el.removeAttribute("data-compact");
+      const kids = [...el.children] as HTMLElement[];
+      const wrapped = kids.some((k) => Math.abs(k.offsetTop - kids[0]!.offsetTop) > 4);
+      if (wrapped) el.setAttribute("data-compact", "");
+      setCompact(wrapped);
+      setToolbarBottom(el.offsetHeight > 0 ? el.offsetTop + el.offsetHeight : 0);
+    };
     measure();
     if (typeof ResizeObserver === "undefined") return;
     const ro = new ResizeObserver(measure);
     ro.observe(el);
+    if (rootRef.current) ro.observe(rootRef.current);
     return () => ro.disconnect();
   }, []);
+  const tip = (label: string) => (compact ? label : undefined);
   const parentInsets = props.cameraInsets ?? NO_INSETS;
   const insets = useMemo<Insets>(() => (toolbarBottom > 0 ? { ...parentInsets, top: Math.max(parentInsets.top ?? 0, toolbarBottom + TOOLBAR_GAP) } : parentInsets), [parentInsets, toolbarBottom]);
   // 다시 배치하는 중(settled 아님)에는 화면과 배치가 어긋날 수 있어 막는다.
@@ -241,15 +271,15 @@ export function Canvas(props: CanvasProps) {
     <div ref={rootRef} className="canvas">
       <div ref={toolbarRef} className="canvas__toolbar" role="toolbar" aria-label="캔버스 도구">
         <div className="canvas__group" role="group" aria-label="보기">
-          <ViewMenu options={options} onFlip={flip} />
+          <ViewMenu options={options} onFlip={flip} compact={compact} {...(props.viewMenuExtra ? { extra: props.viewMenuExtra } : {})} />
         </div>
         <span className="canvas__sep" role="separator" aria-orientation="vertical" />
         <div className="canvas__group" role="group" aria-label="편집">
-          <button type="button" className="canvas__tool" aria-pressed={editMode} onClick={() => props.onEditModeChange(!editMode)}>
+          <button type="button" className="canvas__tool" title={tip("위치 옮기기")} aria-pressed={editMode} onClick={() => props.onEditModeChange(!editMode)}>
             <IconMove />
             <span>위치 옮기기</span>
           </button>
-          <button type="button" className="canvas__tool" disabled={autoArrangeDisabled} onClick={onAutoArrange}>
+          <button type="button" className="canvas__tool" title={tip("자동 정렬")} disabled={autoArrangeDisabled} onClick={onAutoArrange}>
             <IconArrange />
             <span>자동 정렬</span>
           </button>
@@ -260,14 +290,14 @@ export function Canvas(props: CanvasProps) {
             <IconFit />
             <span>전체 보기</span>
           </button>
-          <button type="button" className="canvas__tool" aria-pressed={motion} onClick={() => props.onMotionChange(!motion)}>
+          <button type="button" className="canvas__tool" title={tip("흐름 표시")} aria-pressed={motion} onClick={() => props.onMotionChange(!motion)}>
             <IconFlow />
             <span>흐름 표시</span>
           </button>
         </div>
         <span className="canvas__sep" role="separator" aria-orientation="vertical" />
         <div className="canvas__group" role="group" aria-label="이미지">
-          <ExportMenu disabled={exportBlocked} {...(empty ? {} : { disabledReason: view.layoutFailed ? EXPORT_LAYOUT_FAILED_REASON : EXPORT_LAYOUT_PENDING_REASON })} onExport={onExport} />
+          <ExportMenu disabled={exportBlocked} {...(empty ? {} : { disabledReason: view.layoutFailed ? EXPORT_LAYOUT_FAILED_REASON : EXPORT_LAYOUT_PENDING_REASON })} onExport={onExport} compact={compact} />
         </div>
       </div>
       {empty ? (
@@ -302,6 +332,34 @@ function ZoomVar({ target }: { target: React.RefObject<HTMLDivElement | null> })
   return null;
 }
 
+/**
+ * 보이는 띠 밖으로 나간 외부 서비스 열을 띠 가장자리에 「외부 서비스 2 →」로 알린다. 누르면 그 묶음으로 간다(위치 보기).
+ * 화면 이동마다 바뀌므로 이 컴포넌트만 뷰포트를 구독한다.
+ */
+function OffscreenHints({ targets, size, insets, avoid, onGo }: { targets: OffscreenTarget[]; size: { width: number; height: number }; insets: Insets; avoid: Rect[]; onGo(r: Rect): void }) {
+  const [x, y, zoom] = useStore((s) => s.transform);
+  const hints = useMemo(() => offscreenHints(targets, { x, y, zoom }, size, insets, avoid), [targets, x, y, zoom, size, insets, avoid]);
+  return (
+    <>
+      {hints.map((h) => (
+        <button
+          key={h.side}
+          type="button"
+          className="canvas__offscreen"
+          data-side={h.side}
+          style={h.side === "right" ? { right: insets.right + 8, top: h.y } : { left: insets.left + 8, top: h.y }}
+          aria-label={`${h.text}개, 화면 ${h.side === "right" ? "오른쪽" : "왼쪽"} 밖. 누르면 그쪽으로 이동`}
+          onClick={() => onGo(h.rect)}
+        >
+          {h.side === "left" && <IconArrow left />}
+          <span>{h.text}</span>
+          {h.side === "right" && <IconArrow />}
+        </button>
+      ))}
+    </>
+  );
+}
+
 interface FlowProps extends CanvasProps {
   /** 전체 보기 요청(Canvas 의 도구 모음). */
   fitAllRequest: number;
@@ -313,7 +371,7 @@ interface FlowProps extends CanvasProps {
   updated: Set<string>;
 }
 
-function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onPinnedChange, motion, layout, settled, layoutFailed, fitRequest, fitAllRequest, display, appearing, updated, diffMarks, fitKey, streaming = false, cameraInsets = NO_INSETS, focusRequest, onMention, onAskNode, askDisabled, askReason, onBadgeClick, onWarnBadgeClick, onPlaced, flow = null, knowledge }: FlowProps) {
+function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onPinnedChange, motion, layout, settled, layoutFailed, fitRequest, fitAllRequest, display, appearing, updated, diffMarks, turnMarks, fitKey, streaming = false, cameraInsets = NO_INSETS, focusRequest, frameRequest, overview = false, onMention, onAskNode, askDisabled, askReason, onBadgeClick, onWarnBadgeClick, onPlaced, flow = null, knowledge }: FlowProps) {
   const far = useStore((s) => s.transform[2] < FAR_ZOOM);
   const selected = drawnId(state, options.collapsed, options.selectedId);
   const k = knowledge ?? undefined;
@@ -439,7 +497,13 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
       else if (updated.has(ln.id)) visual = "updated";
       else if (hov && !hov.nodes.has(ln.id) && !pulse?.ids.has(ln.id)) visual = "faded";
       const az = n.attrs.az;
-      const diff = diffMarks?.removed.has(ln.id) ? "removed" : diffMarks?.added.has(ln.id) ? "added" : diffMarks?.changed.has(ln.id) ? "changed" : undefined;
+      const diff = diffMarks?.removed.has(ln.id)
+        ? "removed"
+        : (diffMarks ?? turnMarks)?.added.has(ln.id)
+          ? "added"
+          : (diffMarks ?? turnMarks)?.changed.has(ln.id)
+            ? "changed"
+            : undefined;
       const data: NodeCardData = {
         label: ln.displayLabel,
         fullLabel: n.label,
@@ -479,7 +543,7 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
     }
     return out;
     // eslint-disable-next-line react-hooks/exhaustive-deps -- zoneDesc 는 useId 에서 나와 바뀌지 않는다
-  }, [layout, display, selected, sel, lit, appearing, updated, editMode, options, toggleGroup, diffMarks, missingByNode, warnByNode, onBadgeClick, onWarnBadgeClick, pulse, hoverId, known]);
+  }, [layout, display, selected, sel, lit, appearing, updated, editMode, options, toggleGroup, diffMarks, turnMarks, missingByNode, warnByNode, onBadgeClick, onWarnBadgeClick, pulse, hoverId, known]);
 
   // 영역 이름 알약(연결선 위 층): 영역 노드와 같은 배치·흐림(lit)에서 만든다. 호버·등장 효과로는 다시 만들지 않는다.
   const zoneNames = useMemo<ZoneName[]>(() => {
@@ -525,9 +589,43 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
     settled,
     layoutFailed,
     reducedMotion: prefersReducedMotion(),
+    overview,
     getViewport,
     setViewport: applyViewport,
   });
+  // 오른쪽 외부 서비스 열(맨 위 external_service 영역): 띠 밖으로 나가면 가장자리에 방향 표시를 띄운다.
+  const laneTargets = useMemo<OffscreenTarget[]>(() => {
+    const inside = (nodeParent: string | null, groupId: string) => {
+      const seen = new Set<string>();
+      for (let p = nodeParent; p !== null && !seen.has(p); p = state.groups[p]?.parent ?? null) {
+        if (p === groupId) return true;
+        seen.add(p);
+      }
+      return false;
+    };
+    return Object.values(display.groups)
+      .filter((g) => g.parent === null && g.groupKind === "external_service" && layout.groups[g.id])
+      .map((g) => ({
+        id: g.id,
+        label: g.label,
+        count: g.collapsed ? g.hiddenCount : Object.values(state.nodes).filter((n) => inside(n.parent, g.id)).length,
+        rect: layout.groups[g.id]!,
+      }))
+      .filter((t) => t.count > 0);
+  }, [display.groups, layout.groups, state.nodes, state.groups]);
+  const canvasSize = useMemo(() => ({ width, height }), [width, height]);
+  // 방향 표시가 덮지 않을 상자: 노드, 접힌 영역(상자 하나로 그려지는 것), 펼친 영역의 이름 알약.
+  const nodeBoxes = useMemo(
+    () => [
+      ...Object.values(layout.nodes),
+      ...Object.values(layout.groups).flatMap((g) => {
+        const dg = display.groups[g.id];
+        if (!dg) return [];
+        return dg.collapsed ? [g] : [zoneHeadPill(g, dg.label)];
+      }),
+    ],
+    [layout.nodes, layout.groups, display.groups],
+  );
   // 위치 보기. 프로그램 이동이라 onMoveStart 에 null 이벤트로 와서 사용자 이동으로 치지 않는다.
   // 다시 마운트돼도(빈 캔버스 → 그림) 이미 처리한 옛 요청으로 움직이지 않는다.
   const focusToken = focusRequest?.token;
@@ -553,6 +651,23 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
     setPulse({ ids, token: focusRequest.token });
     // eslint-disable-next-line react-hooks/exhaustive-deps -- 새 요청(토큰)일 때만 움직인다
   }, [focusToken]);
+  // 바뀐 곳 맞춤: 비교 화면의 새 배치(지운 노드까지 든 합친 그림)가 끝난 뒤 바뀐 노드들에 맞춘다. 토큰마다 한 번.
+  const frameToken = frameRequest?.token;
+  const handledFrame = useRef<number | undefined>(undefined);
+  useEffect(() => {
+    if (!frameRequest || !settled || handledFrame.current === frameRequest.token) return;
+    const rects = frameRequest.ids.flatMap((id) => {
+      const d = drawnId(state, options.collapsed, id);
+      const r = d === null ? undefined : (layout.nodes[d] ?? layout.groups[d]);
+      return r ? [r] : [];
+    });
+    // 배치에 아직 하나도 없으면(새 배치 전) 다음 배치를 기다린다.
+    const target = unionRect(rects);
+    if (!target) return;
+    handledFrame.current = frameRequest.token;
+    camera.fitTo(target);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- 새 요청이거나 배치가 끝났을 때만 본다
+  }, [frameToken, settled, layout]);
   useEffect(() => {
     if (!pulse) return;
     const t = setTimeout(() => setPulse(null), PULSE_MS);
@@ -627,9 +742,9 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
     if (e.key === "Enter" || e.key === " ") {
       if (e.key === " ") e.preventDefault();
       if (e.repeat) return;
-      // 영역: Space 는 접고 펴고, Enter 는 클릭처럼 선택을 푼다.
+      // 영역: Space 는 접고 펴고, Enter 는 이름 알약을 누른 것처럼 고른다(다시 누르면 푼다).
       if (!infra && e.key === " ") toggleGroup(id);
-      else onSelect(infra && id !== selected ? id : null);
+      else onSelect(id !== selected ? id : null);
     } else if (e.key === "Escape") {
       if (selected !== null) onSelect(null);
     } else if (e.key.startsWith("Arrow") && editMode && infra && keyMove.current === null && getNode(id)?.selected) {
@@ -762,17 +877,19 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
           crossing={crossing}
           collapsedRects={collapsedRects}
         />
-        {/* 영역 이름표는 연결선 층 위(stacking.ts): 영역 머리를 지나는 선이 이름 뒤로 지나간다. 누르면 영역 머리를 누른 것과 같다. */}
+        {/* 영역 이름표는 연결선 층 위(stacking.ts): 영역 머리를 지나는 선이 이름 뒤로 지나간다. 누르면 그 영역을 고른다(다시 누르면 푼다). */}
         <ZoneNameLayerPortal
           zones={zoneNames}
           onPillClick={(id) => {
             // 영역 머리를 누르면 영역 래퍼가 포커스를 받았다(다음 Tab 이 돌아올 곳). 알약도 같게 한다.
             for (const el of wrap.current?.querySelectorAll<HTMLElement>(".react-flow__node-zone") ?? []) if (el.dataset.id === id) el.focus({ preventScroll: true });
-            onSelect(null);
+            // 영역 바탕은 선택을 풀고(리전이 캔버스를 다 덮어도 풀 곳이 남는다), 이름 알약은 영역을 고른다.
+            onSelect(id === selected ? null : id);
           }}
           onPillContextMenu={(id, e) => openMenu(id, true, e)}
         />
       </ReactFlow>
+      {laneTargets.length > 0 && <OffscreenHints targets={laneTargets} size={canvasSize} insets={cameraInsets} avoid={nodeBoxes} onGo={(r) => camera.focus(r)} />}
       {menu && onMention && (
         <NodeMenu
           x={menu.x}

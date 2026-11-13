@@ -39,7 +39,8 @@
 .list { margin: 0; padding: 0; list-style: none; border: 1px solid var(--line-node); border-radius: var(--radius-surface); overflow: hidden; }
 .list li + li { border-top: 1px solid var(--line-shell); }
 /* 한 줄: 이름·표시 | 다른 이름. */
-.item { display: grid; grid-template-columns: minmax(180px, 1fr) minmax(0, 2fr); column-gap: 16px; align-items: baseline; width: 100%; min-height: 36px; text-align: left; font: inherit; color: var(--text-primary); background: transparent; border: 0; padding: 10px 14px; cursor: pointer; }
+/* 이름 칸은 이름과 표시 알약 둘(망분리 대상·수정 중 등)이 한 줄에 들 만큼 넓게 둔다. */
+.item { display: grid; grid-template-columns: minmax(260px, 1.2fr) minmax(0, 2fr); column-gap: 16px; align-items: baseline; width: 100%; min-height: 36px; text-align: left; font: inherit; color: var(--text-primary); background: transparent; border: 0; padding: 10px 14px; cursor: pointer; }
 .item:hover, .item[aria-current="true"] { background: var(--bg-panel-raised); }
 .dim { opacity: 0.6; }
 .head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 13px; }

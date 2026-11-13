@@ -1,6 +1,7 @@
 // 통신 길 판정: 경계 노드만 거쳐 이어진 길이 두 망 사이의 필요한 방식과 맞는지 본다. 순수 모듈이다.
 import { noLinkKey } from "./assumptions";
 import { BOUNDARY_NODE_KINDS, isLocalLink, networkZoneOf } from "./boundary";
+import { eulReul, euro, gwaWa } from "./josa";
 import { GRADE_LABELS, pairKey, requiredMethod, type NetworkKnowledge } from "./network";
 import type { DiagramState, Warning } from "./types";
 
@@ -105,7 +106,7 @@ function textOf(state: DiagramState, k: NetworkKnowledge, v: LinkVerdict): strin
     .map((id) => {
       const t = state.groups[id]?.netType;
       const def = t ? k.types[t.key] : undefined;
-      return t && def && t.source === "ai" && !t.confirmed ? `${state.groups[id].label}을(를) '${def.name}'(으)로 추정했어요. ` : "";
+      return t && def && t.source === "ai" && !t.confirmed ? `${eulReul(state.groups[id].label)} ${euro(`'${def.name}'`)} 추정했어요. ` : "";
     })
     .join("");
 
@@ -114,7 +115,7 @@ function textOf(state: DiagramState, k: NetworkKnowledge, v: LinkVerdict): strin
   if (gradeOf(second) === "closed" && gradeOf(first) !== "closed") [first, second] = [second, first];
   const nameA = state.groups[first]?.label ?? first;
   const nameB = state.groups[second]?.label ?? second;
-  const named = v.rule === "link_unusual" && gradeOf(first) === "closed" ? `${nameA}(${GRADE_LABELS.closed})와(과) ${nameB}` : `${nameA}와(과) ${nameB}`;
+  const named = v.rule === "link_unusual" && gradeOf(first) === "closed" ? `${gwaWa(`${nameA}(${GRADE_LABELS.closed})`)} ${nameB}` : `${gwaWa(nameA)} ${nameB}`;
   const basis = v.note ? `등록한 기관 규칙(${v.note})에 따르면` : "등록한 기관 규칙에 따르면";
 
   // 기본 제공 짝 규칙에 달린 까닭 한 줄(기관 규칙의 근거는 basis 로 따로 말한다).

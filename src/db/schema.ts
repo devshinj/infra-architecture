@@ -14,7 +14,7 @@ import {
 } from "drizzle-orm/pg-core";
 
 import type { LinkMethod, NetGrade } from "@/domain/network";
-import type { EdgeExplanation, NodeExplanation } from "@/domain/explain";
+import type { AnyExplanation, ExplainTargetKind } from "@/domain/explain";
 import type { Flow } from "@/domain/flows";
 import type { DiagramState } from "@/domain/types";
 import type { MessageMeta } from "@/server/chat/events";
@@ -140,7 +140,7 @@ export const diagramVersions = pgTable(
     status: text("status").$type<VersionStatus>().notNull().default("complete"),
     restoredFrom: integer("restored_from"),
     messageId: uuid("message_id").references(() => messages.id, { onDelete: "set null" }),
-    // Claude Code(MCP)로 만든 버전이면 "mcp". 되돌리기처럼 source 가 다른 버전에도 붙는다.
+    // MCP로 만든 버전이면 "mcp". 되돌리기처럼 source 가 다른 버전에도 붙는다.
     via: text("via").$type<"mcp">(),
     summary: text("summary"),
     createdAt: createdAt(),
@@ -148,7 +148,7 @@ export const diagramVersions = pgTable(
   (t) => [unique().on(t.diagramId, t.number)],
 );
 
-// Claude Code 연결용 키. 원문은 저장하지 않고 SHA-256 해시만 둔다.
+// MCP 연결용 키. 원문은 저장하지 않고 SHA-256 해시만 둔다.
 export const mcpKeys = pgTable("mcp_keys", {
   id: uuid("id").primaryKey().defaultRandom(),
   userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
@@ -182,9 +182,9 @@ export const glossaryTerms = pgTable(
   (t) => [unique().on(t.userId, t.key)],
 );
 
-export type ExplanationTargetKind = "node" | "edge";
+export type ExplanationTargetKind = ExplainTargetKind;
 
-// 노드·엣지 설명 캐시. signature 가 바뀌면 다시 만든다. data 형태는 설명 도메인 타입이 정한다.
+// 노드·엣지·영역 설명 캐시. signature 가 바뀌면 다시 만든다. data 형태는 설명 도메인 타입이 정한다.
 export const explanations = pgTable(
   "explanations",
   {
@@ -193,7 +193,7 @@ export const explanations = pgTable(
     targetKind: text("target_kind").$type<ExplanationTargetKind>().notNull(),
     targetId: text("target_id").notNull(),
     signature: text("signature").notNull(),
-    data: jsonb("data").$type<NodeExplanation | EdgeExplanation>().notNull(),
+    data: jsonb("data").$type<AnyExplanation>().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [unique().on(t.diagramId, t.targetKind, t.targetId)],

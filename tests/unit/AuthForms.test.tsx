@@ -144,6 +144,24 @@ describe("login", () => {
     await waitFor(() => expect(screen.getByLabelText("비밀번호")).toHaveFocus());
   });
 
+  test("the form error has a reserved slot right above the submit button, so the alert does not push the form", async () => {
+    actions.loginAction.mockResolvedValue({ errors: { form: MESSAGES.loginFailed } });
+    const user = userEvent.setup();
+    render(<LoginForm />);
+    const submit = screen.getByRole("button", { name: "로그인" });
+    const slot = submit.previousElementSibling!;
+    // 오류 전에도 자리가 있다(비어 있음).
+    expect(slot.tagName).toBe("DIV");
+    expect(slot).toBeEmptyDOMElement();
+    await user.type(screen.getByLabelText("아이디"), "jae");
+    await user.type(screen.getByLabelText("비밀번호"), "wrongpass");
+    await user.click(submit);
+    // 같은 자리에 알림이 들어간다(새 요소가 끼어들지 않는다).
+    expect(await screen.findByRole("alert")).toHaveTextContent(MESSAGES.loginFailed);
+    expect(screen.getByRole("alert").parentElement).toBe(slot);
+    expect(submit.previousElementSibling).toBe(slot);
+  });
+
   test("shows a notice passed from another screen and keeps the links", () => {
     render(<LoginForm notice="비밀번호를 바꿨어요. 새 비밀번호로 로그인해 주세요." />);
     expect(screen.getByRole("status")).toHaveTextContent("비밀번호를 바꿨어요");
@@ -238,8 +256,15 @@ describe("auth stage (DESIGN.md: the canvas grammar outside the canvas)", () => 
     expect(screen.getAllByRole("heading", { level: 1 })).toHaveLength(1);
   });
 
-  test("the sign-in screens no longer paint the constellation picture", async () => {
+  test("the background picture shows only faintly behind the panel, on wide screens", async () => {
     const { readFileSync } = await import("node:fs");
-    expect(readFileSync("src/app/(auth)/auth.module.css", "utf8")).not.toContain("auth-bg");
+    const css = readFileSync("src/app/(auth)/auth.module.css", "utf8");
+    // 그림은 넓은 화면 블록 안의 바탕 층(.page::before) 한 곳에만, 1 보다 낮은 불투명도로.
+    const wide = css.slice(css.indexOf("@media (min-width: 1080px)"));
+    const layer = wide.slice(wide.indexOf(".page::before"), wide.indexOf("}", wide.indexOf(".page::before")));
+    expect(css.match(/url\(/g)).toHaveLength(1);
+    expect(layer).toContain('url("/brand/auth-bg.webp")');
+    expect(layer).toMatch(/z-index:\s*-1/);
+    expect(Number(/opacity:\s*([\d.]+)/.exec(layer)?.[1])).toBeLessThan(1);
   });
 });

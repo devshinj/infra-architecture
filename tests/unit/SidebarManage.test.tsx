@@ -21,7 +21,7 @@ vi.mock("next/navigation", () => ({
 }));
 vi.mock("@/app/(app)/actions", () => actions);
 
-import { CreateButton, ShellProvider } from "@/ui/Shell";
+import { CreateButton, NARROW_QUERY, ShellProvider } from "@/ui/Shell";
 import { GENERIC_ERROR, Sidebar, type SidebarProject } from "@/ui/Sidebar";
 
 const P: SidebarProject[] = [
@@ -385,7 +385,7 @@ test("좁은 화면은 서랍(☰)이고, 저장값이 없으면 접힌 채로 �
   const listeners = new Set<() => void>();
   const mm = vi.fn((q: string) => ({
     get matches() {
-      return (q === "(max-width: 640px)" || q === "(max-width: 900px)") && narrow;
+      return (q === NARROW_QUERY || q === "(max-width: 900px)") && narrow;
     },
     media: q,
     addEventListener: (_: string, fn: () => void) => listeners.add(fn),
@@ -416,7 +416,7 @@ test("좁은 화면은 서랍(☰)이고, 저장값이 없으면 접힌 채로 �
 
 // ── 좁은 화면 서랍: 위 막대 ☰ 로 열고, 바탕·Esc·닫기로 닫으며 포커스를 가두고 돌려준다 ──
 const stubNarrow = () =>
-  vi.stubGlobal("matchMedia", (q: string) => ({ matches: q === "(max-width: 640px)", media: q, addEventListener() {}, removeEventListener() {} }));
+  vi.stubGlobal("matchMedia", (q: string) => ({ matches: q === NARROW_QUERY, media: q, addEventListener() {}, removeEventListener() {} }));
 
 test("narrow top bar names the open project / diagram, and the drawer is a modal dialog with focus trap, Esc and focus return", () => {
   stubNarrow();

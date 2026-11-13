@@ -14,6 +14,7 @@ import {
   listDiagramsForMcp,
   listProjectsForMcp,
   listVersionsForMcp,
+  lookupTermsForMcp,
 } from "./read";
 
 export const GUIDE_LINE = "InfraSketch에 처음 그리기 전에 get_guide를 먼저 읽으세요.";
@@ -78,13 +79,32 @@ export function createMcpServer(userId: string): McpServer {
   );
 
   server.registerTool(
+    "lookup_terms",
+    {
+      description: describe("요청 글에 나온 말을 이 계정의 용어 사전에서 찾아 뜻을 돌려줘요(앱 대화와 같은 방식, 6개까지)."),
+      inputSchema: { text: z.string().min(1).max(2000).describe("사용자 요청 글") },
+      annotations: { readOnlyHint: true },
+    },
+    ({ text }) =>
+      guarded("lookup_terms", NO_DIAGRAM, READ_FAILED, async () => {
+        const terms = await lookupTermsForMcp(userId, text);
+        return terms.length > 0 ? ok(`용어 ${terms.length}개를 찾았어요. 그릴 때 이 뜻을 따라요.`, terms) : ok("용어 사전에 맞는 말이 없어요.", []);
+      }),
+  );
+
+  server.registerTool(
     "create_project",
     {
-      description: describe("새 프로젝트를 만들어요. 첫 구성도(버전 1)가 함께 생겨요."),
-      inputSchema: { name: z.string().describe("프로젝트 이름(1~60자, 내 프로젝트끼리 겹치지 않게)") },
+      description: describe("새 프로젝트를 만들어요. 첫 구성도(버전 1)가 함께 생기고, 그 이름은 diagram_name 으로 정해요."),
+      inputSchema: {
+        name: z.string().describe("프로젝트 이름(1~60자, 내 프로젝트끼리 겹치지 않게)"),
+        diagram_name: z.string().optional().describe("첫 구성도 이름(1~60자, 비우면 \"새 구성도\")"),
+      },
     },
-    ({ name }) =>
-      guarded("create_project", NO_PROJECT, GENERIC, async () => ok("프로젝트를 만들었어요. 첫 구성도는 버전 1이에요.", await createProjectForMcp(userId, name))),
+    ({ name, diagram_name }) =>
+      guarded("create_project", NO_PROJECT, GENERIC, async () =>
+        ok("프로젝트를 만들었어요. 첫 구성도는 버전 1이에요.", await createProjectForMcp(userId, name, diagram_name)),
+      ),
   );
 
   server.registerTool(
@@ -149,7 +169,7 @@ export function createMcpServer(userId: string): McpServer {
           .min(1)
           .max(COMMANDS_MAX)
           .describe(`명령 객체 목록(1~${COMMANDS_MAX}개). 명령 하나가 배열 원소 하나예요.`),
-        summary: z.string().max(SUMMARY_MAX).optional().describe(`이력에 남길 한 줄(${SUMMARY_MAX}자까지). 비우면 "Claude Code에서 N곳 바꿈"`),
+        summary: z.string().max(SUMMARY_MAX).optional().describe(`이력에 남길 한 줄(${SUMMARY_MAX}자까지). 비우면 "MCP로 N곳 바꿈"`),
         dry_run: z.boolean().optional().describe("true 면 검사만 하고 저장하지 않아요"),
       },
     },

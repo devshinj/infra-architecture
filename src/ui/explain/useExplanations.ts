@@ -7,24 +7,25 @@ import {
   normalizeTerm,
   pickTerm,
   signatureOf,
-  termCandidates,
-  type EdgeExplanation,
-  type NodeExplanation,
+  targetTermCandidates,
+  type AnyExplanation,
+  type ExplainTargetKind,
+  type TermedExplanation,
   type TermEntry,
 } from "@/domain/explain";
 import type { DiagramState } from "@/domain/types";
 
 import type { ExplanationProps } from "./Explanation";
 
-export type TargetKind = "node" | "edge";
+export type TargetKind = ExplainTargetKind;
 
 const FAIL = "설명을 만들지 못했어요. 다시 시도해 주세요.";
 
-/** 받아 둔 설명 하나. 서버 GET 과 같은 "node:id" / "edge:id" 키로 둔다. */
+/** 받아 둔 설명 하나. 서버 GET 과 같은 "node:id" / "edge:id" / "group:id" 키로 둔다. */
 interface Entry {
   status: "ready" | "error";
-  data?: NodeExplanation | EdgeExplanation;
-  partial?: Partial<NodeExplanation>;
+  data?: AnyExplanation;
+  partial?: Partial<TermedExplanation>;
   message?: string;
   /** 서버가 돌려준 서명(성공할 때만). */
   signature?: string;
@@ -94,8 +95,9 @@ function queueOf(
     // 선택한 대상은 저장 서명이 같아도 요청한다: 서버가 캐시(사전 최신값 반영)를 AI 없이 돌려준다.
     if (state.nodes[selectedId]) push({ kind: "node", id: selectedId }, "selected");
     else if (state.edges[selectedId]) push({ kind: "edge", id: selectedId }, "selected");
+    else if (state.groups[selectedId]) push({ kind: "group", id: selectedId }, "selected");
   }
-  // 연결은 선택했을 때만 만든다. 저장 서명을 받기 전에는 노드를 훑지 않는다.
+  // 연결·영역은 선택했을 때만 만든다. 저장 서명을 받기 전에는 노드를 훑지 않는다.
   if (stored) for (const id of Object.keys(state.nodes)) push({ kind: "node", id }, "stale");
   return jobs;
 }
@@ -193,8 +195,8 @@ export function useExplanations({ diagramId, state, live, busy, selectedId, fetc
           signal: ctrl.signal,
         });
         const j = (await r.json().catch(() => null)) as
-          | { ok: true; explanation: NodeExplanation | EdgeExplanation; signature: string }
-          | { ok: false; message?: string; partial?: Partial<NodeExplanation> }
+          | { ok: true; explanation: AnyExplanation; signature: string }
+          | { ok: false; message?: string; partial?: Partial<TermedExplanation> }
           | null;
         if (r.ok && j?.ok === true) entry = { status: "ready", data: j.explanation, signature: j.signature, requested: job.sig };
         else if (r.ok && j?.ok === false)
@@ -214,7 +216,7 @@ export function useExplanations({ diagramId, state, live, busy, selectedId, fetc
       finish();
       // 다시 쓰기나 사전에 없던 AI 용어는 새 용어를 더했을 수 있다: 용어 목록을 다시 받는다.
       const d = entry.data;
-      const newTerm = d?.kind === "node" && d.definitionSource === "ai" && !termsRef.current.some((t) => t.key === normalizeTerm(d.term));
+      const newTerm = (d?.kind === "node" || d?.kind === "group") && d.definitionSource === "ai" && !termsRef.current.some((t) => t.key === normalizeTerm(d.term));
       if (entry.status === "ready" && (job.instruction || newTerm)) loadTerms();
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps -- next 가 바뀔 때만 새로 시작한다
@@ -222,11 +224,11 @@ export function useExplanations({ diagramId, state, live, busy, selectedId, fetc
 
   const queued = useMemo(() => new Set(queue.map((j) => j.key)), [queue]);
 
-  /** 받아 둔 사전에서 찾은 노드의 정의 부분(서버 findTerm 과 같은 후보·순서). 없으면 undefined. */
+  /** 받아 둔 사전에서 찾은 노드·영역의 정의 부분(서버 findTerm 과 같은 후보·순서). 없으면 undefined. */
   const glossaryOf = useCallback(
-    (kind: TargetKind, id: string): Partial<NodeExplanation> | undefined => {
-      const node = kind === "node" ? state.nodes[id] : undefined;
-      const t = node ? pickTerm(terms, termCandidates(node).map((c) => c.key)) : null;
+    (kind: TargetKind, id: string): Partial<TermedExplanation> | undefined => {
+      const keys = targetTermCandidates(state, kind, id).map((c) => c.key);
+      const t = keys.length ? pickTerm(terms, keys) : null;
       if (!t) return undefined;
       return {
         term: t.term,

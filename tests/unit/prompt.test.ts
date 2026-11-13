@@ -4,7 +4,7 @@ import { parseCommand } from "@/domain/commands";
 import { EDGE_KINDS, GROUP_KINDS, NODE_KINDS } from "@/domain/catalog";
 import { patternPromptBlock } from "@/domain/patterns";
 import { emptyState, type DiagramState } from "@/domain/types";
-import type { NodeExplanation } from "@/domain/explain";
+import type { GroupExplanation, NodeExplanation } from "@/domain/explain";
 import type { NetworkKnowledge } from "@/domain/network";
 import {
   ANSWER_PROMPT,
@@ -364,14 +364,14 @@ describe("buildMessages", () => {
     for (const intent of ["structure_change", "question", null] as const) {
       const user = buildMessages({ intent, text: "x", state: s, mentions: [], history: [] }).at(-1)!.content;
       expect(user).toContain("현재 경고:\n- ");
-      expect(user.split("\n")).toContain(`- fw ${JSON.stringify("경계 방화벽을(를) 지나는 연결이 없어 아무 통신도 거치지 않아요.")}`);
+      expect(user.split("\n")).toContain(`- fw ${JSON.stringify("경계 방화벽을 지나는 연결이 없어 아무 통신도 거치지 않아요.")}`);
       expect(user.indexOf("현재 경고:")).toBeGreaterThan(user.indexOf("현재 구성:"));
       expect(user.indexOf("현재 경고:")).toBeLessThan(user.indexOf("참조 노드:"));
     }
     const ignored = { ...s, ignoredWarnings: ["unused_passthrough:fw"] };
     const user = buildMessages({ intent: null, text: "x", state: ignored, mentions: [], history: [] }).at(-1)!.content;
     expect(user).not.toContain("unused_passthrough");
-    expect(user).not.toContain("경계 방화벽을(를) 지나는");
+    expect(user).not.toContain("경계 방화벽을 지나는");
   });
 
   test("warning lines name the edge when the warning is about an edge", () => {
@@ -454,6 +454,19 @@ describe("ask prompt", () => {
     for (const phrase of ["1~4문장", "대상 노드", "설명", "모른다", "JSON", "코드펜스", "마크다운 제목", "원어", "구성도 대화"]) {
       expect(ASK_PROMPT).toContain(phrase);
     }
+  });
+
+  test("ask prompt for a zone gives the zone summary and its boundary", () => {
+    const s = sample();
+    const groupExplanation: GroupExplanation = {
+      kind: "group", term: "VPC", definition: "사설 네트워크입니다.", definitionSource: "glossary", reviewed: true,
+      role: "서버를 한 망에 모읍니다.", boundary: "밖에서는\nL4 로만 들어옵니다.", adr: explanation.adr,
+    };
+    const user = buildAskMessages({ state: s, nodeId: "vpc-1", explanation: groupExplanation, history: [], text: "왜 나눴어?" })[1]!.content;
+    expect(user.startsWith(`대상 영역:\n${explainContext(s, "group", "vpc-1")}\n\n설명:\n`)).toBe(true);
+    expect(user).toContain("안에 든 것:");
+    expect(user).toContain("경계: 밖에서는 L4 로만 들어옵니다.");
+    expect(ASK_PROMPT).toContain("대상 영역");
   });
 
   test("ask prompt says 없음 without explanation", () => {

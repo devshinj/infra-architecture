@@ -6,7 +6,7 @@ import { signupAction } from "@/server/auth/actions";
 import { checkEmail, checkNewPassword, checkUsername, HINTS } from "@/server/auth/rules";
 import { Logo } from "@/ui/brand/Logo";
 
-import { AuthField, AuthSubmit } from "../_components/AuthField";
+import { AuthField, AuthSubmit, FormAlert } from "../_components/AuthField";
 import { useAuthForm, type FieldErrors } from "../_components/useAuthForm";
 import { AuthStage } from "../_components/AuthStage";
 import styles from "../auth.module.css";
@@ -55,11 +55,7 @@ export default function SignupPage() {
           hint={HINTS.password}
           error={errors.password}
         />
-        {errors.form && (
-          <p className={styles.alert} role="alert">
-            {errors.form}
-          </p>
-        )}
+        <FormAlert message={errors.form} />
         <AuthSubmit pending={pending} label="가입하기" pendingLabel="가입하는 중…" />
         <p className={styles.linkLine}>
           이미 계정이 있나요? <Link href="/login">로그인</Link>

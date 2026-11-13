@@ -61,9 +61,11 @@ function requiredKeysForNode(node: DNode): string[] {
 }
 
 // 흐름을 그리는 연결(request·async)만 프로토콜/포트를 요구한다. 망 경계를 넘으면 전달물·방향도 요구한다.
+// 영상·음성 스트림은 api·file 이 아니라 전달물을 묻지 않는다(방향만).
 export function requiredKeysForEdge(state: DiagramState, edge: Edge): string[] {
   const keys = edge.edgeKind === "request" || edge.edgeKind === "async" ? ["label"] : [];
-  return crossesBoundary(state, edge) ? [...keys, "payload", "direction"] : keys;
+  if (!crossesBoundary(state, edge)) return keys;
+  return edge.medium === "video" || edge.medium === "media" ? [...keys, "direction"] : [...keys, "payload", "direction"];
 }
 
 /** 대상 노드·연결의 필수 키. 대상이 없으면 null. */

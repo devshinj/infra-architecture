@@ -15,7 +15,7 @@ import { makeOwnedDiagram } from "./helpers";
 
 const URL_MCP = "http://localhost/api/mcp";
 const GUIDE_LINE = "InfraSketch에 처음 그리기 전에 get_guide를 먼저 읽으세요.";
-const WRONG_KEY = "키가 맞지 않거나 지워졌어요. Claude Code 연결 화면에서 새 키를 만들어 다시 등록해 주세요.";
+const WRONG_KEY = "키가 맞지 않거나 지워졌어요. InfraSketch 의 MCP 연결 화면에서 새 키를 만들어 다시 등록해 주세요.";
 
 async function makeUserKey(): Promise<{ userId: string; key: string }> {
   const tag = randomUUID().slice(0, 8);
@@ -125,7 +125,7 @@ describe("/api/mcp", () => {
     expect((await DELETE()).status).toBe(405);
   });
 
-  test("도구 9개, 설명은 모두 get_guide 안내로 끝난다", async () => {
+  test("도구 10개, 설명은 모두 get_guide 안내로 끝난다", async () => {
     const { key } = await makeUserKey();
     const client = await connect(key);
     const { tools } = await client.listTools();
@@ -139,10 +139,25 @@ describe("/api/mcp", () => {
         "list_diagrams",
         "list_projects",
         "list_versions",
+        "lookup_terms",
         "restore_version",
       ].sort(),
     );
     for (const t of tools) expect(t.description?.endsWith(GUIDE_LINE)).toBe(true);
+  });
+
+  test("lookup_terms: 기본 용어는 정의와 함께, 맞는 말이 없으면 빈 배열", async () => {
+    const { key } = await makeUserKey();
+    const client = await connect(key);
+    const hit = await call(client, "lookup_terms", { text: "Redis 캐시 서버를 앞에 둬 줘" });
+    expect(hit.isError).toBeFalsy();
+    expect(textOf(hit)).toContain("그릴 때 이 뜻을 따라요.");
+    const terms = dataOf<{ term: string; definition: string }[]>(hit);
+    const redis = terms.find((x) => x.term === "Redis");
+    expect(redis?.definition.length).toBeGreaterThan(0);
+    const none = await call(client, "lookup_terms", { text: "zzqq 아무 말도 아닌 글" });
+    expect(none.isError).toBeFalsy();
+    expect(textOf(none)).toBe("용어 사전에 맞는 말이 없어요.\n[]");
   });
 
   test("안내서를 읽는다", async () => {
@@ -151,7 +166,7 @@ describe("/api/mcp", () => {
     const r = await call(client, "get_guide");
     expect(r.isError).toBeFalsy();
     expect(textOf(r)).toContain("# InfraSketch 그리기 안내서");
-    expect(textOf(r).length).toBeLessThanOrEqual(20000);
+    expect(textOf(r).length).toBeLessThanOrEqual(24000);
   });
 
   test("프로젝트 만들기 → 읽기 → 검사 → 적용 → 이력 → 되돌리기", async () => {
@@ -193,6 +208,38 @@ describe("/api/mcp", () => {
     expect(dataOf<{ version: number }>(second).version).toBe(1);
     const dup = await call(client, "create_diagram", { project_id: projectId, name: "둘째" });
     expect(dup.isError).toBe(true);
+  });
+
+  test("create_project 는 diagram_name 으로 첫 구성도 이름을 정하고, 없으면 새 구성도", async () => {
+    const { key } = await makeUserKey();
+    const client = await connect(key);
+
+    const named = dataOf<{ projectId: string }>(await call(client, "create_project", { name: "영상관제", diagram_name: "VMS 구성도" }));
+    expect(dataOf<{ name: string }[]>(await call(client, "list_diagrams", { project_id: named.projectId })).map((d) => d.name)).toEqual(["VMS 구성도"]);
+
+    const plain = dataOf<{ projectId: string }>(await call(client, "create_project", { name: "기본" }));
+    expect(dataOf<{ name: string }[]>(await call(client, "list_diagrams", { project_id: plain.projectId })).map((d) => d.name)).toEqual(["새 구성도"]);
+
+    for (const blank of ["", "   "]) {
+      const r = await call(client, "create_project", { name: `빈 이름 ${blank.length}`, diagram_name: blank });
+      expect(r.isError).toBeFalsy();
+      const { projectId } = dataOf<{ projectId: string }>(r);
+      expect(dataOf<{ name: string }[]>(await call(client, "list_diagrams", { project_id: projectId })).map((d) => d.name)).toEqual(["새 구성도"]);
+    }
+  });
+
+  test("create_project 는 깨진 이름을 isError 로 거절한다", async () => {
+    const { key } = await makeUserKey();
+    const client = await connect(key);
+    const MSG = "이름에 쓸 수 없는 글자(깨진 글자·제어 문자)가 있어요";
+
+    const bad = await call(client, "create_project", { name: "\uFFFD\uFFFD\uFFFD" });
+    expect(bad.isError).toBe(true);
+    expect(textOf(bad)).toContain(MSG);
+
+    const badDiagram = await call(client, "create_project", { name: "정상", diagram_name: "영\uFFFD상" });
+    expect(badDiagram.isError).toBe(true);
+    expect(textOf(badDiagram)).toContain(MSG);
   });
 
   test("틀린 명령은 몇 번째가 왜 틀렸는지 알려 주고 저장하지 않는다", async () => {

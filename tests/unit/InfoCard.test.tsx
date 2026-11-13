@@ -89,12 +89,14 @@ test("expands upward with three sections", async () => {
   expect(toggle()).toHaveAttribute("aria-expanded", "true");
   const sections = screen.getAllByRole("region");
   expect(sections.map((s) => s.getAttribute("aria-label"))).toEqual(["가정", "채워야 할 정보", "주의"]);
+  // 화면 제목(h1, 구성도 이름) 바로 아래 단계: h1 → h3 로 건너뛰지 않는다.
+  expect(screen.getAllByRole("heading", { level: 2 }).map((h) => h.textContent?.replace(/\d+$/, "").trim())).toEqual(["가정", "채워야 할 정보", "주의"]);
   // 위로 열린다: 펼친 내용은 접기 줄 위에 그려진다(카드는 column-reverse, 단추가 DOM 첫째).
   const card = screen.getByRole("complementary", { name: "구성 정보" });
   expect(card.firstElementChild).toBe(toggle());
   expect(within(sections[0]!).getByRole("button", { name: /^규모: 소규모/ })).toBeInTheDocument();
   expect(within(sections[1]!).getByRole("group", { name: "웹1" })).toBeInTheDocument();
-  expect(within(sections[2]!).getByRole("button", { name: /웹1이\(가\) 1대뿐/ })).toBeInTheDocument();
+  expect(within(sections[2]!).getByRole("button", { name: /웹1이 1대뿐/ })).toBeInTheDocument();
 });
 
 test("assumption choose and confirm work inside the card", async () => {
@@ -191,7 +193,7 @@ test("행정망 사례 경고와 추정 망의 맞아요 단추, 누르면 setZo
     </NetworkKnowledgeProvider>,
   );
   const w = within(warnRegion());
-  expect(w.getByText(/^행정망을\(를\) '행정망'\(으\)로 추정했어요\. .*망연계가 필요해요/)).toBeInTheDocument();
+  expect(w.getByText(/^행정망을 '행정망'으로 추정했어요\. .*망연계가 필요해요/)).toBeInTheDocument();
   // 추정 망(행정망)만 확인 줄이 붙는다. 사용자가 정한 GCloud 는 붙지 않는다.
   const picker = w.getByRole("group", { name: "행정망 망 종류" });
   expect(w.queryByRole("group", { name: "GCloud 인터넷망 망 종류" })).not.toBeInTheDocument();

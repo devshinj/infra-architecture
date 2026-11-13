@@ -86,9 +86,9 @@ test("cache without any db warns, with db does not", () => {
 
 test("labels are filled into the template", () => {
   const s = build([node("db", "db_rdb", "주 DB", "pub")], [["pub", "dmz", null]]);
-  expect(evaluateRules(s).find((w) => w.id === "db_public:db")!.text).toBe("주 DB이(가) 공개 구역에 있어요.");
+  expect(evaluateRules(s).find((w) => w.id === "db_public:db")!.text).toBe("주 DB가 공개 구역에 있어요.");
   const e = build([node("c", "client_web", "사용자"), node("w", "was", "WAS")], [], [["e1", "c", "w", "async"]]);
-  expect(evaluateRules(e).find((w) => w.rule === "no_firewall")!.text).toBe("사용자에서 WAS(으)로 바로 들어와요.");
+  expect(evaluateRules(e).find((w) => w.rule === "no_firewall")!.text).toBe("사용자에서 WAS로 바로 들어와요.");
 });
 
 test("db_exposed is Clef-only and exports instructions", () => {
@@ -102,6 +102,12 @@ test("stored qwen text wins for code rules that still fire", () => {
   const s = build([node("w", "was", "WAS")]);
   s.warnings = [stored("spof:w", "spof", "w", "큐웬 문구")];
   expect(mergeWarnings(s).active.find((w) => w.id === "spof:w")!.text).toBe("큐웬 문구");
+});
+
+test("stored text from before automatic particles is shown with the right particle", () => {
+  const s = build([node("w", "was", "WAS")]);
+  s.warnings = [stored("spof:w", "spof", "w", "WAS이(가) 하나뿐이에요")];
+  expect(mergeWarnings(s).active.find((w) => w.id === "spof:w")!.text).toBe("WAS가 하나뿐이에요");
 });
 
 test("stale code warning in state is dropped when the rule no longer fires", () => {
@@ -141,7 +147,7 @@ const zoned = (edges: [string, string, string, "request" | "async" | "aux"][]) =
 test("network_direct warns on WAS(업무망) → API(인터넷망) direct edge", () => {
   const s = zoned([["e", "was", "api", "request"]]);
   const w = evaluateRules(s).find((x) => x.rule === "network_direct");
-  expect(w).toMatchObject({ id: "network_direct:e", nodeId: "api", edgeId: "e", level: "warn", text: "WAS에서 API(으)로 망을 바로 넘어가요." });
+  expect(w).toMatchObject({ id: "network_direct:e", nodeId: "api", edgeId: "e", level: "warn", text: "WAS에서 API로 망을 바로 넘어가요." });
   expect(w?.guide).toBe("서로 다른 망 사이 통신은 방화벽·망연계 솔루션·VPN 을 거치게 그리세요.");
   expect(RULES.find((r) => r.rule === "network_direct")?.patternId).toBeTruthy();
 });
@@ -170,9 +176,9 @@ test("pass-through node with any edge, or a non pass-through node alone, does no
 
 test("spof text says 1대뿐 only when it is the only node of its kind; otherwise it is outside the redundancy group", () => {
   const text = (s: DiagramState, id: string) => evaluateRules(s).find((w) => w.id === `spof:${id}`)?.text;
-  expect(text(build([node("w", "was", "WAS")]), "w")).toBe("WAS이(가) 1대뿐이라 멈추면 서비스도 멈춰요.");
+  expect(text(build([node("w", "was", "WAS")]), "w")).toBe("WAS가 1대뿐이라 멈추면 서비스도 멈춰요.");
   const two = build([node("w1", "was", "WAS #1"), node("w2", "was", "WAS #2")]);
-  expect(text(two, "w1")).toBe("WAS #1이(가) 이중화 묶음(VIP)에 들어 있지 않아 멈춰도 대신할 서버로 넘어가지 않아요.");
+  expect(text(two, "w1")).toBe("WAS #1이 이중화 묶음(VIP)에 들어 있지 않아 멈춰도 대신할 서버로 넘어가지 않아요.");
   // 같은 종류가 묶음 안에 있어도, 밖에 있는 노드는 묶음에 없다고 알린다.
   const mixed = build([node("w1", "was", "WAS #1", "r"), node("w2", "was", "WAS #2")], [["r", "redundancy_group", null]]);
   expect(text(mixed, "w2")).toContain("이중화 묶음(VIP)에 들어 있지 않아");
@@ -217,16 +223,31 @@ test("managed load balancer / DB proxy / compute inside a VPC raise no redundanc
     const s = build([withAttrs(node("m", kind, "M", "priv"), { managed: "yes" })], cloud);
     expect(ids(s).filter((id) => id.endsWith(":m") && !id.startsWith("unused_passthrough"))).toEqual([]);
   }
-  // 같은 ALB 라도 관리형 표시가 없으면 직접 운영하는 서버로 보고 묶음 밖이라 알린다.
-  const plain = build([node("alb", "lb_l7", "ALB", "priv")], cloud);
-  expect(ids(plain).filter((id) => !id.startsWith("unused_passthrough"))).toEqual(["spof_cloud:alb"]);
+  // 관리형 칸이 "아니오"면 이름이 ALB 라도 직접 운영하는 서버로 보고 묶음 밖이라 알린다.
+  const selfRun = build([withAttrs(node("alb", "lb_l7", "ALB", "priv"), { managed: "no" })], cloud);
+  expect(ids(selfRun).filter((id) => !id.startsWith("unused_passthrough"))).toEqual(["spof_cloud:alb"]);
+  // 관리형 칸이 없는 이름 모를 LB 도 직접 운영으로 본다.
+  const plain = build([node("lb", "lb_l7", "사내 LB", "priv")], cloud);
+  expect(ids(plain).filter((id) => !id.startsWith("unused_passthrough"))).toEqual(["spof_cloud:lb"]);
+});
+
+test("managed is read from the product name when the field is empty (diagrams saved before the field, or AI that left it out)", () => {
+  // 옛 구성도의 ALB: 관리형 칸이 없어도 이름으로 관리형이라 이중화 경고를 내지 않는다.
+  const alb = build([node("alb", "lb_l7", "ALB", "priv")], cloud);
+  expect(ids(alb).filter((id) => !id.startsWith("unused_passthrough"))).toEqual([]);
+  // 관리형 DB 는 이름으로 알아보고 Multi-AZ 를 확인한다(spof_cloud 가 아니다).
+  const rds = build([node("rds", "db_rdb", "RDS MySQL", "priv")], cloud);
+  expect(ids(rds)).toEqual(["multi_az:rds"]);
+  // 부제·SW 칸의 제품명도 본다.
+  const cache = build([withAttrs({ ...node("c", "cache", "세션 캐시", "priv"), sub: "Amazon ElastiCache" }, { multi_az: "yes" })], cloud);
+  expect(ids(cache).filter((id) => !id.startsWith("cache_without_db"))).toEqual([]);
 });
 
 test("managed DB/cache: multi_az yes is fine, no warns, unknown is a check", () => {
   const db = (attrs: DNode["attrs"]) => build([withAttrs(node("d", "db_rdb", "RDS", "priv"), { managed: "yes", ...attrs })], cloud);
   expect(ids(db({ multi_az: "yes" }))).toEqual([]);
-  expect(warnOf(db({ multi_az: "no" }), "multi_az:d")).toMatchObject({ level: "warn", text: "RDS이(가) 한 AZ 에만 있어 그 AZ 가 멈추면 데이터도 쓸 수 없어요." });
-  expect(warnOf(db({}), "multi_az:d")).toMatchObject({ level: "check", text: "RDS이(가) 여러 AZ 에 복제(Multi-AZ)되는지 알 수 없어요." });
+  expect(warnOf(db({ multi_az: "no" }), "multi_az:d")).toMatchObject({ level: "warn", text: "RDS가 한 AZ 에만 있어 그 AZ 가 멈추면 데이터도 쓸 수 없어요." });
+  expect(warnOf(db({}), "multi_az:d")).toMatchObject({ level: "check", text: "RDS가 여러 AZ 에 복제(Multi-AZ)되는지 알 수 없어요." });
   const cache = build([withAttrs(node("c", "cache", "ElastiCache", "priv"), { managed: "예", multi_az: null })], cloud);
   expect(warnOf(cache, "multi_az:c")!.level).toBe("check");
 });
@@ -234,7 +255,7 @@ test("managed DB/cache: multi_az yes is fine, no warns, unknown is a check", () 
 test("self-run cloud server outside a group warns spof_cloud with the AZ guide", () => {
   const s = build([node("w", "was", "Admin App", "priv")], cloud);
   const w = warnOf(s, "spof_cloud:w")!;
-  expect(w.text).toBe("Admin App이(가) 1대뿐이라 멈추면 서비스도 멈춰요.");
+  expect(w.text).toBe("Admin App이 1대뿐이라 멈추면 서비스도 멈춰요.");
   expect(w.guide).toContain("서로 다른 AZ");
   expect(w.guide).not.toContain("VIP");
   expect(ids(s)).not.toContain("spof:w");

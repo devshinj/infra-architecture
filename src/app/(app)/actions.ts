@@ -38,6 +38,7 @@ import {
   countZonesUsingType,
   deleteNetworkRule,
   deleteNetworkType,
+  getNetworkKnowledge,
   listNetworkRules,
   listNetworkTypes,
   resetNetworkType,
@@ -47,7 +48,7 @@ import {
   type NetTypeRow,
 } from "@/server/network";
 import { createMcpKey, deleteMcpKey, listMcpKeys } from "@/server/mcpKeys";
-import { getVersion, listVersions, restoreVersionWithMessage } from "@/server/versions";
+import { getVersion, listVersions, restoreVersionWithMessage, type RestoreMessageOpts } from "@/server/versions";
 
 const DIAGRAM_ROUTE = "/p/[projectId]/d/[diagramId]";
 
@@ -171,12 +172,23 @@ export async function importSampleAction(diagramId: string, sampleId: string): P
   });
 }
 
-export async function restoreVersionAction(diagramId: string, number: number): Promise<{ number: number }> {
+/** describeChange: 안내 둘째 줄에 구성 정보 카드 숫자의 변화를 붙인다(이력의 되돌리기). text 는 남긴 안내. */
+export async function restoreVersionAction(
+  diagramId: string,
+  number: number,
+  opts?: { describeChange?: boolean },
+): Promise<{ number: number; text: string }> {
   validVersion(number);
   return run(async (uid) => {
     await getOwnedDiagram(uid, diagramId);
     if ((await getVersion(diagramId, number)) === null) notFound();
-    const r = await restoreVersionWithMessage(diagramId, number);
+    // 카드와 같은 망 지식으로 센다. 못 읽으면 카드도 망 지식 없이 그리므로 없이 센다.
+    let restoreOpts: RestoreMessageOpts = {};
+    if (opts?.describeChange === true) {
+      const knowledge = await getNetworkKnowledge(uid).catch(() => null);
+      restoreOpts = { describeChange: knowledge ? { knowledge } : {} };
+    }
+    const r = await restoreVersionWithMessage(diagramId, number, restoreOpts);
     refreshDiagram();
     return r;
   });
@@ -511,7 +523,7 @@ export async function logoutAction(): Promise<void> {
   await signOut({ redirectTo: "/login" });
 }
 
-/** Claude Code 연결 키. 날짜는 문자열로 넘긴다(화면에서 그대로 보이고 서버 액션 경계도 가볍다). */
+/** MCP 연결 키. 날짜는 문자열로 넘긴다(화면에서 그대로 보이고 서버 액션 경계도 가볍다). */
 export type McpKeyRow = { id: string; name: string; prefix: string; createdAt: string; lastUsedAt: string | null };
 
 const toKeyRow = (k: Awaited<ReturnType<typeof listMcpKeys>>[number]): McpKeyRow => ({
@@ -530,7 +542,7 @@ export async function listMcpKeysAction(): Promise<ActionResult<{ keys: McpKeyRo
 export async function createMcpKeyAction(name: string): Promise<ActionResult<{ id: string; key: string; prefix: string }>> {
   return runResult(async (uid) => {
     const k = await createMcpKey(uid, typeof name === "string" ? name : "");
-    revalidatePath("/claude-code");
+    revalidatePath("/mcp");
     return k;
   });
 }
@@ -538,7 +550,7 @@ export async function createMcpKeyAction(name: string): Promise<ActionResult<{ i
 export async function deleteMcpKeyAction(id: string): Promise<ActionResult> {
   return runResult(async (uid) => {
     await deleteMcpKey(uid, reqString(id, "키"));
-    revalidatePath("/claude-code");
+    revalidatePath("/mcp");
     return {};
   });
 }

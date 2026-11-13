@@ -45,8 +45,8 @@ test("망연계를 거치면 표시 없음", () => {
 
 test("AI 추정 종류면 문구 앞에 추정 문장", () => {
   const w = evaluateNetworkRules(adminCase({ admin: { source: "ai", confirmed: false } }), K);
-  expect(w[0].text.startsWith("행정망을(를) '")).toBe(true);
-  expect(w[0].text).toContain("(으)로 추정했어요. ");
+  expect(w[0].text.startsWith("행정망을 '")).toBe(true);
+  expect(w[0].text).toMatch(/'(으)?로 추정했어요. /);
   const sure = evaluateNetworkRules(adminCase({ admin: { source: "ai", confirmed: true } }), K);
   expect(sure[0].text).not.toContain("추정했어요");
 });
@@ -83,7 +83,7 @@ test("폐쇄망 짝은 link_unusual", () => {
   s.groups["admin-net"].netType = { key: "control-net", source: "user", confirmed: true };
   const [w] = evaluateNetworkRules(s, K);
   expect(w.id).toBe("link_unusual:admin-net--gcloud-internet");
-  expect(w.text).toContain("행정망(폐쇄)와(과) GCloud 인터넷망 사이는 보통 잇지 않는 구간이에요");
+  expect(w.text).toContain("행정망(폐쇄)와 GCloud 인터넷망 사이는 보통 잇지 않는 구간이에요");
   expect(w.text).toContain("기관 규정과 방화벽 담당자에게 확인해 보세요");
 });
 

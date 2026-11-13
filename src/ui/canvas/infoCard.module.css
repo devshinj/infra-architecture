@@ -8,8 +8,10 @@
   left: calc(var(--canvas-inset-left, var(--panel-gap)) + var(--safe-l, 0px));
   bottom: calc(var(--panel-gap) + var(--safe-b, 0px));
   z-index: 30;
-  width: 300px;
-  /* 오른쪽 떠 있는 패널(--canvas-inset-right)까지는 넘지 않는다: 좁은 태블릿 너비에서는 카드가 줄어든다. */
+  /* 접힌 줄(구성 정보 · 채워야 할 정보 · 주의 · 미확정 가정)이 한 줄에 들어가는 너비. 펼친 내용(.body)은 너비 계산에 끼지 않는다. */
+  width: max-content;
+  min-width: 300px;
+  /* 오른쪽 떠 있는 패널(--canvas-inset-right)까지는 넘지 않는다: 좁은 태블릿 너비에서는 카드가 줄어들고 접힌 줄은 항목 사이에서 줄을 바꾼다. */
   max-width: calc(100% - var(--canvas-inset-left, var(--panel-gap)) - max(var(--panel-gap), var(--canvas-inset-right, 0px)) - var(--safe-l, 0px) - var(--safe-r, 0px));
   max-height: 70%;
   box-sizing: border-box;
@@ -53,7 +55,8 @@
 .chevron { flex: none; color: var(--text-secondary); }
 .chevron[data-open] { transform: rotate(180deg); }
 
-.body { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+/* inline-size 가둠: 긴 주의 문구·가정 칩이 카드를 넓히지 않고 접힌 줄이 정한 너비 안에서 줄을 바꾼다. */
+.body { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; contain: inline-size; }
 .section { padding: 12px 16px; }
 .section + .section { border-top: 1px solid var(--glass-line); }
 .heading:focus { outline: none; }
@@ -81,7 +84,8 @@
 .warning:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: -1px; }
 .level { flex: none; font-size: 12px; line-height: 1.5; padding: 0 4px; border: 1px solid var(--state-warn); border-radius: var(--radius-pill); color: var(--text-primary); }
 .warning[data-level="check"] .level { border-color: var(--line-node); color: var(--text-secondary); }
-.warnText { min-width: 0; font-size: 13px; line-height: 1.5; }
+/* 어절 단위로 줄을 바꾼다("멈춰 / 요." 처럼 한 글자만 넘어가지 않게). */
+.warnText { min-width: 0; font-size: 13px; line-height: 1.5; word-break: keep-all; overflow-wrap: anywhere; }
 
 @media (prefers-reduced-motion: no-preference) {
   .chevron { transition: transform var(--dur-micro) var(--ease-out); }
@@ -90,3 +94,16 @@
 
 /* 연결 방식 예상 줄 아래의 망 종류 확인(추정 망마다 하나). 주의 줄 글자 칸과 줄을 맞춘다. */
 .guesses { display: flex; flex-direction: column; gap: 8px; padding: 4px 8px 8px; }
+
+/* 가로 휴대폰(높이 ≤ 480): 접힌 줄을 짧은 단추로 「구성 정보 7·1·4」. 항목 이름은 화면에서만 감추고 버튼 설명으로 읽힌다.
+   낮은 화면에서 넓은 줄이 캔버스 바닥을 가리지 않게 한다. 펼치면 각 절 제목이 이름을 다시 보인다. */
+@media (max-height: 480px) and (orientation: landscape) {
+  .card:not([data-open]) { min-width: 0; }
+  .card:not([data-open]) .segName { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  /* 이름 뒤·항목 사이 띄어쓰기도 없앤다: 줄 글자 크기를 0 으로 두고 제목(13px)·숫자·가운뎃점만 크기를 되돌린다. */
+  .card:not([data-open]) .line { font-size: 0; }
+  .card:not([data-open]) .seg { margin-left: 0; padding-left: 0; border-left: 0; }
+  .card:not([data-open]) .seg .num { font-size: 12px; }
+  .card:not([data-open]) .seg + .seg::before { content: "·"; margin: 0 2px; font-size: 12px; color: var(--text-secondary); }
+  .card:not([data-open]) .title { margin-right: 4px; }
+}
