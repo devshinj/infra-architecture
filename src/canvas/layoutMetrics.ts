@@ -1,5 +1,6 @@
 import type { DiagramState } from "@/domain/types";
 import { buildDisplayGraph, defaultDisplayOptions, type DisplayGraph } from "./display";
+import { labelViolates, type PlacedRestingLabel, type RestingLabelInput } from "./restingLabels";
 import { layoutDiagram, type Layout, type Rect } from "./layout";
 import { textWidth } from "./text";
 
@@ -12,6 +13,8 @@ export interface LayoutMetrics {
   bends: number; // 꺾임 수 합
   aspect: number; // width / height
   zoneHeadCrossings: number; // 펼친 영역의 이름 알약 자리를 지나는 선 수(알약 하나당 선 하나 한 번, 그 영역이 끝점인 선 제외)
+  labelViolations: number; // 평소 화면 이름 가운데 「지킬 것」을 어긴 수(labels 를 줘야 잰다)
+  labelMissing: number; // 이름이 있고 출구선이 아닌데 평소 화면 이름에 빠진 선 수(labels 를 줘야 잰다)
 }
 
 /** 선의 첫 점과 마지막 점에서 이만큼은 노드 옆이라 나란해도 세지 않는다. */
@@ -66,8 +69,14 @@ function trimmedRange(s: Seg, k: "x" | "y"): [number, number] | null {
 }
 
 // 끝점이 아닌 상자 안쪽(가장자리 2px 안쪽)을 지나는지
-const rectHit = (s: Seg, r: Rect, shrink = 2): boolean =>
-  hi(s, "x") > r.x + shrink && lo(s, "x") < r.x + r.width - shrink && hi(s, "y") > r.y + shrink && lo(s, "y") < r.y + r.height - shrink;
+export function rectHit(s: { a: Pt; b: Pt }, r: Rect, pad = 2): boolean {
+  return (
+    Math.max(s.a.x, s.b.x) > r.x + pad &&
+    Math.min(s.a.x, s.b.x) < r.x + r.width - pad &&
+    Math.max(s.a.y, s.b.y) > r.y + pad &&
+    Math.min(s.a.y, s.b.y) < r.y + r.height - pad
+  );
+}
 
 /**
  * groupLabels: 영역 id → 이름. 배치에는 영역 이름이 없어 알약 자리를 재려면 따로 받는다. 이름을 모르는 영역은
@@ -79,6 +88,7 @@ export function measureLayout(
   ends: Record<string, [string, string]>,
   minGap = 16,
   groupLabels?: Record<string, string>,
+  labels?: { placed: PlacedRestingLabel[]; items: RestingLabelInput[] },
 ): LayoutMetrics {
   const E = layout.edges.map((e) => ({ id: e.id, pts: e.points, segs: segsOf(e.points) }));
   let crossings = 0;
@@ -142,7 +152,25 @@ export function measureLayout(
     for (const [id, r] of pills) if (id !== f && id !== t && e.segs.some((s) => rectHit(s, r, 0))) zoneHeadCrossings++;
   }
 
-  return { crossings, sharedPx: Math.round(sharedPx), parallelPx: Math.round(parallelPx), throughNode, bends, aspect: layout.width / layout.height, zoneHeadCrossings };
+  let labelViolations = 0;
+  let labelMissing = 0;
+  if (labels) {
+    labelViolations = labelViolates(layout, groupLabels ?? {}, labels.placed).length;
+    const named = new Set(labels.placed.flatMap((p) => p.edgeIds));
+    labelMissing = labels.items.filter((i) => i.label && !i.egress && !named.has(i.id)).length;
+  }
+
+  return {
+    crossings,
+    sharedPx: Math.round(sharedPx),
+    parallelPx: Math.round(parallelPx),
+    throughNode,
+    bends,
+    aspect: layout.width / layout.height,
+    zoneHeadCrossings,
+    labelViolations,
+    labelMissing,
+  };
 }
 
 export interface MeasuredView {

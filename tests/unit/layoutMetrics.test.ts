@@ -65,3 +65,17 @@ test("edges through an expanded zone's name pill are counted once per pill", () 
   const collapsed = { ...layout, nodes: { p: nodes.p, q: nodes.q } };
   expect(measureLayout(collapsed, ends, 16, { z: "공개 서브넷" }).zoneHeadCrossings).toBe(0);
 });
+
+test("labelViolations counts a resting label that overlaps a node, labelMissing counts a named edge without one", () => {
+  const node = (id: string, x: number): LaidOutNode => ({ id, x, y: 40, width: 20, height: 20, parent: null, displayLabel: id });
+  const nodes = { n1: node("n1", 0), n2: node("n2", 180), mid: node("mid", 90) };
+  const edges = [line("a", [10, 50], [190, 50]), line("b", [10, 90], [190, 90])];
+  const items = [
+    { id: "a", label: "NFS", from: "n1", to: "n2", points: edges[0].points },
+    { id: "b", label: "SSH", from: "n1", to: "n2", points: edges[1].points },
+  ];
+  const m = measureLayout(lay(edges, nodes), { a: ["n1", "n2"], b: ["n1", "n2"] }, 16, {}, { placed: [{ edgeIds: ["a"], text: "NFS", x: 100, y: 50 }], items });
+  expect(m.labelViolations).toBe(1);
+  expect(m.labelMissing).toBe(1);
+  expect(measureLayout(lay(edges, nodes), {}).labelViolations).toBe(0);
+});
