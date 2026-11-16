@@ -138,6 +138,8 @@ function escapeBelongsElsewhere(e: KeyboardEvent): boolean {
   return document.querySelector('[role="tooltip"]') !== null;
 }
 
+const sameSet = (a: ReadonlySet<string>, b: ReadonlySet<string>) => a.size === b.size && [...a].every((x) => b.has(x));
+
 export function DiagramWorkspace({ diagramId, name, projectName, latest, initialPinned, samples, initialChat = [], initialSessions = NO_SESSIONS, initialPaging, knowledge = null }: DiagramWorkspaceProps) {
   const router = useRouter();
   const [current, setCurrent] = useState(latest);
@@ -252,6 +254,8 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
   const canvasOptions = useMemo<CanvasOptions>(() => ({ ...options, showMissingBadges: showMissing }), [options, showMissing]);
   const changeOptions = useCallback(
     (o: CanvasOptions) => {
+      // 펼친 줄기는 표시 그래프·배치에 묶여 있다: 접기·보기 옵션이 바뀌면 선택처럼 푼다.
+      if (o.hideAux !== options.hideAux || o.busSimplify !== options.busSimplify || o.mergeDuplicates !== options.mergeDuplicates || !sameSet(o.collapsed, options.collapsed)) setTrunk(null);
       setOptions(o);
       if (o.showMissingBadges === showMissing) return;
       setShowMissing(o.showMissingBadges);
@@ -261,7 +265,7 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
         /* 저장 실패는 이번 방문에만 영향 */
       }
     },
-    [showMissing],
+    [showMissing, options],
   );
   const [tab, setTab] = useState<Tab>("대화");
   // 좁은 화면의 아래 탭: 구성도(캔버스)냐 패널이냐. 패널이면 보이는 탭은 tab 이다. 넓은 화면에서는 CSS 가 이 값을 쓰지 않는다.
@@ -1036,6 +1040,7 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
 
   const onPinnedChange = (p: Pinned) => {
     setPinned(p);
+    setTrunk(null); // 고정 위치가 바뀌면 배치가 달라져 펼친 줄기 자리가 맞지 않는다.
     savePinnedAction(diagramId, p).then((r) => (r.ok ? setError(null) : setError(r.error)), fail);
   };
   // 고정 위치를 풀고 자동 배치한 뒤 화면을 맞춘다(버튼·대화 재정렬 공통). 버튼은 이력 보기·비교 중에 막힌다.

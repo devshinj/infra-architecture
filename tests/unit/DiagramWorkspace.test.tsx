@@ -2,12 +2,12 @@ import "@testing-library/jest-dom/vitest";
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
-const hookState = vi.hoisted(() => ({ send: vi.fn(), busy: false, onCommand: null as null | ((c: unknown) => void), badgeFns: [] as unknown[], warnFns: [] as unknown[], lines: [] as unknown[], insets: [] as unknown[], focus: [] as unknown[], turn: null as null | { onDone(): void; onInterrupted(): void; onRelayout?(): void; onSessionLines?(key: string, fn: (ls: { id: string; kind: string; text: string }[]) => { id: string; kind: string; text: string }[]): void }, pushLine: vi.fn(), pinned: [] as unknown[], fitRequest: [] as unknown[], fitAll: [] as unknown[], placed: null as null | ((locate: (id: string) => { x: number; y: number } | null) => void), flow: [] as unknown[], selected: [] as unknown[], turnMarks: [] as unknown[], frames: [] as unknown[], refresh: vi.fn(), rfNodes: false, trunk: [] as unknown[], trunkChange: null as null | ((t: { segKey: string; edgeIds: string[]; at: { x: number; y: number } } | null) => void) }));
+const hookState = vi.hoisted(() => ({ send: vi.fn(), busy: false, onCommand: null as null | ((c: unknown) => void), badgeFns: [] as unknown[], warnFns: [] as unknown[], lines: [] as unknown[], insets: [] as unknown[], focus: [] as unknown[], turn: null as null | { onDone(): void; onInterrupted(): void; onRelayout?(): void; onSessionLines?(key: string, fn: (ls: { id: string; kind: string; text: string }[]) => { id: string; kind: string; text: string }[]): void }, pushLine: vi.fn(), pinned: [] as unknown[], fitRequest: [] as unknown[], fitAll: [] as unknown[], placed: null as null | ((locate: (id: string) => { x: number; y: number } | null) => void), flow: [] as unknown[], selected: [] as unknown[], turnMarks: [] as unknown[], frames: [] as unknown[], refresh: vi.fn(), rfNodes: false, trunk: [] as unknown[], optionsChange: null as null | ((o: unknown) => void), optionsSeen: null as unknown, pinnedChange: null as null | ((p: unknown) => void), trunkChange: null as null | ((t: { segKey: string; edgeIds: string[]; at: { x: number; y: number } } | null) => void) }));
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: hookState.refresh }) }));
 vi.mock("@/app/(app)/actions", () => ({
   clearPinnedAction: vi.fn(async () => undefined), getVersionAction: vi.fn(), importSampleAction: vi.fn(),
-  listVersionsAction: vi.fn(async () => []), restoreVersionAction: vi.fn(), savePinnedAction: vi.fn(),
+  listVersionsAction: vi.fn(async () => []), restoreVersionAction: vi.fn(), savePinnedAction: vi.fn(async () => ({ ok: true })),
   saveFieldsAction: vi.fn(async () => ({ ok: true, number: 2 })),
   setWarningIgnoredAction: vi.fn(async () => ({ ok: true, number: 2 })),
   setZoneTypeAction: vi.fn(async () => ({ ok: true, number: 2 })),
@@ -17,10 +17,13 @@ vi.mock("@/app/(app)/actions", () => ({
   renameFlowAction: vi.fn(async () => ({ ok: true })), deleteFlowAction: vi.fn(async () => ({ ok: true })), confirmFlowAction: vi.fn(async () => ({ ok: true })), removeFlowStepAction: vi.fn(async () => ({ ok: true })),
 }));
 vi.mock("@/canvas/Canvas", () => ({
-  Canvas: ({ flow, options, state, pinned, fitRequest, fitAllSignal, onAutoArrange, fitKey, cameraInsets, focusRequest, onMention, onAskNode, onBadgeClick, onWarnBadgeClick, onSelect, onImportSample, onPlaced, turnMarks, frameRequest, trunk, onTrunkChange }: { trunk?: unknown; onTrunkChange?: (t: { segKey: string; edgeIds: string[]; at: { x: number; y: number } } | null) => void; frameRequest?: { ids: string[]; token: number }; turnMarks?: { added: Set<string>; changed: Set<string> }; flow?: unknown; options: { selectedId: string | null }; onAskNode?: (id: string) => void;  onPlaced?: (l: (id: string) => { x: number; y: number } | null) => void; onImportSample?: (id: string) => void; state: { nodes: object }; pinned: unknown; fitRequest?: unknown; fitAllSignal?: unknown; onAutoArrange(): void; fitKey?: string; cameraInsets?: unknown; focusRequest?: unknown; onMention?: (id: string) => void; onBadgeClick?: (id: string) => void; onWarnBadgeClick?: (id: string) => void; onSelect: (id: string | null) => void }) => {
+  Canvas: ({ flow, options, state, pinned, fitRequest, fitAllSignal, onAutoArrange, fitKey, cameraInsets, focusRequest, onMention, onAskNode, onBadgeClick, onWarnBadgeClick, onSelect, onImportSample, onPlaced, turnMarks, frameRequest, trunk, onTrunkChange, onOptionsChange, onPinnedChange }: { onOptionsChange?: (o: never) => void; onPinnedChange?: (p: never) => void; trunk?: unknown; onTrunkChange?: (t: { segKey: string; edgeIds: string[]; at: { x: number; y: number } } | null) => void; frameRequest?: { ids: string[]; token: number }; turnMarks?: { added: Set<string>; changed: Set<string> }; flow?: unknown; options: { selectedId: string | null }; onAskNode?: (id: string) => void;  onPlaced?: (l: (id: string) => { x: number; y: number } | null) => void; onImportSample?: (id: string) => void; state: { nodes: object }; pinned: unknown; fitRequest?: unknown; fitAllSignal?: unknown; onAutoArrange(): void; fitKey?: string; cameraInsets?: unknown; focusRequest?: unknown; onMention?: (id: string) => void; onBadgeClick?: (id: string) => void; onWarnBadgeClick?: (id: string) => void; onSelect: (id: string | null) => void }) => {
     hookState.flow.push(flow ?? null);
     hookState.trunk.push(trunk ?? null);
     hookState.trunkChange = onTrunkChange ?? null;
+    hookState.optionsChange = (onOptionsChange as never) ?? null;
+    hookState.optionsSeen = options;
+    hookState.pinnedChange = (onPinnedChange as never) ?? null;
     hookState.selected.push(options.selectedId);
     hookState.turnMarks.push(turnMarks ?? null);
     hookState.frames.push(frameRequest ?? null);
@@ -1643,6 +1646,31 @@ describe("줄기 펼치기", () => {
     expect(hookState.selected.at(-1)).toBe("e2");
     expect(hookState.trunk.at(-1)).toBeNull();
     expect(screen.getByRole("heading", { name: "연결선" })).toBeInTheDocument();
+  });
+
+  test("접기·보기 옵션이 바뀌면 펼침이 풀리고, 레이아웃과 무관한 옵션이나 같은 값이면 그대로다", () => {
+    hookState.busy = false;
+    render(ui(trunkLatest() as never));
+    const cur = () => hookState.optionsSeen as { collapsed: Set<string>; hoverLabels: boolean };
+    open();
+    act(() => hookState.optionsChange!({ ...cur(), hoverLabels: !cur().hoverLabels }));
+    expect(hookState.trunk.at(-1)).toEqual(sel);
+    act(() => hookState.optionsChange!({ ...cur(), collapsed: new Set(cur().collapsed) }));
+    expect(hookState.trunk.at(-1)).toEqual(sel);
+    act(() => hookState.optionsChange!({ ...cur(), collapsed: new Set(["z"]) }));
+    expect(hookState.trunk.at(-1)).toBeNull();
+    open();
+    act(() => hookState.optionsChange!({ ...cur(), hideAux: !(cur() as { hideAux: boolean }).hideAux }));
+    expect(hookState.trunk.at(-1)).toBeNull();
+  });
+
+  test("고정 위치가 바뀌면 펼침이 풀린다", () => {
+    hookState.busy = false;
+    render(ui(trunkLatest() as never));
+    open();
+    expect(hookState.trunk.at(-1)).toEqual(sel);
+    act(() => hookState.pinnedChange!({ a: { x: 5, y: 5 } }));
+    expect(hookState.trunk.at(-1)).toBeNull();
   });
 
   test("흐름 보기 중에는 trunk 가 Canvas 에 넘어가지 않는다", async () => {

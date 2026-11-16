@@ -663,3 +663,16 @@ test("trunk names whose raw spots coincide are placed apart from each other and 
     expect(b.x1 < ring.x2 && ring.x1 < b.x2 && b.y1 < ring.y2 && ring.y1 < b.y2).toBe(false);
   }
 });
+
+test("boundary dot dodges the merged resting label text, not the bare edge label", () => {
+  const points = [{ x: 0, y: 50 }, { x: 400, y: 50 }];
+  const at = { x: 200, y: 50 };
+  const layout: Layout = { ...lay([{ id: "e1", points, labelAt: at }]), labels: [{ edgeIds: ["e1", "e2", "e3"], text: "NFS ×3", x: at.x, y: at.y }] };
+  render(<EdgeLayer layout={layout} edges={[de("e1", "a", "b", "request", "NFS")]} {...base} crossing={new Set(["e1"])} />);
+  const dot = document.querySelector(".edge-boundary-dot")!;
+  const cx = Number(dot.getAttribute("cx"));
+  const cy = Number(dot.getAttribute("cy"));
+  const name = labelBox({ text: "NFS ×3", x: at.x, y: at.y, anchor: "middle" });
+  const gapX = Math.max(name.x1 - (cx + 3), cx - 3 - name.x2);
+  expect(Math.max(gapX, name.y1 - (cy + 3), cy - 3 - name.y2)).toBeGreaterThanOrEqual(0);
+});

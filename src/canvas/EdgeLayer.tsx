@@ -234,17 +234,19 @@ export function EdgeLayer({ layout, edges, selectedId, selectedRect, emphasis, h
     return { shown, hidden };
   }, [sel, hov, steps, hoverLabels, layout.labels]);
 
+  const placedText = useMemo(() => new Map(layout.labels.map((p) => [p.edgeIds[0]!, p.text])), [layout.labels]);
   // 망 경계 점: 경계를 넘는 연결의 가운데(이름 자리, 없으면 선 가운데). 이름이 있으면 이름 글자 옆으로 비킨다.
   const dots = useMemo(() => {
     const out = new Map<string, Pt>();
     if (!crossing || crossing.size === 0) return out;
     for (const l of laid) {
       if (!crossing.has(l.id)) continue;
-      const at = boundaryDotAt(l.points, DOT_R, l.labelAt, byId.get(l.id)!.label);
+      // 그려지는 평소 이름이 같은 이름을 묶은 글("NFS ×3")이면 그 글 상자를 비킨다. 이름 상자는 내보낸 그림에도 들어간다.
+      const at = boundaryDotAt(l.points, DOT_R, l.labelAt, placedText.get(l.id) ?? byId.get(l.id)!.label);
       if (at) out.set(l.id, at);
     }
     return out;
-  }, [crossing, laid, byId]);
+  }, [crossing, laid, byId, placedText]);
   const dotBoxes = useMemo<Box[]>(() => [...dots.values()].map((p) => ({ x1: p.x - DOT_R, y1: p.y - DOT_R, x2: p.x + DOT_R, y2: p.y + DOT_R })), [dots]);
   const nodeRects = useMemo(() => [...Object.values(layout.nodes), ...(collapsedRects ?? [])], [layout.nodes, collapsedRects]);
 

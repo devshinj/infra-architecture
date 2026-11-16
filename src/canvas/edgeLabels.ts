@@ -355,9 +355,6 @@ export function boundaryDotAt(points: Pt[], radius: number, labelAt?: Pt, label?
   return { x: round(at.x), y: round(at.y) };
 }
 
-/** 평소 화면 같은 이름 묶기에 쓰는 연결: 이름·두 끝·이름 자리. */
-export interface RestingLabel { id: string; label: string; from: string; to: string; at: Pt }
-
 /** 이름이 같고 한쪽 끝을 함께 쓰는 연결끼리 묶는다. 묶음마다 구성원(입력 차례)과, 구성원별로 함께 쓰는 끝 노드 id 를 돌려준다. */
 export function clusterByEnd<T extends { id: string; label: string; from: string; to: string }>(items: T[]): { members: T[]; sharedEnd: Map<string, string> }[] {
   const parent = new Map(items.map((i) => [i.id, i.id]));
@@ -384,25 +381,4 @@ export function clusterByEnd<T extends { id: string; label: string; from: string
   const groups = new Map<string, T[]>();
   for (const i of items) groups.set(find(i.id), [...(groups.get(find(i.id)) ?? []), i]);
   return [...groups.values()].map((members) => ({ members, sharedEnd: new Map(members.filter((m) => shared.has(m.id)).map((m) => [m.id, shared.get(m.id)!])) }));
-}
-
-/**
- * 아무것도 고르지 않은 평소 화면에서 같은 이름이 줄줄이 붙지 않게 한다. 이름이 같고 한쪽 끝을 함께 쓰는 연결
- * (ALB → API #1·#2·관리자 앱의 "HTTP 8080", 두 곳에서 RDS 로 가는 "MySQL 3306")을 한 무리로 보고, 함께 쓰는 끝에
- * 가장 가까운 이름 하나만 "<이름> ×N" 으로 남긴다. 돌려주는 것: 남길 이름(id → 글), 감출 이름 id.
- */
-export function restingLabelClusters(items: RestingLabel[], centerOf: (id: string) => Pt | undefined): { shown: Map<string, string>; hidden: Set<string> } {
-  const shown = new Map<string, string>();
-  const hidden = new Set<string>();
-  for (const { members: list, sharedEnd } of clusterByEnd(items)) {
-    if (list.length < 2) continue;
-    const dist = (i: RestingLabel) => {
-      const c = centerOf(sharedEnd.get(i.id) ?? i.from);
-      return c ? Math.hypot(i.at.x - c.x, i.at.y - c.y) : 0;
-    };
-    const keep = list.reduce((a, b) => (dist(b) < dist(a) || (dist(b) === dist(a) && b.id < a.id) ? b : a));
-    shown.set(keep.id, `${keep.label} ×${list.length}`);
-    for (const i of list) if (i !== keep) hidden.add(i.id);
-  }
-  return { shown, hidden };
 }

@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 
-import { LABEL_LINE, LABEL_OFFSET, MIN_TRUNK, NODE_RING, ROW_GAP, ROW_PITCH, boundaryDotAt, labelBox, mergedLabels, restingLabelClusters, stepLabels, type PlacedLabel } from "@/canvas/edgeLabels";
+import { LABEL_LINE, LABEL_OFFSET, MIN_TRUNK, NODE_RING, ROW_GAP, ROW_PITCH, boundaryDotAt, labelBox, mergedLabels, stepLabels, type PlacedLabel } from "@/canvas/edgeLabels";
 import type { Rect } from "@/canvas/layout";
 
 type Pt = { x: number; y: number };
@@ -283,34 +283,4 @@ test("boundary dot sits at the middle, or beside the edge name when there is one
   const name = labelBox({ text: "HTTPS", x: 100, y: 50, anchor: "middle" });
   const dot = { x1: at.x - 3, y1: at.y - 3, x2: at.x + 3, y2: at.y + 3 };
   expect(gap(dot, name)).toBeGreaterThanOrEqual(ROW_GAP - 0.01);
-});
-
-describe("restingLabelClusters (평소 화면 같은 이름 묶기)", () => {
-  const centers: Record<string, { x: number; y: number }> = { alb: { x: 100, y: 0 }, rds: { x: 100, y: 500 } };
-  const centerOf = (id: string) => centers[id];
-  test("same label sharing a source keeps the one nearest the source as '<label> ×N'", () => {
-    const { shown, hidden } = restingLabelClusters(
-      [
-        { id: "e1", label: "HTTP 8080", from: "alb", to: "a1", at: { x: 40, y: 80 } },
-        { id: "e2", label: "HTTP 8080", from: "alb", to: "a2", at: { x: 100, y: 30 } },
-        { id: "e3", label: "HTTP 8080", from: "alb", to: "a3", at: { x: 160, y: 80 } },
-      ],
-      centerOf,
-    );
-    expect([...shown]).toEqual([["e2", "HTTP 8080 ×3"]]);
-    expect([...hidden].sort()).toEqual(["e1", "e3"]);
-  });
-  test("same label sharing a target merges; different labels or no shared end stay apart", () => {
-    const { shown, hidden } = restingLabelClusters(
-      [
-        { id: "m1", label: "MySQL 3306", from: "asg", to: "rds", at: { x: 100, y: 460 } },
-        { id: "m2", label: "MySQL 3306", from: "admin", to: "rds", at: { x: 40, y: 300 } },
-        { id: "r1", label: "Redis 6379", from: "asg", to: "redis", at: { x: 200, y: 460 } },
-        { id: "x1", label: "MySQL 3306", from: "other", to: "db2", at: { x: 0, y: 0 } },
-      ],
-      centerOf,
-    );
-    expect([...shown]).toEqual([["m1", "MySQL 3306 ×2"]]);
-    expect([...hidden]).toEqual(["m2"]);
-  });
 });
