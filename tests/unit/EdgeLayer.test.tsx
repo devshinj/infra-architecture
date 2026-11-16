@@ -216,13 +216,13 @@ test("selecting a node overlays each incident edge once with its own kind", () =
   expect(document.querySelector('[data-edge-id="e2"] .edge-arrow')).not.toHaveClass("edge--under");
 });
 
-test("layers are ordered base, emphasis, motion, edges", () => {
+test("layers are ordered base, emphasis, motion, edges, then the shared-segment press targets", () => {
   render(<EdgeLayer layout={fanOutLayout} edges={fanOutEdges} {...base} selectedId="w1" />);
   const svg = document.querySelector("svg.edge-layer")!;
   const order = [...svg.children].map((c) =>
-    c.classList.contains("edge-base") ? "base" : c.classList.contains("edge-emph") ? "emph" : c.classList.contains("edge-motion") ? "motion" : c.classList.contains("edge") ? "edge" : "?",
+    c.classList.contains("edge-base") ? "base" : c.classList.contains("edge-emph") ? "emph" : c.classList.contains("edge-motion") ? "motion" : c.classList.contains("edge") ? "edge" : c.classList.contains("edge-seg-hits") ? "hits" : "?",
   );
-  expect(order).toEqual(["base", "emph", "motion", "edge", "edge"]);
+  expect(order).toEqual(["base", "emph", "motion", "edge", "edge", "hits"]);
 });
 
 test("no overlay without selection or hover", () => {
@@ -536,4 +536,79 @@ test("resting view draws layout.labels as-is: one '<name> ×N' on the first edge
   // 이름을 올렸을 때만 보이게 하면 화면에는 이름이 없다.
   rerender(<EdgeLayer layout={layout} edges={edges} {...base} hoverLabels />);
   expect(labelTexts()).toEqual([]);
+});
+
+// ---- 줄기 펼치기 ----
+const trunkLayout = lay([
+  { id: "e1", points: [{ x: 165, y: 52 }, { x: 165, y: 110 }, { x: 85, y: 110 }, { x: 85, y: 170 }] },
+  { id: "e2", points: [{ x: 165, y: 52 }, { x: 165, y: 110 }, { x: 245, y: 110 }, { x: 245, y: 170 }] },
+  { id: "e3", points: [{ x: 165, y: 52 }, { x: 165, y: 110 }, { x: 165, y: 200 }] },
+  { id: "e4", points: [{ x: 10, y: 10 }, { x: 10, y: 60 }] },
+]);
+const trunkEdges = [de("e1", "alb", "w1", "async", "하나"), de("e2", "alb", "w2", "request", "둘"), de("e3", "alb", "w3", "request", "셋"), de("e4", "x", "y")];
+const trunkSel = { segKey: "k", edgeIds: ["e1", "e2", "e3"], at: { x: 165, y: 80 } };
+const trunkProps = { ...base, hoverLabels: false };
+
+test("each shared segment gets one press target, solo segments get none", () => {
+  render(<EdgeLayer layout={trunkLayout} edges={trunkEdges} {...trunkProps} />);
+  const hits = [...document.querySelectorAll(".edge-seg-hit")];
+  expect(hits).toHaveLength(1);
+  expect(hits[0].getAttribute("data-seg-key")).toBeTruthy();
+  expect(document.querySelectorAll(".edge-seg").length).toBeGreaterThan(1);
+});
+
+test("pressing a shared segment reports it as a trunk click and does not select", () => {
+  const onTrunkClick = vi.fn();
+  const onSelect = vi.fn();
+  render(<EdgeLayer layout={trunkLayout} edges={trunkEdges} {...trunkProps} onTrunkClick={onTrunkClick} onSelect={onSelect} />);
+  const hit = document.querySelector(".edge-seg-hit")!;
+  fireEvent.click(hit);
+  expect(onSelect).not.toHaveBeenCalled();
+  expect(onTrunkClick).toHaveBeenCalledTimes(1);
+  const c = onTrunkClick.mock.calls[0][0];
+  expect(c.segKey).toBe(hit.getAttribute("data-seg-key"));
+  expect([...c.edgeIds].sort()).toEqual(["e1", "e2", "e3"]);
+  expect(Number.isFinite(c.at.x) && Number.isFinite(c.at.y)).toBe(true);
+});
+
+test("an expanded trunk draws one coloured overlay per edge, keeping the edge kind class", () => {
+  render(<EdgeLayer layout={trunkLayout} edges={trunkEdges} {...trunkProps} trunk={trunkSel} />);
+  const gs = [...document.querySelectorAll(".edge-trunk g[data-trunk-edge]")];
+  expect(gs.map((g) => g.getAttribute("data-trunk-edge"))).toEqual(["e1", "e2", "e3"]);
+  expect(gs.map((g) => g.getAttribute("data-trunk-color"))).toEqual(["0", "1", "2"]);
+  expect(gs[0].querySelector(".edge-line--async")).not.toBeNull();
+  expect(gs[1].querySelector(".edge-line--request")).not.toBeNull();
+});
+
+test("trunk tags name the far end, using the display name of a collapsed zone", () => {
+  const endName = (id: string) => (id === "w2" ? "영역 B" : `N:${id}`);
+  render(<EdgeLayer layout={trunkLayout} edges={trunkEdges} {...trunkProps} trunk={trunkSel} endName={endName} />);
+  const tags = [...document.querySelectorAll(".edge-trunk-tag")];
+  expect(tags.map((t) => t.textContent)).toEqual(["N:w1", "영역 B", "N:w3"]);
+  expect(tags.map((t) => t.getAttribute("data-trunk-color"))).toEqual(["0", "1", "2"]);
+});
+
+test("a click near the destination end gets the source as far end", () => {
+  render(<EdgeLayer layout={trunkLayout} edges={trunkEdges} {...trunkProps} trunk={{ ...trunkSel, at: { x: 85, y: 168 } }} endName={(id) => `N:${id}`} />);
+  const tag = document.querySelector('.edge-trunk-tag[data-trunk-edge="e1"]')!;
+  expect(tag.textContent).toBe("N:alb");
+});
+
+test("a trunk keeps the others dim and shows its edges' own names even with names on hover only off", () => {
+  const withNames = lay(trunkLayout.edges.map((l) => ({ ...l, labelAt: l.points[1] })));
+  render(<EdgeLayer layout={withNames} edges={trunkEdges} {...trunkProps} trunk={trunkSel} />);
+  expect([...document.querySelectorAll(".edge-label")].map((t) => t.textContent).sort()).toEqual(["둘", "셋", "하나"]);
+  expect(document.querySelector('[data-edge-id="e4"]')).toHaveClass("edge--dim");
+  expect(document.querySelector('[data-edge-id="e1"]')).not.toHaveClass("edge--dim");
+});
+
+test("hovering a shared segment lights all its edges with the hover overlay, no colours or tags", () => {
+  render(<EdgeLayer layout={trunkLayout} edges={trunkEdges} {...trunkProps} />);
+  fireEvent.mouseEnter(document.querySelector(".edge-seg-hit")!);
+  const emph = document.querySelector('.edge-emph[data-mode="hover"]')!;
+  expect([...emph.querySelectorAll("[data-emph-edge]")].map((g) => g.getAttribute("data-emph-edge")).sort()).toEqual(["e1", "e2", "e3"]);
+  expect(document.querySelector(".edge-trunk")).toBeNull();
+  expect(document.querySelector(".edge-trunk-tag")).toBeNull();
+  fireEvent.mouseLeave(document.querySelector(".edge-seg-hit")!);
+  expect(document.querySelector(".edge-emph")).toBeNull();
 });

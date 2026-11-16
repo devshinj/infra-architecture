@@ -273,6 +273,26 @@ test("export removes emphasis overlay", () => {
   expect(viewport.querySelectorAll(".edge-emph")).toHaveLength(1);
 });
 
+test("export drops the expanded trunk overlay, its tags and the shared-segment press targets", () => {
+  const host = document.createElement("div");
+  host.innerHTML = `
+<div class="react-flow__viewport">
+  <svg class="edge-layer">
+    <g class="edge-base"><g data-bundle="b1"><g class="edge-seg" data-edge-ids="e1 e2"><path class="edge-line edge-line--request"></path></g></g></g>
+    <g class="edge-trunk"><g data-trunk-edge="e1" data-trunk-color="0"><path class="edge-line"></path></g></g>
+    <g class="edge edge--dim" data-edge-id="e1"><path class="edge-arrow edge-arrow--request"></path></g>
+    <g class="edge-seg-hits"><path class="edge-seg-hit" data-seg-key="k"></path></g>
+    <g class="edge-trunk-tags"><g class="edge-trunk-tag" data-trunk-edge="e1"><text>w1</text></g></g>
+  </svg>
+</div>`;
+  document.body.appendChild(host);
+  const clone = host.querySelector<HTMLElement>(".react-flow__viewport")!.cloneNode(true) as HTMLElement;
+  neutralizeClone(clone, [], new Set(["e1", "e2"]));
+  for (const sel of [".edge-trunk", ".edge-trunk-tag", ".edge-seg-hit", "[data-trunk-edge]"]) expect(clone.querySelector(sel), sel).toBeNull();
+  expect(clone.querySelectorAll(".edge-seg")).toHaveLength(1);
+  expect(clone.getElementsByClassName("edge--dim")).toHaveLength(0);
+});
+
 function nfsFixture() {
   const layout: Layout = {
     nodes: { n: { id: "n", x: 0, y: 0, width: 100, height: 40 } as Layout["nodes"][string] },
