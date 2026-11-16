@@ -5,6 +5,7 @@ export const BASE_SPEED = 90; // px/s
 export interface Segment {
   key: string;
   d: string;
+  pts: Pt[];
   length: number;
   edgeKind: EdgeKind;
   edgeIds: string[];
@@ -339,6 +340,7 @@ export function buildSegmentBundles(input: InEdge[]): Bundle[] {
       segments: segs.map((s) => ({
         key: s.key,
         d: toD(s.pts),
+        pts: s.pts,
         length: s.length,
         edgeKind: s.kind,
         edgeIds: s.edgeIds,

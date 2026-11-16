@@ -9,7 +9,7 @@ const mkBundle = (edgeKind: "request" | "async"): Bundle => ({
   periodMs: 4000,
   offsetMs: 300,
   junctions: [],
-  segments: [{ key: "k1", d: "M 0 0 L 180 0", length: L, edgeKind, edgeIds: ["e1"], startMs: 500 }],
+  segments: [{ key: "k1", d: "M 0 0 L 180 0", pts: [{ x: 0, y: 0 }, { x: 180, y: 0 }], length: L, edgeKind, edgeIds: ["e1"], startMs: 500 }],
 });
 
 const calls: { el: Element; frames: Keyframe[]; opts: KeyframeAnimationOptions }[] = [];
