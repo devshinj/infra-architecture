@@ -79,3 +79,20 @@ describe("branchSpot with a cornered branch piece", () => {
     expect(branchSpot(pts, { x: 190, y: 100 }, segs, "a")).toEqual({ x: 100, y: 86 });
   });
 });
+
+describe("branchSpot on a U-shaped route", () => {
+  // far end (0,50) is Euclid-closer to a click at (0,0) than the junction (300,0)
+  const pts = [{ x: 0, y: 0 }, { x: 300, y: 0 }, { x: 300, y: 50 }, { x: 0, y: 50 }];
+  const segs = [
+    { edgeIds: ["a", "b"], pts: [{ x: 0, y: 0 }, { x: 300, y: 0 }] },
+    { edgeIds: ["a"], pts: [{ x: 300, y: 0 }, { x: 300, y: 50 }, { x: 0, y: 50 }] },
+  ];
+  it("click on source half enters at the junction", () => {
+    expect(branchSpot(pts, { x: 0, y: 0 }, segs, "a")).toEqual({ x: 300, y: 14 });
+  });
+  it("click on target half enters at the target-side end", () => {
+    const pts2 = [...pts, { x: 0, y: 150 }];
+    const segs2 = [...segs, { edgeIds: ["a", "b"], pts: [{ x: 0, y: 50 }, { x: 0, y: 150 }] }];
+    expect(branchSpot(pts2, { x: 0, y: 140 }, segs2, "a")).toEqual({ x: 14, y: 50 });
+  });
+});

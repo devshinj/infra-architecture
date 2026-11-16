@@ -91,12 +91,14 @@ export function branchSpot(
     const highS = Math.max(sa, sb);
     // 먼 쪽에 있는 조각만(누른 점을 지난 것)
     if (forward ? highS < clickS : lowS > clickS) continue;
-    // 들어서는 끝 = 누른 점에서 유클리드 거리가 더 가까운 끝(투영이 아니라 실제 거리)
-    const dFirst = Math.hypot(first.x - at.x, first.y - at.y);
-    const dLast = Math.hypot(last.x - at.x, last.y - at.y);
-    const oriented = dFirst <= dLast ? seg.pts : [...seg.pts].reverse();
-    const entry = forward ? lowS : highS;
-    const dist = Math.abs(entry - clickS);
+    // 들어서는 끝: 꺾은선 순서(투영)가 갈리면 그 순서로, 같으면 누른 점에서 유클리드로 가까운 끝
+    let startFirst: boolean;
+    if (Math.abs(sa - sb) > 0.5) startFirst = forward ? sa < sb : sa > sb;
+    else
+      startFirst =
+        Math.hypot(first.x - at.x, first.y - at.y) <= Math.hypot(last.x - at.x, last.y - at.y);
+    const oriented = startFirst ? seg.pts : [...seg.pts].reverse();
+    const dist = Math.abs((startFirst ? sa : sb) - clickS);
     if (!best || dist < best.dist) best = { dist, pts: oriented };
   }
   return best ? pointAlong(best.pts, LABEL_OFFSET) : null;
