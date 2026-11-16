@@ -1651,7 +1651,7 @@ describe("줄기 펼치기", () => {
   test("접기·보기 옵션이 바뀌면 펼침이 풀리고, 레이아웃과 무관한 옵션이나 같은 값이면 그대로다", () => {
     hookState.busy = false;
     render(ui(trunkLatest() as never));
-    const cur = () => hookState.optionsSeen as { collapsed: Set<string>; hoverLabels: boolean };
+    const cur = () => hookState.optionsSeen as { collapsed: Set<string>; hoverLabels: boolean; hideAux: boolean };
     open();
     act(() => hookState.optionsChange!({ ...cur(), hoverLabels: !cur().hoverLabels }));
     expect(hookState.trunk.at(-1)).toEqual(sel);
@@ -1660,7 +1660,7 @@ describe("줄기 펼치기", () => {
     act(() => hookState.optionsChange!({ ...cur(), collapsed: new Set(["z"]) }));
     expect(hookState.trunk.at(-1)).toBeNull();
     open();
-    act(() => hookState.optionsChange!({ ...cur(), hideAux: !(cur() as { hideAux: boolean }).hideAux }));
+    act(() => hookState.optionsChange!({ ...cur(), hideAux: !cur().hideAux }));
     expect(hookState.trunk.at(-1)).toBeNull();
   });
 

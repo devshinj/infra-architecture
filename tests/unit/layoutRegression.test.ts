@@ -36,6 +36,7 @@ import { fx } from "../fixtures/spike";
 // 기준선에 적지 않았던 것이다. state-portal 기본은 교차 0·평행 0 을 지킨다(브라우저 글자 폭으로만 보이는 붐빔은 Task 9 에서 본다).
 // zoneHeadCrossings(펼친 영역 이름 알약 자리를 지나는 선)는 기하로만 잰다: 사용자 결정으로 알약을 연결선 위 층(ZoneNameLayer)에 그려
 // 선이 알약 뒤로 지나가므로, 배치는 이 자리를 피하지 않는다.
+// 영역 테두리 여유 8px(최종 검토, separate.ts ZONE_AIR; 노드 상자는 4px 그대로)로 다시 잼: baseline.json 의 모든 값이 그대로다(바뀐 값 없음).
 const baseline = JSON.parse(readFileSync(join(process.cwd(), "tests/fixtures/layout/baseline.json"), "utf8")) as Record<
   string,
   { default: LayoutMetrics; expanded: LayoutMetrics }

@@ -6,6 +6,8 @@ interface Rect { x: number; y: number; width: number; height: number }
 
 /** 민 토막이 끝점이 아닌 상자 곁으로 이보다 가까이 붙지 않는다(외부 열 길찾기의 air 와 같다). */
 const AIR = 4;
+/** 펼친 영역 테두리 곁 여유(노드 상자는 AIR 그대로): 선이 테두리에 붙어 달리지 않게 더 띄운다. */
+const ZONE_AIR = 8;
 /** 민 간격을 minGap 보다 이만큼 더 둔다(소수 좌표에서 c + minGap 이 부동소수로 minGap 보다 조금 작게 재지는 것을 막는다). */
 const EPS = 0.01;
 /** 전체를 다시 훑는 횟수 위쪽 한계. 받아들인 밀기는 평행 길이를 늘 줄이므로 그 전에 멈춘다. */
@@ -29,11 +31,11 @@ const sidesOf = (z: Rect): Seg[] => {
   ];
 };
 
-/** 토막이 테두리 변과 나란히 AIR 안에서 1px 넘게 함께 달리는지(선이 테두리에 묻힌다). */
+/** 토막이 테두리 변과 나란히 ZONE_AIR 안에서 1px 넘게 함께 달리는지(선이 테두리에 묻힌다). */
 function hugs(s: Seg, side: Seg): boolean {
   const os = orient(s);
   const ob = orient(side);
-  if (!os || !ob || os.ax !== ob.ax || Math.abs(s.a[os.ax] - side.a[os.ax]) > AIR) return false;
+  if (!os || !ob || os.ax !== ob.ax || Math.abs(s.a[os.ax] - side.a[os.ax]) > ZONE_AIR) return false;
   return Math.min(hi(s, os.al), hi(side, os.al)) - Math.max(lo(s, os.al), lo(side, os.al)) > 1;
 }
 

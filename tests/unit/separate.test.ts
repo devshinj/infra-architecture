@@ -90,6 +90,15 @@ test("펼친 영역 테두리 곁 4px 안으로 붙는 밀기는 버리고 다�
   expect(out.get("b")![2]!.x - A[2]!.x).toBeGreaterThanOrEqual(16);
 });
 
+test("영역 테두리 곁은 8px 까지 비우고(노드 상자는 4px), 8px 에 붙는 밀기도 버린다", () => {
+  const input = new Map([["a", A], ["b", B]]);
+  // 영역 왼쪽 테두리 x=84. a 를 92 로 밀면 테두리에서 8px 라 4px 여유로는 허용되지만 영역 여유 8px 로는 붙는 것이다.
+  const zones: Rect[] = [{ x: 84, y: -100, width: 516, height: 500 }];
+  const out = separateParallels(input, endsOf(input), new Map(), 16, zones);
+  expect(out.get("a")).toEqual(A);
+  expect(out.get("b")![2]!.x - A[2]!.x).toBeGreaterThanOrEqual(16);
+});
+
 test("선을 펼친 영역 밖으로(테두리 너머로) 미는 밀기는 버린다", () => {
   // a·b 모두 영역(x -50~110) 안이다. b 를 116 으로 밀면 영역 오른쪽 테두리(x=110)를 넘는다.
   const a = P([[10, 0], [10, 40], [100, 40], [100, 160], [10, 160], [10, 200]]);
