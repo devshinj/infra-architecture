@@ -24,15 +24,16 @@ async function openShop(page: Page) {
   await expect(page.locator("g.edge[data-edge-id]").first()).toBeAttached();
 }
 
-/** 공유 조각 누르는 자리 하나를 누른다(가는 선이라 좌표 대신 이벤트를 보낸다). 지나는 선 수를 돌려준다. */
-async function clickSharedSegment(page: Page): Promise<number> {
+/**
+ * 공유 조각 누르는 자리 하나를 누르고, 그 조각이 지나는 선 id 를 (화면의 펼침이 아니라 조각 자신의 data-edge-ids 에서) 돌려준다.
+ * 누르는 자리는 가는 선이라 확대해 좌표로 누르는 대신 이벤트를 직접 보낸다(좌표 의존 없이 같은 핸들러를 탄다).
+ */
+async function clickSharedSegment(page: Page): Promise<string[]> {
   const hit = page.locator(".edge-seg-hit").first();
   await expect(hit).toBeAttached();
-  const key = await hit.getAttribute("data-seg-key");
+  const ids = ((await hit.getAttribute("data-edge-ids")) ?? "").split(" ").filter(Boolean);
   await hit.dispatchEvent("click");
-  const count = await page.locator(".edge-trunk > g[data-trunk-edge]").count();
-  expect(key).toBeTruthy();
-  return count;
+  return ids;
 }
 
 test("공유 조각을 누르면 줄기가 펼쳐지고 가지·Esc 로 풀린다", async ({ page }) => {
@@ -43,18 +44,25 @@ test("공유 조각을 누르면 줄기가 펼쳐지고 가지·Esc 로 풀린�
   await expect(page.locator('[data-seg-shared="true"]').first()).toBeAttached();
   await expect(page.locator(".edge-trunk")).toHaveCount(0);
 
-  await clickSharedSegment(page);
-  const n = await page.locator(".edge-trunk g[data-trunk-edge]").count();
+  const ids = await clickSharedSegment(page);
+  const n = ids.length;
   expect(n).toBeGreaterThan(1);
+  // 조각이 지나는 선 수와 겹선·꼬리표·제목의 수가 모두 같다.
+  await expect(page.locator(".edge-trunk > g[data-trunk-edge]")).toHaveCount(n);
   await expect(page.locator(".edge-trunk-tag")).toHaveCount(n);
   await expect(page.getByRole("heading", { name: `이 줄기의 선 ${n}개` })).toBeVisible();
+  const shown = await page.locator(".edge-trunk > g[data-trunk-edge]").evaluateAll((els) => els.map((e) => e.getAttribute("data-trunk-edge")!));
+  expect([...shown].sort()).toEqual([...ids].sort());
 
-  // 가지를 누르면 줄기가 걷히고 연결 하나를 고른 상태가 된다.
-  const firstId = await page.locator(".edge-trunk g[data-trunk-edge]").first().getAttribute("data-trunk-edge");
-  await page.locator(`g.edge[data-edge-id="${firstId}"] .edge-hit`).dispatchEvent("click");
+  // 설명 탭 목록에서 선 하나를 고르면 줄기가 걷히고 그 연결 하나만 고른 상태가 된다.
+  await expect(page.locator("g.edge.edge--selected")).toHaveCount(0);
+  await page.locator("button:has([data-trunk-color])").first().click();
   await expect(page.locator(".edge-trunk")).toHaveCount(0);
   await expect(page.locator(".edge-trunk-tag")).toHaveCount(0);
   await expect(page.getByRole("heading", { name: /이 줄기의 선/ })).toHaveCount(0);
+  await expect(page.locator("g.edge.edge--selected")).toHaveCount(1);
+  const picked = await page.locator("g.edge.edge--selected").getAttribute("data-edge-id");
+  expect(ids).toContain(picked);
 
   // Esc 로 풀린다.
   await clickSharedSegment(page);

@@ -535,6 +535,7 @@ export function EdgeLayer({ layout, edges, selectedId, selectedRect, emphasis, h
                   key={s.key}
                   className="edge-seg-hit"
                   data-seg-key={s.key}
+                  data-edge-ids={s.edgeIds.join(" ")}
                   d={s.d}
                   onClick={(ev) => {
                     ev.stopPropagation();
