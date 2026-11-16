@@ -132,6 +132,20 @@ test("펼친 줄기는 선택처럼 설명 탭을 열어 선 목록을 보이고
   expect(screen.getByRole("tab", { name: "대화" })).toHaveAttribute("aria-selected", "true");
 });
 
+test("같은 줄기(key)의 목록이 줄어도 탭을 옮기지 않고, 다른 줄기를 펼치면 설명 탭으로 간다", async () => {
+  const t = { ...trunk(), key: "seg-a e-web-1-was-pair e-web-2-was-pair" };
+  const { rerender } = render(<RightPanel {...props(null)} />);
+  rerender(<RightPanel {...props(null)} trunk={t} />);
+  expect(screen.getByRole("tab", { name: "설명" })).toHaveAttribute("aria-selected", "true");
+  await userEvent.click(screen.getByRole("tab", { name: "이력" }));
+  // 보기 옵션·대화 중 명령으로 한 선이 그림에서 빠져 목록이 줄어도 같은 펼침이다.
+  rerender(<RightPanel {...props(null)} trunk={{ ...t, edges: t.edges.slice(0, 1) }} />);
+  expect(screen.getByRole("tab", { name: "이력" })).toHaveAttribute("aria-selected", "true");
+  // 다른 줄기를 펼치면 새 대상이다.
+  rerender(<RightPanel {...props(null)} trunk={{ ...t, key: "seg-b e-web-1-was-pair e-web-2-was-pair" }} />);
+  expect(screen.getByRole("tab", { name: "설명" })).toHaveAttribute("aria-selected", "true");
+});
+
 test("고른 노드에서 곧바로 줄기를 펼치면 설명 탭에 남고, 펼침이 풀리면 처음 탭으로 돌아간다", () => {
   const { rerender } = render(<RightPanel {...props(null)} />);
   rerender(<RightPanel {...props("was-1")} />);

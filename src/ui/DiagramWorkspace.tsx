@@ -533,7 +533,10 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
   const activateFlow = useCallback(
     (key: string | null) => {
       setActiveFlow(key);
-      if (key !== null) setOptions((o) => (o.selectedId === null ? o : { ...o, selectedId: null }));
+      if (key === null) return;
+      // 흐름을 켜면 선택처럼 펼침도 푼다: 흐름을 닫을 때 옛 펼침이 되살아나 설명 탭으로 끌고 가지 않게.
+      setTrunk(null);
+      setOptions((o) => (o.selectedId === null ? o : { ...o, selectedId: null }));
     },
     [setActiveFlow],
   );
@@ -1234,7 +1237,7 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
             flows={flowPanel}
             {...(narrow ? { externalTabs: { tabIdOf: mobileTabId, request: tabRequest } } : {})}
             {...(explain ? { explain } : {})}
-            {...(trunkLines ? { trunk: { edges: trunkLines, onPick: onSelect } } : {})}
+            {...(trunkLines && shownTrunk ? { trunk: { key: `${shownTrunk.segKey} ${shownTrunk.edgeIds.join(" ")}`, edges: trunkLines, onPick: onSelect } } : {})}
             {...(selKind === "node" || selKind === "group"
               ? {
                   ask: {

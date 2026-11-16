@@ -60,8 +60,9 @@ export function RightPanel({ state, selectedId, onSelect, onMention, mentionDisa
     onTabChange?.(t);
   };
   const [before, setBefore] = useState<Tab | null>(null); // tab to return to when the selection clears
-  // 설명 탭이 보여 줄 대상: 선택, 없으면 펼친 줄기(선 목록). 줄기는 연결 id 로 묶어 다른 줄기를 펼치면 새 대상으로 친다.
-  const focusKey = selectedId ?? (trunk ? `\u0000trunk:${trunk.edges.map((e) => e.id).join(" ")}` : null);
+  // 설명 탭이 보여 줄 대상: 선택, 없으면 펼친 줄기(선 목록). 줄기는 변하지 않는 key 로 센다: 그림에 맞춰 목록이 줄어도
+  // 같은 펼침이라 탭을 옮기지 않고, 다른 줄기를 펼치면 새 대상이다.
+  const focusKey = selectedId ?? (trunk ? `\u0000trunk:${trunk.key ?? trunk.edges.map((e) => e.id).join(" ")}` : null);
   const seenSelected = useRef<string | null>(focusKey);
 
   // Any new selection (or a newly opened trunk) switches to 설명 (remembering the tab we left); clearing it returns there.

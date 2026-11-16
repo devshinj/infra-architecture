@@ -1656,6 +1656,20 @@ describe("줄기 펼치기", () => {
     expect(hookState.trunk.at(-1)).toBeNull();
   });
 
+  test("흐름을 켜면 펼침이 풀린다: 흐름을 닫아도 옛 펼침이 돌아오지 않고 흐름 탭에 남는다", async () => {
+    hookState.busy = false;
+    stubFlows();
+    render(ui(flowLatest() as never));
+    open({ ...sel, edgeIds: ["e1"] });
+    expect(screen.getByRole("tab", { name: "설명" })).toHaveAttribute("aria-selected", "true");
+    await openFlow();
+    expect(hookState.flow.at(-1)).not.toBeNull();
+    fireEvent.keyDown(document.body, { key: "Escape" });
+    expect(hookState.flow.at(-1)).toBeNull();
+    expect(hookState.trunk.at(-1)).toBeNull();
+    expect(screen.getByRole("tab", { name: "흐름" })).toHaveAttribute("aria-selected", "true");
+  });
+
   test("새 서버 상태를 받아 펼친 선 가운데 하나라도 없어지면 펼침이 풀린다", () => {
     hookState.busy = false;
     const { rerender } = render(ui(trunkLatest(1) as never));
@@ -1669,6 +1683,21 @@ describe("줄기 펼치기", () => {
     expect(hookState.trunk.at(-1)).toBeNull();
     expect(screen.queryByRole("list", { name: /이 줄기의 선/ })).toBeNull();
     expect(screen.getByRole("tab", { name: "대화" })).toHaveAttribute("aria-selected", "true");
+  });
+
+  test("대화 중 명령으로 펼친 선 하나가 그림에서 빠져도 목록만 줄고, 다른 탭으로 간 사용자를 설명 탭으로 데려가지 않는다", () => {
+    hookState.busy = true;
+    try {
+      render(ui(trunkLatest() as never));
+      open();
+      fireEvent.click(screen.getByRole("tab", { name: "이력" }));
+      act(() => hookState.onCommand!({ op: "remove_edge", id: "e2" }));
+      expect(screen.getByRole("tab", { name: "이력" })).toHaveAttribute("aria-selected", "true");
+      fireEvent.click(screen.getByRole("tab", { name: "설명" }));
+      expect(within(screen.getByRole("list", { name: "이 줄기의 선 1개" })).getAllByRole("button").map((b) => b.textContent)).toEqual(["a → b · HTTP"]);
+    } finally {
+      hookState.busy = false;
+    }
   });
 
   test("대화 차례가 끝나 받은 판에서 펼친 선이 사라져도 펼침이 풀린다", () => {

@@ -55,6 +55,8 @@ export interface NodeInfoProps {
 }
 
 export interface TrunkList {
+  /** 이 펼침의 변하지 않는 이름(누른 조각 + 펼친 연결 모두). 목록이 그림에 맞춰 줄어도 같다. 없으면 목록 연결 id 로 센다. */
+  key?: string;
   edges: { id: string; from: string; to: string; label?: string; color: number }[];
   onPick(id: string): void;
 }
