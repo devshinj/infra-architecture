@@ -178,5 +178,25 @@
       "aspect": 12.062409766454351,
       "zoneHeadCrossings": 53
     }
+  },
+  "state-portal": {
+    "default": {
+      "crossings": 1,
+      "sharedPx": 48,
+      "parallelPx": 0,
+      "throughNode": 0,
+      "bends": 17,
+      "aspect": 3.442514734774067,
+      "zoneHeadCrossings": 0
+    },
+    "expanded": {
+      "crossings": 1,
+      "sharedPx": 48,
+      "parallelPx": 0,
+      "throughNode": 0,
+      "bends": 17,
+      "aspect": 3.442514734774067,
+      "zoneHeadCrossings": 0
+    }
   }
 }

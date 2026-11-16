@@ -21,6 +21,7 @@ import { fx } from "../fixtures/spike";
 // (state-25 934→88, state-50 펼친 화면 4614→0, state-100 펼친 화면 2816→0), 교차도 줄었다(s1 2→1, s4 29→26,
 // state-25 10→2, state-100 펼친 화면 136→124). 꺾임은 그대로, 대신 붐비던 틈만큼 구성도가 16~32px 길어졌다.
 // state-25 에 남은 88px 는 외부 연결이 아닌 부하 분산기 두 선이다.
+// state-portal(2026-11-16): 실제 사용자포털 구성도(식별 정보 걷어냄)를 기준 구성도로 넣었다. 연결선 경로·가독성 개선(feat/edge-routing)의 전후를 같은 구성도로 견주려는 것이다.
 // zoneHeadCrossings(펼친 영역 이름 알약 자리를 지나는 선)는 기하로만 잰다: 사용자 결정으로 알약을 연결선 위 층(ZoneNameLayer)에 그려
 // 선이 알약 뒤로 지나가므로, 배치는 이 자리를 피하지 않는다.
 const baseline = JSON.parse(readFileSync(join(process.cwd(), "tests/fixtures/layout/baseline.json"), "utf8")) as Record<
