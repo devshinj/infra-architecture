@@ -99,8 +99,8 @@
 .edge-boundary-tag__dir-halo { stroke: var(--bg-canvas); stroke-width: 4px; }
 .edge-boundary-tag__dir-line { stroke: var(--boundary-mark); stroke-width: 1.5px; }
 
-/* 공유 조각 누르는 자리: 보이지 않는 굵은 선. 굵기 --hit 은 화면에서 24px 이상(캔버스가 줄수록 그만큼 굵게). 선별 누르는 자리보다 위에 그려진다. */
-.edge-seg-hit { --hit: max(24px, calc(24px / var(--zoom, 1))); fill: none; stroke: transparent; stroke-width: var(--hit); stroke-linecap: butt; pointer-events: stroke; cursor: pointer; }
+/* 공유 조각 누르는 자리: 보이지 않는 굵은 선. 굵기 --hit 은 화면에서 24px 이상(캔버스가 줄수록 그만큼 굵게), 캔버스 26px 에서 멈춰 이웃 평행선(16px 간격)을 덮지 않게 한다. 선별 누르는 자리보다 위에 그려진다. */
+.edge-seg-hit { --hit: max(24px, calc(24px / var(--zoom, 1))); fill: none; stroke: transparent; stroke-width: min(var(--hit), 26px); stroke-linecap: butt; pointer-events: stroke; cursor: pointer; }
 
 /* 펼친 줄기: 연결마다 제 색 겹선. 눌린 공유 조각(spine)은 색 없이 선 종류의 밝은 색으로 위에 둔다. */
 .edge-trunk path { fill: none; pointer-events: none; }

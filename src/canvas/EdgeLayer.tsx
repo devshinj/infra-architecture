@@ -6,7 +6,7 @@ import { shortLabel } from "@/domain/flows";
 
 import "./edges.css";
 import type { DisplayEdge } from "./display";
-import { boundaryDotAt, labelBox, mergedLabels, stepLabels, tagSpots, type Box } from "./edgeLabels";
+import { boundaryDotAt, labelBox, mergedLabels, stepLabels, tagSpots, type Box, type PlacedLabel } from "./edgeLabels";
 import { emphasisOf, type Emphasis } from "./emphasis";
 import type { Layout, Rect } from "./layout";
 import { MediumMark, pointAlong } from "./mediumMark";
@@ -131,7 +131,7 @@ export function EdgeLayer({ layout, edges, selectedId, selectedRect, emphasis, h
   const svgRef = useRef<SVGSVGElement>(null);
   const [hovered, setHovered] = useState<string | null>(null);
   // 공유 조각에 올린 마우스: 그 조각을 지나는 연결 전부(호버 겹선으로 밝힌다).
-  const [hoveredSeg, setHoveredSeg] = useState<string[] | null>(null);
+  const [hoveredSeg, setHoveredSeg] = useState<string | null>(null);
 
   const byId = useMemo(() => new Map(edges.map((e) => [e.id, e])), [edges]);
   const laid = useMemo(() => layout.edges.filter((e) => byId.has(e.id) && e.points.length >= 2), [layout.edges, byId]);
@@ -159,6 +159,8 @@ export function EdgeLayer({ layout, edges, selectedId, selectedRect, emphasis, h
     const ids = trunkProp.edgeIds.filter((i) => laid.some((l) => l.id === i));
     return ids.length > 0 ? { ...trunkProp, edgeIds: ids } : null;
   }, [trunkProp, steps, laid]);
+  // 색 차례는 처음 펼친 연결 차례(일부가 사라져도 남은 선의 색은 그대로).
+  const trunkIndex = useMemo(() => new Map((trunkProp?.edgeIds ?? []).map((id, i) => [id, i])), [trunkProp]);
   const trunkEmphasis = useMemo<Emphasis | null>(() => {
     if (!trunk) return null;
     const nodes = new Set<string>();
@@ -179,11 +181,13 @@ export function EdgeLayer({ layout, edges, selectedId, selectedRect, emphasis, h
   const hov = useMemo<Emphasis | null>(() => {
     if (selectedId !== null || steps || trunk) return null;
     if (hoveredSeg) {
-      const ids = hoveredSeg.filter((i) => byId.has(i));
+      // 조각 키로 지금 묶음에서 다시 찾는다(배치가 바뀌어 사라졌으면 호버 없음).
+      const seg = bundles.flatMap((b) => b.segments).find((x) => x.key === hoveredSeg);
+      const ids = (seg?.edgeIds ?? []).filter((i) => byId.has(i));
       if (ids.length > 0) return { nodes: new Set(ids.flatMap((i) => [byId.get(i)!.from, byId.get(i)!.to])), edges: new Set(ids) };
     }
     return emphasisOf(edges, hoverId);
-  }, [edges, selectedId, hoverId, steps, trunk, hoveredSeg, byId]);
+  }, [edges, selectedId, hoverId, steps, trunk, hoveredSeg, byId, bundles]);
   const incident = useMemo(() => sel?.edges ?? new Set<string>(), [sel]);
   const isSelectedEdge = (e: DisplayEdge) => selectedId !== null && (e.id === selectedId || e.sourceEdgeIds.includes(selectedId));
   const isDim = (ids: string[]) => sel !== null && !ids.some((i) => sel.edges.has(i));
@@ -280,11 +284,24 @@ export function EdgeLayer({ layout, edges, selectedId, selectedRect, emphasis, h
     return items.map((it, i) => ({ id: it.id, pill: it.pill, width: it.width, detail: it.detail, x: spots[i].x, y: spots[i].y }));
   }, [steps, stepIds, selectedId, sel, laid, dots, byId, nodeRects, stepPlaced, dotBoxes, merged, mergedIds]);
 
+  // 펼친 줄기의 연결 이름: 숨었던 이름의 자리(labelAt)는 공유 조각 가운데라 서로 겹치므로, 그린 뒤 노드·서로·경계 점을 피해 제 선을 따라 비킨다.
+  const trunkNames = useMemo(() => {
+    const out = new Map<string, PlacedLabel>();
+    if (!trunk) return out;
+    const items = trunk.edgeIds.flatMap((id) => {
+      const l = laid.find((x) => x.id === id);
+      const e = byId.get(id);
+      return l && e?.label && l.labelAt ? [{ text: e.label, points: l.points, labelAt: l.labelAt, id }] : [];
+    });
+    for (const p of stepLabels(items, nodeRects, dotBoxes)) out.set(p.edgeIds[0], p);
+    return out;
+  }, [trunk, laid, byId, nodeRects, dotBoxes]);
+
   // 줄기 꼬리표: 연결마다 먼 끝 이름. 첫 후보는 먼 쪽 가지 조각 들어서는 곳, 서로·노드·보이는 연결 이름과 겹치지 않게 비킨다.
   const trunkTags = useMemo(() => {
     if (!trunk) return [];
     const segs = bundles.flatMap((b) => b.segments.map((s) => ({ edgeIds: s.edgeIds, pts: s.pts })));
-    const items = trunk.edgeIds.flatMap((id, i) => {
+    const items = trunk.edgeIds.flatMap((id) => {
       const l = laid.find((x) => x.id === id);
       const e = byId.get(id);
       if (!l || !e) return [];
@@ -292,20 +309,16 @@ export function EdgeLayer({ layout, edges, selectedId, selectedRect, emphasis, h
       const text = endName?.(far) ?? far;
       const spot = branchSpot(l.points, trunk.at, segs, id);
       const width = textWidth(text, TRUNK_TAG.font) + 2 * TRUNK_TAG.padX;
-      return [{ text, width, height: TRUNK_TAG.height, points: l.points, ...(spot ? { labelAt: spot } : {}), id, color: trunkColor(i) }];
+      return [{ text, width, height: TRUNK_TAG.height, points: l.points, ...(spot ? { labelAt: spot } : {}), id, color: trunkColor(trunkIndex.get(id) ?? 0) }];
     });
-    const shownNames: Box[] = [];
-    for (const l of laid) {
-      const e = byId.get(l.id)!;
-      if (trunk.edgeIds.includes(l.id) && e.label && l.labelAt) shownNames.push(labelBox({ text: e.label, x: l.labelAt.x, y: l.labelAt.y, anchor: "middle" }));
-    }
+    const shownNames: Box[] = [...trunkNames.values()].map(labelBox);
     const spots = tagSpots(items, nodeRects, [], [...dotBoxes, ...shownNames]);
     const at = new Map(spots.map((p) => [p.edgeIds[0], p]));
     return items.flatMap((it) => {
       const p = at.get(it.id);
       return p ? [{ id: it.id, color: it.color, text: it.text, width: it.width, x: p.x, y: p.y }] : [];
     });
-  }, [trunk, bundles, laid, byId, endName, nodeRects, dotBoxes]);
+  }, [trunk, trunkIndex, trunkNames, bundles, laid, byId, endName, nodeRects, dotBoxes]);
   // 눌린 공유 조각: 색 겹선 위에 색 없이 다시 그려 줄기 몸통으로 보이게 한다.
   const trunkSpine = useMemo(() => (trunk ? bundles.flatMap((b) => b.segments).find((s) => s.key === trunk.segKey) : undefined), [trunk, bundles]);
 
@@ -429,13 +442,13 @@ export function EdgeLayer({ layout, edges, selectedId, selectedRect, emphasis, h
       {/* 2b. 펼친 줄기: 연결마다 제 색 겹선(선 종류 모양은 그대로). 눌린 공유 조각은 색 없이 밝은 선으로 위에 다시 그린다. */}
       {trunk && (
         <g className="edge-trunk">
-          {trunk.edgeIds.map((id, i) => {
+          {trunk.edgeIds.map((id) => {
             const l = laid.find((x) => x.id === id);
             const e = byId.get(id);
             if (!l || !e) return null;
             const arrow = arrowD(l.points, EMPH_ARROW);
             return (
-              <g key={id} data-trunk-edge={id} data-trunk-color={trunkColor(i)}>
+              <g key={id} data-trunk-edge={id} data-trunk-color={trunkColor(trunkIndex.get(id) ?? 0)}>
                 <path className={`edge-trunk__line edge-line edge-line--${e.edgeKind}`} d={toD(l.points)} />
                 {e.edgeKind === "replication" && <path className="edge-trunk__core edge-line edge-line--replication-core" d={toD(l.points)} />}
                 {arrow && <path className="edge-trunk__arrow edge-arrow" d={arrow} />}
@@ -499,7 +512,7 @@ export function EdgeLayer({ layout, edges, selectedId, selectedRect, emphasis, h
               }}
             />
             {showLabel && (
-              <text className="edge-label" x={l.labelAt!.x} y={l.labelAt!.y}>
+              <text className="edge-label" x={trunkNames.get(e.id)?.x ?? l.labelAt!.x} y={trunkNames.get(e.id)?.y ?? l.labelAt!.y}>
                 {labelText}
               </text>
             )}
@@ -512,7 +525,7 @@ export function EdgeLayer({ layout, edges, selectedId, selectedRect, emphasis, h
       })}
 
       {/* 4b. 공유 조각 누르는 자리: 선별 누르는 자리보다 위에 그려 먼저 잡힌다(흐름을 보는 중에는 없다). */}
-      {!steps && (
+      {!steps && onTrunkClick && (
         <g className="edge-seg-hits">
           {bundles.flatMap((b) =>
             b.segments
@@ -525,10 +538,10 @@ export function EdgeLayer({ layout, edges, selectedId, selectedRect, emphasis, h
                   d={s.d}
                   onClick={(ev) => {
                     ev.stopPropagation();
-                    onTrunkClick?.({ segKey: s.key, edgeIds: [...s.edgeIds], at: canvasPoint(ev, s.pts) });
+                    onTrunkClick({ segKey: s.key, edgeIds: [...s.edgeIds], at: canvasPoint(ev, s.pts) });
                   }}
-                  onMouseEnter={() => setHoveredSeg(s.edgeIds)}
-                  onMouseLeave={() => setHoveredSeg((h) => (h === s.edgeIds ? null : h))}
+                  onMouseEnter={() => setHoveredSeg(s.key)}
+                  onMouseLeave={() => setHoveredSeg((h) => (h === s.key ? null : h))}
                 />
               )),
           )}

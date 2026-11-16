@@ -4,6 +4,7 @@ import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
 import { EdgeLayer } from "@/canvas/EdgeLayer";
 import type { DisplayEdge } from "@/canvas/display";
+import { labelBox, NODE_RING, tooClose } from "@/canvas/edgeLabels";
 import type { Layout } from "@/canvas/layout";
 import * as motion from "@/canvas/motion";
 
@@ -217,7 +218,7 @@ test("selecting a node overlays each incident edge once with its own kind", () =
 });
 
 test("layers are ordered base, emphasis, motion, edges, then the shared-segment press targets", () => {
-  render(<EdgeLayer layout={fanOutLayout} edges={fanOutEdges} {...base} selectedId="w1" />);
+  render(<EdgeLayer layout={fanOutLayout} edges={fanOutEdges} {...base} selectedId="w1" onTrunkClick={vi.fn()} />);
   const svg = document.querySelector("svg.edge-layer")!;
   const order = [...svg.children].map((c) =>
     c.classList.contains("edge-base") ? "base" : c.classList.contains("edge-emph") ? "emph" : c.classList.contains("edge-motion") ? "motion" : c.classList.contains("edge") ? "edge" : c.classList.contains("edge-seg-hits") ? "hits" : "?",
@@ -550,7 +551,7 @@ const trunkSel = { segKey: "k", edgeIds: ["e1", "e2", "e3"], at: { x: 165, y: 80
 const trunkProps = { ...base, hoverLabels: false };
 
 test("each shared segment gets one press target, solo segments get none", () => {
-  render(<EdgeLayer layout={trunkLayout} edges={trunkEdges} {...trunkProps} />);
+  render(<EdgeLayer layout={trunkLayout} edges={trunkEdges} {...trunkProps} onTrunkClick={vi.fn()} />);
   const hits = [...document.querySelectorAll(".edge-seg-hit")];
   expect(hits).toHaveLength(1);
   expect(hits[0].getAttribute("data-seg-key")).toBeTruthy();
@@ -603,7 +604,7 @@ test("a trunk keeps the others dim and shows its edges' own names even with name
 });
 
 test("hovering a shared segment lights all its edges with the hover overlay, no colours or tags", () => {
-  render(<EdgeLayer layout={trunkLayout} edges={trunkEdges} {...trunkProps} />);
+  render(<EdgeLayer layout={trunkLayout} edges={trunkEdges} {...trunkProps} onTrunkClick={vi.fn()} />);
   fireEvent.mouseEnter(document.querySelector(".edge-seg-hit")!);
   const emph = document.querySelector('.edge-emph[data-mode="hover"]')!;
   expect([...emph.querySelectorAll("[data-emph-edge]")].map((g) => g.getAttribute("data-emph-edge")).sort()).toEqual(["e1", "e2", "e3"]);
@@ -611,4 +612,54 @@ test("hovering a shared segment lights all its edges with the hover overlay, no 
   expect(document.querySelector(".edge-trunk-tag")).toBeNull();
   fireEvent.mouseLeave(document.querySelector(".edge-seg-hit")!);
   expect(document.querySelector(".edge-emph")).toBeNull();
+});
+
+test("without a trunk handler there are no shared-segment hits and the edge hit selects", () => {
+  const onSelect = vi.fn();
+  render(<EdgeLayer layout={trunkLayout} edges={trunkEdges} {...trunkProps} onSelect={onSelect} />);
+  expect(document.querySelector(".edge-seg-hit")).toBeNull();
+  fireEvent.click(document.querySelector('[data-edge-id="e1"] .edge-hit')!);
+  expect(onSelect).toHaveBeenCalledWith("e1");
+});
+
+test("a shared-segment hover is dropped when that segment vanishes while hovered", () => {
+  const { rerender } = render(<EdgeLayer layout={trunkLayout} edges={trunkEdges} {...trunkProps} onTrunkClick={vi.fn()} />);
+  fireEvent.mouseEnter(document.querySelector(".edge-seg-hit")!);
+  expect(document.querySelector('.edge-emph[data-mode="hover"]')).not.toBeNull();
+  rerender(<EdgeLayer layout={lay([trunkLayout.edges[3]])} edges={[trunkEdges[3]]} {...trunkProps} onTrunkClick={vi.fn()} />);
+  expect(document.querySelector(".edge-emph")).toBeNull();
+});
+
+test("flow view ignores the trunk and has no shared-segment hits", () => {
+  render(
+    <EdgeLayer layout={trunkLayout} edges={trunkEdges} {...trunkProps} onTrunkClick={vi.fn()} trunk={trunkSel} flowSteps={[{ displayEdgeId: "e4", n: 1, short: "x" }]} />,
+  );
+  expect(document.querySelector(".edge-seg-hit")).toBeNull();
+  expect(document.querySelector(".edge-trunk")).toBeNull();
+  expect(document.querySelector(".edge-trunk-tag")).toBeNull();
+});
+
+test("a trunk with vanished edges draws only the survivors and keeps their colours", () => {
+  render(<EdgeLayer layout={trunkLayout} edges={trunkEdges} {...trunkProps} trunk={{ ...trunkSel, edgeIds: ["e1", "gone", "e3"] }} />);
+  const gs = [...document.querySelectorAll(".edge-trunk g[data-trunk-edge]")];
+  expect(gs.map((g) => [g.getAttribute("data-trunk-edge"), g.getAttribute("data-trunk-color")])).toEqual([["e1", "0"], ["e3", "2"]]);
+  expect([...document.querySelectorAll(".edge-trunk-tag")].map((t) => t.getAttribute("data-trunk-color"))).toEqual(["0", "2"]);
+});
+
+test("trunk names whose raw spots coincide are placed apart from each other and from node rings", () => {
+  const rect = { id: "alb", x: 140, y: 20, width: 50, height: 32 };
+  const stacked: Layout = {
+    ...lay(trunkLayout.edges.slice(0, 3).map((l) => ({ ...l, labelAt: { x: 165, y: 80 } }))),
+    nodes: { alb: rect as Layout["nodes"][string] },
+  };
+  render(<EdgeLayer layout={stacked} edges={trunkEdges.slice(0, 3)} {...trunkProps} trunk={trunkSel} />);
+  const texts = [...document.querySelectorAll("text.edge-label")];
+  expect(texts).toHaveLength(3);
+  const boxes = texts.map((t) => labelBox({ text: t.textContent!, x: Number(t.getAttribute("x")), y: Number(t.getAttribute("y")), anchor: "middle" }));
+  for (let i = 0; i < boxes.length; i++) {
+    for (let j = i + 1; j < boxes.length; j++) expect(tooClose(boxes[i], boxes[j]), `${i}-${j}`).toBe(false);
+    const ring = { x1: rect.x - NODE_RING, y1: rect.y - NODE_RING, x2: rect.x + rect.width + NODE_RING, y2: rect.y + rect.height + NODE_RING };
+    const b = boxes[i];
+    expect(b.x1 < ring.x2 && ring.x1 < b.x2 && b.y1 < ring.y2 && ring.y1 < b.y2).toBe(false);
+  }
 });
