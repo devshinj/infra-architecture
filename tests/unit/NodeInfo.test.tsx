@@ -434,3 +434,43 @@ test("a selected zone shows its explanation with the boundary section and a zone
   expect(screen.getByText("직원 PC 의 요청만 들어옵니다.")).toBeInTheDocument();
   expect(screen.getByLabelText("이 영역에 대해 물어보기")).toBeInTheDocument();
 });
+
+// ---- 펼친 줄기의 선 목록 ----
+const trunkList = (onPick = vi.fn()) => ({
+  edges: [
+    { id: "e1", from: "ALB", to: "웹 1", label: "HTTP", color: 0 },
+    { id: "e2", from: "ALB", to: "웹 2", color: 1 },
+    { id: "e3", from: "ALB", to: "웹 3", label: "HTTPS", color: 2 },
+  ],
+  onPick,
+});
+
+test("펼친 줄기: '이 줄기의 선 3개' 머리와 줄마다 버튼, 누르면 그 연결로 onPick", async () => {
+  const onPick = vi.fn();
+  render(<NodeInfo state={fx("s2")} selectedId={null} onSelect={vi.fn()} trunk={trunkList(onPick)} />);
+  expect(screen.getByRole("heading", { name: "이 줄기의 선 3개" })).toBeInTheDocument();
+  const list = screen.getByRole("list", { name: "이 줄기의 선 3개" });
+  const rows = within(list).getAllByRole("button");
+  expect(rows.map((b) => b.textContent)).toEqual(["ALB → 웹 1 · HTTP", "ALB → 웹 2", "ALB → 웹 3 · HTTPS"]);
+  // 색 표지는 캔버스 겹선과 같은 차례 번호(꾸밈이라 보조기기에는 숨긴다).
+  expect(rows.map((b) => b.querySelector("[data-trunk-color]")!.getAttribute("data-trunk-color"))).toEqual(["0", "1", "2"]);
+  for (const b of rows) expect(b.querySelector("[data-trunk-color]")).toHaveAttribute("aria-hidden", "true");
+  await userEvent.click(rows[1]);
+  expect(onPick).toHaveBeenCalledWith("e2");
+  // 빈 선택 안내 대신 목록이 보인다.
+  expect(screen.queryByText(/선택하면 설명이 여기에 표시돼요/)).toBeNull();
+});
+
+test("펼친 줄기 목록은 Tab 으로 차례로 닿고 Enter 로 고른다", async () => {
+  const onPick = vi.fn();
+  render(<NodeInfo state={fx("s2")} selectedId={null} onSelect={vi.fn()} trunk={trunkList(onPick)} />);
+  const rows = within(screen.getByRole("list", { name: "이 줄기의 선 3개" })).getAllByRole("button");
+  await userEvent.tab();
+  expect(rows[0]).toHaveFocus();
+  await userEvent.tab();
+  expect(rows[1]).toHaveFocus();
+  await userEvent.tab();
+  expect(rows[2]).toHaveFocus();
+  await userEvent.keyboard("{Enter}");
+  expect(onPick).toHaveBeenCalledWith("e3");
+});

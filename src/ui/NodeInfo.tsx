@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 
 import { confirmLinkGuessAction, rejectLinkGuessAction } from "@/app/(app)/actions";
 import { CategoryIcon } from "@/canvas/icons";
@@ -47,6 +47,16 @@ export interface NodeInfoProps {
   flows?: { list: Flow[]; onOpen(key: string): void };
   /** AI 가 스스로 넣은 망연계 노드의 맞아요·아니에요. 없으면(이력 보기 등) 추정 표시만 보인다. */
   linkGuess?: LinkGuessSave;
+  /**
+   * 캔버스에서 펼친 줄기의 선 목록(선택이 없을 때만 보인다). from·to 는 표시 그래프의 이름, color 는 캔버스 겹선과 같은 색 차례.
+   * 줄을 누르면(키보드로도) onPick(그 표시 연결 id): 캔버스에서 그 선을 고른 것과 같다.
+   */
+  trunk?: TrunkList;
+}
+
+export interface TrunkList {
+  edges: { id: string; from: string; to: string; label?: string; color: number }[];
+  onPick(id: string): void;
 }
 
 /** 저장 대상 구성도, 차례 중 막기, 저장 뒤 최신 버전 다시 불러오기(partial: 일부만 되돌렸다). */
@@ -329,11 +339,35 @@ function GroupInfo({ state, group, onSelect, onMention, mentionDisabled, explain
   );
 }
 
+/** 펼친 줄기의 선 목록: 줄마다 색 표지(캔버스 겹선과 같은 색) + "출발 → 도착 · 이름". 누르면 그 선을 고른다. */
+function TrunkLines({ trunk }: { trunk: TrunkList }) {
+  const headId = useId();
+  return (
+    <div className={styles.info}>
+      <h2 id={headId} className={styles.title}>{`이 줄기의 선 ${trunk.edges.length}개`}</h2>
+      <ul className={styles.relations} aria-labelledby={headId}>
+        {trunk.edges.map((e) => (
+          <li key={e.id} className={styles.relation}>
+            <button type="button" className={`${styles.chip} ${styles.trunkRow}`} onClick={() => trunk.onPick(e.id)}>
+              <span className={styles.trunkSwatch} data-trunk-color={e.color} style={{ "--trunk-color": `var(--edge-trunk-${e.color})` } as React.CSSProperties} aria-hidden="true" />
+              <span>
+                <ArrowPair a={e.from} b={e.to} />
+                {e.label ? ` · ${e.label}` : ""}
+              </span>
+            </button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 const PAYLOAD_NAME = { api: "API", file: "파일" } as const;
 const DIRECTION_NAME = { one_way: "단방향", two_way: "양방향" } as const;
 
-export function NodeInfo({ state, selectedId, onSelect, onMention, mentionDisabled, warningState, explain, ask, flows, linkGuess, ...caution }: NodeInfoProps) {
+export function NodeInfo({ state, selectedId, onSelect, onMention, mentionDisabled, warningState, explain, ask, flows, linkGuess, trunk, ...caution }: NodeInfoProps) {
   const knowledge = useNetworkKnowledge();
+  if (selectedId === null && trunk) return <TrunkLines trunk={trunk} />;
   if (selectedId === null) return <p className={styles.empty}>캔버스에서 노드나 영역 이름을 선택하면 설명이 여기에 표시돼요.</p>;
 
   const warnings = mergeWarnings(warningState ?? state, knowledge ?? undefined);

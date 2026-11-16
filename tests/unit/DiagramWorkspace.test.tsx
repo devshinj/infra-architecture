@@ -2,7 +2,7 @@ import "@testing-library/jest-dom/vitest";
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
-const hookState = vi.hoisted(() => ({ send: vi.fn(), busy: false, onCommand: null as null | ((c: unknown) => void), badgeFns: [] as unknown[], warnFns: [] as unknown[], lines: [] as unknown[], insets: [] as unknown[], focus: [] as unknown[], turn: null as null | { onDone(): void; onInterrupted(): void; onRelayout?(): void; onSessionLines?(key: string, fn: (ls: { id: string; kind: string; text: string }[]) => { id: string; kind: string; text: string }[]): void }, pushLine: vi.fn(), pinned: [] as unknown[], fitRequest: [] as unknown[], fitAll: [] as unknown[], placed: null as null | ((locate: (id: string) => { x: number; y: number } | null) => void), flow: [] as unknown[], selected: [] as unknown[], turnMarks: [] as unknown[], frames: [] as unknown[], refresh: vi.fn(), rfNodes: false }));
+const hookState = vi.hoisted(() => ({ send: vi.fn(), busy: false, onCommand: null as null | ((c: unknown) => void), badgeFns: [] as unknown[], warnFns: [] as unknown[], lines: [] as unknown[], insets: [] as unknown[], focus: [] as unknown[], turn: null as null | { onDone(): void; onInterrupted(): void; onRelayout?(): void; onSessionLines?(key: string, fn: (ls: { id: string; kind: string; text: string }[]) => { id: string; kind: string; text: string }[]): void }, pushLine: vi.fn(), pinned: [] as unknown[], fitRequest: [] as unknown[], fitAll: [] as unknown[], placed: null as null | ((locate: (id: string) => { x: number; y: number } | null) => void), flow: [] as unknown[], selected: [] as unknown[], turnMarks: [] as unknown[], frames: [] as unknown[], refresh: vi.fn(), rfNodes: false, trunk: [] as unknown[], trunkChange: null as null | ((t: { segKey: string; edgeIds: string[]; at: { x: number; y: number } } | null) => void) }));
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: hookState.refresh }) }));
 vi.mock("@/app/(app)/actions", () => ({
@@ -17,8 +17,10 @@ vi.mock("@/app/(app)/actions", () => ({
   renameFlowAction: vi.fn(async () => ({ ok: true })), deleteFlowAction: vi.fn(async () => ({ ok: true })), confirmFlowAction: vi.fn(async () => ({ ok: true })), removeFlowStepAction: vi.fn(async () => ({ ok: true })),
 }));
 vi.mock("@/canvas/Canvas", () => ({
-  Canvas: ({ flow, options, state, pinned, fitRequest, fitAllSignal, onAutoArrange, fitKey, cameraInsets, focusRequest, onMention, onAskNode, onBadgeClick, onWarnBadgeClick, onSelect, onImportSample, onPlaced, turnMarks, frameRequest }: { frameRequest?: { ids: string[]; token: number }; turnMarks?: { added: Set<string>; changed: Set<string> }; flow?: unknown; options: { selectedId: string | null }; onAskNode?: (id: string) => void;  onPlaced?: (l: (id: string) => { x: number; y: number } | null) => void; onImportSample?: (id: string) => void; state: { nodes: object }; pinned: unknown; fitRequest?: unknown; fitAllSignal?: unknown; onAutoArrange(): void; fitKey?: string; cameraInsets?: unknown; focusRequest?: unknown; onMention?: (id: string) => void; onBadgeClick?: (id: string) => void; onWarnBadgeClick?: (id: string) => void; onSelect: (id: string | null) => void }) => {
+  Canvas: ({ flow, options, state, pinned, fitRequest, fitAllSignal, onAutoArrange, fitKey, cameraInsets, focusRequest, onMention, onAskNode, onBadgeClick, onWarnBadgeClick, onSelect, onImportSample, onPlaced, turnMarks, frameRequest, trunk, onTrunkChange }: { trunk?: unknown; onTrunkChange?: (t: { segKey: string; edgeIds: string[]; at: { x: number; y: number } } | null) => void; frameRequest?: { ids: string[]; token: number }; turnMarks?: { added: Set<string>; changed: Set<string> }; flow?: unknown; options: { selectedId: string | null }; onAskNode?: (id: string) => void;  onPlaced?: (l: (id: string) => { x: number; y: number } | null) => void; onImportSample?: (id: string) => void; state: { nodes: object }; pinned: unknown; fitRequest?: unknown; fitAllSignal?: unknown; onAutoArrange(): void; fitKey?: string; cameraInsets?: unknown; focusRequest?: unknown; onMention?: (id: string) => void; onBadgeClick?: (id: string) => void; onWarnBadgeClick?: (id: string) => void; onSelect: (id: string | null) => void }) => {
     hookState.flow.push(flow ?? null);
+    hookState.trunk.push(trunk ?? null);
+    hookState.trunkChange = onTrunkChange ?? null;
     hookState.selected.push(options.selectedId);
     hookState.turnMarks.push(turnMarks ?? null);
     hookState.frames.push(frameRequest ?? null);
@@ -1591,4 +1593,110 @@ test("narrow: no floating legend over the canvas (it lives in the 보기 menu); 
 test("NARROW_QUERY covers phones held sideways (short landscape) as well as narrow portrait", () => {
   expect(NARROW_QUERY).toContain("(max-width: 640px)");
   expect(NARROW_QUERY).toContain("(max-height: 480px) and (orientation: landscape)");
+});
+
+// ---- 줄기 펼치기 ----
+describe("줄기 펼치기", () => {
+  type Sel = { segKey: string; edgeIds: string[]; at: { x: number; y: number } };
+  const sel: Sel = { segKey: "k", edgeIds: ["e1", "e2"], at: { x: 1, y: 1 } };
+  // e1·e1b 는 같은 두 끝이라 표시 그래프에서 e1 하나로 합쳐진다(원래 연결 여럿을 합친 표시 연결).
+  const allEdges = {
+    e1: { id: "e1", from: "a", to: "b", edgeKind: "request", label: "HTTP" },
+    e1b: { id: "e1b", from: "a", to: "b", edgeKind: "request", label: "HTTPS" },
+    e2: { id: "e2", from: "a", to: "c", edgeKind: "request" },
+  };
+  const trunkLatest = (number = 1, edges: Record<string, unknown> = allEdges, extra: string[] = []) => ({
+    number,
+    state: { ...emptyState(), nodes: Object.fromEntries([web("a"), web("b"), web("c"), ...extra.map(web)]), edges },
+  });
+  const open = (t: Sel = sel) => act(() => hookState.trunkChange!(t));
+  const panelText = () => screen.getByRole("tabpanel").textContent;
+
+  test("펼치면 선택이 풀리고, 펼친 동안 노드를 고르면 펼침이 풀린다. Esc 도 푼다", () => {
+    hookState.busy = false;
+    render(ui(trunkLatest() as never));
+    expect(hookState.trunk.at(-1)).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "선택a" }));
+    expect(hookState.selected.at(-1)).toBe("a");
+    open();
+    expect(hookState.selected.at(-1)).toBeNull();
+    expect(hookState.trunk.at(-1)).toEqual(sel);
+    fireEvent.click(screen.getByRole("button", { name: "선택b" }));
+    expect(hookState.trunk.at(-1)).toBeNull();
+    expect(hookState.selected.at(-1)).toBe("b");
+    open();
+    expect(hookState.trunk.at(-1)).toEqual(sel);
+    fireEvent.keyDown(document.body, { key: "Escape" });
+    expect(hookState.trunk.at(-1)).toBeNull();
+  });
+
+  test("펼치면 오른쪽 설명 탭에 선 목록이 열리고, 줄을 누르면 그 연결을 고른다", () => {
+    hookState.busy = false;
+    render(ui(trunkLatest() as never));
+    expect(screen.getByRole("tab", { name: "대화" })).toHaveAttribute("aria-selected", "true");
+    open();
+    expect(screen.getByRole("tab", { name: "설명" })).toHaveAttribute("aria-selected", "true");
+    const rows = within(screen.getByRole("list", { name: "이 줄기의 선 2개" })).getAllByRole("button");
+    // 출발·도착은 표시 그래프의 이름, 합친 표시 연결의 이름은 대표 연결의 이름.
+    expect(rows.map((b) => b.textContent)).toEqual(["a → b · HTTP", "a → c"]);
+    fireEvent.click(rows[1]);
+    expect(hookState.selected.at(-1)).toBe("e2");
+    expect(hookState.trunk.at(-1)).toBeNull();
+    expect(screen.getByRole("heading", { name: "연결선" })).toBeInTheDocument();
+  });
+
+  test("흐름 보기 중에는 trunk 가 Canvas 에 넘어가지 않는다", async () => {
+    hookState.busy = false;
+    stubFlows();
+    render(ui(flowLatest() as never));
+    open({ ...sel, edgeIds: ["e1"] });
+    expect(hookState.trunk.at(-1)).not.toBeNull();
+    await openFlow();
+    expect(hookState.flow.at(-1)).not.toBeNull();
+    expect(hookState.trunk.at(-1)).toBeNull();
+  });
+
+  test("새 서버 상태를 받아 펼친 선 가운데 하나라도 없어지면 펼침이 풀린다", () => {
+    hookState.busy = false;
+    const { rerender } = render(ui(trunkLatest(1) as never));
+    open();
+    // 펼친 선이 다 남아 있으면(다른 것만 바뀜) 그대로.
+    rerender(ui(trunkLatest(2, allEdges, ["d"]) as never));
+    expect(hookState.trunk.at(-1)).toEqual(sel);
+    expect(screen.getByRole("list", { name: "이 줄기의 선 2개" })).toBeInTheDocument();
+    // 하나가 사라지면 푼다: 빈 강조·빈 목록이 남지 않고 설명 탭도 앞 탭으로 돌아간다.
+    rerender(ui(trunkLatest(3, { e1: allEdges.e1, e1b: allEdges.e1b }) as never));
+    expect(hookState.trunk.at(-1)).toBeNull();
+    expect(screen.queryByRole("list", { name: /이 줄기의 선/ })).toBeNull();
+    expect(screen.getByRole("tab", { name: "대화" })).toHaveAttribute("aria-selected", "true");
+  });
+
+  test("대화 차례가 끝나 받은 판에서 펼친 선이 사라져도 펼침이 풀린다", () => {
+    hookState.busy = false;
+    const { rerender } = render(ui(trunkLatest(1) as never));
+    open();
+    act(() => hookState.turn!.onDone());
+    rerender(ui(trunkLatest(2, { e2: allEdges.e2 }) as never));
+    expect(hookState.trunk.at(-1)).toBeNull();
+  });
+
+  test("합친 표시 연결을 목록에서 골라도, 가지를 눌러 좁혀도 지금 연결 고르기와 같은 설명 탭이 뜬다", () => {
+    hookState.busy = false;
+    render(ui(trunkLatest() as never));
+    fireEvent.click(screen.getByRole("button", { name: "선택e1" }));
+    const expected = panelText();
+    expect(expected).toContain("연결선");
+    fireEvent.click(screen.getByRole("button", { name: "선택해제" }));
+    // 목록에서 고르기
+    open();
+    fireEvent.click(screen.getByRole("button", { name: "a → b · HTTP" }));
+    expect(hookState.selected.at(-1)).toBe("e1");
+    expect(panelText()).toBe(expected);
+    fireEvent.click(screen.getByRole("button", { name: "선택해제" }));
+    // 가지를 눌러 좁히기: Canvas 가 그 표시 연결 id 로 onSelect 를 부른다.
+    open();
+    fireEvent.click(screen.getByRole("button", { name: "선택e1" }));
+    expect(hookState.trunk.at(-1)).toBeNull();
+    expect(panelText()).toBe(expected);
+  });
 });

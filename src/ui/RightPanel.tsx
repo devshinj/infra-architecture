@@ -48,9 +48,11 @@ export interface RightPanelProps {
   flows?: FlowPanelProps;
   /** 설명 탭: AI 추정 망연계의 맞아요·아니에요. 없으면(이력 보기 등) 추정 표시만 보인다. */
   linkGuess?: NodeInfoProps["linkGuess"];
+  /** 캔버스에서 펼친 줄기의 선 목록. 선택처럼 설명 탭을 열고(선택과 함께 오지 않는다), 풀리면 앞 탭으로 돌아간다. */
+  trunk?: NodeInfoProps["trunk"];
 }
 
-export function RightPanel({ state, selectedId, onSelect, onMention, mentionDisabled, history, chat, onHistoryOpen, tab: controlledTab, onTabChange, cautions, warningState, explain, ask, live = true, externalTabs, flows, linkGuess }: RightPanelProps) {
+export function RightPanel({ state, selectedId, onSelect, onMention, mentionDisabled, history, chat, onHistoryOpen, tab: controlledTab, onTabChange, cautions, warningState, explain, ask, live = true, externalTabs, flows, linkGuess, trunk }: RightPanelProps) {
   const [innerTab, setInnerTab] = useState<Tab>("대화");
   const tab = controlledTab ?? innerTab;
   const setTab = (t: Tab) => {
@@ -58,14 +60,16 @@ export function RightPanel({ state, selectedId, onSelect, onMention, mentionDisa
     onTabChange?.(t);
   };
   const [before, setBefore] = useState<Tab | null>(null); // tab to return to when the selection clears
-  const seenSelected = useRef<string | null>(selectedId);
+  // 설명 탭이 보여 줄 대상: 선택, 없으면 펼친 줄기(선 목록). 줄기는 연결 id 로 묶어 다른 줄기를 펼치면 새 대상으로 친다.
+  const focusKey = selectedId ?? (trunk ? `\u0000trunk:${trunk.edges.map((e) => e.id).join(" ")}` : null);
+  const seenSelected = useRef<string | null>(focusKey);
 
-  // Any new selection switches to 설명 (remembering the tab we left); clearing it returns there.
+  // Any new selection (or a newly opened trunk) switches to 설명 (remembering the tab we left); clearing it returns there.
   // Runs in an effect: setTab may notify the parent, which must not happen during render.
   useEffect(() => {
-    if (seenSelected.current === selectedId) return;
-    seenSelected.current = selectedId;
-    if (selectedId !== null) {
+    if (seenSelected.current === focusKey) return;
+    seenSelected.current = focusKey;
+    if (focusKey !== null) {
       if (tab !== "설명") {
         if (before === null) setBefore(tab);
         setTab("설명");
@@ -114,7 +118,7 @@ export function RightPanel({ state, selectedId, onSelect, onMention, mentionDisa
             emptyDiagram={live && Object.keys(state.nodes).length === 0}
           />
         )}
-        {tab === "설명" && <NodeInfo state={state} selectedId={selectedId} onSelect={onSelect} {...(onMention ? { onMention } : {})} {...(mentionDisabled ? { mentionDisabled } : {})} {...cautions} {...(warningState ? { warningState } : {})} {...(explain ? { explain } : {})} {...(ask ? { ask } : {})} {...(flows ? { flows: { list: flows.flows, onOpen: openFlow } } : {})} {...(linkGuess ? { linkGuess } : {})} />}
+        {tab === "설명" && <NodeInfo state={state} selectedId={selectedId} onSelect={onSelect} {...(onMention ? { onMention } : {})} {...(mentionDisabled ? { mentionDisabled } : {})} {...cautions} {...(warningState ? { warningState } : {})} {...(explain ? { explain } : {})} {...(ask ? { ask } : {})} {...(flows ? { flows: { list: flows.flows, onOpen: openFlow } } : {})} {...(linkGuess ? { linkGuess } : {})} {...(trunk ? { trunk } : {})} />}
         {tab === "이력" && <HistoryPanel {...history} />}
         {tab === "흐름" && flows && <FlowPanel {...flows} />}
       </div>

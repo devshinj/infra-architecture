@@ -13,7 +13,7 @@ import { AI_BADGE_SR, AI_GUESS_BADGE } from "@/ui/glossary/aiBadge";
 import { canvasAriaLabels, zoneDescription } from "./ariaLabels";
 import "./canvas.css";
 import { EdgeLayerPortal } from "./EdgeLayer";
-import { emphasisOf, flowEmphasis, litZones, zoneEmphasis } from "./emphasis";
+import { emphasisOf, flowEmphasis, litZones, zoneEmphasis, type Emphasis } from "./emphasis";
 import { ExportMenu } from "./ExportMenu";
 import { exportDiagramImage, exportFileName, type ExportBackground, type ExportFormat } from "./exportImage";
 import type { GroupBoxData } from "./GroupBox";
@@ -26,6 +26,7 @@ import { zoneHeadPill } from "./layoutMetrics";
 import { offscreenHints, type OffscreenTarget } from "./offscreen";
 import { NAV_KEYS, navItems, readingOrder, step, tabStop } from "./roving";
 import { NODE_Z, zoneZ } from "./stacking";
+import { nextTrunk, type TrunkClick, type TrunkSelection } from "./trunk";
 import { prefersReducedMotion, unionRect, useCamera, type Insets, type Viewport } from "./useCamera";
 import { useDiagramView } from "./useDiagramView";
 import { moveMenuFocus, usePopover } from "./usePopover";
@@ -107,6 +108,13 @@ export interface CanvasProps {
    * 이때 options.selectedId 는 null 이다(부모가 보장한다). 단계가 지나는 연결·노드만 밝게 두고 나머지를 흐린다.
    */
   flow?: { steps: { edge: string; n: number; short: string }[] } | null;
+  /**
+   * 펼친 줄기(공유 조각을 눌러 가지를 색으로 펼친 것). 선택과 함께 오지 않는다(부모가 보장한다). 흐름을 보는 중에는 쓰지 않는다.
+   * 펼친 동안은 그 선들과 두 끝 노드가 강조 집합이다(노드·영역 흐림과 연결선 층이 같은 집합을 쓴다).
+   */
+  trunk?: TrunkSelection | null;
+  /** 펼침이 바뀔 때: 공유 조각을 누르면 nextTrunk 의 결과, Esc·빈 곳은 null. 없으면 공유 조각 누르는 자리를 두지 않는다. */
+  onTrunkChange?(t: TrunkSelection | null): void;
 }
 
 export const FAR_ZOOM = 0.6;
@@ -371,9 +379,37 @@ interface FlowProps extends CanvasProps {
   updated: Set<string>;
 }
 
-function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onPinnedChange, motion, layout, settled, layoutFailed, fitRequest, fitAllRequest, display, appearing, updated, diffMarks, turnMarks, fitKey, streaming = false, cameraInsets = NO_INSETS, focusRequest, frameRequest, overview = false, onMention, onAskNode, askDisabled, askReason, onBadgeClick, onWarnBadgeClick, onPlaced, flow = null, knowledge }: FlowProps) {
+function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onPinnedChange, motion, layout, settled, layoutFailed, fitRequest, fitAllRequest, display, appearing, updated, diffMarks, turnMarks, fitKey, streaming = false, cameraInsets = NO_INSETS, focusRequest, frameRequest, overview = false, onMention, onAskNode, askDisabled, askReason, onBadgeClick, onWarnBadgeClick, onPlaced, flow = null, knowledge, trunk: trunkProp = null, onTrunkChange }: FlowProps) {
   const far = useStore((s) => s.transform[2] < FAR_ZOOM);
   const selected = drawnId(state, options.collapsed, options.selectedId);
+  // 펼친 줄기: 흐름을 보는 동안은 쓰지 않는다. 연결선 층에는 받은 그대로 넘긴다(색 차례는 처음 펼친 연결 차례).
+  const trunk = flow ? null : trunkProp;
+  // 펼친 동안의 강조 집합: 표시 그래프에 남은 펼친 선과 그 두 끝. 하나도 안 남았으면 강조하지 않는다(빈 강조로 모두 흐리지 않게).
+  const trunkEmph = useMemo<Emphasis | null>(() => {
+    if (!trunk) return null;
+    const byId = new Map(display.edges.map((e) => [e.id, e]));
+    const nodes = new Set<string>();
+    const edges = new Set<string>();
+    for (const id of trunk.edgeIds) {
+      const e = byId.get(id);
+      if (!e) continue;
+      edges.add(e.id);
+      nodes.add(e.from);
+      nodes.add(e.to);
+    }
+    return edges.size > 0 ? { nodes, edges } : null;
+  }, [trunk, display]);
+  // 꼬리표의 먼 끝 이름: 표시 그래프의 노드·영역 이름(접힌 영역이면 그 영역 이름).
+  const endName = useCallback((id: string) => display.nodes[id]?.label ?? display.groups[id]?.label ?? id, [display]);
+  const clearTrunk = () => {
+    if (trunk) onTrunkChange?.(null);
+  };
+  // 공유 조각을 누르면 nextTrunk 대로: 펼침을 넘기고, 한 연결로 좁혀졌으면 그 연결을 고른다.
+  const onTrunkClick = (c: TrunkClick) => {
+    const next = nextTrunk(trunk, c);
+    onTrunkChange?.(next.trunk);
+    if (next.select !== null) onSelect(next.select);
+  };
   const k = knowledge ?? undefined;
   const missingByNode = useMemo(() => computeMissing(state, k).byNode, [state, k]);
   const warnByNode = useMemo(() => warningsByNode(mergeWarnings(state, k).active), [state, k]);
@@ -383,8 +419,8 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
   const edgeHover = useRef<string | null>(null);
   const known = useMemo(() => new Set([...Object.keys(display.nodes), ...Object.keys(display.groups)]), [display]);
   // 선택이 있거나 대상이 사라졌으면 호버는 없는 것으로 친다(노드가 다시 만들어지지 않게 선택 중엔 늘 null).
-  // 흐름을 보는 동안에도 호버는 쓰지 않는다(흐름 강조가 선택 자리를 쓴다).
-  const hoverId = selected === null && !flow && emphasisOf(display.edges, hover.hoverId, known) !== null ? hover.hoverId : null;
+  // 흐름을 보는 동안에도 호버는 쓰지 않는다(흐름 강조가 선택 자리를 쓴다). 줄기를 펼친 동안도 같다.
+  const hoverId = selected === null && !flow && !trunkEmph && emphasisOf(display.edges, hover.hoverId, known) !== null ? hover.hoverId : null;
   // 고른 노드(또는 영역)의 상자: 연결 이름을 합칠 때 그 변 옆에 둔다.
   const selectedRect: Rect | undefined = selected === null ? undefined : (layout.nodes[selected] ?? layout.groups[selected]);
   // 보드가 바뀌면(fitKey) 호버를 푼다(사라진 노드는 mouseleave 를 보내지 않는다).
@@ -432,7 +468,7 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
   }, [display, selected, flowStepsIn, parentOf]);
   const sel = useMemo(() => {
     if (zoneSel) return zoneSel;
-    if (!flowStepsIn) return emphasisOf(display.edges, selected);
+    if (!flowStepsIn) return trunkEmph ?? emphasisOf(display.edges, selected);
     // 두 끝이 같은 접힌 영역 안이라 선이 없어진 단계는 그 영역을 밝힌다.
     const loops: string[] = [];
     for (const s of flowStepsIn) {
@@ -442,7 +478,7 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
       if (a !== null && a === drawnId(state, options.collapsed, e.to) && display.groups[a]) loops.push(a);
     }
     return flowEmphasis(display.edges, flowStepsIn.map((s) => s.edge), loops);
-  }, [display, selected, flowStepsIn, state, options.collapsed, zoneSel]);
+  }, [display, selected, flowStepsIn, state, options.collapsed, zoneSel, trunkEmph]);
   // 흐름 단계를 표시 연결 id 로 맞춘다(묶이거나 접힌 영역으로 이어진 연결도 원래 연결 id 로 찾는다). 없는 연결은 뺀다.
   const flowSteps = useMemo(() => {
     if (!flowStepsIn) return undefined;
@@ -751,6 +787,7 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
       else onSelect(id !== selected ? id : null);
     } else if (e.key === "Escape") {
       if (selected !== null) onSelect(null);
+      clearTrunk();
     } else if (e.key.startsWith("Arrow") && editMode && infra && keyMove.current === null && getNode(id)?.selected) {
       // 함께 선택된 노드가 모두 같이 움직이므로 모두의 시작 위치를 적는다.
       keyMove.current = new Map(getNodes().filter((n) => n.selected && n.type === "infra").map((n) => [n.id, { ...n.position }]));
@@ -830,10 +867,15 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
         maxZoom={2}
         proOptions={{ hideAttribution: true }}
         onNodeClick={(_, node) => {
-          if (node.type === "zone") onSelect(null);
-          else if (node.type === "infra") onSelect(node.id === selected ? null : node.id);
+          if (node.type === "zone") {
+            onSelect(null);
+            clearTrunk();
+          } else if (node.type === "infra") onSelect(node.id === selected ? null : node.id);
         }}
-        onPaneClick={() => onSelect(null)}
+        onPaneClick={() => {
+          onSelect(null);
+          clearTrunk();
+        }}
         onNodeContextMenu={(e, node) => openMenu(node.id, node.type === "zone", e)}
         onMoveStart={(e) => {
           setMenu(null);
@@ -861,7 +903,10 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
           edges={display.edges}
           selectedId={selected}
           {...(selectedRect ? { selectedRect } : {})}
-          {...(zoneSel ? { emphasis: zoneSel } : {})}
+          {...(zoneSel ? { emphasis: zoneSel } : trunkEmph ? { emphasis: trunkEmph } : {})}
+          trunk={trunk}
+          {...(onTrunkChange ? { onTrunkClick } : {})}
+          endName={endName}
           hoverId={hoverId}
           onHover={(id) => {
             if (id !== null) {
