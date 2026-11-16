@@ -6,7 +6,7 @@ import { shortLabel } from "@/domain/flows";
 
 import "./edges.css";
 import type { DisplayEdge } from "./display";
-import { boundaryDotAt, labelBox, mergedLabels, restingLabelClusters, stepLabels, tagSpots, type Box } from "./edgeLabels";
+import { boundaryDotAt, labelBox, mergedLabels, stepLabels, tagSpots, type Box } from "./edgeLabels";
 import { emphasisOf, type Emphasis } from "./emphasis";
 import type { Layout, Rect } from "./layout";
 import { MediumMark, pointAlong } from "./mediumMark";
@@ -180,20 +180,18 @@ export function EdgeLayer({ layout, edges, selectedId, selectedRect, emphasis, h
   }, [steps, emphasis, sel, selectedId, selectedRect, edges, emphLaid, byId, layout.edges]);
   const mergedIds = useMemo(() => new Set(merged.flatMap((p) => p.edgeIds)), [merged]);
 
-  // 평소 화면(고른 것·올린 것·흐름 없음, 이름 늘 보임): 같은 끝을 함께 쓰는 같은 이름은 하나만 "<이름> ×N" 으로 남긴다.
-  // 노드에 올리면 연결마다 제 이름으로 돌아가 어느 가지인지 보인다.
+  // 평소 화면(고른 것·올린 것·흐름 없음, 이름 늘 보임): 이름 자리는 배치(layout.labels)가 정해 둔 것을 그대로 쓴다.
+  // 같은 끝을 함께 쓰는 같은 이름은 "<이름> ×N" 하나만 첫 연결에 달고, 나머지 구성원은 노드에 올릴 때만 제 이름으로 보인다.
   const resting = useMemo(() => {
     if (sel !== null || hov !== null || steps || hoverLabels) return null;
-    const items = laid.flatMap((l) => {
-      const e = byId.get(l.id)!;
-      return e.label && l.labelAt && !e.egress ? [{ id: e.id, label: e.label, from: e.from, to: e.to, at: l.labelAt }] : [];
-    });
-    const centerOf = (id: string) => {
-      const r = layout.nodes[id] ?? layout.groups[id];
-      return r ? { x: r.x + r.width / 2, y: r.y + r.height / 2 } : undefined;
-    };
-    return restingLabelClusters(items, centerOf);
-  }, [sel, hov, steps, hoverLabels, laid, byId, layout.nodes, layout.groups]);
+    const shown = new Map<string, string>();
+    const hidden = new Set<string>();
+    for (const p of layout.labels) {
+      shown.set(p.edgeIds[0], p.text);
+      for (const id of p.edgeIds.slice(1)) hidden.add(id);
+    }
+    return { shown, hidden };
+  }, [sel, hov, steps, hoverLabels, layout.labels]);
 
   // 망 경계 점: 경계를 넘는 연결의 가운데(이름 자리, 없으면 선 가운데). 이름이 있으면 이름 글자 옆으로 비킨다.
   const dots = useMemo(() => {

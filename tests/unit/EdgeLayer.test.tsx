@@ -523,13 +523,17 @@ test("an empty short description leaves just the number", () => {
   expect(document.querySelector(".edge-step-label")!.textContent).toBe("3");
 });
 
-test("resting view (nothing selected or hovered, names always on) folds the same name on a shared end into '<name> ×N'", () => {
+test("resting view draws layout.labels as-is: one '<name> ×N' on the first edge, no member names", () => {
   const { layout, edges } = labelled();
+  layout.labels = [{ edgeIds: ["h1", "h2"], text: "HTTP ×2", x: 150, y: 5 }];
   const { rerender } = render(<EdgeLayer layout={layout} edges={edges} {...base} hoverLabels={false} />);
-  // n 에서 나가는 HTTP 둘(h1·h2)만 한 무리다. n 으로 들어오는 h3 은 방향이 달라, 끝이 겹치지 않는 far 는 따로 남는다.
-  expect(labelTexts().filter((t) => t.startsWith("HTTP")).sort()).toEqual(["HTTP", "HTTP", "HTTP ×2"]);
-  expect(document.querySelector('[data-edge-id="h2"] .edge-label') ?? document.querySelector('[data-edge-id="h1"] .edge-label')).not.toBeNull();
-  // 이름을 올렸을 때만 보이게 하면 묶을 이름이 없다.
+  const on = (id: string) => document.querySelector(`[data-edge-id="${id}"] .edge-label`);
+  expect(on("h1")).toHaveTextContent("HTTP ×2");
+  expect(on("h1")!.getAttribute("x")).toBe("150");
+  expect(on("h1")!.getAttribute("y")).toBe("5");
+  expect(on("h2")).toBeNull();
+  expect(labelTexts().filter((t) => t === "HTTP ×2")).toHaveLength(1);
+  // 이름을 올렸을 때만 보이게 하면 화면에는 이름이 없다.
   rerender(<EdgeLayer layout={layout} edges={edges} {...base} hoverLabels />);
   expect(labelTexts()).toEqual([]);
 });

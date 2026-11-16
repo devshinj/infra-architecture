@@ -235,15 +235,9 @@ const SVG_NS = "http://www.w3.org/2000/svg";
 
 export interface EdgeLabel { id: string; label: string; x: number; y: number }
 
-/** 이름이 있는 연결의 이름 자리(화면에서 마우스를 올릴 때만 보이는 이름도 그림에는 늘 넣는다). */
-export function edgeLabels(layout: Pick<Layout, "edges">, edges: DisplayEdge[]): EdgeLabel[] {
-  const byId = new Map(edges.map((e) => [e.id, e]));
-  const out: EdgeLabel[] = [];
-  for (const l of layout.edges) {
-    const e = byId.get(l.id);
-    if (e?.label && l.labelAt && l.points.length >= 2) out.push({ id: e.id, label: e.label, x: l.labelAt.x, y: l.labelAt.y });
-  }
-  return out;
+/** 그림에 넣는 이름: 배치가 정한 평소 화면 이름 그대로(옵션과 상관없이, 합친 이름은 "<이름> ×N" 하나). */
+export function edgeLabels(layout: Pick<Layout, "labels">): EdgeLabel[] {
+  return layout.labels.map((p) => ({ id: p.edgeIds[0], label: p.text, x: p.x, y: p.y }));
 }
 
 /**
@@ -272,10 +266,12 @@ export function neutralizeClone(root: Element, labels: EdgeLabel[] = [], keepEdg
   // 화면 밖 복제본에 키보드 포커스가 가지 않게 한다.
   for (const el of [...root.querySelectorAll("[tabindex]")]) el.removeAttribute("tabindex");
   for (const el of [...root.querySelectorAll("[focusable]")]) el.removeAttribute("focusable");
+  // 화면에 그려진 이름은 그 순간의 선택·올림에 따라 달라서 모두 지우고, 배치가 정한 이름으로만 다시 채운다.
+  for (const el of [...root.querySelectorAll("g[data-edge-id] .edge-label")]) el.remove();
   const byId = new Map(labels.map((l) => [l.id, l]));
   for (const g of root.querySelectorAll("g[data-edge-id]")) {
     const l = byId.get(g.getAttribute("data-edge-id") ?? "");
-    if (!l || g.querySelector(".edge-label")) continue;
+    if (!l) continue;
     const t = g.ownerDocument.createElementNS(SVG_NS, "text");
     t.setAttribute("class", "edge-label");
     t.setAttribute("x", String(l.x));
@@ -338,7 +334,7 @@ export interface ExportRequest {
 
 /** 그림을 만들어 내려받게 한다. 실패하면 예외를 던진다(부르는 쪽이 사용자에게 알린다). */
 export async function exportDiagramImage(req: ExportRequest): Promise<void> {
-  const labels = edgeLabels(req.layout, req.edges);
+  const labels = edgeLabels(req.layout);
   const bounds = diagramBounds(req.layout, labels);
   if (!bounds) throw new Error("빈 구성도");
   const frame = exportFrame(bounds, { pixelRatio: req.format === "png" ? PNG_PIXEL_RATIO : 1 });

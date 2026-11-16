@@ -104,20 +104,24 @@ test("exportFrame keeps the pixel area under the canvas limit (iOS Safari ≈16.
   expect(exportFrame({ x: 0, y: 0, width: 1970, height: 1304 }, { pixelRatio: PNG_PIXEL_RATIO }).zoom).toBe(1);
 });
 
-test("edgeLabels lists every named edge that is drawn, hover-only or not", () => {
-  const edges: DisplayEdge[] = [
-    { id: "e1", from: "a", to: "b", edgeKind: "request", label: "HTTPS", sourceEdgeIds: ["e1"] },
-    { id: "e2", from: "a", to: "c", edgeKind: "async", sourceEdgeIds: ["e2"] },
-    { id: "e3", from: "b", to: "c", edgeKind: "request", label: "숨김", sourceEdgeIds: ["e3"] },
-  ];
+test("edgeLabels is layout.labels as-is: first edge id, merged text, placed point", () => {
   const l = layout({
-    edges: [
-      { id: "e1", points: [{ x: 0, y: 0 }, { x: 0, y: 10 }], labelAt: { x: 0, y: 5 } },
-      { id: "e2", points: [{ x: 0, y: 0 }, { x: 0, y: 10 }] },
-      { id: "e4", points: [{ x: 0, y: 0 }, { x: 0, y: 10 }], labelAt: { x: 1, y: 1 } },
+    labels: [
+      { edgeIds: ["e1", "e2", "e3"], text: "NFS ×3", x: 10, y: 20 },
+      { edgeIds: ["e4"], text: "HTTPS", x: 30, y: 40 },
     ],
   });
-  expect(edgeLabels(l, edges)).toEqual([{ id: "e1", label: "HTTPS", x: 0, y: 5 }]);
+  expect(edgeLabels(l)).toEqual([
+    { id: "e1", label: "NFS ×3", x: 10, y: 20 },
+    { id: "e4", label: "HTTPS", x: 30, y: 40 },
+  ]);
+});
+
+test("diagramBounds includes the layout.labels name boxes", () => {
+  const l = layout({ labels: [{ edgeIds: ["e1"], text: "아주 긴 연결 이름 ×3", x: 700, y: 60 }] });
+  const b = diagramBounds(l, edgeLabels(l))!;
+  expect(b.x + b.width).toBeGreaterThan(700);
+  expect(b.x).toBeLessThanOrEqual(80);
 });
 
 test("keepInExport drops screen chrome and keeps diagram content", () => {
