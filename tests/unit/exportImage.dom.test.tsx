@@ -63,6 +63,8 @@ const LAYOUT: Layout = {
   ],
   width: 500,
   height: 320,
+  labels: [],
+  labelBlocked: [],
 };
 const EDGES: DisplayEdge[] = [
   { id: "e1", from: "a", to: "b", edgeKind: "request", label: "HTTPS", sourceEdgeIds: ["e1"] },
@@ -233,7 +235,7 @@ test("exportDiagramImage removes the stage and rethrows when capture fails", asy
 test("exportDiagramImage refuses an empty layout", async () => {
   const viewport = mount();
   await expect(
-    exportDiagramImage({ viewport, layout: { nodes: {}, groups: {}, edges: [], width: 0, height: 0 }, edges: [], format: "png", background: "dark", fileName: "a.png" }),
+    exportDiagramImage({ viewport, layout: { nodes: {}, groups: {}, edges: [], width: 0, height: 0, labels: [], labelBlocked: [] }, edges: [], format: "png", background: "dark", fileName: "a.png" }),
   ).rejects.toThrow();
   expect(lib.toBlob).not.toHaveBeenCalled();
 });
@@ -280,6 +282,8 @@ test("export keeps every original label while a node is selected", () => {
     ],
     width: 300,
     height: 240,
+    labels: [],
+    labelBlocked: [],
   };
   const edges: DisplayEdge[] = [
     { id: "h1", from: "n", to: "a", edgeKind: "request", label: "HTTP", sourceEdgeIds: ["h1"] },
@@ -354,6 +358,8 @@ test("export drops a moved single label and puts the original back at labelAt", 
     edges: [{ id: "s", points: [{ x: 150, y: 140 }, { x: 150, y: 240 }], labelAt: { x: 150, y: 145 } }],
     width: 300,
     height: 260,
+    labels: [],
+    labelBlocked: [],
   };
   const edges: DisplayEdge[] = [{ id: "s", from: "n", to: "x", edgeKind: "request", label: "SQL", sourceEdgeIds: ["s"] }];
   const host = document.createElement("div");

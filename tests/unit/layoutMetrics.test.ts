@@ -6,7 +6,7 @@ import { measureLayout, NAME_PX } from "@/canvas/layoutMetrics";
 import { textWidth } from "@/canvas/text";
 
 const line = (id: string, ...pts: [number, number][]) => ({ id, points: pts.map(([x, y]) => ({ x, y })) });
-const lay = (edges: Layout["edges"], nodes: Record<string, LaidOutNode> = {}): Layout => ({ nodes, groups: {}, edges, width: 200, height: 100 });
+const lay = (edges: Layout["edges"], nodes: Record<string, LaidOutNode> = {}): Layout => ({ nodes, groups: {}, edges, width: 200, height: 100, labels: [], labelBlocked: [] });
 const ends: Record<string, [string, string]> = { a: ["n1", "n2"], b: ["n3", "n4"] };
 
 test("parallel lines 12px apart over 100px count as 100 parallel px", () => {
@@ -56,6 +56,8 @@ test("edges through an expanded zone's name pill are counted once per pill", () 
     ],
     width: 600,
     height: 300,
+    labels: [],
+    labelBlocked: [],
   };
   const ends: Record<string, [string, string]> = { a: ["p", "q"], b: ["p", "q"], c: ["p", "q"], d: ["p", "q"], e: ["z", "p"] };
   expect(measureLayout(layout, ends, 16, { z: "공개 서브넷" }).zoneHeadCrossings).toBe(2);

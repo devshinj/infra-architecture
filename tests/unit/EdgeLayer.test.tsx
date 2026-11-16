@@ -21,7 +21,7 @@ afterEach(cleanup);
 const mockMatchMedia = (matches: boolean) =>
   ((q: string) => ({ matches, media: q, addEventListener() {}, removeEventListener() {}, addListener() {}, removeListener() {} })) as unknown as typeof window.matchMedia;
 
-const lay = (edges: Layout["edges"]): Layout => ({ nodes: {}, groups: {}, edges, width: 330, height: 230 });
+const lay = (edges: Layout["edges"]): Layout => ({ nodes: {}, groups: {}, edges, width: 330, height: 230, labels: [], labelBlocked: [] });
 const de = (id: string, from: string, to: string, edgeKind: DisplayEdge["edgeKind"] = "request", label?: string): DisplayEdge => ({
   id, from, to, edgeKind, sourceEdgeIds: [id], ...(label ? { label } : {}),
 });

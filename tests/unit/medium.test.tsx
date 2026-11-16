@@ -99,7 +99,7 @@ describe("선 위 통신 수단 표지", () => {
 
   test("수단이 있는 연결에만 표지를 그리고, 누르는 자리는 가리지 않는다", () => {
     const layout: Layout = {
-      nodes: {}, groups: {}, width: 300, height: 100,
+      nodes: {}, groups: {}, width: 300, height: 100, labels: [], labelBlocked: [],
       edges: [
         { id: "e1", points: [{ x: 0, y: 10 }, { x: 200, y: 10 }] },
         { id: "e2", points: [{ x: 0, y: 60 }, { x: 200, y: 60 }] },

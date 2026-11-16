@@ -4,6 +4,7 @@ import { buildDisplayGraph, defaultDisplayOptions } from "@/canvas/display";
 import { elbowRoute } from "@/canvas/elbow";
 import { COLLAPSED_MAX_WIDTH, CONTENT_WIDTH, GROUP_PAD, collapsedGroupWidth, SUB_PX, azChipWidth, layoutDiagram, type Layout, type Rect } from "@/canvas/layout";
 import { measureLayout } from "@/canvas/layoutMetrics";
+import { labelViolates } from "@/canvas/restingLabels";
 import { findOverlaps, PAIR_BADGE_OFFSET } from "@/canvas/overlap";
 import { textWidth, truncate } from "@/canvas/text";
 import { applyCommand, applyCommands } from "@/domain/apply";
@@ -347,6 +348,8 @@ test("findOverlaps detects each kind of collision", () => {
     edges: [],
     width: 300,
     height: 200,
+    labels: [],
+    labelBlocked: [],
   });
   expect(findOverlaps(base())).toEqual([]);
 
@@ -451,4 +454,85 @@ test("redundancy group members inserted as #3,#1,#2,#4 lay out left to right as 
     expect(onBorder(e.points[e.points.length - 1], rectOf(l, de.to)), `${e.id} end`).toBe(true);
   }
   expect(findOverlaps(l)).toEqual([]);
+});
+
+// 평소 화면 이름 자리(Layout.labels): 배치가 이름 자리를 비워 두고, 마지막에 「지킬 것」을 지키는 자리에 이름을 놓는다.
+function labeledFan(labels: (string | undefined)[], extra: Command[] = []): DiagramState {
+  const cmds: Command[] = [
+    { op: "add_group", id: "vpc", group_kind: "vpc", label: "VPC", parent: null },
+    { op: "add_node", id: "a", kind: "app_server", label: "APP", parent: "vpc" },
+  ];
+  labels.forEach((label, i) => {
+    cmds.push({ op: "add_node", id: `t${i}`, kind: "db_rdb", label: `DB-${i}`, parent: "vpc" });
+    cmds.push({ op: "add_edge", id: `e${i}`, from: "a", to: `t${i}`, edge_kind: "request", ...(label !== undefined ? { label } : {}) });
+  });
+  const { state, errors } = applyCommands(emptyState(), [...cmds, ...extra]);
+  expect(errors).toEqual([]);
+  return state;
+}
+const groupLabelsOf = (st: DiagramState): Record<string, string> =>
+  Object.fromEntries(Object.values(buildDisplayGraph(st, defaultDisplayOptions(st)).groups).map((x) => [x.id, x.label]));
+
+test("three differently named edges from one node to one layer: each name has room, the trunk stays, labelAt is the name spot", async () => {
+  const st = labeledFan(["HTTPS 443", "JDBC 3306", "NFS 마운트"]);
+  const l = await lay(st);
+  expect(l.labels.map((p) => p.text).sort()).toEqual(["HTTPS 443", "JDBC 3306", "NFS 마운트"]);
+  expect(l.labelBlocked).toEqual([]);
+  expect(labelViolates(l, groupLabelsOf(st), l.labels)).toEqual([]);
+  const starts = ["e0", "e1", "e2"].map((id) => l.edges.find((e) => e.id === id)!.points[0]);
+  expect(starts[1]).toEqual(starts[0]);
+  expect(starts[2]).toEqual(starts[0]);
+  for (const p of l.labels) expect(l.edges.find((e) => e.id === p.edgeIds[0])!.labelAt).toEqual({ x: p.x, y: p.y });
+});
+
+test("names never make the layout shorter than the same graph without names", async () => {
+  const named = await lay(labeledFan(["HTTPS 443", "JDBC 3306", "NFS 마운트"]));
+  const plain = await lay(labeledFan([undefined, undefined, undefined]));
+  expect(plain.labels).toEqual([]);
+  expect(named.height).toBeGreaterThanOrEqual(plain.height);
+});
+
+test("three edges with the same name sharing an end become one '<name> ×3' label", async () => {
+  const l = await lay(labeledFan(["NFS", "NFS", "NFS"]));
+  expect(l.labels.map((p) => p.text)).toEqual(["NFS ×3"]);
+  expect([...l.labels[0].edgeIds].sort()).toEqual(["e0", "e1", "e2"]);
+});
+
+test("with a pinned node the node stays put and every named non-egress edge is in labels", async () => {
+  const st = labeledFan(["HTTPS 443", "JDBC 3306", "NFS 마운트"]);
+  const l = await lay(st, { t1: { x: 700, y: 40 } });
+  expect({ x: l.nodes.t1.x, y: l.nodes.t1.y }).toEqual({ x: 700, y: 40 });
+  const named = new Set(l.labels.flatMap((p) => p.edgeIds));
+  for (const id of ["e0", "e1", "e2"]) expect(named.has(id), id).toBe(true);
+});
+
+test("an egress edge's name is not a resting label", async () => {
+  const st = labeledFan(["HTTPS 443"], [
+    { op: "add_node", id: "nat", kind: "nat", label: "NAT", parent: "vpc" },
+    { op: "add_edge", id: "out", from: "a", to: "nat", edge_kind: "request", label: "외부로" },
+  ]);
+  const g = buildDisplayGraph(st, defaultDisplayOptions(st));
+  expect(g.edges.find((e) => e.id === "out")?.egress).toBe(true);
+  const l = await lay(st);
+  expect(l.labels.flatMap((p) => p.edgeIds)).not.toContain("out");
+  expect(l.labels.map((p) => p.text)).toEqual(["HTTPS 443"]);
+});
+
+test("a named connector inside a redundancy group gets room between the two members; a pinned member is never moved for it", async () => {
+  const { state, errors } = applyCommands(emptyState(), [
+    { op: "add_group", id: "vpc", group_kind: "vpc", label: "VPC", parent: null },
+    { op: "add_group", id: "pair", group_kind: "redundancy_group", label: "DB 이중화", parent: "vpc" },
+    { op: "add_node", id: "p", kind: "db_rdb", label: "주 DB", parent: "pair" },
+    { op: "add_node", id: "s", kind: "db_rdb", label: "대기 DB", parent: "pair" },
+    { op: "add_edge", id: "rep", from: "p", to: "s", edge_kind: "request", label: "복제 (방식 미확정)" },
+  ]);
+  expect(errors).toEqual([]);
+  const l = await lay(state);
+  expect(l.labels.map((x) => x.text)).toEqual(["복제 (방식 미확정)"]);
+  expect(l.labelBlocked).toEqual([]);
+  expect(labelViolates(l, groupLabelsOf(state), l.labels)).toEqual([]);
+  const pinnedAt = { x: l.nodes.s.x, y: l.nodes.s.y };
+  const pinned = await lay(state, { s: pinnedAt });
+  expect({ x: pinned.nodes.s.x, y: pinned.nodes.s.y }).toEqual(pinnedAt);
+  expect(pinned.labels.flatMap((x) => x.edgeIds)).toContain("rep");
 });

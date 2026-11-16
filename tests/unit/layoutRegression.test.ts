@@ -22,6 +22,12 @@ import { fx } from "../fixtures/spike";
 // state-25 10→2, state-100 펼친 화면 136→124). 꺾임은 그대로, 대신 붐비던 틈만큼 구성도가 16~32px 길어졌다.
 // state-25 에 남은 88px 는 외부 연결이 아닌 부하 분산기 두 선이다.
 // state-portal(2026-11-16, v4): 실제 사용자포털 구성도(식별 정보 걷어냄)를 기준 구성도로 넣었다. 연결선 경로·가독성 개선(feat/edge-routing)의 전후를 같은 구성도로 견주려는 것이다.
+// 이름 자리 확보(2026-11-16, Task 3)로 다시 잼: 모든 기준 구성도의 기본·펼친 화면에서 평소 화면 이름 겹침(labelViolations) 0,
+// 빠진 이름(labelMissing) 0 을 지킨다. 이름 자리 확보로 꺾임·크기가 늘었다(사용자 결정). 꺾임은 그대로이고, 크기는 이중화 묶음 안
+// 이름 있는 가로 연결의 두 노드 사이를 벌려 넓어지거나(s2 708→759·aspect 0.776→0.832, s4 1994→2168·1.462→1.589,
+// s5 551→578·0.553→0.580, state-portal 1781→1880·1.038→1.096, 기본·펼친 화면 같음), 구성도 아래 끝 이름 상자만큼 높이가
+// 늘었다(state-50 기본 436→443·2.214→2.179, state-100 기본 436→443·2.579→2.538, state-200 기본 436→443·2.586→2.545).
+// 교차·평행·노드 통과·이름 알약은 모두 이전 값 그대로다.
 // zoneHeadCrossings(펼친 영역 이름 알약 자리를 지나는 선)는 기하로만 잰다: 사용자 결정으로 알약을 연결선 위 층(ZoneNameLayer)에 그려
 // 선이 알약 뒤로 지나가므로, 배치는 이 자리를 피하지 않는다.
 const baseline = JSON.parse(readFileSync(join(process.cwd(), "tests/fixtures/layout/baseline.json"), "utf8")) as Record<
@@ -38,8 +44,10 @@ const LIMIT = 30_000;
 
 test.each(Object.keys(baseline))("%s: 기본 화면은 기준선보다 나빠지지 않는다", async (name) => {
   const base = baseline[name].default;
-  const { layout, ends, groupLabels } = await defaultViewLayout(load(name));
-  const m = measureLayout(layout, ends, 16, groupLabels);
+  const { layout, ends, groupLabels, labels } = await defaultViewLayout(load(name));
+  const m = measureLayout(layout, ends, 16, groupLabels, labels);
+  expect(m.labelViolations).toBe(0);
+  expect(m.labelMissing).toBe(0);
   expect(m.crossings).toBeLessThanOrEqual(base.crossings);
   expect(m.parallelPx).toBeLessThanOrEqual(base.parallelPx);
   expect(m.throughNode).toBe(0);
@@ -50,8 +58,10 @@ test.each(Object.keys(baseline))("%s: 기본 화면은 기준선보다 나빠지
 test.each(Object.keys(baseline))("%s: 모두 펼친 화면은 기준선보다 나빠지지 않는다", async (name) => {
   const base = baseline[name].expanded;
   const st = load(name);
-  const { layout, ends, groupLabels } = await viewLayout(buildDisplayGraph(st, { ...defaultDisplayOptions(st), collapsed: new Set() }));
-  const m = measureLayout(layout, ends, 16, groupLabels);
+  const { layout, ends, groupLabels, labels } = await viewLayout(buildDisplayGraph(st, { ...defaultDisplayOptions(st), collapsed: new Set() }));
+  const m = measureLayout(layout, ends, 16, groupLabels, labels);
+  expect(m.labelViolations).toBe(0);
+  expect(m.labelMissing).toBe(0);
   expect(m.parallelPx).toBeLessThanOrEqual(base.parallelPx);
   expect(m.crossings).toBeLessThanOrEqual(base.crossings);
   expect(m.throughNode).toBe(0);

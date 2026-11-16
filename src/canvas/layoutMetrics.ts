@@ -1,8 +1,8 @@
 import type { DiagramState } from "@/domain/types";
 import { buildDisplayGraph, defaultDisplayOptions, type DisplayGraph } from "./display";
 import { labelViolates, type PlacedRestingLabel, type RestingLabelInput } from "./restingLabels";
+import { NAME_PX, rectHit, zoneHeadPill } from "./geometry";
 import { layoutDiagram, type Layout, type Rect } from "./layout";
-import { textWidth } from "./text";
 
 /** 배치 읽기 쉬움을 재는 값. 단계마다 이 값이 나빠지지 않았는지 회귀 시험이 지킨다. */
 export interface LayoutMetrics {
@@ -20,16 +20,8 @@ export interface LayoutMetrics {
 /** 선의 첫 점과 마지막 점에서 이만큼은 노드 옆이라 나란해도 세지 않는다. */
 export const END_TRIM = 8;
 
-/** 영역 이름 글자 크기(배율 1 의 캔버스 px). canvas.css 의 .group__name 바닥값과 같다. */
-export const NAME_PX = 11;
-const HEAD_H = 30; // .group__head 높이
-const HEAD_PAD = 10; // .group__head 왼쪽 안쪽 여백
-const PILL_PAD = 18; // .group__name 좌우 안쪽 여백 합
-
-/** 펼친 영역 머리 칸에서 이름 알약이 차지하는 자리(어림값). */
-export function zoneHeadPill(g: Rect, label: string): Rect {
-  return { x: g.x + HEAD_PAD, y: g.y, width: PILL_PAD + textWidth(label, NAME_PX), height: HEAD_H };
-}
+// 알약 자리·상자 관통은 geometry.ts 에 있다(restingLabels 와 함께 쓰며 불러오기 고리를 끊는다). 예전 불러오는 곳을 위해 다시 내보낸다.
+export { NAME_PX, rectHit, zoneHeadPill };
 
 type Pt = { x: number; y: number };
 interface Seg {
@@ -66,16 +58,6 @@ function trimmedRange(s: Seg, k: "x" | "y"): [number, number] | null {
   const p = (d: number): number => s.a[k] + ((s.b[k] - s.a[k]) * d) / l;
   const [x, y] = [p(s.from), p(s.to)];
   return [Math.min(x, y), Math.max(x, y)];
-}
-
-// 끝점이 아닌 상자 안쪽(가장자리 2px 안쪽)을 지나는지
-export function rectHit(s: { a: Pt; b: Pt }, r: Rect, pad = 2): boolean {
-  return (
-    Math.max(s.a.x, s.b.x) > r.x + pad &&
-    Math.min(s.a.x, s.b.x) < r.x + r.width - pad &&
-    Math.max(s.a.y, s.b.y) > r.y + pad &&
-    Math.min(s.a.y, s.b.y) < r.y + r.height - pad
-  );
 }
 
 /**
@@ -177,15 +159,21 @@ export interface MeasuredView {
   layout: Layout;
   ends: Record<string, [string, string]>; // 표시 연결의 [from, to]
   groupLabels: Record<string, string>; // 표시 영역 id → 이름
+  labels: { placed: PlacedRestingLabel[]; items: RestingLabelInput[] }; // 평소 화면 이름(measureLayout 의 labels 로 넘긴다)
 }
 
-/** 표시 그래프를 배치하고, 잴 때 필요한 연결 끝과 영역 이름을 함께 돌려준다. */
+/** 표시 그래프를 배치하고, 잴 때 필요한 연결 끝·영역 이름·평소 화면 이름을 함께 돌려준다. */
 export async function viewLayout(g: DisplayGraph): Promise<MeasuredView> {
   const layout = await layoutDiagram(g, {});
+  const pointsOf = new Map(layout.edges.map((e) => [e.id, e.points]));
+  const items: RestingLabelInput[] = g.edges
+    .filter((e) => e.label)
+    .map((e) => ({ id: e.id, label: e.label!, from: e.from, to: e.to, points: pointsOf.get(e.id) ?? [], egress: e.egress }));
   return {
     layout,
     ends: Object.fromEntries(g.edges.map((e) => [e.id, [e.from, e.to] as [string, string]])),
     groupLabels: Object.fromEntries(Object.values(g.groups).map((x) => [x.id, x.label])),
+    labels: { placed: layout.labels, items },
   };
 }
 

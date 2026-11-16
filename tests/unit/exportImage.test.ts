@@ -49,6 +49,8 @@ const layout = (over: Partial<Layout> = {}): Layout => ({
   edges: [],
   width: 400,
   height: 300,
+  labels: [],
+  labelBlocked: [],
   ...over,
 });
 

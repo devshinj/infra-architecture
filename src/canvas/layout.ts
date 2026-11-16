@@ -4,7 +4,9 @@ import type { ElkExtendedEdge, ElkNode } from "elkjs/lib/elk-api";
 import type { DNode } from "@/domain/types";
 
 import type { DisplayGraph } from "./display";
+import { LABEL_LINE, labelBox, NODE_RING, ROW_GAP } from "./edgeLabels";
 import { elbowRoute } from "./elbow";
+import { placeRestingLabels, restingLabelGroups, type PlacedRestingLabel, type RestingLabelInput } from "./restingLabels";
 import { textWidth, truncate } from "./text";
 
 export const NODE = { height: 52, minWidth: 132, maxWidth: 240, padLeft: 42 /* 테두리 양쪽 2+안쪽 왼쪽 10+아이콘 22+사이 8 (canvas.css .node) */, padRight: 18 /* 안쪽 오른쪽 여백(배지 자리) */, gap: 28, layerGap: 52 };
@@ -15,7 +17,17 @@ export interface LaidOutNode extends Rect { id: string; parent: string | null; d
 export interface LaidOutGroup extends Rect { id: string; parent: string | null }
 // degraded: no clear route was found, so the edge is a plain elbow that may cross other shapes.
 export interface LaidOutEdge { id: string; points: { x: number; y: number }[]; labelAt?: { x: number; y: number }; degraded?: boolean }
-export interface Layout { nodes: Record<string, LaidOutNode>; groups: Record<string, LaidOutGroup>; edges: LaidOutEdge[]; width: number; height: number }
+// labels: 평소 화면 이름(같은 글자·같은 끝 묶음은 "<이름> ×N" 하나, 출구선 빼고). labelBlocked: 「지킬 것」을 지킬 자리가
+// 없어 겹친 채 놓인 이름의 edgeIds[0]. 이름을 단 선(labels[i].edgeIds[0])의 labelAt 은 그 이름 자리다.
+export interface Layout {
+  nodes: Record<string, LaidOutNode>;
+  groups: Record<string, LaidOutGroup>;
+  edges: LaidOutEdge[];
+  width: number;
+  height: number;
+  labels: PlacedRestingLabel[];
+  labelBlocked: string[];
+}
 
 type Pt = { x: number; y: number };
 
@@ -45,7 +57,9 @@ const ROOT = "__root";
 const CHANNEL_MARGIN = 24; // main 오른쪽 끝 ↔ 첫 통로, 마지막 통로 ↔ 외부 열
 const CHANNEL_STEP = 16; // 통로끼리 간격 (spacing.edgeEdge)
 const LINE_GAP = 16; // 공유 조각이 아닌 서로 다른 선이 나란히 지날 때 띄울 최소 간격
-const GAP_ROUNDS = 4; // 붐비는 외부 연결 줄을 위해 틈을 벌리는 횟수(한 번에 LINE_GAP)
+// 이름 있는 외부 연결의 가로 토막을 상자에서 띄우는 최소 거리: 이름 상자 반 높이 + ROW_GAP + 선택 고리(17px).
+const LABEL_ROOM = NODE_RING + ROW_GAP + LABEL_LINE / 2;
+const GAP_ROUNDS = 4; // 붐비는 외부 연결 줄·막힌 이름을 위해 틈을 벌리는 횟수(한 번에 LINE_GAP)
 const END_GAP_TRIM = 8; // 이보다 짧게 나란한 것은 붐빈다고 보지 않는다(선 끝 모임, layoutMetrics 의 END_TRIM 과 같다)
 const ROW_GAP_TIGHT = 5; // LINE_GAP 줄이 다음 층까지 밀려날 때 외부 연결의 가로 토막이 다른 가로 토막과 띄우는 간격(예전 값, 6px 부터 붙는다)
 export const CONTENT_WIDTH = NODE.maxWidth - NODE.padLeft - NODE.padRight;
@@ -257,6 +271,26 @@ export async function layoutDiagram(g: DisplayGraph, pinned: Record<string, { x:
 
   const edgeById = new Map(g.edges.map((e) => [e.id, e]));
 
+  // 평소 화면 이름 글자(같은 글자·같은 끝 묶음은 "<이름> ×N"): 선 id → 글자. 출구선은 없다. 묶기는 이름·끝만 보므로 배치 전에는
+  // 점 자리에 길이 1 짜리 자리표를 준다.
+  const restingText = new Map(
+    restingLabelGroups(
+      g.edges.filter((e) => e.label).map((e) => ({ id: e.id, label: e.label!, from: e.from, to: e.to, egress: e.egress, points: [{ x: 0, y: 0 }, { x: 0, y: 1 }] })),
+    ).flatMap((grp) => grp.edgeIds.map((id) => [id, grp.text] as const)),
+  );
+  // 이름 있는 이중화 묶음 안 가로 연결(rowEdge)은 두 구성원 사이가 짧아 이름이 노드 고리에 붙는다. 그 묶음의 노드 간격을 이름 상자 폭 +
+  // 양쪽 (NODE_RING + ROW_GAP) 이상으로 넓힌다(ELK 는 INCLUDE_CHILDREN 에서도 영역별 elk.spacing.nodeNode 를 따른다).
+  // 구성원이 고정 노드면 넓히지 않는다(그 이름은 labelBlocked 에 들 수 있다).
+  const rowSpacing = new Map<string, number>();
+  for (const e of g.edges) {
+    const text = restingText.get(e.id);
+    if (text === undefined || !rowEdge(e.from, e.to) || pinned[e.from] || pinned[e.to]) continue;
+    const box = labelBox({ text, x: 0, y: 0, anchor: "middle" });
+    const need = Math.ceil(box.x2 - box.x1 + 2 * (NODE_RING + ROW_GAP)) + 1;
+    const p = parentOf(e.from)!;
+    rowSpacing.set(p, Math.max(rowSpacing.get(p) ?? NODE.gap, need));
+  }
+
   // One ELK run over the hierarchy under `tops`. Each edge sits in the lowest common ancestor container
   // of its endpoints; ELK returns its sections relative to that container, so the container's absolute
   // offset is added back.
@@ -274,7 +308,11 @@ export async function layoutDiagram(g: DisplayGraph, pinned: Record<string, { x:
       const n: ElkNode = filled.has(grp.id)
         ? {
             id: grp.id,
-            layoutOptions: { ...BASE_OPTIONS, "elk.padding": GROUP_PADDING },
+            layoutOptions: {
+              ...BASE_OPTIONS,
+              "elk.padding": GROUP_PADDING,
+              ...(rowSpacing.has(grp.id) ? { "elk.spacing.nodeNode": String(rowSpacing.get(grp.id)) } : {}),
+            },
             children: [],
             edges: [],
           }
@@ -453,7 +491,8 @@ export async function layoutDiagram(g: DisplayGraph, pinned: Record<string, { x:
   // 본 흐름(main) 배치 한 벌에서 외부 열을 쌓고 모든 선을 그린다. 외부 연결 줄이 붐비면 아래에서 그 틈을 벌린
   // 본 흐름으로 다시 부른다(openGap). crowd 는 벌릴 자리(y), crowdPx 는 다른 선과 16px 미만으로 나란한 외부 연결 길이.
   type Routed = { rects: Map<string, Rect>; points: Map<string, Pt[]>; degraded: Set<string>; crowd: Span[]; crowdPx: number; score: number[] };
-  const route = (base: ElkRun): Routed => {
+  // roomFor: 평소 화면 이름이 막혀 상자에서 LABEL_ROOM 떨어진 줄로 다시 그릴 외부 연결.
+  const route = (base: ElkRun, roomFor: ReadonlySet<string> = new Set()): Routed => {
   const rects = new Map(base.rects);
   const points = new Map(base.edges);
   const crowd: Span[] = [];
@@ -592,10 +631,10 @@ export async function layoutDiagram(g: DisplayGraph, pinned: Record<string, { x:
       // clear horizontal run to the channel; null if there is none. 가로 토막은 다른 선의 가로 토막과 gap 이상,
       // 세로 토막은 다른 선의 세로 토막과 LINE_GAP 이상 띄운다. stub·n 은 세로 토막만의, 세로·가로 토막 모두의 교차 수.
       type Exit = { x: number; y: number; y0: number; stub: number; n: number };
-      const exitRow = (mainId: string, m: Rect, channelX: number, gap: number): Exit | null => {
+      const exitRowFrom = (mainId: string, m: Rect, channelX: number, gap: number, from: number, dirs: readonly (1 | -1)[] = [1, -1]): Exit | null => {
         const xs = stubXs(mainId, m);
-        for (let d = 8; d <= span; d += 2) {
-          for (const dir of [1, -1] as const) {
+        for (let d = from; d <= span; d += 2) {
+          for (const dir of dirs) {
             const y0 = dir === 1 ? m.y + m.height : m.y;
             const y = y0 + dir * d;
             // 이 줄에 닿는 세로 토막 자리 가운데 교차가 가장 적은 곳(같으면 앞 후보). 예전 길찾기는 가운데 하나뿐이다.
@@ -611,6 +650,14 @@ export async function layoutDiagram(g: DisplayGraph, pinned: Record<string, { x:
           }
         }
         return null;
+      };
+      // roomFor 의 연결은 이름이 노드 고리에 붙지 않게, 예전 줄(8px~)과 같은 쪽(아래·위)에서 상자와 LABEL_ROOM 이상 떨어진 줄을 먼저
+      // 본다. 쪽을 바꾸면 뒤에 그리는 외부 연결과 엇갈린다. 그런 줄이 없거나 다른 선을 더 가로지르면 예전 줄을 쓴다.
+      const exitRow = (e: { id: string }, mainId: string, m: Rect, channelX: number, gap: number): Exit | null => {
+        const near = exitRowFrom(mainId, m, channelX, gap, 8);
+        if (!near || !roomFor.has(e.id)) return near;
+        const room = exitRowFrom(mainId, m, channelX, gap, LABEL_ROOM, [near.y > near.y0 ? 1 : -1]);
+        return room && room.n <= near.n ? room : near;
       };
       const used = new Map<string, number>();
       const entryY = (id: string, t: Rect): number => {
@@ -657,8 +704,8 @@ export async function layoutDiagram(g: DisplayGraph, pinned: Record<string, { x:
           // 다른 선과 LINE_GAP 이상 띄운 줄을 먼저 찾는다. 노드 사이 한 층에 외부 연결이 몰려 그 줄이 모자라면, 줄은
           // 다른 선의 가로 토막을 넘어 다음 층까지 내려가 선을 더 가로지른다. 그럴 때만 예전 간격(ROW_GAP_TIGHT)의 줄을 쓴다.
           const m = rects.get(mainId)!;
-          const roomy = wide ? exitRow(mainId, m, channelX, LINE_GAP) : null;
-          const tight = exitRow(mainId, m, channelX, ROW_GAP_TIGHT);
+          const roomy = wide ? exitRow(e, mainId, m, channelX, LINE_GAP) : null;
+          const tight = exitRow(e, mainId, m, channelX, ROW_GAP_TIGHT);
           const spilled = !!roomy && !!tight && roomy.stub > tight.stub && roomy.n > tight.n;
           const exit = roomy && !spilled ? roomy : tight; // tight 이면 이 연결의 가로 토막은 다른 선과 16px 미만으로 붙을 수 있다
           const into = exit && laneRoute(laneId, channelX);
@@ -747,8 +794,10 @@ export async function layoutDiagram(g: DisplayGraph, pinned: Record<string, { x:
   // 외부 연결 줄이 노드 사이 한 틈에 몰려 16px 를 못 지키면, 그 틈 아래 전체를 LINE_GAP 만큼 내려 틈을 넓히고 다시 그린다.
   // 위아래 순서는 그대로 두고 늘리기만 하므로 본 흐름 선의 교차·꺾임은 그대로다. 외부 연결이 꺾은선이 되거나 교차가
   // 늘면 받아들이지 않는다. 사용자가 옮겨 둔(고정) 노드가 있으면 그 자리와 어긋나므로 하지 않는다.
+  const noPins = Object.keys(pinned).length === 0;
   let best = route(cloneRun(main));
-  if (laneIds.length > 0 && Object.keys(pinned).length === 0) {
+  let bestBase = cloneRun(main);
+  if (laneIds.length > 0 && noPins) {
     // 한 번에 LINE_GAP 씩 벌려 보고, 교차·꺾은선이 처음보다 늘지 않은 것 가운데 붐빔이 가장 적은 것을 쓴다.
     const first = best;
     let base = cloneRun(main);
@@ -761,81 +810,170 @@ export async function layoutDiagram(g: DisplayGraph, pinned: Record<string, { x:
       const cand = route(next);
       const notWorse = cand.degraded.size <= first.degraded.size && cand.score.every((v, i) => v <= first.score[i]!);
       if (!notWorse) break;
-      if (cand.crowdPx < best.crowdPx) best = cand;
+      if (cand.crowdPx < best.crowdPx) {
+        best = cand;
+        bestBase = next;
+      }
       cur = cand;
       base = next;
     }
   }
-  const { rects, points, degraded } = best;
 
-  const out: Layout = { nodes: {}, groups: {}, edges: [], width: 0, height: 0 };
-  for (const grp of groups) out.groups[grp.id] = { id: grp.id, parent: parentOf(grp.id), ...rects.get(grp.id)! };
-  for (const n of nodes) {
-    const pin = pinned[n.id];
-    const ln: LaidOutNode = {
-      id: n.id,
-      parent: parentOf(n.id),
-      ...rects.get(n.id)!,
-      ...(pin ? { x: pin.x, y: pin.y } : {}),
-      displayLabel: truncate(n.label, CONTENT_WIDTH, LABEL_PX),
-    };
-    // 칩이 같은 줄에 있으면 그만큼 덜 써서, CSS 가 말풍선 없이 자르는 일이 없게 한다.
-    if (n.sub !== undefined) {
-      const az = azOf(n);
-      ln.displaySub = truncate(n.sub, CONTENT_WIDTH - (az !== undefined ? azChipWidth(az) : 0), SUB_PX);
+  const groupLabels = Object.fromEntries(groups.map((x) => [x.id, x.label]));
+  // 배치 한 벌(route 결과)에서 마지막 Layout 을 만든다: 고정 노드, 영역 다시 맞추기, 고정 노드 선의 꺾은선, 평소 화면 이름.
+  const assemble = (routed: Routed): Layout => {
+    const { rects, points } = routed;
+    const degraded = new Set(routed.degraded);
+    const out: Layout = { nodes: {}, groups: {}, edges: [], width: 0, height: 0, labels: [], labelBlocked: [] };
+    for (const grp of groups) out.groups[grp.id] = { id: grp.id, parent: parentOf(grp.id), ...rects.get(grp.id)! };
+    for (const n of nodes) {
+      const pin = pinned[n.id];
+      const ln: LaidOutNode = {
+        id: n.id,
+        parent: parentOf(n.id),
+        ...rects.get(n.id)!,
+        ...(pin ? { x: pin.x, y: pin.y } : {}),
+        displayLabel: truncate(n.label, CONTENT_WIDTH, LABEL_PX),
+      };
+      // 칩이 같은 줄에 있으면 그만큼 덜 써서, CSS 가 말풍선 없이 자르는 일이 없게 한다.
+      if (n.sub !== undefined) {
+        const az = azOf(n);
+        ln.displaySub = truncate(n.sub, CONTENT_WIDTH - (az !== undefined ? azChipWidth(az) : 0), SUB_PX);
+      }
+      out.nodes[n.id] = ln;
     }
-    out.nodes[n.id] = ln;
-  }
 
-  // A zone always wraps what is inside it: every zone holding a pinned node (directly or deeper) is
-  // re-fitted to its children's bounding box plus GROUP_PAD, innermost first, so it can grow or shrink.
-  // Other zones and unpinned nodes keep their ELK boxes; membership never changes.
-  const refit = new Set<string>();
-  for (const n of nodes) {
-    if (!pinned[n.id]) continue;
-    for (let p = parentOf(n.id); p !== null; p = parentOf(p)) refit.add(p);
-  }
-  for (const id of [...refit].sort((a, b) => depth(b) - depth(a))) {
-    const kids = [...Object.values(out.nodes), ...Object.values(out.groups)].filter((r) => r.parent === id);
-    if (kids.length === 0) continue;
-    const x1 = Math.min(...kids.map((r) => r.x));
-    const y1 = Math.min(...kids.map((r) => r.y));
-    const x2 = Math.max(...kids.map((r) => r.x + r.width));
-    const y2 = Math.max(...kids.map((r) => r.y + r.height));
-    Object.assign(out.groups[id], {
-      x: x1 - GROUP_PAD.side,
-      y: y1 - GROUP_PAD.top,
-      width: x2 - x1 + 2 * GROUP_PAD.side,
-      height: y2 - y1 + GROUP_PAD.top + GROUP_PAD.bottom,
-    });
-  }
-
-  // Pinned nodes keep their stored position; their edges (and edges of re-fitted zones) are redrawn as elbows.
-  const rectOf = (id: string): Rect => out.nodes[id] ?? out.groups[id];
-  const moved = (id: string) => !!pinned[id] || refit.has(id);
-  for (const e of g.edges) {
-    let pts = moved(e.from) || moved(e.to) ? elbowRoute(rectOf(e.from), rectOf(e.to)) : (points.get(e.id) ?? []);
-    if (pts.length < 2) {
-      // ELK returned no route for this edge.
-      pts = elbowRoute(rectOf(e.from), rectOf(e.to));
-      degraded.add(e.id);
+    // A zone always wraps what is inside it: every zone holding a pinned node (directly or deeper) is
+    // re-fitted to its children's bounding box plus GROUP_PAD, innermost first, so it can grow or shrink.
+    // Other zones and unpinned nodes keep their ELK boxes; membership never changes.
+    const refit = new Set<string>();
+    for (const n of nodes) {
+      if (!pinned[n.id]) continue;
+      for (let p = parentOf(n.id); p !== null; p = parentOf(p)) refit.add(p);
     }
-    const le: LaidOutEdge = { id: e.id, points: pts };
-    if (degraded.has(e.id)) le.degraded = true;
-    if (e.label !== undefined) {
-      const mid = pathMidpoint(pts);
-      if (mid) le.labelAt = mid;
+    for (const id of [...refit].sort((a, b) => depth(b) - depth(a))) {
+      const kids = [...Object.values(out.nodes), ...Object.values(out.groups)].filter((r) => r.parent === id);
+      if (kids.length === 0) continue;
+      const x1 = Math.min(...kids.map((r) => r.x));
+      const y1 = Math.min(...kids.map((r) => r.y));
+      const x2 = Math.max(...kids.map((r) => r.x + r.width));
+      const y2 = Math.max(...kids.map((r) => r.y + r.height));
+      Object.assign(out.groups[id], {
+        x: x1 - GROUP_PAD.side,
+        y: y1 - GROUP_PAD.top,
+        width: x2 - x1 + 2 * GROUP_PAD.side,
+        height: y2 - y1 + GROUP_PAD.top + GROUP_PAD.bottom,
+      });
     }
-    out.edges.push(le);
-  }
 
-  for (const r of [...Object.values(out.nodes), ...Object.values(out.groups)]) {
-    out.width = Math.max(out.width, r.x + r.width);
-    out.height = Math.max(out.height, r.y + r.height);
+    // Pinned nodes keep their stored position; their edges (and edges of re-fitted zones) are redrawn as elbows.
+    const rectOf = (id: string): Rect => out.nodes[id] ?? out.groups[id];
+    const moved = (id: string) => !!pinned[id] || refit.has(id);
+    const items: RestingLabelInput[] = [];
+    for (const e of g.edges) {
+      let pts = moved(e.from) || moved(e.to) ? elbowRoute(rectOf(e.from), rectOf(e.to)) : (points.get(e.id) ?? []);
+      if (pts.length < 2) {
+        // ELK returned no route for this edge.
+        pts = elbowRoute(rectOf(e.from), rectOf(e.to));
+        degraded.add(e.id);
+      }
+      const le: LaidOutEdge = { id: e.id, points: pts };
+      if (degraded.has(e.id)) le.degraded = true;
+      if (e.label !== undefined) {
+        const mid = pathMidpoint(pts);
+        if (mid) le.labelAt = mid;
+      }
+      out.edges.push(le);
+      if (e.label) items.push({ id: e.id, label: e.label, from: e.from, to: e.to, points: pts, egress: e.egress });
+    }
+
+    // 평소 화면 이름을 마지막 선 위에 놓는다(선 가운데부터 제 선을 따라 「지킬 것」을 지키는 첫 자리).
+    const { placed, blocked } = placeRestingLabels(out, items, groupLabels);
+    out.labels = placed;
+    out.labelBlocked = blocked;
+    for (const p of placed) {
+      const le = out.edges.find((e) => e.id === p.edgeIds[0]);
+      if (le) le.labelAt = { x: p.x, y: p.y };
+    }
+
+    for (const r of [...Object.values(out.nodes), ...Object.values(out.groups)]) {
+      out.width = Math.max(out.width, r.x + r.width);
+      out.height = Math.max(out.height, r.y + r.height);
+    }
+    for (const p of out.edges.flatMap((e) => e.points)) {
+      out.width = Math.max(out.width, p.x);
+      out.height = Math.max(out.height, p.y);
+    }
+    // 이름이 구성도 밖으로 나가면 그만큼 넓힌다(화면 맞춤·내보낸 그림이 이름을 자르지 않게).
+    for (const p of out.labels) {
+      const b = labelBox({ text: p.text, x: p.x, y: p.y, anchor: "middle" });
+      out.width = Math.max(out.width, b.x2);
+      out.height = Math.max(out.height, b.y2);
+    }
+    return out;
+  };
+
+  let out = assemble(best);
+  const degradedOf = (l: Layout) => l.edges.filter((e) => e.degraded).length;
+  // 외부 연결의 이름이 막혔으면(외부 열 줄이 상자 바로 곁을 지남) 그 연결만 상자에서 LABEL_ROOM 떨어진 줄로 다시 그려 본다. 막힌 이름이
+  // 줄고, 노드 통과 0 이고, 교차·꺾은선·붐빔이 늘지 않을 때만 쓴다. 이름이 막히지 않은 연결은 예전 줄 그대로다.
+  let roomFor: ReadonlySet<string> = new Set();
+  const crossIds = new Set(cross.map((e) => e.id));
+  const laneBlocked = new Set(out.labelBlocked.filter((id) => crossIds.has(id)));
+  if (laneBlocked.size > 0) {
+    const r = route(cloneRun(bestBase), laneBlocked);
+    const cand = assemble(r);
+    const ok = throughNodes(cand) === 0 && edgeCrossings(cand.edges) <= edgeCrossings(out.edges) && degradedOf(cand) <= degradedOf(out) && r.crowdPx <= best.crowdPx;
+    if (ok && cand.labelBlocked.length < out.labelBlocked.length) {
+      out = cand;
+      roomFor = laneBlocked;
+    }
   }
-  for (const p of out.edges.flatMap((e) => e.points)) {
-    out.width = Math.max(out.width, p.x);
-    out.height = Math.max(out.height, p.y);
+  // 그래도 이름을 놓을 자리가 없으면(labelBlocked) 막힌 이름 자리를 담는 가로 틈을 LINE_GAP 씩 벌려 다시 그려 본다. 노드 통과 0 이고
+  // 교차·꺾은선이 처음보다 늘지 않은 것 가운데 막힌 이름이 가장 적은 것을 쓴다. 고정 노드가 있으면 하지 않는다.
+  if (out.labelBlocked.length > 0 && noPins) {
+    const firstCross = edgeCrossings(out.edges);
+    const firstDegraded = degradedOf(out);
+    let base = bestBase;
+    let cur = out;
+    for (let round = 0; round < GAP_ROUNDS && cur.labelBlocked.length > 0; round++) {
+      const next = cloneRun(base);
+      const spans = mergeSpans(cur.labels.filter((p) => cur.labelBlocked.includes(p.edgeIds[0])).map((p) => ({ lo: p.y, hi: p.y + NODE.layerGap })));
+      const opened = spans.sort((a, b) => b.lo - a.lo).filter((sp) => openGap(next, sp, LINE_GAP, (id) => !!g.nodes[id])).length;
+      if (opened === 0) break;
+      const cand = assemble(route(next, roomFor));
+      const ok = throughNodes(cand) === 0 && edgeCrossings(cand.edges) <= firstCross && degradedOf(cand) <= firstDegraded;
+      if (!ok) break;
+      if (cand.labelBlocked.length < out.labelBlocked.length) out = cand;
+      cur = cand;
+      base = next;
+    }
   }
   return out;
+
+  /** 끝점이 아닌 노드(또는 접힌·빈 영역) 상자를 지나는 (선, 상자) 수. */
+  function throughNodes(l: Layout): number {
+    const boxes = new Map<string, Rect>([...Object.entries(l.nodes), ...Object.entries(l.groups).filter(([id]) => !filled.has(id))]);
+    return crossings(boxes, new Map(g.edges.map((e) => [e.id, [e.from, e.to] as [string, string]])), new Map(l.edges.map((e) => [e.id, e.points]))).size;
+  }
+}
+
+/** 서로 다른 두 선의 가로·세로 토막이 서로의 안쪽(양 끝 1px 제외)에서 만나는 점 수(layoutMetrics 의 crossings 와 같은 셈). */
+function edgeCrossings(edges: LaidOutEdge[]): number {
+  const segs = edges.map((e) => e.points.slice(1).map((b, i) => ({ a: e.points[i]!, b })));
+  const isH = (s: { a: Pt; b: Pt }) => Math.abs(s.a.y - s.b.y) < 0.5;
+  const isV = (s: { a: Pt; b: Pt }) => Math.abs(s.a.x - s.b.x) < 0.5;
+  const inside = (v: number, a: number, b: number) => v > Math.min(a, b) + 1 && v < Math.max(a, b) - 1;
+  let n = 0;
+  for (let i = 0; i < segs.length; i++) {
+    for (let j = i + 1; j < segs.length; j++) {
+      for (const u of segs[i]!) {
+        for (const v of segs[j]!) {
+          const [h, w] = isH(u) && isV(v) ? [u, v] : isV(u) && isH(v) ? [v, u] : [null, null];
+          if (h && w && inside(w.a.x, h.a.x, h.b.x) && inside(h.a.y, w.a.y, w.b.y)) n++;
+        }
+      }
+    }
+  }
+  return n;
 }

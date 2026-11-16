@@ -1,6 +1,6 @@
 import { alongCandidates, clusterByEnd, labelBox, NODE_RING, tooClose, type Box } from "./edgeLabels";
 import type { Layout, Rect } from "./layout";
-import { rectHit, zoneHeadPill } from "./layoutMetrics";
+import { rectHit, zoneHeadPill } from "./geometry";
 
 type Pt = { x: number; y: number };
 

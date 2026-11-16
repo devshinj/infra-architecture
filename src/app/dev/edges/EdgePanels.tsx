@@ -84,7 +84,7 @@ function PanelView({ panel }: { panel: Panel }) {
     [panel],
   );
   const layout = useMemo<Layout>(() => ({
-    nodes: {}, groups: {}, width: 330, height: 240,
+    nodes: {}, groups: {}, width: 330, height: 240, labels: [], labelBlocked: [],
     edges: panel.edges.map((e) => {
       const mid = e.pts[Math.floor(e.pts.length / 2)];
       return { id: e.id, points: e.pts.map(([x, y]) => ({ x, y })), labelAt: { x: mid[0], y: mid[1] } };
