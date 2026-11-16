@@ -802,7 +802,11 @@ export async function layoutDiagram(g: DisplayGraph, pinned: Record<string, { x:
   // 모든 선을 그린 뒤, 서로 다른 선이 LINE_GAP 미만으로 나란한 안쪽 토막을 밀어 띄운다(노드 통과·교차가 늘면 밀지 않는다).
   // 이름 자리는 이 뒤(assemble)에서 정하고, 틈 벌리기·외부 연결 다시 그리기도 모두 route 를 거치므로 어느 배치든 띄운 뒤에 이름을 놓는다.
   // 붐빔(crowd)은 위에서 띄우기 전 모양으로 쟀다. 고정 노드가 있으면 하지 않는다(그 선은 assemble 에서 꺾은선으로 다시 그린다).
-  if (noPins) for (const [id, pts] of separateParallels(points, edgeEnds, shapeBoxes, LINE_GAP)) points.set(id, pts);
+  // 펼친 영역 테두리도 넘겨, 민 선이 테두리에 붙거나 영역 밖·남의 영역으로 넘어가지 않게 한다.
+  if (noPins) {
+    const zones = groups.filter((x) => filled.has(x.id)).map((x) => rects.get(x.id)!);
+    for (const [id, pts] of separateParallels(points, edgeEnds, shapeBoxes, LINE_GAP, zones)) points.set(id, pts);
+  }
 
   return { rects, points, degraded, crowd: mergeSpans(crowd), crowdPx, score: laneScore };
   };
