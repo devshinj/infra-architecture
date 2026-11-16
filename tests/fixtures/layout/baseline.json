@@ -181,22 +181,22 @@
   },
   "state-portal": {
     "default": {
-      "crossings": 1,
-      "sharedPx": 48,
+      "crossings": 0,
+      "sharedPx": 2372,
       "parallelPx": 0,
       "throughNode": 0,
-      "bends": 17,
-      "aspect": 3.442514734774067,
-      "zoneHeadCrossings": 0
+      "bends": 47,
+      "aspect": 1.0378088578088578,
+      "zoneHeadCrossings": 1
     },
     "expanded": {
-      "crossings": 1,
-      "sharedPx": 48,
+      "crossings": 0,
+      "sharedPx": 2372,
       "parallelPx": 0,
       "throughNode": 0,
-      "bends": 17,
-      "aspect": 3.442514734774067,
-      "zoneHeadCrossings": 0
+      "bends": 47,
+      "aspect": 1.0378088578088578,
+      "zoneHeadCrossings": 1
     }
   }
 }
