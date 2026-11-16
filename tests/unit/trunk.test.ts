@@ -10,7 +10,9 @@ describe("nextTrunk", () => {
     expect(nextTrunk(null, click("s1", ["a", "b", "c"]))).toEqual({ trunk: abc, select: null });
   });
   it("same segKey keeps current", () => {
-    expect(nextTrunk(abc, click("s1", ["a", "b", "c"]))).toEqual({ trunk: abc, select: null });
+    const r = nextTrunk(abc, { segKey: "s1", edgeIds: ["a", "b", "c"], at: { x: 9, y: 9 } });
+    expect(r.trunk).toBe(abc);
+    expect(r.select).toBeNull();
   });
   it("narrows to a subset", () => {
     const r = nextTrunk(abc, click("s2", ["b", "c"]));
@@ -59,5 +61,21 @@ describe("branchSpot", () => {
   });
   it("null when none", () => {
     expect(branchSpot(pts, { x: 10, y: 0 }, segs, "z")).toBeNull();
+  });
+});
+
+describe("branchSpot with a cornered branch piece", () => {
+  // edge a: (0,0)->(100,0)->(100,100)->(200,100); trunk for a,b first, then a alone turns the corner
+  const pts = [{ x: 0, y: 0 }, { x: 100, y: 0 }, { x: 100, y: 100 }, { x: 200, y: 100 }];
+  const segs = [
+    { edgeIds: ["a", "b"], pts: [{ x: 0, y: 0 }, { x: 60, y: 0 }] },
+    { edgeIds: ["a"], pts: [{ x: 60, y: 0 }, { x: 100, y: 0 }, { x: 100, y: 100 }] },
+    { edgeIds: ["a", "b"], pts: [{ x: 100, y: 100 }, { x: 200, y: 100 }] },
+  ];
+  it("click on source half: enters at the source-side end of the cornered piece", () => {
+    expect(branchSpot(pts, { x: 10, y: 0 }, segs, "a")).toEqual({ x: 74, y: 0 });
+  });
+  it("click on target half: enters at the target-side end, not the far end", () => {
+    expect(branchSpot(pts, { x: 190, y: 100 }, segs, "a")).toEqual({ x: 100, y: 86 });
   });
 });
