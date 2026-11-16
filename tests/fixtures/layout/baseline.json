@@ -7,7 +7,9 @@
       "throughNode": 0,
       "bends": 16,
       "aspect": 0.7783141762452108,
-      "zoneHeadCrossings": 2
+      "zoneHeadCrossings": 2,
+      "labelViolations": 0,
+      "labelMissing": 0
     },
     "expanded": {
       "crossings": 1,
@@ -16,7 +18,9 @@
       "throughNode": 0,
       "bends": 16,
       "aspect": 0.7783141762452108,
-      "zoneHeadCrossings": 2
+      "zoneHeadCrossings": 2,
+      "labelViolations": 0,
+      "labelMissing": 0
     }
   },
   "s2": {
@@ -27,7 +31,9 @@
       "throughNode": 0,
       "bends": 8,
       "aspect": 0.8322368421052632,
-      "zoneHeadCrossings": 2
+      "zoneHeadCrossings": 2,
+      "labelViolations": 0,
+      "labelMissing": 0
     },
     "expanded": {
       "crossings": 0,
@@ -36,7 +42,9 @@
       "throughNode": 0,
       "bends": 8,
       "aspect": 0.8322368421052632,
-      "zoneHeadCrossings": 2
+      "zoneHeadCrossings": 2,
+      "labelViolations": 0,
+      "labelMissing": 0
     }
   },
   "s3": {
@@ -47,7 +55,9 @@
       "throughNode": 0,
       "bends": 34,
       "aspect": 1.0005479452054795,
-      "zoneHeadCrossings": 3
+      "zoneHeadCrossings": 3,
+      "labelViolations": 0,
+      "labelMissing": 0
     },
     "expanded": {
       "crossings": 3,
@@ -56,7 +66,9 @@
       "throughNode": 0,
       "bends": 34,
       "aspect": 1.0005479452054795,
-      "zoneHeadCrossings": 3
+      "zoneHeadCrossings": 3,
+      "labelViolations": 0,
+      "labelMissing": 0
     }
   },
   "s4": {
@@ -67,7 +79,9 @@
       "throughNode": 0,
       "bends": 80,
       "aspect": 1.5892521994134898,
-      "zoneHeadCrossings": 7
+      "zoneHeadCrossings": 7,
+      "labelViolations": 0,
+      "labelMissing": 0
     },
     "expanded": {
       "crossings": 26,
@@ -76,7 +90,9 @@
       "throughNode": 0,
       "bends": 80,
       "aspect": 1.5892521994134898,
-      "zoneHeadCrossings": 7
+      "zoneHeadCrossings": 7,
+      "labelViolations": 0,
+      "labelMissing": 0
     }
   },
   "s5": {
@@ -87,7 +103,9 @@
       "throughNode": 0,
       "bends": 8,
       "aspect": 0.5803212851405622,
-      "zoneHeadCrossings": 2
+      "zoneHeadCrossings": 2,
+      "labelViolations": 0,
+      "labelMissing": 0
     },
     "expanded": {
       "crossings": 0,
@@ -96,27 +114,33 @@
       "throughNode": 0,
       "bends": 8,
       "aspect": 0.5803212851405622,
-      "zoneHeadCrossings": 2
+      "zoneHeadCrossings": 2,
+      "labelViolations": 0,
+      "labelMissing": 0
     }
   },
   "state-25": {
     "default": {
       "crossings": 2,
-      "sharedPx": 328,
-      "parallelPx": 88,
+      "sharedPx": 343,
+      "parallelPx": 0,
       "throughNode": 0,
       "bends": 45,
       "aspect": 2.0465102040816325,
-      "zoneHeadCrossings": 4
+      "zoneHeadCrossings": 4,
+      "labelViolations": 0,
+      "labelMissing": 0
     },
     "expanded": {
       "crossings": 2,
-      "sharedPx": 328,
-      "parallelPx": 88,
+      "sharedPx": 343,
+      "parallelPx": 0,
       "throughNode": 0,
       "bends": 45,
       "aspect": 2.0465102040816325,
-      "zoneHeadCrossings": 4
+      "zoneHeadCrossings": 4,
+      "labelViolations": 0,
+      "labelMissing": 0
     }
   },
   "state-50": {
@@ -127,7 +151,9 @@
       "throughNode": 0,
       "bends": 9,
       "aspect": 2.1790067720090294,
-      "zoneHeadCrossings": 0
+      "zoneHeadCrossings": 0,
+      "labelViolations": 0,
+      "labelMissing": 0
     },
     "expanded": {
       "crossings": 69,
@@ -136,18 +162,22 @@
       "throughNode": 0,
       "bends": 155,
       "aspect": 4.076639072847682,
-      "zoneHeadCrossings": 13
+      "zoneHeadCrossings": 13,
+      "labelViolations": 0,
+      "labelMissing": 0
     }
   },
   "state-100": {
     "default": {
       "crossings": 1,
-      "sharedPx": 70,
+      "sharedPx": 79,
       "parallelPx": 0,
       "throughNode": 0,
       "bends": 13,
       "aspect": 2.537923250564334,
-      "zoneHeadCrossings": 0
+      "zoneHeadCrossings": 0,
+      "labelViolations": 0,
+      "labelMissing": 0
     },
     "expanded": {
       "crossings": 124,
@@ -156,27 +186,33 @@
       "throughNode": 0,
       "bends": 333,
       "aspect": 7.922990797546012,
-      "zoneHeadCrossings": 25
+      "zoneHeadCrossings": 25,
+      "labelViolations": 0,
+      "labelMissing": 0
     }
   },
   "state-200": {
     "default": {
       "crossings": 1,
-      "sharedPx": 70,
+      "sharedPx": 79,
       "parallelPx": 0,
       "throughNode": 0,
       "bends": 13,
       "aspect": 2.5446952595936794,
-      "zoneHeadCrossings": 0
+      "zoneHeadCrossings": 0,
+      "labelViolations": 0,
+      "labelMissing": 0
     },
     "expanded": {
-      "crossings": 612,
-      "sharedPx": 227385,
-      "parallelPx": 480,
+      "crossings": 611,
+      "sharedPx": 228561,
+      "parallelPx": 0,
       "throughNode": 0,
       "bends": 807,
       "aspect": 12.062409766454351,
-      "zoneHeadCrossings": 53
+      "zoneHeadCrossings": 53,
+      "labelViolations": 0,
+      "labelMissing": 0
     }
   },
   "state-portal": {
@@ -187,7 +223,9 @@
       "throughNode": 0,
       "bends": 47,
       "aspect": 1.0955011655011655,
-      "zoneHeadCrossings": 1
+      "zoneHeadCrossings": 1,
+      "labelViolations": 0,
+      "labelMissing": 0
     },
     "expanded": {
       "crossings": 0,
@@ -196,7 +234,9 @@
       "throughNode": 0,
       "bends": 47,
       "aspect": 1.0955011655011655,
-      "zoneHeadCrossings": 1
+      "zoneHeadCrossings": 1,
+      "labelViolations": 0,
+      "labelMissing": 0
     }
   }
 }

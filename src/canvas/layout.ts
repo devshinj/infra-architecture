@@ -6,6 +6,8 @@ import type { DNode } from "@/domain/types";
 import type { DisplayGraph } from "./display";
 import { LABEL_LINE, labelBox, NODE_RING, ROW_GAP } from "./edgeLabels";
 import { elbowRoute } from "./elbow";
+import { countCrossings, segmentsCross } from "./geometry";
+import { separateParallels } from "./separate";
 import { placeRestingLabels, restingLabelGroups, type PlacedRestingLabel, type RestingLabelInput } from "./restingLabels";
 import { textWidth, truncate } from "./text";
 
@@ -488,6 +490,10 @@ export async function layoutDiagram(g: DisplayGraph, pinned: Record<string, { x:
   const cross = g.edges.filter((e) => inLane(e.from) !== inLane(e.to));
   const laneRuns = await Promise.all(laneIds.map(async (id) => ({ id, run: await runElk(new Set([id])) })));
 
+  // 고정 노드가 없을 때만 노드를 옮기는 틈 벌리기·선 띄우기를 한다.
+  const noPins = Object.keys(pinned).length === 0;
+  const edgeEnds = new Map(g.edges.map((e) => [e.id, [e.from, e.to] as [string, string]]));
+
   // 본 흐름(main) 배치 한 벌에서 외부 열을 쌓고 모든 선을 그린다. 외부 연결 줄이 붐비면 아래에서 그 틈을 벌린
   // 본 흐름으로 다시 부른다(openGap). crowd 는 벌릴 자리(y), crowdPx 는 다른 선과 16px 미만으로 나란한 외부 연결 길이.
   type Routed = { rects: Map<string, Rect>; points: Map<string, Pt[]>; degraded: Set<string>; crowd: Span[]; crowdPx: number; score: number[] };
@@ -523,6 +529,10 @@ export async function layoutDiagram(g: DisplayGraph, pinned: Record<string, { x:
 
   // Edges that could not get a clear route; drawn as plain elbows and flagged on the result.
   const degraded = new Set<string>();
+  // 외부 연결을 그린 결과(외부 열이 있을 때). 붐비는 줄 찾기에 쓴다.
+  let laneRun: { routes: Map<string, Pt[]>; degraded: Set<string> } | null = null;
+  // 선이 지나면 안 되는 상자: 노드와 접힌·빈 영역.
+  const shapeBoxes = new Map([...rects].filter(([id]) => g.nodes[id] || (g.groups[id] && !filled.has(id))));
 
   // Redundancy row connectors: facing borders on a line inside both members' vertical ranges, in the
   // edge's own direction. If another member sits between the two, the connector dips into the group's
@@ -724,26 +734,19 @@ export async function layoutDiagram(g: DisplayGraph, pinned: Record<string, { x:
 
     // 두 가지로 그려 보고, 16px 쪽이 예전 길찾기보다 꺾은선(degraded)·상자 관통·교차 가운데 하나라도 늘면 예전 쪽을 쓴다.
     // 선이 노드를 지나거나 교차가 느는 것은 16px 규칙보다 나쁘다(16px 규칙의 정해진 예외, 기준선이 지킨다).
-    const boxes = new Map([...rects].filter(([id]) => g.nodes[id] || (g.groups[id] && !filled.has(id))));
     const laneEnds = new Map(cross.map((e) => [e.id, [e.from, e.to] as [string, string]]));
     const segsOf = (pts: Pt[]) => pts.slice(1).map((b, i) => ({ a: pts[i]!, b }));
     const fixedSegs = [...points.values()].flatMap(segsOf);
-    const meet = (u: { a: Pt; b: Pt }, v: { a: Pt; b: Pt }): boolean => {
-      const isH = (s: { a: Pt; b: Pt }) => Math.abs(s.a.y - s.b.y) < 0.5;
-      const isV = (s: { a: Pt; b: Pt }) => Math.abs(s.a.x - s.b.x) < 0.5;
-      const [h, w] = isH(u) && isV(v) ? [u, v] : isV(u) && isH(v) ? [v, u] : [null, null];
-      return !!h && !!w && inside(w.a.x, h.a.x, h.b.x) && inside(h.a.y, w.a.y, w.b.y);
-    };
     const score = (run: { routes: Map<string, Pt[]>; degraded: Set<string> }): number[] => {
       const lanes = [...run.routes.values()].map(segsOf);
       let n = 0;
       lanes.forEach((ls, i) => {
         for (const u of ls) {
-          for (const v of fixedSegs) if (meet(u, v)) n++;
-          for (const other of lanes.slice(i + 1)) for (const v of other) if (meet(u, v)) n++;
+          for (const v of fixedSegs) if (segmentsCross(u, v)) n++;
+          for (const other of lanes.slice(i + 1)) for (const v of other) if (segmentsCross(u, v)) n++;
         }
       });
-      return [run.degraded.size, crossings(boxes, laneEnds, run.routes).size, n];
+      return [run.degraded.size, crossings(shapeBoxes, laneEnds, run.routes).size, n];
     };
     const roomyRun = routeLanes(true);
     const oldRun = routeLanes(false);
@@ -752,14 +755,22 @@ export async function layoutDiagram(g: DisplayGraph, pinned: Record<string, { x:
     laneScore = run === roomyRun ? rs : os;
     for (const [id, pts] of run.routes) points.set(id, pts);
     for (const id of run.degraded) degraded.add(id);
+    laneRun = run;
     // Edges between two different lane groups (rare): a plain elbow.
     for (const e of g.edges) if (!points.has(e.id)) points.set(e.id, elbowRoute(rects.get(e.from)!, rects.get(e.to)!));
+  }
 
+  if (laneRun) {
+    const run = laneRun;
     // 붐비는 외부 연결 줄: 본 흐름 안의 가로 토막이 다른 선의 가로 토막과 16px 미만으로 나란하면, 그 선이 나온 노드
-    // 바로 아래(위로 나갔으면 바로 위)를 벌릴 자리로 적는다. 외부 열 쪽(통로 오른쪽)은 보지 않는다.
-    const rowsOf = (pts: Pt[]) => segsOf(pts).filter((u) => Math.abs(u.a.y - u.b.y) < 0.5 && Math.abs(u.a.x - u.b.x) > 1);
+    // 바로 아래(위로 나갔으면 바로 위)를 벌릴 자리로 적는다. 외부 열 쪽(통로 오른쪽)은 보지 않는다. 외부 연결이 LINE_GAP 줄을
+    // 못 찾아 ROW_GAP_TIGHT 로 물러선 줄이 여기 걸리면, 아래(layoutDiagram)에서 그 틈을 openGap 으로 벌려 다시 그려 보고
+    // 나빠지지 않을 때만 받는다. 띄우기(separateParallels) 전에 잰다: 띄우기로 붐빔이 가려지면 교차를 줄이던 틈 벌리기가 빠진다.
+    const rowsOf = (pts: Pt[]) =>
+      pts.slice(1).map((b, i) => ({ a: pts[i]!, b })).filter((u) => Math.abs(u.a.y - u.b.y) < 0.5 && Math.abs(u.a.x - u.b.x) > 1);
     const others = [...points].map(([id, pts]) => ({ id, rows: rowsOf(pts) }));
-    for (const [id, pts] of run.routes) {
+    for (const id of run.routes.keys()) {
+      const pts = points.get(id)!;
       if (run.degraded.has(id)) continue;
       const e = edgeById.get(id)!;
       const mainId = inLane(e.from) ? e.to : e.from;
@@ -788,13 +799,17 @@ export async function layoutDiagram(g: DisplayGraph, pinned: Record<string, { x:
     }
   }
 
+  // 모든 선을 그린 뒤, 서로 다른 선이 LINE_GAP 미만으로 나란한 안쪽 토막을 밀어 띄운다(노드 통과·교차가 늘면 밀지 않는다).
+  // 이름 자리는 이 뒤(assemble)에서 정하고, 틈 벌리기·외부 연결 다시 그리기도 모두 route 를 거치므로 어느 배치든 띄운 뒤에 이름을 놓는다.
+  // 붐빔(crowd)은 위에서 띄우기 전 모양으로 쟀다. 고정 노드가 있으면 하지 않는다(그 선은 assemble 에서 꺾은선으로 다시 그린다).
+  if (noPins) for (const [id, pts] of separateParallels(points, edgeEnds, shapeBoxes, LINE_GAP)) points.set(id, pts);
+
   return { rects, points, degraded, crowd: mergeSpans(crowd), crowdPx, score: laneScore };
   };
 
   // 외부 연결 줄이 노드 사이 한 틈에 몰려 16px 를 못 지키면, 그 틈 아래 전체를 LINE_GAP 만큼 내려 틈을 넓히고 다시 그린다.
   // 위아래 순서는 그대로 두고 늘리기만 하므로 본 흐름 선의 교차·꺾임은 그대로다. 외부 연결이 꺾은선이 되거나 교차가
-  // 늘면 받아들이지 않는다. 사용자가 옮겨 둔(고정) 노드가 있으면 그 자리와 어긋나므로 하지 않는다.
-  const noPins = Object.keys(pinned).length === 0;
+  // 늘면 받아들이지 않는다. 사용자가 옮겨 둔(고정) 노드가 있으면 그 자리와 어긋나므로 하지 않는다(noPins).
   let best = route(cloneRun(main));
   let bestBase = cloneRun(main);
   if (laneIds.length > 0 && noPins) {
@@ -954,26 +969,11 @@ export async function layoutDiagram(g: DisplayGraph, pinned: Record<string, { x:
   /** 끝점이 아닌 노드(또는 접힌·빈 영역) 상자를 지나는 (선, 상자) 수. */
   function throughNodes(l: Layout): number {
     const boxes = new Map<string, Rect>([...Object.entries(l.nodes), ...Object.entries(l.groups).filter(([id]) => !filled.has(id))]);
-    return crossings(boxes, new Map(g.edges.map((e) => [e.id, [e.from, e.to] as [string, string]])), new Map(l.edges.map((e) => [e.id, e.points]))).size;
+    return crossings(boxes, edgeEnds, new Map(l.edges.map((e) => [e.id, e.points]))).size;
   }
 }
 
-/** 서로 다른 두 선의 가로·세로 토막이 서로의 안쪽(양 끝 1px 제외)에서 만나는 점 수(layoutMetrics 의 crossings 와 같은 셈). */
+/** 서로 다른 두 선의 가로·세로 토막이 서로의 안쪽(양 끝 1px 제외)에서 만나는 점 수(layoutMetrics 의 crossings 와 같은 셈, geometry.ts). */
 function edgeCrossings(edges: LaidOutEdge[]): number {
-  const segs = edges.map((e) => e.points.slice(1).map((b, i) => ({ a: e.points[i]!, b })));
-  const isH = (s: { a: Pt; b: Pt }) => Math.abs(s.a.y - s.b.y) < 0.5;
-  const isV = (s: { a: Pt; b: Pt }) => Math.abs(s.a.x - s.b.x) < 0.5;
-  const inside = (v: number, a: number, b: number) => v > Math.min(a, b) + 1 && v < Math.max(a, b) - 1;
-  let n = 0;
-  for (let i = 0; i < segs.length; i++) {
-    for (let j = i + 1; j < segs.length; j++) {
-      for (const u of segs[i]!) {
-        for (const v of segs[j]!) {
-          const [h, w] = isH(u) && isV(v) ? [u, v] : isV(u) && isH(v) ? [v, u] : [null, null];
-          if (h && w && inside(w.a.x, h.a.x, h.b.x) && inside(h.a.y, w.a.y, w.b.y)) n++;
-        }
-      }
-    }
-  }
-  return n;
+  return countCrossings(edges.map((e) => e.points));
 }

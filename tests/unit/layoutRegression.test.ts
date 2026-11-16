@@ -23,11 +23,17 @@ import { fx } from "../fixtures/spike";
 // state-25 에 남은 88px 는 외부 연결이 아닌 부하 분산기 두 선이다.
 // state-portal(2026-11-16, v4): 실제 사용자포털 구성도(식별 정보 걷어냄)를 기준 구성도로 넣었다. 연결선 경로·가독성 개선(feat/edge-routing)의 전후를 같은 구성도로 견주려는 것이다.
 // 이름 자리 확보(2026-11-16, Task 3)로 다시 잼: 모든 기준 구성도의 기본·펼친 화면에서 평소 화면 이름 겹침(labelViolations) 0,
-// 빠진 이름(labelMissing) 0 을 지킨다. 이름 자리 확보로 꺾임·크기가 늘었다(사용자 결정). 꺾임은 그대로이고, 크기는 이중화 묶음 안
+// 빠진 이름(labelMissing) 0 을 지킨다. 이름 자리 확보로 크기가 늘었다(사용자 결정). 꺾임은 그대로이고, 크기는 이중화 묶음 안
 // 이름 있는 가로 연결의 두 노드 사이를 벌려 넓어지거나(s2 708→759·aspect 0.776→0.832, s4 1994→2168·1.462→1.589,
 // s5 551→578·0.553→0.580, state-portal 1781→1880·1.038→1.096, 기본·펼친 화면 같음), 구성도 아래 끝 이름 상자만큼 높이가
 // 늘었다(state-50 기본 436→443·2.214→2.179, state-100 기본 436→443·2.579→2.538, state-200 기본 436→443·2.586→2.545).
 // 교차·평행·노드 통과·이름 알약은 모두 이전 값 그대로다.
+// 모든 선 16px 띄우기(2026-11-16, Task 5, separate.ts)로 다시 잼: baseline.json 은 지금 값을 빠짐없이 적은 것이다(sharedPx·
+// labelViolations·labelMissing 포함, 시험이 지키지 않는 값도). 평행은 모두 0 이 됐다(state-25 기본·펼친 화면 88→0, state-200
+// 펼친 화면 480→0). 교차는 늘지 않았고 state-200 펼친 화면만 612→611 로 줄었다. 꺾임·노드 통과·이름 알약·이름 겹침·크기는
+// 그대로다. 지키지 않는 sharedPx 는 민 토막이 같은 줄기 식구와 겹치는 만큼 늘었다(state-25 328→343, state-200 펼친 화면
+// 227385→228561). state-100·state-200 기본의 sharedPx 70→79 는 Task 3(막힌 외부 연결 다시 그리기)에서 이미 바뀌었는데
+// 기준선에 적지 않았던 것이다. state-portal 기본은 교차 0·평행 0 을 지킨다(브라우저 글자 폭으로만 보이는 붐빔은 Task 9 에서 본다).
 // zoneHeadCrossings(펼친 영역 이름 알약 자리를 지나는 선)는 기하로만 잰다: 사용자 결정으로 알약을 연결선 위 층(ZoneNameLayer)에 그려
 // 선이 알약 뒤로 지나가므로, 배치는 이 자리를 피하지 않는다.
 const baseline = JSON.parse(readFileSync(join(process.cwd(), "tests/fixtures/layout/baseline.json"), "utf8")) as Record<
@@ -49,7 +55,8 @@ test.each(Object.keys(baseline))("%s: 기본 화면은 기준선보다 나빠지
   expect(m.labelViolations).toBe(0);
   expect(m.labelMissing).toBe(0);
   expect(m.crossings).toBeLessThanOrEqual(base.crossings);
-  expect(m.parallelPx).toBeLessThanOrEqual(base.parallelPx);
+  // 평소 화면에서는 서로 다른 선이 16px 미만으로 나란히 지나지 않는다(모든 기준 구성도).
+  expect(m.parallelPx).toBe(0);
   expect(m.throughNode).toBe(0);
   expect(m.bends).toBeLessThanOrEqual(base.bends);
   expect(m.zoneHeadCrossings).toBeLessThanOrEqual(base.zoneHeadCrossings);
@@ -69,15 +76,12 @@ test.each(Object.keys(baseline))("%s: 모두 펼친 화면은 기준선보다 �
   expect(m.zoneHeadCrossings).toBeLessThanOrEqual(base.zoneHeadCrossings);
 }, LIMIT);
 
-// 평소 화면(샘플, 40개 이하 구성도, 접힌 기본 화면)에서는 서로 다른 선이 16px 미만으로 나란히 지나지 않는다.
-// state-25 는 빠진다: 외부 열 줄기는 2단계에서 풀렸지만, 부하 분산기에서 WAS 두 대로 가는 두 선(ELK 배치)이 15.8px 로
-// 나란한 88px 가 남는다. 위 기준선 시험이 나빠지지 않게만 지킨다.
-// s1 은 묶음 경계 합치기로 WAS 줄 아래에 몰리던 연결이 줄어 0 이 되어 들어왔다.
-const EVERYDAY = ["s1", "s2", "s3", "s4", "s5", "state-50", "state-100"];
-
-test.each(EVERYDAY)("%s: default view has no parallel lines closer than 16px", async (name) => {
-  const { layout, ends } = await defaultViewLayout(load(name));
-  expect(measureLayout(layout, ends, 16).parallelPx).toBe(0);
+// 사용자포털 구성도(실제 구성도) 기본 화면: 교차 0, 16px 미만 평행 0.
+test("state-portal: default view has no crossings and no parallel lines closer than 16px", async () => {
+  const { layout, ends } = await defaultViewLayout(load("state-portal"));
+  const m = measureLayout(layout, ends, 16);
+  expect(m.crossings).toBe(0);
+  expect(m.parallelPx).toBe(0);
 }, LIMIT);
 
 // 외부 열로 몰리는 연결. 기준값은 455fd67(이 단계 전) 배치로 잰 교차·꺾임이다. 16px 를 지키려다 꺾은선(degraded)이

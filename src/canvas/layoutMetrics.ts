@@ -1,7 +1,7 @@
 import type { DiagramState } from "@/domain/types";
 import { buildDisplayGraph, defaultDisplayOptions, type DisplayGraph } from "./display";
 import { labelViolates, type PlacedRestingLabel, type RestingLabelInput } from "./restingLabels";
-import { NAME_PX, rectHit, zoneHeadPill } from "./geometry";
+import { countCrossings, END_TRIM, isHorizontal, isVertical, NAME_PX, pathSegments, rectHit, trimmedRange, zoneHeadPill, type PathSeg } from "./geometry";
 import { layoutDiagram, type Layout, type Rect } from "./layout";
 
 /** 배치 읽기 쉬움을 재는 값. 단계마다 이 값이 나빠지지 않았는지 회귀 시험이 지킨다. */
@@ -17,48 +17,16 @@ export interface LayoutMetrics {
   labelMissing: number; // 이름이 있고 출구선이 아닌데 평소 화면 이름에 빠진 선 수(labels 를 줘야 잰다)
 }
 
-/** 선의 첫 점과 마지막 점에서 이만큼은 노드 옆이라 나란해도 세지 않는다. */
-export const END_TRIM = 8;
+// 알약 자리·상자 관통·선 끝 덜기(END_TRIM)·교차 셈은 geometry.ts 에 있다(restingLabels·separate 와 함께 쓰며 불러오기 고리를 끊는다).
+// 예전 불러오는 곳을 위해 다시 내보낸다.
+export { END_TRIM, NAME_PX, rectHit, zoneHeadPill };
 
-// 알약 자리·상자 관통은 geometry.ts 에 있다(restingLabels 와 함께 쓰며 불러오기 고리를 끊는다). 예전 불러오는 곳을 위해 다시 내보낸다.
-export { NAME_PX, rectHit, zoneHeadPill };
-
-type Pt = { x: number; y: number };
-interface Seg {
-  a: Pt;
-  b: Pt;
-  from: number; // 이 마디 안에서 평행 길이로 셀 수 있는 구간의 시작(마디 시작점으로부터 거리)
-  to: number; // 끝
-}
-
-const len = (a: Pt, b: Pt): number => Math.hypot(a.x - b.x, a.y - b.y);
-const isV = (s: Seg): boolean => Math.abs(s.a.x - s.b.x) < 0.5;
-const isH = (s: Seg): boolean => Math.abs(s.a.y - s.b.y) < 0.5;
+type Seg = PathSeg;
+const isV = isVertical;
+const isH = isHorizontal;
 const lo = (s: Seg, k: "x" | "y"): number => Math.min(s.a[k], s.b[k]);
 const hi = (s: Seg, k: "x" | "y"): number => Math.max(s.a[k], s.b[k]);
-
-function segsOf(pts: Pt[]): Seg[] {
-  const total = pts.slice(1).reduce((t, b, i) => t + len(pts[i], b), 0);
-  const out: Seg[] = [];
-  let at = 0;
-  for (let i = 1; i < pts.length; i++) {
-    const a = pts[i - 1];
-    const b = pts[i];
-    const l = len(a, b);
-    if (l > 0.01) out.push({ a, b, from: Math.max(0, END_TRIM - at), to: Math.min(l, total - END_TRIM - at) });
-    at += l;
-  }
-  return out;
-}
-
-/** 마디에서 평행 길이로 셀 수 있는 구간을 축(k) 좌표 [작은 값, 큰 값] 으로 돌려준다. 없으면 null. */
-function trimmedRange(s: Seg, k: "x" | "y"): [number, number] | null {
-  if (s.to <= s.from) return null;
-  const l = len(s.a, s.b);
-  const p = (d: number): number => s.a[k] + ((s.b[k] - s.a[k]) * d) / l;
-  const [x, y] = [p(s.from), p(s.to)];
-  return [Math.min(x, y), Math.max(x, y)];
-}
+const segsOf = pathSegments;
 
 /**
  * groupLabels: 영역 id → 이름. 배치에는 영역 이름이 없어 알약 자리를 재려면 따로 받는다. 이름을 모르는 영역은
@@ -73,20 +41,13 @@ export function measureLayout(
   labels?: { placed: PlacedRestingLabel[]; items: RestingLabelInput[] },
 ): LayoutMetrics {
   const E = layout.edges.map((e) => ({ id: e.id, pts: e.points, segs: segsOf(e.points) }));
-  let crossings = 0;
+  const crossings = countCrossings(E.map((e) => e.pts));
   let sharedPx = 0;
   let parallelPx = 0;
   for (let i = 0; i < E.length; i++) {
     for (let j = i + 1; j < E.length; j++) {
       for (const u of E[i].segs) {
         for (const v of E[j].segs) {
-          const [h, w] = isH(u) && isV(v) ? [u, v] : isV(u) && isH(v) ? [v, u] : [null, null];
-          if (h && w) {
-            const x = w.a.x;
-            const y = h.a.y;
-            if (x > lo(h, "x") + 1 && x < hi(h, "x") - 1 && y > lo(w, "y") + 1 && y < hi(w, "y") - 1) crossings++;
-            continue;
-          }
           const [ax, al] = isV(u) && isV(v) ? (["x", "y"] as const) : isH(u) && isH(v) ? (["y", "x"] as const) : [null, null];
           if (!ax || !al) continue;
           const gap = Math.abs(u.a[ax] - v.a[ax]);
