@@ -536,3 +536,27 @@ test("a named connector inside a redundancy group gets room between the two memb
   expect({ x: pinned.nodes.s.x, y: pinned.nodes.s.y }).toEqual(pinnedAt);
   expect(pinned.labels.flatMap((x) => x.edgeIds)).toContain("rep");
 });
+
+test("with pinned nodes, distinct parallel lines are still pushed 16px apart on the final geometry", async () => {
+  const { state, errors } = applyCommands(emptyState(), [
+    { op: "add_node", id: "a1", kind: "web_server", label: "A1", parent: null },
+    { op: "add_node", id: "a2", kind: "web_server", label: "A2", parent: null },
+    { op: "add_node", id: "b1", kind: "web_server", label: "B1", parent: null },
+    { op: "add_node", id: "b2", kind: "web_server", label: "B2", parent: null },
+    { op: "add_edge", id: "e1", from: "a1", to: "b1", edge_kind: "request" },
+    { op: "add_edge", id: "e2", from: "a2", to: "b2", edge_kind: "request" },
+  ]);
+  expect(errors).toEqual([]);
+  const g = buildDisplayGraph(state, defaultDisplayOptions(state));
+  const ends = Object.fromEntries(g.edges.map((e) => [e.id, [e.from, e.to] as [string, string]]));
+  // 두 선의 가운데 가로 토막이 4px 차로 나란하게 되는 자리에 모두 고정한다.
+  const pin = { a1: { x: 0, y: 0 }, a2: { x: 300, y: 0 }, b1: { x: 600, y: 300 }, b2: { x: 900, y: 308 } };
+  const l = await layoutDiagram(g, pin);
+  for (const [id, p] of Object.entries(pin)) expect({ x: l.nodes[id].x, y: l.nodes[id].y }, id).toEqual(p);
+  const m = measureLayout(l, ends, 16);
+  expect(m.parallelPx).toBe(0);
+  expect(m.throughNode).toBe(0);
+  expect(m.crossings).toBeLessThanOrEqual(2);
+  // 처음과 끝 토막은 노드 가장자리에 그대로 붙는다.
+  for (const e of l.edges) expect(e.points.length).toBeGreaterThanOrEqual(4);
+});

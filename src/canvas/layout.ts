@@ -493,6 +493,9 @@ export async function layoutDiagram(g: DisplayGraph, pinned: Record<string, { x:
   // 고정 노드가 없을 때만 노드를 옮기는 틈 벌리기·선 띄우기를 한다.
   const noPins = Object.keys(pinned).length === 0;
   const edgeEnds = new Map(g.edges.map((e) => [e.id, [e.from, e.to] as [string, string]]));
+  const shapeBoxesOf = (rs: Map<string, Rect>) => new Map([...rs].filter(([id]) => g.nodes[id] || (g.groups[id] && !filled.has(id))));
+  // 펼친(내용이 있는) 영역 상자.
+  const zonesOf = (rs: Map<string, Rect>) => groups.filter((x) => filled.has(x.id)).map((x) => rs.get(x.id)!);
 
   // 본 흐름(main) 배치 한 벌에서 외부 열을 쌓고 모든 선을 그린다. 외부 연결 줄이 붐비면 아래에서 그 틈을 벌린
   // 본 흐름으로 다시 부른다(openGap). crowd 는 벌릴 자리(y), crowdPx 는 다른 선과 16px 미만으로 나란한 외부 연결 길이.
@@ -532,7 +535,7 @@ export async function layoutDiagram(g: DisplayGraph, pinned: Record<string, { x:
   // 외부 연결을 그린 결과(외부 열이 있을 때). 붐비는 줄 찾기에 쓴다.
   let laneRun: { routes: Map<string, Pt[]>; degraded: Set<string> } | null = null;
   // 선이 지나면 안 되는 상자: 노드와 접힌·빈 영역.
-  const shapeBoxes = new Map([...rects].filter(([id]) => g.nodes[id] || (g.groups[id] && !filled.has(id))));
+  const shapeBoxes = shapeBoxesOf(rects);
 
   // Redundancy row connectors: facing borders on a line inside both members' vertical ranges, in the
   // edge's own direction. If another member sits between the two, the connector dips into the group's
@@ -804,8 +807,7 @@ export async function layoutDiagram(g: DisplayGraph, pinned: Record<string, { x:
   // 붐빔(crowd)은 위에서 띄우기 전 모양으로 쟀다. 고정 노드가 있으면 하지 않는다(그 선은 assemble 에서 꺾은선으로 다시 그린다).
   // 펼친 영역 테두리도 넘겨, 민 선이 테두리에 붙거나 영역 밖·남의 영역으로 넘어가지 않게 한다.
   if (noPins) {
-    const zones = groups.filter((x) => filled.has(x.id)).map((x) => rects.get(x.id)!);
-    for (const [id, pts] of separateParallels(points, edgeEnds, shapeBoxes, LINE_GAP, zones)) points.set(id, pts);
+    for (const [id, pts] of separateParallels(points, edgeEnds, shapeBoxes, LINE_GAP, zonesOf(rects))) points.set(id, pts);
   }
 
   return { rects, points, degraded, crowd: mergeSpans(crowd), crowdPx, score: laneScore };
@@ -888,7 +890,7 @@ export async function layoutDiagram(g: DisplayGraph, pinned: Record<string, { x:
     // Pinned nodes keep their stored position; their edges (and edges of re-fitted zones) are redrawn as elbows.
     const rectOf = (id: string): Rect => out.nodes[id] ?? out.groups[id];
     const moved = (id: string) => !!pinned[id] || refit.has(id);
-    const items: RestingLabelInput[] = [];
+    const finalPts = new Map<string, Pt[]>();
     for (const e of g.edges) {
       let pts = moved(e.from) || moved(e.to) ? elbowRoute(rectOf(e.from), rectOf(e.to)) : (points.get(e.id) ?? []);
       if (pts.length < 2) {
@@ -896,6 +898,16 @@ export async function layoutDiagram(g: DisplayGraph, pinned: Record<string, { x:
         pts = elbowRoute(rectOf(e.from), rectOf(e.to));
         degraded.add(e.id);
       }
+      finalPts.set(e.id, pts);
+    }
+    // 고정 노드가 있으면 route 안의 띄우기가 빠졌으므로, 최종 선 위에서 한 번 더 한다(노드는 그대로, 최종 상자·영역 기준).
+    if (!noPins) {
+      const finalRects = new Map<string, Rect>([...Object.entries(out.nodes), ...Object.entries(out.groups)].map(([id, r]) => [id, r]));
+      for (const [id, pts] of separateParallels(finalPts, edgeEnds, shapeBoxesOf(finalRects), LINE_GAP, zonesOf(finalRects))) finalPts.set(id, pts);
+    }
+    const items: RestingLabelInput[] = [];
+    for (const e of g.edges) {
+      const pts = finalPts.get(e.id)!;
       const le: LaidOutEdge = { id: e.id, points: pts };
       if (degraded.has(e.id)) le.degraded = true;
       if (e.label !== undefined) {
