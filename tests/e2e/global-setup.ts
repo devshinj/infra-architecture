@@ -17,7 +17,7 @@ export default async function globalSetup() {
   try {
     const db = drizzle(admin);
     await migrate(db, { migrationsFolder: path.resolve(process.cwd(), "src/db/migrations") });
-    await db.execute(sql`TRUNCATE users CASCADE`);
+    await db.execute(sql`TRUNCATE users, auth_attempts CASCADE`);
   } finally {
     await admin.end();
   }

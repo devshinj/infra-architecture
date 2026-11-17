@@ -8,7 +8,7 @@ import { checkEmail, RESET_TTL_HOURS } from "@/server/auth/rules";
 import { Logo } from "@/ui/brand/Logo";
 import { Button } from "@/ui/Button";
 
-import { AuthField, AuthSubmit } from "../_components/AuthField";
+import { AuthField, AuthSubmit, FormAlert } from "../_components/AuthField";
 import { useAuthForm, type FieldErrors } from "../_components/useAuthForm";
 import { AuthStage } from "../_components/AuthStage";
 import styles from "../auth.module.css";
@@ -63,6 +63,7 @@ export default function ResetRequestPage() {
               defaultValue={state.email}
               autoFocus
             />
+            <FormAlert message={errors.form} />
             <AuthSubmit pending={pending} label="재설정 링크 보내기" pendingLabel="보내는 중…" />
           </>
         )}

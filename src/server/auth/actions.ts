@@ -1,9 +1,10 @@
 "use server";
 
 import { AuthError } from "next-auth";
+import { after } from "next/server";
 import { redirect } from "next/navigation";
 
-import { signIn } from "@/auth";
+import { LoginRateLimited, signIn } from "@/auth";
 
 import { requestPasswordReset, resetPassword } from "./reset";
 import { checkEmail, MESSAGES, normalizeEmail } from "./rules";
@@ -29,7 +30,8 @@ export async function loginAction(_prev: FormState, data: FormData): Promise<For
     });
   } catch (e) {
     if (e instanceof AuthError) {
-      return { errors: { form: MESSAGES.loginFailed } };
+      const limited = e instanceof LoginRateLimited || (e as { code?: string }).code === "rate_limited";
+      return { errors: { form: limited ? MESSAGES.tooManyAttempts : MESSAGES.loginFailed } };
     }
     throw e; // signIn 성공 시의 redirect 도 여기로 온다.
   }
@@ -56,7 +58,9 @@ export async function requestResetAction(_prev: FormState, data: FormData): Prom
   const emailError = checkEmail(text(data, "email"));
   if (emailError) return { errors: { email: emailError } };
   const email = normalizeEmail(text(data, "email"));
-  await requestPasswordReset(email);
+  // 메일은 응답 뒤에 보낸다(after) — 계정이 있을 때만 느려지면 응답 시간으로 가입 여부가 드러난다.
+  const result = await requestPasswordReset(email, (task) => after(task));
+  if (result === "limited") return { errors: { form: MESSAGES.tooManyAttempts }, email };
   return { done: true, email };
 }
 

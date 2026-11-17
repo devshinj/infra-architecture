@@ -26,8 +26,10 @@ export const MESSAGES = {
   passwordShort: `비밀번호는 ${PASSWORD_MIN}자 이상이어야 해요`,
   passwordLong: `비밀번호가 너무 길어요. ${PASSWORD_MAX_BYTES}바이트(영문 ${PASSWORD_MAX_BYTES}자, 한글 약 24자) 이하로 입력해 주세요`,
   usernameTaken: "이미 쓰고 있는 아이디예요",
-  emailTaken: "이미 가입된 이메일이에요",
+  /** 이메일이 이미 쓰이는지 드러내지 않도록 이유를 말하지 않는다(아이디 중복은 아이디를 골라야 해서 그대로 알린다). */
+  emailTaken: "이 이메일로는 가입할 수 없어요. 이미 계정이 있다면 비밀번호 찾기를 써 주세요",
   loginFailed: "아이디 또는 비밀번호가 맞지 않아요",
+  tooManyAttempts: "시도가 너무 많아요. 잠시 후에 다시 시도해 주세요",
   resetLinkExpired: "만료됐거나 이미 쓴 링크예요. 재설정 링크를 다시 받아 주세요",
 } as const;
 

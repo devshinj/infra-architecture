@@ -26,8 +26,24 @@ export const users = pgTable("users", {
   username: text("username").notNull().unique(),
   email: text("email").notNull().unique(),
   passwordHash: text("password_hash").notNull(),
+  /** 비밀번호를 재설정할 때마다 1 오른다. 로그인 토큰의 번호와 다르면 그 로그인은 끊긴다(src/auth.ts). */
+  sessionVersion: integer("session_version").notNull().default(0),
   createdAt: createdAt(),
 });
+
+/**
+ * 로그인 실패·재설정 요청 기록(횟수 제한, src/server/auth/rateLimit.ts). key 는 "login:user:jae"·"login:ip:1.2.3.4"·"reset:email:a@b.co".
+ * 계정과 묶지 않는다(없는 아이디·주소도 센다). 하루 지난 줄은 기록할 때 지운다.
+ */
+export const authAttempts = pgTable(
+  "auth_attempts",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    key: text("key").notNull(),
+    at: timestamp("at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("auth_attempts_key_at_idx").on(t.key, t.at), index("auth_attempts_at_idx").on(t.at)],
+);
 
 // Nexus 연동 자리. 지금은 쓰지 않는다.
 export const accounts = pgTable(
