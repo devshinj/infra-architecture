@@ -98,3 +98,35 @@
 .edge-boundary-tag__dir path { fill: none; stroke-linecap: round; stroke-linejoin: round; }
 .edge-boundary-tag__dir-halo { stroke: var(--bg-canvas); stroke-width: 4px; }
 .edge-boundary-tag__dir-line { stroke: var(--boundary-mark); stroke-width: 1.5px; }
+
+/* 공유 조각 누르는 자리: 보이지 않는 굵은 선. 굵기 --hit 은 화면에서 24px 이상(캔버스가 줄수록 그만큼 굵게), 캔버스 26px 에서 멈춰 이웃 평행선(16px 간격)을 덮지 않게 한다. 선별 누르는 자리보다 위에 그려진다. */
+.edge-seg-hit { --hit: max(24px, calc(24px / var(--zoom, 1))); fill: none; stroke: transparent; stroke-width: min(var(--hit), 26px); stroke-linecap: butt; pointer-events: stroke; cursor: pointer; }
+
+/* 펼친 줄기: 연결마다 제 색 겹선. 눌린 공유 조각(spine)은 색 없이 선 종류의 밝은 색으로 위에 둔다. */
+.edge-trunk path { fill: none; pointer-events: none; }
+.edge-trunk__line { stroke-width: 2.5; stroke-opacity: 1; }
+.edge-trunk__line.edge-line--replication { stroke-width: 4.4; }
+.edge-trunk__arrow { stroke-width: 1.8; }
+.edge-trunk [data-trunk-color="0"] :is(.edge-line, .edge-arrow) { stroke: var(--edge-trunk-0); }
+.edge-trunk [data-trunk-color="1"] :is(.edge-line, .edge-arrow) { stroke: var(--edge-trunk-1); }
+.edge-trunk [data-trunk-color="2"] :is(.edge-line, .edge-arrow) { stroke: var(--edge-trunk-2); }
+.edge-trunk [data-trunk-color="3"] :is(.edge-line, .edge-arrow) { stroke: var(--edge-trunk-3); }
+.edge-trunk [data-trunk-color="4"] :is(.edge-line, .edge-arrow) { stroke: var(--edge-trunk-4); }
+.edge-trunk [data-trunk-color="5"] :is(.edge-line, .edge-arrow) { stroke: var(--edge-trunk-5); }
+.edge-trunk [data-trunk-color] .edge-line--replication-core { stroke: var(--bg-canvas); stroke-width: 1.4; }
+.edge-trunk__spine { stroke-width: 2.5; stroke-opacity: 1; }
+.edge-trunk__spine.edge-line--request { stroke: var(--edge-request-lit); }
+.edge-trunk__spine.edge-line--async { stroke: var(--edge-async-lit); }
+.edge-trunk__spine.edge-line--replication { stroke: var(--edge-replication-lit); stroke-width: 4.4; }
+.edge-trunk__spine.edge-line--aux { stroke: var(--edge-aux-lit); }
+
+/* 줄기 꼬리표: 먼 끝 이름 알약. 테두리는 제 겹선 색, 글자는 읽히는 색(--edge-trunk-tag-text). */
+.edge-trunk-tag { pointer-events: none; }
+.edge-trunk-tag__pill { fill: var(--bg-canvas); stroke-width: 1.5; }
+.edge-trunk-tag__text { font-size: 11px; fill: var(--edge-trunk-tag-text); text-anchor: middle; dominant-baseline: central; }
+.edge-trunk-tag[data-trunk-color="0"] .edge-trunk-tag__pill { stroke: var(--edge-trunk-0); }
+.edge-trunk-tag[data-trunk-color="1"] .edge-trunk-tag__pill { stroke: var(--edge-trunk-1); }
+.edge-trunk-tag[data-trunk-color="2"] .edge-trunk-tag__pill { stroke: var(--edge-trunk-2); }
+.edge-trunk-tag[data-trunk-color="3"] .edge-trunk-tag__pill { stroke: var(--edge-trunk-3); }
+.edge-trunk-tag[data-trunk-color="4"] .edge-trunk-tag__pill { stroke: var(--edge-trunk-4); }
+.edge-trunk-tag[data-trunk-color="5"] .edge-trunk-tag__pill { stroke: var(--edge-trunk-5); }

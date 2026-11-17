@@ -29,6 +29,9 @@
   border: 1px solid var(--line-node); border-radius: var(--radius-control); padding: 4px 12px; cursor: pointer;
 }
 .chip:hover { border-color: var(--text-secondary); }
+/* 펼친 줄기 목록의 줄: 앞에 캔버스 겹선과 같은 색 점. */
+.trunkRow { display: inline-flex; align-items: center; gap: 8px; text-align: left; }
+.trunkSwatch { flex: none; width: 10px; height: 10px; border-radius: 50%; background: var(--trunk-color); }
 .chip:focus-visible, .versionRow:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
 
 .versions { margin: 0; padding: 8px; list-style: none; display: flex; flex-direction: column; gap: 4px; }

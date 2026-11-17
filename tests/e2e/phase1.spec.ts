@@ -69,7 +69,7 @@ test("가입 → 프로젝트·구성도 → 샘플 → 선택 → 편집 이동
   await page.getByRole("tab", { name: "대화" }).click();
   await page.getByPlaceholder(/만들고 싶은 서비스/).fill("AWS 쇼핑몰 구성도 그려줘");
   await page.getByRole("button", { name: "보내기" }).click();
-  await expect(page.getByText(/노드 \d+ · 연결 \d+ · (?:\d+곳 바꿨어요|바꾼 곳이 없어요)/)).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByText(/^(?:\d+곳 바꿨어요|바꾼 곳이 없어요)/)).toBeVisible({ timeout: 30_000 });
   await expect(nodes).not.toHaveCount(IDC_NODES);
   await page.getByRole("tab", { name: "이력" }).click();
   await expect(page.getByText("v3", { exact: true })).toBeVisible();

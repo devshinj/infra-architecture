@@ -1,8 +1,10 @@
 import "@testing-library/jest-dom/vitest";
 import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
-import { afterEach, beforeAll, expect, test, vi } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, test, vi } from "vitest";
 
 import * as layoutMod from "@/canvas/layout";
+import type { Layout } from "@/canvas/layout";
+import * as trunkMod from "@/canvas/trunk";
 import { Canvas, type CanvasOptions, type CanvasProps } from "@/canvas/Canvas";
 import { defaultDisplayOptions } from "@/canvas/display";
 import { applyCommands } from "@/domain/apply";
@@ -30,6 +32,10 @@ afterEach(cleanup);
 vi.mock("@/canvas/layout", async (orig) => {
   const m = await orig<typeof import("@/canvas/layout")>();
   return { ...m, layoutDiagram: vi.fn(m.layoutDiagram) };
+});
+vi.mock("@/canvas/trunk", async (orig) => {
+  const m = await orig<typeof import("@/canvas/trunk")>();
+  return { ...m, nextTrunk: vi.fn(m.nextTrunk) };
 });
 
 const baseProps = (state = fx("s2")): CanvasProps => {
@@ -886,6 +892,24 @@ test("한 줄에 들면 이름을 보이고 툴팁을 겹쳐 두지 않는다", 
   expect(screen.getByRole("button", { name: "자동 정렬" })).not.toHaveAttribute("title");
 });
 
+test("a selected zone keeps its inside lit, and the crossing edges with their outside ends", async () => {
+  const props = baseProps();
+  props.options = { ...props.options, selectedId: "private-zone" };
+  const { container } = render(<div style={{ width: 800, height: 600 }}><Canvas {...props} /></div>);
+  await waitFor(() => expect(nodeEl(container, "was-1")).not.toBeNull());
+  // 안의 노드(하위 영역 안까지)와 경계를 넘어 이어진 바깥 끝(web-1·web-2)은 밝고, 그 밖은 흐리다.
+  for (const id of ["was-1", "was-2", "db-proxy", "db-primary", "db-standby", "web-1", "web-2"]) expect(nodeEl(container, id)!.querySelector(".node--dimmed"), id).toBeNull();
+  for (const id of ["client-web", "fw-external"]) expect(nodeEl(container, id)!.querySelector(".node--dimmed"), id).not.toBeNull();
+  // 하위 영역도 밝다.
+  for (const id of ["was-pair", "db-pair"]) expect(groupEl(container, id)!.classList.contains("group--dimmed"), id).toBe(false);
+  // 안끼리·경계를 넘는 선은 밝고, 바깥끼리 선(client-web → fw-external)은 흐리다.
+  const edgeOf = (from: string, to: string) => Object.values(props.state.edges).find((e) => e.from === from && e.to === to)!.id;
+  const seg = (id: string) => container.querySelector(`[data-edge-id="${id}"]`);
+  await waitFor(() => expect(seg(edgeOf("client-web", "fw-external"))).not.toBeNull());
+  expect(seg(edgeOf("client-web", "fw-external"))).toHaveClass("edge--dim");
+  expect(container.querySelectorAll(".edge-seg:not(.edge--dim)").length).toBeGreaterThan(0);
+});
+
 test("clicking the name pill of the selected zone clears the selection and the zone shows the selected ring", async () => {
   const props = baseProps();
   props.options = { ...props.options, selectedId: "was-pair" };
@@ -894,4 +918,145 @@ test("clicking the name pill of the selected zone clears the selection and the z
   expect(container.querySelector('.react-flow__node-zone[data-id="was-pair"] .group')).toHaveClass("group--selected");
   fireEvent.click(pillEl(container, "was-pair")!);
   expect(props.onSelect).toHaveBeenLastCalledWith(null);
+});
+
+// ---- 줄기 펼치기 ----
+describe("줄기 펼치기", () => {
+  const node = (id: string, label: string, parent: string | null) => ({ id, kind: "web_server" as const, label, parent, attrs: {} });
+  const st = (): DiagramState => ({
+    ...emptyState(),
+    groups: {
+      z: { id: "z", groupKind: "subnet_private", label: "웹 구역", parent: null },
+      far: { id: "far", groupKind: "subnet_private", label: "먼 구역", parent: null },
+    },
+    nodes: { alb: node("alb", "부하 분산", null), w1: node("w1", "웹 1", "z"), w2: node("w2", "웹 2", "z"), x: node("x", "엑스", "far"), y: node("y", "와이", "far") },
+    edges: {
+      e1: { id: "e1", from: "alb", to: "w1", edgeKind: "request" },
+      e2: { id: "e2", from: "alb", to: "w2", edgeKind: "request" },
+      e3: { id: "e3", from: "x", to: "y", edgeKind: "request" },
+    },
+  });
+  const rect = (id: string, parent: string | null, x: number, y: number, displayLabel: string) => ({ id, parent, x, y, width: 130, height: 52, displayLabel });
+  // e1·e2 는 부하 분산 아래 (165,52)→(165,110) 을 함께 쓰고 갈라진다. e3 은 따로.
+  const trunkLayout = (): Layout => ({
+    nodes: { alb: rect("alb", null, 100, 0, "부하 분산"), w1: rect("w1", "z", 20, 170, "웹 1"), w2: rect("w2", "z", 180, 170, "웹 2"), x: rect("x", "far", 400, 0, "엑스"), y: rect("y", "far", 400, 170, "와이") },
+    groups: { z: { id: "z", parent: null, x: 0, y: 140, width: 330, height: 100 }, far: { id: "far", parent: null, x: 380, y: -30, width: 170, height: 270 } },
+    edges: [
+      { id: "e1", points: [{ x: 165, y: 52 }, { x: 165, y: 110 }, { x: 85, y: 110 }, { x: 85, y: 170 }] },
+      { id: "e2", points: [{ x: 165, y: 52 }, { x: 165, y: 110 }, { x: 245, y: 110 }, { x: 245, y: 170 }] },
+      { id: "e3", points: [{ x: 465, y: 52 }, { x: 465, y: 170 }] },
+    ],
+    width: 600,
+    height: 260,
+    labels: [],
+    labelBlocked: [],
+  });
+  const opened = { segKey: "k", edgeIds: ["e1", "e2"], at: { x: 165, y: 80 } };
+  let real: typeof layoutMod.layoutDiagram;
+  beforeEach(async () => {
+    real = (await vi.importActual<typeof import("@/canvas/layout")>("@/canvas/layout")).layoutDiagram;
+    vi.mocked(layoutMod.layoutDiagram).mockImplementation(async () => trunkLayout());
+    vi.mocked(trunkMod.nextTrunk).mockClear();
+  });
+  afterEach(() => {
+    vi.mocked(layoutMod.layoutDiagram).mockImplementation(real);
+  });
+  const frame = (p: CanvasProps) => <div style={{ width: 800, height: 600 }}><Canvas {...p} /></div>;
+  const hitOf = (c: HTMLElement) => c.querySelector<SVGPathElement>(".edge-seg-hit");
+
+  test("공유 조각을 누르면 nextTrunk 의 trunk 로 onTrunkChange, select 가 있으면 onSelect", async () => {
+    const props: CanvasProps = { ...baseProps(st()), onTrunkChange: vi.fn() };
+    const { container, rerender } = render(frame(props));
+    await waitFor(() => expect(hitOf(container)).not.toBeNull());
+    fireEvent.click(hitOf(container)!);
+    expect(trunkMod.nextTrunk).toHaveBeenLastCalledWith(null, expect.objectContaining({ segKey: expect.any(String) }));
+    const first = vi.mocked(props.onTrunkChange!).mock.calls[0]![0]!;
+    expect([...first.edgeIds].sort()).toEqual(["e1", "e2"]);
+    expect(props.onSelect).not.toHaveBeenCalled();
+    // 펼친 줄기를 다시 누르면 지금 펼침을 그대로 넘긴다.
+    rerender(frame({ ...props, trunk: first }));
+    fireEvent.click(hitOf(container)!);
+    expect(trunkMod.nextTrunk).toHaveBeenLastCalledWith(first, expect.anything());
+    expect(props.onTrunkChange).toHaveBeenLastCalledWith(first);
+    // 한 연결로 좁혀지면(select) 펼침을 풀고 그 연결을 고른다.
+    vi.mocked(trunkMod.nextTrunk).mockReturnValueOnce({ trunk: null, select: "e2" });
+    fireEvent.click(hitOf(container)!);
+    expect(props.onTrunkChange).toHaveBeenLastCalledWith(null);
+    expect(props.onSelect).toHaveBeenLastCalledWith("e2");
+  });
+
+  test("onTrunkChange 가 없거나 흐름을 보는 중이면 공유 조각 누르는 자리도 펼침도 없다", async () => {
+    const { container, rerender } = render(frame(baseProps(st())));
+    await waitFor(() => expect(nodeEl(container, "w1")).not.toBeNull());
+    await waitFor(() => expect(container.querySelector(".edge-seg")).not.toBeNull());
+    expect(hitOf(container)).toBeNull();
+    const flow = { steps: [{ edge: "e3", n: 1, short: "x" }] };
+    rerender(frame({ ...baseProps(st()), onTrunkChange: vi.fn(), trunk: opened, flow }));
+    await waitFor(() => expect(container.querySelector(".edge-step-label")).not.toBeNull());
+    expect(hitOf(container)).toBeNull();
+    expect(container.querySelector(".edge-trunk")).toBeNull();
+    // 흐름 강조를 따른다: 흐름 밖 노드는 흐리다(펼친 줄기 끝이라도).
+    expect(nodeEl(container, "w1")!.querySelector(".node--dimmed")).not.toBeNull();
+  });
+
+  test("펼친 동안 Esc·빈 곳·영역 바탕을 누르면 onTrunkChange(null), 펼침이 없으면 부르지 않는다", async () => {
+    const props: CanvasProps = { ...baseProps(st()), onTrunkChange: vi.fn() };
+    const { container, rerender } = render(frame({ ...props, trunk: opened }));
+    await waitFor(() => expect(nodeEl(container, "x")).not.toBeNull());
+    const x = nodeEl(container, "x")!;
+    x.focus();
+    fireEvent.keyDown(x, { key: "Escape" });
+    expect(props.onTrunkChange).toHaveBeenCalledTimes(1);
+    expect(props.onTrunkChange).toHaveBeenLastCalledWith(null);
+    fireEvent.click(container.querySelector(".react-flow__pane")!);
+    expect(props.onTrunkChange).toHaveBeenCalledTimes(2);
+    expect(props.onTrunkChange).toHaveBeenLastCalledWith(null);
+    fireEvent.click(container.querySelector('.react-flow__node-zone[data-id="far"]')!);
+    expect(props.onTrunkChange).toHaveBeenCalledTimes(3);
+    expect(props.onTrunkChange).toHaveBeenLastCalledWith(null);
+    expect(props.onSelect).not.toHaveBeenCalledWith(expect.any(String));
+    rerender(frame(props));
+    fireEvent.keyDown(x, { key: "Escape" });
+    fireEvent.click(container.querySelector(".react-flow__pane")!);
+    expect(props.onTrunkChange).toHaveBeenCalledTimes(3);
+  });
+
+  test("펼친 동안 펼친 선의 두 끝이 아닌 노드는 흐리고, 두 끝 노드와 그 조상 영역은 밝다", async () => {
+    const props: CanvasProps = { ...baseProps(st()), onTrunkChange: vi.fn(), trunk: opened };
+    const { container } = render(frame(props));
+    await waitFor(() => expect(nodeEl(container, "x")?.querySelector(".node--dimmed") ?? null).not.toBeNull());
+    for (const id of ["alb", "w1", "w2"]) expect(nodeEl(container, id)!.querySelector(".node--dimmed"), id).toBeNull();
+    for (const id of ["x", "y"]) expect(nodeEl(container, id)!.querySelector(".node--dimmed"), id).not.toBeNull();
+    expect(groupEl(container, "z")!.classList.contains("group--dimmed")).toBe(false);
+    expect(groupEl(container, "far")!.classList.contains("group--dimmed")).toBe(true);
+    // 선도 같은 강조를 쓴다: 펼친 선은 밝고 나머지는 흐리다.
+    expect(container.querySelector('[data-edge-id="e3"]')).toHaveClass("edge--dim");
+    expect(container.querySelector('[data-edge-id="e1"]')).not.toHaveClass("edge--dim");
+    // 꼬리표의 먼 끝 이름은 표시 그래프의 이름이다.
+    expect([...container.querySelectorAll(".edge-trunk-tag__text")].map((t) => t.textContent).sort()).toEqual(["웹 1", "웹 2"]);
+  });
+
+  test("공유 조각에 마우스를 올리면 그 선들의 두 끝이 아닌 노드가 호버 흐림이 되고, 떠나면 풀린다", async () => {
+    const props: CanvasProps = { ...baseProps(st()), onTrunkChange: vi.fn() };
+    const { container } = render(frame(props));
+    await waitFor(() => expect(hitOf(container)).not.toBeNull());
+    expect(container.querySelector(".node--faded")).toBeNull();
+    fireEvent.mouseEnter(hitOf(container)!);
+    await waitFor(() => expect(nodeEl(container, "x")!.querySelector(".node--faded")).not.toBeNull());
+    expect(nodeEl(container, "y")!.querySelector(".node--faded")).not.toBeNull();
+    for (const id of ["alb", "w1", "w2"]) expect(nodeEl(container, id)!.querySelector(".node--faded"), id).toBeNull();
+    // 호버는 영역을 흐리지 않는다.
+    expect(container.querySelector(".node--dimmed")).toBeNull();
+    fireEvent.mouseLeave(hitOf(container)!);
+    await waitFor(() => expect(container.querySelector(".node--faded")).toBeNull());
+  });
+
+  test("펼친 선이 표시 그래프에서 모두 사라지면 빈 강조(모두 흐림)를 남기지 않는다", async () => {
+    const props: CanvasProps = { ...baseProps(st()), onTrunkChange: vi.fn(), trunk: { ...opened, edgeIds: ["gone-1", "gone-2"] } };
+    const { container } = render(frame(props));
+    await waitFor(() => expect(nodeEl(container, "x")).not.toBeNull());
+    await waitFor(() => expect(container.querySelector(".edge-seg")).not.toBeNull());
+    expect(container.querySelector(".node--dimmed")).toBeNull();
+    expect(container.querySelector(".group--dimmed")).toBeNull();
+  });
 });

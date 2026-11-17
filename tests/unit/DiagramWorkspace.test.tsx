@@ -2,12 +2,12 @@ import "@testing-library/jest-dom/vitest";
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
-const hookState = vi.hoisted(() => ({ send: vi.fn(), busy: false, onCommand: null as null | ((c: unknown) => void), badgeFns: [] as unknown[], warnFns: [] as unknown[], lines: [] as unknown[], insets: [] as unknown[], focus: [] as unknown[], turn: null as null | { onDone(): void; onInterrupted(): void; onRelayout?(): void; onSessionLines?(key: string, fn: (ls: { id: string; kind: string; text: string }[]) => { id: string; kind: string; text: string }[]): void }, pushLine: vi.fn(), pinned: [] as unknown[], fitRequest: [] as unknown[], fitAll: [] as unknown[], placed: null as null | ((locate: (id: string) => { x: number; y: number } | null) => void), flow: [] as unknown[], selected: [] as unknown[], turnMarks: [] as unknown[], frames: [] as unknown[], refresh: vi.fn(), rfNodes: false }));
+const hookState = vi.hoisted(() => ({ send: vi.fn(), busy: false, onCommand: null as null | ((c: unknown) => void), badgeFns: [] as unknown[], warnFns: [] as unknown[], lines: [] as unknown[], insets: [] as unknown[], focus: [] as unknown[], turn: null as null | { onDone(): void; onInterrupted(): void; onRelayout?(): void; onSessionLines?(key: string, fn: (ls: { id: string; kind: string; text: string }[]) => { id: string; kind: string; text: string }[]): void }, pushLine: vi.fn(), pinned: [] as unknown[], fitRequest: [] as unknown[], fitAll: [] as unknown[], placed: null as null | ((locate: (id: string) => { x: number; y: number } | null) => void), flow: [] as unknown[], selected: [] as unknown[], turnMarks: [] as unknown[], frames: [] as unknown[], refresh: vi.fn(), rfNodes: false, trunk: [] as unknown[], optionsChange: null as null | ((o: unknown) => void), optionsSeen: null as unknown, pinnedChange: null as null | ((p: unknown) => void), trunkChange: null as null | ((t: { segKey: string; edgeIds: string[]; at: { x: number; y: number } } | null) => void) }));
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: hookState.refresh }) }));
 vi.mock("@/app/(app)/actions", () => ({
   clearPinnedAction: vi.fn(async () => undefined), getVersionAction: vi.fn(), importSampleAction: vi.fn(),
-  listVersionsAction: vi.fn(async () => []), restoreVersionAction: vi.fn(), savePinnedAction: vi.fn(),
+  listVersionsAction: vi.fn(async () => []), restoreVersionAction: vi.fn(), savePinnedAction: vi.fn(async () => ({ ok: true })),
   saveFieldsAction: vi.fn(async () => ({ ok: true, number: 2 })),
   setWarningIgnoredAction: vi.fn(async () => ({ ok: true, number: 2 })),
   setZoneTypeAction: vi.fn(async () => ({ ok: true, number: 2 })),
@@ -17,8 +17,13 @@ vi.mock("@/app/(app)/actions", () => ({
   renameFlowAction: vi.fn(async () => ({ ok: true })), deleteFlowAction: vi.fn(async () => ({ ok: true })), confirmFlowAction: vi.fn(async () => ({ ok: true })), removeFlowStepAction: vi.fn(async () => ({ ok: true })),
 }));
 vi.mock("@/canvas/Canvas", () => ({
-  Canvas: ({ flow, options, state, pinned, fitRequest, fitAllSignal, onAutoArrange, fitKey, cameraInsets, focusRequest, onMention, onAskNode, onBadgeClick, onWarnBadgeClick, onSelect, onImportSample, onPlaced, turnMarks, frameRequest }: { frameRequest?: { ids: string[]; token: number }; turnMarks?: { added: Set<string>; changed: Set<string> }; flow?: unknown; options: { selectedId: string | null }; onAskNode?: (id: string) => void;  onPlaced?: (l: (id: string) => { x: number; y: number } | null) => void; onImportSample?: (id: string) => void; state: { nodes: object }; pinned: unknown; fitRequest?: unknown; fitAllSignal?: unknown; onAutoArrange(): void; fitKey?: string; cameraInsets?: unknown; focusRequest?: unknown; onMention?: (id: string) => void; onBadgeClick?: (id: string) => void; onWarnBadgeClick?: (id: string) => void; onSelect: (id: string | null) => void }) => {
+  Canvas: ({ flow, options, state, pinned, fitRequest, fitAllSignal, onAutoArrange, fitKey, cameraInsets, focusRequest, onMention, onAskNode, onBadgeClick, onWarnBadgeClick, onSelect, onImportSample, onPlaced, turnMarks, frameRequest, trunk, onTrunkChange, onOptionsChange, onPinnedChange }: { onOptionsChange?: (o: never) => void; onPinnedChange?: (p: never) => void; trunk?: unknown; onTrunkChange?: (t: { segKey: string; edgeIds: string[]; at: { x: number; y: number } } | null) => void; frameRequest?: { ids: string[]; token: number }; turnMarks?: { added: Set<string>; changed: Set<string> }; flow?: unknown; options: { selectedId: string | null }; onAskNode?: (id: string) => void;  onPlaced?: (l: (id: string) => { x: number; y: number } | null) => void; onImportSample?: (id: string) => void; state: { nodes: object }; pinned: unknown; fitRequest?: unknown; fitAllSignal?: unknown; onAutoArrange(): void; fitKey?: string; cameraInsets?: unknown; focusRequest?: unknown; onMention?: (id: string) => void; onBadgeClick?: (id: string) => void; onWarnBadgeClick?: (id: string) => void; onSelect: (id: string | null) => void }) => {
     hookState.flow.push(flow ?? null);
+    hookState.trunk.push(trunk ?? null);
+    hookState.trunkChange = onTrunkChange ?? null;
+    hookState.optionsChange = (onOptionsChange as never) ?? null;
+    hookState.optionsSeen = options;
+    hookState.pinnedChange = (onPinnedChange as never) ?? null;
     hookState.selected.push(options.selectedId);
     hookState.turnMarks.push(turnMarks ?? null);
     hookState.frames.push(frameRequest ?? null);
@@ -66,6 +71,9 @@ import { NARROW_QUERY, ShellProvider } from "@/ui/Shell";
 import { POLL_MS } from "@/ui/useRemoteChanges";
 
 import { KNOWLEDGE, adminCase } from "../fixtures/network";
+
+/** 글자가 여러 요소(이름·선 화살표·숨긴 화살표 글자)로 나뉜 덩이를 전체 글자로 찾는다: 그 글자를 다 가진 가장 안쪽 요소. */
+const whole = (text: string) => (_: string, el: Element | null) => !!el && el.textContent === text && ![...el.children].some((c) => c.textContent === text);
 
 afterEach(() => {
   cleanup();
@@ -1211,12 +1219,12 @@ test("가정 칩에서 망연계 거절 기억을 지우면 서버에 지우고 
   const latest = { number: 1, state: { ...adminCase(), assumptions: { [key]: { key, value: "망연계 없이 통신(사용자 확인)", confirmed: true } } } };
   render(<DiagramWorkspace diagramId="d" name="n" latest={latest as never} initialPinned={{}} samples={[]} knowledge={KNOWLEDGE} />);
   fireEvent.click(cardToggle());
-  expect(screen.getByText("망연계 없음: 행정망 ↔ GCloud 인터넷망")).toBeInTheDocument();
+  expect(screen.getByText(whole("망연계 없음: 행정망 ↔ GCloud 인터넷망"))).toBeInTheDocument();
   await act(async () => {
     fireEvent.click(screen.getByRole("button", { name: "행정망 ↔ GCloud 인터넷망 망연계 없음 기억 지우기" }));
   });
   expect(removeNoLinkAction).toHaveBeenCalledWith("d", key);
-  expect(screen.queryByText("망연계 없음: 행정망 ↔ GCloud 인터넷망")).not.toBeInTheDocument();
+  expect(screen.queryByText(whole("망연계 없음: 행정망 ↔ GCloud 인터넷망"))).not.toBeInTheDocument();
 });
 
 describe("Claude Code 변경 알아채기", () => {
@@ -1588,4 +1596,173 @@ test("narrow: no floating legend over the canvas (it lives in the 보기 menu); 
 test("NARROW_QUERY covers phones held sideways (short landscape) as well as narrow portrait", () => {
   expect(NARROW_QUERY).toContain("(max-width: 640px)");
   expect(NARROW_QUERY).toContain("(max-height: 480px) and (orientation: landscape)");
+});
+
+// ---- 줄기 펼치기 ----
+describe("줄기 펼치기", () => {
+  type Sel = { segKey: string; edgeIds: string[]; at: { x: number; y: number } };
+  const sel: Sel = { segKey: "k", edgeIds: ["e1", "e2"], at: { x: 1, y: 1 } };
+  // e1·e1b 는 같은 두 끝이라 표시 그래프에서 e1 하나로 합쳐진다(원래 연결 여럿을 합친 표시 연결).
+  const allEdges = {
+    e1: { id: "e1", from: "a", to: "b", edgeKind: "request", label: "HTTP" },
+    e1b: { id: "e1b", from: "a", to: "b", edgeKind: "request", label: "HTTPS" },
+    e2: { id: "e2", from: "a", to: "c", edgeKind: "request" },
+  };
+  const trunkLatest = (number = 1, edges: Record<string, unknown> = allEdges, extra: string[] = []) => ({
+    number,
+    state: { ...emptyState(), nodes: Object.fromEntries([web("a"), web("b"), web("c"), ...extra.map(web)]), edges },
+  });
+  const open = (t: Sel = sel) => act(() => hookState.trunkChange!(t));
+  const panelText = () => screen.getByRole("tabpanel").textContent;
+
+  test("펼치면 선택이 풀리고, 펼친 동안 노드를 고르면 펼침이 풀린다. Esc 도 푼다", () => {
+    hookState.busy = false;
+    render(ui(trunkLatest() as never));
+    expect(hookState.trunk.at(-1)).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "선택a" }));
+    expect(hookState.selected.at(-1)).toBe("a");
+    open();
+    expect(hookState.selected.at(-1)).toBeNull();
+    expect(hookState.trunk.at(-1)).toEqual(sel);
+    fireEvent.click(screen.getByRole("button", { name: "선택b" }));
+    expect(hookState.trunk.at(-1)).toBeNull();
+    expect(hookState.selected.at(-1)).toBe("b");
+    open();
+    expect(hookState.trunk.at(-1)).toEqual(sel);
+    fireEvent.keyDown(document.body, { key: "Escape" });
+    expect(hookState.trunk.at(-1)).toBeNull();
+  });
+
+  test("펼치면 오른쪽 설명 탭에 선 목록이 열리고, 줄을 누르면 그 연결을 고른다", () => {
+    hookState.busy = false;
+    render(ui(trunkLatest() as never));
+    expect(screen.getByRole("tab", { name: "대화" })).toHaveAttribute("aria-selected", "true");
+    open();
+    expect(screen.getByRole("tab", { name: "설명" })).toHaveAttribute("aria-selected", "true");
+    const rows = within(screen.getByRole("list", { name: "이 줄기의 선 2개" })).getAllByRole("button");
+    // 출발·도착은 표시 그래프의 이름, 합친 표시 연결의 이름은 대표 연결의 이름.
+    expect(rows.map((b) => b.textContent)).toEqual(["a → b · HTTP", "a → c"]);
+    fireEvent.click(rows[1]);
+    expect(hookState.selected.at(-1)).toBe("e2");
+    expect(hookState.trunk.at(-1)).toBeNull();
+    expect(screen.getByRole("heading", { name: "연결선" })).toBeInTheDocument();
+  });
+
+  test("접기·보기 옵션이 바뀌면 펼침이 풀리고, 레이아웃과 무관한 옵션이나 같은 값이면 그대로다", () => {
+    hookState.busy = false;
+    render(ui(trunkLatest() as never));
+    const cur = () => hookState.optionsSeen as { collapsed: Set<string>; hoverLabels: boolean; hideAux: boolean };
+    open();
+    act(() => hookState.optionsChange!({ ...cur(), hoverLabels: !cur().hoverLabels }));
+    expect(hookState.trunk.at(-1)).toEqual(sel);
+    act(() => hookState.optionsChange!({ ...cur(), collapsed: new Set(cur().collapsed) }));
+    expect(hookState.trunk.at(-1)).toEqual(sel);
+    act(() => hookState.optionsChange!({ ...cur(), collapsed: new Set(["z"]) }));
+    expect(hookState.trunk.at(-1)).toBeNull();
+    open();
+    act(() => hookState.optionsChange!({ ...cur(), hideAux: !cur().hideAux }));
+    expect(hookState.trunk.at(-1)).toBeNull();
+  });
+
+  test("고정 위치가 바뀌면 펼침이 풀린다", () => {
+    hookState.busy = false;
+    render(ui(trunkLatest() as never));
+    open();
+    expect(hookState.trunk.at(-1)).toEqual(sel);
+    act(() => hookState.pinnedChange!({ a: { x: 5, y: 5 } }));
+    expect(hookState.trunk.at(-1)).toBeNull();
+  });
+
+  test("자동 정렬을 하면 펼침이 풀린다", () => {
+    hookState.busy = false;
+    render(ui(trunkLatest() as never));
+    open();
+    expect(hookState.trunk.at(-1)).toEqual(sel);
+    fireEvent.click(screen.getByRole("button", { name: "자동정렬" }));
+    expect(hookState.trunk.at(-1)).toBeNull();
+  });
+
+  test("흐름 보기 중에는 trunk 가 Canvas 에 넘어가지 않는다", async () => {
+    hookState.busy = false;
+    stubFlows();
+    render(ui(flowLatest() as never));
+    open({ ...sel, edgeIds: ["e1"] });
+    expect(hookState.trunk.at(-1)).not.toBeNull();
+    await openFlow();
+    expect(hookState.flow.at(-1)).not.toBeNull();
+    expect(hookState.trunk.at(-1)).toBeNull();
+  });
+
+  test("흐름을 켜면 펼침이 풀린다: 흐름을 닫아도 옛 펼침이 돌아오지 않고 흐름 탭에 남는다", async () => {
+    hookState.busy = false;
+    stubFlows();
+    render(ui(flowLatest() as never));
+    open({ ...sel, edgeIds: ["e1"] });
+    expect(screen.getByRole("tab", { name: "설명" })).toHaveAttribute("aria-selected", "true");
+    await openFlow();
+    expect(hookState.flow.at(-1)).not.toBeNull();
+    fireEvent.keyDown(document.body, { key: "Escape" });
+    expect(hookState.flow.at(-1)).toBeNull();
+    expect(hookState.trunk.at(-1)).toBeNull();
+    expect(screen.getByRole("tab", { name: "흐름" })).toHaveAttribute("aria-selected", "true");
+  });
+
+  test("새 서버 상태를 받아 펼친 선 가운데 하나라도 없어지면 펼침이 풀린다", () => {
+    hookState.busy = false;
+    const { rerender } = render(ui(trunkLatest(1) as never));
+    open();
+    // 펼친 선이 다 남아 있으면(다른 것만 바뀜) 그대로.
+    rerender(ui(trunkLatest(2, allEdges, ["d"]) as never));
+    expect(hookState.trunk.at(-1)).toEqual(sel);
+    expect(screen.getByRole("list", { name: "이 줄기의 선 2개" })).toBeInTheDocument();
+    // 하나가 사라지면 푼다: 빈 강조·빈 목록이 남지 않고 설명 탭도 앞 탭으로 돌아간다.
+    rerender(ui(trunkLatest(3, { e1: allEdges.e1, e1b: allEdges.e1b }) as never));
+    expect(hookState.trunk.at(-1)).toBeNull();
+    expect(screen.queryByRole("list", { name: /이 줄기의 선/ })).toBeNull();
+    expect(screen.getByRole("tab", { name: "대화" })).toHaveAttribute("aria-selected", "true");
+  });
+
+  test("대화 중 명령으로 펼친 선 하나가 그림에서 빠져도 목록만 줄고, 다른 탭으로 간 사용자를 설명 탭으로 데려가지 않는다", () => {
+    hookState.busy = true;
+    try {
+      render(ui(trunkLatest() as never));
+      open();
+      fireEvent.click(screen.getByRole("tab", { name: "이력" }));
+      act(() => hookState.onCommand!({ op: "remove_edge", id: "e2" }));
+      expect(screen.getByRole("tab", { name: "이력" })).toHaveAttribute("aria-selected", "true");
+      fireEvent.click(screen.getByRole("tab", { name: "설명" }));
+      expect(within(screen.getByRole("list", { name: "이 줄기의 선 1개" })).getAllByRole("button").map((b) => b.textContent)).toEqual(["a → b · HTTP"]);
+    } finally {
+      hookState.busy = false;
+    }
+  });
+
+  test("대화 차례가 끝나 받은 판에서 펼친 선이 사라져도 펼침이 풀린다", () => {
+    hookState.busy = false;
+    const { rerender } = render(ui(trunkLatest(1) as never));
+    open();
+    act(() => hookState.turn!.onDone());
+    rerender(ui(trunkLatest(2, { e2: allEdges.e2 }) as never));
+    expect(hookState.trunk.at(-1)).toBeNull();
+  });
+
+  test("합친 표시 연결을 목록에서 골라도, 가지를 눌러 좁혀도 지금 연결 고르기와 같은 설명 탭이 뜬다", () => {
+    hookState.busy = false;
+    render(ui(trunkLatest() as never));
+    fireEvent.click(screen.getByRole("button", { name: "선택e1" }));
+    const expected = panelText();
+    expect(expected).toContain("연결선");
+    fireEvent.click(screen.getByRole("button", { name: "선택해제" }));
+    // 목록에서 고르기
+    open();
+    fireEvent.click(screen.getByRole("button", { name: "a → b · HTTP" }));
+    expect(hookState.selected.at(-1)).toBe("e1");
+    expect(panelText()).toBe(expected);
+    fireEvent.click(screen.getByRole("button", { name: "선택해제" }));
+    // 가지를 눌러 좁히기: Canvas 가 그 표시 연결 id 로 onSelect 를 부른다.
+    open();
+    fireEvent.click(screen.getByRole("button", { name: "선택e1" }));
+    expect(hookState.trunk.at(-1)).toBeNull();
+    expect(panelText()).toBe(expected);
+  });
 });

@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { ASSUMPTION_CHOICES, ASSUMPTION_LABELS, parseNoLinkKey } from "@/domain/assumptions";
 import type { Assumption, Group } from "@/domain/types";
 
+import { ArrowPair } from "../Arrow";
 import styles from "./chat.module.css";
 
 export interface AssumptionChipsProps {
@@ -81,7 +82,7 @@ export function AssumptionChips({ assumptions, busy, onChoose, onConfirm, readOn
           return (
             <li key={key} className={styles.assumptionItem}>
               <span className={`${styles.assumptionChip} ${styles.assumptionStatic} ${a.confirmed ? styles.assumptionConfirmed : ""}`}>
-                <span>{`망연계 없음: ${nameA} ↔ ${nameB}`}</span>
+                <span>망연계 없음: <ArrowPair a={nameA} b={nameB} dir="both" /></span>
                 {a.confirmed && <span className={styles.assumptionMark}>확정</span>}
               </span>
               {onRemoveNoLink && !readOnly && (

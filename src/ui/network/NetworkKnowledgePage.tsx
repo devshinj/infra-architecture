@@ -20,6 +20,7 @@ import type { NetTypeRow } from "@/server/network";
 import { Button } from "@/ui/Button";
 import { closeOnEscape, useNotesPanel } from "@/ui/useNotesPanel";
 
+import { ArrowPair } from "../Arrow";
 import { type Dialog, DialogView, GENERIC_ERROR } from "../dialogs";
 import styles from "./knowledge.module.css";
 
@@ -154,7 +155,7 @@ export function NetworkKnowledgePage({ initialTypes, initialRules }: { initialTy
     setDialog({
       kind: "delete",
       title: "기관 규칙 지우기",
-      message: `${nameOf(r.a)} ↔ ${nameOf(r.b)} 규칙을 지울까요?`,
+      message: <><ArrowPair a={nameOf(r.a)} b={nameOf(r.b)} dir="both" /> 규칙을 지울까요?</>,
       run: async () => {
         const d = await deleteNetworkRuleAction(r.id);
         if (!d.ok) return d.error;
@@ -375,7 +376,7 @@ export function NetworkKnowledgePage({ initialTypes, initialRules }: { initialTy
           <tbody>
             {GRADE_RULES.map((r) => (
               <tr key={`${r.a}-${r.b}-${r.when ?? ""}`}>
-                <td>{gradeLabel(r.a)} ↔ {gradeLabel(r.b)}{r.when === "separated" ? " (둘 중 하나가 망분리 대상)" : ""}</td>
+                <td><ArrowPair a={gradeLabel(r.a)} b={gradeLabel(r.b)} dir="both" />{r.when === "separated" ? " (둘 중 하나가 망분리 대상)" : ""}</td>
                 <td>{METHOD_LABELS[r.method]}</td>
               </tr>
             ))}
@@ -394,7 +395,7 @@ export function NetworkKnowledgePage({ initialTypes, initialRules }: { initialTy
             <tbody>
               {baseRules.map((r) => (
                 <tr key={`${r.a}--${r.b}`}>
-                  <td>{nameOf(r.a)} ↔ {nameOf(r.b)}</td>
+                  <td><ArrowPair a={nameOf(r.a)} b={nameOf(r.b)} dir="both" /></td>
                   <td>{METHOD_LABELS[r.method]}{overridden(r.a, r.b) ? " (기관 규칙이 먼저)" : ""}</td>
                   <td>{r.note}</td>
                 </tr>
@@ -425,7 +426,7 @@ export function NetworkKnowledgePage({ initialTypes, initialRules }: { initialTy
               <Fragment key={r.id}>
                 <li className={styles.ruleRow}>
                   <span className={styles.ruleText}>
-                    <strong>{nameOf(r.a)} ↔ {nameOf(r.b)}</strong>
+                    <strong><ArrowPair a={nameOf(r.a)} b={nameOf(r.b)} dir="both" /></strong>
                     <span className={styles.meta}>{METHOD_LABELS[r.method]}{r.note ? ` · 근거: ${r.note}` : ""}</span>
                   </span>
                   <Button

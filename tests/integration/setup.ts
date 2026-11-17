@@ -26,7 +26,7 @@ beforeAll(async () => {
 });
 
 beforeEach(async () => {
-  await drizzle(admin).execute(sql`TRUNCATE users CASCADE`);
+  await drizzle(admin).execute(sql`TRUNCATE users, auth_attempts CASCADE`);
 });
 
 afterAll(async () => {

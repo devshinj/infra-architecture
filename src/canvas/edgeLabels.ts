@@ -42,7 +42,7 @@ export function labelBox(p: Pick<PlacedLabel, "text" | "x" | "y" | "anchor">): B
 }
 
 /** 두 상자가 ROW_GAP 보다 가까운지(ROW_GAP 만큼 떨어져 맞닿는 것은 괜찮다). */
-function tooClose(a: Box, b: Box): boolean {
+export function tooClose(a: Box, b: Box): boolean {
   const g = ROW_GAP - 1e-6;
   return a.x1 < b.x2 + g && b.x1 < a.x2 + g && a.y1 < b.y2 + g && b.y1 < a.y2 + g;
 }
@@ -278,7 +278,7 @@ function boxOf(item: AlongItem, text: string, c: Pt): Box {
 }
 
 /** 자리 후보: labelAt(없으면 선 가운데)에서 시작해 제 선을 따라 가까운 순서로. */
-function alongCandidates(points: Pt[], labelAt?: Pt): Pt[] {
+export function alongCandidates(points: Pt[], labelAt?: Pt): Pt[] {
   const rs = runs(points);
   if (rs.length === 0) return labelAt ? [labelAt] : points.slice(0, 1);
   const total = totalLength(rs);
@@ -355,15 +355,8 @@ export function boundaryDotAt(points: Pt[], radius: number, labelAt?: Pt, label?
   return { x: round(at.x), y: round(at.y) };
 }
 
-/** 평소 화면 같은 이름 묶기에 쓰는 연결: 이름·두 끝·이름 자리. */
-export interface RestingLabel { id: string; label: string; from: string; to: string; at: Pt }
-
-/**
- * 아무것도 고르지 않은 평소 화면에서 같은 이름이 줄줄이 붙지 않게 한다. 이름이 같고 한쪽 끝을 함께 쓰는 연결
- * (ALB → API #1·#2·관리자 앱의 "HTTP 8080", 두 곳에서 RDS 로 가는 "MySQL 3306")을 한 무리로 보고, 함께 쓰는 끝에
- * 가장 가까운 이름 하나만 "<이름> ×N" 으로 남긴다. 돌려주는 것: 남길 이름(id → 글), 감출 이름 id.
- */
-export function restingLabelClusters(items: RestingLabel[], centerOf: (id: string) => Pt | undefined): { shown: Map<string, string>; hidden: Set<string> } {
+/** 이름이 같고 한쪽 끝을 함께 쓰는 연결끼리 묶는다. 묶음마다 구성원(입력 차례)과, 구성원별로 함께 쓰는 끝 노드 id 를 돌려준다. */
+export function clusterByEnd<T extends { id: string; label: string; from: string; to: string }>(items: T[]): { members: T[]; sharedEnd: Map<string, string> }[] {
   const parent = new Map(items.map((i) => [i.id, i.id]));
   const find = (id: string): string => {
     let r = id;
@@ -371,7 +364,7 @@ export function restingLabelClusters(items: RestingLabel[], centerOf: (id: strin
     parent.set(id, r);
     return r;
   };
-  const byEnd = new Map<string, RestingLabel[]>();
+  const byEnd = new Map<string, T[]>();
   for (const i of items) {
     for (const end of [`from\u0000${i.from}`, `to\u0000${i.to}`]) {
       const key = `${i.label}\u0000${end}`;
@@ -385,19 +378,7 @@ export function restingLabelClusters(items: RestingLabel[], centerOf: (id: strin
     for (const i of list.slice(1)) parent.set(find(i.id), find(list[0]!.id));
     for (const i of list) if (!shared.has(i.id)) shared.set(i.id, key.split("\u0000")[2]!);
   }
-  const groups = new Map<string, RestingLabel[]>();
+  const groups = new Map<string, T[]>();
   for (const i of items) groups.set(find(i.id), [...(groups.get(find(i.id)) ?? []), i]);
-  const shown = new Map<string, string>();
-  const hidden = new Set<string>();
-  for (const list of groups.values()) {
-    if (list.length < 2) continue;
-    const dist = (i: RestingLabel) => {
-      const c = centerOf(shared.get(i.id) ?? i.from);
-      return c ? Math.hypot(i.at.x - c.x, i.at.y - c.y) : 0;
-    };
-    const keep = list.reduce((a, b) => (dist(b) < dist(a) || (dist(b) === dist(a) && b.id < a.id) ? b : a));
-    shown.set(keep.id, `${keep.label} ×${list.length}`);
-    for (const i of list) if (i !== keep) hidden.add(i.id);
-  }
-  return { shown, hidden };
+  return [...groups.values()].map((members) => ({ members, sharedEnd: new Map(members.filter((m) => shared.has(m.id)).map((m) => [m.id, shared.get(m.id)!])) }));
 }

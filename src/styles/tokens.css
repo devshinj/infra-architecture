@@ -73,6 +73,15 @@
   --edge-aux-lit: #90A1AC;
   --edge-glow: #ACC1CF; /* 강조선 뒤 번짐 색 */
 
+  /* 줄기 펼침 6색: 강철 계열 연결선과 가르려고 채도를 높였다(차례로 돌려 쓴다). 꼬리표 글자는 어두운 바탕 위 밝은 색. */
+  --edge-trunk-0: #FF7A6B;
+  --edge-trunk-1: #FFC247;
+  --edge-trunk-2: #3FD6B5;
+  --edge-trunk-3: #4DA3FF;
+  --edge-trunk-4: #A78BFA;
+  --edge-trunk-5: #F472B6;
+  --edge-trunk-tag-text: #EAF1F5;
+
   /* 연결선 움직임 (빛 꼬리·패킷·광택). 꼬리 머리는 --accent(흐름 점) */
   --motion-comet-tail: #BECDD5;
   --motion-comet-mid: #D7F5AB;

@@ -6,13 +6,14 @@ import { shortLabel } from "@/domain/flows";
 
 import "./edges.css";
 import type { DisplayEdge } from "./display";
-import { boundaryDotAt, labelBox, mergedLabels, restingLabelClusters, stepLabels, tagSpots, type Box } from "./edgeLabels";
+import { boundaryDotAt, labelBox, mergedLabels, stepLabels, tagSpots, type Box, type PlacedLabel } from "./edgeLabels";
 import { emphasisOf, type Emphasis } from "./emphasis";
 import type { Layout, Rect } from "./layout";
 import { MediumMark, pointAlong } from "./mediumMark";
 import { textWidth } from "./text";
 import { startBundleMotion, type MotionKind } from "./motion";
 import { buildSegmentBundles, type Bundle } from "./segments";
+import { branchSpot, farEnd, trunkColor, type TrunkClick, type TrunkSelection } from "./trunk";
 
 export interface EdgeLayerProps {
   layout: Layout;
@@ -20,10 +21,17 @@ export interface EdgeLayerProps {
   selectedId: string | null;
   /** 고른 노드(또는 접힌 영역)의 상자. 있으면 그 노드에 이어진 같은 이름을 하나로 합쳐 그린다. */
   selectedRect?: Rect;
+  /** 고른 대상의 강조 집합을 Canvas 가 이미 셌으면 그것(펼친 영역을 고른 때: 안쪽과 경계를 넘는 연결). 없으면 selectedId 로 센다. */
+  emphasis?: Emphasis;
   /** 선택이 없을 때 마우스를 올린 노드/연결 id. 선택이 있으면 무시한다. */
   hoverId: string | null;
   /** 연결선(클릭 영역)에 마우스가 들어오면 그 id, 나가면 null. */
   onHover?(id: string | null): void;
+  /**
+   * 공유 조각(둘 이상이 함께 쓰는 줄기)에 마우스를 올리면 그 조각을 지나는 연결 id 전부, 떠나거나 조각이 사라지거나
+   * 호버를 쓰지 않는 때(선택·펼침·흐름 보기)가 되면 null. 노드 흐림을 선 하나에 올린 때와 같게 하려고 Canvas 가 쓴다.
+   */
+  onHoverEdges?(ids: string[] | null): void;
   hoverLabels: boolean;
   motion: boolean;
   appearing: Set<string>;
@@ -40,6 +48,12 @@ export interface EdgeLayerProps {
   crossing?: ReadonlySet<string>;
   /** 접힌 영역 상자. 단계 글자·"망 넘음" 표시가 노드 상자처럼 피한다. */
   collapsedRects?: Rect[];
+  /** 펼친 줄기. 있으면 그 줄기의 연결을 선택처럼 밝히고 연결마다 색 겹선과 먼 끝 꼬리표를 단다. 흐름을 보는 중에는 쓰지 않는다. */
+  trunk?: TrunkSelection | null;
+  /** 공유 조각(둘 이상이 함께 쓰는 줄기)을 눌렀을 때. 눌린 점은 캔버스 좌표. */
+  onTrunkClick?(c: TrunkClick): void;
+  /** 노드·영역 id → 꼬리표에 쓸 이름(접힌 영역이면 영역 이름). */
+  endName?(id: string): string;
 }
 
 const MANY_NODES = 40;
@@ -70,6 +84,8 @@ function tagDetail(e: DisplayEdge): { text: string | null; direction: DisplayEdg
   const width = textW + (direction ? (text ? TAG.gap : 0) + DIR.w : 0);
   return { text, direction, width };
 }
+/** 줄기 꼬리표: 글자 크기, 알약 안쪽 좌우 여백, 높이. */
+const TRUNK_TAG = { font: 11, padX: 6, height: 16 };
 const ARROW = { size: 5, spread: 0.5 };
 /** 강조 겹선의 화살표 크기. */
 const EMPH_ARROW = 6.5;
@@ -116,9 +132,11 @@ function prefersReducedMotion(): boolean {
   return typeof window !== "undefined" && !!window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
 }
 
-export function EdgeLayer({ layout, edges, selectedId, selectedRect, hoverId, onHover, hoverLabels, motion, appearing, nodeCount, onSelect, flowSteps, crossing, collapsedRects }: EdgeLayerProps) {
+export function EdgeLayer({ layout, edges, selectedId, selectedRect, emphasis, hoverId, onHover, onHoverEdges, hoverLabels, motion, appearing, nodeCount, onSelect, flowSteps, crossing, collapsedRects, trunk: trunkProp, onTrunkClick, endName }: EdgeLayerProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [hovered, setHovered] = useState<string | null>(null);
+  // 공유 조각에 올린 마우스: 그 조각을 지나는 연결 전부(호버 겹선으로 밝힌다).
+  const [hoveredSeg, setHoveredSeg] = useState<string | null>(null);
 
   const byId = useMemo(() => new Map(edges.map((e) => [e.id, e])), [edges]);
   const laid = useMemo(() => layout.edges.filter((e) => byId.has(e.id) && e.points.length >= 2), [layout.edges, byId]);
@@ -140,11 +158,60 @@ export function EdgeLayer({ layout, edges, selectedId, selectedRect, hoverId, on
   }, [flowSteps, byId]);
   const stepIds = useMemo(() => new Set(steps?.map((s) => s.displayEdgeId) ?? []), [steps]);
 
+  // 펼친 줄기: 배치에 남은 연결만 센다(하나도 없으면 펼침이 없는 것). 흐름을 보는 동안은 쓰지 않는다.
+  const trunk = useMemo<TrunkSelection | null>(() => {
+    if (!trunkProp || steps) return null;
+    const ids = trunkProp.edgeIds.filter((i) => laid.some((l) => l.id === i));
+    return ids.length > 0 ? { ...trunkProp, edgeIds: ids } : null;
+  }, [trunkProp, steps, laid]);
+  // 색 차례는 처음 펼친 연결 차례(일부가 사라져도 남은 선의 색은 그대로).
+  const trunkIndex = useMemo(() => new Map((trunkProp?.edgeIds ?? []).map((id, i) => [id, i])), [trunkProp]);
+  const trunkEmphasis = useMemo<Emphasis | null>(() => {
+    if (!trunk) return null;
+    const nodes = new Set<string>();
+    for (const i of trunk.edgeIds) {
+      const e = byId.get(i);
+      if (e) {
+        nodes.add(e.from);
+        nodes.add(e.to);
+      }
+    }
+    return { nodes, edges: new Set(trunk.edgeIds) };
+  }, [trunk, byId]);
+
   // 선택 기준 강조(흐림 22%)와 호버 기준 강조(흐림 45%). 호버는 선택이 없을 때만.
   // 흐름을 보는 동안은 흐름 단계가 선택 강조 자리를 쓰고(같은 겹선·빛), 호버는 쓰지 않는다.
   // 단계는 이미 표시 연결 id 로 맞춰 와 있으므로 연결 집합만 쓴다(노드 흐림은 Canvas 가 한다).
-  const sel = useMemo<Emphasis | null>(() => (steps ? { nodes: new Set(), edges: stepIds } : emphasisOf(edges, selectedId)), [edges, selectedId, steps, stepIds]);
-  const hov = useMemo(() => (selectedId === null && !steps ? emphasisOf(edges, hoverId) : null), [edges, selectedId, hoverId, steps]);
+  const sel = useMemo<Emphasis | null>(() => (steps ? { nodes: new Set(), edges: stepIds } : (emphasis ?? trunkEmphasis ?? emphasisOf(edges, selectedId))), [edges, selectedId, steps, stepIds, emphasis, trunkEmphasis]);
+  // 공유 조각 호버: 조각 키로 지금 묶음에서 다시 찾는다(배치가 바뀌어 사라졌으면 호버 없음). 선택·흐름·펼침 중에는 쓰지 않는다.
+  const segIds = useMemo<string[] | null>(() => {
+    if (!hoveredSeg || selectedId !== null || steps || trunk) return null;
+    const seg = bundles.flatMap((b) => b.segments).find((x) => x.key === hoveredSeg);
+    const ids = (seg?.edgeIds ?? []).filter((i) => byId.has(i));
+    return ids.length > 0 ? ids : null;
+  }, [hoveredSeg, selectedId, steps, trunk, bundles, byId]);
+  const segSet = useMemo(() => new Set(segIds ?? []), [segIds]);
+  const hov = useMemo<Emphasis | null>(() => {
+    if (selectedId !== null || steps || trunk) return null;
+    if (segIds) return { nodes: new Set(segIds.flatMap((i) => [byId.get(i)!.from, byId.get(i)!.to])), edges: new Set(segIds) };
+    return emphasisOf(edges, hoverId);
+  }, [edges, selectedId, hoverId, steps, trunk, segIds, byId]);
+  // Canvas 가 같은 호버 흐림을 만들도록 조각 호버를 알린다(바뀔 때만).
+  const reportEdges = useRef(onHoverEdges);
+  reportEdges.current = onHoverEdges;
+  const reported = useRef("");
+  const segKey = segIds?.join(" ") ?? "";
+  useEffect(() => {
+    if (reported.current === segKey) return;
+    reported.current = segKey;
+    reportEdges.current?.(segIds);
+  }, [segKey, segIds]);
+  useEffect(
+    () => () => {
+      if (reported.current) reportEdges.current?.(null);
+    },
+    [],
+  );
   const incident = useMemo(() => sel?.edges ?? new Set<string>(), [sel]);
   const isSelectedEdge = (e: DisplayEdge) => selectedId !== null && (e.id === selectedId || e.sourceEdgeIds.includes(selectedId));
   const isDim = (ids: string[]) => sel !== null && !ids.some((i) => sel.edges.has(i));
@@ -161,7 +228,8 @@ export function EdgeLayer({ layout, edges, selectedId, selectedRect, hoverId, on
   // 노드·접힌 영역을 고르면 이어진 연결의 같은 이름을 하나로 합치고, 이름끼리·노드와 겹치지 않게 둔다
   // (연결을 고르거나 호버일 때는 연결마다 그대로). 따로 그리는 것은 합친 이름과 제자리에서 비킨 하나뿐인 이름이다.
   const merged = useMemo(() => {
-    if (steps || !sel || selectedId === null || !selectedRect || edges.some((e) => e.id === selectedId || e.sourceEdgeIds.includes(selectedId))) return [];
+    // 펼친 영역을 고른 때(emphasis)는 이어진 선이 영역 상자에 닿지 않으므로 합치지 않는다.
+    if (steps || emphasis || trunk || !sel || selectedId === null || !selectedRect || edges.some((e) => e.id === selectedId || e.sourceEdgeIds.includes(selectedId))) return [];
     const incidentLaid = emphLaid.map((l) => {
       const e = byId.get(l.id)!;
       return { id: l.id, points: l.points, from: e.from, to: e.to, ...(e.label ? { label: e.label } : {}), ...(l.labelAt ? { labelAt: l.labelAt } : {}) };
@@ -174,35 +242,35 @@ export function EdgeLayer({ layout, edges, selectedId, selectedRect, hoverId, on
         return { ...p, moved: p.edgeIds.length === 1 && (!at || off(at.x, p.x) || off(at.y, p.y)) };
       })
       .filter((p) => p.edgeIds.length > 1 || p.moved);
-  }, [steps, sel, selectedId, selectedRect, edges, emphLaid, byId, layout.edges]);
+  }, [steps, emphasis, trunk, sel, selectedId, selectedRect, edges, emphLaid, byId, layout.edges]);
   const mergedIds = useMemo(() => new Set(merged.flatMap((p) => p.edgeIds)), [merged]);
 
-  // 평소 화면(고른 것·올린 것·흐름 없음, 이름 늘 보임): 같은 끝을 함께 쓰는 같은 이름은 하나만 "<이름> ×N" 으로 남긴다.
-  // 노드에 올리면 연결마다 제 이름으로 돌아가 어느 가지인지 보인다.
+  // 평소 화면(고른 것·올린 것·흐름 없음, 이름 늘 보임): 이름 자리는 배치(layout.labels)가 정해 둔 것을 그대로 쓴다.
+  // 같은 끝을 함께 쓰는 같은 이름은 "<이름> ×N" 하나만 첫 연결에 달고, 나머지 구성원은 노드에 올릴 때만 제 이름으로 보인다.
   const resting = useMemo(() => {
     if (sel !== null || hov !== null || steps || hoverLabels) return null;
-    const items = laid.flatMap((l) => {
-      const e = byId.get(l.id)!;
-      return e.label && l.labelAt && !e.egress ? [{ id: e.id, label: e.label, from: e.from, to: e.to, at: l.labelAt }] : [];
-    });
-    const centerOf = (id: string) => {
-      const r = layout.nodes[id] ?? layout.groups[id];
-      return r ? { x: r.x + r.width / 2, y: r.y + r.height / 2 } : undefined;
-    };
-    return restingLabelClusters(items, centerOf);
-  }, [sel, hov, steps, hoverLabels, laid, byId, layout.nodes, layout.groups]);
+    const shown = new Map<string, string>();
+    const hidden = new Set<string>();
+    for (const p of layout.labels) {
+      shown.set(p.edgeIds[0], p.text);
+      for (const id of p.edgeIds.slice(1)) hidden.add(id);
+    }
+    return { shown, hidden };
+  }, [sel, hov, steps, hoverLabels, layout.labels]);
 
+  const placedText = useMemo(() => new Map(layout.labels.map((p) => [p.edgeIds[0]!, p.text])), [layout.labels]);
   // 망 경계 점: 경계를 넘는 연결의 가운데(이름 자리, 없으면 선 가운데). 이름이 있으면 이름 글자 옆으로 비킨다.
   const dots = useMemo(() => {
     const out = new Map<string, Pt>();
     if (!crossing || crossing.size === 0) return out;
     for (const l of laid) {
       if (!crossing.has(l.id)) continue;
-      const at = boundaryDotAt(l.points, DOT_R, l.labelAt, byId.get(l.id)!.label);
+      // 그려지는 평소 이름이 같은 이름을 묶은 글("NFS ×3")이면 그 글 상자를 비킨다. 이름 상자는 내보낸 그림에도 들어간다.
+      const at = boundaryDotAt(l.points, DOT_R, l.labelAt, placedText.get(l.id) ?? byId.get(l.id)!.label);
       if (at) out.set(l.id, at);
     }
     return out;
-  }, [crossing, laid, byId]);
+  }, [crossing, laid, byId, placedText]);
   const dotBoxes = useMemo<Box[]>(() => [...dots.values()].map((p) => ({ x1: p.x - DOT_R, y1: p.y - DOT_R, x2: p.x + DOT_R, y2: p.y + DOT_R })), [dots]);
   const nodeRects = useMemo(() => [...Object.values(layout.nodes), ...(collapsedRects ?? [])], [layout.nodes, collapsedRects]);
 
@@ -241,6 +309,64 @@ export function EdgeLayer({ layout, edges, selectedId, selectedRect, hoverId, on
     const spots = tagSpots(items, nodeRects, stepPlaced, [...dotBoxes, ...shownNames]);
     return items.map((it, i) => ({ id: it.id, pill: it.pill, width: it.width, detail: it.detail, x: spots[i].x, y: spots[i].y }));
   }, [steps, stepIds, selectedId, sel, laid, dots, byId, nodeRects, stepPlaced, dotBoxes, merged, mergedIds]);
+
+  // 펼친 줄기의 연결 이름: 숨었던 이름의 자리(labelAt)는 공유 조각 가운데라 서로 겹치므로, 그린 뒤 노드·서로·경계 점을 피해 제 선을 따라 비킨다.
+  const trunkNames = useMemo(() => {
+    const out = new Map<string, PlacedLabel>();
+    if (!trunk) return out;
+    const items = trunk.edgeIds.flatMap((id) => {
+      const l = laid.find((x) => x.id === id);
+      const e = byId.get(id);
+      return l && e?.label && l.labelAt ? [{ text: e.label, points: l.points, labelAt: l.labelAt, id }] : [];
+    });
+    for (const p of stepLabels(items, nodeRects, dotBoxes)) out.set(p.edgeIds[0], p);
+    return out;
+  }, [trunk, laid, byId, nodeRects, dotBoxes]);
+
+  // 공유 조각에 올렸을 때의 연결 이름: 같은 자리(조각 가운데)에 몰리므로 노드·서로·경계 점·보이는 다른 이름을 피해 제 선을 따라 비킨다.
+  const segNames = useMemo(() => {
+    const out = new Map<string, PlacedLabel>();
+    if (!segIds) return out;
+    const items = segIds.flatMap((id) => {
+      const l = laid.find((x) => x.id === id);
+      const e = byId.get(id);
+      return l && e?.label && l.labelAt ? [{ text: e.label, points: l.points, labelAt: l.labelAt, id }] : [];
+    });
+    // 이름이 늘 보이는 설정이면 조각에 안 걸린 다른 연결의 이름도 그 자리에 보인다.
+    const others: Box[] = hoverLabels
+      ? []
+      : laid.flatMap((l) => {
+          const e = byId.get(l.id)!;
+          return segSet.has(l.id) || !e.label || e.egress || !l.labelAt ? [] : [labelBox({ text: e.label, x: l.labelAt.x, y: l.labelAt.y, anchor: "middle" })];
+        });
+    for (const p of stepLabels(items, nodeRects, [...dotBoxes, ...others])) out.set(p.edgeIds[0], p);
+    return out;
+  }, [segIds, segSet, hoverLabels, laid, byId, nodeRects, dotBoxes]);
+
+  // 줄기 꼬리표: 연결마다 먼 끝 이름. 첫 후보는 먼 쪽 가지 조각 들어서는 곳, 서로·노드·보이는 연결 이름과 겹치지 않게 비킨다.
+  const trunkTags = useMemo(() => {
+    if (!trunk) return [];
+    const segs = bundles.flatMap((b) => b.segments.map((s) => ({ edgeIds: s.edgeIds, pts: s.pts })));
+    const items = trunk.edgeIds.flatMap((id) => {
+      const l = laid.find((x) => x.id === id);
+      const e = byId.get(id);
+      if (!l || !e) return [];
+      const far = farEnd(l.points, trunk.at, e.from, e.to);
+      const text = endName?.(far) ?? far;
+      const spot = branchSpot(l.points, trunk.at, segs, id);
+      const width = textWidth(text, TRUNK_TAG.font) + 2 * TRUNK_TAG.padX;
+      return [{ text, width, height: TRUNK_TAG.height, points: l.points, ...(spot ? { labelAt: spot } : {}), id, color: trunkColor(trunkIndex.get(id) ?? 0) }];
+    });
+    const shownNames: Box[] = [...trunkNames.values()].map(labelBox);
+    const spots = tagSpots(items, nodeRects, [], [...dotBoxes, ...shownNames]);
+    const at = new Map(spots.map((p) => [p.edgeIds[0], p]));
+    return items.flatMap((it) => {
+      const p = at.get(it.id);
+      return p ? [{ id: it.id, color: it.color, text: it.text, width: it.width, x: p.x, y: p.y }] : [];
+    });
+  }, [trunk, trunkIndex, trunkNames, bundles, laid, byId, endName, nodeRects, dotBoxes]);
+  // 눌린 공유 조각: 색 겹선 위에 색 없이 다시 그려 줄기 몸통으로 보이게 한다.
+  const trunkSpine = useMemo(() => (trunk ? bundles.flatMap((b) => b.segments).find((s) => s.key === trunk.segKey) : undefined), [trunk, bundles]);
 
   // Which bundles animate. Over 40 nodes only the ones touching the selection; with fewer, every bundle animates.
   // 흐름 표시를 꺼도 흐름을 보는 동안은 그 흐름 단계가 지나는 묶음만 움직인다(연두 움직임은 고른 흐름에만).
@@ -286,6 +412,15 @@ export function EdgeLayer({ layout, edges, selectedId, selectedRect, hoverId, on
   // 고른 동안 갈림점은 겹선의 점 위에 있을 때만 흐리지 않는다.
   const junctionDim = (j: Pt) => sel !== null && !emphLaid.some((l) => onPolyline(j, l.points));
   const junctionFaded = (b: Bundle) => isFaded(bundleEdgeIds(b));
+
+  // 누른 화면 점을 캔버스 좌표로. 변환을 못 얻으면(jsdom 등) 조각 가운데로 한다.
+  const canvasPoint = (ev: React.MouseEvent, pts: Pt[]): Pt => {
+    const m = svgRef.current?.getScreenCTM?.()?.inverse();
+    if (m && (ev.clientX !== 0 || ev.clientY !== 0)) {
+      return { x: m.a * ev.clientX + m.c * ev.clientY + m.e, y: m.b * ev.clientX + m.d * ev.clientY + m.f };
+    }
+    return pointAlong(pts, 0.5) ?? pts[0];
+  };
 
   return (
     <svg ref={svgRef} className="edge-layer" width={layout.width} height={layout.height} aria-hidden="true">
@@ -350,6 +485,26 @@ export function EdgeLayer({ layout, edges, selectedId, selectedRect, hoverId, on
         </g>
       )}
 
+      {/* 2b. 펼친 줄기: 연결마다 제 색 겹선(선 종류 모양은 그대로). 눌린 공유 조각은 색 없이 밝은 선으로 위에 다시 그린다. */}
+      {trunk && (
+        <g className="edge-trunk">
+          {trunk.edgeIds.map((id) => {
+            const l = laid.find((x) => x.id === id);
+            const e = byId.get(id);
+            if (!l || !e) return null;
+            const arrow = arrowD(l.points, EMPH_ARROW);
+            return (
+              <g key={id} data-trunk-edge={id} data-trunk-color={trunkColor(trunkIndex.get(id) ?? 0)}>
+                <path className={`edge-trunk__line edge-line edge-line--${e.edgeKind}`} d={toD(l.points)} />
+                {e.edgeKind === "replication" && <path className="edge-trunk__core edge-line edge-line--replication-core" d={toD(l.points)} />}
+                {arrow && <path className="edge-trunk__arrow edge-arrow" d={arrow} />}
+              </g>
+            );
+          })}
+          {trunkSpine && <path className={`edge-trunk__spine edge-line edge-line--${trunkSpine.edgeKind}`} d={trunkSpine.d} />}
+        </g>
+      )}
+
       {/* 3. 움직임: 조각마다 하나. 흐림은 바닥과 같되 이어진 선이 지나는 조각은 흐리지 않는다. */}
       <g className="edge-motion">
         {bundles.flatMap((b) =>
@@ -375,7 +530,7 @@ export function EdgeLayer({ layout, edges, selectedId, selectedRect, hoverId, on
         // 합친 이름에 들어간 선은 따로 그리지 않는다.
         // 출구선 이름은 늘 올렸을 때만(고르면 이어진 선이라 보인다).
         const hoverOnly = hoverLabels || !!e.egress;
-        const shown = incident.has(e.id) || (sel ? hoverOnly && hovered === e.id : !hoverOnly || hovered === e.id);
+        const shown = incident.has(e.id) || segSet.has(e.id) || (sel ? hoverOnly && hovered === e.id : !hoverOnly || hovered === e.id);
         // 흐름을 보는 동안 단계 연결은 제 이름 대신 단계 글자를 단다.
         // 평소 화면에서 같은 이름 무리에 묻힌 이름은 올렸을 때만 보인다.
         const clustered = !!resting?.hidden.has(e.id) && hovered !== e.id;
@@ -403,7 +558,7 @@ export function EdgeLayer({ layout, edges, selectedId, selectedRect, hoverId, on
               }}
             />
             {showLabel && (
-              <text className="edge-label" x={l.labelAt!.x} y={l.labelAt!.y}>
+              <text className="edge-label" x={(trunkNames.get(e.id) ?? segNames.get(e.id))?.x ?? l.labelAt!.x} y={(trunkNames.get(e.id) ?? segNames.get(e.id))?.y ?? l.labelAt!.y}>
                 {labelText}
               </text>
             )}
@@ -414,6 +569,31 @@ export function EdgeLayer({ layout, edges, selectedId, selectedRect, hoverId, on
           </g>
         );
       })}
+
+      {/* 4b. 공유 조각 누르는 자리: 선별 누르는 자리보다 위에 그려 먼저 잡힌다(흐름을 보는 중에는 없다). */}
+      {!steps && onTrunkClick && (
+        <g className="edge-seg-hits">
+          {bundles.flatMap((b) =>
+            b.segments
+              .filter((s) => s.edgeIds.length > 1)
+              .map((s) => (
+                <path
+                  key={s.key}
+                  className="edge-seg-hit"
+                  data-seg-key={s.key}
+                  data-edge-ids={s.edgeIds.join(" ")}
+                  d={s.d}
+                  onClick={(ev) => {
+                    ev.stopPropagation();
+                    onTrunkClick({ segKey: s.key, edgeIds: [...s.edgeIds], at: canvasPoint(ev, s.pts) });
+                  }}
+                  onMouseEnter={() => setHoveredSeg(s.key)}
+                  onMouseLeave={() => setHoveredSeg((h) => (h === s.key ? null : h))}
+                />
+              )),
+          )}
+        </g>
+      )}
 
       {/* 5. 고른 노드에 이어진 같은 이름을 하나로 합친 이름, 겹쳐서 제자리에서 비킨 이름 */}
       {merged.length > 0 && (
@@ -462,6 +642,20 @@ export function EdgeLayer({ layout, edges, selectedId, selectedRect, hoverId, on
                   <path className="edge-boundary-tag__dir-line" d={DIR_D[t.detail.direction]} />
                 </g>
               )}
+            </g>
+          ))}
+        </g>
+      )}
+
+      {/* 8. 줄기 꼬리표: 먼 끝 이름(화면 장치: 내보내기에서 걷는다) */}
+      {trunkTags.length > 0 && (
+        <g className="edge-trunk-tags">
+          {trunkTags.map((t) => (
+            <g key={t.id} className="edge-trunk-tag" data-trunk-edge={t.id} data-trunk-color={t.color} transform={`translate(${t.x - t.width / 2} ${t.y})`}>
+              <rect className="edge-trunk-tag__pill" x={0} y={-TRUNK_TAG.height / 2} width={t.width} height={TRUNK_TAG.height} rx={TRUNK_TAG.height / 2} />
+              <text className="edge-trunk-tag__text" x={t.width / 2} y={0}>
+                {t.text}
+              </text>
             </g>
           ))}
         </g>

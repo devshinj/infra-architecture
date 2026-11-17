@@ -21,11 +21,27 @@ export function usePopover(firstItem: string) {
       if (!root.current?.contains(e.target as globalThis.Node)) setOpen(false);
     };
     // 키보드로 포커스가 팝오버 밖(버튼 포함 root 바깥)으로 나가면 닫는다. 창 전환처럼 relatedTarget 이 없으면 그대로 둔다.
+    // 단, 안쪽을 포인터로 누르는 동안의 focusout 은 닫는 이유가 아니다: 포커스 못 받는 라벨 글자를 누르면 브라우저가
+    // 가장 가까운 포커스 가능 조상(팝오버 밖)으로 포커스를 옮기는데, 이때 닫으면 이어지는 click 이 사라진 라벨에 간다.
+    let pressing = false;
+    const onPress = () => {
+      pressing = true;
+    };
+    const onRelease = () => {
+      pressing = false;
+    };
     const onOut = (e: FocusEvent) => {
+      if (pressing) return;
       const to = e.relatedTarget as globalThis.Node | null;
       if (to && !root.current?.contains(to)) setOpen(false);
     };
     const el = root.current;
+    el?.addEventListener("mousedown", onPress);
+    el?.addEventListener("pointerdown", onPress);
+    document.addEventListener("mouseup", onRelease);
+    document.addEventListener("pointerup", onRelease);
+    document.addEventListener("click", onRelease);
+    document.addEventListener("dragend", onRelease);
     document.addEventListener("keydown", onKey);
     document.addEventListener("mousedown", onDown);
     el?.addEventListener("focusout", onOut);
@@ -33,6 +49,12 @@ export function usePopover(firstItem: string) {
       document.removeEventListener("keydown", onKey);
       document.removeEventListener("mousedown", onDown);
       el?.removeEventListener("focusout", onOut);
+      el?.removeEventListener("mousedown", onPress);
+      el?.removeEventListener("pointerdown", onPress);
+      document.removeEventListener("mouseup", onRelease);
+      document.removeEventListener("pointerup", onRelease);
+      document.removeEventListener("click", onRelease);
+      document.removeEventListener("dragend", onRelease);
     };
   }, [open, firstItem]);
   return { open, setOpen, root, trigger };

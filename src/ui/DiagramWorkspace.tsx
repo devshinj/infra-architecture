@@ -17,7 +17,8 @@ import {
   setWarningIgnoredAction,
 } from "@/app/(app)/actions";
 import { Canvas, type CanvasOptions, type DiffMarks, type TurnMarks } from "@/canvas/Canvas";
-import { defaultDisplayOptions } from "@/canvas/display";
+import { buildDisplayGraph, defaultDisplayOptions } from "@/canvas/display";
+import { trunkColor, type TrunkSelection } from "@/canvas/trunk";
 import { applyCommand } from "@/domain/apply";
 import { assumptionChangeMessage, confirmAssumption } from "@/domain/assumptions";
 import { isFlowCommand } from "@/domain/commands";
@@ -137,11 +138,15 @@ function escapeBelongsElsewhere(e: KeyboardEvent): boolean {
   return document.querySelector('[role="tooltip"]') !== null;
 }
 
+const sameSet = (a: ReadonlySet<string>, b: ReadonlySet<string>) => a.size === b.size && [...a].every((x) => b.has(x));
+
 export function DiagramWorkspace({ diagramId, name, projectName, latest, initialPinned, samples, initialChat = [], initialSessions = NO_SESSIONS, initialPaging, knowledge = null }: DiagramWorkspaceProps) {
   const router = useRouter();
   const [current, setCurrent] = useState(latest);
   const [pinned, setPinned] = useState<Pinned>(initialPinned);
   const [options, setOptions] = useState<CanvasOptions>(() => optionsFor(latest.state));
+  /** 펼친 줄기. 선택과 배타다: 펼치면 선택을 풀고, 무언가를 고르면(selectedId 를 non-null 로) 펼침을 푼다. */
+  const [trunk, setTrunk] = useState<TrunkSelection | null>(null);
   /** 방금 끝난 대화 차례가 더하거나 바꾼 노드. 다음 조작까지 비교 화면과 같은 표시로 남는다. */
   const [turnMarks, setTurnMarks] = useState<TurnMarks | null>(null);
   const turnBase = useRef<DiagramState | null>(null);
@@ -249,6 +254,8 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
   const canvasOptions = useMemo<CanvasOptions>(() => ({ ...options, showMissingBadges: showMissing }), [options, showMissing]);
   const changeOptions = useCallback(
     (o: CanvasOptions) => {
+      // 펼친 줄기는 표시 그래프·배치에 묶여 있다: 접기·보기 옵션이 바뀌면 선택처럼 푼다.
+      if (o.hideAux !== options.hideAux || o.busSimplify !== options.busSimplify || o.mergeDuplicates !== options.mergeDuplicates || !sameSet(o.collapsed, options.collapsed)) setTrunk(null);
       setOptions(o);
       if (o.showMissingBadges === showMissing) return;
       setShowMissing(o.showMissingBadges);
@@ -258,7 +265,7 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
         /* 저장 실패는 이번 방문에만 영향 */
       }
     },
-    [showMissing],
+    [showMissing, options],
   );
   const [tab, setTab] = useState<Tab>("대화");
   // 좁은 화면의 아래 탭: 구성도(캔버스)냐 패널이냐. 패널이면 보이는 탭은 tab 이다. 넓은 화면에서는 CSS 가 이 값을 쓰지 않는다.
@@ -431,6 +438,13 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
         for (const id of added) if (latest.state.nodes[id]) fly.queue(id);
       }
     }
+    // 펼친 줄기: 새 표시 그래프(아래에서 정하는 보기 옵션 그대로)에 펼친 선이 하나라도 없으면 푼다(빈 강조·빈 목록이 남지 않게).
+    if (trunk) {
+      const next = optionsFor(latest.state);
+      const g = buildDisplayGraph(latest.state, { ...next, collapsed: adoptAfterChat.current ? options.collapsed : next.collapsed, selectedId: null });
+      const have = new Set(g.edges.map((e) => e.id));
+      if (!trunk.edgeIds.every((id) => have.has(id))) setTrunk(null);
+    }
     setCurrent(latest);
     if (!adoptAfterChat.current) setBoard((n) => n + 1);
     // 렌더 중이라 ref 는 읽기만 한다(푸는 것은 current.number 가 바뀐 뒤의 effect).
@@ -523,15 +537,28 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
   const activateFlow = useCallback(
     (key: string | null) => {
       setActiveFlow(key);
-      if (key !== null) setOptions((o) => (o.selectedId === null ? o : { ...o, selectedId: null }));
+      if (key === null) return;
+      // 흐름을 켜면 선택처럼 펼침도 푼다: 흐름을 닫을 때 옛 펼침이 되살아나 설명 탭으로 끌고 가지 않게.
+      setTrunk(null);
+      setOptions((o) => (o.selectedId === null ? o : { ...o, selectedId: null }));
     },
     [setActiveFlow],
   );
   /** 캔버스·패널의 선택. 노드·연결을 고르면 흐름 보기를 푼다. 고르거나 빈 곳을 누르는 것은 다음 조작이라 차례 표시를 걷는다. */
   const onSelect = (id: string | null) => {
-    if (id !== null) setActiveFlow(null);
+    if (id !== null) {
+      setActiveFlow(null);
+      setTrunk(null);
+    }
     setTurnMarks(null);
     setOptions((o) => ({ ...o, selectedId: id }));
+  };
+  /** 캔버스의 줄기 펼치기. 펼치면 선택을 푼다(선택과 배타). 펼치는 것도 다음 조작이라 차례 표시를 걷는다. */
+  const onTrunkChange = (t: TrunkSelection | null) => {
+    setTrunk(t);
+    if (t === null) return;
+    setTurnMarks(null);
+    setOptions((o) => (o.selectedId === null ? o : { ...o, selectedId: null }));
   };
   useEffect(() => {
     if (activeFlowKey === null) return;
@@ -553,8 +580,9 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
     } else if (e.code === "KeyF" && !e.shiftKey) {
       e.preventDefault();
       setFitAll((n) => n + 1);
-    } else if (e.key === "Escape" && activeFlowKey === null && options.selectedId !== null) {
-      onSelect(null);
+    } else if (e.key === "Escape" && activeFlowKey === null && (options.selectedId !== null || trunk !== null)) {
+      if (options.selectedId !== null) onSelect(null);
+      setTrunk(null);
     }
   };
   useEffect(() => {
@@ -577,6 +605,19 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
         : null,
     [activeFlow, shown.edges],
   );
+  // 펼친 줄기: 흐름을 보는 중에는 캔버스에도 설명 탭에도 넘기지 않는다.
+  const shownTrunk = activeFlowKey === null ? trunk : null;
+  // 설명 탭의 선 목록: 캔버스와 같은 표시 그래프의 이름으로, 색은 캔버스 겹선과 같은 차례(펼친 연결 차례). 그림에 없는 선은 뺀다.
+  const trunkLines = useMemo(() => {
+    if (!shownTrunk) return null;
+    const g = buildDisplayGraph(shown, canvasOptions);
+    const name = (id: string) => g.nodes[id]?.label ?? g.groups[id]?.label ?? id;
+    const lines = shownTrunk.edgeIds.flatMap((id, i) => {
+      const e = g.edges.find((x) => x.id === id);
+      return e ? [{ id, from: name(e.from), to: name(e.to), ...(e.label ? { label: e.label } : {}), color: trunkColor(i) }] : [];
+    });
+    return lines.length > 0 ? lines : null;
+  }, [shownTrunk, shown, canvasOptions]);
 
   // 설명 탭의 점: 구성도를 보는 중에 고른 항목의 설명을 아직 안 봤을 때만. 한 번 본 항목은 다시 골라도 찍지 않는다.
   const [seenExplain, setSeenExplain] = useState<ReadonlySet<string>>(() => new Set());
@@ -829,6 +870,7 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
     (id: string) => {
       if (selectedRef.current === id) setTab("설명");
       setActiveFlow(null);
+      setTrunk(null);
       setOptions((o) => ({ ...o, selectedId: id }));
     },
     [setActiveFlow],
@@ -914,14 +956,17 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
     if (partial) pushDiagramLine({ kind: "system", text: PARTIAL_UNDO });
   };
 
+  // 다른 판(이력 보기·비교·현재로)으로 가면 선택처럼 펼침도 푼다(옛 배치의 줄기라 새 그림과 맞지 않는다).
   const enter = (next: Mode, state: DiagramState) => {
     setMode(next);
     setEditMode(false);
     setTurnMarks(null);
+    setTrunk(null);
     setOptions(optionsFor(state));
   };
   const backToLive = () => {
     setMode({ kind: "live" });
+    setTrunk(null);
     setOptions(optionsFor(current.state));
   };
 
@@ -995,11 +1040,13 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
 
   const onPinnedChange = (p: Pinned) => {
     setPinned(p);
+    setTrunk(null); // 고정 위치가 바뀌면 배치가 달라져 펼친 줄기 자리가 맞지 않는다.
     savePinnedAction(diagramId, p).then((r) => (r.ok ? setError(null) : setError(r.error)), fail);
   };
   // 고정 위치를 풀고 자동 배치한 뒤 화면을 맞춘다(버튼·대화 재정렬 공통). 버튼은 이력 보기·비교 중에 막힌다.
   const onAutoArrange = () => {
     setPinned({});
+    setTrunk(null); // 고정 위치를 지우고 다시 배치하므로 펼친 줄기 자리가 맞지 않는다.
     setArranged((n) => n + 1);
     clearPinnedAction(diagramId).catch(fail);
   };
@@ -1126,6 +1173,8 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
               onOptionsChange={changeOptions}
               onSelect={onSelect}
               flow={canvasFlow}
+              trunk={shownTrunk}
+              onTrunkChange={onTrunkChange}
               askDisabled={askLocked}
               {...(askReason ? { askReason } : {})}
               onPinnedChange={live ? onPinnedChange : () => {}}
@@ -1194,6 +1243,7 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
             flows={flowPanel}
             {...(narrow ? { externalTabs: { tabIdOf: mobileTabId, request: tabRequest } } : {})}
             {...(explain ? { explain } : {})}
+            {...(trunkLines && shownTrunk ? { trunk: { key: `${shownTrunk.segKey} ${shownTrunk.edgeIds.join(" ")}`, edges: trunkLines, onPick: onSelect } } : {})}
             {...(selKind === "node" || selKind === "group"
               ? {
                   ask: {

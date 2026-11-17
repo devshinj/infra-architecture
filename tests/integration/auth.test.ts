@@ -72,7 +72,7 @@ describe("reset mail failure", () => {
     const { signup: su } = await import("@/server/auth/signup");
     const { requestPasswordReset: req } = await import("@/server/auth/reset");
     await su({ username: "jae", password: "password1", email: "a@b.co" });
-    await expect(req("a@b.co")).resolves.toBeUndefined();
+    await expect(req("a@b.co")).resolves.toBe("ok");
     expect(errSpy).toHaveBeenCalled();
     expect(JSON.stringify(errSpy.mock.calls)).not.toContain("/reset/");
     vi.doUnmock("@/env");

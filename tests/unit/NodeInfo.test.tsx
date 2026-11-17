@@ -29,8 +29,11 @@ test("NodeInfo shows missing values as 미입력 and connected node chips", asyn
 test("NodeInfo shows the Korean kind name and relation direction", () => {
   render(<NodeInfo state={fx("s2")} selectedId="was-1" onSelect={vi.fn()} />);
   expect(screen.getByText("WAS", { selector: "[data-testid=kind]" })).toBeInTheDocument();
-  expect(screen.getAllByText(/← 동기 요청 · HTTP\/AJP/)).toHaveLength(2);
-  expect(screen.getByText(/→ 동기 요청 · TCP 1521/)).toBeInTheDocument();
+  // 방향은 선으로 그린 화살표(보조기기에는 숨김)와 숨긴 화살표 글자로 보인다: 글자 내용은 그대로 "← 동기 요청 · …".
+  const rows = [...document.querySelectorAll("li")].filter((li) => /동기 요청/.test(li.textContent ?? ""));
+  expect(rows.filter((li) => /← 동기 요청 · HTTP\/AJP/.test(li.textContent!))).toHaveLength(2);
+  expect(rows.filter((li) => /→ 동기 요청 · TCP 1521/.test(li.textContent!))).toHaveLength(1);
+  for (const li of rows) expect(li.querySelector("svg")).toHaveAttribute("aria-hidden", "true");
 });
 
 test("NodeInfo shows an edge's kind, ends and label", () => {
@@ -384,7 +387,12 @@ test("a selected zone shows its net type with the AI guess badge, members and cr
   expect(within(crossing).getAllByRole("button")).toHaveLength(1);
   await userEvent.click(within(crossing).getByRole("button", { name: /직원 PC → 업무 WAS/ }));
   expect(onSelect).toHaveBeenLastCalledWith("e1");
-  expect(crossing).toHaveTextContent("← 들어옴 · 동기 요청 · HTTPS");
+  expect(crossing).toHaveTextContent("들어옴 · 동기 요청 · HTTPS");
+  // 화살표는 글자가 아니라 선으로 그린 SVG 다(글꼴에서 ">" 처럼 보이지 않게). 보조기기에는 숨긴다.
+  expect(crossing.textContent).not.toMatch(/[←]/);
+  const arrows = crossing.querySelectorAll("svg");
+  expect(arrows.length).toBeGreaterThanOrEqual(2);
+  for (const a of arrows) expect(a).toHaveAttribute("aria-hidden", "true");
 });
 
 test("a confirmed net type has no AI badge and a zone without net type, members or links says so", () => {
@@ -425,4 +433,44 @@ test("a selected zone shows its explanation with the boundary section and a zone
   expect(screen.getByRole("heading", { name: "경계에서 드나드는 것" })).toBeInTheDocument();
   expect(screen.getByText("직원 PC 의 요청만 들어옵니다.")).toBeInTheDocument();
   expect(screen.getByLabelText("이 영역에 대해 물어보기")).toBeInTheDocument();
+});
+
+// ---- 펼친 줄기의 선 목록 ----
+const trunkList = (onPick = vi.fn()) => ({
+  edges: [
+    { id: "e1", from: "ALB", to: "웹 1", label: "HTTP", color: 0 },
+    { id: "e2", from: "ALB", to: "웹 2", color: 1 },
+    { id: "e3", from: "ALB", to: "웹 3", label: "HTTPS", color: 2 },
+  ],
+  onPick,
+});
+
+test("펼친 줄기: '이 줄기의 선 3개' 머리와 줄마다 버튼, 누르면 그 연결로 onPick", async () => {
+  const onPick = vi.fn();
+  render(<NodeInfo state={fx("s2")} selectedId={null} onSelect={vi.fn()} trunk={trunkList(onPick)} />);
+  expect(screen.getByRole("heading", { name: "이 줄기의 선 3개" })).toBeInTheDocument();
+  const list = screen.getByRole("list", { name: "이 줄기의 선 3개" });
+  const rows = within(list).getAllByRole("button");
+  expect(rows.map((b) => b.textContent)).toEqual(["ALB → 웹 1 · HTTP", "ALB → 웹 2", "ALB → 웹 3 · HTTPS"]);
+  // 색 표지는 캔버스 겹선과 같은 차례 번호(꾸밈이라 보조기기에는 숨긴다).
+  expect(rows.map((b) => b.querySelector("[data-trunk-color]")!.getAttribute("data-trunk-color"))).toEqual(["0", "1", "2"]);
+  for (const b of rows) expect(b.querySelector("[data-trunk-color]")).toHaveAttribute("aria-hidden", "true");
+  await userEvent.click(rows[1]);
+  expect(onPick).toHaveBeenCalledWith("e2");
+  // 빈 선택 안내 대신 목록이 보인다.
+  expect(screen.queryByText(/선택하면 설명이 여기에 표시돼요/)).toBeNull();
+});
+
+test("펼친 줄기 목록은 Tab 으로 차례로 닿고 Enter 로 고른다", async () => {
+  const onPick = vi.fn();
+  render(<NodeInfo state={fx("s2")} selectedId={null} onSelect={vi.fn()} trunk={trunkList(onPick)} />);
+  const rows = within(screen.getByRole("list", { name: "이 줄기의 선 3개" })).getAllByRole("button");
+  await userEvent.tab();
+  expect(rows[0]).toHaveFocus();
+  await userEvent.tab();
+  expect(rows[1]).toHaveFocus();
+  await userEvent.tab();
+  expect(rows[2]).toHaveFocus();
+  await userEvent.keyboard("{Enter}");
+  expect(onPick).toHaveBeenCalledWith("e3");
 });

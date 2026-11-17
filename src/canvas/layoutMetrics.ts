@@ -1,7 +1,8 @@
 import type { DiagramState } from "@/domain/types";
 import { buildDisplayGraph, defaultDisplayOptions, type DisplayGraph } from "./display";
+import { labelViolates, type PlacedRestingLabel, type RestingLabelInput } from "./restingLabels";
+import { countCrossings, END_TRIM, isHorizontal, isVertical, NAME_PX, pathSegments, rectHit, trimmedRange, zoneHeadPill, type PathSeg } from "./geometry";
 import { layoutDiagram, type Layout, type Rect } from "./layout";
-import { textWidth } from "./text";
 
 /** 배치 읽기 쉬움을 재는 값. 단계마다 이 값이 나빠지지 않았는지 회귀 시험이 지킨다. */
 export interface LayoutMetrics {
@@ -12,62 +13,20 @@ export interface LayoutMetrics {
   bends: number; // 꺾임 수 합
   aspect: number; // width / height
   zoneHeadCrossings: number; // 펼친 영역의 이름 알약 자리를 지나는 선 수(알약 하나당 선 하나 한 번, 그 영역이 끝점인 선 제외)
+  labelViolations: number; // 평소 화면 이름 가운데 「지킬 것」을 어긴 수(labels 를 줘야 잰다)
+  labelMissing: number; // 이름이 있고 출구선이 아닌데 평소 화면 이름에 빠진 선 수(labels 를 줘야 잰다)
 }
 
-/** 선의 첫 점과 마지막 점에서 이만큼은 노드 옆이라 나란해도 세지 않는다. */
-export const END_TRIM = 8;
+// 알약 자리·상자 관통·선 끝 덜기(END_TRIM)·교차 셈은 geometry.ts 에 있다(restingLabels·separate 와 함께 쓰며 불러오기 고리를 끊는다).
+// 예전 불러오는 곳을 위해 다시 내보낸다.
+export { END_TRIM, NAME_PX, rectHit, zoneHeadPill };
 
-/** 영역 이름 글자 크기(배율 1 의 캔버스 px). canvas.css 의 .group__name 바닥값과 같다. */
-export const NAME_PX = 11;
-const HEAD_H = 30; // .group__head 높이
-const HEAD_PAD = 10; // .group__head 왼쪽 안쪽 여백
-const PILL_PAD = 18; // .group__name 좌우 안쪽 여백 합
-
-/** 펼친 영역 머리 칸에서 이름 알약이 차지하는 자리(어림값). */
-export function zoneHeadPill(g: Rect, label: string): Rect {
-  return { x: g.x + HEAD_PAD, y: g.y, width: PILL_PAD + textWidth(label, NAME_PX), height: HEAD_H };
-}
-
-type Pt = { x: number; y: number };
-interface Seg {
-  a: Pt;
-  b: Pt;
-  from: number; // 이 마디 안에서 평행 길이로 셀 수 있는 구간의 시작(마디 시작점으로부터 거리)
-  to: number; // 끝
-}
-
-const len = (a: Pt, b: Pt): number => Math.hypot(a.x - b.x, a.y - b.y);
-const isV = (s: Seg): boolean => Math.abs(s.a.x - s.b.x) < 0.5;
-const isH = (s: Seg): boolean => Math.abs(s.a.y - s.b.y) < 0.5;
+type Seg = PathSeg;
+const isV = isVertical;
+const isH = isHorizontal;
 const lo = (s: Seg, k: "x" | "y"): number => Math.min(s.a[k], s.b[k]);
 const hi = (s: Seg, k: "x" | "y"): number => Math.max(s.a[k], s.b[k]);
-
-function segsOf(pts: Pt[]): Seg[] {
-  const total = pts.slice(1).reduce((t, b, i) => t + len(pts[i], b), 0);
-  const out: Seg[] = [];
-  let at = 0;
-  for (let i = 1; i < pts.length; i++) {
-    const a = pts[i - 1];
-    const b = pts[i];
-    const l = len(a, b);
-    if (l > 0.01) out.push({ a, b, from: Math.max(0, END_TRIM - at), to: Math.min(l, total - END_TRIM - at) });
-    at += l;
-  }
-  return out;
-}
-
-/** 마디에서 평행 길이로 셀 수 있는 구간을 축(k) 좌표 [작은 값, 큰 값] 으로 돌려준다. 없으면 null. */
-function trimmedRange(s: Seg, k: "x" | "y"): [number, number] | null {
-  if (s.to <= s.from) return null;
-  const l = len(s.a, s.b);
-  const p = (d: number): number => s.a[k] + ((s.b[k] - s.a[k]) * d) / l;
-  const [x, y] = [p(s.from), p(s.to)];
-  return [Math.min(x, y), Math.max(x, y)];
-}
-
-// 끝점이 아닌 상자 안쪽(가장자리 2px 안쪽)을 지나는지
-const rectHit = (s: Seg, r: Rect, shrink = 2): boolean =>
-  hi(s, "x") > r.x + shrink && lo(s, "x") < r.x + r.width - shrink && hi(s, "y") > r.y + shrink && lo(s, "y") < r.y + r.height - shrink;
+const segsOf = pathSegments;
 
 /**
  * groupLabels: 영역 id → 이름. 배치에는 영역 이름이 없어 알약 자리를 재려면 따로 받는다. 이름을 모르는 영역은
@@ -79,22 +38,16 @@ export function measureLayout(
   ends: Record<string, [string, string]>,
   minGap = 16,
   groupLabels?: Record<string, string>,
+  labels?: { placed: PlacedRestingLabel[]; items: RestingLabelInput[] },
 ): LayoutMetrics {
   const E = layout.edges.map((e) => ({ id: e.id, pts: e.points, segs: segsOf(e.points) }));
-  let crossings = 0;
+  const crossings = countCrossings(E.map((e) => e.pts));
   let sharedPx = 0;
   let parallelPx = 0;
   for (let i = 0; i < E.length; i++) {
     for (let j = i + 1; j < E.length; j++) {
       for (const u of E[i].segs) {
         for (const v of E[j].segs) {
-          const [h, w] = isH(u) && isV(v) ? [u, v] : isV(u) && isH(v) ? [v, u] : [null, null];
-          if (h && w) {
-            const x = w.a.x;
-            const y = h.a.y;
-            if (x > lo(h, "x") + 1 && x < hi(h, "x") - 1 && y > lo(w, "y") + 1 && y < hi(w, "y") - 1) crossings++;
-            continue;
-          }
           const [ax, al] = isV(u) && isV(v) ? (["x", "y"] as const) : isH(u) && isH(v) ? (["y", "x"] as const) : [null, null];
           if (!ax || !al) continue;
           const gap = Math.abs(u.a[ax] - v.a[ax]);
@@ -142,22 +95,46 @@ export function measureLayout(
     for (const [id, r] of pills) if (id !== f && id !== t && e.segs.some((s) => rectHit(s, r, 0))) zoneHeadCrossings++;
   }
 
-  return { crossings, sharedPx: Math.round(sharedPx), parallelPx: Math.round(parallelPx), throughNode, bends, aspect: layout.width / layout.height, zoneHeadCrossings };
+  let labelViolations = 0;
+  let labelMissing = 0;
+  if (labels) {
+    labelViolations = labelViolates(layout, groupLabels ?? {}, labels.placed).length;
+    const named = new Set(labels.placed.flatMap((p) => p.edgeIds));
+    labelMissing = labels.items.filter((i) => i.label && !i.egress && !named.has(i.id)).length;
+  }
+
+  return {
+    crossings,
+    sharedPx: Math.round(sharedPx),
+    parallelPx: Math.round(parallelPx),
+    throughNode,
+    bends,
+    aspect: layout.width / layout.height,
+    zoneHeadCrossings,
+    labelViolations,
+    labelMissing,
+  };
 }
 
 export interface MeasuredView {
   layout: Layout;
   ends: Record<string, [string, string]>; // 표시 연결의 [from, to]
   groupLabels: Record<string, string>; // 표시 영역 id → 이름
+  labels: { placed: PlacedRestingLabel[]; items: RestingLabelInput[] }; // 평소 화면 이름(measureLayout 의 labels 로 넘긴다)
 }
 
-/** 표시 그래프를 배치하고, 잴 때 필요한 연결 끝과 영역 이름을 함께 돌려준다. */
+/** 표시 그래프를 배치하고, 잴 때 필요한 연결 끝·영역 이름·평소 화면 이름을 함께 돌려준다. */
 export async function viewLayout(g: DisplayGraph): Promise<MeasuredView> {
   const layout = await layoutDiagram(g, {});
+  const pointsOf = new Map(layout.edges.map((e) => [e.id, e.points]));
+  const items: RestingLabelInput[] = g.edges
+    .filter((e) => e.label)
+    .map((e) => ({ id: e.id, label: e.label!, from: e.from, to: e.to, points: pointsOf.get(e.id) ?? [], egress: e.egress }));
   return {
     layout,
     ends: Object.fromEntries(g.edges.map((e) => [e.id, [e.from, e.to] as [string, string]])),
     groupLabels: Object.fromEntries(Object.values(g.groups).map((x) => [x.id, x.label])),
+    labels: { placed: layout.labels, items },
   };
 }
 

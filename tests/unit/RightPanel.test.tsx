@@ -109,3 +109,51 @@ test("흐름 tab present and switches", async () => {
   rerender(<RightPanel {...props(null)} flows={flows} onTabChange={onTabChange} />);
   expect(screen.getByRole("tab", { name: "흐름" })).toHaveAttribute("aria-selected", "true");
 });
+
+// ---- 펼친 줄기 ----
+const trunk = () => ({
+  edges: [
+    { id: "e-web-1-was-pair", from: "웹 1", to: "WAS 묶음", label: "HTTP", color: 0 },
+    { id: "e-web-2-was-pair", from: "웹 2", to: "WAS 묶음", color: 1 },
+  ],
+  onPick: vi.fn(),
+});
+
+test("펼친 줄기는 선택처럼 설명 탭을 열어 선 목록을 보이고, 풀면 앞 탭으로 돌아간다", async () => {
+  const t = trunk();
+  const { rerender } = render(<RightPanel {...props(null)} />);
+  expect(screen.getByRole("tab", { name: "대화" })).toHaveAttribute("aria-selected", "true");
+  rerender(<RightPanel {...props(null)} trunk={t} />);
+  expect(screen.getByRole("tab", { name: "설명" })).toHaveAttribute("aria-selected", "true");
+  expect(screen.getByRole("heading", { name: "이 줄기의 선 2개" })).toBeInTheDocument();
+  await userEvent.click(screen.getByRole("button", { name: "웹 2 → WAS 묶음" }));
+  expect(t.onPick).toHaveBeenCalledWith("e-web-2-was-pair");
+  rerender(<RightPanel {...props(null)} />);
+  expect(screen.getByRole("tab", { name: "대화" })).toHaveAttribute("aria-selected", "true");
+});
+
+test("같은 줄기(key)의 목록이 줄어도 탭을 옮기지 않고, 다른 줄기를 펼치면 설명 탭으로 간다", async () => {
+  const t = { ...trunk(), key: "seg-a e-web-1-was-pair e-web-2-was-pair" };
+  const { rerender } = render(<RightPanel {...props(null)} />);
+  rerender(<RightPanel {...props(null)} trunk={t} />);
+  expect(screen.getByRole("tab", { name: "설명" })).toHaveAttribute("aria-selected", "true");
+  await userEvent.click(screen.getByRole("tab", { name: "이력" }));
+  // 보기 옵션·대화 중 명령으로 한 선이 그림에서 빠져 목록이 줄어도 같은 펼침이다.
+  rerender(<RightPanel {...props(null)} trunk={{ ...t, edges: t.edges.slice(0, 1) }} />);
+  expect(screen.getByRole("tab", { name: "이력" })).toHaveAttribute("aria-selected", "true");
+  // 다른 줄기를 펼치면 새 대상이다.
+  rerender(<RightPanel {...props(null)} trunk={{ ...t, key: "seg-b e-web-1-was-pair e-web-2-was-pair" }} />);
+  expect(screen.getByRole("tab", { name: "설명" })).toHaveAttribute("aria-selected", "true");
+});
+
+test("고른 노드에서 곧바로 줄기를 펼치면 설명 탭에 남고, 펼침이 풀리면 처음 탭으로 돌아간다", () => {
+  const { rerender } = render(<RightPanel {...props(null)} />);
+  rerender(<RightPanel {...props("was-1")} />);
+  expect(screen.getByRole("tab", { name: "설명" })).toHaveAttribute("aria-selected", "true");
+  // 펼치면 선택이 풀린다(부모가 보장): 선택이 null 이 되어도 펼침이 있으니 설명 탭에 머문다.
+  rerender(<RightPanel {...props(null)} trunk={trunk()} />);
+  expect(screen.getByRole("tab", { name: "설명" })).toHaveAttribute("aria-selected", "true");
+  expect(screen.getByRole("heading", { name: "이 줄기의 선 2개" })).toBeInTheDocument();
+  rerender(<RightPanel {...props(null)} />);
+  expect(screen.getByRole("tab", { name: "대화" })).toHaveAttribute("aria-selected", "true");
+});

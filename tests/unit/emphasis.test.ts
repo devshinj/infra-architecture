@@ -95,3 +95,22 @@ test("a merged group edge is incident to each sending member, and its target lig
 test("flow emphasis lights the member a merged step actually leaves from", () => {
   expect([...flowEmphasis([mergedEdge], ["e2"]).nodes].sort()).toEqual(["a2", "asg", "db"]);
 });
+
+import { zoneEmphasis } from "@/canvas/emphasis";
+
+test("zoneEmphasis lights everything inside the zone, crossing edges and their outside ends", () => {
+  // vpc ⊃ subnet ⊃ a, vpc ⊃ b, 바깥 c·d. a-b 안끼리, b-c 경계 넘음, c-d 바깥끼리.
+  const tree: Record<string, string | null> = { vpc: null, subnet: "vpc", empty: "vpc", a: "subnet", b: "vpc", c: null, d: null };
+  const up = (id: string) => tree[id] ?? null;
+  const es = [de("in", "a", "b"), de("cross", "c", "b"), de("out", "c", "d")];
+  const em = zoneEmphasis(es, up, Object.keys(tree), "vpc");
+  expect([...em.nodes].sort()).toEqual(["a", "b", "c", "empty", "subnet", "vpc"]);
+  expect([...em.edges].sort()).toEqual(["cross", "in"]);
+});
+
+test("zoneEmphasis lights the members behind a merged bundle edge", () => {
+  const tree: Record<string, string | null> = { zone: null, pair: null, m1: "pair", m2: "pair", x: "zone" };
+  const merged: DisplayEdge = { ...de("pair-x", "pair", "x", ["s1", "s2"]), origins: { s1: "m1", s2: "m2" } };
+  const em = zoneEmphasis([merged], (id) => tree[id] ?? null, Object.keys(tree), "zone");
+  expect([...em.nodes].sort()).toEqual(["m1", "m2", "pair", "x", "zone"]);
+});

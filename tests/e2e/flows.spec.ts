@@ -4,7 +4,7 @@ import { NET_NODE_COUNT, S1_FLOW_START_LABEL, S1_NODE_COUNT } from "./fake-llm";
 
 const uid = () => Math.random().toString(36).slice(2, 8);
 const PLACEHOLDER = "만들고 싶은 서비스나 바꾸고 싶은 점을 말해 주세요. 노드를 오른쪽 클릭하면 참조를 붙일 수 있어요.";
-const SUMMARY = /노드 \d+ · 연결 \d+ · (?:\d+곳 바꿨어요|바꾼 곳이 없어요)/;
+const SUMMARY = /^(?:\d+곳 바꿨어요|바꾼 곳이 없어요)/;
 // 가짜 LLM 흐름 제안(s1): 사용자 행동 둘 · 시스템·네트워크 하나.
 const SUGGESTED = ["상품 보기", "주문하기", "정산 배치"];
 const NET_GUIDE = "서로 다른 망 사이 통신은 방화벽·망연계 솔루션·VPN 을 거치게 그리세요.";

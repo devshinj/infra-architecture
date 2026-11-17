@@ -6,7 +6,7 @@ import { measureLayout, NAME_PX } from "@/canvas/layoutMetrics";
 import { textWidth } from "@/canvas/text";
 
 const line = (id: string, ...pts: [number, number][]) => ({ id, points: pts.map(([x, y]) => ({ x, y })) });
-const lay = (edges: Layout["edges"], nodes: Record<string, LaidOutNode> = {}): Layout => ({ nodes, groups: {}, edges, width: 200, height: 100 });
+const lay = (edges: Layout["edges"], nodes: Record<string, LaidOutNode> = {}): Layout => ({ nodes, groups: {}, edges, width: 200, height: 100, labels: [], labelBlocked: [] });
 const ends: Record<string, [string, string]> = { a: ["n1", "n2"], b: ["n3", "n4"] };
 
 test("parallel lines 12px apart over 100px count as 100 parallel px", () => {
@@ -56,6 +56,8 @@ test("edges through an expanded zone's name pill are counted once per pill", () 
     ],
     width: 600,
     height: 300,
+    labels: [],
+    labelBlocked: [],
   };
   const ends: Record<string, [string, string]> = { a: ["p", "q"], b: ["p", "q"], c: ["p", "q"], d: ["p", "q"], e: ["z", "p"] };
   expect(measureLayout(layout, ends, 16, { z: "공개 서브넷" }).zoneHeadCrossings).toBe(2);
@@ -64,4 +66,18 @@ test("edges through an expanded zone's name pill are counted once per pill", () 
   // 안에 아무것도 없는(접힌) 영역은 노드 통과로 세고 알약으로는 세지 않는다.
   const collapsed = { ...layout, nodes: { p: nodes.p, q: nodes.q } };
   expect(measureLayout(collapsed, ends, 16, { z: "공개 서브넷" }).zoneHeadCrossings).toBe(0);
+});
+
+test("labelViolations counts a resting label that overlaps a node, labelMissing counts a named edge without one", () => {
+  const node = (id: string, x: number): LaidOutNode => ({ id, x, y: 40, width: 20, height: 20, parent: null, displayLabel: id });
+  const nodes = { n1: node("n1", 0), n2: node("n2", 180), mid: node("mid", 90) };
+  const edges = [line("a", [10, 50], [190, 50]), line("b", [10, 90], [190, 90])];
+  const items = [
+    { id: "a", label: "NFS", from: "n1", to: "n2", points: edges[0].points },
+    { id: "b", label: "SSH", from: "n1", to: "n2", points: edges[1].points },
+  ];
+  const m = measureLayout(lay(edges, nodes), { a: ["n1", "n2"], b: ["n1", "n2"] }, 16, {}, { placed: [{ edgeIds: ["a"], text: "NFS", x: 100, y: 50 }], items });
+  expect(m.labelViolations).toBe(1);
+  expect(m.labelMissing).toBe(1);
+  expect(measureLayout(lay(edges, nodes), {}).labelViolations).toBe(0);
 });

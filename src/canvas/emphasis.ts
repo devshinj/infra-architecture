@@ -74,3 +74,26 @@ export function litZones(parentOf: (id: string) => string | null, emph: Emphasis
   if (selectedId !== null) add(selectedId);
   return lit;
 }
+
+/**
+ * 영역(펼친 영역)을 고를 때의 강조 집합: 영역 자신과 그 안(깊은 곳까지)의 그려진 노드·영역,
+ * 한 끝이라도 안에 있는 연결(안끼리 잇는 선과 경계를 넘는 선)과 그 두 끝. 묶음 경계에서 합친 연결이면 구성원도 밝힌다.
+ * drawnIds 는 지금 그려진 노드·영역 id 모두, parentOf 는 그려진 부모다.
+ */
+export function zoneEmphasis(edges: DisplayEdge[], parentOf: (id: string) => string | null, drawnIds: Iterable<string>, zoneId: string): Emphasis {
+  const inside = (id: string) => {
+    for (let p: string | null = id; p !== null; p = parentOf(p)) if (p === zoneId) return true;
+    return false;
+  };
+  const nodes = new Set<string>([zoneId]);
+  for (const id of drawnIds) if (inside(id)) nodes.add(id);
+  const ids = new Set<string>();
+  for (const e of edges) {
+    if (!inside(e.from) && !inside(e.to)) continue;
+    ids.add(e.id);
+    nodes.add(e.from);
+    nodes.add(e.to);
+    if (e.origins) for (const o of Object.values(e.origins)) nodes.add(o);
+  }
+  return { nodes, edges: ids };
+}

@@ -5,7 +5,7 @@ import { ADMIN, ADMIN_NODE_COUNT, WORK_NODE_COUNT } from "./fake-llm";
 
 const uid = () => Math.random().toString(36).slice(2, 8);
 const PLACEHOLDER = "만들고 싶은 서비스나 바꾸고 싶은 점을 말해 주세요. 노드를 오른쪽 클릭하면 참조를 붙일 수 있어요.";
-const SUMMARY = /노드 \d+ · 연결 \d+ · (?:\d+곳 바꿨어요|바꾼 곳이 없어요)/;
+const SUMMARY = /^(?:\d+곳 바꿨어요|바꾼 곳이 없어요)/;
 const LINK_EXPECTED = "사이는 망연계가 필요해요";
 
 async function signup(page: Page) {
@@ -65,7 +65,7 @@ test("행정망 사례: AI 추정 망연계, 아니에요로 되돌리기, 다�
   await expect(nodes(page)).toHaveCount(ADMIN_NODE_COUNT - 1, { timeout: 15_000 });
   await expect(nodeByTitle(page, "망연계 솔루션")).toHaveCount(0);
   await nodeByTitle(page, "행정망 방화벽").click();
-  const linked = page.locator("section").filter({ has: page.getByRole("heading", { name: "연결된 노드" }) });
+  const linked = page.locator("section").filter({ has: page.getByRole("heading", { name: "연결", exact: true }) });
   await expect(linked.getByRole("button", { name: "GCloud WAS" })).toBeVisible();
   await expect(linked.getByRole("button", { name: "행정망 PC" })).toBeVisible();
   await page.keyboard.press("Escape");

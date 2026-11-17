@@ -27,7 +27,7 @@ async function buildS1(page: Page) {
   await page.getByPlaceholder(PLACEHOLDER).fill("AWS 에 결제랑 카카오 로그인 붙는 쇼핑몰");
   await page.getByRole("button", { name: "보내기" }).click();
   await expect(nodes(page)).toHaveCount(S1_NODE_COUNT, { timeout: 30_000 });
-  await expect(page.getByText(/노드 \d+ · 연결 \d+ · (?:\d+곳 바꿨어요|바꾼 곳이 없어요)/)).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByText(/^(?:\d+곳 바꿨어요|바꾼 곳이 없어요)/)).toBeVisible({ timeout: 30_000 });
 }
 
 const was1 = (page: Page) => nodes(page).filter({ has: page.getByTitle("WAS #1") });
@@ -127,7 +127,7 @@ test("reload: no reminder line in chat, the card keeps the count", async ({ page
   await page.getByRole("tab", { name: "대화" }).click();
   // 다시 불러와도 같은 모양: 접힌 완료 카드와 요약 칩. 빠진 정보 칩은 대화에 없다.
   await expect(page.getByText(/^완료 · 노드 \d+ · 연결 \d+$/)).toBeVisible({ timeout: 15_000 });
-  await expect(page.getByText(/노드 \d+ · 연결 \d+ · (?:\d+곳 바꿨어요|바꾼 곳이 없어요)/)).toBeVisible();
+  await expect(page.getByText(/^(?:\d+곳 바꿨어요|바꾼 곳이 없어요)/)).toBeVisible();
   await expect(page.getByText(REMINDER)).toHaveCount(0);
   // 카드는 접힌 채 같은 수를 보이고, 누르면 블록이 접힌 채로 펼쳐진다.
   await expect(cardToggle(page)).toHaveAttribute("aria-expanded", "false");
@@ -137,4 +137,25 @@ test("reload: no reminder line in chat, the card keeps the count", async ({ page
   await expect(page.getByRole("button", { name: "WAS #1 항목 펼치기" })).toBeVisible();
   // 켠 설정은 브라우저에 기억된다.
   await expect(was1Badge(page)).toBeVisible({ timeout: 15_000 });
+});
+
+test("view options: pressing an option's name or description toggles it and keeps the popover open", async ({ page }) => {
+  await setup(page);
+  await buildS1(page);
+  await page.getByRole("button", { name: "보기", exact: true }).click();
+  const pop = page.getByRole("dialog", { name: "보기 옵션" });
+  const row = pop.locator("label.canvas__opt").filter({ has: page.getByRole("checkbox", { name: "빠진 정보 숫자" }) });
+  const box = row.getByRole("checkbox");
+  await expect(box).not.toBeChecked();
+  // 글자(이름)를 누르면 포커스가 팝오버 밖으로 가려 해도 닫히지 않고 값이 바뀐다.
+  await row.locator(".canvas__opt-name").click();
+  await expect(pop).toBeVisible();
+  await expect(box).toBeChecked();
+  // 설명 글자도 같다.
+  await row.locator(".canvas__opt-desc").click();
+  await expect(pop).toBeVisible();
+  await expect(box).not.toBeChecked();
+  // Esc 로는 여전히 닫힌다.
+  await page.keyboard.press("Escape");
+  await expect(pop).toBeHidden();
 });

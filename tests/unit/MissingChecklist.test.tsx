@@ -71,6 +71,8 @@ test("blocks start collapsed, toggle expands", async () => {
   for (const n of ALL) expect(within(block(n)).getByRole("button", { name: `${n} 항목 펼치기` })).toHaveAttribute("aria-expanded", "false");
   expect(within(block("디비")).getByText("1")).toBeInTheDocument();
   expect(within(block("디비")).getByRole("button", { name: "디비 위치 보기" })).toHaveTextContent("디비");
+  // 연결 블록 제목의 화살표는 글꼴에서 ">" 처럼 보이는 글자 대신 선으로 그린 SVG(보조기기에는 숨김)다.
+  expect(within(block("웹1 → 디비")).getByRole("button", { name: "웹1 → 디비 위치 보기" }).querySelector("svg")).toHaveAttribute("aria-hidden", "true");
   expect(screen.queryByRole("textbox")).not.toBeInTheDocument();
   await expand("웹1 → 디비");
   expect(within(block("웹1 → 디비")).getByRole("textbox", { name: "프로토콜/포트" })).toBeInTheDocument();

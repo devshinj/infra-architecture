@@ -69,7 +69,9 @@ test("Claude Code 연동: 키 만들기, 열어 둔 구성도에 변경이 뜨�
   await expect(fresh).toBeVisible();
   const key = ((await fresh.locator("code").first().textContent()) ?? "").trim();
   expect(key).toMatch(/^isk_[A-Za-z0-9_-]{43}$/);
-  await expect(fresh.locator("code").nth(1)).toContainText("claude mcp add --transport http infrasketch");
+  // 등록 명령은 옆의 연결 방법에 있고, 방금 만든 키가 들어간다.
+  const howto = page.getByRole("complementary", { name: "연결 방법" });
+  await expect(howto.locator("code", { hasText: "claude mcp add --transport http infrasketch" })).toContainText(`Bearer ${key}`);
   await expect(page.getByRole("table", { name: "키 목록" })).toContainText(key.slice(0, 8));
 
   // 구성도를 다시 열어 둔다.
