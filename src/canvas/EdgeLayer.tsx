@@ -27,6 +27,11 @@ export interface EdgeLayerProps {
   hoverId: string | null;
   /** 연결선(클릭 영역)에 마우스가 들어오면 그 id, 나가면 null. */
   onHover?(id: string | null): void;
+  /**
+   * 공유 조각(둘 이상이 함께 쓰는 줄기)에 마우스를 올리면 그 조각을 지나는 연결 id 전부, 떠나거나 조각이 사라지거나
+   * 호버를 쓰지 않는 때(선택·펼침·흐름 보기)가 되면 null. 노드 흐림을 선 하나에 올린 때와 같게 하려고 Canvas 가 쓴다.
+   */
+  onHoverEdges?(ids: string[] | null): void;
   hoverLabels: boolean;
   motion: boolean;
   appearing: Set<string>;
@@ -127,7 +132,7 @@ function prefersReducedMotion(): boolean {
   return typeof window !== "undefined" && !!window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
 }
 
-export function EdgeLayer({ layout, edges, selectedId, selectedRect, emphasis, hoverId, onHover, hoverLabels, motion, appearing, nodeCount, onSelect, flowSteps, crossing, collapsedRects, trunk: trunkProp, onTrunkClick, endName }: EdgeLayerProps) {
+export function EdgeLayer({ layout, edges, selectedId, selectedRect, emphasis, hoverId, onHover, onHoverEdges, hoverLabels, motion, appearing, nodeCount, onSelect, flowSteps, crossing, collapsedRects, trunk: trunkProp, onTrunkClick, endName }: EdgeLayerProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [hovered, setHovered] = useState<string | null>(null);
   // 공유 조각에 올린 마우스: 그 조각을 지나는 연결 전부(호버 겹선으로 밝힌다).
@@ -178,16 +183,35 @@ export function EdgeLayer({ layout, edges, selectedId, selectedRect, emphasis, h
   // 흐름을 보는 동안은 흐름 단계가 선택 강조 자리를 쓰고(같은 겹선·빛), 호버는 쓰지 않는다.
   // 단계는 이미 표시 연결 id 로 맞춰 와 있으므로 연결 집합만 쓴다(노드 흐림은 Canvas 가 한다).
   const sel = useMemo<Emphasis | null>(() => (steps ? { nodes: new Set(), edges: stepIds } : (emphasis ?? trunkEmphasis ?? emphasisOf(edges, selectedId))), [edges, selectedId, steps, stepIds, emphasis, trunkEmphasis]);
+  // 공유 조각 호버: 조각 키로 지금 묶음에서 다시 찾는다(배치가 바뀌어 사라졌으면 호버 없음). 선택·흐름·펼침 중에는 쓰지 않는다.
+  const segIds = useMemo<string[] | null>(() => {
+    if (!hoveredSeg || selectedId !== null || steps || trunk) return null;
+    const seg = bundles.flatMap((b) => b.segments).find((x) => x.key === hoveredSeg);
+    const ids = (seg?.edgeIds ?? []).filter((i) => byId.has(i));
+    return ids.length > 0 ? ids : null;
+  }, [hoveredSeg, selectedId, steps, trunk, bundles, byId]);
+  const segSet = useMemo(() => new Set(segIds ?? []), [segIds]);
   const hov = useMemo<Emphasis | null>(() => {
     if (selectedId !== null || steps || trunk) return null;
-    if (hoveredSeg) {
-      // 조각 키로 지금 묶음에서 다시 찾는다(배치가 바뀌어 사라졌으면 호버 없음).
-      const seg = bundles.flatMap((b) => b.segments).find((x) => x.key === hoveredSeg);
-      const ids = (seg?.edgeIds ?? []).filter((i) => byId.has(i));
-      if (ids.length > 0) return { nodes: new Set(ids.flatMap((i) => [byId.get(i)!.from, byId.get(i)!.to])), edges: new Set(ids) };
-    }
+    if (segIds) return { nodes: new Set(segIds.flatMap((i) => [byId.get(i)!.from, byId.get(i)!.to])), edges: new Set(segIds) };
     return emphasisOf(edges, hoverId);
-  }, [edges, selectedId, hoverId, steps, trunk, hoveredSeg, byId, bundles]);
+  }, [edges, selectedId, hoverId, steps, trunk, segIds, byId]);
+  // Canvas 가 같은 호버 흐림을 만들도록 조각 호버를 알린다(바뀔 때만).
+  const reportEdges = useRef(onHoverEdges);
+  reportEdges.current = onHoverEdges;
+  const reported = useRef("");
+  const segKey = segIds?.join(" ") ?? "";
+  useEffect(() => {
+    if (reported.current === segKey) return;
+    reported.current = segKey;
+    reportEdges.current?.(segIds);
+  }, [segKey, segIds]);
+  useEffect(
+    () => () => {
+      if (reported.current) reportEdges.current?.(null);
+    },
+    [],
+  );
   const incident = useMemo(() => sel?.edges ?? new Set<string>(), [sel]);
   const isSelectedEdge = (e: DisplayEdge) => selectedId !== null && (e.id === selectedId || e.sourceEdgeIds.includes(selectedId));
   const isDim = (ids: string[]) => sel !== null && !ids.some((i) => sel.edges.has(i));
@@ -298,6 +322,26 @@ export function EdgeLayer({ layout, edges, selectedId, selectedRect, emphasis, h
     for (const p of stepLabels(items, nodeRects, dotBoxes)) out.set(p.edgeIds[0], p);
     return out;
   }, [trunk, laid, byId, nodeRects, dotBoxes]);
+
+  // 공유 조각에 올렸을 때의 연결 이름: 같은 자리(조각 가운데)에 몰리므로 노드·서로·경계 점·보이는 다른 이름을 피해 제 선을 따라 비킨다.
+  const segNames = useMemo(() => {
+    const out = new Map<string, PlacedLabel>();
+    if (!segIds) return out;
+    const items = segIds.flatMap((id) => {
+      const l = laid.find((x) => x.id === id);
+      const e = byId.get(id);
+      return l && e?.label && l.labelAt ? [{ text: e.label, points: l.points, labelAt: l.labelAt, id }] : [];
+    });
+    // 이름이 늘 보이는 설정이면 조각에 안 걸린 다른 연결의 이름도 그 자리에 보인다.
+    const others: Box[] = hoverLabels
+      ? []
+      : laid.flatMap((l) => {
+          const e = byId.get(l.id)!;
+          return segSet.has(l.id) || !e.label || e.egress || !l.labelAt ? [] : [labelBox({ text: e.label, x: l.labelAt.x, y: l.labelAt.y, anchor: "middle" })];
+        });
+    for (const p of stepLabels(items, nodeRects, [...dotBoxes, ...others])) out.set(p.edgeIds[0], p);
+    return out;
+  }, [segIds, segSet, hoverLabels, laid, byId, nodeRects, dotBoxes]);
 
   // 줄기 꼬리표: 연결마다 먼 끝 이름. 첫 후보는 먼 쪽 가지 조각 들어서는 곳, 서로·노드·보이는 연결 이름과 겹치지 않게 비킨다.
   const trunkTags = useMemo(() => {
@@ -486,7 +530,7 @@ export function EdgeLayer({ layout, edges, selectedId, selectedRect, emphasis, h
         // 합친 이름에 들어간 선은 따로 그리지 않는다.
         // 출구선 이름은 늘 올렸을 때만(고르면 이어진 선이라 보인다).
         const hoverOnly = hoverLabels || !!e.egress;
-        const shown = incident.has(e.id) || (sel ? hoverOnly && hovered === e.id : !hoverOnly || hovered === e.id);
+        const shown = incident.has(e.id) || segSet.has(e.id) || (sel ? hoverOnly && hovered === e.id : !hoverOnly || hovered === e.id);
         // 흐름을 보는 동안 단계 연결은 제 이름 대신 단계 글자를 단다.
         // 평소 화면에서 같은 이름 무리에 묻힌 이름은 올렸을 때만 보인다.
         const clustered = !!resting?.hidden.has(e.id) && hovered !== e.id;
@@ -514,7 +558,7 @@ export function EdgeLayer({ layout, edges, selectedId, selectedRect, emphasis, h
               }}
             />
             {showLabel && (
-              <text className="edge-label" x={trunkNames.get(e.id)?.x ?? l.labelAt!.x} y={trunkNames.get(e.id)?.y ?? l.labelAt!.y}>
+              <text className="edge-label" x={(trunkNames.get(e.id) ?? segNames.get(e.id))?.x ?? l.labelAt!.x} y={(trunkNames.get(e.id) ?? segNames.get(e.id))?.y ?? l.labelAt!.y}>
                 {labelText}
               </text>
             )}

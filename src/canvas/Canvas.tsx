@@ -417,10 +417,27 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
   const hover = useHoverEmphasis();
   const dragging = useRef(false);
   const edgeHover = useRef<string | null>(null);
+  // 공유 조각에 올린 마우스: 그 조각을 지나는 연결 id 전부(EdgeLayer 가 알린다). 선택·흐름·펼침 중에는 EdgeLayer 가 null 로 알린다.
+  const [segHover, setSegHover] = useState<string[] | null>(null);
   const known = useMemo(() => new Set([...Object.keys(display.nodes), ...Object.keys(display.groups)]), [display]);
   // 선택이 있거나 대상이 사라졌으면 호버는 없는 것으로 친다(노드가 다시 만들어지지 않게 선택 중엔 늘 null).
   // 흐름을 보는 동안에도 호버는 쓰지 않는다(흐름 강조가 선택 자리를 쓴다). 줄기를 펼친 동안도 같다.
   const hoverId = selected === null && !flow && !trunkEmph && emphasisOf(display.edges, hover.hoverId, known) !== null ? hover.hoverId : null;
+  // 노드 흐림에 쓰는 호버 강조: 공유 조각 호버면 그 선들의 합집합, 아니면 올린 대상 하나.
+  const hoverEmph = useMemo<Emphasis | null>(() => {
+    if (selected === null && !flow && !trunkEmph && segHover) {
+      const nodes = new Set<string>();
+      const edges = new Set<string>();
+      for (const id of segHover) {
+        const e = emphasisOf(display.edges, id, known);
+        if (!e) continue;
+        for (const n of e.nodes) nodes.add(n);
+        for (const x of e.edges) edges.add(x);
+      }
+      if (edges.size > 0) return { nodes, edges };
+    }
+    return emphasisOf(display.edges, hoverId, known);
+  }, [selected, flow, trunkEmph, segHover, display.edges, hoverId, known]);
   // 고른 노드(또는 영역)의 상자: 연결 이름을 합칠 때 그 변 옆에 둔다.
   const selectedRect: Rect | undefined = selected === null ? undefined : (layout.nodes[selected] ?? layout.groups[selected]);
   // 보드가 바뀌면(fitKey) 호버를 푼다(사라진 노드는 mouseleave 를 보내지 않는다).
@@ -428,6 +445,7 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
   useEffect(() => {
     edgeHover.current = null;
     resetHover();
+    setSegHover(null);
   }, [fitKey, resetHover]);
   // 위치 보기 강조: 강조할 그려진 노드 id 와 토큰(같은 노드를 다시 눌러도 링이 처음부터 돈다).
   const [pulse, setPulse] = useState<{ ids: Set<string>; token: number } | null>(null);
@@ -504,7 +522,7 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
   const lit = useMemo(() => (sel ? litZones(parentOf, sel, selected) : null), [parentOf, sel, selected]);
 
   const computed = useMemo<Node[]>(() => {
-    const hov = emphasisOf(display.edges, hoverId, known);
+    const hov = hoverEmph;
     const out: Node[] = [];
     for (const lg of Object.values(layout.groups)) {
       const g = display.groups[lg.id];
@@ -583,7 +601,7 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
     }
     return out;
     // eslint-disable-next-line react-hooks/exhaustive-deps -- zoneDesc 는 useId 에서 나와 바뀌지 않는다
-  }, [layout, display, selected, sel, lit, appearing, updated, editMode, options, toggleGroup, diffMarks, turnMarks, missingByNode, warnByNode, onBadgeClick, onWarnBadgeClick, pulse, hoverId, known]);
+  }, [layout, display, selected, sel, lit, appearing, updated, editMode, options, toggleGroup, diffMarks, turnMarks, missingByNode, warnByNode, onBadgeClick, onWarnBadgeClick, pulse, hoverEmph, known]);
 
   // 영역 이름 알약(연결선 위 층): 영역 노드와 같은 배치·흐림(lit)에서 만든다. 호버·등장 효과로는 다시 만들지 않는다.
   const zoneNames = useMemo<ZoneName[]>(() => {
@@ -918,6 +936,7 @@ function Flow({ state, pinned, editMode, options, onOptionsChange, onSelect, onP
               edgeHover.current = null;
             }
           }}
+          onHoverEdges={setSegHover}
           hoverLabels={options.hoverLabels}
           motion={motion}
           appearing={appearing}

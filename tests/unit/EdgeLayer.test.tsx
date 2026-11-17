@@ -614,6 +614,36 @@ test("hovering a shared segment lights all its edges with the hover overlay, no 
   expect(document.querySelector(".edge-emph")).toBeNull();
 });
 
+test("hovering a shared segment shows every edge's name without overlap, even with names on hover only; leaving hides them", () => {
+  const withNames = lay(trunkLayout.edges.map((l) => ({ ...l, labelAt: { x: 165, y: 80 } })));
+  const onHoverEdges = vi.fn();
+  const { rerender } = render(<EdgeLayer layout={withNames} edges={trunkEdges} {...trunkProps} hoverLabels onTrunkClick={vi.fn()} onHoverEdges={onHoverEdges} />);
+  expect(labelTexts()).toEqual([]);
+  fireEvent.mouseEnter(document.querySelector(".edge-seg-hit")!);
+  expect(labelTexts().sort()).toEqual(["둘", "셋", "하나"]);
+  expect([...(onHoverEdges.mock.calls.at(-1)![0] as string[])].sort()).toEqual(["e1", "e2", "e3"]);
+  const boxes = [...document.querySelectorAll(".edge-label")].map((t) => labelBox({ text: t.textContent!, x: Number(t.getAttribute("x")), y: Number(t.getAttribute("y")), anchor: "middle" }));
+  for (let i = 0; i < boxes.length; i++) for (let j = i + 1; j < boxes.length; j++) expect(tooClose(boxes[i], boxes[j])).toBe(false);
+  fireEvent.mouseLeave(document.querySelector(".edge-seg-hit")!);
+  expect(labelTexts()).toEqual([]);
+  expect(onHoverEdges).toHaveBeenLastCalledWith(null);
+  // 이름이 늘 보이는 설정에서도 같은 이름 셋이 겹치지 않게 놓인다.
+  rerender(<EdgeLayer layout={withNames} edges={trunkEdges} {...trunkProps} hoverLabels={false} onTrunkClick={vi.fn()} onHoverEdges={onHoverEdges} />);
+  fireEvent.mouseEnter(document.querySelector(".edge-seg-hit")!);
+  const again = [...document.querySelectorAll(".edge-label")].map((t) => labelBox({ text: t.textContent!, x: Number(t.getAttribute("x")), y: Number(t.getAttribute("y")), anchor: "middle" }));
+  expect(again).toHaveLength(3);
+  for (let i = 0; i < again.length; i++) for (let j = i + 1; j < again.length; j++) expect(tooClose(again[i], again[j])).toBe(false);
+});
+
+test("the shared-segment hover report drops when the segment vanishes", () => {
+  const onHoverEdges = vi.fn();
+  const { rerender } = render(<EdgeLayer layout={trunkLayout} edges={trunkEdges} {...trunkProps} onTrunkClick={vi.fn()} onHoverEdges={onHoverEdges} />);
+  fireEvent.mouseEnter(document.querySelector(".edge-seg-hit")!);
+  expect(onHoverEdges).toHaveBeenLastCalledWith(expect.arrayContaining(["e1", "e2", "e3"]));
+  rerender(<EdgeLayer layout={lay([trunkLayout.edges[3]])} edges={[trunkEdges[3]]} {...trunkProps} onTrunkClick={vi.fn()} onHoverEdges={onHoverEdges} />);
+  expect(onHoverEdges).toHaveBeenLastCalledWith(null);
+});
+
 test("without a trunk handler there are no shared-segment hits and the edge hit selects", () => {
   const onSelect = vi.fn();
   render(<EdgeLayer layout={trunkLayout} edges={trunkEdges} {...trunkProps} onSelect={onSelect} />);

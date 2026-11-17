@@ -1036,6 +1036,21 @@ describe("줄기 펼치기", () => {
     expect([...container.querySelectorAll(".edge-trunk-tag__text")].map((t) => t.textContent).sort()).toEqual(["웹 1", "웹 2"]);
   });
 
+  test("공유 조각에 마우스를 올리면 그 선들의 두 끝이 아닌 노드가 호버 흐림이 되고, 떠나면 풀린다", async () => {
+    const props: CanvasProps = { ...baseProps(st()), onTrunkChange: vi.fn() };
+    const { container } = render(frame(props));
+    await waitFor(() => expect(hitOf(container)).not.toBeNull());
+    expect(container.querySelector(".node--faded")).toBeNull();
+    fireEvent.mouseEnter(hitOf(container)!);
+    await waitFor(() => expect(nodeEl(container, "x")!.querySelector(".node--faded")).not.toBeNull());
+    expect(nodeEl(container, "y")!.querySelector(".node--faded")).not.toBeNull();
+    for (const id of ["alb", "w1", "w2"]) expect(nodeEl(container, id)!.querySelector(".node--faded"), id).toBeNull();
+    // 호버는 영역을 흐리지 않는다.
+    expect(container.querySelector(".node--dimmed")).toBeNull();
+    fireEvent.mouseLeave(hitOf(container)!);
+    await waitFor(() => expect(container.querySelector(".node--faded")).toBeNull());
+  });
+
   test("펼친 선이 표시 그래프에서 모두 사라지면 빈 강조(모두 흐림)를 남기지 않는다", async () => {
     const props: CanvasProps = { ...baseProps(st()), onTrunkChange: vi.fn(), trunk: { ...opened, edgeIds: ["gone-1", "gone-2"] } };
     const { container } = render(frame(props));
