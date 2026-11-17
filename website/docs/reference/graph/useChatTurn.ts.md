@@ -1,59 +1,73 @@
 ---
 title: "useChatTurn.ts"
-sidebar_position: 58
+sidebar_position: 4
 ---
 # useChatTurn.ts
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 19 nodes · cohesion 0.16
+> 53 nodes · cohesion 0.08
 
 ## Key Concepts
 
 - **useChatTurn.ts** (34 connections) — `src/ui/chat/useChatTurn.ts`
+- **events.ts** (29 connections) — `src/server/chat/events.ts`
+- **useSessions.ts** (27 connections) — `src/ui/chat/useSessions.ts`
+- **lines.ts** (24 connections) — `src/ui/chat/lines.ts`
 - **useChatTurn()** (18 connections) — `src/ui/chat/useChatTurn.ts`
+- **messages.ts** (17 connections) — `src/server/chat/messages.ts`
+- **MessageMeta** (15 connections) — `src/server/chat/events.ts`
+- **Warning** (14 connections) — `src/domain/types.ts`
+- **listMessages()** (13 connections) — `src/server/chat/messages.ts`
+- **messagesToLines()** (13 connections) — `src/ui/chat/lines.ts`
+- **ChatLine** (10 connections) — `src/ui/chat/useChatTurn.ts`
+- **useSessions()** (10 connections) — `src/ui/chat/useSessions.ts`
+- **ClarifyQuestion** (8 connections) — `src/domain/clarify.ts`
 - **UseChatTurnArgs** (8 connections) — `src/ui/chat/useChatTurn.ts`
+- **WarningCounts** (6 connections) — `src/domain/warnings.ts`
+- **keepsCard()** (5 connections) — `src/ui/chat/lines.ts`
+- **summaryText()** (5 connections) — `src/ui/chat/lines.ts`
+- **warningsChip()** (4 connections) — `src/ui/chat/lines.ts`
 - **NEW_SESSION** (4 connections) — `src/ui/chat/useSessions.ts`
+- **MessageRole** (3 connections) — `src/db/schema.ts`
+- **changedOf()** (3 connections) — `src/ui/chat/lines.ts`
 - **.onCommand()** (3 connections) — `src/ui/chat/useChatTurn.ts`
 - **.onSession()** (3 connections) — `src/ui/chat/useChatTurn.ts`
 - **.onSessionLines()** (3 connections) — `src/ui/chat/useChatTurn.ts`
-- **isAbort()** (2 connections) — `src/ui/chat/useChatTurn.ts`
-- **nextId()** (2 connections) — `src/ui/chat/useChatTurn.ts`
-- **ProgressCard** (2 connections) — `src/ui/chat/useChatTurn.ts`
-- **.onDone()** (2 connections) — `src/ui/chat/useChatTurn.ts`
-- **.onInterrupted()** (2 connections) — `src/ui/chat/useChatTurn.ts`
-- **.onOpenHistory()** (2 connections) — `src/ui/chat/useChatTurn.ts`
-- **.onRelayout()** (2 connections) — `src/ui/chat/useChatTurn.ts`
-- **ANSWER_INTENTS** (1 connections) — `src/ui/chat/useChatTurn.ts`
-- **CardStep** (1 connections) — `src/ui/chat/useChatTurn.ts`
-- **DoneEvent** (1 connections) — `src/ui/chat/useChatTurn.ts`
-- **MAIN** (1 connections) — `src/ui/chat/useChatTurn.ts`
-- **TurnTarget** (1 connections) — `src/ui/chat/useChatTurn.ts`
+- **SessionEventPayload** (2 connections) — `src/server/chat/events.ts`
+- *... and 28 more nodes in this community*
 
 ## Relationships
 
-- [lines.ts](lines.ts.md) (7 shared connections)
-- [useSessions.ts](useSessions.ts.md) (5 shared connections)
-- [schema.ts](schema.ts.md) (4 shared connections)
-- [ChatPanel.tsx](ChatPanel.tsx.md) (4 shared connections)
-- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (4 shared connections)
-- [SessionPicker.tsx](SessionPicker.tsx.md) (3 shared connections)
-- [commands.ts](commands.ts.md) (3 shared connections)
-- [clarify.ts](clarify.ts.md) (2 shared connections)
-- [ask.ts](ask.ts.md) (1 shared connections)
-- [ResetPasswordForm.tsx](ResetPasswordForm.tsx.md) (1 shared connections)
-- [types.ts](types.ts.md) (1 shared connections)
-- [domain/warnings.ts](domain-warnings.ts.md) (1 shared connections)
+- [pipeline.ts](pipeline.ts.md) (14 shared connections)
+- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (11 shared connections)
+- [schema.ts](schema.ts.md) (10 shared connections)
+- [auth](auth.md) (9 shared connections)
+- [ChatPanel.tsx](ChatPanel.tsx.md) (7 shared connections)
+- [SessionPicker.tsx](SessionPicker.tsx.md) (7 shared connections)
+- [domain/warnings.ts](domain-warnings.ts.md) (5 shared connections)
+- [ask/route.ts](ask-route.ts.md) (5 shared connections)
+- [(app)/actions.ts](app-actions.ts.md) (5 shared connections)
+- [networkRules.ts](networkRules.ts.md) (4 shared connections)
+- [types.ts](types.ts.md) (4 shared connections)
+- [\[sessionId\]/route.ts]([sessionId]-route.ts.md) (4 shared connections)
 
 ## Source Files
 
+- `src/db/schema.ts`
+- `src/domain/clarify.ts`
+- `src/domain/types.ts`
+- `src/domain/warnings.ts`
+- `src/server/chat/events.ts`
+- `src/server/chat/messages.ts`
+- `src/ui/chat/lines.ts`
 - `src/ui/chat/useChatTurn.ts`
 - `src/ui/chat/useSessions.ts`
 
 ## Audit Trail
 
-- EXTRACTED: 63 (97%)
-- INFERRED: 2 (3%)
+- EXTRACTED: 211 (96%)
+- INFERRED: 9 (4%)
 - AMBIGUOUS: 0 (0%)
 
 ---

@@ -1,6 +1,6 @@
 ---
 title: "PageSkeleton.tsx"
-sidebar_position: 52
+sidebar_position: 64
 ---
 # PageSkeleton.tsx
 

@@ -1,20 +1,18 @@
 ---
 title: "AuthStage.tsx"
-sidebar_position: 53
+sidebar_position: 71
 ---
 # AuthStage.tsx
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 19 nodes · cohesion 0.13
+> 17 nodes · cohesion 0.12
 
 ## Key Concepts
 
 - **AuthStage.tsx** (28 connections) — `src/app/(auth)/_components/AuthStage.tsx`
-- **AuthStage()** (14 connections) — `src/app/(auth)/_components/AuthStage.tsx`
 - **flag()** (3 connections) — `src/app/(auth)/_components/AuthStage.tsx`
 - **FlowSteps()** (3 connections) — `src/app/(auth)/_components/AuthStage.tsx`
-- **at()** (2 connections) — `src/app/(auth)/_components/AuthStage.tsx`
 - **useScene()** (2 connections) — `src/app/(auth)/_components/AuthStage.tsx`
 - **Action** (1 connections) — `src/app/(auth)/_components/AuthStage.tsx`
 - **Box** (1 connections) — `src/app/(auth)/_components/AuthStage.tsx`
@@ -32,10 +30,10 @@ sidebar_position: 53
 
 ## Relationships
 
-- [ResetPasswordForm.tsx](ResetPasswordForm.tsx.md) (13 shared connections)
-- [MissingChecklist.tsx](MissingChecklist.tsx.md) (4 shared connections)
-- [motion.ts](motion.ts.md) (1 shared connections)
-- [reset.ts](reset.ts.md) (1 shared connections)
+- [ResetPasswordForm.tsx](ResetPasswordForm.tsx.md) (10 shared connections)
+- [EdgePanels.tsx](EdgePanels.tsx.md) (3 shared connections)
+- [types.ts](types.ts.md) (1 shared connections)
+- [EdgeLayer.tsx](EdgeLayer.tsx.md) (1 shared connections)
 
 ## Source Files
 
@@ -43,7 +41,7 @@ sidebar_position: 53
 
 ## Audit Trail
 
-- EXTRACTED: 42 (100%)
+- EXTRACTED: 32 (100%)
 - INFERRED: 0 (0%)
 - AMBIGUOUS: 0 (0%)
 

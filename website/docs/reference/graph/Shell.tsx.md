@@ -1,6 +1,6 @@
 ---
 title: "Shell.tsx"
-sidebar_position: 28
+sidebar_position: 29
 ---
 # Shell.tsx
 
@@ -40,17 +40,17 @@ sidebar_position: 28
 ## Relationships
 
 - [Sidebar.tsx](Sidebar.tsx.md) (9 shared connections)
-- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (8 shared connections)
-- [ResetPasswordForm.tsx](ResetPasswordForm.tsx.md) (6 shared connections)
-- [\[sessionId\]/route.ts]([sessionId]-route.ts.md) (4 shared connections)
+- [ResetPasswordForm.tsx](ResetPasswordForm.tsx.md) (7 shared connections)
+- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (6 shared connections)
+- [auth](auth.md) (4 shared connections)
 - [projects.ts](projects.ts.md) (4 shared connections)
 - [PageSkeleton.tsx](PageSkeleton.tsx.md) (4 shared connections)
 - [NetworkKnowledgePage.tsx](NetworkKnowledgePage.tsx.md) (4 shared connections)
 - [ChatPanel.tsx](ChatPanel.tsx.md) (3 shared connections)
 - [GlossaryPage.tsx](GlossaryPage.tsx.md) (3 shared connections)
-- [app/layout.tsx](app-layout.tsx.md) (2 shared connections)
 - [auth.ts](auth.ts.md) (2 shared connections)
-- [mcpKeys.ts](mcpKeys.ts.md) (1 shared connections)
+- [FlowPanel.tsx](FlowPanel.tsx.md) (1 shared connections)
+- [MobileTabBar.tsx](MobileTabBar.tsx.md) (1 shared connections)
 
 ## Source Files
 

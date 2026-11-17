@@ -1,6 +1,6 @@
 ---
 title: "ChatPanel.tsx"
-sidebar_position: 5
+sidebar_position: 9
 ---
 # ChatPanel.tsx
 
@@ -39,18 +39,18 @@ sidebar_position: 5
 
 ## Relationships
 
+- [useChatTurn.ts](useChatTurn.ts.md) (7 shared connections)
 - [SessionPicker.tsx](SessionPicker.tsx.md) (6 shared connections)
 - [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (6 shared connections)
 - [RightPanel.tsx](RightPanel.tsx.md) (6 shared connections)
-- [ResetPasswordForm.tsx](ResetPasswordForm.tsx.md) (5 shared connections)
-- [useChatTurn.ts](useChatTurn.ts.md) (4 shared connections)
-- [clarify.ts](clarify.ts.md) (4 shared connections)
+- [Button.tsx](Button.tsx.md) (5 shared connections)
+- [ResetPasswordForm.tsx](ResetPasswordForm.tsx.md) (4 shared connections)
 - [Shell.tsx](Shell.tsx.md) (3 shared connections)
 - [PageSkeleton.tsx](PageSkeleton.tsx.md) (3 shared connections)
-- [Review Focus](Review_Focus.md) (2 shared connections)
-- [useSessions.ts](useSessions.ts.md) (2 shared connections)
 - [FlyLayer.tsx](FlyLayer.tsx.md) (2 shared connections)
+- [ask.ts](ask.ts.md) (1 shared connections)
 - [InfraSketch 설계 문서](InfraSketch_설계_문서.md) (1 shared connections)
+- [pipeline.ts](pipeline.ts.md) (1 shared connections)
 
 ## Source Files
 

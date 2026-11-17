@@ -1,25 +1,27 @@
 ---
 title: "prompt.ts"
-sidebar_position: 14
+sidebar_position: 11
 ---
 # prompt.ts
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 38 nodes · cohesion 0.08
+> 42 nodes · cohesion 0.07
 
 ## Key Concepts
 
 - **prompt.ts** (83 connections) — `src/server/chat/prompt.ts`
-- **mergeWarnings()** (16 connections) — `src/domain/warnings.ts`
-- **infoCounts.ts** (12 connections) — `src/domain/infoCounts.ts`
 - **buildMessages()** (12 connections) — `src/server/chat/prompt.ts`
+- **Task 6: 대화 차례 — 프롬프트, 종류 검사, 망연계 추정 기록, 흐름 나누기, 경고 점검** (11 connections) — `docs/superpowers/plans/2026-11-06-network-knowledge-link-guess.md`
+- **glossaryMatch.ts** (9 connections) — `src/domain/glossaryMatch.ts`
 - **explainContext()** (7 connections) — `src/server/chat/prompt.ts`
 - **groupContext()** (6 connections) — `src/server/chat/prompt.ts`
-- **infoCounts** (5 connections) — `src/domain/infoCounts.ts`
 - **buildFlowSuggestMessages()** (5 connections) — `src/server/chat/prompt.ts`
 - **summarizeState()** (5 connections) — `src/server/chat/prompt.ts`
 - **glossaryBlock()** (4 connections) — `src/domain/glossaryMatch.ts`
+- **MatchedTerm** (4 connections) — `src/domain/glossaryMatch.ts`
+- **matchGlossaryTerms()** (4 connections) — `src/domain/glossaryMatch.ts`
+- **buildExplainMessages()** (4 connections) — `src/server/chat/prompt.ts`
 - **describeEndpoint()** (4 connections) — `src/server/chat/prompt.ts`
 - **labelOf()** (3 connections) — `src/domain/missing.ts`
 - **ancestorsOf()** (3 connections) — `src/server/chat/prompt.ts`
@@ -28,42 +30,39 @@ sidebar_position: 14
 - **replayHistory()** (3 connections) — `src/server/chat/prompt.ts`
 - **summarizeFlows()** (3 connections) — `src/server/chat/prompt.ts`
 - **warningBlock()** (3 connections) — `src/server/chat/prompt.ts`
+- **squash()** (2 connections) — `src/domain/glossaryMatch.ts`
 - **HistoryItem** (2 connections) — `src/server/chat/prompt.ts`
 - **kindKo()** (2 connections) — `src/server/chat/prompt.ts`
 - **oneLine()** (2 connections) — `src/server/chat/prompt.ts`
 - **ordered()** (2 connections) — `src/server/chat/prompt.ts`
-- **LABELS** (1 connections) — `src/domain/infoCounts.ts`
-- **ANSWER_PROMPT** (1 connections) — `src/server/chat/prompt.ts`
-- **ASK_PROMPT** (1 connections) — `src/server/chat/prompt.ts`
-- *... and 13 more nodes in this community*
+- *... and 17 more nodes in this community*
 
 ## Relationships
 
-- [missing.ts](missing.ts.md) (15 shared connections)
-- [pipeline.ts](pipeline.ts.md) (9 shared connections)
-- [pairKey](pairKey.md) (8 shared connections)
-- [domain/explain.ts](domain-explain.ts.md) (8 shared connections)
-- [ask.ts](ask.ts.md) (6 shared connections)
-- [domain/warnings.ts](domain-warnings.ts.md) (4 shared connections)
-- [versions.ts](versions.ts.md) (4 shared connections)
-- [glossaryMatch.ts](glossaryMatch.ts.md) (3 shared connections)
-- [getOwnedDiagram](getOwnedDiagram.md) (3 shared connections)
+- [drawing/rules.ts](drawing-rules.ts.md) (14 shared connections)
+- [missing.ts](missing.ts.md) (12 shared connections)
+- [pipeline.ts](pipeline.ts.md) (10 shared connections)
+- [ask.ts](ask.ts.md) (5 shared connections)
+- [groupInfo.ts](groupInfo.ts.md) (5 shared connections)
+- [chat/warnings.ts](chat-warnings.ts.md) (4 shared connections)
+- [domain/explain.ts](domain-explain.ts.md) (4 shared connections)
+- [glossary.ts](glossary.ts.md) (3 shared connections)
 - [types.ts](types.ts.md) (3 shared connections)
-- [NodeInfo.tsx](NodeInfo.tsx.md) (3 shared connections)
 - [설명 생성과 품질 검사](설명_생성과_품질_검사.md) (3 shared connections)
+- [flowSuggest.ts](flowSuggest.ts.md) (3 shared connections)
+- [domain/apply.ts](domain-apply.ts.md) (2 shared connections)
 
 ## Source Files
 
+- `docs/superpowers/plans/2026-11-06-network-knowledge-link-guess.md`
 - `src/domain/glossaryMatch.ts`
-- `src/domain/infoCounts.ts`
 - `src/domain/missing.ts`
-- `src/domain/warnings.ts`
 - `src/server/chat/prompt.ts`
 
 ## Audit Trail
 
-- EXTRACTED: 143 (96%)
-- INFERRED: 6 (4%)
+- EXTRACTED: 130 (90%)
+- INFERRED: 14 (10%)
 - AMBIGUOUS: 0 (0%)
 
 ---

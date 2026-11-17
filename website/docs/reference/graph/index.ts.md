@@ -1,17 +1,16 @@
 ---
 title: "index.ts"
-sidebar_position: 8
+sidebar_position: 12
 ---
 # index.ts
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 42 nodes · cohesion 0.13
+> 42 nodes · cohesion 0.11
 
 ## Key Concepts
 
 - **index.ts** (33 connections) — `src/domain/samples/index.ts`
-- **dsl.ts** (31 connections) — `src/domain/samples/dsl.ts`
 - **gov-netsep.ts** (13 connections) — `src/domain/samples/gov-netsep.ts`
 - **eks-msa.ts** (12 connections) — `src/domain/samples/eks-msa.ts`
 - **iot-control.ts** (12 connections) — `src/domain/samples/iot-control.ts`
@@ -26,7 +25,9 @@ sidebar_position: 8
 - **assume()** (9 connections) — `src/domain/samples/dsl.ts`
 - **group()** (9 connections) — `src/domain/samples/dsl.ts`
 - **node()** (9 connections) — `src/domain/samples/dsl.ts`
+- **Task 4: 서버 설명 생성** (7 connections) — `docs/superpowers/plans/2026-10-30-infrasketch-phase3c1-explanations-glossary.md`
 - **edgeId()** (7 connections) — `src/domain/samples/dsl.ts`
+- **overLimit()** (4 connections) — `src/domain/explain.ts`
 - **managed()** (4 connections) — `src/domain/samples/dsl.ts`
 - **zoneType()** (3 connections) — `src/domain/samples/dsl.ts`
 - **ACCESS_CONTROL** (2 connections) — `src/domain/samples/access-control.ts`
@@ -34,26 +35,27 @@ sidebar_position: 8
 - **EKS_MSA** (2 connections) — `src/domain/samples/eks-msa.ts`
 - **GOV_NETSEP** (2 connections) — `src/domain/samples/gov-netsep.ts`
 - **IDC_3TIER** (2 connections) — `src/domain/samples/idc-3tier.ts`
-- **IOT_CONTROL** (2 connections) — `src/domain/samples/iot-control.ts`
 - *... and 17 more nodes in this community*
 
 ## Relationships
 
-- [types.ts](types.ts.md) (9 shared connections)
-- [commands.ts](commands.ts.md) (6 shared connections)
-- [domain/apply.ts](domain-apply.ts.md) (3 shared connections)
+- [types.ts](types.ts.md) (19 shared connections)
+- [schema.ts](schema.ts.md) (5 shared connections)
+- [domain/explain.ts](domain-explain.ts.md) (3 shared connections)
 - [domain/flows.ts](domain-flows.ts.md) (3 shared connections)
-- [samples.ts](samples.ts.md) (3 shared connections)
-- [getOwnedDiagram](getOwnedDiagram.md) (2 shared connections)
-- [segments.ts](segments.ts.md) (1 shared connections)
-- [motion.ts](motion.ts.md) (1 shared connections)
-- [Canvas.tsx](Canvas.tsx.md) (1 shared connections)
-- [InfoCard.tsx](InfoCard.tsx.md) (1 shared connections)
-- [networkRules.ts](networkRules.ts.md) (1 shared connections)
-- [domain/explain.ts](domain-explain.ts.md) (1 shared connections)
+- [DiagramState](DiagramState.md) (3 shared connections)
+- [mcp/apply.ts](mcp-apply.ts.md) (3 shared connections)
+- [설명 생성과 품질 검사](설명_생성과_품질_검사.md) (2 shared connections)
+- [domain/apply.ts](domain-apply.ts.md) (2 shared connections)
+- [3C-1 계획 작업 목록](3C-1_계획_작업_목록.md) (1 shared connections)
+- [NotFoundError](NotFoundError.md) (1 shared connections)
+- [chat/warnings.ts](chat-warnings.ts.md) (1 shared connections)
+- [Flow](Flow.md) (1 shared connections)
 
 ## Source Files
 
+- `docs/superpowers/plans/2026-10-30-infrasketch-phase3c1-explanations-glossary.md`
+- `src/domain/explain.ts`
 - `src/domain/samples/access-control.ts`
 - `src/domain/samples/aws-shop.ts`
 - `src/domain/samples/dsl.ts`
@@ -67,8 +69,8 @@ sidebar_position: 8
 
 ## Audit Trail
 
-- EXTRACTED: 141 (96%)
-- INFERRED: 6 (4%)
+- EXTRACTED: 132 (92%)
+- INFERRED: 11 (8%)
 - AMBIGUOUS: 0 (0%)
 
 ---

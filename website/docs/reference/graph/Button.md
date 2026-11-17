@@ -1,6 +1,6 @@
 ---
 title: "Button()"
-sidebar_position: 127
+sidebar_position: 128
 sidebar_label: "핵심 노드: Button()"
 ---
 # Button()
@@ -17,16 +17,16 @@ sidebar_label: "핵심 노드: Button()"
 - [DiagramWorkspace()](DiagramWorkspace.md) `EXTRACTED`
 - Sidebar() `EXTRACTED`
 - NetworkKnowledgePage() `EXTRACTED`
-- ChatPanel() `EXTRACTED`
 - MissingChecklist() `EXTRACTED`
+- ChatPanel() `EXTRACTED`
 - FlowPanel() `EXTRACTED`
 - SessionPicker() `EXTRACTED`
 - DialogView() `EXTRACTED`
 - GlossaryPage() `EXTRACTED`
 - McpKeysPage() `EXTRACTED`
 - AuthSubmit() `EXTRACTED`
-- ZoneTypePicker() `EXTRACTED`
 - ResetRequestPage() `EXTRACTED`
+- ZoneTypePicker() `EXTRACTED`
 - HistoryPanel() `EXTRACTED`
 - LinkGuessPart() `EXTRACTED`
 - expandedNav() `EXTRACTED`
@@ -37,22 +37,22 @@ sidebar_label: "핵심 노드: Button()"
 - *…and 5 more `calls` connection(s) not listed (lowest-degree first to go)*
 
 ### contains
-- Button.tsx `EXTRACTED`
+- [Button.tsx](Button.tsx.md) `EXTRACTED`
 
 ### imports
 - [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) `EXTRACTED`
 - [NodeInfo.tsx](NodeInfo.tsx.md) `EXTRACTED`
-- [ChatPanel.tsx](ChatPanel.tsx.md) `EXTRACTED`
 - [NetworkKnowledgePage.tsx](NetworkKnowledgePage.tsx.md) `EXTRACTED`
+- [ChatPanel.tsx](ChatPanel.tsx.md) `EXTRACTED`
 - [Sidebar.tsx](Sidebar.tsx.md) `EXTRACTED`
 - [Explanation.tsx](Explanation.tsx.md) `EXTRACTED`
 - [MissingChecklist.tsx](MissingChecklist.tsx.md) `EXTRACTED`
 - [SessionPicker.tsx](SessionPicker.tsx.md) `EXTRACTED`
 - [FlowPanel.tsx](FlowPanel.tsx.md) `EXTRACTED`
 - [Shell.tsx](Shell.tsx.md) `EXTRACTED`
-- [GlossaryPage.tsx](GlossaryPage.tsx.md) `EXTRACTED`
 - reset/page.tsx `EXTRACTED`
-- [ZoneTypePicker.tsx](ZoneTypePicker.tsx.md) `EXTRACTED`
+- [GlossaryPage.tsx](GlossaryPage.tsx.md) `EXTRACTED`
+- ZoneTypePicker.tsx `EXTRACTED`
 - McpKeysPage.tsx `EXTRACTED`
 - dialogs.tsx `EXTRACTED`
 - AuthField.tsx `EXTRACTED`

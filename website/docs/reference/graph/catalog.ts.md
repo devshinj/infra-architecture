@@ -1,23 +1,31 @@
 ---
 title: "catalog.ts"
-sidebar_position: 79
+sidebar_position: 57
 ---
 # catalog.ts
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 14 nodes · cohesion 0.20
+> 22 nodes · cohesion 0.14
 
 ## Key Concepts
 
 - **ZoneNameLayer.tsx** (15 connections) — `src/canvas/ZoneNameLayer.tsx`
+- **GroupBox.tsx** (10 connections) — `src/canvas/GroupBox.tsx`
 - **stacking.ts** (9 connections) — `src/canvas/stacking.ts`
+- **GroupKind** (9 connections) — `src/domain/catalog.ts`
 - **groupToggleWidth()** (6 connections) — `src/canvas/layout.ts`
+- **nodeTypes.ts** (6 connections) — `src/canvas/nodeTypes.ts`
+- **GROUP_KINDS** (6 connections) — `src/domain/catalog.ts`
+- **groupToggleLabel()** (4 connections) — `src/canvas/layout.ts`
 - **ZoneNameLayer()** (4 connections) — `src/canvas/ZoneNameLayer.tsx`
 - **ZoneNameLayerPortal()** (4 connections) — `src/canvas/ZoneNameLayer.tsx`
+- **GroupBox()** (3 connections) — `src/canvas/GroupBox.tsx`
+- **GroupBoxData** (3 connections) — `src/canvas/GroupBox.tsx`
 - **zoneZ()** (3 connections) — `src/canvas/stacking.ts`
 - **ZoneName** (3 connections) — `src/canvas/ZoneNameLayer.tsx`
 - **zoneNameMaxWidth()** (3 connections) — `src/canvas/ZoneNameLayer.tsx`
+- **nodeTypes** (2 connections) — `src/canvas/nodeTypes.ts`
 - **NODE_Z** (2 connections) — `src/canvas/stacking.ts`
 - **ZONE_NAME_IN_PORTAL_Z** (2 connections) — `src/canvas/stacking.ts`
 - **zoneNameTransform()** (2 connections) — `src/canvas/ZoneNameLayer.tsx`
@@ -27,24 +35,31 @@ sidebar_position: 79
 
 ## Relationships
 
-- [Canvas.tsx](Canvas.tsx.md) (8 shared connections)
-- [layout.ts](layout.ts.md) (4 shared connections)
-- [EdgePanels.tsx](EdgePanels.tsx.md) (3 shared connections)
-- [types.ts](types.ts.md) (2 shared connections)
-- [textWidth](textWidth.md) (1 shared connections)
-- [layoutMetrics.ts](layoutMetrics.ts.md) (1 shared connections)
-- [motion.ts](motion.ts.md) (1 shared connections)
+- [Canvas.tsx](Canvas.tsx.md) (10 shared connections)
+- [layout.ts](layout.ts.md) (7 shared connections)
+- [types.ts](types.ts.md) (6 shared connections)
+- [EdgePanels.tsx](EdgePanels.tsx.md) (4 shared connections)
+- [Flow](Flow.md) (2 shared connections)
+- [EdgeLayer.tsx](EdgeLayer.tsx.md) (1 shared connections)
+- [mcp/apply.ts](mcp-apply.ts.md) (1 shared connections)
+- [drawing/rules.ts](drawing-rules.ts.md) (1 shared connections)
+- [NodeInfo.tsx](NodeInfo.tsx.md) (1 shared connections)
+- [domain/assumptions.ts](domain-assumptions.ts.md) (1 shared connections)
+- [domain/explain.ts](domain-explain.ts.md) (1 shared connections)
 
 ## Source Files
 
+- `src/canvas/GroupBox.tsx`
 - `src/canvas/ZoneNameLayer.tsx`
 - `src/canvas/layout.ts`
+- `src/canvas/nodeTypes.ts`
 - `src/canvas/stacking.ts`
+- `src/domain/catalog.ts`
 
 ## Audit Trail
 
-- EXTRACTED: 38 (100%)
-- INFERRED: 0 (0%)
+- EXTRACTED: 65 (97%)
+- INFERRED: 2 (3%)
 - AMBIGUOUS: 0 (0%)
 
 ---

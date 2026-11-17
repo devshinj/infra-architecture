@@ -1,12 +1,12 @@
 ---
 title: "networkRules.ts"
-sidebar_position: 47
+sidebar_position: 56
 ---
 # networkRules.ts
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 21 nodes · cohesion 0.17
+> 22 nodes · cohesion 0.16
 
 ## Key Concepts
 
@@ -25,6 +25,7 @@ sidebar_position: 47
 - **iGa()** (3 connections) — `src/domain/josa.ts`
 - **latinWordFinal()** (2 connections) — `src/domain/josa.ts`
 - **LINK_RULES** (2 connections) — `src/domain/networkRules.ts`
+- **LinkVerdict** (2 connections) — `src/domain/networkRules.ts`
 - **DIGIT** (1 connections) — `src/domain/josa.ts`
 - **Final** (1 connections) — `src/domain/josa.ts`
 - **PICK** (1 connections) — `src/domain/josa.ts`
@@ -36,14 +37,14 @@ sidebar_position: 47
 
 - [domain/warnings.ts](domain-warnings.ts.md) (10 shared connections)
 - [domain/flows.ts](domain-flows.ts.md) (9 shared connections)
-- [missing.ts](missing.ts.md) (5 shared connections)
-- [getOwnedDiagram](getOwnedDiagram.md) (4 shared connections)
+- [missing.ts](missing.ts.md) (8 shared connections)
+- [useChatTurn.ts](useChatTurn.ts.md) (4 shared connections)
 - [Canvas.tsx](Canvas.tsx.md) (3 shared connections)
-- [versions.ts](versions.ts.md) (3 shared connections)
-- [lines.ts](lines.ts.md) (3 shared connections)
-- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (3 shared connections)
+- [schema.ts](schema.ts.md) (3 shared connections)
 - [glossary.ts](glossary.ts.md) (2 shared connections)
-- [pairKey](pairKey.md) (2 shared connections)
+- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (2 shared connections)
+- [getOwnedDiagram](getOwnedDiagram.md) (2 shared connections)
+- [drawing/rules.ts](drawing-rules.ts.md) (2 shared connections)
 - [mcp/apply.ts](mcp-apply.ts.md) (2 shared connections)
 - [InfoCard.tsx](InfoCard.tsx.md) (2 shared connections)
 
@@ -55,7 +56,7 @@ sidebar_position: 47
 
 ## Audit Trail
 
-- EXTRACTED: 79 (87%)
+- EXTRACTED: 80 (87%)
 - INFERRED: 12 (13%)
 - AMBIGUOUS: 0 (0%)
 

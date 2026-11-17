@@ -1,63 +1,71 @@
 ---
 title: "NotFoundError"
-sidebar_position: 129
+sidebar_position: 54
 sidebar_label: "핵심 노드: NotFoundError"
 ---
 # NotFoundError
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> God node · 36 connections · `src/server/projects.ts`
+> 23 nodes · cohesion 0.11
 
-**Community:** [server/network.ts](server-network.ts.md)
+## Key Concepts
 
-## Connections by Relation
+- **NotFoundError** (36 connections) — `src/server/projects.ts`
+- **mcpKeys.ts** (18 connections) — `src/server/mcpKeys.ts`
+- **flows/route.ts** (12 connections) — `src/app/api/diagrams/[id]/flows/route.ts`
+- **head/route.ts** (12 connections) — `src/app/api/diagrams/[id]/head/route.ts`
+- **createMcpKey()** (5 connections) — `src/server/mcpKeys.ts`
+- **deleteMcpKey()** (5 connections) — `src/server/mcpKeys.ts`
+- **verifyMcpKey()** (5 connections) — `src/server/mcpKeys.ts`
+- **getDiagramHead()** (4 connections) — `src/server/flows.ts`
+- **deleteNetworkRule()** (4 connections) — `src/server/network.ts`
+- **Task 3: 키 만들기·확인** (3 connections) — `docs/superpowers/plans/2026-11-09-mcp-server.md`
+- **ref_node_crypto** (3 connections)
+- **GET()** (3 connections) — `src/app/api/diagrams/[id]/flows/route.ts`
+- **GET()** (3 connections) — `src/app/api/diagrams/[id]/head/route.ts`
+- **hashKey()** (3 connections) — `src/server/mcpKeys.ts`
+- **mcpKeys** (2 connections) — `src/db/schema.ts`
+- **Ctx** (1 connections) — `src/app/api/diagrams/[id]/flows/route.ts`
+- **dynamic** (1 connections) — `src/app/api/diagrams/[id]/flows/route.ts`
+- **runtime** (1 connections) — `src/app/api/diagrams/[id]/flows/route.ts`
+- **Ctx** (1 connections) — `src/app/api/diagrams/[id]/head/route.ts`
+- **dynamic** (1 connections) — `src/app/api/diagrams/[id]/head/route.ts`
+- **runtime** (1 connections) — `src/app/api/diagrams/[id]/head/route.ts`
+- **MCP_KEY_LIMITS** (1 connections) — `src/server/mcpKeys.ts`
+- **.constructor()** (1 connections) — `src/server/projects.ts`
 
-### calls
-- [getOwnedDiagram()](getOwnedDiagram_2.md) `EXTRACTED`
-- runAskTurn() `EXTRACTED`
-- runChatTurn() `EXTRACTED`
-- updateNetworkType() `EXTRACTED`
-- withOwnedFlow() `EXTRACTED`
-- countNetworkTypeUsageAction() `EXTRACTED`
-- assertOwnedProject() `EXTRACTED`
-- updateTerm() `EXTRACTED`
-- getOwnedType() `EXTRACTED`
-- deleteMcpKey() `EXTRACTED`
-- deleteNetworkRule() `EXTRACTED`
-- assertUuid() `EXTRACTED`
+## Relationships
 
-### contains
-- [projects.ts](projects.ts.md) `EXTRACTED`
+- [server/network.ts](server-network.ts.md) (9 shared connections)
+- [schema.ts](schema.ts.md) (9 shared connections)
+- [auth](auth.md) (6 shared connections)
+- [projects.ts](projects.ts.md) (6 shared connections)
+- [read.ts](read.ts.md) (5 shared connections)
+- [(app)/actions.ts](app-actions.ts.md) (5 shared connections)
+- [getOwnedDiagram](getOwnedDiagram.md) (4 shared connections)
+- [mcpKeys.ts](mcpKeys.ts.md) (4 shared connections)
+- [DiagramState](DiagramState.md) (2 shared connections)
+- [ResetPasswordForm.tsx](ResetPasswordForm.tsx.md) (2 shared connections)
+- [auth.ts](auth.ts.md) (2 shared connections)
+- [NetworkKnowledgePage.tsx](NetworkKnowledgePage.tsx.md) (2 shared connections)
 
-### imports
-- [(app)/actions.ts](app-actions.ts.md) `EXTRACTED`
-- [pipeline.ts](pipeline.ts.md) `EXTRACTED`
-- [ask.ts](ask.ts.md) `EXTRACTED`
-- [server/network.ts](server-network.ts.md) `EXTRACTED`
-- [server/flows.ts](server-flows.ts.md) `EXTRACTED`
-- [glossary.ts](glossary.ts.md) `EXTRACTED`
-- [\[sessionId\]/route.ts]([sessionId]-route.ts.md) `EXTRACTED`
-- [ask/route.ts](ask-route.ts.md) `EXTRACTED`
-- server.ts `EXTRACTED`
-- chat/route.ts `EXTRACTED`
-- \[diagramId\]/page.tsx `EXTRACTED`
-- [explain/route.ts](explain-route.ts.md) `EXTRACTED`
-- sessions/route.ts `EXTRACTED`
-- [mcpKeys.ts](mcpKeys.ts.md) `EXTRACTED`
-- suggest/route.ts `EXTRACTED`
-- flows/route.ts `EXTRACTED`
-- head/route.ts `EXTRACTED`
+## Source Files
 
-### method
-- .constructor() `EXTRACTED`
+- `docs/superpowers/plans/2026-11-09-mcp-server.md`
+- `src/app/api/diagrams/[id]/flows/route.ts`
+- `src/app/api/diagrams/[id]/head/route.ts`
+- `src/db/schema.ts`
+- `src/server/flows.ts`
+- `src/server/mcpKeys.ts`
+- `src/server/network.ts`
+- `src/server/projects.ts`
 
-### references
-- Task 4: 서버 설명 생성 `INFERRED`
-- [Task 6: 읽기 서비스와 안내서](Task_6-_읽기_서비스와_안내서.md) `INFERRED`
-- Task 2: 용어 사전 시드와 서버 함수 `INFERRED`
-- Task 5: DB와 서버 — 망 지식 테이블, 기본 제공 채우기, 읽기·고치기 `INFERRED`
-- Task 3: 키 만들기·확인 `INFERRED`
+## Audit Trail
+
+- EXTRACTED: 92 (93%)
+- INFERRED: 7 (7%)
+- AMBIGUOUS: 0 (0%)
 
 ---
 

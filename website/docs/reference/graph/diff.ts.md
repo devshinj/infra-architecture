@@ -27,15 +27,18 @@ sidebar_position: 81
 
 ## Relationships
 
-- [getOwnedDiagram](getOwnedDiagram.md) (5 shared connections)
-- [types.ts](types.ts.md) (4 shared connections)
+- [DiagramState](DiagramState.md) (4 shared connections)
 - [pipeline.ts](pipeline.ts.md) (4 shared connections)
-- [layoutMetrics.ts](layoutMetrics.ts.md) (3 shared connections)
-- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (3 shared connections)
-- [commands.ts](commands.ts.md) (2 shared connections)
-- [schema.ts](schema.ts.md) (2 shared connections)
+- [layout.ts](layout.ts.md) (3 shared connections)
+- [types.ts](types.ts.md) (3 shared connections)
+- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (2 shared connections)
+- [getOwnedDiagram](getOwnedDiagram.md) (2 shared connections)
+- [useChatTurn.ts](useChatTurn.ts.md) (2 shared connections)
 - [prompt.ts](prompt.ts.md) (2 shared connections)
-- [InfraSketch 설계 문서](InfraSketch_설계_문서.md) (1 shared connections)
+- [domain/assumptions.ts](domain-assumptions.ts.md) (1 shared connections)
+- [mcp/apply.ts](mcp-apply.ts.md) (1 shared connections)
+- [(app)/actions.ts](app-actions.ts.md) (1 shared connections)
+- [변경 이력과 비파괴 되돌리기](변경_이력과_비파괴_되돌리기.md) (1 shared connections)
 
 ## Source Files
 

@@ -1,6 +1,6 @@
 ---
 title: "FlyLayer.tsx"
-sidebar_position: 67
+sidebar_position: 72
 ---
 # FlyLayer.tsx
 
@@ -30,11 +30,13 @@ sidebar_position: 67
 
 ## Relationships
 
-- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (5 shared connections)
-- [Canvas.tsx](Canvas.tsx.md) (2 shared connections)
+- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (3 shared connections)
 - [GhostLayer.tsx](GhostLayer.tsx.md) (2 shared connections)
 - [useCamera.ts](useCamera.ts.md) (2 shared connections)
 - [ChatPanel.tsx](ChatPanel.tsx.md) (2 shared connections)
+- [(app)/actions.ts](app-actions.ts.md) (2 shared connections)
+- [Flow](Flow.md) (1 shared connections)
+- [Canvas.tsx](Canvas.tsx.md) (1 shared connections)
 - [ResetPasswordForm.tsx](ResetPasswordForm.tsx.md) (1 shared connections)
 
 ## Source Files

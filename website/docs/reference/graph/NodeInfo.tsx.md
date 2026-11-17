@@ -1,6 +1,6 @@
 ---
 title: "NodeInfo.tsx"
-sidebar_position: 24
+sidebar_position: 20
 ---
 # NodeInfo.tsx
 
@@ -10,11 +10,11 @@ sidebar_position: 24
 
 ## Key Concepts
 
-- **NodeInfo.tsx** (76 connections) — `src/ui/NodeInfo.tsx`
-- **NodeInfo()** (24 connections) — `src/ui/NodeInfo.tsx`
-- **Flow** (12 connections) — `src/domain/flows.ts`
-- **GroupInfo()** (11 connections) — `src/ui/NodeInfo.tsx`
+- **NodeInfo.tsx** (82 connections) — `src/ui/NodeInfo.tsx`
+- **NodeInfo()** (26 connections) — `src/ui/NodeInfo.tsx`
+- **GroupInfo()** (13 connections) — `src/ui/NodeInfo.tsx`
 - **NodeInfoProps** (10 connections) — `src/ui/NodeInfo.tsx`
+- **categoryOf()** (7 connections) — `src/domain/catalog.ts`
 - **requiredKeysFor()** (7 connections) — `src/domain/missing.ts`
 - **AskNode()** (6 connections) — `src/ui/explain/AskNode.tsx`
 - **isEmpty()** (5 connections) — `src/domain/missing.ts`
@@ -27,6 +27,7 @@ sidebar_position: 24
 - **edgeKindName()** (3 connections) — `src/ui/NodeInfo.tsx`
 - **Fields()** (3 connections) — `src/ui/NodeInfo.tsx`
 - **nameOf()** (3 connections) — `src/ui/NodeInfo.tsx`
+- **NetTypePart()** (3 connections) — `src/ui/NodeInfo.tsx`
 - **.onSelect()** (3 connections) — `src/ui/NodeInfo.tsx`
 - **.onAsk()** (2 connections) — `src/ui/explain/AskNode.tsx`
 - **kindName()** (2 connections) — `src/ui/NodeInfo.tsx`
@@ -34,34 +35,33 @@ sidebar_position: 24
 - **.onSaved()** (2 connections) — `src/ui/NodeInfo.tsx`
 - **.onIgnoreWarning()** (2 connections) — `src/ui/NodeInfo.tsx`
 - **.onMention()** (2 connections) — `src/ui/NodeInfo.tsx`
-- **onOpen()** (2 connections) — `src/ui/NodeInfo.tsx`
 - *... and 8 more nodes in this community*
 
 ## Relationships
 
+- [missing.ts](missing.ts.md) (11 shared connections)
+- [Arrow.tsx](Arrow.tsx.md) (10 shared connections)
 - [managed.ts](managed.ts.md) (8 shared connections)
-- [missing.ts](missing.ts.md) (7 shared connections)
 - [Explanation.tsx](Explanation.tsx.md) (7 shared connections)
-- [ResetPasswordForm.tsx](ResetPasswordForm.tsx.md) (6 shared connections)
+- [MissingChecklist.tsx](MissingChecklist.tsx.md) (6 shared connections)
 - [(app)/actions.ts](app-actions.ts.md) (6 shared connections)
 - [RightPanel.tsx](RightPanel.tsx.md) (6 shared connections)
-- [domain/flows.ts](domain-flows.ts.md) (5 shared connections)
-- [domain/explain.ts](domain-explain.ts.md) (5 shared connections)
-- [types.ts](types.ts.md) (5 shared connections)
-- [domain/warnings.ts](domain-warnings.ts.md) (4 shared connections)
-- [getOwnedDiagram](getOwnedDiagram.md) (4 shared connections)
-- [InfoCard.tsx](InfoCard.tsx.md) (4 shared connections)
+- [ResetPasswordForm.tsx](ResetPasswordForm.tsx.md) (5 shared connections)
+- [groupInfo.ts](groupInfo.ts.md) (5 shared connections)
+- [types.ts](types.ts.md) (4 shared connections)
+- [domain/flows.ts](domain-flows.ts.md) (4 shared connections)
+- [domain/warnings.ts](domain-warnings.ts.md) (3 shared connections)
 
 ## Source Files
 
-- `src/domain/flows.ts`
+- `src/domain/catalog.ts`
 - `src/domain/missing.ts`
 - `src/ui/NodeInfo.tsx`
 - `src/ui/explain/AskNode.tsx`
 
 ## Audit Trail
 
-- EXTRACTED: 152 (99%)
+- EXTRACTED: 157 (99%)
 - INFERRED: 2 (1%)
 - AMBIGUOUS: 0 (0%)
 

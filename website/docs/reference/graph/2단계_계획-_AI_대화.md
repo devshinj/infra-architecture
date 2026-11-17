@@ -1,6 +1,6 @@
 ---
 title: "2단계 계획: AI 대화"
-sidebar_position: 115
+sidebar_position: 116
 ---
 # 2단계 계획: AI 대화
 
@@ -19,9 +19,10 @@ sidebar_position: 115
 
 ## Relationships
 
-- [InfraSketch 설계 문서](InfraSketch_설계_문서.md) (4 shared connections)
-- [domain/apply.ts](domain-apply.ts.md) (1 shared connections)
+- [InfraSketch 설계 문서](InfraSketch_설계_문서.md) (3 shared connections)
+- [schema.ts](schema.ts.md) (1 shared connections)
 - [Canvas.tsx](Canvas.tsx.md) (1 shared connections)
+- [변경 이력과 비파괴 되돌리기](변경_이력과_비파괴_되돌리기.md) (1 shared connections)
 - [useChatTurn.ts](useChatTurn.ts.md) (1 shared connections)
 - [getOwnedDiagram](getOwnedDiagram.md) (1 shared connections)
 

@@ -1,6 +1,6 @@
 ---
 title: "SessionPicker.tsx"
-sidebar_position: 39
+sidebar_position: 50
 ---
 # SessionPicker.tsx
 
@@ -37,16 +37,15 @@ sidebar_position: 39
 
 ## Relationships
 
-- [useSessions.ts](useSessions.ts.md) (6 shared connections)
+- [FlowPanel.tsx](FlowPanel.tsx.md) (9 shared connections)
+- [useChatTurn.ts](useChatTurn.ts.md) (7 shared connections)
 - [ChatPanel.tsx](ChatPanel.tsx.md) (6 shared connections)
-- [mcpKeys.ts](mcpKeys.ts.md) (5 shared connections)
-- [ResetPasswordForm.tsx](ResetPasswordForm.tsx.md) (4 shared connections)
-- [FlowPanel.tsx](FlowPanel.tsx.md) (4 shared connections)
-- [useChatTurn.ts](useChatTurn.ts.md) (3 shared connections)
-- [Canvas.tsx](Canvas.tsx.md) (3 shared connections)
+- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (3 shared connections)
+- [ExportMenu.tsx](ExportMenu.tsx.md) (3 shared connections)
+- [ResetPasswordForm.tsx](ResetPasswordForm.tsx.md) (3 shared connections)
 - [Sidebar.tsx](Sidebar.tsx.md) (2 shared connections)
+- [Button.tsx](Button.tsx.md) (1 shared connections)
 - [RightPanel.tsx](RightPanel.tsx.md) (1 shared connections)
-- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (1 shared connections)
 - [domain/flows.ts](domain-flows.ts.md) (1 shared connections)
 
 ## Source Files

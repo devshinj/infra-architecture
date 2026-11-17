@@ -1,6 +1,6 @@
 ---
 title: "GhostLayer.tsx"
-sidebar_position: 83
+sidebar_position: 84
 ---
 # GhostLayer.tsx
 
@@ -26,10 +26,11 @@ sidebar_position: 83
 
 ## Relationships
 
-- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (4 shared connections)
+- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (3 shared connections)
 - [FlyLayer.tsx](FlyLayer.tsx.md) (2 shared connections)
 - [ResetPasswordForm.tsx](ResetPasswordForm.tsx.md) (1 shared connections)
 - [useCamera.ts](useCamera.ts.md) (1 shared connections)
+- [(app)/actions.ts](app-actions.ts.md) (1 shared connections)
 - [useRemoteChanges.ts](useRemoteChanges.ts.md) (1 shared connections)
 
 ## Source Files
