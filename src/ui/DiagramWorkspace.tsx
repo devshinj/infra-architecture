@@ -1046,6 +1046,7 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
   // 고정 위치를 풀고 자동 배치한 뒤 화면을 맞춘다(버튼·대화 재정렬 공통). 버튼은 이력 보기·비교 중에 막힌다.
   const onAutoArrange = () => {
     setPinned({});
+    setTrunk(null); // 고정 위치를 지우고 다시 배치하므로 펼친 줄기 자리가 맞지 않는다.
     setArranged((n) => n + 1);
     clearPinnedAction(diagramId).catch(fail);
   };

@@ -1673,6 +1673,15 @@ describe("줄기 펼치기", () => {
     expect(hookState.trunk.at(-1)).toBeNull();
   });
 
+  test("자동 정렬을 하면 펼침이 풀린다", () => {
+    hookState.busy = false;
+    render(ui(trunkLatest() as never));
+    open();
+    expect(hookState.trunk.at(-1)).toEqual(sel);
+    fireEvent.click(screen.getByRole("button", { name: "자동정렬" }));
+    expect(hookState.trunk.at(-1)).toBeNull();
+  });
+
   test("흐름 보기 중에는 trunk 가 Canvas 에 넘어가지 않는다", async () => {
     hookState.busy = false;
     stubFlows();
