@@ -100,6 +100,28 @@ test("auto arrange button enabled outside edit mode", () => {
   expect(screen.getByRole("button", { name: "자동 정렬" })).toBeDisabled();
 });
 
+test("「묶음 접기」는 이중화 묶음만 한 번에 접고, 모두 접혀 있으면 「묶음 펼치기」로 편다", () => {
+  const state = fx("s2");
+  const rows = Object.values(state.groups).filter((g) => g.groupKind === "redundancy_group").map((g) => g.id);
+  expect(rows.length).toBeGreaterThan(0);
+  const props = baseProps(state);
+  const { rerender } = render(<Canvas {...props} />);
+  fireEvent.click(screen.getByRole("button", { name: "묶음 접기" }));
+  const folded = vi.mocked(props.onOptionsChange).mock.calls[0]![0].collapsed;
+  expect([...folded].sort()).toEqual([...rows].sort());
+  // 모두 접힌 상태에서는 글자가 바뀌고, 누르면 이중화 묶음만 펴진다(다른 접힌 영역은 그대로).
+  const other = Object.values(state.groups).find((g) => g.groupKind !== "redundancy_group")!.id;
+  rerender(<Canvas {...props} options={{ ...props.options, collapsed: new Set([...rows, other]) }} />);
+  expect(screen.queryByRole("button", { name: "묶음 접기" })).toBeNull();
+  fireEvent.click(screen.getByRole("button", { name: "묶음 펼치기" }));
+  expect([...vi.mocked(props.onOptionsChange).mock.calls[1]![0].collapsed]).toEqual([other]);
+});
+
+test("이중화 묶음이 없는 구성도에는 「묶음 접기」가 없다", () => {
+  render(<Canvas {...baseProps(emptyState())} />);
+  expect(screen.queryByRole("button", { name: /묶음 (접기|펼치기)/ })).toBeNull();
+});
+
 test("selecting a node inside a collapsed group highlights the group and keeps its neighbours undimmed", async () => {
   const state = fx("s2");
   const props = baseProps(state);

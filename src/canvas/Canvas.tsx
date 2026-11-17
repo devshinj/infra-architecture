@@ -18,7 +18,7 @@ import { ExportMenu } from "./ExportMenu";
 import { exportDiagramImage, exportFileName, type ExportBackground, type ExportFormat } from "./exportImage";
 import type { GroupBoxData } from "./GroupBox";
 import type { NodeCardData, NodeVisualState } from "./NodeCard";
-import { displayEdgeFor, outermostCollapsedAncestor, type DisplayGraph, type DisplayOptions } from "./display";
+import { displayEdgeFor, outermostCollapsedAncestor, redundancyGroupIds, type DisplayGraph, type DisplayOptions } from "./display";
 import type { Layout, Rect } from "./layout";
 import { NodeMenu } from "./NodeMenu";
 import { nodeTypes } from "./nodeTypes";
@@ -155,6 +155,8 @@ const IconEye = () => <Icon><path d="M1.5 8s2.4-4.5 6.5-4.5S14.5 8 14.5 8 12.1 1
 const IconMove = () => <Icon><path d="M8 1.5v13M1.5 8h13M8 1.5 6.2 3.3M8 1.5l1.8 1.8M8 14.5l-1.8-1.8M8 14.5l1.8-1.8M1.5 8l1.8-1.8M1.5 8l1.8 1.8M14.5 8l-1.8-1.8M14.5 8l-1.8 1.8" /></Icon>;
 const IconArrange = () => <Icon><rect x="2" y="2" width="5" height="4" rx="1" /><rect x="9" y="2" width="5" height="4" rx="1" /><rect x="5.5" y="10" width="5" height="4" rx="1" /><path d="M4.5 6v2h7V6M8 8v2" /></Icon>;
 const IconArrow = ({ left = false }: { left?: boolean }) => <Icon>{left ? <path d="M13.5 8h-11M6.5 4 2.5 8l4 4" /> : <path d="M2.5 8h11M9.5 4l4 4-4 4" />}</Icon>;
+/** 겹친 상자 둘: 이중화 묶음을 한 상자로 접는다. */
+const IconStack = () => <Icon><rect x="2" y="5.5" width="9" height="8" rx="1.5" /><path d="M5 5.5V4a1.5 1.5 0 0 1 1.5-1.5h6A1.5 1.5 0 0 1 14 4v5a1.5 1.5 0 0 1-1.5 1.5H11" /></Icon>;
 const IconFit = () => <Icon><path d="M2 5.5V2h3.5M10.5 2H14v3.5M14 10.5V14h-3.5M5.5 14H2v-3.5" /></Icon>;
 const IconFlow = () => <Icon><path d="M1.5 8h3l2-4 3 8 2-4h3" /></Icon>;
 const IconChevron = () => <svg className="canvas__tool-chevron" width="8" height="8" viewBox="0 0 8 8" aria-hidden="true" focusable="false" {...stroke}><path d="M1.5 3 4 5.5 6.5 3" /></svg>;
@@ -229,6 +231,18 @@ export function Canvas(props: CanvasProps) {
   // 전체 보기: 구성도 전체를 담는 맞춤 요청(fitAllRequest). 자동 정렬 등 부모의 fitRequest 는 읽을 수 있는 줌 규칙을 따른다.
   const [fitTick, setFitTick] = useState(0);
   const flip = (key: ToggleKey) => onOptionsChange({ ...options, [key]: !options[key] });
+  // 「묶음 접기」: 이중화 묶음을 한 번에 접거나 편다. 펼쳐진 것이 하나라도 있으면 모두 접고, 모두 접혀 있으면 모두 편다.
+  const rowGroups = redundancyGroupIds(state);
+  const rowsAllFolded = rowGroups.length > 0 && rowGroups.every((id) => options.collapsed.has(id));
+  const rowsLabel = rowsAllFolded ? "묶음 펼치기" : "묶음 접기";
+  const toggleRows = () => {
+    const collapsed = new Set(options.collapsed);
+    for (const id of rowGroups) {
+      if (rowsAllFolded) collapsed.delete(id);
+      else collapsed.add(id);
+    }
+    onOptionsChange({ ...options, collapsed });
+  };
   // 이미지로 내보내기: 화면에 그려진 뷰포트를 복제해 구성도 전체를 찍는다(exportImage.ts).
   const rootRef = useRef<HTMLDivElement>(null);
   // 떠 있는 도구 모음이 가리는 위쪽 띠: 화면 맞춤이 맨 윗줄 노드를 그 밑에 두지 않게 카메라 위쪽 여백으로 준다.
@@ -280,6 +294,12 @@ export function Canvas(props: CanvasProps) {
       <div ref={toolbarRef} className="canvas__toolbar" role="toolbar" aria-label="캔버스 도구">
         <div className="canvas__group" role="group" aria-label="보기">
           <ViewMenu options={options} onFlip={flip} compact={compact} {...(props.viewMenuExtra ? { extra: props.viewMenuExtra } : {})} />
+          {rowGroups.length > 0 && (
+            <button type="button" className="canvas__tool" title={compact ? rowsLabel : "이중화 묶음을 한 번에 접거나 펴요"} onClick={toggleRows}>
+              <IconStack />
+              <span>{rowsLabel}</span>
+            </button>
+          )}
         </div>
         <span className="canvas__sep" role="separator" aria-orientation="vertical" />
         <div className="canvas__group" role="group" aria-label="편집">

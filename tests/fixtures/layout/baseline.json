@@ -50,22 +50,22 @@
   "s3": {
     "default": {
       "crossings": 3,
-      "sharedPx": 448,
+      "sharedPx": 483,
       "parallelPx": 0,
       "throughNode": 0,
-      "bends": 34,
-      "aspect": 1.0005479452054795,
+      "bends": 36,
+      "aspect": 1.0581753554502369,
       "zoneHeadCrossings": 3,
       "labelViolations": 0,
       "labelMissing": 0
     },
     "expanded": {
       "crossings": 3,
-      "sharedPx": 448,
+      "sharedPx": 483,
       "parallelPx": 0,
       "throughNode": 0,
-      "bends": 34,
-      "aspect": 1.0005479452054795,
+      "bends": 36,
+      "aspect": 1.0581753554502369,
       "zoneHeadCrossings": 3,
       "labelViolations": 0,
       "labelMissing": 0
@@ -73,23 +73,23 @@
   },
   "s4": {
     "default": {
-      "crossings": 26,
-      "sharedPx": 512,
+      "crossings": 21,
+      "sharedPx": 520,
       "parallelPx": 0,
       "throughNode": 0,
-      "bends": 80,
-      "aspect": 1.5892521994134898,
+      "bends": 82,
+      "aspect": 1.6107291666666668,
       "zoneHeadCrossings": 7,
       "labelViolations": 0,
       "labelMissing": 0
     },
     "expanded": {
-      "crossings": 26,
-      "sharedPx": 512,
+      "crossings": 21,
+      "sharedPx": 520,
       "parallelPx": 0,
       "throughNode": 0,
-      "bends": 80,
-      "aspect": 1.5892521994134898,
+      "bends": 82,
+      "aspect": 1.6107291666666668,
       "zoneHeadCrossings": 7,
       "labelViolations": 0,
       "labelMissing": 0
@@ -145,24 +145,24 @@
   },
   "state-50": {
     "default": {
-      "crossings": 0,
-      "sharedPx": 60,
+      "crossings": 26,
+      "sharedPx": 1817,
       "parallelPx": 0,
       "throughNode": 0,
-      "bends": 9,
-      "aspect": 2.1790067720090294,
-      "zoneHeadCrossings": 0,
+      "bends": 115,
+      "aspect": 3.562673267326733,
+      "zoneHeadCrossings": 1,
       "labelViolations": 0,
       "labelMissing": 0
     },
     "expanded": {
-      "crossings": 69,
-      "sharedPx": 7852,
+      "crossings": 56,
+      "sharedPx": 7398,
       "parallelPx": 0,
       "throughNode": 0,
-      "bends": 155,
-      "aspect": 4.076639072847682,
-      "zoneHeadCrossings": 13,
+      "bends": 147,
+      "aspect": 4.131359060402684,
+      "zoneHeadCrossings": 11,
       "labelViolations": 0,
       "labelMissing": 0
     }
@@ -170,12 +170,12 @@
   "state-100": {
     "default": {
       "crossings": 1,
-      "sharedPx": 79,
+      "sharedPx": 11908,
       "parallelPx": 0,
       "throughNode": 0,
-      "bends": 13,
-      "aspect": 2.537923250564334,
-      "zoneHeadCrossings": 0,
+      "bends": 35,
+      "aspect": 4.870175879396985,
+      "zoneHeadCrossings": 1,
       "labelViolations": 0,
       "labelMissing": 0
     },
@@ -194,11 +194,11 @@
   "state-200": {
     "default": {
       "crossings": 1,
-      "sharedPx": 79,
+      "sharedPx": 446,
       "parallelPx": 0,
       "throughNode": 0,
-      "bends": 13,
-      "aspect": 2.5446952595936794,
+      "bends": 17,
+      "aspect": 3.8448861911987855,
       "zoneHeadCrossings": 0,
       "labelViolations": 0,
       "labelMissing": 0

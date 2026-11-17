@@ -1,9 +1,11 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { expect, test } from "vitest";
 
-import { buildDisplayGraph, defaultDisplayOptions, initialCollapsed } from "@/canvas/display";
+import { buildDisplayGraph, defaultDisplayOptions, initialCollapsed, redundancyGroupIds, visibleBoxCount } from "@/canvas/display";
 import { applyCommands } from "@/domain/apply";
 import type { Command } from "@/domain/commands";
-import { emptyState } from "@/domain/types";
+import { emptyState, type DiagramState } from "@/domain/types";
 import { fx, synth } from "../fixtures/spike";
 
 test("bus simplify turns pub/sub pairs into one service→bus edge", () => {
@@ -90,7 +92,7 @@ test("does not mutate input state", () => {
   expect(JSON.stringify(s2)).toBe(before);
 });
 
-test("> 40 nodes starts with non-root groups collapsed", () => {
+test("> 40 nodes starts with the deepest non-root group collapsed", () => {
   const big = synth(45);
   expect(initialCollapsed(big).size).toBeGreaterThan(0);
   expect([...initialCollapsed(big)]).toEqual(["sub"]);
@@ -194,4 +196,52 @@ test("edges touching a NAT gateway are egress lines, including a merged group ed
   const egress = g.edges.filter((e) => e.egress).map((e) => `${e.from}>${e.to}`).sort();
   expect(egress).toEqual(["asg>nat", "nat>pg"]);
   expect(g.edges.find((e) => e.to === "db")?.egress).toBeUndefined();
+});
+
+// 처음 접기(배치 가독성 4단계): 노드가 40개를 넘으면 가장 깊은 영역부터 접어 보이는 상자를 40개 이하로 만든다.
+const layoutFixture = (name: string): DiagramState =>
+  JSON.parse(readFileSync(join(process.cwd(), `tests/fixtures/layout/${name}.json`), "utf8")) as DiagramState;
+
+test.each([
+  ["state-50", 40],
+  ["state-100", 32],
+  ["state-200", 21],
+] as const)("%s 는 처음에 상자 %i개로 열리고 맨 바깥 영역은 펼쳐 있다", (name, boxes) => {
+  const st = layoutFixture(name);
+  const collapsed = initialCollapsed(st);
+  expect(visibleBoxCount(st, collapsed)).toBe(boxes);
+  for (const id of collapsed) expect(st.groups[id].parent).not.toBeNull();
+  // 같은 입력에는 같은 결과.
+  expect([...initialCollapsed(st)]).toEqual([...collapsed]);
+});
+
+test("state-50 은 이중화 묶음만 접히고 망·서브넷은 펼쳐 있다", () => {
+  const st = layoutFixture("state-50");
+  const kinds = new Set([...initialCollapsed(st)].map((id) => st.groups[id].groupKind));
+  expect([...kinds]).toEqual(["redundancy_group"]);
+});
+
+test("40개 이하면 접지 않고, 노드가 하나뿐인 영역은 접지 않는다", () => {
+  expect(initialCollapsed(layoutFixture("state-25")).size).toBe(0);
+  // 맨 바깥 영역 하나 안에: 노드 하나짜리 영역 20개 + 노드 30개짜리 영역 하나.
+  const cmds: Command[] = [{ op: "add_group", id: "top", group_kind: "vpc", label: "VPC", parent: null }, { op: "add_group", id: "big", group_kind: "subnet_private", label: "큰 구역", parent: "top" }];
+  for (let i = 0; i < 20; i++) cmds.push({ op: "add_group", id: `one${i}`, group_kind: "subnet_private", label: `구역 ${i}`, parent: "top" }, { op: "add_node", id: `a${i}`, kind: "app_server", label: `A${i}`, parent: `one${i}` });
+  for (let i = 0; i < 30; i++) cmds.push({ op: "add_node", id: `b${i}`, kind: "app_server", label: `B${i}`, parent: "big" });
+  const st = applyCommands(emptyState(), cmds).state;
+  expect([...initialCollapsed(st)]).toEqual(["big"]);
+  expect(visibleBoxCount(st, initialCollapsed(st))).toBe(21);
+});
+
+test("영역 없이 노드만 많으면 접을 것이 없어 그대로 둔다", () => {
+  const cmds: Command[] = Array.from({ length: 45 }, (_, i) => ({ op: "add_node", id: `n${i}`, kind: "app_server", label: `N${i}`, parent: null }) as Command);
+  const st = applyCommands(emptyState(), cmds).state;
+  expect(initialCollapsed(st).size).toBe(0);
+  expect(visibleBoxCount(st, new Set())).toBe(45);
+});
+
+test("redundancyGroupIds 는 이중화 묶음만 고른다", () => {
+  const st = layoutFixture("state-50");
+  const ids = redundancyGroupIds(st);
+  expect(ids).toHaveLength(10);
+  expect(ids.every((id) => st.groups[id].groupKind === "redundancy_group")).toBe(true);
 });

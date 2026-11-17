@@ -1,6 +1,6 @@
 import { beforeEach, expect, test, vi } from "vitest";
 
-const requestPasswordReset = vi.hoisted(() => vi.fn(async (..._args: unknown[]): Promise<"ok" | "limited"> => "ok"));
+const requestPasswordReset = vi.hoisted(() => vi.fn<(...args: unknown[]) => Promise<"ok" | "limited">>(async () => "ok"));
 vi.mock("@/server/auth/reset", () => ({ requestPasswordReset, resetPassword: vi.fn() }));
 vi.mock("@/server/auth/signup", () => ({ signup: vi.fn() }));
 vi.mock("@/auth", () => ({ signIn: vi.fn(), LoginRateLimited: class LoginRateLimited extends Error {} }));
