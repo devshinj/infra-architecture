@@ -37,6 +37,13 @@ import { fx } from "../fixtures/spike";
 // zoneHeadCrossings(펼친 영역 이름 알약 자리를 지나는 선)는 기하로만 잰다: 사용자 결정으로 알약을 연결선 위 층(ZoneNameLayer)에 그려
 // 선이 알약 뒤로 지나가므로, 배치는 이 자리를 피하지 않는다.
 // 영역 테두리 여유 8px(최종 검토, separate.ts ZONE_AIR; 노드 상자는 4px 그대로)로 다시 잼: baseline.json 의 모든 값이 그대로다(바뀐 값 없음).
+// 배치 가독성 3·4단계(2026-11-17, 설계 2026-11-17-layout-stage34-fold-and-crossings-design.md)로 다시 잼(사용자 승인):
+//  - 처음 접기가 "깊은 영역부터, 보이는 상자 40개 이하"로 바뀌어 state-50·100·200 의 기본 화면이 달라졌다(상자 9→40, 11→32,
+//    11→21). state-50 기본은 교차 0→26·꺾임 9→115, state-100 기본은 꺾임 13→35, state-200 기본은 13→17. 처음부터 더 많이 보여 주는 대가다.
+//  - 영역을 넘나드는 훑기(hierarchicalSweepiness 1): s4 교차 26→21, 대신 꺾임 80→82.
+//  - 보이는 상자 60개 이하에서만 탐색 늘리기(thoroughness 50): state-50 펼친 화면 교차 69→56·꺾임 155→147, 대신 s3 꺾임 34→36.
+//    상자가 더 많은 화면(state-100·200 펼친 화면)은 탐색을 늘리면 16px 미만 평행이 생겨(48px·428px) 기본 탐색으로 두었고 값이 그대로다.
+//  - 평행 0·노드 통과 0·이름 겹침 0·빠진 이름 0 은 모든 화면에서 그대로다.
 const baseline = JSON.parse(readFileSync(join(process.cwd(), "tests/fixtures/layout/baseline.json"), "utf8")) as Record<
   string,
   { default: LayoutMetrics; expanded: LayoutMetrics }

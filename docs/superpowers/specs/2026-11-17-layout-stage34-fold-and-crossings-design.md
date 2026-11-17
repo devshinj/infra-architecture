@@ -1,6 +1,6 @@
 # 배치 가독성 3·4단계 — 처음 접기, 묶음 접기 단추, 엇갈림 줄이기
 
-날짜: 2026-11-17 · 상태: 초안 — 사용자 승인 전
+날짜: 2026-11-17 · 상태: 승인됨(2026-11-17), 구현 중 3번 설정 범위를 좁힘
 
 ## 왜 하는가
 
@@ -105,10 +105,12 @@ s4(노드 33개, 40개 이하라 다 펼쳐 연다)에서 이중화 묶음 5개�
 
 ### 3. 배치 엔진 탐색 강화
 
-`layout.ts` 의 `BASE_OPTIONS` 에 두 줄을 더한다.
+`layout.ts` 에 두 설정을 더한다.
 
-- `"elk.layered.thoroughness": "50"`
-- `"elk.layered.crossingMinimization.hierarchicalSweepiness": "1"`
+- `"elk.layered.crossingMinimization.hierarchicalSweepiness": "1"` — 언제나.
+- `"elk.layered.thoroughness": "50"` — 보이는 상자(노드 + 접힌 영역)가 60개 이하인 화면에서만(`THOROUGH_MAX_BOXES`).
+
+**구현 중 바뀐 점(2026-11-17, 사용자 선택).** thoroughness 를 모든 화면에 넣으면 state-100·200 을 모두 펼친 화면에서 16px 미만으로 나란한 선이 48px·428px 생겼다(교차는 124 → 104, 611 → 487). "평행 0 을 지킨다"를 어기므로 멈추고 물었고, 사용자가 "보이는 상자 60개 이하일 때만 강화"를 골랐다. 그래서 100개 이상을 모두 펼친 화면은 값이 지금과 같고, 목표 3 의 "모두 펼친 큰 구성도 15~20% 감소"는 state-50(69 → 56)에만 해당한다. 큰 화면의 배치 시간도 늘지 않는다.
 
 다른 설정은 재 봤지만 넣지 않는다: greedySwitch 양방향(변화 없음), sweepiness −1(교차가 크게 늚), 층 나누기 전략 바꾸기(COFFMAN_GRAHAM·MIN_WIDTH·LONGEST_PATH: 구성도마다 좋고 나쁨이 갈림), 노드 놓기 BRANDES_KOEPF(state-25 교차 2 → 10), considerModelOrder(뒤처리가 깨짐).
 

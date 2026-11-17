@@ -82,7 +82,16 @@ const BASE_OPTIONS: Record<string, string> = {
   "elk.layered.nodePlacement.strategy": "NETWORK_SIMPLEX",
   // Keep edges that leave a group apart; merged they share one line and you cannot tell which goes where.
   "elk.layered.mergeHierarchyEdges": "false",
+  // 교차 줄이기(2026-11-17 측정): 영역을 넘나드는 훑기를 켠다. s4 교차 26→21(꺾임 +2, 사용자 승인).
+  "elk.layered.crossingMinimization.hierarchicalSweepiness": "1",
 };
+/**
+ * 보이는 상자(노드 + 접힌 영역)가 이 수 이하일 때만 ELK 탐색을 늘린다(THOROUGH). state-50 접은 화면 교차 39→26, 모두 펼친 화면
+ * 69→56, 배치 시간 약 1.5배, s3 꺾임 +2(사용자 승인). 상자가 더 많은 화면(100개 이상을 모두 펼침)은 탐색을 늘리면 교차는
+ * 줄지만 16px 미만으로 나란한 선이 생겨(state-100 48px, state-200 428px) 기본 탐색으로 둔다(사용자 선택).
+ */
+export const THOROUGH_MAX_BOXES = 60;
+const THOROUGH: Record<string, string> = { "elk.layered.thoroughness": "50" };
 // 나란히 놓는 영역(이중화 묶음·쿠버네티스 클러스터)의 자식 노드는 이름의 숫자 순서(#1, #2, …)로 놓는다.
 const ROW_GROUP_KINDS: ReadonlySet<string> = new Set(["redundancy_group", "k8s_cluster"]);
 
@@ -243,6 +252,7 @@ const touches = (a: Rect, b: Rect): boolean => a.x <= b.x + b.width && b.x <= a.
 export async function layoutDiagram(g: DisplayGraph, pinned: Record<string, { x: number; y: number }>, opts: { reorder?: boolean } = {}): Promise<Layout> {
   const groups = Object.values(g.groups);
   const nodes = Object.values(g.nodes);
+  const effort = nodes.length + groups.filter((x) => x.collapsed).length <= THOROUGH_MAX_BOXES ? THOROUGH : {};
   const parentOf = (id: string): string | null => {
     const p = (g.nodes[id] ?? g.groups[id])?.parent ?? null;
     return p !== null && g.groups[p] ? p : null;
@@ -300,7 +310,7 @@ export async function layoutDiagram(g: DisplayGraph, pinned: Record<string, { x:
     const inRun = (id: string) => tops.has(topOf(id));
     const containerOf = (id: string): string => parentOf(id) ?? ROOT;
     const elkById = new Map<string, ElkNode>();
-    const root: ElkNode = { id: ROOT, layoutOptions: { ...BASE_OPTIONS, "elk.direction": "DOWN" }, children: [], edges: [] };
+    const root: ElkNode = { id: ROOT, layoutOptions: { ...BASE_OPTIONS, ...effort, "elk.direction": "DOWN" }, children: [], edges: [] };
     elkById.set(ROOT, root);
     // Parents before children; input order otherwise (stable model order for ELK).
     for (const grp of groups.filter((x) => inRun(x.id)).sort((a, b) => depth(a.id) - depth(b.id))) {
@@ -312,6 +322,7 @@ export async function layoutDiagram(g: DisplayGraph, pinned: Record<string, { x:
             id: grp.id,
             layoutOptions: {
               ...BASE_OPTIONS,
+              ...effort,
               "elk.padding": GROUP_PADDING,
               ...(rowSpacing.has(grp.id) ? { "elk.spacing.nodeNode": String(rowSpacing.get(grp.id)) } : {}),
             },

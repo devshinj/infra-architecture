@@ -52,14 +52,48 @@ export function displayEdgeFor(edges: DisplayEdge[], id: string): DisplayEdge | 
 const NODE_THRESHOLD = 40;
 const BUS_LABEL = "이벤트";
 
+/**
+ * 처음 열 때 접어 둘 영역. 노드가 NODE_THRESHOLD 이하면 접지 않는다. 넘으면 가장 깊은 영역부터(같은 깊이면 안에 든 노드가
+ * 많은 것부터, 그래도 같으면 state.groups 순서) 하나씩 접고, 보이는 상자(보이는 노드 + 접힌 영역)가 NODE_THRESHOLD 이하가
+ * 되면 멈춘다. 맨 바깥 영역과 노드가 하나뿐인 영역은 접지 않는다(접어도 상자가 줄지 않는다).
+ */
 export function initialCollapsed(state: DiagramState): Set<string> {
-  if (Object.keys(state.nodes).length <= NODE_THRESHOLD) return new Set();
-  return new Set(
-    Object.values(state.groups)
-      .filter((g) => g.parent !== null)
-      .map((g) => g.id),
-  );
+  const collapsed = new Set<string>();
+  if (Object.keys(state.nodes).length <= NODE_THRESHOLD) return collapsed;
+  const ancestors = (parent: string | null): string[] => {
+    const out: string[] = [];
+    for (let p = parent; p !== null && state.groups[p]; p = state.groups[p].parent) out.push(p);
+    return out;
+  };
+  const inside = new Map<string, number>(); // 영역 id → 안에 든 노드 수(깊이 무관)
+  for (const n of Object.values(state.nodes)) for (const g of ancestors(n.parent)) inside.set(g, (inside.get(g) ?? 0) + 1);
+  const depth = (id: string): number => ancestors(state.groups[id].parent).length;
+  const candidates = Object.values(state.groups)
+    .map((g, i) => ({ id: g.id, i, depth: depth(g.id), nodes: inside.get(g.id) ?? 0 }))
+    .filter((c) => c.depth > 0 && c.nodes >= 2)
+    .sort((a, b) => b.depth - a.depth || b.nodes - a.nodes || a.i - b.i);
+  for (const c of candidates) {
+    if (visibleBoxCount(state, collapsed) <= NODE_THRESHOLD) break;
+    collapsed.add(c.id);
+  }
+  return collapsed;
 }
+
+/** 보이는 상자 수: 접힌 조상이 없는 노드와, 접혔고 접힌 조상이 없는 영역. */
+export function visibleBoxCount(state: DiagramState, collapsed: Set<string>): number {
+  const hidden = (parent: string | null): boolean => {
+    for (let p = parent; p !== null && state.groups[p]; p = state.groups[p].parent) if (collapsed.has(p)) return true;
+    return false;
+  };
+  let n = 0;
+  for (const x of Object.values(state.nodes)) if (!hidden(x.parent)) n++;
+  for (const g of Object.values(state.groups)) if (collapsed.has(g.id) && !hidden(g.parent)) n++;
+  return n;
+}
+
+/** 이중화 묶음 id 전부(「묶음 접기」 단추의 대상). */
+export const redundancyGroupIds = (state: DiagramState): string[] =>
+  Object.values(state.groups).filter((g) => g.groupKind === "redundancy_group").map((g) => g.id);
 
 export const defaultDisplayOptions = (state: DiagramState): DisplayOptions => ({
   hideAux: true,
