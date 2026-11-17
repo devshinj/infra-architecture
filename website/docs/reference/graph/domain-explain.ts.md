@@ -1,18 +1,16 @@
 ---
 title: "domain/explain.ts"
-sidebar_position: 18
+sidebar_position: 55
 ---
 # domain/explain.ts
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 35 nodes · cohesion 0.10
+> 22 nodes · cohesion 0.15
 
 ## Key Concepts
 
-- **domain/explain.ts** (39 connections) — `src/domain/explain.ts`
 - **useExplanations.ts** (28 connections) — `src/ui/explain/useExplanations.ts`
-- **signatureOf()** (14 connections) — `src/domain/explain.ts`
 - **normalizeTerm()** (13 connections) — `src/domain/explain.ts`
 - **useExplanations()** (12 connections) — `src/ui/explain/useExplanations.ts`
 - **targetTermCandidates()** (8 connections) — `src/domain/explain.ts`
@@ -24,33 +22,31 @@ sidebar_position: 18
 - **queueOf()** (5 connections) — `src/ui/explain/useExplanations.ts`
 - **ExplainTargetKind** (4 connections) — `src/domain/explain.ts`
 - **addAiTerm()** (4 connections) — `src/server/glossary.ts`
-- **EdgeExplanation** (3 connections) — `src/domain/explain.ts`
-- **GroupExplanation** (3 connections) — `src/domain/explain.ts`
 - **groupTermCandidates()** (3 connections) — `src/domain/explain.ts`
-- **LIMITS** (3 connections) — `src/domain/explain.ts`
-- **NodeExplanation** (3 connections) — `src/domain/explain.ts`
 - **TermEntry** (3 connections) — `src/domain/explain.ts`
 - **Entry** (3 connections) — `src/ui/explain/useExplanations.ts`
 - **keyOf()** (3 connections) — `src/ui/explain/useExplanations.ts`
-- **attrText()** (2 connections) — `src/domain/explain.ts`
-- **endpointOf()** (2 connections) — `src/domain/explain.ts`
-- **fnv1a()** (2 connections) — `src/domain/explain.ts`
-- *... and 10 more nodes in this community*
+- **Job** (2 connections) — `src/ui/explain/useExplanations.ts`
+- **omit()** (2 connections) — `src/ui/explain/useExplanations.ts`
+- **Request** (2 connections) — `src/ui/explain/useExplanations.ts`
+- **TargetKind** (2 connections) — `src/ui/explain/useExplanations.ts`
+- **UseExplanationsInput** (2 connections) — `src/ui/explain/useExplanations.ts`
+- **ExplanationView** (1 connections) — `src/ui/explain/useExplanations.ts`
 
 ## Relationships
 
-- [설명 생성과 품질 검사](설명_생성과_품질_검사.md) (13 shared connections)
-- [Explanation.tsx](Explanation.tsx.md) (13 shared connections)
-- [glossary.ts](glossary.ts.md) (7 shared connections)
-- [groupInfo.ts](groupInfo.ts.md) (5 shared connections)
-- [types.ts](types.ts.md) (4 shared connections)
-- [(app)/actions.ts](app-actions.ts.md) (4 shared connections)
-- [prompt.ts](prompt.ts.md) (4 shared connections)
-- [DiagramState](DiagramState.md) (3 shared connections)
-- [schema.ts](schema.ts.md) (3 shared connections)
-- [index.ts](index.ts.md) (3 shared connections)
+- [domain/explain.ts](domain-explain.ts.md) (12 shared connections)
+- [Explanation.tsx](Explanation.tsx.md) (9 shared connections)
+- [설명 생성과 품질 검사](설명_생성과_품질_검사.md) (5 shared connections)
+- [glossary.ts](glossary.ts.md) (5 shared connections)
+- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (4 shared connections)
 - [GlossaryPage.tsx](GlossaryPage.tsx.md) (3 shared connections)
-- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (3 shared connections)
+- [ask.ts](ask.ts.md) (2 shared connections)
+- [server/network.ts](server-network.ts.md) (2 shared connections)
+- [schema.ts](schema.ts.md) (2 shared connections)
+- [prompt.ts](prompt.ts.md) (2 shared connections)
+- [(app)/actions.ts](app-actions.ts.md) (2 shared connections)
+- [getOwnedDiagram](getOwnedDiagram.md) (2 shared connections)
 
 ## Source Files
 
@@ -61,8 +57,8 @@ sidebar_position: 18
 
 ## Audit Trail
 
-- EXTRACTED: 130 (93%)
-- INFERRED: 10 (7%)
+- EXTRACTED: 83 (91%)
+- INFERRED: 8 (9%)
 - AMBIGUOUS: 0 (0%)
 
 ---

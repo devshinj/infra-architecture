@@ -1,6 +1,6 @@
 ---
 title: "glossary.ts"
-sidebar_position: 69
+sidebar_position: 62
 ---
 # glossary.ts
 
@@ -32,17 +32,17 @@ sidebar_position: 69
 ## Relationships
 
 - [domain/explain.ts](domain-explain.ts.md) (7 shared connections)
-- [schema.ts](schema.ts.md) (5 shared connections)
 - [GlossaryPage.tsx](GlossaryPage.tsx.md) (5 shared connections)
+- [schema.ts](schema.ts.md) (4 shared connections)
 - [설명 생성과 품질 검사](설명_생성과_품질_검사.md) (4 shared connections)
 - [prompt.ts](prompt.ts.md) (3 shared connections)
-- [pipeline.ts](pipeline.ts.md) (3 shared connections)
+- [ask.ts](ask.ts.md) (2 shared connections)
 - [networkRules.ts](networkRules.ts.md) (2 shared connections)
 - [(app)/actions.ts](app-actions.ts.md) (2 shared connections)
-- [NotFoundError](NotFoundError.md) (1 shared connections)
+- [read.ts](read.ts.md) (2 shared connections)
 - [server/network.ts](server-network.ts.md) (1 shared connections)
-- [projects.ts](projects.ts.md) (1 shared connections)
-- [read.ts](read.ts.md) (1 shared connections)
+- [pipeline.ts](pipeline.ts.md) (1 shared connections)
+- [reset.ts](reset.ts.md) (1 shared connections)
 
 ## Source Files
 

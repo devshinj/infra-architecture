@@ -1,6 +1,6 @@
 ---
 title: "EdgeLayer()"
-sidebar_position: 131
+sidebar_position: 130
 sidebar_label: "핵심 노드: EdgeLayer()"
 ---
 # EdgeLayer()

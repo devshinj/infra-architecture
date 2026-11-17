@@ -1,6 +1,6 @@
 ---
 title: "Explanation.tsx"
-sidebar_position: 28
+sidebar_position: 31
 ---
 # Explanation.tsx
 
@@ -41,12 +41,12 @@ sidebar_position: 28
 
 - [domain/explain.ts](domain-explain.ts.md) (13 shared connections)
 - [NodeInfo.tsx](NodeInfo.tsx.md) (7 shared connections)
-- [ResetPasswordForm.tsx](ResetPasswordForm.tsx.md) (5 shared connections)
-- [GlossaryPage.tsx](GlossaryPage.tsx.md) (5 shared connections)
-- [PageSkeleton.tsx](PageSkeleton.tsx.md) (3 shared connections)
+- [ZoneTypePicker.tsx](ZoneTypePicker.tsx.md) (5 shared connections)
+- [NetworkKnowledgePage.tsx](NetworkKnowledgePage.tsx.md) (3 shared connections)
+- [Shell.tsx](Shell.tsx.md) (3 shared connections)
+- [ResetPasswordForm.tsx](ResetPasswordForm.tsx.md) (3 shared connections)
 - [RightPanel.tsx](RightPanel.tsx.md) (3 shared connections)
 - [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (2 shared connections)
-- [Button.tsx](Button.tsx.md) (1 shared connections)
 
 ## Source Files
 

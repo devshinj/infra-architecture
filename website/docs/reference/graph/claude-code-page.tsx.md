@@ -1,6 +1,6 @@
 ---
 title: "claude-code/page.tsx"
-sidebar_position: 120
+sidebar_position: 119
 ---
 # claude-code/page.tsx
 

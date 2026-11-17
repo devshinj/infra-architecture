@@ -1,67 +1,75 @@
 ---
 title: "Canvas.tsx"
-sidebar_position: 23
+sidebar_position: 2
 ---
 # Canvas.tsx
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 32 nodes · cohesion 0.10
+> 74 nodes · cohesion 0.05
 
 ## Key Concepts
 
-- **Canvas.tsx** (117 connections) — `src/canvas/Canvas.tsx`
-- **Canvas()** (21 connections) — `src/canvas/Canvas.tsx`
+- **Canvas.tsx** (119 connections) — `src/canvas/Canvas.tsx`
+- **Flow()** (41 connections) — `src/canvas/Canvas.tsx`
+- **Canvas()** (23 connections) — `src/canvas/Canvas.tsx`
+- **CanvasProps** (19 connections) — `src/canvas/Canvas.tsx`
+- **roving.ts** (16 connections) — `src/canvas/roving.ts`
+- **emphasis.ts** (10 connections) — `src/canvas/emphasis.ts`
+- **TrunkSelection** (9 connections) — `src/canvas/trunk.ts`
+- **Icon()** (8 connections) — `src/canvas/Canvas.tsx`
+- **usePopover()** (8 connections) — `src/canvas/usePopover.ts`
+- **Task 5: 화면 — 경고 배지, 설명 패널 "주의할 점", 대화 줄** (7 connections) — `docs/superpowers/plans/2026-10-30-infrasketch-phase3b-warnings.md`
 - **ariaLabels.ts** (7 connections) — `src/canvas/ariaLabels.ts`
-- **Icon()** (7 connections) — `src/canvas/Canvas.tsx`
 - **ViewMenu()** (6 connections) — `src/canvas/Canvas.tsx`
+- **displayEdgeFor()** (6 connections) — `src/canvas/display.ts`
+- **usePopover.ts** (6 connections) — `src/canvas/usePopover.ts`
+- **litZones()** (5 connections) — `src/canvas/emphasis.ts`
+- **Task 3: 강조 토큰과 노드·영역 흐림** (4 connections) — `docs/superpowers/plans/2026-11-04-layout-harmony-stage1.md`
 - **canvasAriaLabels()** (4 connections) — `src/canvas/ariaLabels.ts`
+- **.onTrunkChange()** (4 connections) — `src/canvas/Canvas.tsx`
 - **OffscreenHints()** (4 connections) — `src/canvas/Canvas.tsx`
 - **outermostCollapsedAncestor()** (4 connections) — `src/canvas/display.ts`
-- **zoneDescription()** (3 connections) — `src/canvas/ariaLabels.ts`
-- **drawnId()** (3 connections) — `src/canvas/Canvas.tsx`
-- **IconArrange()** (3 connections) — `src/canvas/Canvas.tsx`
-- **IconArrow()** (3 connections) — `src/canvas/Canvas.tsx`
-- **IconEye()** (3 connections) — `src/canvas/Canvas.tsx`
-- **IconFit()** (3 connections) — `src/canvas/Canvas.tsx`
-- **IconFlow()** (3 connections) — `src/canvas/Canvas.tsx`
-- **IconMove()** (3 connections) — `src/canvas/Canvas.tsx`
-- **CanvasOptions** (2 connections) — `src/canvas/Canvas.tsx`
-- **.onEditModeChange()** (2 connections) — `src/canvas/Canvas.tsx`
-- **.onMotionChange()** (2 connections) — `src/canvas/Canvas.tsx`
-- **DiffMarks** (2 connections) — `src/canvas/Canvas.tsx`
-- **IconChevron()** (2 connections) — `src/canvas/Canvas.tsx`
-- **isTouch()** (2 connections) — `src/canvas/Canvas.tsx`
-- **TurnMarks** (2 connections) — `src/canvas/Canvas.tsx`
-- **DIRECTION** (1 connections) — `src/canvas/ariaLabels.ts`
-- **FAR_ZOOM** (1 connections) — `src/canvas/Canvas.tsx`
-- *... and 7 more nodes in this community*
+- **Emphasis** (4 connections) — `src/canvas/emphasis.ts`
+- **flowEmphasis()** (4 connections) — `src/canvas/emphasis.ts`
+- **step()** (4 connections) — `src/canvas/roving.ts`
+- **useHoverEmphasis()** (4 connections) — `src/canvas/useHoverEmphasis.ts`
+- **warningsByNode()** (4 connections) — `src/domain/warnings.ts`
+- *... and 49 more nodes in this community*
 
 ## Relationships
 
-- [Flow](Flow.md) (23 shared connections)
-- [ExportMenu.tsx](ExportMenu.tsx.md) (11 shared connections)
-- [catalog.ts](catalog.ts.md) (10 shared connections)
-- [layout.ts](layout.ts.md) (8 shared connections)
-- [Rect](Rect.md) (6 shared connections)
-- [roving.ts](roving.ts.md) (6 shared connections)
-- [missing.ts](missing.ts.md) (5 shared connections)
+- [EdgeLayer.tsx](EdgeLayer.tsx.md) (24 shared connections)
+- [useCamera.ts](useCamera.ts.md) (16 shared connections)
+- [catalog.ts](catalog.ts.md) (12 shared connections)
+- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (9 shared connections)
+- [layoutMetrics.ts](layoutMetrics.ts.md) (9 shared connections)
+- [ExportMenu.tsx](ExportMenu.tsx.md) (9 shared connections)
+- [types.ts](types.ts.md) (7 shared connections)
+- [domain/warnings.ts](domain-warnings.ts.md) (6 shared connections)
+- [EdgePanels.tsx](EdgePanels.tsx.md) (5 shared connections)
 - [exportImage.ts](exportImage.ts.md) (5 shared connections)
-- [types.ts](types.ts.md) (5 shared connections)
-- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (5 shared connections)
-- [EdgePanels.tsx](EdgePanels.tsx.md) (4 shared connections)
-- [EdgeLayerProps](EdgeLayerProps.md) (4 shared connections)
+- [useDiagramView.ts](useDiagramView.ts.md) (5 shared connections)
+- [networkRules.ts](networkRules.ts.md) (3 shared connections)
 
 ## Source Files
 
+- `docs/superpowers/plans/2026-10-30-infrasketch-phase3b-warnings.md`
+- `docs/superpowers/plans/2026-11-04-layout-harmony-stage1.md`
 - `src/canvas/Canvas.tsx`
 - `src/canvas/ariaLabels.ts`
 - `src/canvas/display.ts`
+- `src/canvas/emphasis.ts`
+- `src/canvas/roving.ts`
+- `src/canvas/trunk.ts`
+- `src/canvas/useHoverEmphasis.ts`
+- `src/canvas/usePopover.ts`
+- `src/domain/warnings.ts`
 
 ## Audit Trail
 
-- EXTRACTED: 165 (98%)
-- INFERRED: 3 (2%)
+- EXTRACTED: 274 (94%)
+- INFERRED: 16 (6%)
 - AMBIGUOUS: 0 (0%)
 
 ---

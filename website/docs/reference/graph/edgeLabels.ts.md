@@ -1,12 +1,12 @@
 ---
 title: "edgeLabels.ts"
-sidebar_position: 6
+sidebar_position: 12
 ---
 # edgeLabels.ts
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 46 nodes · cohesion 0.08
+> 42 nodes · cohesion 0.09
 
 ## Key Concepts
 
@@ -19,7 +19,6 @@ sidebar_position: 6
 - **tagSpots()** (8 connections) — `src/canvas/edgeLabels.ts`
 - **boundaryDotAt()** (7 connections) — `src/canvas/edgeLabels.ts`
 - **tooClose()** (7 connections) — `src/canvas/edgeLabels.ts`
-- **연결선 경로와 가독성 Implementation Plan** (6 connections) — `docs/superpowers/plans/2026-11-16-edge-routing-readability.md`
 - **stepLabels()** (6 connections) — `src/canvas/edgeLabels.ts`
 - **Task 7: 캔버스 흐름 강조·단계 글자·경계 표시** (5 connections) — `docs/superpowers/plans/2026-11-05-flows-and-network-boundaries.md`
 - **Global Constraints** (5 connections) — `docs/superpowers/plans/2026-11-16-edge-routing-readability.md`
@@ -35,19 +34,21 @@ sidebar_position: 6
 - **totalLength()** (3 connections) — `src/canvas/edgeLabels.ts`
 - **commonPrefix()** (2 connections) — `src/canvas/edgeLabels.ts`
 - **fromSelected()** (2 connections) — `src/canvas/edgeLabels.ts`
-- *... and 21 more nodes in this community*
+- **rows()** (2 connections) — `src/canvas/edgeLabels.ts`
+- *... and 17 more nodes in this community*
 
 ## Relationships
 
-- [EdgeLayer.tsx](EdgeLayer.tsx.md) (21 shared connections)
-- [restingLabels.ts](restingLabels.ts.md) (11 shared connections)
-- [layout.ts](layout.ts.md) (7 shared connections)
-- [layoutMetrics.ts](layoutMetrics.ts.md) (5 shared connections)
+- [EdgeLayer.tsx](EdgeLayer.tsx.md) (16 shared connections)
+- [restingLabels.ts](restingLabels.ts.md) (15 shared connections)
+- [layout.ts](layout.ts.md) (8 shared connections)
 - [domain/flows.ts](domain-flows.ts.md) (3 shared connections)
-- [exportImage.ts](exportImage.ts.md) (2 shared connections)
-- [연결선 경로와 가독성 — 줄기 펼치기·겹치지 않는 이름·선 간격](연결선_경로와_가독성_—_줄기_펼치기·겹치지_않는_이름·선_간격.md) (2 shared connections)
-- [(app)/actions.ts](app-actions.ts.md) (1 shared connections)
-- [Rect](Rect.md) (1 shared connections)
+- [textWidth](textWidth.md) (3 shared connections)
+- [useDiagramView.ts](useDiagramView.ts.md) (1 shared connections)
+- [exportImage.ts](exportImage.ts.md) (1 shared connections)
+- [연결선 경로와 가독성 — 줄기 펼치기·겹치지 않는 이름·선 간격](연결선_경로와_가독성_—_줄기_펼치기·겹치지_않는_이름·선_간격.md) (1 shared connections)
+- [useCamera.ts](useCamera.ts.md) (1 shared connections)
+- [layoutMetrics.ts](layoutMetrics.ts.md) (1 shared connections)
 
 ## Source Files
 
@@ -58,8 +59,8 @@ sidebar_position: 6
 
 ## Audit Trail
 
-- EXTRACTED: 107 (78%)
-- INFERRED: 30 (22%)
+- EXTRACTED: 103 (79%)
+- INFERRED: 27 (21%)
 - AMBIGUOUS: 0 (0%)
 
 ---

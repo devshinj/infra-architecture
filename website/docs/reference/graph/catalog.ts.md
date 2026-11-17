@@ -1,6 +1,6 @@
 ---
 title: "catalog.ts"
-sidebar_position: 57
+sidebar_position: 53
 ---
 # catalog.ts
 
@@ -35,13 +35,14 @@ sidebar_position: 57
 
 ## Relationships
 
-- [Canvas.tsx](Canvas.tsx.md) (10 shared connections)
-- [layout.ts](layout.ts.md) (7 shared connections)
-- [types.ts](types.ts.md) (6 shared connections)
+- [Canvas.tsx](Canvas.tsx.md) (12 shared connections)
+- [layout.ts](layout.ts.md) (6 shared connections)
 - [EdgePanels.tsx](EdgePanels.tsx.md) (4 shared connections)
-- [Flow](Flow.md) (2 shared connections)
-- [EdgeLayer.tsx](EdgeLayer.tsx.md) (1 shared connections)
-- [mcp/apply.ts](mcp-apply.ts.md) (1 shared connections)
+- [segments.ts](segments.ts.md) (4 shared connections)
+- [types.ts](types.ts.md) (2 shared connections)
+- [textWidth](textWidth.md) (1 shared connections)
+- [layoutMetrics.ts](layoutMetrics.ts.md) (1 shared connections)
+- [commands.ts](commands.ts.md) (1 shared connections)
 - [drawing/rules.ts](drawing-rules.ts.md) (1 shared connections)
 - [NodeInfo.tsx](NodeInfo.tsx.md) (1 shared connections)
 - [domain/assumptions.ts](domain-assumptions.ts.md) (1 shared connections)

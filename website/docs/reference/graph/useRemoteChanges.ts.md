@@ -26,11 +26,11 @@ sidebar_position: 86
 
 ## Relationships
 
-- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (4 shared connections)
-- [DiagramState](DiagramState.md) (2 shared connections)
-- [GhostLayer.tsx](GhostLayer.tsx.md) (1 shared connections)
+- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (5 shared connections)
+- [read.ts](read.ts.md) (1 shared connections)
+- [FlyLayer.tsx](FlyLayer.tsx.md) (1 shared connections)
+- [Command](Command.md) (1 shared connections)
 - [ResetPasswordForm.tsx](ResetPasswordForm.tsx.md) (1 shared connections)
-- [(app)/actions.ts](app-actions.ts.md) (1 shared connections)
 
 ## Source Files
 

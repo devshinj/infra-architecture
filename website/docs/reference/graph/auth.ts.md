@@ -1,12 +1,12 @@
 ---
 title: "auth.ts"
-sidebar_position: 52
+sidebar_position: 45
 ---
 # auth.ts
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 23 nodes · cohesion 0.12
+> 24 nodes · cohesion 0.12
 
 ## Key Concepts
 
@@ -24,6 +24,7 @@ sidebar_position: 52
 - **LoginRateLimited** (2 connections) — `src/auth.ts`
 - **isPublicPath()** (2 connections) — `src/middleware-paths.ts`
 - **currentSessionVersion()** (2 connections) — `src/server/auth/password.ts`
+- **clientIp()** (2 connections) — `src/server/auth/rateLimit.ts`
 - **keepIfCurrent()** (2 connections) — `src/server/auth/session.ts`
 - **{ auth }** (1 connections) — `src/middleware.ts`
 - **config** (1 connections) — `src/middleware.ts`
@@ -40,11 +41,11 @@ sidebar_position: 52
 - [auth/actions.ts](auth-actions.ts.md) (4 shared connections)
 - [auth](auth.md) (3 shared connections)
 - [ask/route.ts](ask-route.ts.md) (2 shared connections)
-- [NotFoundError](NotFoundError.md) (2 shared connections)
+- [server/flows.ts](server-flows.ts.md) (2 shared connections)
 - [(app)/actions.ts](app-actions.ts.md) (2 shared connections)
 - [Shell.tsx](Shell.tsx.md) (2 shared connections)
 - [explain/route.ts](explain-route.ts.md) (1 shared connections)
-- [flowSuggest.ts](flowSuggest.ts.md) (1 shared connections)
+- [suggest/route.ts](suggest-route.ts.md) (1 shared connections)
 - [\[sessionId\]/route.ts]([sessionId]-route.ts.md) (1 shared connections)
 - [health.ts](health.ts.md) (1 shared connections)
 - [GlossaryPage.tsx](GlossaryPage.tsx.md) (1 shared connections)
@@ -57,12 +58,13 @@ sidebar_position: 52
 - `src/middleware-paths.ts`
 - `src/middleware.ts`
 - `src/server/auth/password.ts`
+- `src/server/auth/rateLimit.ts`
 - `src/server/auth/session.ts`
 - `src/types/next-auth.d.ts`
 
 ## Audit Trail
 
-- EXTRACTED: 59 (100%)
+- EXTRACTED: 60 (100%)
 - INFERRED: 0 (0%)
 - AMBIGUOUS: 0 (0%)
 

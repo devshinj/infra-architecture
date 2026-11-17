@@ -1,23 +1,20 @@
 ---
 title: "Legend.tsx"
-sidebar_position: 60
+sidebar_position: 75
 ---
 # Legend.tsx
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 22 nodes · cohesion 0.13
+> 16 nodes · cohesion 0.19
 
 ## Key Concepts
 
 - **Legend.tsx** (21 connections) — `src/ui/canvas/Legend.tsx`
-- **mediumMark.tsx** (13 connections) — `src/canvas/mediumMark.tsx`
 - **Legend()** (7 connections) — `src/ui/canvas/Legend.tsx`
 - **LegendList()** (6 connections) — `src/ui/canvas/Legend.tsx`
 - **MediumMark()** (5 connections) — `src/canvas/mediumMark.tsx`
 - **legendPlacement()** (4 connections) — `src/ui/canvas/Legend.tsx`
-- **MEDIUM_LABELS** (3 connections) — `src/canvas/mediumMark.tsx`
-- **pointAlong()** (3 connections) — `src/canvas/mediumMark.tsx`
 - **src_canvas_edges** (2 connections)
 - **Chevron()** (2 connections) — `src/ui/canvas/Legend.tsx`
 - **EdgeSample()** (2 connections) — `src/ui/canvas/Legend.tsx`
@@ -27,20 +24,15 @@ sidebar_position: 60
 - **LegendProps** (2 connections) — `src/ui/canvas/Legend.tsx`
 - **.onMeasure()** (2 connections) — `src/ui/canvas/Legend.tsx`
 - **legendStacksAboveCard()** (2 connections) — `src/ui/canvas/Legend.tsx`
-- **GLYPH** (1 connections) — `src/canvas/mediumMark.tsx`
-- **MEDIUM_R** (1 connections) — `src/canvas/mediumMark.tsx`
-- **Pt** (1 connections) — `src/canvas/mediumMark.tsx`
 - **LEGEND_LINE_HEIGHT** (1 connections) — `src/ui/canvas/Legend.tsx`
 - **src_ui_canvas_legend_module** (1 connections)
 
 ## Relationships
 
-- [EdgeLayer.tsx](EdgeLayer.tsx.md) (6 shared connections)
-- [types.ts](types.ts.md) (6 shared connections)
-- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (4 shared connections)
-- [(app)/actions.ts](app-actions.ts.md) (3 shared connections)
-- [NodeInfo.tsx](NodeInfo.tsx.md) (2 shared connections)
-- [segments.ts](segments.ts.md) (1 shared connections)
+- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (7 shared connections)
+- [EdgePanels.tsx](EdgePanels.tsx.md) (4 shared connections)
+- [EdgeLayer.tsx](EdgeLayer.tsx.md) (3 shared connections)
+- [segments.ts](segments.ts.md) (2 shared connections)
 - [ResetPasswordForm.tsx](ResetPasswordForm.tsx.md) (1 shared connections)
 
 ## Source Files
@@ -50,7 +42,7 @@ sidebar_position: 60
 
 ## Audit Trail
 
-- EXTRACTED: 54 (100%)
+- EXTRACTED: 40 (100%)
 - INFERRED: 0 (0%)
 - AMBIGUOUS: 0 (0%)
 

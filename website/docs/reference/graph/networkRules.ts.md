@@ -1,6 +1,6 @@
 ---
 title: "networkRules.ts"
-sidebar_position: 56
+sidebar_position: 51
 ---
 # networkRules.ts
 
@@ -35,18 +35,18 @@ sidebar_position: 56
 
 ## Relationships
 
-- [domain/warnings.ts](domain-warnings.ts.md) (10 shared connections)
-- [domain/flows.ts](domain-flows.ts.md) (9 shared connections)
-- [missing.ts](missing.ts.md) (8 shared connections)
-- [useChatTurn.ts](useChatTurn.ts.md) (4 shared connections)
+- [domain/warnings.ts](domain-warnings.ts.md) (11 shared connections)
+- [domain/flows.ts](domain-flows.ts.md) (8 shared connections)
+- [drawing/rules.ts](drawing-rules.ts.md) (6 shared connections)
+- [getOwnedDiagram](getOwnedDiagram.md) (5 shared connections)
 - [Canvas.tsx](Canvas.tsx.md) (3 shared connections)
-- [schema.ts](schema.ts.md) (3 shared connections)
+- [useChatTurn.ts](useChatTurn.ts.md) (3 shared connections)
+- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (3 shared connections)
+- [missing.ts](missing.ts.md) (2 shared connections)
 - [glossary.ts](glossary.ts.md) (2 shared connections)
-- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (2 shared connections)
-- [getOwnedDiagram](getOwnedDiagram.md) (2 shared connections)
-- [drawing/rules.ts](drawing-rules.ts.md) (2 shared connections)
+- [schema.ts](schema.ts.md) (2 shared connections)
 - [mcp/apply.ts](mcp-apply.ts.md) (2 shared connections)
-- [InfoCard.tsx](InfoCard.tsx.md) (2 shared connections)
+- [MissingChecklist.tsx](MissingChecklist.tsx.md) (2 shared connections)
 
 ## Source Files
 

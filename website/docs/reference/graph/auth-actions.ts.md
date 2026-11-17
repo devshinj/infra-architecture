@@ -1,12 +1,12 @@
 ---
 title: "auth/actions.ts"
-sidebar_position: 40
+sidebar_position: 38
 ---
 # auth/actions.ts
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 26 nodes · cohesion 0.17
+> 27 nodes · cohesion 0.15
 
 ## Key Concepts
 
@@ -17,7 +17,6 @@ sidebar_position: 40
 - **checkNewPassword()** (9 connections) — `src/server/auth/rules.ts`
 - **signup()** (9 connections) — `src/server/auth/signup.ts`
 - **requestResetAction()** (7 connections) — `src/server/auth/actions.ts`
-- **resetPassword()** (7 connections) — `src/server/auth/reset.ts`
 - **signupAction()** (6 connections) — `src/server/auth/actions.ts`
 - **checkUsername()** (6 connections) — `src/server/auth/rules.ts`
 - **MESSAGES** (6 connections) — `src/server/auth/rules.ts`
@@ -26,38 +25,39 @@ sidebar_position: 40
 - **loginAction()** (5 connections) — `src/server/auth/actions.ts`
 - **resetPasswordAction()** (5 connections) — `src/server/auth/actions.ts`
 - **text()** (5 connections) — `src/server/auth/actions.ts`
-- **hashPassword()** (5 connections) — `src/server/auth/password.ts`
 - **signIn** (4 connections) — `src/auth.ts`
+- **users** (4 connections) — `src/db/schema.ts`
+- **validate()** (3 connections) — `src/app/(auth)/reset/[token]/ResetPasswordForm.tsx`
+- **HINTS** (3 connections) — `src/server/auth/rules.ts`
 - **RESET_TTL_HOURS** (3 connections) — `src/server/auth/rules.ts`
 - **FormState** (2 connections) — `src/server/auth/actions.ts`
 - **EMAIL_PATTERN** (1 connections) — `src/server/auth/rules.ts`
 - **PASSWORD_MAX_BYTES** (1 connections) — `src/server/auth/rules.ts`
 - **PASSWORD_MIN** (1 connections) — `src/server/auth/rules.ts`
 - **USERNAME_PATTERN** (1 connections) — `src/server/auth/rules.ts`
-- **SignupInput** (1 connections) — `src/server/auth/signup.ts`
-- *... and 1 more nodes in this community*
+- *... and 2 more nodes in this community*
 
 ## Relationships
 
-- [ResetPasswordForm.tsx](ResetPasswordForm.tsx.md) (32 shared connections)
-- [reset.ts](reset.ts.md) (19 shared connections)
+- [ResetPasswordForm.tsx](ResetPasswordForm.tsx.md) (34 shared connections)
+- [reset.ts](reset.ts.md) (21 shared connections)
 - [auth.ts](auth.ts.md) (4 shared connections)
 - [schema.ts](schema.ts.md) (4 shared connections)
 
 ## Source Files
 
+- `src/app/(auth)/reset/[token]/ResetPasswordForm.tsx`
 - `src/app/(auth)/signup/page.tsx`
 - `src/auth.ts`
+- `src/db/schema.ts`
 - `src/server/auth/actions.ts`
-- `src/server/auth/password.ts`
-- `src/server/auth/reset.ts`
 - `src/server/auth/rules.ts`
 - `src/server/auth/signup.ts`
 
 ## Audit Trail
 
-- EXTRACTED: 109 (96%)
-- INFERRED: 5 (4%)
+- EXTRACTED: 109 (95%)
+- INFERRED: 6 (5%)
 - AMBIGUOUS: 0 (0%)
 
 ---

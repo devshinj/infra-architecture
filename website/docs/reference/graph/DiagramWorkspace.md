@@ -1,15 +1,15 @@
 ---
 title: "DiagramWorkspace()"
-sidebar_position: 124
+sidebar_position: 123
 sidebar_label: "핵심 노드: DiagramWorkspace()"
 ---
 # DiagramWorkspace()
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> God node · 58 connections · `src/ui/DiagramWorkspace.tsx`
+> God node · 59 connections · `src/ui/DiagramWorkspace.tsx`
 
-**Community:** [(app)/actions.ts](app-actions.ts.md)
+**Community:** [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md)
 
 ## Connections by Relation
 
@@ -47,6 +47,7 @@ sidebar_label: "핵심 노드: DiagramWorkspace()"
 - InfraSketch 3D단계: 화면·사용성 개선 구현 계획 `INFERRED`
 - 연결선 경로와 가독성 Implementation Plan `INFERRED`
 - Task 4: 질문 시작하기(설명 패널·우클릭 메뉴) `INFERRED`
+- 1. 처음 접기: 깊은 영역부터, 보이는 상자 40개 이하 `INFERRED`
 
 ---
 

@@ -1,6 +1,6 @@
 ---
 title: "InfraSketch 3B단계: 경고·구성 패턴 구현 계획"
-sidebar_position: 117
+sidebar_position: 118
 ---
 # InfraSketch 3B단계: 경고·구성 패턴 구현 계획
 

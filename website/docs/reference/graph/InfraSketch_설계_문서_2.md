@@ -13,8 +13,8 @@ sidebar_position: 134
 ## Connections by Relation
 
 ### references
-- [변경 이력과 비파괴 되돌리기](변경_이력과_비파괴_되돌리기.md) `EXTRACTED`
-- [2단계 계획: AI 대화](2단계_계획-_AI_대화.md) `EXTRACTED`
+- 변경 이력과 비파괴 되돌리기 `EXTRACTED`
+- 2단계 계획: AI 대화 `EXTRACTED`
 - 빠진 정보 채우기 `EXTRACTED`
 - Clef-Flash 판정 모델 `EXTRACTED`
 - 1단계 계획: 기반과 캔버스 `EXTRACTED`

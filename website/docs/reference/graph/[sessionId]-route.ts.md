@@ -1,6 +1,6 @@
 ---
 title: "[sessionId]/route.ts"
-sidebar_position: 30
+sidebar_position: 33
 ---
 # [sessionId]/route.ts
 
@@ -12,7 +12,7 @@ sidebar_position: 30
 
 - **[sessionId]/route.ts** (34 connections) — `src/app/api/diagrams/[id]/sessions/[sessionId]/route.ts`
 - **sessions.ts** (32 connections) — `src/server/chat/sessions.ts`
-- **createSession()** (8 connections) — `src/server/chat/sessions.ts`
+- **ref_zod** (9 connections)
 - **guard()** (7 connections) — `src/app/api/diagrams/[id]/sessions/[sessionId]/route.ts`
 - **PATCH()** (7 connections) — `src/app/api/diagrams/[id]/sessions/[sessionId]/route.ts`
 - **DELETE()** (6 connections) — `src/app/api/diagrams/[id]/sessions/[sessionId]/route.ts`
@@ -39,18 +39,18 @@ sidebar_position: 30
 
 ## Relationships
 
-- [auth](auth.md) (10 shared connections)
-- [ask.ts](ask.ts.md) (8 shared connections)
+- [auth](auth.md) (14 shared connections)
+- [ask/route.ts](ask-route.ts.md) (10 shared connections)
+- [ask.ts](ask.ts.md) (7 shared connections)
 - [getOwnedDiagram](getOwnedDiagram.md) (6 shared connections)
-- [pipeline.ts](pipeline.ts.md) (6 shared connections)
-- [schema.ts](schema.ts.md) (6 shared connections)
-- [useChatTurn.ts](useChatTurn.ts.md) (4 shared connections)
-- [ask/route.ts](ask-route.ts.md) (4 shared connections)
-- [NotFoundError](NotFoundError.md) (1 shared connections)
-- [ResetPasswordForm.tsx](ResetPasswordForm.tsx.md) (1 shared connections)
-- [projects.ts](projects.ts.md) (1 shared connections)
+- [schema.ts](schema.ts.md) (5 shared connections)
+- [projects.ts](projects.ts.md) (2 shared connections)
+- [pipeline.ts](pipeline.ts.md) (2 shared connections)
+- [explain/route.ts](explain-route.ts.md) (1 shared connections)
+- [suggest/route.ts](suggest-route.ts.md) (1 shared connections)
+- [commands.ts](commands.ts.md) (1 shared connections)
 - [env.ts](env.ts.md) (1 shared connections)
-- [auth.ts](auth.ts.md) (1 shared connections)
+- [read.ts](read.ts.md) (1 shared connections)
 
 ## Source Files
 
@@ -60,8 +60,8 @@ sidebar_position: 30
 
 ## Audit Trail
 
-- EXTRACTED: 97 (98%)
-- INFERRED: 2 (2%)
+- EXTRACTED: 101 (99%)
+- INFERRED: 1 (1%)
 - AMBIGUOUS: 0 (0%)
 
 ---
