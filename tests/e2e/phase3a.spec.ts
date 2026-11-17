@@ -138,3 +138,24 @@ test("reload: no reminder line in chat, the card keeps the count", async ({ page
   // 켠 설정은 브라우저에 기억된다.
   await expect(was1Badge(page)).toBeVisible({ timeout: 15_000 });
 });
+
+test("view options: pressing an option's name or description toggles it and keeps the popover open", async ({ page }) => {
+  await setup(page);
+  await buildS1(page);
+  await page.getByRole("button", { name: "보기", exact: true }).click();
+  const pop = page.getByRole("dialog", { name: "보기 옵션" });
+  const row = pop.locator("label.canvas__opt").filter({ has: page.getByRole("checkbox", { name: "빠진 정보 숫자" }) });
+  const box = row.getByRole("checkbox");
+  await expect(box).not.toBeChecked();
+  // 글자(이름)를 누르면 포커스가 팝오버 밖으로 가려 해도 닫히지 않고 값이 바뀐다.
+  await row.locator(".canvas__opt-name").click();
+  await expect(pop).toBeVisible();
+  await expect(box).toBeChecked();
+  // 설명 글자도 같다.
+  await row.locator(".canvas__opt-desc").click();
+  await expect(pop).toBeVisible();
+  await expect(box).not.toBeChecked();
+  // Esc 로는 여전히 닫힌다.
+  await page.keyboard.press("Escape");
+  await expect(pop).toBeHidden();
+});
