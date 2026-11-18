@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { checkGuards, compareBaseline, judgeQwen, summarizeOps, type CaseResult } from "../../scripts/eval-intent-lib";
+import { checkGuards, checkScope, compareBaseline, judgeQwen, scopeNote, summarizeOps, type CaseResult } from "../../scripts/eval-intent-lib";
+import type { DiagramState } from "@/domain/types";
 
 describe("judgeQwen", () => {
   it("질문에는 명령이 없어야 한다", () => {
@@ -95,5 +96,86 @@ describe("judgeQwen nodes_attr", () => {
     expect(judgeQwen(exp, [{ op: "update_node", id: "a", attrs: { os: "x" } }, { op: "update_node", id: "b", attrs: { cpu: "4" } }])).toBe(
       "대상이 다름(빠짐: b / 더함: -)",
     );
+  });
+});
+
+describe("checkScope", () => {
+  const base = (): DiagramState => ({
+    groups: { biz: { id: "biz", groupKind: "network_zone", label: "업무망", parent: null } },
+    nodes: {
+      web: { id: "web", kind: "web_server", label: "웹 서버", parent: "biz", attrs: {} },
+      was: { id: "was", kind: "was", label: "WAS", parent: "biz", attrs: { os: "Rocky 9", sw: null } },
+      db: { id: "db", kind: "db_rdb", label: "DB", parent: "biz", attrs: {} },
+    },
+    edges: {
+      "e-web-was": { id: "e-web-was", from: "web", to: "was", edgeKind: "request" },
+      "e-was-db": { id: "e-was-db", from: "was", to: "db", edgeKind: "request" },
+    },
+    assumptions: {},
+  });
+  const kinds = (issues: ReturnType<typeof checkScope>) => issues.map((i) => i.kind);
+
+  it("바뀐 것이 없으면 넘침이 없다", () => {
+    expect(checkScope({}, base(), base())).toEqual([]);
+  });
+
+  it("허용하지 않은 기존 노드·연결·영역을 바꾸거나 지우면 기존 대상", () => {
+    const after = base();
+    after.nodes.db!.label = "회원 DB";
+    delete after.edges["e-was-db"];
+    after.groups.biz!.label = "내부망";
+    const issues = checkScope({ touch: ["web"] }, base(), after);
+    expect(kinds(issues)).toEqual(["기존 대상"]);
+    expect(issues[0]!.detail).toBe("db 바뀜, e-was-db 지워짐, biz 바뀜");
+  });
+
+  it("touch 에 든 대상은 바꾸거나 지워도 된다", () => {
+    const after = base();
+    after.nodes.db!.label = "회원 DB";
+    delete after.edges["e-was-db"];
+    expect(checkScope({ touch: ["db", "e-was-db"] }, base(), after)).toEqual([]);
+  });
+
+  it("새 노드·영역은 허용 개수까지", () => {
+    const after = base();
+    after.nodes["was-2"] = { id: "was-2", kind: "was", label: "WAS #2", parent: "biz", attrs: {} };
+    after.nodes["was-3"] = { id: "was-3", kind: "was", label: "WAS #3", parent: "biz", attrs: {} };
+    after.groups.rg = { id: "rg", groupKind: "redundancy_group", label: "WAS VIP", parent: "biz" };
+    expect(checkScope({ newNodes: 2, newGroups: 1 }, base(), after)).toEqual([]);
+    const issues = checkScope({ newNodes: 1 }, base(), after);
+    expect(kinds(issues)).toEqual(["새 노드", "새 영역"]);
+    expect(issues[0]!.detail).toBe("2개(허용 1): was-2, was-3");
+  });
+
+  it("새 노드에 닿는 새 연결은 되고, 허용하지 않은 기존 노드끼리의 새 연결은 넘침", () => {
+    const after = base();
+    after.nodes.mq = { id: "mq", kind: "queue", label: "큐", parent: "biz", attrs: {} };
+    after.edges["e-was-mq"] = { id: "e-was-mq", from: "was", to: "mq", edgeKind: "async" };
+    expect(checkScope({ newNodes: 1 }, base(), after)).toEqual([]);
+    after.edges["e-web-db"] = { id: "e-web-db", from: "web", to: "db", edgeKind: "request" };
+    expect(kinds(checkScope({ newNodes: 1 }, base(), after))).toEqual(["새 연결"]);
+    expect(checkScope({ newNodes: 1, touch: ["web"] }, base(), after)).toEqual([]);
+  });
+
+  it("말하지 않은 속성값은 넘침, 말한 key 와 기존 값을 복사한 것은 된다", () => {
+    const after = base();
+    after.nodes["was-2"] = { id: "was-2", kind: "was", label: "WAS #2", parent: "biz", attrs: { os: "Rocky 9", sw: "Tomcat 10", cpu: null } };
+    const issues = checkScope({ newNodes: 1 }, base(), after);
+    expect(kinds(issues)).toEqual(["속성값"]);
+    expect(issues[0]!.detail).toBe("was-2.sw=Tomcat 10");
+    expect(checkScope({ newNodes: 1, attrs: ["sw"] }, base(), after)).toEqual([]);
+    expect(checkScope({ newNodes: 1, attrs: ["was-2.sw"] }, base(), after)).toEqual([]);
+    expect(kinds(checkScope({ newNodes: 1, attrs: ["db.sw"] }, base(), after))).toEqual(["속성값"]);
+  });
+
+  it("touch 에 든 기존 노드에 적은 속성값도 본다", () => {
+    const after = base();
+    after.nodes.was!.attrs = { os: "Rocky 9", sw: "Tomcat 10" };
+    expect(kinds(checkScope({ touch: ["was"] }, base(), after))).toEqual(["속성값"]);
+  });
+
+  it("scopeNote 는 검사별로 한 줄에 모은다", () => {
+    expect(scopeNote([])).toBeNull();
+    expect(scopeNote([{ kind: "새 노드", detail: "2개(허용 1): a, b" }, { kind: "속성값", detail: "a.sw=X" }])).toBe("범위 넘침 — 새 노드: 2개(허용 1): a, b / 속성값: a.sw=X");
   });
 });

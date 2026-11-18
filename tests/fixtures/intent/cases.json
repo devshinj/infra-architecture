@@ -1,5 +1,5 @@
 {
-  "note": "want: 기대 의도(판정 없음은 \"null\"). qwen: Qwen 출력 기대 — none(명령 없음), structure(구성 명령 1개 이상), flow(흐름 명령 1개 이상, ops 로 종류 지정), edge(지정 연결의 전달물·방향), node_attr(지정 노드 속성 갱신), nodes_attr(여러 노드에 같은 속성 — 빠지거나 더하면 실패), record(기대 없이 기록만), skip(Qwen 을 부르지 않는 의도). 추가 검사: forbid(나오면 안 되는 명령), keepStepText(기존 흐름의 남은 단계 짧은 설명 유지), allowPayload(문장이 전달물·방향을 직접 말함). 기대가 edge 가 아니면 망을 안 넘는 연결에 전달물·방향을 적은 것도 실패다.",
+  "note": "want: 기대 의도(판정 없음은 \"null\"). qwen: Qwen 출력 기대 — none(명령 없음), structure(구성 명령 1개 이상), flow(흐름 명령 1개 이상, ops 로 종류 지정), edge(지정 연결의 전달물·방향), node_attr(지정 노드 속성 갱신), nodes_attr(여러 노드에 같은 속성 — 빠지거나 더하면 실패), record(기대 없이 기록만), skip(Qwen 을 부르지 않는 의도). 추가 검사: forbid(나오면 안 되는 명령), keepStepText(기존 흐름의 남은 단계 짧은 설명 유지), allowPayload(문장이 전달물·방향을 직접 말함), scope(요청 범위 — touch: 바꾸거나 지워도 되는 기존 id, newNodes·newGroups: 새로 만들어도 되는 수, attrs: 채워도 되는 속성 \"key\" 또는 \"id.key\". 넘으면 실패). 기대가 edge 가 아니면 망을 안 넘는 연결에 전달물·방향을 적은 것도 실패다.",
   "cases": [
     { "id": "flow-create-signup", "text": "회원가입 흐름 만들어 줘", "want": "structure_change", "qwen": { "expect": "flow", "ops": ["add_flow", "update_flow"] } },
     { "id": "flow-draw-login", "text": "로그인할 때 어떤 서버를 거치는지 흐름으로 그려 줘", "want": "structure_change", "qwen": { "expect": "flow", "ops": ["add_flow"] } },
@@ -46,6 +46,22 @@
     { "id": "b-biz-cpu", "diagram": "large", "text": "업무망에 있는 WAS와 배치 서버는 전부 8코어야", "want": "structure_change", "qwen": { "expect": "nodes_attr", "key": "cpu", "nodes": ["was-1", "was-2", "was-3", "was-4", "batch-1", "batch-2"] } },
     { "id": "b-web-sw", "diagram": "large", "text": "웹 서버 전부 Nginx 1.24로 바꿔 줘", "want": "structure_change", "qwen": { "expect": "nodes_attr", "key": "sw", "nodes": ["web-1", "web-2", "web-3"] } },
     { "id": "b-db-ha", "diagram": "large", "text": "모든 DB 이중화해 줘", "want": "structure_change", "qwen": { "expect": "record" } },
+
+    { "id": "r-lb", "text": "웹 서버 앞에 로드밸런서 추가해 줘", "want": "structure_change", "qwen": { "expect": "structure", "scope": { "touch": ["e-fw-web"], "newNodes": 1 } } },
+    { "id": "r-lb-mixed", "text": "로드밸런서는 어떤 역할이야? 웹 서버 앞에 추가해 줘", "want": "structure_change", "qwen": { "expect": "structure", "scope": { "touch": ["e-fw-web"], "newNodes": 1 } } },
+    { "id": "r-mq", "text": "메시지 큐를 WAS 뒤에 하나 넣어 줘", "want": "structure_change", "qwen": { "expect": "structure", "scope": { "touch": ["was"], "newNodes": 1 } } },
+    { "id": "r-mq-mixed", "text": "메시지 큐가 뭐야? 쓸 만하면 WAS 뒤에 하나 넣어 줘", "want": "structure_change", "qwen": { "expect": "structure", "scope": { "touch": ["was"], "newNodes": 1 } } },
+    { "id": "r-cdn-mixed", "text": "CDN이 왜 필요해? 필요하면 추가해 줘", "want": "structure_change", "qwen": { "expect": "structure", "scope": { "touch": ["user", "e-user-fw"], "newNodes": 1 } } },
+    { "id": "r-describe", "text": "우리 서비스는 웹 서버 두 대에 WAS 세 대, DB는 오라클 쓰고 있어", "want": "structure_change", "qwen": { "expect": "structure", "scope": { "touch": ["web", "was", "db"], "newNodes": 3, "newGroups": 2, "attrs": ["db.sw", "db.version"] } } },
+    { "id": "r-monitor", "text": "모니터링 서버가 따로 있는데 WAS랑 DB 상태를 수집해", "want": "structure_change", "qwen": { "expect": "structure", "scope": { "newNodes": 1 } } },
+    { "id": "r-was-add", "text": "WAS 한 대 더 추가해 줘", "want": "structure_change", "qwen": { "expect": "structure", "scope": { "touch": ["was"], "newNodes": 1, "newGroups": 1 } } },
+    { "id": "r-db-ha", "text": "회원 DB 이중화해 줘", "want": "structure_change", "qwen": { "expect": "structure", "scope": { "touch": ["db"], "newNodes": 1, "newGroups": 1, "attrs": ["replication"] } } },
+    { "id": "r-rename", "text": "@WAS 이름을 API 서버로 바꿔 줘", "want": "structure_change", "qwen": { "expect": "structure", "scope": { "touch": ["was"] } } },
+    { "id": "r-remove-batch", "text": "배치 서버 빼 줘", "want": "structure_change", "qwen": { "expect": "structure", "scope": { "touch": ["batch", "e-batch-db"] } } },
+    { "id": "r-link-insert", "text": "망연계 노드 하나 더 추가해서 WAS랑 외부 인증 사이에 넣어 줘", "want": "structure_change", "qwen": { "expect": "structure", "scope": { "touch": ["e-was-auth"], "newNodes": 1 } } },
+    { "id": "r-db-engine", "text": "회원 DB를 PostgreSQL로 바꿔 줘", "want": "structure_change", "qwen": { "expect": "structure", "scope": { "touch": ["db"], "attrs": ["db.sw", "db.version"] } } },
+    { "id": "r-edge-add", "text": "웹 서버에서 캐시로 가는 연결 추가해 줘", "want": "structure_change", "qwen": { "expect": "structure", "scope": { "touch": ["web"] } } },
+    { "id": "r-os", "text": "웹 서버 OS는 Rocky 9", "want": "missing_info_answer", "qwen": { "expect": "node_attr", "node": "web", "scope": { "touch": ["web"], "attrs": ["web.os"] } } },
 
     { "id": "l-relayout", "text": "보기 좋게 다시 배치해 줘", "want": "layout", "qwen": { "expect": "skip" } }
   ]

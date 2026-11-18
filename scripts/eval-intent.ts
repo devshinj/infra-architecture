@@ -14,12 +14,15 @@ import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import {
   checkGuards,
+  checkScope,
   compareBaseline,
   judgeQwen,
+  scopeNote,
   summarizeOps,
   type CaseResult,
   type QwenExpect,
   type QwenGuards,
+  type ScopeKind,
   type SeenCommand,
 } from "./eval-intent-lib";
 import { formatTable } from "./smoke-table";
@@ -105,6 +108,8 @@ async function main(): Promise<number> {
 
   const results: CaseResult[] = [];
   const rows: string[][] = [];
+  // 범위를 잰 실행 가운데 검사별로 넘친 실행 수.
+  const scopeKinds = new Map<ScopeKind, number>();
   for (const c of cases) {
     const prev = c.lastAssistant ?? DEFAULT_PREV;
     const { state, flows, flowSteps } = diagramOf(c.diagram);
@@ -126,6 +131,8 @@ async function main(): Promise<number> {
     let opsText = "-";
     let qwenPasses: number | undefined;
     let qwenRuns: number | undefined;
+    let scopeOver: number | undefined;
+    let scopeRuns: number | undefined;
     if (qwen && c.qwen.expect !== "skip") {
       const answerMode = routed === "question" || routed === "other";
       if (routed === "layout" || routed === "history") {
@@ -142,7 +149,7 @@ async function main(): Promise<number> {
         const history = [{ role: "assistant" as const, content: prev }];
         const messages = buildMessages({ intent: routedIntent, text: clean, state, mentions, history, missing: openMissing, flows });
         // 한 번 돌린 결과: 문제 이유(없으면 null)와 낸 명령 요약.
-        const once = async (): Promise<{ note: string | null; ops: string }> => {
+        const once = async (): Promise<{ note: string | null; ops: string; over?: boolean }> => {
           const seen: SeenCommand[] = [];
           const touched = new Set<string>(); // 전달물·방향을 적은 연결 id
           let st = state;
@@ -196,10 +203,13 @@ async function main(): Promise<number> {
           // 사용자가 값을 정해 준 문장(expect edge)은 묻지 않는다.
           const guessed =
             c.qwen.expect === "edge" || c.qwen.allowPayload ? [] : [...touched].filter((id) => st.edges[id] && !crossesBoundary(st, st.edges[id]!));
-          const note = judgeQwen(c.qwen, seen) ?? checkGuards(c.qwen, seen, { guessed, flows: flowSteps });
-          return { note, ops: summarizeOps(seen) };
+          // 범위는 기대가 틀린 실행에서도 따로 잰다(넘침 수가 기대 실패에 가려지지 않게).
+          const issues = c.qwen.scope ? checkScope(c.qwen.scope, state, st) : null;
+          for (const kind of new Set(issues?.map((i) => i.kind))) scopeKinds.set(kind, (scopeKinds.get(kind) ?? 0) + 1);
+          const note = judgeQwen(c.qwen, seen) ?? checkGuards(c.qwen, seen, { guessed, flows: flowSteps }) ?? scopeNote(issues ?? []);
+          return { note, ops: summarizeOps(seen), over: issues ? issues.length > 0 : undefined };
         };
-        const runs: { note: string | null; ops: string }[] = [];
+        const runs: { note: string | null; ops: string; over?: boolean }[] = [];
         for (let i = 0; i < repeat; i++) runs.push(await once());
         const fails = runs.filter((r) => r.note !== null);
         qwenPasses = runs.length - fails.length;
@@ -207,11 +217,16 @@ async function main(): Promise<number> {
         qwenOk = fails.length === 0;
         qwenNote = fails[0]?.note ?? undefined;
         opsText = runs.at(-1)!.ops;
+        const measured = runs.filter((r) => r.over !== undefined);
+        if (measured.length) {
+          scopeRuns = measured.length;
+          scopeOver = measured.filter((r) => r.over).length;
+        }
       }
       if (c.qwen.expect === "record") qwenOk = null; // 기대 없이 기록만
     }
 
-    results.push({ id: c.id, intent: got?.intent ?? null, confidence: got?.confidence ?? null, routed, intentOk, qwenOk, qwenNote, qwenPasses, qwenRuns });
+    results.push({ id: c.id, intent: got?.intent ?? null, confidence: got?.confidence ?? null, routed, intentOk, qwenOk, qwenNote, qwenPasses, qwenRuns, scopeOver, scopeRuns });
     const mark = (ok: boolean | null) => (ok === null ? " " : ok ? "O" : "X");
     rows.push([
       c.id,
@@ -231,6 +246,13 @@ async function main(): Promise<number> {
   if (qwen && repeat > 1) {
     const sum = (k: "qwenPasses" | "qwenRuns") => results.reduce((t, r) => t + (r.qwenOk === null ? 0 : (r[k] ?? 0)), 0);
     console.log(`Qwen 실행 ${sum("qwenPasses")}/${sum("qwenRuns")} 통과 (문장마다 ${repeat}번)`);
+  }
+
+  const scoped = results.filter((r) => r.scopeRuns);
+  if (scoped.length) {
+    const total = (k: "scopeOver" | "scopeRuns") => scoped.reduce((t, r) => t + (r[k] ?? 0), 0);
+    const byKind = [...scopeKinds].map(([kind, n]) => `${kind} ${n}`).join(" · ");
+    console.log(`범위 넘침 ${total("scopeOver")}/${total("scopeRuns")} 실행 (문장 ${scoped.filter((r) => r.scopeOver).length}/${scoped.length})${byKind ? ` — ${byKind}` : ""}`);
   }
 
   let code = 0;
