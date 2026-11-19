@@ -41,6 +41,9 @@ export interface ScopeIssue {
   detail: string;
 }
 
+/** 사용자가 말하지 않아도 그리기 규칙이 노드 종류를 보고 적게 하는 속성. 지어낸 값이 아니다. */
+const RULE_ATTRS = new Set(["managed"]);
+
 /**
  * 차례 시작 구성(before)과 명령을 적용한 구성(after)을 견주어 요청 범위를 넘긴 것을 검사별로 하나씩 돌려준다. 없으면 빈 배열.
  * 속성값은 새로 적힌(비어 있지 않고 전과 다른) 값만 본다. 시작 구성의 어느 노드에 같은 key·같은 값이 있으면 복사한 것으로 보고 넘어간다.
@@ -84,7 +87,7 @@ export function checkScope(scope: Scope, before: DiagramState, after: DiagramSta
   for (const n of Object.values(after.nodes)) {
     const prev = before.nodes[n.id]?.attrs ?? {};
     for (const [k, v] of Object.entries(n.attrs)) {
-      if (v === null || v === "" || prev[k] === v) continue;
+      if (v === null || v === "" || prev[k] === v || RULE_ATTRS.has(k)) continue;
       if (allowed.has(k) || allowed.has(`${n.id}.${k}`) || known.has(`${k}=${v}`)) continue;
       made.push(`${n.id}.${k}=${v}`);
     }

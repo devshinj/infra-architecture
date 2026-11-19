@@ -174,6 +174,12 @@ describe("checkScope", () => {
     expect(kinds(checkScope({ touch: ["was"] }, base(), after))).toEqual(["속성값"]);
   });
 
+  it("그리기 규칙이 종류에 따라 적게 하는 managed 는 속성값 넘침으로 세지 않는다", () => {
+    const after = base();
+    after.nodes.cdn = { id: "cdn", kind: "cdn", label: "CDN", parent: null, attrs: { managed: "yes" } };
+    expect(checkScope({ newNodes: 1 }, base(), after)).toEqual([]);
+  });
+
   it("scopeNote 는 검사별로 한 줄에 모은다", () => {
     expect(scopeNote([])).toBeNull();
     expect(scopeNote([{ kind: "새 노드", detail: "2개(허용 1): a, b" }, { kind: "속성값", detail: "a.sw=X" }])).toBe("범위 넘침 — 새 노드: 2개(허용 1): a, b / 속성값: a.sw=X");
