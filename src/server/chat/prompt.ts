@@ -23,7 +23,7 @@ function warningBlock(state: DiagramState, network?: NetworkKnowledge): string {
   const active = mergeWarnings(state, network).active.slice(0, WARNING_LINES_MAX);
   if (active.length === 0) return "";
   const lines = active.map((w) => `- ${w.nodeId}${w.edgeId ? ` 연결 ${w.edgeId}` : ""} ${JSON.stringify(w.text)}`);
-  return `현재 경고:\n${lines.join("\n")}\n\n`;
+  return `현재 경고(참고용이다. 요청이 경고를 말하지 않으면 이 경고를 없애려고 구성을 바꾸지 않는다):\n${lines.join("\n")}\n\n`;
 }
 
 // 그리기 규칙·종류 목록·attrs 칸 목록은 공용 모듈(MCP get_guide 와 같은 글)에 있다.
@@ -54,10 +54,14 @@ ${R[3]}
 - label, sub, say, set_assumption 의 value 는 모두 한국어로 쓴다. label·sub 예시: "웹 서버 #1", "API 서버 #2", "공개 서브넷", "메인 VPC". 제품명만 원어 그대로 쓴다(CloudFront, Redis, Aurora MySQL, ALB, Tomcat 등).
 ${R[4]}
 - warn 과 report_missing 명령은 내지 않는다. 위험 진단은 다른 단계가 맡는다.
-- "현재 경고:" 는 지금 화면에 뜬 경고다. 사용자가 경고를 말하거나 고쳐 달라고 하면 그 목록의 경고가 가리키는 노드·연결을 고친다. 사용자가 경고를 말하지 않았으면 경고를 없애려고 구성을 바꾸지 않는다.
+- "현재 경고" 는 지금 화면에 뜬 경고다. 사용자가 경고를 말하거나 고쳐 달라고 하면 그 목록의 경고가 가리키는 노드·연결을 고친다. 사용자가 경고를 말하지 않았으면 경고를 없애려고 구성을 바꾸지 않는다.
 - 사용자가 말하지 않은 속성값(소프트웨어·버전·포트·OS·스펙 등)은 null 로 둔다. 기존 노드를 복제할 때만 그 노드의 값을 그대로 쓴다.
 - 요청한 것만 추가한다. 요청에 없는 이중화·로드밸런서·DNS·모니터링 같은 노드와 영역은 만들지 않는다.
+  예: "API 서버 한 대 더" → API 서버 노드 하나와 기존 API 서버와 같은 연결만 더한다(둘을 이중화 묶음으로 묶는 것까지). 로드밸런서는 넣지 않고 기존 연결도 지우지 않는다.
+  예: "앱 서버는 네 대, 캐시는 Redis 써" → 앱 서버만 네 대로 맞추고, 캐시는 sw 만 Redis 로 쓴다. 대수를 말하지 않은 캐시는 늘리거나 이중화하지 않는다.
+  예: "WAF 추가해 줘" → WAF 노드 하나와 그 연결만. 함께 쓰이곤 하는 DNS·CDN·로드밸런서는 넣지 않는다.
 ${R[5]}
+- "~가 뭐야? 필요하면(쓸 만하면) 추가해 줘"처럼 질문과 요청이 함께 있으면 추가하라는 요청이다. say 로 한 문장 답하고 요청한 것을 명령으로 추가한다.
 - 사용자가 질문만 하면 구성은 건드리지 않는다. 질문이면 명령 없이 {"op":"say","text":"…"} 한두 문장으로만 답한다.
 
 ${patternBlock()}`;
