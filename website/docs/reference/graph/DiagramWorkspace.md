@@ -1,6 +1,6 @@
 ---
 title: "DiagramWorkspace()"
-sidebar_position: 123
+sidebar_position: 121
 sidebar_label: "핵심 노드: DiagramWorkspace()"
 ---
 # DiagramWorkspace()
@@ -18,7 +18,7 @@ sidebar_label: "핵심 노드: DiagramWorkspace()"
 - applyCommand() `EXTRACTED`
 - Canvas() `EXTRACTED`
 - useChatTurn() `EXTRACTED`
-- [useFlows](useFlows.md) `EXTRACTED`
+- useFlows `EXTRACTED`
 - run() `EXTRACTED`
 - InfoCard() `EXTRACTED`
 - checkFlow() `EXTRACTED`

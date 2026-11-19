@@ -1,6 +1,6 @@
 ---
 title: "useRemoteChanges.ts"
-sidebar_position: 86
+sidebar_position: 79
 ---
 # useRemoteChanges.ts
 
@@ -28,8 +28,8 @@ sidebar_position: 86
 
 - [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (5 shared connections)
 - [read.ts](read.ts.md) (1 shared connections)
-- [FlyLayer.tsx](FlyLayer.tsx.md) (1 shared connections)
-- [Command](Command.md) (1 shared connections)
+- [GhostLayer.tsx](GhostLayer.tsx.md) (1 shared connections)
+- [diff.ts](diff.ts.md) (1 shared connections)
 - [ResetPasswordForm.tsx](ResetPasswordForm.tsx.md) (1 shared connections)
 
 ## Source Files

@@ -1,29 +1,31 @@
 ---
 title: "read.ts"
-sidebar_position: 10
+sidebar_position: 25
 ---
 # read.ts
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 42 nodes · cohesion 0.08
+> 36 nodes · cohesion 0.12
 
 ## Key Concepts
 
 - **read.ts** (66 connections) — `src/server/mcp/read.ts`
 - **server.ts** (31 connections) — `src/server/mcp/server.ts`
+- **getNetworkKnowledge()** (22 connections) — `src/server/network.ts`
 - **createMcpServer()** (19 connections) — `src/server/mcp/server.ts`
 - **File Structure** (18 connections) — `docs/superpowers/plans/2026-11-09-mcp-server.md`
+- **Task 5: MCP 고치기·되돌리기 서비스** (15 connections) — `docs/superpowers/plans/2026-11-09-mcp-server.md`
 - **getDiagramForMcp()** (12 connections) — `src/server/mcp/read.ts`
-- **matchUserTerms()** (11 connections) — `src/server/glossary.ts`
+- **createDiagram()** (12 connections) — `src/server/projects.ts`
+- **applyMcpCommands()** (8 connections) — `src/server/mcp/apply.ts`
 - **Task 6: 읽기 서비스와 안내서** (7 connections) — `docs/superpowers/plans/2026-11-09-mcp-server.md`
-- **patternBlock()** (7 connections) — `src/server/drawing/rules.ts`
 - **buildGuide()** (7 connections) — `src/server/mcp/read.ts`
 - **diagramUrl()** (7 connections) — `src/server/mcp/url.ts`
 - **createProjectWithDiagram()** (7 connections) — `src/server/projects.ts`
+- **planFlowOps()** (6 connections) — `src/domain/flows.ts`
 - **createProjectForMcp()** (5 connections) — `src/server/mcp/read.ts`
-- **Task 2: 키 테이블과 버전 칸** (4 connections) — `docs/superpowers/plans/2026-11-09-mcp-server.md`
-- **MCP 그리기를 앱 대화와 맞추기 — 설계** (4 connections) — `docs/superpowers/specs/2026-11-12-mcp-parity-design.md`
+- **createDiagramForMcp()** (4 connections) — `src/server/mcp/read.ts`
 - **listDiagramsForMcp()** (4 connections) — `src/server/mcp/read.ts`
 - **listProjectsForMcp()** (4 connections) — `src/server/mcp/read.ts`
 - **listVersionsForMcp()** (4 connections) — `src/server/mcp/read.ts`
@@ -32,43 +34,39 @@ sidebar_position: 10
 - **fail()** (3 connections) — `src/server/mcp/server.ts`
 - **guarded()** (3 connections) — `src/server/mcp/server.ts`
 - **listProjectsWithVersions()** (3 connections) — `src/server/projects.ts`
-- **Task 7: MCP 라우트와 도구** (2 connections) — `docs/superpowers/plans/2026-11-09-mcp-server.md`
-- **사용자가 정한 것 (바꾸지 않는다)** (2 connections) — `docs/superpowers/specs/2026-11-12-mcp-parity-design.md`
-- **CLARIFY_KEYS** (2 connections) — `src/domain/clarify.ts`
-- *... and 17 more nodes in this community*
+- **body()** (2 connections) — `src/server/mcp/server.ts`
+- *... and 11 more nodes in this community*
 
 ## Relationships
 
-- [drawing/rules.ts](drawing-rules.ts.md) (18 shared connections)
-- [getOwnedDiagram](getOwnedDiagram.md) (13 shared connections)
+- [getOwnedDiagram](getOwnedDiagram.md) (31 shared connections)
 - [projects.ts](projects.ts.md) (12 shared connections)
-- [mcp/apply.ts](mcp-apply.ts.md) (11 shared connections)
-- [mcpKeys.ts](mcpKeys.ts.md) (6 shared connections)
-- [schema.ts](schema.ts.md) (6 shared connections)
+- [networkBlock](networkBlock.md) (9 shared connections)
+- [drawing/rules.ts](drawing-rules.ts.md) (8 shared connections)
+- [(app)/actions.ts](app-actions.ts.md) (6 shared connections)
+- [missing.ts](missing.ts.md) (6 shared connections)
+- [pipeline.ts](pipeline.ts.md) (6 shared connections)
 - [clarify.ts](clarify.ts.md) (6 shared connections)
-- [pipeline.ts](pipeline.ts.md) (4 shared connections)
-- [ask.ts](ask.ts.md) (4 shared connections)
-- [prompt.ts](prompt.ts.md) (4 shared connections)
-- [server/flows.ts](server-flows.ts.md) (4 shared connections)
-- [missing.ts](missing.ts.md) (3 shared connections)
+- [server/network.ts](server-network.ts.md) (6 shared connections)
+- [domain/apply.ts](domain-apply.ts.md) (5 shared connections)
+- [mcpKeys.ts](mcpKeys.ts.md) (5 shared connections)
+- [NotFoundError](NotFoundError.md) (4 shared connections)
 
 ## Source Files
 
 - `docs/superpowers/plans/2026-11-09-mcp-server.md`
-- `docs/superpowers/specs/2026-11-12-mcp-parity-design.md`
-- `src/domain/clarify.ts`
-- `src/server/drawing/rules.ts`
-- `src/server/glossary.ts`
+- `src/domain/flows.ts`
 - `src/server/mcp/apply.ts`
 - `src/server/mcp/read.ts`
 - `src/server/mcp/server.ts`
 - `src/server/mcp/url.ts`
+- `src/server/network.ts`
 - `src/server/projects.ts`
 
 ## Audit Trail
 
-- EXTRACTED: 170 (89%)
-- INFERRED: 21 (11%)
+- EXTRACTED: 186 (86%)
+- INFERRED: 30 (14%)
 - AMBIGUOUS: 0 (0%)
 
 ---

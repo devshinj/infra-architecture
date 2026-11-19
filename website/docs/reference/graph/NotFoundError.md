@@ -1,63 +1,62 @@
 ---
 title: "NotFoundError"
-sidebar_position: 129
+sidebar_position: 69
 sidebar_label: "핵심 노드: NotFoundError"
 ---
 # NotFoundError
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> God node · 36 connections · `src/server/projects.ts`
+> 16 nodes · cohesion 0.13
 
-**Community:** [ask.ts](ask.ts.md)
+## Key Concepts
 
-## Connections by Relation
+- **NotFoundError** (36 connections) — `src/server/projects.ts`
+- **flows/route.ts** (12 connections) — `src/app/api/diagrams/[id]/flows/route.ts`
+- **Review Focus** (11 connections) — `docs/superpowers/plans/2026-11-06-network-knowledge-link-guess.md`
+- **Task 8: 구성도 화면 — 지식 전달, 안내 카드, 빠진 정보 줄, 망연계 노드 표시** (8 connections) — `docs/superpowers/plans/2026-11-06-network-knowledge-link-guess.md`
+- **Task 5: DB와 서버 — 망 지식 테이블, 기본 제공 채우기, 읽기·고치기** (5 connections) — `docs/superpowers/plans/2026-11-06-network-knowledge-link-guess.md`
+- **deleteMcpKey()** (5 connections) — `src/server/mcpKeys.ts`
+- **deleteNetworkRule()** (4 connections) — `src/server/network.ts`
+- **Task 3: 키 만들기·확인** (3 connections) — `docs/superpowers/plans/2026-11-09-mcp-server.md`
+- **GET()** (3 connections) — `src/app/api/diagrams/[id]/flows/route.ts`
+- **Task 2: 구성도 상태 — 망 종류 칸, `set_zone_type`, 망연계 추정 표시 명령** (2 connections) — `docs/superpowers/plans/2026-11-06-network-knowledge-link-guess.md`
+- **Task 10: E2E 와 문서** (1 connections) — `docs/superpowers/plans/2026-11-06-network-knowledge-link-guess.md`
+- **Task 1: 망 지식 도메인 — 타입, 기본 제공 목록, 필요한 방식 계산** (1 connections) — `docs/superpowers/plans/2026-11-06-network-knowledge-link-guess.md`
+- **Ctx** (1 connections) — `src/app/api/diagrams/[id]/flows/route.ts`
+- **dynamic** (1 connections) — `src/app/api/diagrams/[id]/flows/route.ts`
+- **runtime** (1 connections) — `src/app/api/diagrams/[id]/flows/route.ts`
+- **.constructor()** (1 connections) — `src/server/projects.ts`
 
-### calls
-- [getOwnedDiagram()](getOwnedDiagram_2.md) `EXTRACTED`
-- runAskTurn() `EXTRACTED`
-- runChatTurn() `EXTRACTED`
-- updateNetworkType() `EXTRACTED`
-- withOwnedFlow() `EXTRACTED`
-- countNetworkTypeUsageAction() `EXTRACTED`
-- assertOwnedProject() `EXTRACTED`
-- updateTerm() `EXTRACTED`
-- getOwnedType() `EXTRACTED`
-- deleteMcpKey() `EXTRACTED`
-- deleteNetworkRule() `EXTRACTED`
-- assertUuid() `EXTRACTED`
+## Relationships
 
-### contains
-- [projects.ts](projects.ts.md) `EXTRACTED`
+- [server/network.ts](server-network.ts.md) (7 shared connections)
+- [(app)/actions.ts](app-actions.ts.md) (6 shared connections)
+- [getOwnedDiagram](getOwnedDiagram.md) (5 shared connections)
+- [ask/route.ts](ask-route.ts.md) (5 shared connections)
+- [read.ts](read.ts.md) (4 shared connections)
+- [projects.ts](projects.ts.md) (4 shared connections)
+- [domain/flows.ts](domain-flows.ts.md) (3 shared connections)
+- [NetworkKnowledgePage.tsx](NetworkKnowledgePage.tsx.md) (3 shared connections)
+- [server/flows.ts](server-flows.ts.md) (3 shared connections)
+- [pipeline.ts](pipeline.ts.md) (3 shared connections)
+- [domain/apply.ts](domain-apply.ts.md) (2 shared connections)
+- [missing.ts](missing.ts.md) (2 shared connections)
 
-### imports
-- [(app)/actions.ts](app-actions.ts.md) `EXTRACTED`
-- [pipeline.ts](pipeline.ts.md) `EXTRACTED`
-- [ask.ts](ask.ts.md) `EXTRACTED`
-- [server/network.ts](server-network.ts.md) `EXTRACTED`
-- [server/flows.ts](server-flows.ts.md) `EXTRACTED`
-- [glossary.ts](glossary.ts.md) `EXTRACTED`
-- [\[sessionId\]/route.ts]([sessionId]-route.ts.md) `EXTRACTED`
-- [ask/route.ts](ask-route.ts.md) `EXTRACTED`
-- server.ts `EXTRACTED`
-- chat/route.ts `EXTRACTED`
-- \[diagramId\]/page.tsx `EXTRACTED`
-- [explain/route.ts](explain-route.ts.md) `EXTRACTED`
-- sessions/route.ts `EXTRACTED`
-- [mcpKeys.ts](mcpKeys.ts.md) `EXTRACTED`
-- [suggest/route.ts](suggest-route.ts.md) `EXTRACTED`
-- flows/route.ts `EXTRACTED`
-- head/route.ts `EXTRACTED`
+## Source Files
 
-### method
-- .constructor() `EXTRACTED`
+- `docs/superpowers/plans/2026-11-06-network-knowledge-link-guess.md`
+- `docs/superpowers/plans/2026-11-09-mcp-server.md`
+- `src/app/api/diagrams/[id]/flows/route.ts`
+- `src/server/mcpKeys.ts`
+- `src/server/network.ts`
+- `src/server/projects.ts`
 
-### references
-- Task 4: 서버 설명 생성 `INFERRED`
-- Task 6: 읽기 서비스와 안내서 `INFERRED`
-- Task 2: 용어 사전 시드와 서버 함수 `INFERRED`
-- Task 5: DB와 서버 — 망 지식 테이블, 기본 제공 채우기, 읽기·고치기 `INFERRED`
-- Task 3: 키 만들기·확인 `INFERRED`
+## Audit Trail
+
+- EXTRACTED: 62 (78%)
+- INFERRED: 17 (22%)
+- AMBIGUOUS: 0 (0%)
 
 ---
 

@@ -1,18 +1,23 @@
 ---
 title: "commands.ts"
-sidebar_position: 52
+sidebar_position: 36
 ---
 # commands.ts
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 22 nodes · cohesion 0.09
+> 27 nodes · cohesion 0.09
 
 ## Key Concepts
 
 - **commands.ts** (49 connections) — `src/domain/commands.ts`
+- **parseCommand()** (13 connections) — `src/domain/commands.ts`
+- **isFlowCommand()** (11 connections) — `src/domain/commands.ts`
+- **checkCommands()** (9 connections) — `src/server/mcp/apply.ts`
+- **isStructural()** (8 connections) — `src/domain/commands.ts`
+- **toFlowOp()** (7 connections) — `src/domain/commands.ts`
+- **Task 5: 대화 차례의 흐름 명령** (6 connections) — `docs/superpowers/plans/2026-11-05-flows-and-network-boundaries.md`
 - **COMMAND_OPS** (3 connections) — `src/domain/commands.ts`
-- **createFlowRetarget()** (3 connections) — `src/domain/commands.ts`
 - **SERVER_ONLY_OPS** (3 connections) — `src/domain/commands.ts`
 - **FLOW_OPS** (2 connections) — `src/domain/commands.ts`
 - **attrs** (1 connections) — `src/domain/commands.ts`
@@ -30,32 +35,33 @@ sidebar_position: 52
 - **nodeKind** (1 connections) — `src/domain/commands.ts`
 - **parent** (1 connections) — `src/domain/commands.ts`
 - **payload** (1 connections) — `src/domain/commands.ts`
-- **replacedEdge** (1 connections) — `src/domain/commands.ts`
-- **tuple()** (1 connections) — `src/domain/commands.ts`
+- *... and 2 more nodes in this community*
 
 ## Relationships
 
-- [pipeline.ts](pipeline.ts.md) (9 shared connections)
-- [mcp/apply.ts](mcp-apply.ts.md) (5 shared connections)
-- [segments.ts](segments.ts.md) (2 shared connections)
-- [domain/apply.ts](domain-apply.ts.md) (2 shared connections)
+- [pipeline.ts](pipeline.ts.md) (12 shared connections)
+- [getOwnedDiagram](getOwnedDiagram.md) (12 shared connections)
+- [domain/apply.ts](domain-apply.ts.md) (7 shared connections)
+- [flowSuggest.ts](flowSuggest.ts.md) (4 shared connections)
+- [segments.ts](segments.ts.md) (3 shared connections)
+- [index.ts](index.ts.md) (3 shared connections)
+- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (3 shared connections)
+- [domain/flows.ts](domain-flows.ts.md) (2 shared connections)
+- [drawing/rules.ts](drawing-rules.ts.md) (2 shared connections)
 - [types.ts](types.ts.md) (2 shared connections)
-- [Command](Command.md) (2 shared connections)
-- [catalog.ts](catalog.ts.md) (1 shared connections)
-- [InfraSketch 설계 문서](InfraSketch_설계_문서.md) (1 shared connections)
-- [drawing/rules.ts](drawing-rules.ts.md) (1 shared connections)
-- [\[sessionId\]/route.ts]([sessionId]-route.ts.md) (1 shared connections)
-- [domain/flows.ts](domain-flows.ts.md) (1 shared connections)
-- [diff.ts](diff.ts.md) (1 shared connections)
+- [useChatTurn.ts](useChatTurn.ts.md) (2 shared connections)
+- [samples.ts](samples.ts.md) (2 shared connections)
 
 ## Source Files
 
+- `docs/superpowers/plans/2026-11-05-flows-and-network-boundaries.md`
 - `src/domain/commands.ts`
+- `src/server/mcp/apply.ts`
 
 ## Audit Trail
 
-- EXTRACTED: 56 (100%)
-- INFERRED: 0 (0%)
+- EXTRACTED: 85 (89%)
+- INFERRED: 11 (11%)
 - AMBIGUOUS: 0 (0%)
 
 ---

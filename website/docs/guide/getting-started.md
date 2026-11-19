@@ -84,6 +84,7 @@ npm run eval:intent                  # Clef 판정 + 그 뒤 Qwen 명령
 npm run eval:intent -- --clef-only   # 의도 분류만(빠름)
 npm run eval:intent -- --repeat 3    # Qwen 을 문장마다 3번(통과 횟수)
 npm run eval:intent -- --update      # 지금 결과를 기준으로 저장
+npm run eval:intent -- --only a,b --dump out.jsonl   # 고른 문장만, 모델이 낸 명령을 파일로(원인 조사용)
 ```
 
 ## Claude Code 연결 (선택)

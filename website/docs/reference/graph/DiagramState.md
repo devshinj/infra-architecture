@@ -1,6 +1,6 @@
 ---
 title: "DiagramState"
-sidebar_position: 122
+sidebar_position: 120
 sidebar_label: "핵심 노드: DiagramState"
 ---
 # DiagramState
@@ -9,7 +9,7 @@ sidebar_label: "핵심 노드: DiagramState"
 
 > God node · 67 connections · `src/domain/types.ts`
 
-**Community:** [getOwnedDiagram](getOwnedDiagram.md)
+**Community:** [diff.ts](diff.ts.md)
 
 ## Connections by Relation
 
@@ -22,18 +22,18 @@ sidebar_label: "핵심 노드: DiagramState"
 - [pipeline.ts](pipeline.ts.md) `EXTRACTED`
 - [Canvas.tsx](Canvas.tsx.md) `EXTRACTED`
 - [prompt.ts](prompt.ts.md) `EXTRACTED`
-- [mcp/apply.ts](mcp-apply.ts.md) `EXTRACTED`
+- mcp/apply.ts `EXTRACTED`
 - [NodeInfo.tsx](NodeInfo.tsx.md) `EXTRACTED`
 - server/explain.ts `EXTRACTED`
 - [projects.ts](projects.ts.md) `EXTRACTED`
 - [read.ts](read.ts.md) `EXTRACTED`
-- [ask.ts](ask.ts.md) `EXTRACTED`
+- ask.ts `EXTRACTED`
 - [domain/warnings.ts](domain-warnings.ts.md) `EXTRACTED`
 - [server/network.ts](server-network.ts.md) `EXTRACTED`
 - [schema.ts](schema.ts.md) `EXTRACTED`
 - [flowSuggest.ts](flowSuggest.ts.md) `EXTRACTED`
 - [server/flows.ts](server-flows.ts.md) `EXTRACTED`
-- versions.ts `EXTRACTED`
+- [versions.ts](versions.ts.md) `EXTRACTED`
 - [domain/flows.ts](domain-flows.ts.md) `EXTRACTED`
 - [samples.ts](samples.ts.md) `EXTRACTED`
 - [domain/explain.ts](domain-explain.ts.md) `EXTRACTED`

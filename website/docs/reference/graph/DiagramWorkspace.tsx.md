@@ -1,73 +1,71 @@
 ---
 title: "DiagramWorkspace.tsx"
-sidebar_position: 5
+sidebar_position: 21
 ---
 # DiagramWorkspace.tsx
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 45 nodes · cohesion 0.09
+> 37 nodes · cohesion 0.09
 
 ## Key Concepts
 
 - **DiagramWorkspace.tsx** (132 connections) — `src/ui/DiagramWorkspace.tsx`
 - **DiagramWorkspace()** (59 connections) — `src/ui/DiagramWorkspace.tsx`
 - **MobileTabBar.tsx** (13 connections) — `src/ui/MobileTabBar.tsx`
-- **refreshDiagram()** (12 connections) — `src/app/(app)/actions.ts`
 - **PanelResizer.tsx** (9 connections) — `src/ui/PanelResizer.tsx`
-- **defaultDisplayOptions()** (8 connections) — `src/canvas/display.ts`
-- **saveFieldsAction()** (7 connections) — `src/app/(app)/actions.ts`
-- **setWarningIgnoredAction()** (7 connections) — `src/app/(app)/actions.ts`
-- **clearPinnedAction()** (6 connections) — `src/app/(app)/actions.ts`
-- **confirmAssumptionAction()** (6 connections) — `src/app/(app)/actions.ts`
-- **importSampleAction()** (6 connections) — `src/app/(app)/actions.ts`
-- **removeNoLinkAction()** (6 connections) — `src/app/(app)/actions.ts`
-- **savePinnedAction()** (6 connections) — `src/app/(app)/actions.ts`
-- **trunkColor()** (6 connections) — `src/canvas/trunk.ts`
+- **confirmAssumption()** (6 connections) — `src/domain/assumptions.ts`
+- **useFly()** (6 connections) — `src/ui/FlyLayer.tsx`
 - **MobileTabBar()** (6 connections) — `src/ui/MobileTabBar.tsx`
-- **1. 처음 접기: 깊은 영역부터, 보이는 상자 40개 이하** (4 connections) — `docs/superpowers/specs/2026-11-17-layout-stage34-fold-and-crossings-design.md`
-- **optionsFor()** (4 connections) — `src/ui/DiagramWorkspace.tsx`
 - **mobileTabId()** (4 connections) — `src/ui/MobileTabBar.tsx`
 - **assumptionChangeMessage()** (3 connections) — `src/domain/assumptions.ts`
+- **FlyLayer** (3 connections) — `src/ui/FlyLayer.tsx`
+- **undoneVersions()** (3 connections) — `src/ui/HistoryPanel.tsx`
 - **MobileTabBarProps** (3 connections) — `src/ui/MobileTabBar.tsx`
 - **NetworkKnowledgeProvider()** (3 connections) — `src/ui/network/NetworkKnowledgeContext.tsx`
 - **PanelResizer()** (3 connections) — `src/ui/PanelResizer.tsx`
 - **diffItems()** (2 connections) — `src/ui/DiagramWorkspace.tsx`
 - **escapeBelongsElsewhere()** (2 connections) — `src/ui/DiagramWorkspace.tsx`
 - **hasId()** (2 connections) — `src/ui/DiagramWorkspace.tsx`
-- *... and 20 more nodes in this community*
+- **sameSet()** (2 connections) — `src/ui/DiagramWorkspace.tsx`
+- **unionState()** (2 connections) — `src/ui/DiagramWorkspace.tsx`
+- **MOBILE_VIEWS** (2 connections) — `src/ui/MobileTabBar.tsx`
+- **.controls()** (2 connections) — `src/ui/MobileTabBar.tsx`
+- **.onChange()** (2 connections) — `src/ui/MobileTabBar.tsx`
+- **MobileView** (2 connections) — `src/ui/MobileTabBar.tsx`
+- **PANEL_DEFAULT** (2 connections) — `src/ui/PanelResizer.tsx`
+- **PANEL_MAX** (2 connections) — `src/ui/PanelResizer.tsx`
+- *... and 12 more nodes in this community*
 
 ## Relationships
 
-- [(app)/actions.ts](app-actions.ts.md) (16 shared connections)
-- [RightPanel.tsx](RightPanel.tsx.md) (11 shared connections)
-- [run](run.md) (10 shared connections)
-- [getOwnedDiagram](getOwnedDiagram.md) (10 shared connections)
+- [(app)/actions.ts](app-actions.ts.md) (23 shared connections)
+- [useChatTurn.ts](useChatTurn.ts.md) (13 shared connections)
+- [RightPanel.tsx](RightPanel.tsx.md) (10 shared connections)
 - [MissingChecklist.tsx](MissingChecklist.tsx.md) (10 shared connections)
 - [Canvas.tsx](Canvas.tsx.md) (9 shared connections)
-- [FlyLayer.tsx](FlyLayer.tsx.md) (9 shared connections)
-- [SessionPicker.tsx](SessionPicker.tsx.md) (8 shared connections)
-- [ChatPanel.tsx](ChatPanel.tsx.md) (7 shared connections)
+- [ResetPasswordForm.tsx](ResetPasswordForm.tsx.md) (7 shared connections)
 - [Legend.tsx](Legend.tsx.md) (7 shared connections)
-- [EdgeLayer.tsx](EdgeLayer.tsx.md) (6 shared connections)
+- [ChatPanel.tsx](ChatPanel.tsx.md) (6 shared connections)
+- [GhostLayer.tsx](GhostLayer.tsx.md) (5 shared connections)
+- [Shell.tsx](Shell.tsx.md) (5 shared connections)
 - [useRemoteChanges.ts](useRemoteChanges.ts.md) (5 shared connections)
+- [FlyLayer.tsx](FlyLayer.tsx.md) (5 shared connections)
 
 ## Source Files
 
-- `docs/superpowers/specs/2026-11-17-layout-stage34-fold-and-crossings-design.md`
-- `src/app/(app)/actions.ts`
-- `src/canvas/display.ts`
-- `src/canvas/trunk.ts`
 - `src/domain/assumptions.ts`
 - `src/ui/DiagramWorkspace.tsx`
+- `src/ui/FlyLayer.tsx`
+- `src/ui/HistoryPanel.tsx`
 - `src/ui/MobileTabBar.tsx`
 - `src/ui/PanelResizer.tsx`
 - `src/ui/network/NetworkKnowledgeContext.tsx`
 
 ## Audit Trail
 
-- EXTRACTED: 254 (96%)
-- INFERRED: 11 (4%)
+- EXTRACTED: 222 (98%)
+- INFERRED: 5 (2%)
 - AMBIGUOUS: 0 (0%)
 
 ---

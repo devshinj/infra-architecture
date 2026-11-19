@@ -1,67 +1,76 @@
 ---
 title: "segments.ts"
-sidebar_position: 20
+sidebar_position: 3
 ---
 # segments.ts
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 37 nodes · cohesion 0.10
+> 69 nodes · cohesion 0.05
 
 ## Key Concepts
 
 - **catalog.ts** (38 connections) — `src/domain/catalog.ts`
 - **segments.ts** (23 connections) — `src/canvas/segments.ts`
+- **NodeCard.tsx** (18 connections) — `src/canvas/NodeCard.tsx`
 - **motion.ts** (16 connections) — `src/canvas/motion.ts`
+- **ZoneNameLayer.tsx** (15 connections) — `src/canvas/ZoneNameLayer.tsx`
 - **buildSegmentBundles()** (11 connections) — `src/canvas/segments.ts`
 - **EdgeKind** (11 connections) — `src/domain/catalog.ts`
+- **GroupBox.tsx** (10 connections) — `src/canvas/GroupBox.tsx`
+- **CategoryIcon()** (9 connections) — `src/canvas/icons.tsx`
 - **startBundleMotion()** (9 connections) — `src/canvas/motion.ts`
 - **EDGE_KINDS** (9 connections) — `src/domain/catalog.ts`
+- **GroupKind** (9 connections) — `src/domain/catalog.ts`
+- **icons.tsx** (8 connections) — `src/canvas/icons.tsx`
+- **NodeCard()** (8 connections) — `src/canvas/NodeCard.tsx`
+- **ref_xyflow_react** (7 connections)
+- **NameTooltip.tsx** (7 connections) — `src/canvas/NameTooltip.tsx`
+- **groupToggleWidth()** (6 connections) — `src/canvas/layout.ts`
+- **nodeTypes.ts** (6 connections) — `src/canvas/nodeTypes.ts`
+- **Category** (6 connections) — `src/domain/catalog.ts`
+- **GROUP_KINDS** (6 connections) — `src/domain/catalog.ts`
+- **NodeCardData** (5 connections) — `src/canvas/NodeCard.tsx`
 - **buildSegs()** (5 connections) — `src/canvas/segments.ts`
 - **normalize()** (5 connections) — `src/canvas/segments.ts`
 - **rp()** (5 connections) — `src/canvas/segments.ts`
-- **piecesOf()** (4 connections) — `src/canvas/segments.ts`
-- **pk()** (4 connections) — `src/canvas/segments.ts`
-- **bundleSpeed()** (3 connections) — `src/canvas/motion.ts`
-- **def()** (3 connections) — `src/canvas/motion.ts`
-- **Bundle** (3 connections) — `src/canvas/segments.ts`
-- **Segment** (3 connections) — `src/canvas/segments.ts`
-- **speedOf()** (3 connections) — `src/canvas/segments.ts`
-- **dashAlong()** (2 connections) — `src/canvas/motion.ts`
-- **hostOf()** (2 connections) — `src/canvas/motion.ts`
-- **make()** (2 connections) — `src/canvas/motion.ts`
-- **MotionKind** (2 connections) — `src/canvas/motion.ts`
-- **assignStarts()** (2 connections) — `src/canvas/segments.ts`
-- **BASE_SPEED** (2 connections) — `src/canvas/segments.ts`
-- **InEdge** (2 connections) — `src/canvas/segments.ts`
-- **r5()** (2 connections) — `src/canvas/segments.ts`
-- *... and 12 more nodes in this community*
+- **groupToggleLabel()** (4 connections) — `src/canvas/layout.ts`
+- *... and 44 more nodes in this community*
 
 ## Relationships
 
-- [EdgeLayer.tsx](EdgeLayer.tsx.md) (10 shared connections)
-- [types.ts](types.ts.md) (7 shared connections)
-- [catalog.ts](catalog.ts.md) (4 shared connections)
-- [EdgePanels.tsx](EdgePanels.tsx.md) (4 shared connections)
+- [Canvas.tsx](Canvas.tsx.md) (16 shared connections)
+- [EdgeLayer.tsx](EdgeLayer.tsx.md) (12 shared connections)
+- [types.ts](types.ts.md) (8 shared connections)
+- [EdgePanels.tsx](EdgePanels.tsx.md) (6 shared connections)
+- [layout.ts](layout.ts.md) (6 shared connections)
+- [NodeInfo.tsx](NodeInfo.tsx.md) (6 shared connections)
+- [MissingChecklist.tsx](MissingChecklist.tsx.md) (5 shared connections)
+- [AuthStage.tsx](AuthStage.tsx.md) (4 shared connections)
+- [ResetPasswordForm.tsx](ResetPasswordForm.tsx.md) (3 shared connections)
+- [commands.ts](commands.ts.md) (3 shared connections)
 - [domain/warnings.ts](domain-warnings.ts.md) (3 shared connections)
-- [layoutMetrics.ts](layoutMetrics.ts.md) (2 shared connections)
-- [InfraSketch 설계 문서](InfraSketch_설계_문서.md) (2 shared connections)
-- [commands.ts](commands.ts.md) (2 shared connections)
-- [drawing/rules.ts](drawing-rules.ts.md) (2 shared connections)
-- [samples.ts](samples.ts.md) (2 shared connections)
-- [Legend.tsx](Legend.tsx.md) (2 shared connections)
-- [NodeInfo.tsx](NodeInfo.tsx.md) (2 shared connections)
+- [drawing/rules.ts](drawing-rules.ts.md) (3 shared connections)
 
 ## Source Files
 
+- `src/app/dev/edges/EdgePanels.tsx`
+- `src/canvas/GroupBox.tsx`
+- `src/canvas/NameTooltip.tsx`
+- `src/canvas/NodeCard.tsx`
+- `src/canvas/ZoneNameLayer.tsx`
+- `src/canvas/icons.tsx`
+- `src/canvas/layout.ts`
 - `src/canvas/motion.ts`
+- `src/canvas/nodeTypes.ts`
 - `src/canvas/segments.ts`
 - `src/domain/catalog.ts`
+- `src/domain/types.ts`
 
 ## Audit Trail
 
-- EXTRACTED: 116 (97%)
-- INFERRED: 3 (3%)
+- EXTRACTED: 219 (97%)
+- INFERRED: 7 (3%)
 - AMBIGUOUS: 0 (0%)
 
 ---

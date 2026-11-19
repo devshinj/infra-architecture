@@ -1,6 +1,6 @@
 ---
 title: "auth.ts"
-sidebar_position: 45
+sidebar_position: 41
 ---
 # auth.ts
 
@@ -39,15 +39,15 @@ sidebar_position: 45
 
 - [reset.ts](reset.ts.md) (5 shared connections)
 - [auth/actions.ts](auth-actions.ts.md) (4 shared connections)
-- [auth](auth.md) (3 shared connections)
-- [ask/route.ts](ask-route.ts.md) (2 shared connections)
-- [server/flows.ts](server-flows.ts.md) (2 shared connections)
+- [ask/route.ts](ask-route.ts.md) (3 shared connections)
+- [\[sessionId\]/route.ts]([sessionId]-route.ts.md) (2 shared connections)
 - [(app)/actions.ts](app-actions.ts.md) (2 shared connections)
 - [Shell.tsx](Shell.tsx.md) (2 shared connections)
 - [explain/route.ts](explain-route.ts.md) (1 shared connections)
-- [suggest/route.ts](suggest-route.ts.md) (1 shared connections)
-- [\[sessionId\]/route.ts]([sessionId]-route.ts.md) (1 shared connections)
-- [health.ts](health.ts.md) (1 shared connections)
+- [NotFoundError](NotFoundError.md) (1 shared connections)
+- [flowSuggest.ts](flowSuggest.ts.md) (1 shared connections)
+- [server/flows.ts](server-flows.ts.md) (1 shared connections)
+- [deps.ts](deps.ts.md) (1 shared connections)
 - [GlossaryPage.tsx](GlossaryPage.tsx.md) (1 shared connections)
 
 ## Source Files

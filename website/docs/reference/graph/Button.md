@@ -1,6 +1,6 @@
 ---
 title: "Button()"
-sidebar_position: 127
+sidebar_position: 125
 sidebar_label: "핵심 노드: Button()"
 ---
 # Button()
@@ -9,7 +9,7 @@ sidebar_label: "핵심 노드: Button()"
 
 > God node · 44 connections · `src/ui/Button.tsx`
 
-**Community:** [NetworkKnowledgePage.tsx](NetworkKnowledgePage.tsx.md)
+**Community:** [ResetPasswordForm.tsx](ResetPasswordForm.tsx.md)
 
 ## Connections by Relation
 
@@ -52,7 +52,7 @@ sidebar_label: "핵심 노드: Button()"
 - [Shell.tsx](Shell.tsx.md) `EXTRACTED`
 - reset/page.tsx `EXTRACTED`
 - [GlossaryPage.tsx](GlossaryPage.tsx.md) `EXTRACTED`
-- [ZoneTypePicker.tsx](ZoneTypePicker.tsx.md) `EXTRACTED`
+- ZoneTypePicker.tsx `EXTRACTED`
 - McpKeysPage.tsx `EXTRACTED`
 - dialogs.tsx `EXTRACTED`
 - AuthField.tsx `EXTRACTED`
