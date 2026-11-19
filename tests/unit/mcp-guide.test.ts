@@ -16,6 +16,8 @@ describe("buildGuide", () => {
   test("요청 범위를 넘지 않게 하는 문구가 들어 있다", () => {
     expect(guide).toContain("소프트웨어(sw)·버전·포트·OS");
     expect(guide).toContain("요청한 것만 바꿔요");
+    expect(guide).toContain("attrs.sw 에 써요");
+    expect(guide).toContain("추가해 달라는 요청이에요");
     expect(guide).toContain("경고를 없애려고 구성을 바꾸지 않아요");
   });
 
