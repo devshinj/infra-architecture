@@ -71,6 +71,11 @@ describe("checkGuards", () => {
     expect(checkGuards({ forbid: ["remove_edge"] }, [{ op: "add_node" }], none)).toBeNull();
   });
 
+  it("만들라고 한 노드 수보다 적게 만들면 잡는다", () => {
+    expect(checkGuards({ addsNodes: 2 }, [{ op: "add_node" }, { op: "add_edge" }], none)).toBe("새 노드가 모자람: 1개(기대 2개 이상)");
+    expect(checkGuards({ addsNodes: 2 }, [{ op: "add_node" }, { op: "add_node" }], none)).toBeNull();
+  });
+
   it("지어낸 전달물·방향을 잡는다", () => {
     expect(checkGuards({}, [], { guessed: ["e-a-b"], flows: {} })).toBe("망을 안 넘는 연결에 전달물·방향을 지어냄: e-a-b");
   });

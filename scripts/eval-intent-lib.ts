@@ -19,6 +19,8 @@ export interface QwenGuards {
   keepStepText?: boolean;
   /** 문장이 전달물·방향을 직접 말해서, 같은 망 안 연결에 적어도 지어낸 것이 아니다 */
   allowPayload?: boolean;
+  /** 요청이 새 노드를 만들라고 한 문장: add_node 가 이 수보다 적으면 실패다(범위 규칙이 해야 할 일까지 막는지 본다). */
+  addsNodes?: number;
   /** 요청 범위. 있으면 범위를 넘긴 실행은 실패다(checkScope). */
   scope?: Scope;
 }
@@ -123,6 +125,8 @@ export function checkGuards(
 ): string | null {
   const bad = (g.forbid ?? []).filter((op) => cmds.some((c) => c.op === op));
   if (bad.length) return `나오면 안 되는 명령: ${bad.join(", ")}`;
+  const addedNodes = cmds.filter((c) => c.op === "add_node").length;
+  if (g.addsNodes && addedNodes < g.addsNodes) return `새 노드가 모자람: ${addedNodes}개(기대 ${g.addsNodes}개 이상)`;
   if (ctx.guessed.length) return `망을 안 넘는 연결에 전달물·방향을 지어냄: ${ctx.guessed.join(", ")}`;
   if (g.keepStepText) {
     for (const c of cmds) {

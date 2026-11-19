@@ -6,11 +6,12 @@
  *   --clef-only   Qwen 을 부르지 않고 의도 분류만 본다(빠름)
  *   --only a,b    이 id 의 문장만
  *   --repeat N    Qwen 을 문장마다 N 번 돌려 통과 횟수를 본다(기본 1). 모두 통과해야 맞음
+ *   --dump FILE   실행마다 Qwen 이 낸 명령과 판정을 FILE 에 JSON Lines 로 덧붙인다(원인 조사용)
  *   --update      이번 결과를 기준 파일(tests/fixtures/intent/baseline.json)로 저장
  *
  * 기준 파일이 있으면 그보다 나빠진 문장을 따로 보여 주고, 하나라도 있으면 실패(1)로 끝낸다.
  */
-import { readFileSync, writeFileSync, existsSync } from "node:fs";
+import { appendFileSync, readFileSync, writeFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import {
   checkGuards,
@@ -51,6 +52,8 @@ const clefOnly = args.includes("--clef-only");
 const update = args.includes("--update");
 const onlyArg = args[args.indexOf("--only") + 1];
 const only = args.includes("--only") && onlyArg ? new Set(onlyArg.split(",")) : null;
+const dumpArg = args[args.indexOf("--dump") + 1];
+const dumpPath = args.includes("--dump") && dumpArg ? dumpArg : null;
 const repeat = args.includes("--repeat") ? Math.max(1, Number(args[args.indexOf("--repeat") + 1]) || 1) : 1;
 
 async function main(): Promise<number> {
@@ -149,8 +152,9 @@ async function main(): Promise<number> {
         const history = [{ role: "assistant" as const, content: prev }];
         const messages = buildMessages({ intent: routedIntent, text: clean, state, mentions, history, missing: openMissing, flows });
         // 한 번 돌린 결과: 문제 이유(없으면 null)와 낸 명령 요약.
-        const once = async (): Promise<{ note: string | null; ops: string; over?: boolean }> => {
+        const once = async (msgs: typeof messages): Promise<{ note: string | null; ops: string; over?: boolean; empty?: boolean }> => {
           const seen: SeenCommand[] = [];
+          const rawCmds: unknown[] = []; // --dump 용: 모델이 낸 그대로(say 포함)
           const touched = new Set<string>(); // 전달물·방향을 적은 연결 id
           let st = state;
           // 파이프라인과 같이, 같은 두 노드 사이 연결을 지웠다 다시 만들면 짝을 지운다. 판정은 바꾼 명령으로 한다.
@@ -185,6 +189,7 @@ async function main(): Promise<number> {
           };
           const parser = createJsonlParser(
             (v) => {
+              rawCmds.push(v);
               if ((v as { op?: unknown } | null)?.op === "say") return;
               const p = parseCommand(normalizeAiCommand(v));
               if (!p.ok) return;
@@ -193,7 +198,7 @@ async function main(): Promise<number> {
             () => {},
           );
           try {
-            await qwen.streamCompletion(messages, { signal: AbortSignal.timeout(QWEN_TIMEOUT_MS), onDelta: (d) => parser.push(d) });
+            await qwen.streamCompletion(msgs, { signal: AbortSignal.timeout(QWEN_TIMEOUT_MS), onDelta: (d) => parser.push(d) });
             parser.end();
           } catch (e) {
             return { note: `호출 실패: ${(e as Error).name}`, ops: "-" };
@@ -207,10 +212,17 @@ async function main(): Promise<number> {
           const issues = c.qwen.scope ? checkScope(c.qwen.scope, state, st) : null;
           for (const kind of new Set(issues?.map((i) => i.kind))) scopeKinds.set(kind, (scopeKinds.get(kind) ?? 0) + 1);
           const note = judgeQwen(c.qwen, seen) ?? checkGuards(c.qwen, seen, { guessed, flows: flowSteps }) ?? scopeNote(issues ?? []);
-          return { note, ops: summarizeOps(seen), over: issues ? issues.length > 0 : undefined };
+          if (dumpPath) appendFileSync(dumpPath, JSON.stringify({ id: c.id, note, cmds: rawCmds }) + "\n");
+          return { note, ops: summarizeOps(seen), over: issues ? issues.length > 0 : undefined, empty: seen.length === 0 };
+        };
+        // 파이프라인처럼, 구성 변경 요청에 명령이 하나도 없으면(say 만 쓰고 멈춤) 다그치는 한 줄을 붙여 한 번만 다시 부른다.
+        const turn = async () => {
+          const r = await once(messages);
+          if (routedIntent !== "structure_change" || !r.empty) return r;
+          return once(buildMessages({ intent: routedIntent, text: clean, state, mentions, history, missing: openMissing, flows, retry: true }));
         };
         const runs: { note: string | null; ops: string; over?: boolean }[] = [];
-        for (let i = 0; i < repeat; i++) runs.push(await once());
+        for (let i = 0; i < repeat; i++) runs.push(await turn());
         const fails = runs.filter((r) => r.note !== null);
         qwenPasses = runs.length - fails.length;
         qwenRuns = runs.length;
