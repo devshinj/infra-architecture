@@ -227,9 +227,18 @@ async function lockedTurn(args: TurnArgs, sessionId: string | null, followUp: bo
   const openMissing = computeMissing(state).items.filter((m) => !m.unknown && m.targetKind !== "group");
   const openItems = clefOpenItems(state, openMissing, { text: clean, lastAssistant, mentionIds: mentions.map((m) => m.id) });
   // 되묻기에 답한 차례는 분류하지 않는다(이미 구성 변경으로 분류된 요청을 이어 그린다).
+  // Clef 가 실제로 낸 판정(확신 미달로 버린 것 포함). 부르지 않았으면 undefined, 답을 못 받았으면 null.
+  const clefSeen: { raw?: Awaited<ReturnType<typeof deps.clef.classifyIntent>> } = {};
+  const classifyStart = Date.now();
   const intent: Intent | null = pendingText
     ? "structure_change"
-    : await resolveIntent(args.text, () => deps.clef.classifyIntent(clean, { lastAssistant, openItems }, signal));
+    : await resolveIntent(args.text, async () => (clefSeen.raw = await deps.clef.classifyIntent(clean, { lastAssistant, openItems }, signal)));
+  // 분류가 어디서 틀리는지 나중에 볼 수 있게 판정·확신도·걸린 시간을 남긴다. 사용자 글은 남기지 않는다.
+  if (!pendingText) {
+    const raw = clefSeen.raw;
+    const why = raw === undefined ? "not_called" : raw === null ? "no_answer" : intent === null ? "low_confidence" : "ok";
+    console.info("[chat] intent", { diagramId, routed: intent, clef: raw?.intent ?? null, confidence: raw?.confidence ?? null, why, ms: Date.now() - classifyStart });
+  }
   emit({ t: "start", messageId: userMsg.id, intent });
 
   const says: string[] = [];

@@ -1,4 +1,5 @@
 /** 의도 점검(eval-intent.ts)용 순수 도우미: Qwen 출력 판정과 기준 파일 비교. */
+import type { DiagramState } from "@/domain/types";
 
 export type QwenExpect =
   | { expect: "none" }
@@ -18,6 +19,88 @@ export interface QwenGuards {
   keepStepText?: boolean;
   /** 문장이 전달물·방향을 직접 말해서, 같은 망 안 연결에 적어도 지어낸 것이 아니다 */
   allowPayload?: boolean;
+  /** 요청이 새 노드를 만들라고 한 문장: add_node 가 이 수보다 적으면 실패다(범위 규칙이 해야 할 일까지 막는지 본다). */
+  addsNodes?: number;
+  /** 요청 범위. 있으면 범위를 넘긴 실행은 실패다(checkScope). */
+  scope?: Scope;
+}
+
+/** 한 가지만 요청하는 문장이 건드려도 되는 범위. */
+export interface Scope {
+  /** 바꾸거나 지워도 되는 기존 노드·연결·영역 id. 여기 든 노드에는 새 연결을 붙여도 된다. */
+  touch?: string[];
+  /** 새로 만들어도 되는 노드 수(기본 0) */
+  newNodes?: number;
+  /** 새로 만들어도 되는 영역 수(기본 0) */
+  newGroups?: number;
+  /** 사용자가 값을 말해서 채워도 되는 속성. "sw"(어느 노드든) 또는 "db.sw"(그 노드만) */
+  attrs?: string[];
+}
+
+export type ScopeKind = "기존 대상" | "새 노드" | "새 영역" | "새 연결" | "속성값";
+export interface ScopeIssue {
+  kind: ScopeKind;
+  detail: string;
+}
+
+/** 사용자가 말하지 않아도 그리기 규칙이 노드 종류를 보고 적게 하는 속성. 지어낸 값이 아니다. */
+const RULE_ATTRS = new Set(["managed"]);
+
+/**
+ * 차례 시작 구성(before)과 명령을 적용한 구성(after)을 견주어 요청 범위를 넘긴 것을 검사별로 하나씩 돌려준다. 없으면 빈 배열.
+ * 속성값은 새로 적힌(비어 있지 않고 전과 다른) 값만 본다. 시작 구성의 어느 노드에 같은 key·같은 값이 있으면 복사한 것으로 보고 넘어간다.
+ */
+export function checkScope(scope: Scope, before: DiagramState, after: DiagramState): ScopeIssue[] {
+  const touch = new Set(scope.touch ?? []);
+  const issues: ScopeIssue[] = [];
+  const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
+
+  const changed: string[] = [];
+  const tables: [Record<string, unknown>, Record<string, unknown>][] = [
+    [before.nodes, after.nodes],
+    [before.edges, after.edges],
+    [before.groups, after.groups],
+  ];
+  for (const [was, now] of tables) {
+    for (const id of Object.keys(was)) {
+      if (touch.has(id)) continue;
+      if (now[id] === undefined) changed.push(`${id} 지워짐`);
+      else if (!same(was[id], now[id])) changed.push(`${id} 바뀜`);
+    }
+  }
+  if (changed.length) issues.push({ kind: "기존 대상", detail: changed.join(", ") });
+
+  const added = (was: Record<string, unknown>, now: Record<string, unknown>) => Object.keys(now).filter((id) => !(id in was));
+  const count = (kind: ScopeKind, ids: string[], allowed: number) => {
+    if (ids.length > allowed) issues.push({ kind, detail: `${ids.length}개(허용 ${allowed}): ${ids.join(", ")}` });
+  };
+  count("새 노드", added(before.nodes, after.nodes), scope.newNodes ?? 0);
+  count("새 영역", added(before.groups, after.groups), scope.newGroups ?? 0);
+
+  const loose = added(before.edges, after.edges).filter((id) => {
+    const e = after.edges[id]!;
+    return e.from in before.nodes && e.to in before.nodes && !touch.has(e.from) && !touch.has(e.to);
+  });
+  if (loose.length) issues.push({ kind: "새 연결", detail: loose.map((id) => `${after.edges[id]!.from}→${after.edges[id]!.to}`).join(", ") });
+
+  const allowed = new Set(scope.attrs ?? []);
+  const known = new Set(Object.values(before.nodes).flatMap((n) => Object.entries(n.attrs).map(([k, v]) => `${k}=${v}`)));
+  const made: string[] = [];
+  for (const n of Object.values(after.nodes)) {
+    const prev = before.nodes[n.id]?.attrs ?? {};
+    for (const [k, v] of Object.entries(n.attrs)) {
+      if (v === null || v === "" || prev[k] === v || RULE_ATTRS.has(k)) continue;
+      if (allowed.has(k) || allowed.has(`${n.id}.${k}`) || known.has(`${k}=${v}`)) continue;
+      made.push(`${n.id}.${k}=${v}`);
+    }
+  }
+  if (made.length) issues.push({ kind: "속성값", detail: made.join(", ") });
+  return issues;
+}
+
+/** 넘침을 한 줄로. 없으면 null. */
+export function scopeNote(issues: ScopeIssue[]): string | null {
+  return issues.length ? `범위 넘침 — ${issues.map((i) => `${i.kind}: ${i.detail}`).join(" / ")}` : null;
 }
 
 /** Qwen 이 낸 명령 중 판정에 쓰는 것만(스키마를 통과한 명령). */
@@ -42,6 +125,8 @@ export function checkGuards(
 ): string | null {
   const bad = (g.forbid ?? []).filter((op) => cmds.some((c) => c.op === op));
   if (bad.length) return `나오면 안 되는 명령: ${bad.join(", ")}`;
+  const addedNodes = cmds.filter((c) => c.op === "add_node").length;
+  if (g.addsNodes && addedNodes < g.addsNodes) return `새 노드가 모자람: ${addedNodes}개(기대 ${g.addsNodes}개 이상)`;
   if (ctx.guessed.length) return `망을 안 넘는 연결에 전달물·방향을 지어냄: ${ctx.guessed.join(", ")}`;
   if (g.keepStepText) {
     for (const c of cmds) {
@@ -116,6 +201,9 @@ export interface CaseResult {
   /** --repeat 로 여러 번 돌렸을 때 통과 횟수/전체. qwenOk 는 모두 통과했는지다. */
   qwenPasses?: number;
   qwenRuns?: number;
+  /** 범위(scope)를 잰 문장만: 넘친 실행 수/잰 실행 수 */
+  scopeOver?: number;
+  scopeRuns?: number;
 }
 
 export interface Change {

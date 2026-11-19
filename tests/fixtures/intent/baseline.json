@@ -1,130 +1,130 @@
 {
-  "savedAt": "2026-11-11",
+  "savedAt": "2026-11-19",
   "results": [
     {
       "id": "flow-create-signup",
       "intent": "structure_change",
-      "confidence": 0.9223172237378083,
+      "confidence": 0.9164735401783828,
       "routed": "structure_change",
       "intentOk": true,
       "qwenOk": true,
-      "qwenPasses": 1,
-      "qwenRuns": 1
+      "qwenPasses": 3,
+      "qwenRuns": 3
     },
     {
       "id": "flow-draw-login",
       "intent": "structure_change",
-      "confidence": 0.8685923613810941,
+      "confidence": 0.8487125835686051,
       "routed": "structure_change",
       "intentOk": true,
       "qwenOk": true,
-      "qwenPasses": 1,
-      "qwenRuns": 1
+      "qwenPasses": 3,
+      "qwenRuns": 3
     },
     {
       "id": "flow-add-pwreset",
       "intent": "structure_change",
-      "confidence": 0.9535992888660078,
+      "confidence": 0.9430709528712906,
       "routed": "structure_change",
       "intentOk": true,
       "qwenOk": true,
-      "qwenPasses": 1,
-      "qwenRuns": 1
+      "qwenPasses": 3,
+      "qwenRuns": 3
     },
     {
       "id": "flow-edit-sms",
       "intent": "structure_change",
-      "confidence": 0.9324416566658563,
+      "confidence": 0.9248851736092073,
       "routed": "structure_change",
       "intentOk": true,
       "qwenOk": true,
-      "qwenPasses": 1,
-      "qwenRuns": 1
+      "qwenPasses": 3,
+      "qwenRuns": 3
     },
     {
       "id": "flow-resync",
       "intent": "structure_change",
-      "confidence": 0.9584496229219976,
+      "confidence": 0.9534094780181933,
       "routed": "structure_change",
       "intentOk": true,
       "qwenOk": true,
-      "qwenPasses": 1,
-      "qwenRuns": 1
+      "qwenPasses": 3,
+      "qwenRuns": 3
     },
     {
       "id": "flow-remove-pay",
       "intent": "structure_change",
-      "confidence": 0.9807326654562543,
+      "confidence": 0.9547087580360843,
       "routed": "structure_change",
       "intentOk": true,
       "qwenOk": true,
-      "qwenPasses": 1,
-      "qwenRuns": 1
+      "qwenPasses": 3,
+      "qwenRuns": 3
     },
     {
       "id": "flow-show-was",
       "intent": "structure_change",
-      "confidence": 0.7847976199182884,
+      "confidence": 0.7444840298872464,
       "routed": "structure_change",
       "intentOk": true,
       "qwenOk": null,
-      "qwenPasses": 1,
-      "qwenRuns": 1
+      "qwenPasses": 3,
+      "qwenRuns": 3
     },
     {
       "id": "flow-add-batch",
       "intent": "structure_change",
-      "confidence": 0.9441449852354378,
+      "confidence": 0.9422217574524148,
       "routed": "structure_change",
       "intentOk": true,
       "qwenOk": true,
-      "qwenPasses": 1,
-      "qwenRuns": 1
+      "qwenPasses": 3,
+      "qwenRuns": 3
     },
     {
       "id": "flow-add-cross",
       "intent": "structure_change",
-      "confidence": 0.8970953282559844,
+      "confidence": 0.8720778445134656,
       "routed": "structure_change",
       "intentOk": true,
       "qwenOk": true,
-      "qwenPasses": 1,
-      "qwenRuns": 1
+      "qwenPasses": 3,
+      "qwenRuns": 3
     },
     {
       "id": "flow-rename",
       "intent": "structure_change",
-      "confidence": 0.9507912336749189,
+      "confidence": 0.9399942321627426,
       "routed": "structure_change",
       "intentOk": true,
       "qwenOk": true,
-      "qwenPasses": 1,
-      "qwenRuns": 1
+      "qwenPasses": 3,
+      "qwenRuns": 3
     },
     {
       "id": "flow-draw-browse",
       "intent": "structure_change",
-      "confidence": 0.8494378330422242,
+      "confidence": 0.8288485692656078,
       "routed": "structure_change",
       "intentOk": true,
       "qwenOk": true,
-      "qwenPasses": 1,
-      "qwenRuns": 1
+      "qwenPasses": 3,
+      "qwenRuns": 3
     },
     {
       "id": "flow-add-cache",
       "intent": "structure_change",
-      "confidence": 0.9635061948298033,
+      "confidence": 0.9581122406747159,
       "routed": "structure_change",
       "intentOk": true,
       "qwenOk": true,
-      "qwenPasses": 1,
-      "qwenRuns": 1
+      "qwenPasses": 3,
+      "qwenRuns": 3
     },
     {
       "id": "q-flow-why-db",
       "intent": "question",
-      "confidence": 0.8811397699254299,
+      "confidence": 0.8932514872829991,
       "routed": "question",
       "intentOk": true,
       "qwenOk": true
@@ -132,17 +132,17 @@
     {
       "id": "q-flow-what",
       "intent": "question",
-      "confidence": 0.4104526943702231,
+      "confidence": 0.4125090865647669,
       "routed": "null",
       "intentOk": false,
       "qwenOk": true,
-      "qwenPasses": 1,
-      "qwenRuns": 1
+      "qwenPasses": 3,
+      "qwenRuns": 3
     },
     {
       "id": "q-link-why",
       "intent": "question",
-      "confidence": 0.9015620437996944,
+      "confidence": 0.9091804500834234,
       "routed": "question",
       "intentOk": true,
       "qwenOk": true
@@ -150,7 +150,7 @@
     {
       "id": "q-flow-fw",
       "intent": "question",
-      "confidence": 0.9035770125526416,
+      "confidence": 0.9124662859928238,
       "routed": "question",
       "intentOk": true,
       "qwenOk": true
@@ -158,7 +158,7 @@
     {
       "id": "q-flow-broken",
       "intent": "question",
-      "confidence": 0.8562802776846994,
+      "confidence": 0.8728477329208696,
       "routed": "question",
       "intentOk": true,
       "qwenOk": true
@@ -166,7 +166,7 @@
     {
       "id": "q-zone-diff",
       "intent": "question",
-      "confidence": 0.9444519774217366,
+      "confidence": 0.9433224898882966,
       "routed": "question",
       "intentOk": true,
       "qwenOk": true
@@ -174,7 +174,7 @@
     {
       "id": "q-oneway-safe",
       "intent": "question",
-      "confidence": 0.7575938428633446,
+      "confidence": 0.8248065858842992,
       "routed": "question",
       "intentOk": true,
       "qwenOk": true
@@ -182,7 +182,7 @@
     {
       "id": "q-need-browser",
       "intent": "question",
-      "confidence": 0.6898490700404638,
+      "confidence": 0.6597421129586085,
       "routed": "question",
       "intentOk": true,
       "qwenOk": true
@@ -190,7 +190,7 @@
     {
       "id": "q-need-cache",
       "intent": "question",
-      "confidence": 0.8958210366122634,
+      "confidence": 0.8978437918334482,
       "routed": "question",
       "intentOk": true,
       "qwenOk": true
@@ -198,7 +198,7 @@
     {
       "id": "q-need-ha",
       "intent": "question",
-      "confidence": 0.8630825243021707,
+      "confidence": 0.8729115272931265,
       "routed": "question",
       "intentOk": true,
       "qwenOk": true
@@ -206,197 +206,769 @@
     {
       "id": "q-how-was",
       "intent": "missing_info_answer",
-      "confidence": 0.33024436383351025,
+      "confidence": 0.33388133445086743,
       "routed": "null",
       "intentOk": false,
       "qwenOk": true,
-      "qwenPasses": 1,
-      "qwenRuns": 1
+      "qwenPasses": 3,
+      "qwenRuns": 3
     },
     {
       "id": "s-add-browser",
       "intent": "structure_change",
-      "confidence": 0.9823103469425977,
+      "confidence": 0.979536934047901,
       "routed": "structure_change",
       "intentOk": true,
       "qwenOk": true,
-      "qwenPasses": 1,
-      "qwenRuns": 1
+      "qwenPasses": 3,
+      "qwenRuns": 3
     },
     {
       "id": "s-can-draw",
       "intent": "structure_change",
-      "confidence": 0.9149520464893005,
+      "confidence": 0.9088134111266706,
       "routed": "structure_change",
       "intentOk": true,
-      "qwenOk": true,
+      "qwenOk": false,
+      "qwenNote": "망을 안 넘는 연결에 전달물·방향을 지어냄: e-was-link-auth, e-link-was",
       "qwenPasses": 1,
-      "qwenRuns": 1
+      "qwenRuns": 3
     },
     {
       "id": "s-need-add",
       "intent": "structure_change",
-      "confidence": 0.972113895034132,
+      "confidence": 0.9700657190969814,
       "routed": "structure_change",
       "intentOk": true,
       "qwenOk": true,
-      "qwenPasses": 1,
-      "qwenRuns": 1
+      "qwenPasses": 3,
+      "qwenRuns": 3
     },
     {
       "id": "s-zone-split",
       "intent": "structure_change",
-      "confidence": 0.8887394770792085,
+      "confidence": 0.8609726891138326,
       "routed": "structure_change",
       "intentOk": true,
       "qwenOk": true,
-      "qwenPasses": 1,
-      "qwenRuns": 1
+      "qwenPasses": 3,
+      "qwenRuns": 3
     },
     {
       "id": "s-add-was",
       "intent": "structure_change",
-      "confidence": 0.9724306321887719,
+      "confidence": 0.9674773456934334,
       "routed": "structure_change",
       "intentOk": true,
       "qwenOk": true,
-      "qwenPasses": 1,
-      "qwenRuns": 1
+      "qwenPasses": 3,
+      "qwenRuns": 3
     },
     {
       "id": "s-add-web",
       "intent": "structure_change",
-      "confidence": 0.9593297479573739,
+      "confidence": 0.9533540795209753,
       "routed": "structure_change",
       "intentOk": true,
-      "qwenOk": true,
-      "qwenPasses": 1,
-      "qwenRuns": 1
+      "qwenOk": false,
+      "qwenNote": "나오면 안 되는 명령: remove_node, update_flow",
+      "qwenPasses": 2,
+      "qwenRuns": 3
     },
     {
       "id": "s-db-ha",
       "intent": "structure_change",
-      "confidence": 0.720992088453057,
+      "confidence": 0.6728731569370332,
       "routed": "structure_change",
       "intentOk": true,
       "qwenOk": true,
-      "qwenPasses": 1,
-      "qwenRuns": 1
+      "qwenPasses": 3,
+      "qwenRuns": 3
     },
     {
       "id": "s-edge-info",
       "intent": "structure_change",
-      "confidence": 0.7495801893208256,
+      "confidence": 0.6963889729019233,
       "routed": "structure_change",
       "intentOk": true,
       "qwenOk": true,
-      "qwenPasses": 1,
-      "qwenRuns": 1
+      "qwenPasses": 3,
+      "qwenRuns": 3
     },
     {
       "id": "s-add-link",
       "intent": "structure_change",
-      "confidence": 0.9799399084517273,
+      "confidence": 0.9771531930141194,
       "routed": "structure_change",
       "intentOk": true,
       "qwenOk": true,
-      "qwenPasses": 1,
-      "qwenRuns": 1
+      "qwenPasses": 3,
+      "qwenRuns": 3
     },
     {
       "id": "m-edge-file-oneway",
       "intent": "missing_info_answer",
-      "confidence": 0.655264493394337,
-      "routed": "missing_info_answer",
-      "intentOk": true,
+      "confidence": 0.5953655366881593,
+      "routed": "null",
+      "intentOk": false,
       "qwenOk": true,
-      "qwenPasses": 1,
-      "qwenRuns": 1
+      "qwenPasses": 3,
+      "qwenRuns": 3
     },
     {
       "id": "m-edge-api-two",
       "intent": "missing_info_answer",
-      "confidence": 0.7241066921397351,
+      "confidence": 0.7142596638670146,
       "routed": "missing_info_answer",
       "intentOk": true,
       "qwenOk": true,
-      "qwenPasses": 1,
-      "qwenRuns": 1
+      "qwenPasses": 3,
+      "qwenRuns": 3
     },
     {
       "id": "m-edge-file-short",
       "intent": "missing_info_answer",
-      "confidence": 0.719433727811792,
+      "confidence": 0.7335881222748796,
       "routed": "missing_info_answer",
       "intentOk": true,
       "qwenOk": true,
-      "qwenPasses": 1,
-      "qwenRuns": 1
+      "qwenPasses": 3,
+      "qwenRuns": 3
     },
     {
       "id": "m-node-spec",
       "intent": "missing_info_answer",
-      "confidence": 0.5342702961815665,
+      "confidence": 0.5296117889851091,
       "routed": "null",
       "intentOk": false,
       "qwenOk": true,
-      "qwenPasses": 1,
-      "qwenRuns": 1
+      "qwenPasses": 3,
+      "qwenRuns": 3
     },
     {
       "id": "b-all-os",
       "intent": "structure_change",
-      "confidence": 0.7011681472906378,
+      "confidence": 0.7300569428292146,
       "routed": "structure_change",
       "intentOk": true,
       "qwenOk": true,
-      "qwenPasses": 1,
-      "qwenRuns": 1
+      "qwenPasses": 3,
+      "qwenRuns": 3
     },
     {
       "id": "b-was-ram",
       "intent": "structure_change",
-      "confidence": 0.7547802451026108,
+      "confidence": 0.7192114115420882,
       "routed": "structure_change",
       "intentOk": true,
       "qwenOk": true,
-      "qwenPasses": 1,
-      "qwenRuns": 1
+      "qwenPasses": 3,
+      "qwenRuns": 3
     },
     {
       "id": "b-biz-cpu",
       "intent": "structure_change",
-      "confidence": 0.889365352388395,
+      "confidence": 0.8766844775243927,
       "routed": "structure_change",
       "intentOk": true,
       "qwenOk": true,
-      "qwenPasses": 1,
-      "qwenRuns": 1
+      "qwenPasses": 3,
+      "qwenRuns": 3
     },
     {
       "id": "b-web-sw",
       "intent": "structure_change",
-      "confidence": 0.8944382994269964,
+      "confidence": 0.878670537652026,
       "routed": "structure_change",
       "intentOk": true,
       "qwenOk": true,
-      "qwenPasses": 1,
-      "qwenRuns": 1
+      "qwenPasses": 3,
+      "qwenRuns": 3
     },
     {
       "id": "b-db-ha",
       "intent": "structure_change",
-      "confidence": 0.885401866581349,
+      "confidence": 0.8585229906609003,
       "routed": "structure_change",
       "intentOk": true,
       "qwenOk": null,
-      "qwenPasses": 1,
-      "qwenRuns": 1
+      "qwenPasses": 3,
+      "qwenRuns": 3
+    },
+    {
+      "id": "r-lb",
+      "intent": "structure_change",
+      "confidence": 0.9599523796295847,
+      "routed": "structure_change",
+      "intentOk": true,
+      "qwenOk": true,
+      "qwenPasses": 3,
+      "qwenRuns": 3,
+      "scopeOver": 0,
+      "scopeRuns": 3
+    },
+    {
+      "id": "r-lb-mixed",
+      "intent": "structure_change",
+      "confidence": 0.8992869488487617,
+      "routed": "structure_change",
+      "intentOk": true,
+      "qwenOk": true,
+      "qwenPasses": 3,
+      "qwenRuns": 3,
+      "scopeOver": 0,
+      "scopeRuns": 3
+    },
+    {
+      "id": "r-mq",
+      "intent": "structure_change",
+      "confidence": 0.9706912846907751,
+      "routed": "structure_change",
+      "intentOk": true,
+      "qwenOk": true,
+      "qwenPasses": 3,
+      "qwenRuns": 3,
+      "scopeOver": 0,
+      "scopeRuns": 3
+    },
+    {
+      "id": "r-mq-mixed",
+      "intent": "structure_change",
+      "confidence": 0.6302728470101291,
+      "routed": "structure_change",
+      "intentOk": true,
+      "qwenOk": false,
+      "qwenNote": "범위 넘침 — 기존 대상: e-batch-db 바뀜",
+      "qwenPasses": 2,
+      "qwenRuns": 3,
+      "scopeOver": 1,
+      "scopeRuns": 3
+    },
+    {
+      "id": "r-cdn-mixed",
+      "intent": "structure_change",
+      "confidence": 0.710939243643786,
+      "routed": "structure_change",
+      "intentOk": true,
+      "qwenOk": true,
+      "qwenPasses": 3,
+      "qwenRuns": 3,
+      "scopeOver": 0,
+      "scopeRuns": 3
+    },
+    {
+      "id": "r-describe",
+      "intent": "structure_change",
+      "confidence": 0.4098421932309503,
+      "routed": "null",
+      "intentOk": false,
+      "qwenOk": false,
+      "qwenNote": "범위 넘침 — 새 노드: 4개(허용 3): web-2, was-2, was-3, db-2 / 새 영역: 3개(허용 2): rg-web, rg-was, rg-db / 속성값: db-2.sw=Oracle",
+      "qwenPasses": 0,
+      "qwenRuns": 3,
+      "scopeOver": 3,
+      "scopeRuns": 3
+    },
+    {
+      "id": "r-monitor",
+      "intent": "structure_change",
+      "confidence": 0.6014226893976709,
+      "routed": "structure_change",
+      "intentOk": true,
+      "qwenOk": true,
+      "qwenPasses": 3,
+      "qwenRuns": 3,
+      "scopeOver": 0,
+      "scopeRuns": 3
+    },
+    {
+      "id": "r-was-add",
+      "intent": "structure_change",
+      "confidence": 0.9674773456934334,
+      "routed": "structure_change",
+      "intentOk": true,
+      "qwenOk": true,
+      "qwenPasses": 3,
+      "qwenRuns": 3,
+      "scopeOver": 0,
+      "scopeRuns": 3
+    },
+    {
+      "id": "r-db-ha",
+      "intent": "structure_change",
+      "confidence": 0.6728731569370332,
+      "routed": "structure_change",
+      "intentOk": true,
+      "qwenOk": true,
+      "qwenPasses": 3,
+      "qwenRuns": 3,
+      "scopeOver": 0,
+      "scopeRuns": 3
+    },
+    {
+      "id": "r-rename",
+      "intent": "structure_change",
+      "confidence": 0.9259706277827672,
+      "routed": "structure_change",
+      "intentOk": true,
+      "qwenOk": true,
+      "qwenPasses": 3,
+      "qwenRuns": 3,
+      "scopeOver": 0,
+      "scopeRuns": 3
+    },
+    {
+      "id": "r-remove-batch",
+      "intent": "structure_change",
+      "confidence": 0.9646225819158257,
+      "routed": "structure_change",
+      "intentOk": true,
+      "qwenOk": true,
+      "qwenPasses": 3,
+      "qwenRuns": 3,
+      "scopeOver": 0,
+      "scopeRuns": 3
+    },
+    {
+      "id": "r-link-insert",
+      "intent": "structure_change",
+      "confidence": 0.9771531930141194,
+      "routed": "structure_change",
+      "intentOk": true,
+      "qwenOk": true,
+      "qwenPasses": 3,
+      "qwenRuns": 3,
+      "scopeOver": 0,
+      "scopeRuns": 3
+    },
+    {
+      "id": "r-db-engine",
+      "intent": "structure_change",
+      "confidence": 0.8651384639026535,
+      "routed": "structure_change",
+      "intentOk": true,
+      "qwenOk": true,
+      "qwenPasses": 3,
+      "qwenRuns": 3,
+      "scopeOver": 0,
+      "scopeRuns": 3
+    },
+    {
+      "id": "r-edge-add",
+      "intent": "structure_change",
+      "confidence": 0.960474718110785,
+      "routed": "structure_change",
+      "intentOk": true,
+      "qwenOk": true,
+      "qwenPasses": 3,
+      "qwenRuns": 3,
+      "scopeOver": 0,
+      "scopeRuns": 3
+    },
+    {
+      "id": "r-os",
+      "intent": "missing_info_answer",
+      "confidence": 0.2771127098792275,
+      "routed": "null",
+      "intentOk": false,
+      "qwenOk": true,
+      "qwenPasses": 3,
+      "qwenRuns": 3,
+      "scopeOver": 0,
+      "scopeRuns": 3
+    },
+    {
+      "id": "k-warn-fix",
+      "intent": "structure_change",
+      "confidence": 0.7606335684362874,
+      "routed": "structure_change",
+      "intentOk": true,
+      "qwenOk": true,
+      "qwenPasses": 3,
+      "qwenRuns": 3
+    },
+    {
+      "id": "k-warn-all",
+      "intent": "structure_change",
+      "confidence": 0.5318752244322378,
+      "routed": "null",
+      "intentOk": false,
+      "qwenOk": true,
+      "qwenPasses": 3,
+      "qwenRuns": 3
+    },
+    {
+      "id": "k-was-lb",
+      "intent": "structure_change",
+      "confidence": 0.9684588198299219,
+      "routed": "structure_change",
+      "intentOk": true,
+      "qwenOk": true,
+      "qwenPasses": 3,
+      "qwenRuns": 3
+    },
+    {
+      "id": "k-cdn-dns",
+      "intent": "structure_change",
+      "confidence": 0.9723061793410066,
+      "routed": "structure_change",
+      "intentOk": true,
+      "qwenOk": true,
+      "qwenPasses": 3,
+      "qwenRuns": 3
+    },
+    {
+      "id": "k-web-sw",
+      "intent": "structure_change",
+      "confidence": 0.9397825096881934,
+      "routed": "structure_change",
+      "intentOk": true,
+      "qwenOk": true,
+      "qwenPasses": 3,
+      "qwenRuns": 3
+    },
+    {
+      "id": "k-new-3tier",
+      "intent": "structure_change",
+      "confidence": 0.8700421818541972,
+      "routed": "structure_change",
+      "intentOk": true,
+      "qwenOk": true,
+      "qwenPasses": 3,
+      "qwenRuns": 3
+    },
+    {
+      "id": "c-f-yes-do",
+      "intent": "structure_change",
+      "confidence": 0.9320258676537089,
+      "routed": "structure_change",
+      "intentOk": true,
+      "qwenOk": null
+    },
+    {
+      "id": "c-f-yes",
+      "intent": "structure_change",
+      "confidence": 0.5945909810708375,
+      "routed": "null",
+      "intentOk": false,
+      "qwenOk": null
+    },
+    {
+      "id": "c-f-no",
+      "intent": "structure_change",
+      "confidence": 0.5857262038187044,
+      "routed": "null",
+      "intentOk": false,
+      "qwenOk": null
+    },
+    {
+      "id": "c-f-not-that",
+      "intent": "structure_change",
+      "confidence": 0.8717783949147748,
+      "routed": "structure_change",
+      "intentOk": true,
+      "qwenOk": null
+    },
+    {
+      "id": "c-f-same-db",
+      "intent": "structure_change",
+      "confidence": 0.7063092530255176,
+      "routed": "structure_change",
+      "intentOk": true,
+      "qwenOk": null
+    },
+    {
+      "id": "c-f-one-more",
+      "intent": "structure_change",
+      "confidence": 0.7988555352511229,
+      "routed": "structure_change",
+      "intentOk": true,
+      "qwenOk": null
+    },
+    {
+      "id": "c-f-why",
+      "intent": "question",
+      "confidence": 0.8598032872189633,
+      "routed": "question",
+      "intentOk": true,
+      "qwenOk": null
+    },
+    {
+      "id": "c-f-undo",
+      "intent": "history",
+      "confidence": 0.9084707957944473,
+      "routed": "history",
+      "intentOk": true,
+      "qwenOk": null
+    },
+    {
+      "id": "c-f-thanks",
+      "intent": "other",
+      "confidence": 0.8036434495374939,
+      "routed": "other",
+      "intentOk": true,
+      "qwenOk": null
+    },
+    {
+      "id": "c-f-after-answer",
+      "intent": "structure_change",
+      "confidence": 0.2851862063690883,
+      "routed": "null",
+      "intentOk": false,
+      "qwenOk": null
+    },
+    {
+      "id": "c-x-explain-and-add",
+      "intent": "question",
+      "confidence": 0.37984127377508886,
+      "routed": "null",
+      "intentOk": false,
+      "qwenOk": null
+    },
+    {
+      "id": "c-x-spec-and-add",
+      "intent": "structure_change",
+      "confidence": 0.935614255190656,
+      "routed": "structure_change",
+      "intentOk": true,
+      "qwenOk": null
+    },
+    {
+      "id": "c-x-benefit-do",
+      "intent": "question",
+      "confidence": 0.46274957160288166,
+      "routed": "null",
+      "intentOk": false,
+      "qwenOk": null
+    },
+    {
+      "id": "c-q-remove-what-if",
+      "intent": "question",
+      "confidence": 0.7178407706973019,
+      "routed": "question",
+      "intentOk": true,
+      "qwenOk": null
+    },
+    {
+      "id": "c-q-scale-diff",
+      "intent": "question",
+      "confidence": 0.874568267065188,
+      "routed": "question",
+      "intentOk": true,
+      "qwenOk": null
+    },
+    {
+      "id": "c-q-batch-needed",
+      "intent": "question",
+      "confidence": 0.6053532966801377,
+      "routed": "question",
+      "intentOk": true,
+      "qwenOk": null
+    },
+    {
+      "id": "c-q-pg-link",
+      "intent": "question",
+      "confidence": 0.7125746594156812,
+      "routed": "question",
+      "intentOk": true,
+      "qwenOk": null
+    },
+    {
+      "id": "c-q-summary",
+      "intent": "question",
+      "confidence": 0.6544491743146548,
+      "routed": "question",
+      "intentOk": true,
+      "qwenOk": null
+    },
+    {
+      "id": "c-q-what-missing",
+      "intent": "question",
+      "confidence": 0.18250085673195135,
+      "routed": "null",
+      "intentOk": false,
+      "qwenOk": null
+    },
+    {
+      "id": "c-s-del-short",
+      "intent": "structure_change",
+      "confidence": 0.8200456154495104,
+      "routed": "structure_change",
+      "intentOk": true,
+      "qwenOk": null
+    },
+    {
+      "id": "c-s-remove-batch",
+      "intent": "structure_change",
+      "confidence": 0.9568434638763847,
+      "routed": "structure_change",
+      "intentOk": true,
+      "qwenOk": null
+    },
+    {
+      "id": "c-s-rename",
+      "intent": "structure_change",
+      "confidence": 0.8155926870757559,
+      "routed": "structure_change",
+      "intentOk": true,
+      "qwenOk": null
+    },
+    {
+      "id": "c-s-db-engine",
+      "intent": "structure_change",
+      "confidence": 0.8629190446666637,
+      "routed": "structure_change",
+      "intentOk": true,
+      "qwenOk": null
+    },
+    {
+      "id": "c-o-was-2",
+      "intent": "missing_info_answer",
+      "confidence": 0.4007761542576823,
+      "routed": "null",
+      "intentOk": false,
+      "qwenOk": null
+    },
+    {
+      "id": "c-s-cleanup",
+      "intent": "structure_change",
+      "confidence": 0.9849848283507324,
+      "routed": "structure_change",
+      "intentOk": true,
+      "qwenOk": null
+    },
+    {
+      "id": "c-d-shop",
+      "intent": "structure_change",
+      "confidence": 0.9041669367189014,
+      "routed": "structure_change",
+      "intentOk": true,
+      "qwenOk": null
+    },
+    {
+      "id": "c-d-path",
+      "intent": "structure_change",
+      "confidence": 0.9004981890559552,
+      "routed": "structure_change",
+      "intentOk": true,
+      "qwenOk": null
+    },
+    {
+      "id": "c-d-dr",
+      "intent": "structure_change",
+      "confidence": 0.9301046826755737,
+      "routed": "structure_change",
+      "intentOk": true,
+      "qwenOk": null
+    },
+    {
+      "id": "c-m-short-cpu",
+      "intent": "missing_info_answer",
+      "confidence": 0.5849937960045113,
+      "routed": "null",
+      "intentOk": false,
+      "qwenOk": null
+    },
+    {
+      "id": "c-m-ip",
+      "intent": "missing_info_answer",
+      "confidence": 0.7223180224655433,
+      "routed": "missing_info_answer",
+      "intentOk": true,
+      "qwenOk": null
+    },
+    {
+      "id": "c-m-auth-api",
+      "intent": "missing_info_answer",
+      "confidence": 0.7782235574562106,
+      "routed": "missing_info_answer",
+      "intentOk": true,
+      "qwenOk": null
+    },
+    {
+      "id": "c-o-dont-know",
+      "intent": "missing_info_answer",
+      "confidence": 0.45711199642171413,
+      "routed": "null",
+      "intentOk": false,
+      "qwenOk": null
+    },
+    {
+      "id": "c-o-later",
+      "intent": "missing_info_answer",
+      "confidence": 0.39906738655918444,
+      "routed": "null",
+      "intentOk": false,
+      "qwenOk": null
+    },
+    {
+      "id": "c-h-revert",
+      "intent": "history",
+      "confidence": 0.9577115380782587,
+      "routed": "history",
+      "intentOk": true,
+      "qwenOk": null
+    },
+    {
+      "id": "c-h-log",
+      "intent": "history",
+      "confidence": 0.8618043528883442,
+      "routed": "history",
+      "intentOk": true,
+      "qwenOk": null
+    },
+    {
+      "id": "c-h-diff",
+      "intent": "history",
+      "confidence": 0.8314377607236209,
+      "routed": "history",
+      "intentOk": true,
+      "qwenOk": null
+    },
+    {
+      "id": "c-l-auto",
+      "intent": "layout",
+      "confidence": 0.9625041375013662,
+      "routed": "layout",
+      "intentOk": true,
+      "qwenOk": null
+    },
+    {
+      "id": "c-l-tangled",
+      "intent": "layout",
+      "confidence": 0.8923321081905307,
+      "routed": "layout",
+      "intentOk": true,
+      "qwenOk": null
+    },
+    {
+      "id": "c-e-hello",
+      "intent": "other",
+      "confidence": 0.8097935462410879,
+      "routed": "other",
+      "intentOk": true,
+      "qwenOk": null
+    },
+    {
+      "id": "c-e-lunch",
+      "intent": "other",
+      "confidence": 0.4311718410875919,
+      "routed": "null",
+      "intentOk": false,
+      "qwenOk": null
+    },
+    {
+      "id": "c-o-export",
+      "intent": "structure_change",
+      "confidence": 0.3270279431566534,
+      "routed": "null",
+      "intentOk": false,
+      "qwenOk": null
     },
     {
       "id": "l-relayout",
       "intent": "layout",
-      "confidence": 0.9797659249616693,
+      "confidence": 0.9788151387556251,
       "routed": "layout",
       "intentOk": true,
       "qwenOk": null
