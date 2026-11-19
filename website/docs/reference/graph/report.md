@@ -15,7 +15,7 @@ sidebar_position: 1
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `cd47a8ec`
+- Built from commit: `fd1913a5`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
