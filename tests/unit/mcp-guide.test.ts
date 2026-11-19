@@ -13,6 +13,12 @@ describe("buildGuide", () => {
     expect(guide.length).toBeLessThanOrEqual(24000);
   });
 
+  test("요청 범위를 넘지 않게 하는 문구가 들어 있다", () => {
+    expect(guide).toContain("소프트웨어(sw)·버전·포트·OS");
+    expect(guide).toContain("요청한 것만 바꿔요");
+    expect(guide).toContain("경고를 없애려고 구성을 바꾸지 않아요");
+  });
+
   test("사용법 문구가 들어 있다", () => {
     expect(guide).toContain("get_diagram 으로 다시 읽");
     expect(guide).toContain("모르는 값은 비워");
