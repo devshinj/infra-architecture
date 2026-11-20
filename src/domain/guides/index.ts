@@ -5,9 +5,10 @@ import { RELAY } from "./relay";
 import { SHOP } from "./shop";
 import { SOCIAL_LOGIN } from "./sociallogin";
 import { STREAMING } from "./streaming";
+import { VMS } from "./vms";
 import { GUIDE_ENVS, type Guide, type GuideEnv } from "./types";
 
-export const GUIDE_LIST: readonly Guide[] = [SHOP, MESSENGER, DELIVERY, STREAMING, CCTV, SOCIAL_LOGIN, RELAY];
+export const GUIDE_LIST: readonly Guide[] = [SHOP, MESSENGER, DELIVERY, STREAMING, CCTV, VMS, SOCIAL_LOGIN, RELAY];
 
 export function getGuide(id: string): Guide | undefined {
   return GUIDE_LIST.find((g) => g.id === id);
