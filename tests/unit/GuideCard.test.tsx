@@ -44,10 +44,43 @@ const panel = (o: Partial<ChatPanelProps> = {}): ChatPanelProps => ({
   ...o,
 });
 
+const dots = (region: HTMLElement) => region.querySelector<HTMLElement>("[data-progress]");
+
+test("the band shows the topic title", () => {
+  render(<GuideCard {...card()} />);
+  const region = screen.getByRole("region", { name: "학습 단계" });
+  const title = within(region).getByText("학습 · 대형 쇼핑몰 (온프레미스)");
+  expect(title.closest("[data-band]")).not.toBeNull();
+});
+
+test("dots mark done, now and todo steps", () => {
+  render(<GuideCard {...card()} />);
+  const row = dots(screen.getByRole("region", { name: "학습 단계" }))!;
+  const states = [...row.querySelectorAll("[data-state]")].map((d) => d.getAttribute("data-state"));
+  expect(states).toHaveLength(12);
+  expect(states.filter((s) => s === "done")).toHaveLength(2);
+  expect(states[2]).toBe("now");
+  expect(states.filter((s) => s === "now")).toHaveLength(1);
+  expect(states.filter((s) => s === "todo")).toHaveLength(9);
+});
+
+test("progress dots are hidden from assistive tech", () => {
+  render(<GuideCard {...card()} />);
+  const region = screen.getByRole("region", { name: "학습 단계" });
+  expect(dots(region)).toHaveAttribute("aria-hidden", "true");
+  expect(region).toHaveTextContent("이번 단계 · 3 / 12");
+});
+
+test("env-less card shows the band without progress dots", () => {
+  render(<GuideCard {...card({ view: ENV_VIEW })} />);
+  const region = screen.getByRole("region", { name: "학습 단계" });
+  expect(within(region).getByText("학습 · 대형 쇼핑몰")).toBeInTheDocument();
+  expect(dots(region)).toBeNull();
+});
+
 test("GuideCard shows step n/N, goal and example", () => {
   render(<GuideCard {...card()} />);
   const region = screen.getByRole("region", { name: "학습 단계" });
-  expect(within(region).getByText("학습: 대형 쇼핑몰 (온프레미스)")).toBeInTheDocument();
   expect(region).toHaveTextContent("3 / 12");
   expect(within(region).getByText("WAS 를 두 대로 이중화하기")).toBeInTheDocument();
   expect(within(region).getByText("WAS 두 대를 이중화해서 넣어 줘")).toBeInTheDocument();
@@ -78,7 +111,7 @@ test("env chips send the env label", async () => {
   const p = panel({ guide: { view: ENV_VIEW, onQuit: vi.fn(async () => undefined) } });
   render(<ChatPanel {...p} />);
   const region = screen.getByRole("region", { name: "학습 단계" });
-  expect(within(region).getByText("학습: 대형 쇼핑몰")).toBeInTheDocument();
+  expect(within(region).getByText("학습 · 대형 쇼핑몰")).toBeInTheDocument();
   expect(region).not.toHaveTextContent("/ 0");
   expect(within(region).queryByRole("button", { name: "입력창에 넣기" })).not.toBeInTheDocument();
   const user = userEvent.setup();

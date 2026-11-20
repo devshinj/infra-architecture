@@ -42,10 +42,10 @@ test("학습 모드 한 바퀴: 주제 고르기 → 환경 → 1단계 → 안 
   await page.getByRole("tab", { name: "대화" }).click();
 
   // 환경 고르기 전: 환경 칩. 새 대화 버튼은 없다.
-  await expect(card(page)).toContainText("학습: 대형 쇼핑몰", { timeout: 15_000 });
+  await expect(card(page)).toContainText("학습 · 대형 쇼핑몰", { timeout: 15_000 });
   await expect(page.getByRole("button", { name: "새 대화" })).toHaveCount(0);
   await card(page).getByRole("list", { name: "환경" }).getByRole("button", { name: "온프레미스" }).click();
-  await expect(card(page)).toContainText("학습: 대형 쇼핑몰 (온프레미스)", { timeout: 30_000 });
+  await expect(card(page)).toContainText("학습 · 대형 쇼핑몰 (온프레미스)", { timeout: 30_000 });
   await expect(card(page)).toContainText("1 / 12");
   await expect(card(page)).toContainText(STEP1_EXAMPLE);
   await turnEnded(page);

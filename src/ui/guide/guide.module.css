@@ -27,10 +27,18 @@
 .page a:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
 
 /* ---- 단계 카드(대화 탭 맨 위) ---- */
-.card { flex: none; margin: 12px 12px 0; padding: 12px; display: flex; flex-direction: column; gap: 8px; background: var(--color-paper-2); border: 1px solid var(--line-node); border-radius: var(--radius-surface); }
-.cardHead { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
-.cardTitle { margin: 0; min-width: 0; font-size: 13px; font-weight: 600; color: var(--text-primary); overflow-wrap: anywhere; }
-.count { flex: none; margin: 0; font-size: 12px; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+.card { flex: none; margin: 12px 12px 0; overflow: hidden; display: flex; flex-direction: column; border: 1px solid var(--line-node); border-radius: var(--radius-surface); }
+/* 머리띠: "지금 할 일" 판에만 허락된 옅은 연두(DESIGN.md · One Signal Rule 보충). 칠한 연두 버튼은 여전히 보내기 하나. */
+.band { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 12px; background: color-mix(in srgb, var(--accent) 12%, var(--bg-canvas)); border-bottom: 1px solid color-mix(in srgb, var(--accent) 35%, var(--line-node)); }
+.bandTitle { margin: 0; min-width: 0; font-size: 12px; font-weight: 600; line-height: 1.5; color: var(--accent); overflow-wrap: anywhere; }
+/* 진행 점: 지난 단계 강철, 지금 단계 길쭉한 연두, 남은 단계 선 색. 꾸밈이라 보조기기에서 숨긴다. */
+.dots { flex: none; display: flex; align-items: center; gap: 4px; }
+.dot { width: 6px; height: 6px; border-radius: var(--radius-pill); background: var(--line-node); }
+.dot[data-state="done"] { background: var(--text-secondary); }
+.dot[data-state="now"] { width: 14px; background: var(--accent); }
+.cardBody { padding: 12px; display: flex; flex-direction: column; gap: 8px; background: var(--color-paper-2); }
+.count { font-variant-numeric: tabular-nums; }
+.goal { font-size: 15px; font-weight: 600; }
 .rows { margin: 0; display: flex; flex-direction: column; gap: 8px; }
 .rows dt { font-size: 12px; font-weight: 500; color: var(--text-secondary); }
 .rows dd { margin: 2px 0 0; font-size: 13px; line-height: 1.5; color: var(--text-primary); }
@@ -51,7 +59,8 @@
 .noteChip::after { content: "▸"; font-size: 12px; color: var(--text-secondary); }
 .noteChip[aria-expanded="true"] { font-weight: 600; border-color: var(--text-secondary); }
 .noteChip[aria-expanded="true"]::after { content: "▾"; }
-.noteText { margin: 0; padding: 0 0 0 12px; border-left: 1px solid var(--line-node); font-size: 13px; line-height: 1.6; color: var(--color-ink-2); word-break: keep-all; }
+/* 펼친 해설: 칩 아래 작은 판 하나(칩 순서대로 쌓인다). */
+.noteText { margin: 0; padding: 6px 10px; background: var(--color-paper-2); border: 1px solid var(--line-shell); border-radius: var(--radius-control); font-size: 12px; line-height: 1.6; color: var(--color-ink-2); word-break: keep-all; }
 .noteText::before { content: attr(data-label) " · "; font-size: 12px; font-weight: 500; color: var(--text-secondary); }
 
 /* ---- 완료 판 ---- */
