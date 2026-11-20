@@ -4,10 +4,11 @@ import { NODE_KINDS } from "@/domain/catalog";
 import { normalizeTerm, signatureOf, type NodeExplanation } from "@/domain/explain";
 import { emptyState, type DiagramState } from "@/domain/types";
 import { buildExplainMessages, EXPLAIN_EDGE_PROMPT, EXPLAIN_GROUP_PROMPT, EXPLAIN_NODE_PROMPT } from "@/server/chat/prompt";
-import { explainTarget, type ExplainRepo } from "@/server/explain";
+import { cachedNodeExplanation, explainTarget, saveAuthoredExplanations, type ExplainRepo } from "@/server/explain";
 import type { GlossaryRow } from "@/server/glossary";
 import { EXPLAIN_SCORE_QUESTION, type ClefAnswers, type ClefClient } from "@/server/llm/clef";
 import type { ChatMessage, QwenClient } from "@/server/llm/qwen";
+import { LEARNING_LOCKED_MESSAGE } from "@/server/guide/runs";
 import { NotFoundError, ValidationError } from "@/server/projects";
 
 const L4_DEF = "L4 로드밸런서(Layer 4 Load Balancer)는 전송 계층의 IP·포트만 보고 요청을 나눠 보내는 장비입니다.";
@@ -42,7 +43,7 @@ const row = (over: Partial<GlossaryRow>): GlossaryRow => ({
 const L4_ROW = row({ key: normalizeTerm("L4 로드밸런서"), term: "L4 로드밸런서", definition: L4_DEF, why: "서버 여러 대에 요청을 나누려고", compare: "L4는 IP·포트, L7은 요청 내용을 봅니다.", reviewed: true, aliases: ["l4"] });
 
 /** 메모리 저장소. 호출 순서를 log 에 남긴다. */
-function fakeRepo(state: DiagramState | null = sample(), terms: GlossaryRow[] = [L4_ROW]) {
+function fakeRepo(state: DiagramState | null = sample(), terms: GlossaryRow[] = [L4_ROW], learning = false) {
   const log: string[] = [];
   const cache = new Map<string, { signature: string; data: unknown }>();
   const glossary = [...terms];
@@ -53,6 +54,9 @@ function fakeRepo(state: DiagramState | null = sample(), terms: GlossaryRow[] = 
     },
     async getLatestState() {
       return state ? { state } : null;
+    },
+    async isLearning() {
+      return learning;
     },
     async ensureSeeded() {
       log.push("seed");
@@ -542,5 +546,62 @@ describe("explainTarget for groups", () => {
 
   test("group prompt names its fields and limits", () => {
     for (const k of ['"definition"', '"role"', '"boundary"', '"adr"', "120자", "150자", "80자", "영역"]) expect(EXPLAIN_GROUP_PROMPT).toContain(k);
+  });
+});
+
+describe("authored explanations", () => {
+  const ADR2 = { decision: "d", reason: "r", alternative: "a", cost: "c" };
+
+  test("saveAuthoredExplanations skips targets not in the state", async () => {
+    const { repo, cache } = fakeRepo();
+    const n = await saveAuthoredExplanations(
+      "d",
+      sample(),
+      {
+        "node:lb": { definition: "대본 정의", role: "나눕니다", adr: ADR2 },
+        "edge:e1": { flow: "f", method: "m", why: "w", firewall: "x" },
+        "node:gone": { role: "r", adr: ADR2 },
+        "edge:gone": { flow: "f", method: "m", why: "w", firewall: "x" },
+      },
+      { repo, now: () => new Date(5) },
+    );
+    expect(n).toBe(2);
+    expect([...cache.keys()].sort()).toEqual(["edge:e1", "node:lb"]);
+    expect(cache.get("node:lb")!.signature).toBe(signatureOf(sample(), "node", "lb"));
+    // 같은 서명으로 다시 저장해도 덮어쓴다.
+    expect(await saveAuthoredExplanations("d", sample(), { "node:lb": { definition: "바뀐 정의", role: "r", adr: ADR2 } }, { repo })).toBe(1);
+    expect((cache.get("node:lb")!.data as NodeExplanation).definition).toBe("바뀐 정의");
+  });
+
+  test("a cached authored explanation is not overridden by the account glossary", async () => {
+    const { repo } = fakeRepo();
+    await saveAuthoredExplanations("d", sample(), { "node:lb": { definition: "대본 정의", role: "r", adr: ADR2 } }, { repo });
+    const { qwen, calls } = fakeQwen(nodeJson());
+    const r = await explainTarget("u", "d", "node", "lb", {}, { qwen, clef: fakeClef().clef, repo });
+    expect(r).toMatchObject({ ok: true, explanation: { definition: "대본 정의", authored: true, reviewed: true } });
+    expect(calls).toHaveLength(0);
+    const cachedNode = await cachedNodeExplanation("u", "d", sample(), "lb", { repo });
+    expect(cachedNode).toMatchObject({ definition: "대본 정의", authored: true });
+  });
+
+  test("rewrite is refused while learning", async () => {
+    const { repo } = fakeRepo(sample(), [L4_ROW], true);
+    const { qwen, calls } = fakeQwen(nodeJson());
+    const deps = { qwen, clef: fakeClef().clef, repo };
+    for (const opts of [{ instruction: "더 쉽게" }, { force: true }]) {
+      const err = await explainTarget("u", "d", "node", "lb", opts, deps).catch((e: unknown) => e);
+      expect(err).toBeInstanceOf(ValidationError);
+      expect((err as Error).message).toBe(LEARNING_LOCKED_MESSAGE);
+    }
+    expect(calls).toHaveLength(0);
+  });
+
+  test("rewrite works when not learning", async () => {
+    const { repo } = fakeRepo(sample(), [L4_ROW], false);
+    const { qwen, calls } = fakeQwen(nodeJson());
+    const deps = { qwen, clef: fakeClef().clef, repo };
+    expect(await explainTarget("u", "d", "node", "lb", { force: true }, deps)).toMatchObject({ ok: true });
+    expect(await explainTarget("u", "d", "node", "lb", { instruction: "더 쉽게" }, deps)).toMatchObject({ ok: true });
+    expect(calls.length).toBeGreaterThanOrEqual(2);
   });
 });
