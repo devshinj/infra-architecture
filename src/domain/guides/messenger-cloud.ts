@@ -3,7 +3,7 @@
 // 도메인은 예약된 example 을 쓴다(chat.messenger.example·api.messenger.example·files.messenger.example).
 // 빈 영역이 남지 않게 영역은 그 안에 처음 무언가를 놓는 단계에서 만든다(데이터 서브넷은 접속 상태 캐시, 외부 영역은 FCM·APNs 단계).
 // 실시간 전달: 보내는 채팅 서버가 저장(DynamoDB) → 접속 상태에서 받는 사람의 서버 확인 → 그 서버 채널에 발행(Redis Pub/Sub).
-// 파일: API 서버가 CloudFront 서명 URL 을 주고, 앱은 CloudFront(OAC)를 거쳐 S3 에 올리고 받는다. 앱 → S3 직접 연결은 방화벽 없는 진입 경고에 걸려 그리지 않는다.
+// 파일: 올리기는 API 서버가 준 S3 미리 서명 URL 로 앱이 S3 에 바로 올린다. 받기는 CloudFront 서명 URL → CloudFront(OAC, GET 만) → S3 다.
 import type { Command } from "../commands";
 import { assume, edge, edgeId, group, managed, node } from "../samples/dsl";
 
@@ -54,14 +54,14 @@ const ALB_CHAT_RULES = "443 리스너(AWS WAF 연결): chat.messenger.example �
 export const MESSENGER_CLOUD: GuideVariant = {
   environment: "클라우드(AWS)",
   outro:
-    "서울 리전의 VPC 에 ALB 와 두 AZ 의 채팅 서버를 두어 WebSocket 연결을 오래 쥐고, 서버 사이 전달은 Redis Pub/Sub, 저장은 DynamoDB, 접속 상태는 ElastiCache 로 나눈 메신저를 만들었어요. 연결이 없는 사용자에게는 SQS 와 푸시 워커가 FCM·APNs 로 알림을 맡기고, 사진·파일은 서명 URL 로 CloudFront 를 거쳐 S3 를 오가요.",
+    "서울 리전의 VPC 에 ALB 와 두 AZ 의 채팅 서버를 두어 WebSocket 연결을 오래 쥐고, 서버 사이 전달은 Redis Pub/Sub, 저장은 DynamoDB, 접속 상태는 ElastiCache 로 나눈 메신저를 만들었어요. 연결이 없는 사용자에게는 SQS 와 푸시 워커가 FCM·APNs 로 알림을 맡기고, 사진·파일은 미리 서명 URL 로 S3 에 바로 올려 CloudFront 로 내려받아요.",
   otherEnv: [
     { from: "ALB(WebSocket, 유휴 시간 제한)", to: "L4·L7 장비 두 대(VIP, 연결 유지 시간 설정)" },
     { from: "채팅 서버 Auto Scaling 그룹(두 AZ)", to: "채팅 서버 두 대 이상(VIP 뒤)" },
     { from: "ElastiCache(접속 상태·Pub/Sub)", to: "Redis + Sentinel" },
     { from: "DynamoDB", to: "Cassandra 같은 분산 NoSQL 클러스터(직접 운영)" },
     { from: "RDS Multi-AZ", to: "MySQL Active-Standby(VIP)" },
-    { from: "S3 + CloudFront", to: "사내 오브젝트 스토리지 + CDN 업체 계약" },
+    { from: "S3(미리 서명 URL 로 올리기) + CloudFront(받기)", to: "사내 오브젝트 스토리지(기한 있는 올리기 URL) + CDN 업체 계약" },
     { from: "SQS", to: "사내 큐(RabbitMQ)" },
     { from: "NAT 게이트웨이", to: "아웃바운드 프록시·방화벽(FCM·APNs 주소만 허용)" },
     { from: "CloudWatch", to: "Prometheus·Grafana·ELK" },
@@ -102,7 +102,7 @@ export const MESSENGER_CLOUD: GuideVariant = {
         ),
         [G("region")]: groupText(
           "메신저 서버와 데이터를 두는 AWS 서울 리전(ap-northeast-2)이에요. 리전 안에는 서로 떨어진 데이터센터 묶음(AZ)이 여러 곳 있어요.",
-          "앱의 WebSocket·API 연결이 ALB 로 들어오고, 파일은 CloudFront 를 거쳐 S3 로 오가요. 푸시는 NAT 게이트웨이를 거쳐 FCM·APNs 로 나가요.",
+          "앱의 WebSocket·API 연결이 ALB 로 들어오고, 파일은 S3 로 바로 올라와 CloudFront 를 거쳐 내려가요. 푸시는 NAT 게이트웨이를 거쳐 FCM·APNs 로 나가요.",
           ["사용자가 국내라 서울 리전에 둔다", "가까워 메시지 지연이 짧고, 국내 저장 요구에도 맞추기 쉽다", "도쿄 같은 다른 리전에 둔다", "서울 리전 전체가 멈추는 일까지는 대비하지 않는다"],
         ),
         [G("vpc")]: groupText(
@@ -121,13 +121,13 @@ export const MESSENGER_CLOUD: GuideVariant = {
         ),
         [E("user", "alb")]: edgeText(
           "PC·웹 메신저가 ALB 에 WebSocket 연결을 열고, 그 연결로 메시지를 주고받아요.",
-          "WSS(TCP 443). HTTPS 요청으로 시작해 WebSocket 으로 업그레이드해요.",
+          "WSS(TCP 443). HTTPS 요청으로 시작해 WebSocket 으로 업그레이드해요. 로그인 같은 API 요청(HTTPS)도 이 입구로 와요.",
           "연결 하나로 보내기와 받기를 모두 해, 새 메시지를 바로 받으려고요.",
           "ALB 보안 그룹: 인터넷 → 443 허용. WAF 는 연결을 여는 요청을 검사해요.",
         ),
         [E("mobile", "alb")]: edgeText(
           "모바일 앱이 화면에 있는 동안 ALB 에 WebSocket 연결을 열어 둬요.",
-          "WSS(TCP 443). 30초쯤마다 하트비트를 보내 유휴 시간 제한에 걸리지 않게 해요.",
+          "WSS(TCP 443). 30초쯤마다 하트비트를 보내요. 로그인 같은 API 요청(HTTPS)도 같은 443 입구로 와요.",
           "앱이 켜져 있는 동안 새 메시지를 바로 받으려고요.",
           "ALB 보안 그룹: 인터넷 → 443 허용.",
         ),
@@ -178,7 +178,7 @@ export const MESSENGER_CLOUD: GuideVariant = {
         ),
         [N("chat-2")]: nodeText(
           "채팅 서버 #1 과 같은 서버를 다른 AZ(2c)에 둔 짝이에요. ALB 가 새 연결을 두 대에 나눠 주고, 2a 가 멈추면 끊긴 앱들이 이 서버로 다시 연결해요.",
-          ["두 서버를 서로 다른 AZ 에 둔다", "AZ 하나의 장애로 모든 연결이 함께 끊기지 않는다", "같은 AZ 에 두 대를 둔다", "서로 다른 서버에 붙은 사람끼리는 메시지를 넘겨줄 길이 따로 필요하다"],
+          ["두 서버를 서로 다른 AZ 에 둔다", "AZ 하나의 장애로 모든 연결이 함께 끊기지 않는다", "같은 AZ 에 두 대를 둔다", "AZ 를 넘는 통신에 약간의 요금과 지연이 생긴다"],
         ),
         [E("alb", "chat-1")]: edgeText(
           "ALB 가 새 WebSocket 연결을 채팅 서버 #1(2a)에 붙여요. 연결은 끊길 때까지 이 서버에 머물러요.",
@@ -200,7 +200,7 @@ export const MESSENGER_CLOUD: GuideVariant = {
       id: "store",
       goal: "메시지 저장: DynamoDB",
       example: "메시지는 DynamoDB 에 저장해 줘",
-      keywords: [["dynamodb", "다이나모", "dynamo", "nosql", "노에스큐엘", "메시지 저장", "메시지를 저장", "대화 저장", "대화를 저장", "대화 기록", "메시지 기록", "db", "디비", "데이터베이스", "database"]],
+      keywords: [["dynamodb", "다이나모", "dynamo", "nosql", "노에스큐엘", "메시지 저장", "메시지를 저장", "대화 저장", "대화를 저장", "대화 기록", "메시지 기록", "메시지 db", "메시지 디비", "메시지 데이터베이스", "대화 db"]],
       commands: [
         node("ddb", "db_nosql", "메시지 저장소", "region", "Amazon DynamoDB · 대화방·메시지·읽음", {
           ...managed("yes"), sw: "Amazon DynamoDB", version: NO_VERSION, replication: "리전 안 여러 AZ 에 자동 복제",
@@ -212,7 +212,7 @@ export const MESSENGER_CLOUD: GuideVariant = {
       notes: [
         { kind: "flow", text: "메시지는 쓰기가 아주 많고, 읽을 때는 '이 방의 최근 메시지'처럼 키로 찾아요. 그래서 키로 나눠 많이 쓰기 좋은 DynamoDB 를 골랐어요." },
         { kind: "net", text: "DynamoDB 는 VPC 밖의 리전 서비스예요. 채팅 서버는 게이트웨이 엔드포인트로 NAT 없이 닿아요." },
-        { kind: "caution", text: "읽음은 방마다 '어디까지 읽었나' 순번 하나로 저장해요. 메시지마다 읽은 사람을 따로 쓰면 단체방에서 쓰기가 크게 늘어요." },
+        { kind: "caution", text: "읽음 표시는 사람·방마다 '어디까지 읽었나' 순번 하나로 저장하고, 바뀌면 메시지와 같은 길로 상대에게 알려요. 메시지마다 쓰면 쓰기가 크게 늘어요." },
       ],
       miss: "이번 단계는 메시지를 남겨 둘 저장소예요. '메시지는 DynamoDB 에 저장해 줘'처럼 말해 보세요.",
       explains: {
@@ -240,7 +240,7 @@ export const MESSENGER_CLOUD: GuideVariant = {
       id: "presence",
       goal: "접속 상태: ElastiCache",
       example: "접속 상태는 ElastiCache 에 둬 줘",
-      keywords: [["접속 상태", "접속상태", "온라인 상태", "presence", "프레즌스", "접속 여부", "접속중", "접속 중", "온라인 표시", "elasticache", "엘라스티캐시", "캐시", "cache"]],
+      keywords: [["접속 상태", "접속상태", "온라인", "presence", "프레즌스", "접속 여부", "접속중", "접속 중", "접속해 있", "elasticache", "엘라스티캐시"]],
       commands: [
         group("data", "subnet_private", "데이터 서브넷", "vpc"),
         node("presence", "cache", "접속 상태 캐시", "data", "ElastiCache · 사용자 → 채팅 서버", REDIS),
@@ -251,7 +251,7 @@ export const MESSENGER_CLOUD: GuideVariant = {
       notes: [
         { kind: "flow", text: "연결이 끊기거나 서버가 멈추면 하트비트도 끊겨 기록이 만료돼요. 기록이 없으면 그 사람은 오프라인이에요." },
         { kind: "net", text: "데이터 서브넷에는 밖으로 나가는 경로가 없어요. 캐시는 VPC 안의 서버하고만 말해요." },
-        { kind: "caution", text: "접속 상태는 다시 만들 수 있는 값이라 캐시에 둬요. 캐시가 바뀌어 비어도 하트비트마다 다시 적어 곧 채워져요." },
+        { kind: "caution", text: "접속 상태는 다시 만들 수 있어 캐시에 둬요. PC 와 휴대폰으로 함께 접속한 사람은 기기마다 기록을 따로 적어, 연결된 기기 모두에 보내요." },
       ],
       miss: "이번 단계는 누가 접속해 있는지 적는 곳이에요. '접속 상태는 ElastiCache 에 둬 줘'처럼 말해 보세요.",
       explains: {
@@ -292,9 +292,9 @@ export const MESSENGER_CLOUD: GuideVariant = {
       ],
       say: "받는 사람이 다른 채팅 서버에 붙어 있으면 그 서버로 메시지를 넘겨야 해요. 채팅 서버마다 자기 채널을 구독해 두고, 보내는 서버는 접속 상태에서 찾은 서버의 채널에 발행해요. 그 서버가 받아 연결로 내려 줘요.",
       notes: [
-        { kind: "flow", text: "채팅 서버 #1 → 받는 사람의 서버(#2) 확인 → #2 채널에 발행 → #2 가 받아 WebSocket 으로 내려보내요." },
+        { kind: "flow", text: "단체방은 보내는 서버가 멤버마다 접속 상태를 찾아 서버별로 한 번씩 발행해요. 연결 없는 멤버는 푸시 대기열로 가요." },
         { kind: "link", text: "채팅 서버끼리는 직접 잇지 않고 중계 캐시만 바라봐요. 서버가 늘어도 서로의 주소를 알 필요가 없어요." },
-        { kind: "caution", text: "Redis Pub/Sub 는 받아 두지 않고 그 순간 구독 중인 서버에만 전해요. 놓친 메시지는 앱이 다시 연결할 때 DynamoDB 에서 받아 와요." },
+        { kind: "caution", text: "Redis Pub/Sub 는 받아 두지 않아요. 접속 기록은 남았는데 연결이 막 끊긴 사람은 놓칠 수 있어, 앱이 다시 연결할 때 DynamoDB 에서 받아 와요." },
       ],
       miss: "이번 단계는 채팅 서버끼리 메시지를 넘기는 길이에요. '서버 사이 메시지 전달은 Redis Pub/Sub 로 해 줘'처럼 말해 보세요.",
       explains: {
@@ -342,9 +342,9 @@ export const MESSENGER_CLOUD: GuideVariant = {
       ],
       say: "로그인과 친구 목록 같은 짧은 요청은 API 서버 두 대가 맡고, 회원·친구·기기 토큰은 RDS MySQL(Multi-AZ)에 둬요. ALB 는 주소(chat·api)를 보고 채팅 서버와 API 서버로 나눠 보내요.",
       notes: [
-        { kind: "link", text: "로그인하면 API 서버가 짧게 쓰는 액세스 토큰(JWT)을 줘요. 앱은 WebSocket 을 열 때 이 토큰을 보내고, 채팅 서버는 서명만 확인해요." },
-        { kind: "caution", text: "브라우저는 WebSocket 에 인증 헤더를 붙일 수 없어 토큰을 첫 메시지나 쿠키로 보내요. 주소 뒤에 붙이면 로그에 남지 않게 막아요." },
-        { kind: "net", text: "API 와 채팅은 같은 ALB 를 쓰고 대상 그룹만 달라요. 요청이 짧은 API 와 연결이 긴 채팅을 서버로 나눠 따로 늘려요." },
+        { kind: "link", text: "로그인하면 API 서버가 짧게 쓰는 액세스 토큰(JWT)을 줘요. 앱은 WebSocket 을 열 때 이 토큰을 보내고, 채팅 서버는 서명과 만료 시각을 확인해요." },
+        { kind: "caution", text: "브라우저는 WebSocket 에 인증 헤더를 붙일 수 없어 토큰을 첫 메시지나 쿠키로 보내요. 주소 뒤에 붙이면 접근 로그에 남으니 피해요." },
+        { kind: "net", text: "앱의 API 요청(HTTPS)도 채팅과 같은 ALB 443 입구로 들어와 대상 그룹만 달라요. 요청이 짧은 API 와 연결이 긴 채팅을 따로 늘려요." },
       ],
       miss: "이번 단계는 로그인을 맡는 API 서버와 회원 DB 예요. '로그인 API 서버 두 대와 회원 DB 를 넣어 줘'처럼 말해 보세요.",
       explains: {
@@ -356,7 +356,7 @@ export const MESSENGER_CLOUD: GuideVariant = {
         ),
         [N("api-1")]: nodeText(
           "로그인·토큰 발급, 친구 목록, 기기 토큰 등록, 파일 서명 URL 발급 같은 짧은 요청을 처리해요(AZ 2a). 회원 정보는 RDS 에서 읽고 써요.",
-          ["로그인하면 짧게 쓰는 JWT 액세스 토큰과 갱신 토큰을 준다", "채팅 서버가 서명만 확인해 연결마다 DB 를 묻지 않는다", "연결할 때마다 채팅 서버가 세션 저장소를 조회한다", "발급한 액세스 토큰은 만료 전에 되돌리기 어려워 수명을 짧게 둔다"],
+          ["로그인하면 짧게 쓰는 JWT 액세스 토큰과 갱신 토큰을 준다", "채팅 서버가 서명과 만료만 확인해 연결마다 DB 를 묻지 않는다", "연결할 때마다 채팅 서버가 세션 저장소를 조회한다", "발급한 액세스 토큰은 만료 전에 되돌리기 어려워 수명을 짧게 둔다"],
         ),
         [N("api-2")]: nodeText(
           "API #1 과 같은 서버를 다른 AZ(2c)에 둔 짝이에요. ALB 가 두 대에 나눠 보내고, 2a 가 멈추면 이 서버가 받아요.",
@@ -400,45 +400,59 @@ export const MESSENGER_CLOUD: GuideVariant = {
       example: "사진·파일은 S3 에 올리고 CloudFront 로 받게 해 줘",
       keywords: [["s3", "cloudfront", "클라우드프론트", "클라우드 프런트", "cdn", "사진", "파일", "이미지", "첨부", "버킷", "bucket", "오브젝트", "동영상"]],
       commands: [
-        node("cdn", "cdn", "CloudFront", null, "CDN · 파일 올리기·받기", { ...managed(), sw: "Amazon CloudFront" }),
+        node("cdn", "cdn", "CloudFront", null, "CDN · 파일 받기", { ...managed(), sw: "Amazon CloudFront" }),
         node("s3", "object_storage", "S3", "region", "사진·파일", { ...managed(), sw: "Amazon S3", replication: "리전 안 여러 AZ 에 자동 저장", version: NO_VERSION }),
+        edge("user", "s3", "request", "HTTPS 443(미리 서명 URL)"),
+        edge("mobile", "s3", "request", "HTTPS 443(미리 서명 URL)"),
         edge("user", "cdn", "request", "HTTPS 443"),
         edge("mobile", "cdn", "request", "HTTPS 443"),
         edge("cdn", "s3", "request", "OAC HTTPS"),
       ],
-      say: "사진·파일은 메시지 연결로 보내지 않아요. 앱이 API 서버에서 몇 분만 쓰는 서명 URL 을 받아 CloudFront 를 거쳐 S3 에 바로 올리고, 메시지에는 파일 위치만 담아요. 받는 사람도 서명 URL 로 받아요.",
+      say: "사진·파일은 메시지 연결로 보내지 않아요. 앱이 API 서버에서 몇 분만 쓰는 미리 서명 URL 을 받아 S3 에 바로 올리고, 메시지에는 파일 위치만 담아요. 받는 사람은 CloudFront 서명 URL 로 내려받아요.",
       notes: [
-        { kind: "flow", text: "API 에서 서명 URL 받기 → CloudFront 로 올리기 → S3 저장 → WebSocket 으로 '사진 보냄(파일 위치)' 메시지를 보내요." },
-        { kind: "caution", text: "버킷은 공개하지 않아요. S3 는 CloudFront 만 OAC 로 읽고 쓰게 하고, 앱은 기한이 짧은 서명 URL 로만 CloudFront 에 닿아요." },
-        { kind: "net", text: "CloudFront 는 리전 밖 전 세계 엣지에서 돌아요. 큰 파일이 채팅·API 서버를 지나지 않아 연결을 쥔 서버가 가벼워요." },
+        { kind: "flow", text: "API 에서 미리 서명 URL 받기 → S3 에 바로 올리기 → WebSocket 으로 '사진 보냄(파일 위치)' 메시지 보내기 순서예요." },
+        { kind: "caution", text: "버킷은 공개하지 않아요. 올리기는 그 파일 하나에 PUT 만 되는 기한 짧은 URL 로 하고, 읽기는 CloudFront 만 OAC 로 하게 해요." },
+        { kind: "net", text: "S3 와 CloudFront 는 VPC 밖에 있어요. 큰 파일이 채팅·API 서버를 지나지 않아 연결을 쥔 서버가 가벼워요." },
       ],
       miss: "이번 단계는 사진·파일을 주고받는 길이에요. '사진·파일은 S3 에 올리고 CloudFront 로 받게 해 줘'처럼 말해 보세요.",
       explains: {
         [N("cdn")]: nodeText(
-          "사진·파일을 올리고 받는 입구예요. 서명이 맞는 요청만 받아 S3 로 넘기고, 한 번 받은 파일은 엣지에 캐시해 같은 방 사람들이 빨리 받아요.",
-          ["파일은 서명 URL 로 CloudFront 를 거쳐 S3 에 올리고 받는다", "큰 파일이 채팅·API 서버를 지나지 않고, 받기는 엣지 캐시가 맡는다", "S3 미리 서명 URL 로 S3 주소에 바로 올린다", "CloudFront 에 PUT 을 열고, 서명 키를 API 서버에 안전하게 둬야 한다"],
+          "사진·파일을 내려받는 입구예요. 서명이 맞는 요청만 받아 S3 에서 가져오고, 한 번 받은 파일은 엣지에 캐시해 같은 방 사람들이 빨리 받아요.",
+          ["받기는 서명 URL 로 CloudFront 를 거치고 GET 만 연다", "버킷을 공개하지 않고, 받기는 가까운 엣지 캐시가 맡는다", "받기도 S3 미리 서명 URL 로 S3 에서 바로 받는다", "서명 키를 API 서버에 안전하게 두고 배포 설정을 관리해야 한다"],
         ),
         [N("s3")]: nodeText(
           "사진·동영상·파일을 저장하는 오브젝트 스토리지예요. 리전 안 여러 AZ 에 자동으로 나눠 저장해 따로 이중화할 것이 없어요.",
-          ["파일은 S3 에 두고 메시지에는 파일 위치만 담는다", "메시지 저장소가 가볍고, 용량 걱정 없이 쌓는다", "파일을 DynamoDB 나 서버 디스크에 둔다", "저장량·요청 수만큼 요금이 들어 오래된 파일의 보관 기간을 정해야 한다"],
+          ["파일은 미리 서명 URL 로 S3 에 바로 올리고 메시지에는 위치만 담는다", "큰 파일이 채팅·API 서버를 지나지 않고 메시지 저장소가 가볍다", "앱이 API 서버로 파일을 보내고 서버가 S3 에 올린다", "올라온 파일의 크기·종류를 따로 확인하고 오래된 파일의 보관 기간을 정해야 한다"],
+        ),
+        [E("user", "s3")]: edgeText(
+          "PC·웹 메신저가 API 서버에서 받은 미리 서명 URL 로 파일을 S3 에 바로 올려요.",
+          "HTTPS(TCP 443) PUT. URL 에 담긴 서명은 그 파일 하나에, 몇 분 동안만 통해요.",
+          "큰 파일이 채팅·API 서버를 지나지 않게 해요.",
+          "버킷은 비공개예요. API 서버 IAM 역할로 서명한 URL 만 통하고, 기한이 지나면 S3 가 403 으로 막아요.",
+        ),
+        [E("mobile", "s3")]: edgeText(
+          "모바일 앱이 찍은 사진을 미리 서명 URL 로 S3 에 바로 올려요.",
+          "HTTPS(TCP 443) PUT. 올린 뒤 파일 위치를 메시지에 담아 WebSocket 으로 보내요.",
+          "파일은 메시지 연결이 아닌 따로 된 길로 올려야 채팅이 막히지 않아요.",
+          "버킷은 비공개예요. 서명이 없거나 기한이 지난 요청은 S3 가 403 으로 막아요.",
         ),
         [E("user", "cdn")]: edgeText(
-          "PC·웹 메신저가 서명 URL 로 파일을 올리고, 받은 사진·파일을 내려받아요.",
+          "PC·웹 메신저가 받은 사진·파일을 서명 URL 로 내려받아요.",
           "HTTPS(TCP 443). files 주소의 CloudFront 엣지가 받아요.",
-          "파일은 메시지 연결이 아닌 따로 된 길로 오가야 채팅이 막히지 않아요.",
+          "받는 파일도 메시지 연결이 아닌 따로 된 길로 와야 채팅이 막히지 않아요.",
           "CloudFront 는 서명이 없거나 기한이 지난 URL 을 403 으로 막아요.",
         ),
         [E("mobile", "cdn")]: edgeText(
-          "모바일 앱이 찍은 사진을 서명 URL 로 올리고, 받은 사진을 내려받아요.",
+          "모바일 앱이 받은 사진·파일을 서명 URL 로 내려받아요.",
           "HTTPS(TCP 443). 가까운 CloudFront 엣지가 받아요.",
           "큰 파일이 채팅 서버를 지나지 않게 해요.",
-          "CloudFront 는 서명이 맞는 요청만 받아요.",
+          "CloudFront 는 서명이 맞는 GET 요청만 받아요.",
         ),
         [E("cdn", "s3")]: edgeText(
-          "CloudFront 가 올라온 파일을 S3 에 쓰고, 캐시에 없는 파일을 S3 에서 가져와요.",
+          "CloudFront 가 캐시에 없는 파일을 S3 에서 가져와요.",
           "HTTPS(TCP 443). OAC 로 CloudFront 가 서명한 요청만 버킷이 받아요.",
-          "버킷을 공개하지 않고 CloudFront 만 통로로 쓰려고요.",
-          "S3 버킷 정책: 이 CloudFront 배포에서 온 읽기·쓰기만 허용해요.",
+          "버킷을 공개하지 않고 받기는 CloudFront 만 통로로 쓰려고요.",
+          "S3 버킷 정책: 이 CloudFront 배포의 읽기(GetObject)만 허용해요.",
         ),
       },
     },
@@ -448,7 +462,7 @@ export const MESSENGER_CLOUD: GuideVariant = {
       id: "queue",
       goal: "푸시 대기열(SQS)과 푸시 워커",
       example: "푸시 보낼 일은 SQS 대기열에 넣고 워커 두 대가 꺼내게 해 줘",
-      keywords: [["sqs", "대기열", "큐", "queue", "워커", "worker"]],
+      keywords: [["sqs", "대기열", "큐에", "큐로", "큐를", "큐가", "메시지 큐", "queue", "워커", "worker"]],
       conflicts: workerConflicts(
         "세 대도 틀린 구성은 아니지만, 이 가이드는 푸시 워커를 두 대로 맞춰요. 'SQS 대기열과 워커 두 대'로 말해 주세요.",
         "한 대나 한 AZ 에만 두면 그 워커가 멈출 때 푸시가 모두 밀려요. 이번에는 두 대를 두 AZ 에 나눠요.",
@@ -535,7 +549,7 @@ export const MESSENGER_CLOUD: GuideVariant = {
       id: "push",
       goal: "NAT 를 거쳐 FCM·APNs 푸시",
       example: "NAT 를 거쳐 FCM·APNs 로 푸시 알림을 보내 줘",
-      keywords: [["fcm", "apns", "nat", "firebase", "파이어베이스", "에프씨엠", "푸시 알림", "푸시알림", "push notification", "알림 서비스", "오프라인"]],
+      keywords: [["fcm", "apns", "nat 게이트웨이", "nat gateway", "nat 를", "nat 로", "firebase", "파이어베이스", "에프씨엠", "푸시 알림", "푸시알림", "push notification", "알림 서비스"]],
       commands: [
         assume("external", "푸시 알림(FCM·APNs)"),
         group("ext", "external_service", "푸시 알림 서비스"),
@@ -552,7 +566,7 @@ export const MESSENGER_CLOUD: GuideVariant = {
       say: "푸시 워커가 NAT 게이트웨이를 거쳐 Android 는 FCM, iOS 는 APNs 에 알림을 맡겨요. 휴대폰까지는 OS 가 FCM·APNs 와 늘 열어 두는 연결로 전해져, 앱이 꺼져 있어도 알림이 떠요.",
       notes: [
         { kind: "link", text: "워커 → NAT → 인터넷 게이트웨이 → FCM·APNs 로 나가요. 모두 HTTPS 443 이고, 기기 토큰과 우리 서버 인증(서비스 계정·인증 키)을 함께 보내요." },
-        { kind: "caution", text: "NAT 게이트웨이는 한 AZ 안에서만 이중화돼요. 그림은 하나지만 AZ 마다 하나씩 둬야 한 AZ 가 멈춰도 푸시가 나가요." },
+        { kind: "caution", text: "기본 NAT 게이트웨이는 한 AZ 안에서만 이중화돼요. 그림은 하나지만 AZ 마다 하나씩 둬야 한 AZ 가 멈춰도 푸시가 나가요." },
         { kind: "flow", text: "푸시는 도착을 보장하지 않아 '새 메시지' 알림만 맡겨요. 앱을 열면 다시 연결해 마지막 순번 뒤의 메시지를 받아 와요." },
       ],
       miss: "이번 단계는 휴대폰까지 알림을 보내는 길이에요. 'NAT 를 거쳐 FCM·APNs 로 푸시 알림을 보내 줘'처럼 말해 보세요.",
@@ -672,7 +686,7 @@ export const MESSENGER_CLOUD: GuideVariant = {
           ["chat-1", "presence", "접속 확인", "받는 사람이 어느 채팅 서버에 연결돼 있는지 찾는다(#2)."],
           ["chat-1", "pubsub", "발행", "채팅 서버 #2 의 채널에 메시지를 발행한다."],
           ["pubsub", "chat-2", "전달", "그 채널을 구독하던 채팅 서버 #2 가 메시지를 받는다.", true],
-          ["chat-2", "alb", "내려보냄", "채팅 서버 #2 가 받는 사람의 WebSocket 연결로 메시지를 내려보낸다.", true],
+          ["chat-2", "alb", "내려보냄", "채팅 서버 #2 가 받는 사람이 열어 둔 WebSocket 연결을 거꾸로 타고 메시지를 내려보낸다.", true],
           ["alb", "user", "도착", "친구의 PC 화면에 메시지가 바로 나타난다.", true],
         ]),
         flow("offline-push", "오프라인 사용자 푸시", "user", "PC 사용자가 앱을 닫아 둔 친구에게 메시지를 보낸다.", "친구 휴대폰에 알림이 뜨고, 앱을 열면 놓친 메시지를 받아 온다.", [

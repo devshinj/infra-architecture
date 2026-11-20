@@ -4,16 +4,19 @@
     { "id": "cctv-field-m2", "guide": "cctv", "env": "onprem", "step": "field", "text": "현장에 IP 카메라를 달고 PoE 로 전원 주는 스위치에 연결해 줘", "expect": "match" },
     { "id": "cctv-field-c1", "guide": "cctv", "env": "onprem", "step": "field", "text": "녹화 서버를 넣어 줘", "expect": "miss" },
     { "id": "cctv-field-c2", "guide": "cctv", "env": "onprem", "step": "field", "text": "PoE 가 뭐야?", "expect": "question" },
+    { "id": "cctv-field-c3", "guide": "cctv", "env": "onprem", "step": "field", "text": "카메라 영상을 녹화할 서버를 넣어 줘", "expect": "miss" },
 
     { "id": "cctv-line-m1", "guide": "cctv", "env": "onprem", "step": "line", "text": "현장 스위치를 센터까지 광 전용선으로 연결하고 입구에 방화벽 세워 줘", "expect": "match" },
     { "id": "cctv-line-m2", "guide": "cctv", "env": "onprem", "step": "line", "text": "카메라 영상이 들어오는 전용 회선 앞에 영상망 방화벽을 놓자", "expect": "match" },
     { "id": "cctv-line-c1", "guide": "cctv", "env": "onprem", "step": "line", "text": "현장 카메라와 PoE 스위치를 달아 줘", "expect": "miss" },
     { "id": "cctv-line-c2", "guide": "cctv", "env": "onprem", "step": "line", "text": "영상 전용 회선은 왜 따로 깔아?", "expect": "question" },
+    { "id": "cctv-line-c3", "guide": "cctv", "env": "onprem", "step": "line", "text": "관제망 방화벽을 둬 줘", "expect": "miss" },
 
     { "id": "cctv-recorder-m1", "guide": "cctv", "env": "onprem", "step": "recorder", "text": "카메라 영상을 받아 녹화할 서버 두 대에 예비 한 대를 더해 줘", "expect": "match" },
     { "id": "cctv-recorder-m2", "guide": "cctv", "env": "onprem", "step": "recorder", "text": "VMS 녹화 서버를 N+1 로 구성해 줘", "expect": "match" },
     { "id": "cctv-recorder-c1", "guide": "cctv", "env": "onprem", "step": "recorder", "text": "영상을 담을 저장소를 붙여 줘", "expect": "miss" },
     { "id": "cctv-recorder-c2", "guide": "cctv", "env": "onprem", "step": "recorder", "text": "N+1 이 뭐야?", "expect": "question" },
+    { "id": "cctv-recorder-c3", "guide": "cctv", "env": "onprem", "step": "recorder", "text": "VMS 관리 서버를 넣어 줘", "expect": "miss" },
 
     { "id": "cctv-storage-m1", "guide": "cctv", "env": "onprem", "step": "storage", "text": "녹화 영상을 30일 동안 쌓아 둘 스토리지를 RAID 6 으로 붙여 줘", "expect": "match" },
     { "id": "cctv-storage-m2", "guide": "cctv", "env": "onprem", "step": "storage", "text": "녹화 서버 뒤에 300TB 저장 장치를 연결해 줘", "expect": "match" },

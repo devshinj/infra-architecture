@@ -49,6 +49,14 @@
       "expect": "conflict"
     },
     {
+      "id": "relay-biz-c4",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "biz",
+      "text": "업무망과 대외계 사이에 내부 방화벽을 넣어 줘",
+      "expect": "miss"
+    },
+    {
       "id": "relay-relay-m1",
       "guide": "relay",
       "env": "onprem",
@@ -77,7 +85,7 @@
       "guide": "relay",
       "env": "onprem",
       "step": "relay",
-      "text": "업무망과 대외계 사이에 망연계 장비를 넣어 줘",
+      "text": "업무망과 대외계 사이에 내부 방화벽을 넣어 줘",
       "expect": "miss"
     },
     {
@@ -97,44 +105,52 @@
       "expect": "conflict"
     },
     {
-      "id": "relay-link-m1",
+      "id": "relay-fwin-m1",
       "guide": "relay",
       "env": "onprem",
-      "step": "link",
-      "text": "내부망에서 대외계로 넘어갈 때 망연계 솔루션을 거치게 해 줘",
+      "step": "fwin",
+      "text": "업무망에서 대외계로 넘어가는 길목에 방화벽을 세워 줘",
       "expect": "match"
     },
     {
-      "id": "relay-link-m2",
+      "id": "relay-fwin-m2",
       "guide": "relay",
       "env": "onprem",
-      "step": "link",
-      "text": "업무망 출구에 내부 방화벽을 두고 그 뒤에 망간 자료 전송 장비를 붙여 줘",
+      "step": "fwin",
+      "text": "업무망 출구에 내부 방화벽을 두고 중계 서버로 가는 포트만 열어 줘",
       "expect": "match"
     },
     {
-      "id": "relay-link-m3",
+      "id": "relay-fwin-m3",
       "guide": "relay",
       "env": "onprem",
-      "step": "link",
-      "text": "두 망이 직접 닿지 않게 스트림 연계 장비를 사이에 넣어 줘",
+      "step": "fwin",
+      "text": "대외계에서 업무망으로 먼저 못 들어오게 사이에 firewall 을 넣어 줘",
       "expect": "match"
     },
     {
-      "id": "relay-link-c1",
+      "id": "relay-fwin-c1",
       "guide": "relay",
       "env": "onprem",
-      "step": "link",
+      "step": "fwin",
       "text": "기관마다 큐를 따로 만들어 줘",
       "expect": "miss"
     },
     {
-      "id": "relay-link-c2",
+      "id": "relay-fwin-c2",
       "guide": "relay",
       "env": "onprem",
-      "step": "link",
-      "text": "망연계랑 방화벽은 뭐가 달라?",
+      "step": "fwin",
+      "text": "여기는 왜 망연계를 안 쓰고 방화벽만 둬?",
       "expect": "question"
+    },
+    {
+      "id": "relay-fwin-c3",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "fwin",
+      "text": "업무망과 대외계 사이에 망연계 장비를 넣어 줘",
+      "expect": "miss"
     },
     {
       "id": "relay-queue-m1",
@@ -217,19 +233,19 @@
       "expect": "question"
     },
     {
-      "id": "relay-card-c3",
+      "id": "relay-card-m4",
       "guide": "relay",
       "env": "onprem",
       "step": "card",
-      "text": "카드사 어댑터는 한 대만 넣어 줘",
-      "expect": "conflict"
+      "text": "회선 라우터를 한 대로 두고 카드사를 전용 회선으로 연결해 줘",
+      "expect": "match"
     },
     {
       "id": "relay-partner-m1",
       "guide": "relay",
       "env": "onprem",
       "step": "partner",
-      "text": "협력사 B 하고는 IPsec 터널을 만들고 REST API 로 주고받게 해 줘",
+      "text": "제휴사 B 하고는 IPsec 터널을 만들고 REST API 로 주고받게 해 줘",
       "expect": "match"
     },
     {
@@ -265,12 +281,20 @@
       "expect": "question"
     },
     {
-      "id": "relay-partner-c3",
+      "id": "relay-partner-m4",
       "guide": "relay",
       "env": "onprem",
       "step": "partner",
-      "text": "제휴사 어댑터는 서버 하나만 둬 줘",
-      "expect": "conflict"
+      "text": "VPN 장비 한 대로 제휴사를 연결해 줘",
+      "expect": "match"
+    },
+    {
+      "id": "relay-partner-c4",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "partner",
+      "text": "카드사 API 를 HTTPS 로 붙여 줘",
+      "expect": "miss"
     },
     {
       "id": "relay-file-m1",
@@ -321,6 +345,22 @@
       "expect": "conflict"
     },
     {
+      "id": "relay-file-c4",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "file",
+      "text": "거래 로그 파일을 남겨 줘",
+      "expect": "miss"
+    },
+    {
+      "id": "relay-file-c5",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "file",
+      "text": "카드 승인과 정산 파일 주고받기 흐름을 정리해 줘",
+      "expect": "miss"
+    },
+    {
       "id": "relay-log-m1",
       "guide": "relay",
       "env": "onprem",
@@ -369,6 +409,14 @@
       "expect": "conflict"
     },
     {
+      "id": "relay-log-c4",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "log",
+      "text": "로그인 화면을 만들어 줘",
+      "expect": "miss"
+    },
+    {
       "id": "relay-dual-m1",
       "guide": "relay",
       "env": "onprem",
@@ -409,12 +457,12 @@
       "expect": "question"
     },
     {
-      "id": "relay-dual-c3",
+      "id": "relay-dual-m4",
       "guide": "relay",
       "env": "onprem",
       "step": "dual",
-      "text": "회선은 하나만 둬 줘",
-      "expect": "conflict"
+      "text": "VPN 장비 한 대만 더 붙여 줘",
+      "expect": "match"
     },
     {
       "id": "relay-ops-m1",

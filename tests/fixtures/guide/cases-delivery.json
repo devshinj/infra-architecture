@@ -273,6 +273,22 @@
       "expect": "question"
     },
     {
+      "id": "delivery-realtime-m3",
+      "guide": "delivery",
+      "env": "cloud",
+      "step": "realtime",
+      "text": "가게 앱이 실시간으로 주문을 받게 해 줘",
+      "expect": "match"
+    },
+    {
+      "id": "delivery-realtime-c3",
+      "guide": "delivery",
+      "env": "cloud",
+      "step": "realtime",
+      "text": "라이더 위치를 실시간으로 보여 줘",
+      "expect": "miss"
+    },
+    {
       "id": "delivery-location-m1",
       "guide": "delivery",
       "env": "cloud",
@@ -399,6 +415,14 @@
       "step": "ops",
       "text": "점심 몰림은 미리 알 수 있어?",
       "expect": "question"
+    },
+    {
+      "id": "delivery-ops-c3",
+      "guide": "delivery",
+      "env": "cloud",
+      "step": "ops",
+      "text": "로그인 서버를 넣어 줘",
+      "expect": "miss"
     },
     {
       "id": "delivery-flows-m1",

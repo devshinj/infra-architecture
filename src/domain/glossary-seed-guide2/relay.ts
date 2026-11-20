@@ -49,7 +49,7 @@ export const TERMS: GlossarySeedEntry[] = [
   },
   {
     term: "망취소",
-    fullName: "망취소(Network Reversal)",
+    fullName: "망취소(자동 취소, Reversal)",
     category: "연계 / 거래 처리",
     definition: "망취소는 거래 요청 뒤 응답을 받지 못해 결과를 알 수 없을 때 그 거래를 취소하는 전문을 보내 양쪽 상태를 맞추는 처리입니다.",
     why: "상대 기관에서는 처리됐는데 우리는 실패로 아는 어긋남을 막습니다.",

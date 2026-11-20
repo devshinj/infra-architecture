@@ -177,6 +177,22 @@
       "expect": "question"
     },
     {
+      "id": "sociallogin-providers-c4",
+      "guide": "sociallogin",
+      "env": "cloud",
+      "step": "providers",
+      "text": "카카오·네이버·구글 시크릿을 Secrets Manager 에 넣어 둬",
+      "expect": "miss"
+    },
+    {
+      "id": "sociallogin-providers-c5",
+      "guide": "sociallogin",
+      "env": "cloud",
+      "step": "providers",
+      "text": "카카오 네이버 구글 계정을 한 회원으로 묶을 수 있게 회원 DB 를 만들어 줘",
+      "expect": "miss"
+    },
+    {
       "id": "sociallogin-secret-m1",
       "guide": "sociallogin",
       "env": "cloud",

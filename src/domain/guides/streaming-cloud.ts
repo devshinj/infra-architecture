@@ -1,8 +1,8 @@
 // 동영상 스트리밍 — 클라우드(AWS 서울 리전).
 // 가상 값: VPC 10.20.0.0/16. 서브넷은 AZ 마다 하나씩이다(공개 10.20.0.0/24·10.20.1.0/24, 앱 10.20.10.0/24·10.20.11.0/24, 데이터 10.20.20.0/24·10.20.21.0/24).
 // 빈 영역이 남지 않게 영역은 그 안에 처음 무언가를 놓는 단계에서 만든다(1단계는 리전 밖의 입구, 2단계에 리전·VPC·공개 서브넷).
-// 큰 영상은 API 를 거치지 않고 미리 서명한 URL 로 원본 버킷에 바로 올린다. 업로더 → 버킷을 바로 그으면 "방화벽 없는 진입" 경고가 뜨고,
-// 실제로도 멀리 있는 업로더가 가까운 엣지로 들어오게 S3 Transfer Acceleration(전송 가속) 엣지를 거치게 그린다.
+// 큰 영상은 API 를 거치지 않고 미리 서명한 URL 로 원본 버킷에 바로 올린다(업로더 → 원본 버킷을 바로 긋는다).
+// S3 Transfer Acceleration(전송 가속)은 해외·먼 지역 업로더가 있을 때의 선택지로만 말한다.
 // 변환은 EC2 워커(FFmpeg)로 한다. MediaConvert 는 ADR 의 다른 방법으로만 말한다.
 // 서버가 부르는 AWS 서비스(S3·SQS·Firehose·CloudWatch)는 VPC 엔드포인트로 닿아 NAT 를 두지 않는다.
 import { assume, edge, flow, group, managed, node } from "../samples/dsl";
@@ -35,7 +35,7 @@ export const STREAMING_CLOUD: GuideVariant = {
   otherEnv: [
     { from: "CloudFront", to: "상용 CDN 계약, 또는 캐시 서버(Nginx) 여러 대" },
     { from: "S3 원본·변환본 버킷", to: "대용량 오브젝트 스토리지(MinIO·Ceph) 또는 NAS" },
-    { from: "미리 서명한 URL·전송 가속", to: "오브젝트 스토리지의 서명 URL(S3 방식 지원 제품) 또는 업로드 전용 서버" },
+    { from: "미리 서명한 URL(멀티파트 업로드)", to:"오브젝트 스토리지의 서명 URL(S3 방식 지원 제품) 또는 업로드 전용 서버" },
     { from: "S3 이벤트 → SQS", to: "저장소 알림 + 사내 큐(RabbitMQ·Kafka)" },
     { from: "변환 워커 Auto Scaling 그룹", to: "변환 서버 여러 대(GPU 인코더 포함), 몰릴 때를 생각해 미리 넉넉히" },
     { from: "ALB", to: "L4 두 대(VIP)" },
@@ -77,7 +77,7 @@ export const STREAMING_CLOUD: GuideVariant = {
         ),
         [N("uploader")]: nodeText(
           "영상을 올리는 크리에이터예요. 제목·설명 등록은 API 로 하고, 몇 GB 짜리 영상 파일은 원본 버킷으로 바로 올려요.",
-          ["업로더도 시청자와 같은 입구로 API 를 부른다", "WAF·인증 같은 입구 설정을 한 벌로 관리한다", "업로더 전용 도메인과 서버를 따로 둔다", "업로드 접수와 시청 요청이 같은 API 서버에 섞인다"],
+          ["업로더도 시청자와 같은 입구로 API 를 부른다", "도메인·인증서·인증 같은 입구 설정을 한 벌로 관리한다", "업로더 전용 도메인과 서버를 따로 둔다", "업로드 접수와 시청 요청이 같은 API 서버에 섞인다"],
         ),
         [N("cdn")]: nodeText(
           "시청자와 가까운 엣지에서 요청을 받는 CDN 이에요. 영상 조각·썸네일은 캐시해 바로 내보내고, API 요청은 캐시하지 않고 서울의 ALB 로 넘겨요.",
@@ -113,7 +113,7 @@ export const STREAMING_CLOUD: GuideVariant = {
       ],
       say: "서울 리전에 스트리밍 VPC 를 만들고, 인터넷과 닿는 공개 서브넷에 ALB 를 뒀어요. CloudFront 는 /api 로 시작하는 요청만 ALB 로 보내고, ALB 가 그 요청을 API 서버들에 나눠요.",
       notes: [
-        { kind: "net", text: "공개 서브넷에는 인터넷과 맞닿는 ALB 만 둬요. 이 구성의 서버는 인터넷에 나갈 일이 없어 NAT 게이트웨이도 두지 않아요." },
+        { kind: "net", text: "공개 서브넷에는 ALB 만 둬요. 서버는 AWS 서비스에 VPC 엔드포인트로 닿고 인터넷에 나갈 일이 없어 NAT 게이트웨이도 두지 않아요." },
         { kind: "flow", text: "영상 조각은 ALB 로 오지 않아요. CloudFront 가 경로(/api, /videos)를 보고 갈 곳을 나눠요." },
         { kind: "caution", text: "CloudFront 주소 목록은 남의 CloudFront 도 포함해요. 그래서 우리 CloudFront 가 붙인 비밀 헤더가 있는 요청만 ALB 가 넘겨요." },
       ],
@@ -121,8 +121,8 @@ export const STREAMING_CLOUD: GuideVariant = {
       explains: {
         [G("region")]: groupText(
           "서버와 영상 파일을 두는 AWS 서울 리전(ap-northeast-2)이에요. 리전 안에는 서로 떨어진 데이터센터 묶음(AZ)이 여러 곳 있어요.",
-          "CloudFront 를 거친 API 요청이 ALB 로, 업로드 조각이 전송 가속 엣지를 거쳐 원본 버킷으로 들어와요. 영상 조각은 CloudFront 가 꺼내 가요.",
-          ["시청자가 국내라 서울 리전에 둔다", "업로드가 빠르고, 엣지 캐시에 없는 조각도 가까운 원본에서 가져온다", "도쿄 같은 다른 리전에 둔다", "서울 리전 전체가 멈추는 일까지는 대비하지 않는다"],
+          "CloudFront 를 거친 API 요청이 ALB 로, 업로드 조각이 서명 URL 로 원본 버킷에 바로 들어와요. 영상 조각은 CloudFront 가 꺼내 가요.",
+          ["시청자·업로더가 국내라 서울 리전에 둔다", "버킷이 가까워 업로드가 빠르고, 엣지 캐시에 없는 조각도 가까운 원본에서 가져온다", "도쿄 같은 다른 리전에 둔다", "서울 리전 전체가 멈추는 일까지는 대비하지 않는다"],
         ),
         [G("vpc")]: groupText(
           "스트리밍 서비스만 쓰는 사설 네트워크(10.20.0.0/16)예요. 공개·앱·데이터 서브넷으로 나눠 서버와 DB 를 둬요.",
@@ -260,37 +260,27 @@ export const STREAMING_CLOUD: GuideVariant = {
       goal: "원본 버킷과 바로 올리기(서명 URL)",
       example: "원본 영상은 S3 버킷에 바로 올리게 해 줘",
       keywords: [
-        ["s3", "버킷", "bucket", "오브젝트", "스토리지", "storage", "presigned", "pre signed", "미리 서명", "서명된 url", "서명 url", "멀티파트", "multipart", "전송 가속", "transfer acceleration"],
+        ["s3", "버킷", "bucket", "오브젝트", "스토리지", "storage", "presigned", "pre signed", "미리 서명", "서명된 url", "서명 url", "멀티파트", "multipart"],
         // 변환본 버킷(8단계)·재생(9단계)·로그 버킷(10단계) 요청은 받지 않게, 올리기 말이 있어야 맞음으로 본다.
         ["올리", "올려", "올릴", "업로드", "upload", "원본", "presigned", "pre signed", "미리 서명", "멀티파트", "multipart"],
       ],
       commands: [
         node("s3-raw", "object_storage", "원본 버킷", "region", "S3 · 업로드 원본", S3_ATTRS),
-        node("accel", "cdn", "전송 가속 엣지", null, "S3 Transfer Acceleration", { ...managed(), sw: "S3 Transfer Acceleration" }),
         edge("api-1", "s3-raw", "request", "S3 API HTTPS"),
         edge("api-2", "s3-raw", "request", "S3 API HTTPS"),
-        edge("uploader", "accel", "request", "HTTPS 443 조각 PUT"),
-        edge("accel", "s3-raw", "request", "AWS 망 HTTPS"),
+        edge("uploader", "s3-raw", "request", "HTTPS 443 서명 URL 조각 PUT"),
       ],
       say: "원본 버킷을 만들고, 큰 영상은 API 서버를 거치지 않고 여기로 바로 올리게 했어요. API 는 업로드를 열고 조각마다 미리 서명한 URL 만 줘요. 앱은 그 URL 로 조각을 나눠 올려요(멀티파트 업로드).",
       notes: [
         { kind: "flow", text: "API 가 멀티파트 업로드를 열고 조각별 서명 URL 을 줘요. 앱이 조각을 다 올리고 알리면 API 가 조각을 하나로 합쳐요." },
-        { kind: "link", text: "조각은 업로더 → 가까운 전송 가속 엣지 → AWS 망 → 원본 버킷으로 가요. 끊긴 조각만 다시 올리면 돼요." },
-        { kind: "caution", text: "서명 URL 은 정한 파일 하나에 짧게만 쓰게 만들어요. 끝나지 않은 멀티파트 조각은 수명 주기 규칙으로 지워요." },
+        { kind: "link", text: "조각은 업로더 기기에서 S3 로 바로 가요. 버킷은 공개하지 않고, 서명 URL 의 서명과 만료 시간이 올릴 권한이에요. 끊긴 조각만 다시 올려요." },
+        { kind: "caution", text: "서명 URL 은 정한 파일 하나에 짧게만 쓰게 만들어요. 끝나지 않은 조각은 수명 주기 규칙으로 지우고, 브라우저 업로드는 버킷 CORS 도 열어요." },
       ],
       miss: "이번 단계는 원본 영상을 저장소에 바로 올리는 길이에요. '원본 영상은 S3 버킷에 바로 올리게 해 줘'처럼 말해 보세요.",
       explains: {
         [N("s3-raw")]: nodeText(
           "업로더가 올린 원본 영상 파일을 그대로 두는 S3 버킷이에요. 공개하지 않고, 서명 URL 로 올리기와 변환 워커의 읽기만 허용해요.",
           ["원본은 따로 버킷에 두고 지우지 않는다", "화질을 더하거나 변환을 다시 할 때 원본에서 새로 만든다", "변환 뒤 원본을 지운다", "원본 저장 요금이 계속 들어, 수명 주기 규칙으로 싼 저장 등급으로 옮긴다"],
-        ),
-        [N("accel")]: nodeText(
-          "업로더와 가까운 CloudFront 엣지에서 조각을 받아 AWS 내부 망으로 원본 버킷까지 보내 주는 S3 기능이에요. 서명 URL 도 이 주소로 만들어요.",
-          ["업로드는 S3 전송 가속 주소로 받는다", "멀리 있는 업로더도 가까운 엣지에 닿아 큰 파일이 빨리, 덜 끊기며 오른다", "S3 리전 주소로 바로 올린다", "가속을 거친 만큼 GB 당 요금이 더 들어, 업로더가 가까우면 끄기도 한다"],
-          {
-            term: "S3 Transfer Acceleration",
-            definition: "S3 Transfer Acceleration(전송 가속)은 CloudFront 엣지로 받은 데이터를 AWS 내부 망으로 S3 버킷까지 보내는 S3 의 업로드 가속 기능입니다.",
-          },
         ),
         [E("api-1", "s3-raw")]: edgeText(
           "API #1 이 멀티파트 업로드를 열고 조각 서명 URL 을 만들며, 다 오르면 조각을 합쳐요.",
@@ -304,17 +294,11 @@ export const STREAMING_CLOUD: GuideVariant = {
           "어느 API 서버가 받아도 같은 버킷에 같은 방식으로 올리게 해요.",
           "API 의 IAM 역할에 원본 버킷의 업로드 관련 권한만 줘요.",
         ),
-        [E("uploader", "accel")]: edgeText(
-          "업로더 앱이 영상 조각을 서명 URL 로 하나씩(또는 몇 개씩 함께) 올려요.",
-          "HTTPS(TCP 443) PUT. 조각마다 서명 URL 이 따로 있어요.",
+        [E("uploader", "s3-raw")]: edgeText(
+          "업로더 앱이 영상 조각을 서명 URL 로 원본 버킷에 바로, 하나씩(또는 몇 개씩 함께) 올려요.",
+          "HTTPS(TCP 443) PUT, S3 서울 리전 주소. 해외·먼 업로더가 많으면 전송 가속 주소를 쓰기도 해요.",
           "큰 파일을 서버를 거치지 않고, 끊겨도 조각만 다시 올리게 하려고요.",
-          "서명 URL 의 서명·만료 시간이 권한이에요. 정한 파일 이름과 조각 번호에만 쓸 수 있어요.",
-        ),
-        [E("accel", "s3-raw")]: edgeText(
-          "엣지가 받은 조각을 AWS 내부 망으로 서울의 원본 버킷에 넣어요.",
-          "AWS 망 안의 HTTPS 전송이에요. 우리가 따로 잇는 길은 없어요.",
-          "인터넷 구간을 짧게 해 먼 곳에서도 업로드가 빨라져요.",
-          "버킷 정책으로 공개 접근을 막아, 서명 URL 이 없으면 올릴 수 없어요.",
+          "버킷은 비공개예요. 서명·만료 시간이 권한이라, 정한 파일 이름과 조각 번호에만 쓸 수 있어요.",
         ),
       },
     },
@@ -367,7 +351,7 @@ export const STREAMING_CLOUD: GuideVariant = {
       ],
       say: "변환 워커 두 대를 두 AZ 에 두고 Auto Scaling 그룹으로 묶었어요. 워커는 대기열에서 작업을 꺼내 원본을 내려받고 FFmpeg 로 변환해요. 쌓인 작업이 늘면 워커도 늘어요.",
       notes: [
-        { kind: "flow", text: "워커 한 대당 쌓인 작업 수를 기준으로 대수를 늘리고 줄여요. 업로드가 적은 밤에는 최소 대수만 남겨요." },
+        { kind: "flow", text: "워커 한 대당 쌓인 작업 수로 대수를 늘리고 줄여요. 줄일 때 변환 중인 워커가 꺼지지 않게 축소 보호를 걸어 둬요." },
         { kind: "caution", text: "메시지 표시 제한 시간은 변환 시간보다 길게 잡거나 작업 중에 늘려요. 짧으면 다른 워커가 같은 영상을 또 변환해요." },
         { kind: "net", text: "워커는 인터페이스 엔드포인트로 SQS 에, 게이트웨이 엔드포인트로 S3 에 닿아요. 큰 파일이 NAT 요금을 타지 않아요." },
       ],
@@ -421,7 +405,7 @@ export const STREAMING_CLOUD: GuideVariant = {
       id: "output",
       goal: "변환본 버킷(화질별 HLS)",
       example: "변환한 영상은 HLS 로 다른 버킷에 저장해 줘",
-      keywords: [["hls", "m3u8", "변환본", "변환한 영상", "변환된 영상", "abr", "화질별", "적응형", "adaptive", "출력 버킷", "결과 버킷", "썸네일", "thumbnail", "dash"]],
+      keywords: [["hls", "m3u8", "변환본", "변환한 영상", "변환된 영상", "abr", "화질별", "적응형", "adaptive", "출력 버킷", "결과 버킷", "썸네일", "thumbnail", "mpegdash"]],
       commands: [
         node("s3-out", "object_storage", "변환본 버킷", "region", "S3 · HLS 조각·썸네일", S3_ATTRS),
         edge("work-1", "s3-out", "request", "S3 HTTPS HLS 저장"),
@@ -433,6 +417,7 @@ export const STREAMING_CLOUD: GuideVariant = {
       notes: [
         { kind: "flow", text: "대표 재생 목록(m3u8)이 화질별 목록을 알려 줘요. 플레이어는 회선 속도를 보며 조각마다 화질을 바꿔요(ABR)." },
         { kind: "caution", text: "원본과 변환본을 한 버킷에 두면 변환본 저장이 또 변환 이벤트를 부를 수 있어요. 권한·수명 주기도 달라 버킷을 나눠요." },
+        { kind: "link", text: "이 가이드는 FFmpeg 워커가 변환해요. AWS 에는 변환을 통째로 맡기는 관리형 서비스(MediaConvert)도 있어 서버 없이 같은 HLS 를 만들 수 있어요." },
       ],
       miss: "이번 단계는 화질별로 변환한 영상을 담는 버킷이에요. '변환한 영상은 HLS 로 다른 버킷에 저장해 줘'처럼 말해 보세요.",
       explains: {
@@ -474,7 +459,7 @@ export const STREAMING_CLOUD: GuideVariant = {
       example: "영상 재생은 CloudFront 가 맡게 하고 서명 쿠키로 막아 줘",
       keywords: [
         ["cloudfront", "클라우드프론트", "클라우드 프런트", "cdn", "엣지"],
-        ["재생", "보여", "내보내", "스트리밍", "streaming", "서명 쿠키", "서명된 쿠키", "signed cookie", "signed url", "oac", "꺼내"],
+        ["재생", "보여", "보게", "시청", "틀어", "내보내", "스트리밍", "streaming", "서명 쿠키", "서명된 쿠키", "signed cookie", "signed url", "oac", "꺼내"],
       ],
       commands: [
         update("cdn", { rules: "/api/* → ALB(캐시 안 함) · /videos/* → 변환본 버킷(서명 쿠키 필요, 캐시)" }),
@@ -502,7 +487,7 @@ export const STREAMING_CLOUD: GuideVariant = {
       id: "logs",
       goal: "시청 기록 모으기(Data Firehose)",
       example: "시청 기록은 Firehose 로 모아 S3 에 쌓아 줘",
-      keywords: [["firehose", "파이어호스", "kinesis", "키네시스", "시청 기록", "시청기록", "시청 로그", "시청 이벤트", "재생 기록", "로그 수집", "이벤트 수집", "추천"]],
+      keywords: [["firehose", "파이어호스", "kinesis", "키네시스", "시청 기록", "시청기록", "시청 로그", "시청 이벤트", "재생 기록", "로그 수집", "이벤트 수집", "추천용", "추천에 쓸"]],
       commands: [
         node("firehose", "stream", "Data Firehose", "region", "시청 이벤트 모으기", { ...managed(), sw: "Amazon Data Firehose", version: NO_VERSION }),
         node("s3-log", "object_storage", "로그 버킷", "region", "S3 · 시청 기록", S3_ATTRS),
@@ -620,7 +605,7 @@ export const STREAMING_CLOUD: GuideVariant = {
       say: "CloudWatch 를 붙여 ALB·EC2·RDS·SQS·OpenSearch·CloudFront 의 지표와 서버 로그를 보게 했어요. 기준을 넘으면 알람이 운영자에게 가요.",
       notes: [
         { kind: "caution", text: "변환 대기열의 가장 오래된 메시지 나이에 알람을 걸어요. 워커가 밀리면 업로더는 '처리 중'만 오래 보게 돼요." },
-        { kind: "flow", text: "CloudFront 캐시 적중률도 봐요. 떨어지면 변환본 버킷으로 가는 요청과 요금이 함께 늘어요." },
+        { kind: "flow", text: "CloudFront 캐시 적중률도 봐요(추가 지표를 켜야 CloudWatch 에 보여요). 떨어지면 버킷으로 가는 요청과 요금이 늘어요." },
         { kind: "net", text: "관리형 서비스 지표는 설치 없이 모여요. EC2 의 메모리·앱 로그는 CloudWatch 에이전트가 엔드포인트로 보내요." },
       ],
       miss: "이번 단계는 모니터링과 알람이에요. 'CloudWatch 로 모니터링과 알람을 붙여 줘'처럼 말해 보세요.",
@@ -631,7 +616,7 @@ export const STREAMING_CLOUD: GuideVariant = {
         ),
         [N("operator")]: nodeText(
           "서비스를 운영하는 담당자예요. 알람을 받아 워커 최대 대수를 늘리거나, 실패 대기열에 쌓인 변환 실패를 살펴요.",
-          ["알람은 메일·문자로 운영자에게 보낸다", "변환 밀림·오류를 사람이 바로 알아야 대응한다", "대시보드를 사람이 계속 지켜본다", "알람 기준을 잘못 잡으면 알람이 너무 많거나 늦게 온다"],
+          ["알람은 메일 등으로 운영자에게 보낸다", "변환 밀림·오류를 사람이 바로 알아야 대응한다", "대시보드를 사람이 계속 지켜본다", "알람 기준을 잘못 잡으면 알람이 너무 많거나 늦게 온다"],
         ),
         [E("vpc", "cw")]: edgeText(
           "VPC 안 서버·ALB·RDS·OpenSearch 의 지표와 앱 로그가 CloudWatch 로 가요. S3·SQS 지표도 함께 모여요.",
@@ -641,7 +626,7 @@ export const STREAMING_CLOUD: GuideVariant = {
         ),
         [E("cw", "operator")]: edgeText(
           "기준을 넘은 알람이 운영자에게 가요.",
-          "CloudWatch 알람이 SNS 로 메일·문자를 보내요.",
+          "CloudWatch 알람이 SNS 를 거쳐 메일 등으로 가요.",
           "변환 밀림이나 재생 오류를 사람이 바로 알아야 대응해요.",
           "AWS 안에서 보내는 알림이라 따로 열 것이 없어요.",
         ),
@@ -661,8 +646,7 @@ export const STREAMING_CLOUD: GuideVariant = {
           ["alb", "api-1", "분배", "ALB 가 API 서버 한 대로 요청을 나눈다."],
           ["api-1", "rds", "영상 등록", "API 가 영상을 '업로드 중' 상태로 DB 에 적는다."],
           ["api-1", "s3-raw", "서명 URL", "API 가 멀티파트 업로드를 열고 조각별 서명 URL 을 만들어 돌려준다."],
-          ["uploader", "accel", "조각 올리기", "앱이 서명 URL 로 조각을 가까운 전송 가속 엣지에 올린다."],
-          ["accel", "s3-raw", "원본 저장", "엣지가 조각을 AWS 망으로 원본 버킷에 넣는다."],
+          ["uploader", "s3-raw", "조각 올리기", "앱이 서명 URL 로 조각을 원본 버킷에 바로 올린다. 끊긴 조각만 다시 올린다."],
           ["api-1", "s3-raw", "조각 합치기", "조각이 다 오르면 앱이 알리고, API 가 조각을 하나의 원본 파일로 합친다."],
           ["s3-raw", "sqs", "변환 요청", "원본 파일이 생기자 S3 가 이벤트를 변환 대기열에 넣는다."],
           ["sqs", "work-1", "작업 꺼내기", "변환 워커가 대기열에서 작업을 받아 온다."],
@@ -685,7 +669,7 @@ export const STREAMING_CLOUD: GuideVariant = {
       ],
       say: "영상 올리기와 영상 보기 두 흐름을 정리했어요. 흐름을 재생하면 큰 파일과 작은 요청이 서로 다른 길로 다니는 것을 볼 수 있어요.",
       notes: [
-        { kind: "flow", text: "영상 파일은 올릴 때 전송 가속 엣지 → 원본 버킷, 볼 때 변환본 버킷 → CloudFront 로만 다녀요. API 는 작은 요청만 받아요." },
+        { kind: "flow", text: "영상 파일은 올릴 때 업로더 → 원본 버킷, 볼 때 변환본 버킷 → CloudFront 로만 다녀요. API 는 작은 요청만 받아요." },
         { kind: "link", text: "업로드와 변환은 S3 이벤트 → SQS 로 끊겨 있어요. 워커가 밀려도 업로드는 이미 끝나 있어요." },
         { kind: "caution", text: "흐름은 서버 한 대씩만 그렸어요. 실제로는 ALB 가 요청마다 API 두 대 가운데 하나를, 대기열이 워커 하나를 골라요." },
       ],

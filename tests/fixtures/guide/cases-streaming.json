@@ -273,6 +273,22 @@
       "expect": "question"
     },
     {
+      "id": "streaming-output-c3",
+      "guide": "streaming",
+      "env": "cloud",
+      "step": "output",
+      "text": "CloudWatch dashboard 를 만들어 줘",
+      "expect": "miss"
+    },
+    {
+      "id": "streaming-playback-m3",
+      "guide": "streaming",
+      "env": "cloud",
+      "step": "playback",
+      "text": "시청자가 CloudFront 로 영상을 보게 해 줘",
+      "expect": "match"
+    },
+    {
       "id": "streaming-playback-m1",
       "guide": "streaming",
       "env": "cloud",
@@ -335,6 +351,14 @@
       "step": "logs",
       "text": "Firehose 는 왜 바로 안 쓰고 묶어서 써?",
       "expect": "question"
+    },
+    {
+      "id": "streaming-logs-c3",
+      "guide": "streaming",
+      "env": "cloud",
+      "step": "logs",
+      "text": "다음에 뭘 넣을지 추천해 줘",
+      "expect": "miss"
     },
     {
       "id": "streaming-search-m1",
