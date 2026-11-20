@@ -387,3 +387,22 @@ test("an undone turn's summary is dimmed and tagged 되돌림, without compare/u
   expect(screen.queryByRole("button", { name: "되돌리기" })).not.toBeInTheDocument();
   expect(screen.queryByRole("button", { name: "바뀐 곳 보기" })).not.toBeInTheDocument();
 });
+
+test("ChatPanel hides new session while learning", () => {
+  const view = { guideId: "shop", title: "대형 쇼핑몰", env: "onprem" as const, envChoices: ["onprem" as const, "cloud" as const], step: 0, total: 12, status: "active" as const, current: { goal: "입구 만들기", example: "방화벽 넣어 줘" } };
+  const onNew = vi.fn();
+  const guide = (status: "active" | "done" | "quit") => ({ view: { ...view, status }, onQuit: vi.fn(async () => undefined) });
+  const { rerender } = render(<ChatPanel {...base({ picker: { ...picker("main"), onNew }, guide: guide("active") })} />);
+  expect(screen.queryByRole("button", { name: "새 대화" })).not.toBeInTheDocument();
+  expect(screen.getByRole("region", { name: "학습 단계" })).toBeInTheDocument();
+  // 세션 고르기 자체는 남는다(노드 질문 세션으로 갈 수 있다).
+  expect(screen.getByRole("button", { name: /기본 대화/ })).toBeInTheDocument();
+  rerender(<ChatPanel {...base({ picker: { ...picker("main"), onNew }, guide: guide("done") })} />);
+  expect(screen.getByRole("button", { name: "새 대화" })).toBeInTheDocument();
+  expect(screen.queryByRole("region", { name: "학습 단계" })).not.toBeInTheDocument();
+  rerender(<ChatPanel {...base({ picker: { ...picker("main"), onNew } })} />);
+  expect(screen.getByRole("button", { name: "새 대화" })).toBeInTheDocument();
+  // 노드 질문 세션에서는 학습 카드를 보이지 않는다.
+  rerender(<ChatPanel {...base({ ask: ASK, picker: { ...picker("s1"), onNew }, guide: guide("active") })} />);
+  expect(screen.queryByRole("region", { name: "학습 단계" })).not.toBeInTheDocument();
+});

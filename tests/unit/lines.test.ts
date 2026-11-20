@@ -253,3 +253,31 @@ test("예전에 저장된 되돌리기 안내 줄은 조사를 고쳐 보인다"
   const lines = messagesToLines([{ id: "m1", role: "system", content: "v6로 되돌림 (새 버전 v9)", meta: {} }]);
   expect(lines.map((l) => [l.kind, l.text])).toEqual([["system", "v6으로 되돌림 (새 버전 v9)"]]);
 });
+
+test("messagesToLines keeps meta.guide", () => {
+  const notes = [{ kind: "net" as const, text: "DMZ 는 처음 받는 구역이에요." }];
+  const lines = messagesToLines([
+    { id: "u1", role: "user", content: "방화벽 넣어 줘", meta: {} },
+    { id: "a1", role: "assistant", content: "방화벽을 넣었어요.", meta: { guide: { kind: "step", step: 1, notes }, says: ["방화벽을 넣었어요."], applied: 2, changed: 2, skipped: 0, version: 3, status: "complete", nodes: 2, edges: 1 } },
+    { id: "a2", role: "assistant", content: "다 만들었어요.", meta: { guide: { kind: "done", outro: "다 만들었어요.", otherEnv: [{ from: "NAS", to: "S3" }], rebuild: ["cloud"] }, says: ["다 만들었어요."], applied: 0, changed: 0, skipped: 0, version: null, status: "complete" } },
+    { id: "a3", role: "assistant", content: "이번에는 두 대로 해요.", meta: { guide: { kind: "miss", step: 2 }, says: ["이번에는 두 대로 해요."], applied: 0, changed: 0, skipped: 0, version: null, status: "complete" } },
+    { id: "a4", role: "assistant", content: "다음 단계예요.", meta: { guide: { kind: "step", step: 2 }, says: ["다음 단계예요."], applied: 1, changed: 1, skipped: 0, version: 4, status: "complete" } },
+  ]);
+  expect(lines.map((l) => [l.kind, l.text])).toEqual([
+    ["user", "방화벽 넣어 줘"],
+    ["card", ""],
+    ["progress", "방화벽을 넣었어요."],
+    ["guide", ""],
+    ["summary", "2곳 바꿨어요"],
+    // 완료 글(outro)은 완료 판이 보이므로 안내 줄로 따로 두지 않는다. 요약 칩도 없다.
+    ["guide", ""],
+    ["progress", "이번에는 두 대로 해요."],
+    ["card", ""],
+    ["progress", "다음 단계예요."],
+    ["summary", "1곳 바꿨어요"],
+  ]);
+  const [step, done] = lines.filter((l) => l.kind === "guide");
+  expect(step).toMatchObject({ id: "a1-guide", turn: "a1", guide: { kind: "step", step: 1, notes } });
+  expect(done).toMatchObject({ id: "a2-guide", turn: "a2", guide: { kind: "done", outro: "다 만들었어요.", otherEnv: [{ from: "NAS", to: "S3" }], rebuild: ["cloud"] } });
+  expect(new Set(lines.map((l) => l.id)).size).toBe(lines.length);
+});

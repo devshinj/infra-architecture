@@ -189,3 +189,27 @@ test("프로젝트 줄의 '구성도 N' 은 접혀 있을 때만 보인다(보�
   expect(within(head).getByText("구성도 2")).toBeInTheDocument();
   expect(head).toHaveAccessibleName("프로젝트A, 구성도 2개");
 });
+
+test("학습 모드 link goes to /learn and learning diagrams show the step badge", () => {
+  window.localStorage.clear();
+  path = "/learn";
+  render(
+    <Sidebar
+      projects={[{ id: "p", name: "학습", diagrams: [{ id: "d1", name: "대형 쇼핑몰", learning: "학습 3/12" }, { id: "d2", name: "보통 구성도" }] }]}
+      userName="a"
+    />,
+  );
+  const link = screen.getByRole("link", { name: "학습 모드" });
+  expect(link).toHaveAttribute("href", "/learn");
+  expect(link).toHaveAttribute("aria-current", "page");
+  expect(screen.getByRole("button", { name: "대형 쇼핑몰, 학습 3/12" })).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "보통 구성도" })).toBeInTheDocument();
+  cleanup();
+  window.localStorage.setItem("infrasketch.sidebarCollapsed", "1");
+  render(<ShellProvider><Sidebar projects={[]} userName="a" /></ShellProvider>);
+  const rail = screen.getByRole("link", { name: "학습 모드" });
+  expect(rail).toHaveAttribute("title", "학습 모드");
+  expect(rail).toHaveAttribute("href", "/learn");
+  window.localStorage.removeItem("infrasketch.sidebarCollapsed");
+  path = "/";
+});

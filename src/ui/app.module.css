@@ -73,6 +73,8 @@
 .rowName { display: block; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 /* 접혀 있을 때만: "구성도 N". */
 .count { flex: none; font-size: 12px; font-weight: 400; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+/* 학습 중인 구성도: 상태 배지(알약) "학습 3/12". */
+.learnBadge { flex: none; font-size: 12px; font-weight: 400; line-height: 1.5; padding: 0 8px; color: var(--text-secondary); border: 1px solid var(--line-node); border-radius: var(--radius-pill); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .diagramRow { margin-left: 20px; }
 .addRow {
   display: block; width: calc(100% - 20px); margin-left: 20px; text-align: left; font: inherit; font-size: 12px;

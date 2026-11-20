@@ -447,3 +447,20 @@ test("an existing diagram chat posts its sessionId; errors are counted", async (
   expect(h.store.c1!.map((l) => [l.kind, l.text])).toEqual([["user", "또"], ["error", "다른 응답을 처리하고 있어요."]]);
   expect(h.result.current.errors).toBe(1);
 });
+
+test("guide event is passed to onGuide before done; replaceLines swaps the main lines", async () => {
+  const view = { guideId: "shop", title: "대형 쇼핑몰", env: "onprem" as const, envChoices: ["onprem" as const, "cloud" as const], step: 1, total: 12, status: "active" as const, current: { goal: "L4", example: "L4 두 대" } };
+  vi.stubGlobal("fetch", vi.fn(async () => streamOf([nd([
+    { t: "start", messageId: "m", intent: null }, { t: "cmd", cmd: add("a") }, { t: "say", text: "방화벽을 넣었어요." },
+    { t: "guide", view }, done({ applied: 1, changed: 1 }),
+  ])])));
+  const order: string[] = [];
+  const onGuide = vi.fn(() => void order.push("guide"));
+  const onDone = vi.fn(() => void order.push("done"));
+  const h = renderHook(() => useChatTurn({ diagramId: "d1", initial: [], onCommand: vi.fn(), onDone, onOpenHistory: vi.fn(), onGuide }));
+  await act(() => h.result.current.send("방화벽 넣어 줘"));
+  expect(onGuide).toHaveBeenCalledWith(view);
+  expect(order).toEqual(["guide", "done"]);
+  act(() => h.result.current.replaceLines([{ id: "x", kind: "system", text: "다시 불러옴" }]));
+  expect(h.result.current.lines).toEqual([{ id: "x", kind: "system", text: "다시 불러옴" }]);
+});

@@ -31,3 +31,23 @@ export function guideView(
     current: cur ? { goal: cur.goal, example: cur.example } : null,
   };
 }
+
+/** 주제 고르기 화면의 카드 하나(대본 전체를 화면에 보내지 않는다). */
+export interface GuideSummary {
+  id: string;
+  title: string;
+  intro: string;
+  learns: string[];
+  /** 대본이 있는 환경과 그 단계 수(GUIDE_ENVS 순서). */
+  envs: { env: GuideEnv; steps: number }[];
+}
+
+export function guideSummary(g: Guide): GuideSummary {
+  return {
+    id: g.id,
+    title: g.title,
+    intro: g.intro,
+    learns: [...g.learns],
+    envs: guideEnvs(g).map((env) => ({ env, steps: g.variants[env]!.steps.length })),
+  };
+}

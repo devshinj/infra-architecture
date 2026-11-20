@@ -30,7 +30,8 @@ export { GENERIC_ERROR };
 export interface SidebarProject {
   id: string;
   name: string;
-  diagrams: { id: string; name: string }[];
+  /** learning: 학습 중인 구성도의 배지("학습 3/12"). 학습 중이 아니면 없다. */
+  diagrams: { id: string; name: string; learning?: string }[];
 }
 
 type MenuTarget = { type: "project" | "diagram"; id: string; name: string; project: SidebarProject };
@@ -66,6 +67,7 @@ export function Sidebar({ projects, userName }: { projects: SidebarProject[]; us
   const [duplicating, startDup] = useTransition();
   const shell = useShell();
   const [account, setAccount] = useState(false);
+  const learnCurrent = pathname === "/learn";
   const glossaryCurrent = pathname === "/glossary";
   const networkCurrent = pathname === "/network";
   const mcpCurrent = pathname === "/mcp";
@@ -358,6 +360,18 @@ export function Sidebar({ projects, userName }: { projects: SidebarProject[]; us
 
   const dialogView = dialog && <DialogView dialog={dialog} onClose={closeDialog} />;
 
+  const learnLink = (rail: boolean) => (
+    <Link
+      href="/learn"
+      className={rail ? `${styles.railBtn} ${learnCurrent ? styles.railBtnActive : ""}` : `${styles.sideLink} ${learnCurrent ? styles.sideLinkActive : ""}`}
+      aria-current={learnCurrent ? "page" : undefined}
+      onClick={() => setDrawer(false)}
+      {...(rail ? { "aria-label": "학습 모드", title: "학습 모드" } : {})}
+    >
+      {rail ? <IconLearn /> : "학습 모드"}
+      <LinkPending />
+    </Link>
+  );
   const glossaryLink = (rail: boolean) => (
     <Link
       href="/glossary"
@@ -437,6 +451,8 @@ export function Sidebar({ projects, userName }: { projects: SidebarProject[]; us
                 <span className={styles.topbarSep} aria-hidden="true">/</span>
                 <span className={styles.topbarDiagram} title={diagram.name}>{diagram.name}</span>
               </>
+            ) : learnCurrent ? (
+              <span className={styles.topbarDiagram}>학습 모드</span>
             ) : glossaryCurrent ? (
               <span className={styles.topbarDiagram}>용어 사전</span>
             ) : networkCurrent ? (
@@ -470,6 +486,7 @@ export function Sidebar({ projects, userName }: { projects: SidebarProject[]; us
         <nav className={`${styles.sidebar} ${styles.rail}`} aria-label="프로젝트">
           <RailButton label="프로젝트 영역 펼치기" expanded={false} buttonRef={toggleRef} onClick={() => setShellCollapsed(false)}><IconExpand /></RailButton>
           <RailButton label="새 프로젝트" buttonRef={newProjectBtn} onClick={newProject}><IconPlus /></RailButton>
+          {learnLink(true)}
           {glossaryLink(true)}
           {networkLink(true)}
           <div className={styles.railFoot} ref={accountWrap}>
@@ -572,6 +589,8 @@ export function Sidebar({ projects, userName }: { projects: SidebarProject[]; us
                               <IconDiagram />
                               {/* 잘린 긴 이름은 마우스를 올리면 보인다. 포커스되지 않는 안쪽에 두어 이름을 두 번 읽지 않게. */}
                               <span className={styles.rowName} title={d.name}>{d.name}</span>
+                              {/* 줄 이름 뒤 쉼표는 보조기기에만(「대형 쇼핑몰, 학습 3/12」). 빈칸 글자는 flex 안이라 그려지지 않는다. */}
+                              {d.learning && <><span className={styles.srOnly}>,</span>{" "}<span className={styles.learnBadge}>{d.learning}</span></>}
                             </button>
                             {menuFor({ type: "diagram", id: d.id, name: d.name, project: p })}
                           </div>
@@ -589,6 +608,7 @@ export function Sidebar({ projects, userName }: { projects: SidebarProject[]; us
         <div className={styles.sideFoot}>
           <Button ref={newProjectBtn} onClick={newProject}>새 프로젝트</Button>
           <div className={styles.pageLinks}>
+            {learnLink(false)}
             {glossaryLink(false)}
             {networkLink(false)}
             {mcpLink(false)}
@@ -642,6 +662,8 @@ const IconCollapse = () => <Svg><rect x="2.5" y="3" width="13" height="12" rx="2
 const IconExpand = () => <Svg><rect x="2.5" y="3" width="13" height="12" rx="2" /><path d="M6.5 3v12M9.5 7l2 2-2 2" /></Svg>;
 const IconPlus = () => <Svg><path d="M9 4v10M4 9h10" /></Svg>;
 const IconBook = () => <Svg><path d="M3.5 3.5h4a1.5 1.5 0 0 1 1.5 1.5v9a1.2 1.2 0 0 0-1.2-1.2H3.5zM14.5 3.5h-4A1.5 1.5 0 0 0 9 5v9a1.2 1.2 0 0 1 1.2-1.2h4.3z" /></Svg>;
+/** 학습 모드: 점에서 점으로 이어 가는 꺾인 길(한 단계씩 따라가기). */
+const IconLearn = () => <Svg><circle cx="4" cy="14" r="1.75" /><circle cx="14" cy="4" r="1.75" /><path d="M5.75 14H9a1.5 1.5 0 0 0 1.5-1.5v-7A1.5 1.5 0 0 1 12 4h.25" /></Svg>;
 const IconNetwork = () => <Svg><circle cx="9" cy="4.5" r="1.75" /><circle cx="4.5" cy="13.5" r="1.75" /><circle cx="13.5" cy="13.5" r="1.75" /><path d="M8.2 6.1L5.3 11.9M9.8 6.1l2.9 5.8M6.25 13.5h5.5" /></Svg>;
 const IconMenu = () => <Svg><path d="M3 5h12M3 9h12M3 13h12" /></Svg>;
 const IconClose = () => <Svg><path d="M4.5 4.5l9 9M13.5 4.5l-9 9" /></Svg>;

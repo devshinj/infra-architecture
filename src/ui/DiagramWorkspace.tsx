@@ -45,6 +45,7 @@ import type { ExplanationProps } from "./explain/Explanation";
 import { type TargetKind, useExplanations } from "./explain/useExplanations";
 import type { FlowPanelProps } from "./flows/FlowPanel";
 import { useFlows } from "./flows/useFlows";
+import { useGuide } from "./guide/useGuide";
 import { MOBILE_VIEWS, MobileTabBar, type MobileView, mobileTabId } from "./MobileTabBar";
 import { PANEL_DEFAULT, PANEL_MAX, PANEL_MIN, PANEL_MIN_COMPACT, PanelResizer } from "./PanelResizer";
 import { PANEL_GAP, SKIP_SLOT_ID, useShell } from "./Shell";
@@ -92,7 +93,7 @@ export interface DiagramWorkspaceProps {
   initialPaging?: SessionPaging;
   /** 계정 공통 망 지식. 없으면(못 읽음) 망 종류·연결 방식 예상 없이 지금처럼 그린다. */
   knowledge?: NetworkKnowledge | null;
-  /** 이 구성도의 학습 상태(학습한 적 없으면 null). status 가 active 일 때 학습 중이다. Task 9 가 단계 카드로 쓴다. */
+  /** 이 구성도의 학습 상태(학습한 적 없으면 null). status 가 active 일 때 학습 중이고 대화 탭 위에 단계 카드가 붙는다(useGuide). */
   guide?: GuideView | null;
 }
 
@@ -124,6 +125,8 @@ const CARD_WIDTH = 380;
 const optionsFor = (state: DiagramState): CanvasOptions => ({ ...defaultDisplayOptions(state), hoverLabels: false, showMissingBadges: false });
 
 const NO_SESSIONS: SessionSummary[] = [];
+/** 대화 기록이 없을 때. 렌더마다 새 배열이면 학습 차례 뒤 대화 다시 그리기(useGuide)가 서버 그리기로 착각한다. */
+const NO_LINES: ChatLine[] = [];
 
 /** 스스로 쓴 버전을 받아 오기를 기다리는 가장 긴 시간. 그동안은 Claude Code 변경을 묻지 않는다(넘으면 다시 묻는다). */
 const OWN_WRITE_MS = 5000;
@@ -143,7 +146,7 @@ function escapeBelongsElsewhere(e: KeyboardEvent): boolean {
 
 const sameSet = (a: ReadonlySet<string>, b: ReadonlySet<string>) => a.size === b.size && [...a].every((x) => b.has(x));
 
-export function DiagramWorkspace({ diagramId, name, projectName, latest, initialPinned, samples, initialChat = [], initialSessions = NO_SESSIONS, initialPaging, knowledge = null }: DiagramWorkspaceProps) {
+export function DiagramWorkspace({ diagramId, name, projectName, latest, initialPinned, samples, initialChat = NO_LINES, initialSessions = NO_SESSIONS, initialPaging, knowledge = null, guide: guideProp = null }: DiagramWorkspaceProps) {
   const router = useRouter();
   const [current, setCurrent] = useState(latest);
   const [pinned, setPinned] = useState<Pinned>(initialPinned);
@@ -424,7 +427,10 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
       refreshAfterInterrupt();
     },
     onRelayout: () => onAutoArrange(),
+    onGuide: (v) => guide.onEvent(v),
   });
+  // 학습: 단계 카드의 진행 상태, 학습 차례 뒤 저장된 대화 줄(해설 칩·완료 판)로 다시 그리기, 그만두기·다시 만들기.
+  const guide = useGuide({ diagramId, initial: guideProp, serverLines: initialChat, busy: chat.busy, replaceLines: chat.replaceLines });
   // The server re-renders with a newer version after import/restore/chat: adopt it, but never mid-turn
   // (it would wipe the commands already streamed); the done-refresh brings the newer version later.
   // 물어서 저절로 온 바깥 변경은 이력 보기·비교 중이면 미룬다(보던 화면에서 끌어내지 않는다). 현재로 돌아오면 그때 받는다.
@@ -1018,6 +1024,7 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
       // 서버가 남긴 안내(구성 정보 숫자의 변화 포함)를 대화에도 바로 띄운다. 새로 고치면 저장된 같은 줄이 보인다.
       const r = await restoreVersionAction(diagramId, number, { describeChange: true });
       if (r && "error" in r) return setError(r.error);
+      guide.onRestored(r?.guide);
       loadVersions();
       if (r?.text) pushDiagramLine({ kind: "system", text: r.text });
     });
@@ -1029,6 +1036,7 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
       expectNewBoard();
       const r = await restoreVersionAction(diagramId, v - 1);
       if (r && "error" in r) return setError(r.error);
+      guide.onRestored(r?.guide);
       loadVersions();
       pushDiagramLine({ kind: "system", text: `방금 바꾼 것을 되돌렸어요. v${v - 1} 구성으로 돌아갔어요.` });
     });
@@ -1297,6 +1305,7 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
               onOpenWarnings: openWarnings,
               turnActions: { latest: current.number, disabled: locked || busy || !live, onCompare: (v) => compare(v - 1), onUndo: undoTurn },
               undone,
+              guide: { view: guide.view, onQuit: guide.quit, onRebuild: guide.rebuild },
               health,
               mentionRef,
               ...(live ? {} : { disabledReason: "이전 버전을 보는 중에는 대화할 수 없어요." }),
