@@ -109,13 +109,13 @@ export const SHOP_CLOUD: GuideVariant = {
         group("region", "cloud_region", "AWS 서울 리전"),
         group("vpc", "vpc", "쇼핑몰 VPC", "region"),
         group("pub", "subnet_public", "공개 서브넷", "vpc"),
-        node("alb", "lb_l7", "ALB", "pub", "L7 로드밸런서", { ...managed(), sw: "AWS ALB", port: "443", rules: "443 리스너 → API 대상 그룹(8080), 헬스 체크 /health" }),
+        node("alb", "lb_l7", "ALB", "pub", "L7 로드밸런서", { ...managed(), sw: "AWS ALB", port: "443", rules: "443 리스너: 비밀 원본 헤더가 있으면 API 대상 그룹(8080), 없으면 403 · 헬스 체크 /health" }),
         edge("cdn", "alb", "request", "HTTPS 443"),
       ],
       say: "AWS 서울 리전에 쇼핑몰 VPC 를 만들고, 인터넷과 닿는 공개 서브넷에 ALB 를 뒀어요. CloudFront 가 캐시에 없는 요청을 보내면 ALB 가 뒤의 API 서버들에 나눠요. ALB 는 AWS 가 여러 AZ 에 이중화해요.",
       notes: [
         { kind: "net", text: "공개 서브넷은 인터넷 게이트웨이로 가는 경로가 있는 서브넷이에요. 인터넷과 맞닿는 ALB·NAT 만 여기 둬요." },
-        { kind: "caution", text: "ALB 는 인터넷에 열려 있어요. CloudFront 를 건너뛰고 오는 요청을 막게, 보안 그룹은 CloudFront 주소 목록만 허용해요." },
+        { kind: "caution", text: "CloudFront 주소 목록은 남의 CloudFront 도 포함해요. 그래서 우리 CloudFront 가 붙인 비밀 헤더가 있는 요청만 ALB 리스너가 넘겨요." },
         { kind: "flow", text: "온프레미스의 L4 자리예요. ALB 는 HTTPS 를 풀어 경로를 보고 나누는 L7 이에요. 서브넷은 실제로 AZ 마다 하나씩(2a·2c) 둬요." },
       ],
       miss: "이번 단계는 VPC 와 그 안의 ALB 예요. 'VPC 를 만들고 CloudFront 뒤에 ALB 를 둬 줘'처럼 말해 보세요.",
@@ -141,9 +141,9 @@ export const SHOP_CLOUD: GuideVariant = {
         ),
         [E("cdn", "alb")]: edgeText(
           "캐시에 없는 요청(주로 API)을 CloudFront 가 서울의 ALB 로 보내요.",
-          "HTTPS(TCP 443). CloudFront 가 원본(ALB)에 새로 연결하고, ALB 가 인증서로 암호를 풀어요.",
+          "HTTPS(TCP 443). CloudFront 가 원본 요청에 비밀 헤더를 붙여 ALB 에 새로 연결해요.",
           "주문·로그인처럼 서버가 답해야 하는 요청을 원본으로 보내는 길이에요.",
-          "ALB 보안 그룹: CloudFront 관리형 접두사 목록 → 443 만 허용.",
+          "보안 그룹은 CloudFront 접두사 목록만 443 허용, 리스너는 비밀 헤더가 없으면 403 으로 막아요.",
         ),
       },
     },
@@ -421,10 +421,10 @@ export const SHOP_CLOUD: GuideVariant = {
         { kind: "caution", text: "표준 대기열은 같은 메시지를 두 번 줄 수 있어요. 처리기는 주문 번호로 이미 처리했는지 보고 건너뛰어야 해요." },
         { kind: "caution", text: "표준 대기열은 넣은 순서대로 꺼내 주지 않을 수 있어요. 순서가 꼭 필요하면 FIFO 대기열을 쓰고 처리량 한도를 확인해요." },
       ],
-      miss: "이번 단계는 주문이 몰릴 때 받아 둘 대기열이에요. 'SQS 대기열을 넣어 줘'처럼 말해 보세요.",
+      miss: "이번 단계는 배송·알림 같은 주문 후속 일을 받아 둘 대기열이에요. 'SQS 대기열을 넣어 줘'처럼 말해 보세요.",
       explains: {
         [N("sqs")]: nodeText(
-          "주문 접수 메시지를 받아 두었다가 처리기가 꺼내 가게 하는 관리형 대기열이에요. AWS 가 여러 AZ 에 나눠 저장해 따로 이중화할 것이 없어요.",
+          "결제를 마친 주문의 후속 일(배송·알림·적립) 메시지를 받아 두었다가 처리기가 꺼내 가게 하는 관리형 대기열이에요. AWS 가 여러 AZ 에 나눠 저장해 따로 이중화할 것이 없어요.",
           ["늦어도 되는 주문 후속 일은 SQS 로 넘긴다", "몰릴 때도 API 는 빨리 답하고, 뒤쪽 일은 처리기가 제 속도로 한다", "API 가 배송 요청·알림까지 끝낸 뒤 답한다", "처리가 조금 늦을 수 있고, 중복·순서 처리를 앱이 맡는다"],
         ),
         [G("order-asg")]: groupText(
