@@ -168,9 +168,9 @@ export async function duplicateDiagramAction(
   });
 }
 
-export async function importSampleAction(diagramId: string, sampleId: string): Promise<{ number: number }> {
+export async function importSampleAction(diagramId: string, sampleId: string): Promise<ActionResult<{ number: number }>> {
   if (!SAMPLES.some((x) => x.id === sampleId)) notFound();
-  return run(async (uid) => {
+  return runResult(async (uid) => {
     const r = await importSample(uid, diagramId, sampleId);
     refreshDiagram();
     return r;

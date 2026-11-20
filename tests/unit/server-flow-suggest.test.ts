@@ -38,6 +38,9 @@ function fakeRepo(opts: { suggestedAt?: Date | null; flows?: Flow[]; busy?: numb
     async getOwnedDiagram(userId) {
       if (userId !== "u") throw new NotFoundError();
     },
+    async isLearning() {
+      return false;
+    },
     async withLock(_d, fn) {
       store.lockTries++;
       if (store.busyLeft > 0) {

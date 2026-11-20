@@ -1037,7 +1037,8 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
     !locked &&
     run(async () => {
       expectNewBoard();
-      await importSampleAction(diagramId, sampleId);
+      const r = await importSampleAction(diagramId, sampleId);
+      if (!r.ok) return setError(r.error);
       await clearPinnedAction(diagramId);
       setPinned({});
       loadVersions();

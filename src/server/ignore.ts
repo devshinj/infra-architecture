@@ -2,6 +2,7 @@ import { emptyState, type DiagramState } from "@/domain/types";
 import { BUSY_MESSAGE } from "@/server/chat/busy";
 import { withDiagramLock } from "@/server/chat/lock";
 import { getOwnedDiagram, ValidationError } from "@/server/projects";
+import { assertNotLearning } from "@/server/guide/runs";
 import { createVersion, getLatestState } from "@/server/versions";
 
 const WARNING_ID = /^[a-z_]{1,32}:[a-z0-9][a-z0-9-]{0,63}(--[a-z0-9][a-z0-9-]{0,63})?$/;
@@ -17,6 +18,7 @@ export async function setWarningIgnoredFor(
   ignored: boolean,
 ): Promise<{ number: number | null }> {
   await getOwnedDiagram(userId, diagramId);
+  await assertNotLearning(diagramId);
   if (typeof warningId !== "string" || !WARNING_ID.test(warningId)) {
     throw new ValidationError("경고를 찾을 수 없어요");
   }

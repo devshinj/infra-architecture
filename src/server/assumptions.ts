@@ -1,6 +1,7 @@
 import { confirmAssumption } from "@/domain/assumptions";
 import { emptyState } from "@/domain/types";
 import { getOwnedDiagram, ValidationError } from "@/server/projects";
+import { assertNotLearning } from "@/server/guide/runs";
 import { createVersion, getLatestState } from "@/server/versions";
 
 const KEY = /^[a-z_]{1,32}$/;
@@ -13,6 +14,7 @@ export async function confirmAssumptionFor(
   value: string,
 ): Promise<{ number: number }> {
   await getOwnedDiagram(userId, diagramId);
+  await assertNotLearning(diagramId);
   if (typeof key !== "string" || !KEY.test(key)) throw new ValidationError("가정 항목이 올바르지 않아요");
   if (typeof value !== "string" || value.length < 1 || value.length > 80) {
     throw new ValidationError("가정 값은 1~80자로 입력해 주세요");

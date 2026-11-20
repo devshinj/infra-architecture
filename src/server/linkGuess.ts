@@ -7,6 +7,7 @@ import { BUSY_MESSAGE } from "@/server/chat/busy";
 import { withDiagramLock } from "@/server/chat/lock";
 import { rewriteFlows } from "@/server/flows";
 import { getOwnedDiagram, ValidationError } from "@/server/projects";
+import { assertNotLearning } from "@/server/guide/runs";
 import { createVersion, getLatestState } from "@/server/versions";
 
 const NO_LINK_VALUE = "망연계 없이 통신(사용자 확인)";
@@ -18,6 +19,7 @@ export async function confirmLinkGuessFor(
   nodeId: string,
 ): Promise<{ number: number | null }> {
   await getOwnedDiagram(userId, diagramId);
+  await assertNotLearning(diagramId);
   const locked = await withDiagramLock(diagramId, async () => {
     const latest = await getLatestState(diagramId);
     const before = latest?.state ?? emptyState();
@@ -43,6 +45,7 @@ export async function rejectLinkGuessFor(
   nodeId: string,
 ): Promise<{ number: number | null; partial: boolean }> {
   await getOwnedDiagram(userId, diagramId);
+  await assertNotLearning(diagramId);
   const locked = await withDiagramLock(diagramId, async () => {
     const latest = await getLatestState(diagramId);
     const before = latest?.state ?? emptyState();
@@ -90,6 +93,7 @@ export async function rejectLinkGuessFor(
 /** 가정 칩의 지우기: 망연계 거절 기억(no_link 가정) 하나를 지운다. 그 짝의 안내가 다시 보인다. 없으면 `number: null`. */
 export async function removeNoLinkFor(userId: string, diagramId: string, key: string): Promise<{ number: number | null }> {
   await getOwnedDiagram(userId, diagramId);
+  await assertNotLearning(diagramId);
   if (typeof key !== "string" || !parseNoLinkKey(key)) throw new ValidationError("가정 항목이 올바르지 않아요");
   const locked = await withDiagramLock(diagramId, async () => {
     const latest = await getLatestState(diagramId);

@@ -11,6 +11,7 @@ import type { DiagramState } from "@/domain/types";
 import { createVersion } from "@/server/versions";
 
 import { getOwnedDiagram } from "./projects";
+import { assertNotLearning } from "./guide/runs";
 
 export interface SpikeGroup { id: string; group_kind: string; label: string; parent: string | null }
 export interface SpikeNode { id: string; kind: string; label: string; sub?: string | null; parent: string | null; attrs?: Record<string, string | number | null> }
@@ -127,6 +128,7 @@ export function sampleState(sampleId: string): DiagramState {
  */
 export async function importSample(userId: string, diagramId: string, sampleId: string): Promise<{ number: number }> {
   await getOwnedDiagram(userId, diagramId);
+  await assertNotLearning(diagramId);
   const { state, flows: sampleFlows } = sampleOf(sampleId);
   return db.transaction(async (tx) => {
     const { number } = await createVersion(diagramId, state, { source: "import", tx });

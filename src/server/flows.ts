@@ -6,6 +6,7 @@ import { checkFlow, judgeFlowOps, type Flow, type FlowOp, type FlowProblem } fro
 import { emptyState, type DiagramState } from "@/domain/types";
 import { withDiagramLock } from "@/server/chat/lock";
 import { getOwnedDiagram, NotFoundError, ValidationError } from "@/server/projects";
+import { assertNotLearning } from "@/server/guide/runs";
 import { getLatestState } from "@/server/versions";
 
 export interface StoredFlow extends Flow {
@@ -170,6 +171,7 @@ async function withOwnedFlow(
   fn: (flow: Flow) => Promise<void>,
 ): Promise<void> {
   await getOwnedDiagram(userId, diagramId);
+  await assertNotLearning(diagramId);
   if (typeof key !== "string" || !KEY_RE.test(key)) throw new NotFoundError();
   const locked = await withDiagramLock(diagramId, async () => {
     const [row] = await db

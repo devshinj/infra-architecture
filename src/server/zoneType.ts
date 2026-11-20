@@ -3,6 +3,7 @@ import { BUSY_MESSAGE } from "@/server/chat/busy";
 import { withDiagramLock } from "@/server/chat/lock";
 import { getNetworkKnowledge } from "@/server/network";
 import { getOwnedDiagram, ValidationError } from "@/server/projects";
+import { assertNotLearning } from "@/server/guide/runs";
 import { createVersion, getLatestState } from "@/server/versions";
 
 const NO_TARGET = "대상을 찾을 수 없어요";
@@ -19,6 +20,7 @@ export async function setZoneTypeFor(
   key: string | null,
 ): Promise<{ number: number | null }> {
   await getOwnedDiagram(userId, diagramId);
+  await assertNotLearning(diagramId);
   if (typeof groupId !== "string") throw new ValidationError(NO_TARGET);
   if (key !== null) {
     if (typeof key !== "string") throw new ValidationError(BAD_KEY);
