@@ -1,4 +1,4 @@
-import { GUIDE_MIN_CONFIDENCE, type GuideEnv, type GuideStep } from "./types";
+import { GUIDE_MIN_CONFIDENCE, GUIDE_QUESTION_WINS, type GuideEnv, type GuideStep } from "./types";
 
 /** 소문자로 바꾸고 공백·문장부호를 없앤다. "두 대" → "두대". */
 export function normalizeUtterance(text: string): string {
@@ -59,6 +59,7 @@ export function decideStep(
   const reply = findConflict(text, step);
   if (reply !== null) return { kind: "conflict", reply };
   if (clef.match !== null) {
+    if (clef.question !== null && clef.question >= GUIDE_QUESTION_WINS) return { kind: "question" };
     if (clef.match >= threshold) return { kind: "match" };
     if (clef.question !== null && clef.question >= threshold) return { kind: "question" };
     return { kind: "miss" };

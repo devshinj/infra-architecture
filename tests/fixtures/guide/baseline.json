@@ -68,8 +68,8 @@
       "ok": true,
       "passes": 3,
       "runs": 3,
-      "match": 0.14463143714297527,
-      "question": 0.012053779516236447
+      "match": null,
+      "question": null
     },
     {
       "id": "onprem-l4-c2",
@@ -108,8 +108,8 @@
       "ok": true,
       "passes": 3,
       "runs": 3,
-      "match": 0.06979492650638747,
-      "question": 0.03161876726864548
+      "match": null,
+      "question": null
     },
     {
       "id": "onprem-web-m1",
@@ -138,8 +138,8 @@
       "ok": true,
       "passes": 3,
       "runs": 3,
-      "match": 0.16079243661397521,
-      "question": 0.01704531725343583
+      "match": null,
+      "question": null
     },
     {
       "id": "onprem-web-c2",
@@ -158,8 +158,8 @@
       "ok": true,
       "passes": 3,
       "runs": 3,
-      "match": 0.12463857053608371,
-      "question": 0.017712298703411445
+      "match": null,
+      "question": null
     },
     {
       "id": "onprem-was-m1",
@@ -188,8 +188,8 @@
       "ok": true,
       "passes": 3,
       "runs": 3,
-      "match": 0.4146617973581297,
-      "question": 0.012821214266594244
+      "match": null,
+      "question": null
     },
     {
       "id": "onprem-was-c2",
@@ -554,9 +554,9 @@
     {
       "id": "cloud-entry-c2",
       "expect": "question",
-      "got": "match",
-      "ok": false,
-      "passes": 0,
+      "got": "question",
+      "ok": true,
+      "passes": 3,
       "runs": 3,
       "match": 0.6020615889267098,
       "question": 0.9666001780666844
@@ -628,8 +628,8 @@
       "ok": true,
       "passes": 3,
       "runs": 3,
-      "match": 0.2938095639024741,
-      "question": 0.019124036750888904
+      "match": null,
+      "question": null
     },
     {
       "id": "cloud-api-c2",
@@ -648,8 +648,8 @@
       "ok": true,
       "passes": 3,
       "runs": 3,
-      "match": 0.06371499425196533,
-      "question": 0.011777842688519623
+      "match": null,
+      "question": null
     },
     {
       "id": "cloud-api-c4",
@@ -694,9 +694,9 @@
     {
       "id": "cloud-rds-c2",
       "expect": "question",
-      "got": "match",
-      "ok": false,
-      "passes": 0,
+      "got": "question",
+      "ok": true,
+      "passes": 3,
       "runs": 3,
       "match": 0.746138993030751,
       "question": 0.9661559646595075
@@ -734,9 +734,9 @@
     {
       "id": "cloud-cache-c2",
       "expect": "question",
-      "got": "match",
-      "ok": false,
-      "passes": 0,
+      "got": "question",
+      "ok": true,
+      "passes": 3,
       "runs": 3,
       "match": 0.6774740169356273,
       "question": 0.9465966702001757

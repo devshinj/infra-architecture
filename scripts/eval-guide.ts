@@ -6,7 +6,8 @@
  *   --only a,b      이 id 의 문장만
  *   --repeat N      문장마다 N 번 묻는다(기본 1). 모두 기대와 같아야 맞음
  *   --threshold X   GUIDE_MIN_CONFIDENCE 대신 이 기준으로 판정(기준 바꿔 보기)
- *   --update        이번 결과를 기준 파일(tests/fixtures/guide/baseline.json)로 저장
+ *   --update        이번 결과를 기준 파일(tests/fixtures/guide/baseline.json)로 저장. 나빠진 문장이 있거나 --repeat 가 3 보다 작으면 거부
+ *   --force         나빠진 문장이 있어도 --update 로 저장(--repeat 3 이상은 여전히 필요)
  *
  * 기준 파일이 있으면 그보다 나빠진 문장을 따로 보여 주고, 하나라도 있으면 실패(1)로 끝낸다.
  */
@@ -43,6 +44,7 @@ interface Result {
 
 const args = process.argv.slice(2);
 const update = args.includes("--update");
+const force = args.includes("--force");
 const valueOf = (flag: string) => (args.includes(flag) ? args[args.indexOf(flag) + 1] : undefined);
 const only = valueOf("--only") ? new Set(valueOf("--only")!.split(",")) : null;
 const repeat = Math.max(1, Number(valueOf("--repeat")) || 1);
@@ -52,7 +54,7 @@ async function main(): Promise<number> {
   const { llmConfig } = await import("../src/server/llm/config");
   const { createClefClient } = await import("../src/server/llm/clef");
   const { askClef } = await import("../src/server/guide/judge");
-  const { decideStep } = await import("../src/domain/guides/judge");
+  const { decideStep, findConflict } = await import("../src/domain/guides/judge");
   const { getGuide } = await import("../src/domain/guides");
   const { GUIDE_MIN_CONFIDENCE } = await import("../src/domain/guides/types");
 
@@ -76,8 +78,10 @@ async function main(): Promise<number> {
     let lastMatch: number | null = null;
     let lastQuestion: number | null = null;
     for (let i = 0; i < repeat; i++) {
-      const p = await askClef(clef, c.text, step.goal, AbortSignal.timeout(15_000));
-      if (p.match === null) clefFailures++;
+      // 대화 차례(turn.ts)처럼 conflict 가 잡히면 Clef 를 부르지 않는다.
+      const hasConflict = findConflict(c.text, step) !== null;
+      const p = hasConflict ? { match: null, question: null } : await askClef(clef, c.text, step.goal, AbortSignal.timeout(15_000));
+      if (p.match === null && !hasConflict) clefFailures++;
       lastMatch = p.match;
       lastQuestion = p.question;
       verdicts.push(decideStep(c.text, step, p, threshold).kind);
@@ -111,9 +115,16 @@ async function main(): Promise<number> {
   }
 
   let code = 0;
+  let worseCount = 0;
   if (existsSync(BASELINE)) {
     const base = new Map((JSON.parse(readFileSync(BASELINE, "utf8")).results as Result[]).map((r) => [r.id, r]));
     const worse = results.filter((r) => base.get(r.id)?.ok && !r.ok);
+    worseCount = worse.length;
+    const fresh = results.filter((r) => !base.has(r.id));
+    if (fresh.length) {
+      console.log(`\n기준 없음 ${fresh.length}건`);
+      for (const r of fresh) console.log(`  ${r.id} ${r.ok ? "O" : "X"} 기대 ${r.expect} → ${r.got}`);
+    }
     const better = results.filter((r) => base.get(r.id) && !base.get(r.id)!.ok && r.ok);
     const show = (title: string, xs: Result[]) => {
       if (!xs.length) return;
@@ -129,7 +140,11 @@ async function main(): Promise<number> {
   }
 
   if (update) {
-    if (only || thresholdArg !== undefined) {
+    if (repeat < 3) {
+      console.log("\n--repeat 가 3 보다 작아 기준으로 저장하지 않아요(흔들림이 기준에 섞여요). --repeat 3 이상으로 돌리세요.");
+    } else if (worseCount > 0 && !force) {
+      console.log(`\n기준보다 나빠진 문장이 ${worseCount}건 있어 저장하지 않아요. 의도한 것이면 --force 를 같이 주세요.`);
+    } else if (only || thresholdArg !== undefined) {
       console.log("\n--only·--threshold 결과는 기준으로 저장하지 않아요(전체를 기본 기준으로 돌려야 해요).");
     } else {
       writeFileSync(BASELINE, JSON.stringify({ savedAt: new Date().toISOString().slice(0, 10), results }, null, 2) + "\n");

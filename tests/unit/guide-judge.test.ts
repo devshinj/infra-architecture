@@ -33,6 +33,10 @@ describe("guide judge", () => {
   });
   test("conflict wins over clef", () =>
     expect(decideStep("WAS 세 대 넣어 줘", step, { match: 0.9, question: 0.1 })).toEqual({ kind: "conflict", reply: "이번에는 두 대로 합니다." }));
+  test("a confident question beats a match", () => {
+    expect(decideStep("WAS 가 뭐야?", step, { match: 0.7, question: 0.95 })).toEqual({ kind: "question" });
+    expect(decideStep("WAS 두 대 넣어 줘", step, { match: 0.7, question: 0.5 })).toEqual({ kind: "match" });
+  });
   test("clef match decides when present", () => {
     expect(decideStep("앱 서버를 이중으로", step, { match: 0.8, question: 0.1 })).toEqual({ kind: "match" });
     expect(decideStep("WAS 두 대 넣어 줘", step, { match: 0.3, question: 0.2 })).toEqual({ kind: "miss" });
