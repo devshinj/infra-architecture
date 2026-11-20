@@ -2,6 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 
 const uid = () => Math.random().toString(36).slice(2, 8);
 const LOCKED = "학습 중에는 바꿀 수 없어요. 학습을 그만두면 바꿀 수 있어요.";
+const REWRITE_NOTE = "학습을 그만두면 다시 쓸 수 있어요.";
 // SHOP 온프레미스 대본의 1·2단계(src/domain/guides/shop-onprem.ts).
 const STEP1_EXAMPLE = "고객이 웹과 앱으로 들어오고 앞에 방화벽을 둬 줘";
 const STEP1_SAY = /^IDC 안에 DMZ 를 나누고 맨 앞에 외부 방화벽을 뒀어요\./;
@@ -85,12 +86,13 @@ test("학습 모드 한 바퀴: 주제 고르기 → 환경 → 1단계 → 안 
   await page.getByRole("tab", { name: "설명" }).click();
   await expect(page.getByText(FW_ROLE)).toBeVisible({ timeout: 15_000 });
 
-  // 설명 고치기(다시 쓰기)는 학습 중이라 막힌다.
-  await page.getByRole("button", { name: "다시 쓰기" }).click();
-  await page.getByLabel("다시 쓰기 지시").fill("더 쉽게");
-  await page.getByRole("button", { name: "다시 만들기" }).click();
-  await expect(page.getByText(LOCKED)).toBeVisible({ timeout: 15_000 });
-  await expect(page.getByText("다시 쓴 역할")).toHaveCount(0);
+  // 설명 고치기(다시 쓰기)는 학습 중이라 막혀 있다: 버튼은 보이되 눌리지 않고 옆에 이유가 있다. 대본 글은 그대로.
+  const rewrite = page.getByRole("button", { name: "다시 쓰기" });
+  await expect(rewrite).toBeVisible();
+  await expect(rewrite).toBeDisabled();
+  await expect(rewrite).toHaveAccessibleDescription(REWRITE_NOTE);
+  await expect(page.getByText(REWRITE_NOTE)).toBeVisible();
+  await expect(page.getByText(FW_ROLE)).toBeVisible();
 
   // 학습 그만두기 → 확인 → 카드가 사라지고 새 대화가 돌아온다.
   await page.getByRole("tab", { name: "대화" }).click();
@@ -103,10 +105,14 @@ test("학습 모드 한 바퀴: 주제 고르기 → 환경 → 1단계 → 안 
   await expect(page.getByRole("button", { name: "새 대화" })).toBeVisible({ timeout: 15_000 });
   await expect(nodes(page)).toHaveCount(STEP1_NODES);
 
-  // 같은 고치기가 이제 된다. 외부 방화벽은 아직 골라져 있다(다시 누르면 선택이 풀린다).
+  // 같은 고치기가 이제 된다(새로 고치지 않아도). 외부 방화벽은 아직 골라져 있다(다시 누르면 선택이 풀린다).
   await page.getByRole("tab", { name: "설명" }).click();
-  await expect(page.getByText(LOCKED)).toBeVisible();
-  await page.getByRole("button", { name: "다시 시도" }).click();
+  await expect(page.getByText(FW_ROLE)).toBeVisible();
+  await expect(page.getByText(REWRITE_NOTE)).toHaveCount(0, { timeout: 15_000 });
+  await expect(rewrite).toBeEnabled();
+  await rewrite.click();
+  await page.getByLabel("다시 쓰기 지시").fill("더 쉽게");
+  await page.getByRole("button", { name: "다시 만들기" }).click();
   await expect(page.getByText("다시 쓴 역할")).toBeVisible({ timeout: 15_000 });
   await expect(page.getByText(LOCKED)).toHaveCount(0);
 });
