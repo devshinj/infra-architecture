@@ -1,0 +1,55 @@
+import { describe, expect, test } from "vitest";
+
+import { decideStep, findConflict, keywordMatch, looksLikeQuestion, normalizeUtterance, readEnv } from "@/domain/guides/judge";
+import type { GuideStep } from "@/domain/guides/types";
+
+const step = {
+  id: "was",
+  goal: "WAS 두 대 이중화",
+  example: "WAS 두 대를 이중화해서 넣어 줘",
+  keywords: [["was", "앱서버"], ["두대", "2대", "이중화"]],
+  conflicts: [{ pattern: ["was", "세대"], reply: "이번에는 두 대로 합니다." }],
+  commands: [],
+  say: "",
+  miss: "이번 단계는 WAS 두 대입니다.",
+  explains: {},
+} satisfies GuideStep;
+
+describe("guide judge", () => {
+  test("normalizeUtterance drops spaces and punctuation", () => expect(normalizeUtterance("WAS 두 대!")).toBe("was두대"));
+  test("keywordMatch needs one hit per group", () => {
+    expect(keywordMatch("앱 서버 2대 넣어줘", step.keywords)).toBe(true);
+    expect(keywordMatch("WAS 넣어줘", step.keywords)).toBe(false);
+    expect(keywordMatch("WAS 두 대", [])).toBe(false);
+  });
+  test("findConflict returns the reply of the first full pattern", () => {
+    expect(findConflict("WAS 세 대", step)).toBe("이번에는 두 대로 합니다.");
+    expect(findConflict("WAS 두 대", step)).toBeNull();
+  });
+  test("looksLikeQuestion", () => {
+    expect(looksLikeQuestion("L4 가 뭐야?")).toBe(true);
+    expect(looksLikeQuestion("차이를 알려 줘")).toBe(true);
+    expect(looksLikeQuestion("DB 넣어 줘")).toBe(false);
+  });
+  test("conflict wins over clef", () =>
+    expect(decideStep("WAS 세 대 넣어 줘", step, { match: 0.9, question: 0.1 })).toEqual({ kind: "conflict", reply: "이번에는 두 대로 합니다." }));
+  test("clef match decides when present", () => {
+    expect(decideStep("앱 서버를 이중으로", step, { match: 0.8, question: 0.1 })).toEqual({ kind: "match" });
+    expect(decideStep("WAS 두 대 넣어 줘", step, { match: 0.3, question: 0.2 })).toEqual({ kind: "miss" });
+    expect(decideStep("WAS 가 뭐야?", step, { match: 0.2, question: 0.9 })).toEqual({ kind: "question" });
+  });
+  test("keywords decide when clef is absent", () => {
+    expect(decideStep("WAS 두 대 넣어 줘", step, { match: null, question: null })).toEqual({ kind: "match" });
+    expect(decideStep("L4 가 뭐야?", step, { match: null, question: null })).toEqual({ kind: "question" });
+    expect(decideStep("DB 넣어 줘", step, { match: null, question: null })).toEqual({ kind: "miss" });
+  });
+  test("readEnv reads one env or none", () => {
+    expect(readEnv("온프레미스로 할게", ["onprem", "cloud"])).toBe("onprem");
+    expect(readEnv("AWS 로", ["onprem", "cloud"])).toBe("cloud");
+    expect(readEnv("둘 다 좋아", ["onprem", "cloud"])).toBeNull();
+    expect(readEnv("온프렘이랑 클라우드 둘 다", ["onprem", "cloud"])).toBeNull();
+    expect(readEnv("클라우드", ["onprem"])).toBeNull();
+    expect(readEnv("네 시작할게요", ["cloud"])).toBe("cloud");
+    expect(readEnv("클라우드가 뭐야?", ["cloud"])).toBeNull();
+  });
+});
