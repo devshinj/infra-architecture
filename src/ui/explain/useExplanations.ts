@@ -197,11 +197,16 @@ export function useExplanations({ diagramId, state, live, busy, selectedId, fetc
         const j = (await r.json().catch(() => null)) as
           | { ok: true; explanation: AnyExplanation; signature: string }
           | { ok: false; message?: string; partial?: Partial<TermedExplanation> }
+          | { ok?: undefined; error?: string }
           | null;
         if (r.ok && j?.ok === true) entry = { status: "ready", data: j.explanation, signature: j.signature, requested: job.sig };
         else if (r.ok && j?.ok === false)
           entry = { status: "error", message: j.message || FAIL, ...(j.partial ? { partial: j.partial } : {}), requested: job.sig };
-        else entry = { status: "error", message: FAIL, requested: job.sig };
+        else {
+          // 400 은 서버가 이유를 적어 거절한 것이다(학습 중 다시 쓰기 등): 그 글을 그대로 보인다.
+          const reason = r.status === 400 && j && "error" in j && typeof j.error === "string" ? j.error : null;
+          entry = { status: "error", message: reason || FAIL, requested: job.sig };
+        }
       } catch {
         if (ctrl.signal.aborted) return finish(); // 언마운트: 다시 붙으면 큐가 다시 고른다
         entry = { status: "error", message: FAIL, requested: job.sig };
