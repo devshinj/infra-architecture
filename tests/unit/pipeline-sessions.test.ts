@@ -14,6 +14,12 @@ vi.mock("@/server/projects", async (orig) => ({
   getOwnedDiagram: vi.fn(async () => ({})),
 }));
 vi.mock("@/server/versions", () => ({ getLatestState: vi.fn(async () => null), createVersion: vi.fn() }));
+// 학습 중이 아닌 구성도(진행 상태 표를 읽지 않는다).
+vi.mock("@/server/guide/runs", async (orig) => ({
+  ...(await orig<typeof import("@/server/guide/runs")>()),
+  getLiveGuideRun: vi.fn(async () => null),
+  isLearning: vi.fn(async () => false),
+}));
 vi.mock("@/server/chat/lock", () => ({ USER_TURN_LOCK_WAIT_MS: 0, withDiagramLock: async (_id: string, fn: () => Promise<unknown>) => ({ ok: true, value: await fn() }) }));
 vi.mock("@/server/chat/messages", () => ({
   listMessages: vi.fn(async (_d: string, _limit: number, sessionId: string | null) => {

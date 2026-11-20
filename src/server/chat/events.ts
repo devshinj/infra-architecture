@@ -1,6 +1,8 @@
 /** 대화 이벤트·메시지 메타. 클라이언트도 쓰므로 서버 모듈을 import 하지 않는다. */
 import type { ClarifyQuestion } from "@/domain/clarify";
 import type { Command } from "@/domain/commands";
+import type { GuideEnv, GuideNote } from "@/domain/guides/types";
+import type { GuideView } from "@/domain/guides/view";
 import type { Warning } from "@/domain/types";
 import type { WarningCounts } from "@/domain/warnings";
 
@@ -58,6 +60,20 @@ export interface MessageMeta {
   handoff?: true;
   /** handoff 일 때 구성도 대화로 넘긴 사용자 글(다시 불러와도 버튼에 쓴다). */
   handoffText?: string;
+  /**
+   * 학습(가이드) 차례의 글. step 은 1 부터 센 단계 번호. env 는 환경을 다시 물은 글(envChoices),
+   * step 은 단계를 그린 글(notes), miss 는 안 맞은 글, done 은 완료 글(outro·otherEnv·rebuild), quit 은 대본이 깨져 그만둔 글.
+   * rebuild 는 완료 때 다시 만들 수 있는 다른 환경.
+   */
+  guide?: {
+    kind: "env" | "step" | "miss" | "done" | "quit";
+    step?: number;
+    notes?: GuideNote[];
+    envChoices?: GuideEnv[];
+    outro?: string;
+    otherEnv?: { from: string; to: string }[];
+    rebuild?: GuideEnv[];
+  };
 }
 
 /** 새로 만든 세션(session 이벤트). 노드 질문 세션은 노드가 있고, 구성도 대화 세션은 nodeId·nodeLabel 이 null. */
@@ -82,6 +98,7 @@ export type ChatEvent =
   // 그리기 전에 되묻기: 구성은 바꾸지 않고 선택지를 보낸다. 답은 다음 차례의 choices 로 온다.
   | { t: "clarify"; questions: ClarifyQuestion[] }
   | { t: "handoff"; text: string } // 노드 질문의 구성 변경 요청(사용자 글 그대로)
+  | { t: "guide"; view: GuideView } // 학습 차례가 끝난 뒤의 진행 상태, done 앞
   | {
       t: "done";
       version: number | null;
@@ -100,3 +117,11 @@ export type ChatEvent =
       assistantMessageId: string;
     }
   | { t: "error"; message: string };
+
+export type DoneEvent = Extract<ChatEvent, { t: "done" }>;
+
+/** done 이벤트. flows(0 보다 클 때)·warningCounts 는 있을 때만 싣는다. 대화 차례와 학습 차례가 같이 쓴다. */
+export function doneEvent(d: Omit<DoneEvent, "t">): DoneEvent {
+  const { flows, warningCounts, ...rest } = d;
+  return { t: "done", ...rest, ...(flows ? { flows } : {}), ...(warningCounts ? { warningCounts } : {}) };
+}

@@ -18,8 +18,10 @@ import { applyFlowOps, listFlows, rewriteFlows } from "@/server/flows";
 import { choiceValue, choicesNote, CLARIFY_AUTO, CLARIFY_REPLY, detectForks, validChoices, type ClarifyQuestion } from "@/domain/clarify";
 import { matchUserTerms } from "@/server/glossary";
 import { getNetworkKnowledge } from "@/server/network";
+import { getLiveGuideRun, isLearning, LEARNING_LOCKED_MESSAGE } from "@/server/guide/runs";
+import { runGuideTurn } from "@/server/guide/turn";
 
-import { SESSION_GONE_MESSAGE, sessionPayload, type ChatEvent, type MessageMeta } from "./events";
+import { doneEvent, SESSION_GONE_MESSAGE, sessionPayload, type ChatEvent, type MessageMeta } from "./events";
 import { BUSY_MESSAGE } from "./busy";
 import { USER_TURN_LOCK_WAIT_MS, withDiagramLock } from "./lock";
 import { clefOpenItems, resolveIntent } from "./intent";
@@ -87,6 +89,8 @@ export async function runChatTurn(args: TurnArgs, deps: ChatDeps): Promise<ChatT
     // 노드 질문 세션은 /ask 로만 이어 간다(구성을 바꾸지 않는다).
     if (row.kind !== "diagram") throw new ValidationError("구성도 대화 세션이 아니에요");
   }
+  // 학습 대화는 기본 대화에만 쌓는다. 학습 중에는 구성도 대화 세션을 쓰지 않는다.
+  if (target !== undefined && (await isLearning(args.diagramId))) throw new ValidationError(LEARNING_LOCKED_MESSAGE);
   const emit = guardEmit(args.emit);
   const turnArgs = { ...args, emit };
   const locked = await withDiagramLock(args.diagramId, () => sessionTurn(turnArgs, deps), { waitMs: USER_TURN_LOCK_WAIT_MS });
@@ -198,8 +202,11 @@ async function lockedTurn(args: TurnArgs, sessionId: string | null, followUp: bo
           )
       : [];
   const lastAssistant = history.findLast((m) => m.role === "assistant")?.content;
-  // 되묻기에 답한 차례: 이 대화의 마지막 AI 글이 되물은 것이면 그때의 요청을 고른 답과 함께 그린다.
-  const picked = validChoices(args.choices);
+  // 학습 중(기본 대화만): 진행 상태를 잠금 안에서 읽는다(같은 글을 두 번 보내도 두 번째는 다음 단계로 판정된다).
+  const guideRun = sessionId === null ? await getLiveGuideRun(diagramId) : null;
+  const learning = guideRun?.status === "active";
+  // 되묻기에 답한 차례: 이 대화의 마지막 AI 글이 되물은 것이면 그때의 요청을 고른 답과 함께 그린다(학습 중에는 되묻지 않는다).
+  const picked = learning ? {} : validChoices(args.choices);
   const lastRow = rows.findLast((m) => m.role === "assistant");
   const pendingText = Object.keys(picked).length > 0 ? (lastRow?.meta?.clarify?.text ?? null) : null;
   const { clean, mentions } = parseMentions(pendingText ?? args.text, state);
@@ -214,11 +221,22 @@ async function lockedTurn(args: TurnArgs, sessionId: string | null, followUp: bo
     return null;
   });
 
+  // 학습 중이면 가이드 차례를 돌린다. 질문만 돌려받아 아래 질문 답변 경로를 탄다(의도 분류·되묻기 없이).
+  let guideIntent: Intent | null = null;
+  if (guideRun && learning) {
+    const guided = await runGuideTurn(
+      { userId: args.userId, diagramId, text: args.text, userMessageId: userMsg.id, state, knowledge, run: guideRun, signal, emit },
+      { clef: deps.clef },
+    );
+    if (guided.handled) return;
+    guideIntent = guided.intent;
+  }
+
   if (!deps.qwen) {
     emit({ t: "start", messageId: userMsg.id, intent: null });
     emit({ t: "error", message: AI_UNAVAILABLE_MESSAGE });
     // 응답 메시지는 남기지 않는다. 클라이언트가 깨끗이 정리하도록 done 을 보낸다.
-    emit({ t: "done", version: null, status: "complete", applied: 0, changed: 0, skipped: 0, missing: computeMissing(state, knowledge ?? undefined).count, ...counts(), assistantMessageId: "" });
+    emit(doneEvent({ version: null, status: "complete", applied: 0, changed: 0, skipped: 0, missing: computeMissing(state, knowledge ?? undefined).count, ...counts(), assistantMessageId: "" }));
     return;
   }
 
@@ -230,11 +248,13 @@ async function lockedTurn(args: TurnArgs, sessionId: string | null, followUp: bo
   // Clef 가 실제로 낸 판정(확신 미달로 버린 것 포함). 부르지 않았으면 undefined, 답을 못 받았으면 null.
   const clefSeen: { raw?: Awaited<ReturnType<typeof deps.clef.classifyIntent>> } = {};
   const classifyStart = Date.now();
-  const intent: Intent | null = pendingText
-    ? "structure_change"
-    : await resolveIntent(args.text, async () => (clefSeen.raw = await deps.clef.classifyIntent(clean, { lastAssistant, openItems }, signal)));
+  const intent: Intent | null =
+    guideIntent ??
+    (pendingText
+      ? "structure_change"
+      : await resolveIntent(args.text, async () => (clefSeen.raw = await deps.clef.classifyIntent(clean, { lastAssistant, openItems }, signal))));
   // 분류가 어디서 틀리는지 나중에 볼 수 있게 판정·확신도·걸린 시간을 남긴다. 사용자 글은 남기지 않는다.
-  if (!pendingText) {
+  if (!pendingText && !guideIntent) {
     const raw = clefSeen.raw;
     const why = raw === undefined ? "not_called" : raw === null ? "no_answer" : intent === null ? "low_confidence" : "ok";
     console.info("[chat] intent", { diagramId, routed: intent, clef: raw?.intent ?? null, confidence: raw?.confidence ?? null, why, ms: Date.now() - classifyStart });
@@ -535,17 +555,18 @@ async function lockedTurn(args: TurnArgs, sessionId: string | null, followUp: bo
   };
   const assistant = await createMessage(diagramId, "assistant", content, meta, sessionId);
   if (fresh.length > 0) emit({ t: "warnings", items: fresh });
-  emit({
-    t: "done",
-    version,
-    status: status === "complete" ? "complete" : "aborted",
-    applied,
-    changed,
-    ...(flowsSaved > 0 ? { flows: flowsSaved } : {}),
-    skipped,
-    missing,
-    ...counts(),
-    ...(warningCounts ? { warningCounts } : {}),
-    assistantMessageId: assistant.id,
-  });
+  emit(
+    doneEvent({
+      version,
+      status: status === "complete" ? "complete" : "aborted",
+      applied,
+      changed,
+      flows: flowsSaved,
+      skipped,
+      missing,
+      ...counts(),
+      ...(warningCounts ? { warningCounts } : {}),
+      assistantMessageId: assistant.id,
+    }),
+  );
 }

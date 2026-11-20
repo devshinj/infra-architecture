@@ -1,4 +1,4 @@
-import { and, asc, eq, sql } from "drizzle-orm";
+import { and, asc, eq, inArray, sql } from "drizzle-orm";
 
 import { db, type Tx } from "@/db/client";
 import { diagramVersions, flows, type FlowSource } from "@/db/schema";
@@ -69,6 +69,40 @@ export async function applyFlowOps(
     saved++;
   }
   return { saved, rejected };
+}
+
+/**
+ * 학습 대본의 흐름 명령을 저장한다. 구성도 잠금은 호출자(학습 차례)가 쥐고 있다.
+ * 이미 있는 흐름과 견주지 않고 지금 상태로만 검사한다(대본의 흐름은 이미 있는 id 여도 덮어쓴다).
+ * 사람이 쓴 흐름이라 importSample 처럼 확인한 사용자 흐름(source "user", reviewed true)으로 둔다.
+ */
+export async function saveGuideFlows(
+  diagramId: string,
+  state: DiagramState,
+  ops: FlowOp[],
+  tx?: Tx,
+): Promise<{ saved: number; rejected: { id: string; reason: string }[] }> {
+  const q = tx ?? db;
+  const outcomes = judgeFlowOps(state, [], ops);
+  const rejected: { id: string; reason: string }[] = [];
+  let saved = 0;
+  for (const [i, out] of outcomes.entries()) {
+    const op = ops[i]!;
+    if (out.kind !== "saved") {
+      rejected.push({ id: op.id, reason: out.kind === "rejected" ? out.reason : "not_found" });
+      continue;
+    }
+    await q.delete(flows).where(byKey(diagramId, op.id));
+    await q.insert(flows).values({ diagramId, key: op.id, data: out.flow, source: "user", reviewed: true });
+    saved++;
+  }
+  return { saved, rejected };
+}
+
+/** 학습 대본이 넣은 흐름을 key 로 지운다(이전 단계로 되돌릴 때). 없는 key 는 건너뛴다. */
+export async function deleteGuideFlows(diagramId: string, keys: string[], tx?: Tx): Promise<void> {
+  if (keys.length === 0) return;
+  await (tx ?? db).delete(flows).where(and(eq(flows.diagramId, diagramId), inArray(flows.key, keys)));
 }
 
 /**

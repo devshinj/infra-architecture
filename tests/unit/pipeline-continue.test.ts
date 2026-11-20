@@ -17,6 +17,12 @@ vi.mock("@/server/versions", () => ({
     return { number: store.versions.length };
   }),
 }));
+// 학습 중이 아닌 구성도(진행 상태 표를 읽지 않는다).
+vi.mock("@/server/guide/runs", async (orig) => ({
+  ...(await orig<typeof import("@/server/guide/runs")>()),
+  getLiveGuideRun: vi.fn(async () => null),
+  isLearning: vi.fn(async () => false),
+}));
 vi.mock("@/server/chat/lock", () => ({ USER_TURN_LOCK_WAIT_MS: 0, withDiagramLock: async (_id: string, fn: () => Promise<unknown>) => ({ ok: true, value: await fn() }) }));
 vi.mock("@/server/chat/messages", () => ({
   listMessages: vi.fn(async () => []),
