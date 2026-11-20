@@ -1,11 +1,13 @@
 // 영상관제시스템 학습 대본. 실제 회사의 구성이 아니라 이런 서비스를 만들 때 흔히 쓰는 구성이다. 값은 모두 예시다.
+import { CCTV_ONPREM } from "./cctv-onprem";
 import type { Guide } from "./types";
 
 export const CCTV: Guide = {
   id: "cctv",
   title: "영상관제시스템",
-  intro: "",
-  learns: [],
-  envIntro: "",
-  variants: {},
+  intro: "도시 곳곳의 CCTV 영상을 모아 녹화하고 관제센터에서 지켜보는 영상관제시스템을 한 단계씩 만들어 봐요.",
+  learns: ["현장 → 수집 → 저장 → 관제 흐름과 대역폭·저장 용량 계산", "현장망·영상망·관제망·업무망 나누기와 망 경계", "영상 반출·타 기관 제공과 개인영상정보 보호"],
+  envIntro:
+    "이 주제는 온프레미스(관제센터 전산실)로 만들어요. 영상관제는 개인영상정보를 다루고 관제망을 인터넷·업무망과 떼어 두는 것이 원칙이라, 서버와 저장소를 센터에 직접 둬요. 시작하려면 '온프레미스로 할게'처럼 답해 주세요.",
+  variants: { onprem: CCTV_ONPREM },
 };
