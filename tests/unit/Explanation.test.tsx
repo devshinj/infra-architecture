@@ -176,3 +176,27 @@ test("자세히 remembers being opened (next node opens it too)", async () => {
   expect(document.querySelector("details")).toHaveAttribute("open");
   window.localStorage.removeItem("infrasketch.explainDetails");
 });
+
+test("while learning 다시 쓰기 is disabled with a note, the explanation stays, and it opens again after quitting", async () => {
+  const onRewrite = vi.fn();
+  const { rerender } = render(<Explanation status="ready" data={node} terms={[]} onRewrite={onRewrite} rewriteLocked />);
+  const btn = screen.getByRole("button", { name: "다시 쓰기" });
+  expect(btn).toBeDisabled();
+  const note = screen.getByText("학습을 그만두면 다시 쓸 수 있어요.");
+  expect(note).toBeVisible();
+  expect(btn).toHaveAccessibleDescription("학습을 그만두면 다시 쓸 수 있어요.");
+  expect(screen.getByText("외부 요청을 WAS 로 넘깁니다.")).toBeInTheDocument();
+  await userEvent.click(btn);
+  expect(screen.queryByLabelText("다시 쓰기 지시")).not.toBeInTheDocument();
+
+  // 그만두면(잠금이 풀리면) 새로 고치지 않아도 바로 다시 쓸 수 있다.
+  rerender(<Explanation status="ready" data={node} terms={[]} onRewrite={onRewrite} />);
+  const open = screen.getByRole("button", { name: "다시 쓰기" });
+  expect(open).toBeEnabled();
+  expect(open).not.toHaveAccessibleDescription();
+  expect(screen.queryByText("학습을 그만두면 다시 쓸 수 있어요.")).not.toBeInTheDocument();
+  await userEvent.click(open);
+  await userEvent.type(screen.getByLabelText("다시 쓰기 지시"), "더 쉽게");
+  await userEvent.click(screen.getByRole("button", { name: "다시 만들기" }));
+  expect(onRewrite).toHaveBeenCalledWith("더 쉽게");
+});

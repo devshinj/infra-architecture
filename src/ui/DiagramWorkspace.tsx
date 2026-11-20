@@ -513,6 +513,8 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
       terms: explanations.terms,
       target: selKind,
       busy: locked,
+      // 학습 중에는 대본 설명을 다시 쓸 수 없다: 버튼은 보이되 막고 이유를 적는다. 그만두면 바로 풀린다.
+      ...(guide.learning ? { rewriteLocked: true } : {}),
       ...(live ? { onRewrite: (instruction: string) => rewrite(selKind, selId, instruction), onRetry: () => retry(selKind, selId) } : {}),
     };
   }

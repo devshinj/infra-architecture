@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 
 import { normalizeTerm, type AnyExplanation, type EdgeExplanation, type GroupExplanation, type NodeExplanation, type TermedExplanation } from "@/domain/explain";
 import { Button } from "@/ui/Button";
@@ -19,6 +19,8 @@ export interface ExplanationProps {
   onRewrite?(instruction: string): void;
   onRetry?(): void;
   busy?: boolean;
+  /** 학습 중: 다시 쓰기를 숨기지 않고 막은 채 그 이유를 옆에 적는다(대본 설명은 그대로 둔다). */
+  rewriteLocked?: boolean;
   /** 데이터가 아직 없을 때(loading) 어떤 자리를 그릴지. 기본은 노드. */
   target?: "node" | "edge" | "group";
 }
@@ -55,9 +57,24 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
-function Rewrite({ onRewrite, busy }: { onRewrite: (instruction: string) => void; busy?: boolean }) {
+export const REWRITE_LOCKED_NOTE = "학습을 그만두면 다시 쓸 수 있어요.";
+
+function Rewrite({ onRewrite, busy, locked }: { onRewrite: (instruction: string) => void; busy?: boolean; locked?: boolean }) {
   const [open, setOpen] = useState(false);
   const [text, setText] = useState("");
+  const noteId = useId();
+  if (locked) {
+    return (
+      <div className={styles.rewriteLocked}>
+        <Button size="sm" disabled aria-describedby={noteId}>
+          다시 쓰기
+        </Button>
+        <p id={noteId} className={styles.slowNote}>
+          {REWRITE_LOCKED_NOTE}
+        </p>
+      </div>
+    );
+  }
   if (!open) {
     return (
       <Button size="sm" className={styles.start} disabled={busy} onClick={() => setOpen(true)}>
@@ -262,7 +279,7 @@ function EdgeBody({ d, terms }: { d: EdgeExplanation; terms: GlossaryTerm[] }) {
 }
 
 /** 설명 패널 본문. 데이터는 props 로만 받는다(요청·큐는 호출한 쪽 몫). */
-export function Explanation({ status, data, partial, message, terms, onRewrite, onRetry, busy, target }: ExplanationProps) {
+export function Explanation({ status, data, partial, message, terms, onRewrite, onRetry, busy, rewriteLocked, target }: ExplanationProps) {
   const slow = useSlow(status === "loading");
   if (status === "idle") return null;
 
@@ -322,7 +339,7 @@ export function Explanation({ status, data, partial, message, terms, onRewrite, 
   return (
     <div className={styles.explain}>
       {data.kind === "edge" ? <EdgeBody d={data} terms={terms} /> : <NodeBody d={data} terms={terms} />}
-      {onRewrite && <Rewrite onRewrite={onRewrite} busy={busy} />}
+      {onRewrite && <Rewrite onRewrite={onRewrite} busy={busy} locked={rewriteLocked} />}
     </div>
   );
 }

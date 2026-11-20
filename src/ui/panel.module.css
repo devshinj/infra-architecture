@@ -94,6 +94,8 @@
 .adrRow dt { color: var(--text-secondary); }
 .adrRow dd { margin: 0; color: var(--text-primary); }
 .rewrite { display: flex; gap: 8px; align-items: center; }
+/* 학습 중: 막힌 다시 쓰기 옆에 이유 한 줄. 좁으면 아래로 내린다. */
+.rewriteLocked { display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: center; }
 .rewriteInput {
   flex: 1; min-width: 0; font: inherit; font-size: 12px; color: var(--text-primary); background: var(--bg-panel-raised);
   border: 1px solid var(--line-node); border-radius: var(--radius-control); padding: 4px 8px;
