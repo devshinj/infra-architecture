@@ -1,0 +1,436 @@
+{
+  "cases": [
+    {
+      "id": "streaming-entry-m1",
+      "guide": "streaming",
+      "env": "cloud",
+      "step": "entry",
+      "text": "영상 보는 사람이랑 영상 올리는 사람이 맨 앞에 CDN 으로 접속하게 해 줘",
+      "expect": "match"
+    },
+    {
+      "id": "streaming-entry-m2",
+      "guide": "streaming",
+      "env": "cloud",
+      "step": "entry",
+      "text": "시청자 앱과 업로더 앱을 그리고 앞단에 클라우드프론트를 두자",
+      "expect": "match"
+    },
+    {
+      "id": "streaming-entry-c1",
+      "guide": "streaming",
+      "env": "cloud",
+      "step": "entry",
+      "text": "VPC 를 만들고 CloudFront 뒤에 ALB 를 둬 줘",
+      "expect": "miss"
+    },
+    {
+      "id": "streaming-entry-c2",
+      "guide": "streaming",
+      "env": "cloud",
+      "step": "entry",
+      "text": "CloudFront 가 뭐야?",
+      "expect": "question"
+    },
+    {
+      "id": "streaming-alb-m1",
+      "guide": "streaming",
+      "env": "cloud",
+      "step": "alb",
+      "text": "서울 리전에 VPC 하나 만들고 공개 서브넷에 로드밸런서를 놓아 줘",
+      "expect": "match"
+    },
+    {
+      "id": "streaming-alb-m2",
+      "guide": "streaming",
+      "env": "cloud",
+      "step": "alb",
+      "text": "CloudFront 에서 넘어오는 API 요청을 받을 ALB 를 퍼블릭 서브넷에 넣자",
+      "expect": "match"
+    },
+    {
+      "id": "streaming-alb-c1",
+      "guide": "streaming",
+      "env": "cloud",
+      "step": "alb",
+      "text": "API 서버 두 대를 AZ 두 곳에 나눠 넣어 줘",
+      "expect": "miss"
+    },
+    {
+      "id": "streaming-alb-c2",
+      "guide": "streaming",
+      "env": "cloud",
+      "step": "alb",
+      "text": "ALB 는 왜 공개 서브넷에 둬?",
+      "expect": "question"
+    },
+    {
+      "id": "streaming-api-m1",
+      "guide": "streaming",
+      "env": "cloud",
+      "step": "api",
+      "text": "ALB 뒤에 백엔드 서버를 AZ 마다 한 대씩 오토스케일링으로 붙여 줘",
+      "expect": "match"
+    },
+    {
+      "id": "streaming-api-m2",
+      "guide": "streaming",
+      "env": "cloud",
+      "step": "api",
+      "text": "API 서버를 2a 랑 2c 에 하나씩 두고 Auto Scaling 그룹으로 묶어 줘",
+      "expect": "match"
+    },
+    {
+      "id": "streaming-api-c1",
+      "guide": "streaming",
+      "env": "cloud",
+      "step": "api",
+      "text": "API 서버 세 대로 해 줘",
+      "expect": "conflict"
+    },
+    {
+      "id": "streaming-api-c2",
+      "guide": "streaming",
+      "env": "cloud",
+      "step": "api",
+      "text": "API 서버 하나만 둬 줘",
+      "expect": "conflict"
+    },
+    {
+      "id": "streaming-api-c3",
+      "guide": "streaming",
+      "env": "cloud",
+      "step": "api",
+      "text": "영상 정보는 RDS Multi-AZ 에 저장해 줘",
+      "expect": "miss"
+    },
+    {
+      "id": "streaming-api-c4",
+      "guide": "streaming",
+      "env": "cloud",
+      "step": "api",
+      "text": "Auto Scaling 그룹은 어떻게 서버를 늘려?",
+      "expect": "question"
+    },
+    {
+      "id": "streaming-rds-m1",
+      "guide": "streaming",
+      "env": "cloud",
+      "step": "rds",
+      "text": "제목이랑 설명, 변환 상태 같은 메타데이터를 담을 DB 를 넣어 줘",
+      "expect": "match"
+    },
+    {
+      "id": "streaming-rds-m2",
+      "guide": "streaming",
+      "env": "cloud",
+      "step": "rds",
+      "text": "영상 정보용 PostgreSQL 을 데이터 서브넷에 이중화해서 넣자",
+      "expect": "match"
+    },
+    {
+      "id": "streaming-rds-c1",
+      "guide": "streaming",
+      "env": "cloud",
+      "step": "rds",
+      "text": "원본 영상은 S3 버킷에 바로 올리게 해 줘",
+      "expect": "miss"
+    },
+    {
+      "id": "streaming-rds-c2",
+      "guide": "streaming",
+      "env": "cloud",
+      "step": "rds",
+      "text": "영상 파일은 왜 DB 에 안 넣어?",
+      "expect": "question"
+    },
+    {
+      "id": "streaming-upload-m1",
+      "guide": "streaming",
+      "env": "cloud",
+      "step": "upload",
+      "text": "큰 영상 파일은 서버 안 거치고 미리 서명한 URL 로 S3 에 업로드하게 해 줘",
+      "expect": "match"
+    },
+    {
+      "id": "streaming-upload-m2",
+      "guide": "streaming",
+      "env": "cloud",
+      "step": "upload",
+      "text": "업로더가 멀티파트로 원본을 버킷에 직접 올리게 하자",
+      "expect": "match"
+    },
+    {
+      "id": "streaming-upload-c1",
+      "guide": "streaming",
+      "env": "cloud",
+      "step": "upload",
+      "text": "원본이 들어오면 SQS 큐에 변환 작업을 넣어 줘",
+      "expect": "miss"
+    },
+    {
+      "id": "streaming-upload-c2",
+      "guide": "streaming",
+      "env": "cloud",
+      "step": "upload",
+      "text": "미리 서명한 URL 은 어떻게 만들어?",
+      "expect": "question"
+    },
+    {
+      "id": "streaming-queue-m1",
+      "guide": "streaming",
+      "env": "cloud",
+      "step": "queue",
+      "text": "업로드가 끝나면 S3 이벤트로 대기열에 변환 요청이 쌓이게 해 줘",
+      "expect": "match"
+    },
+    {
+      "id": "streaming-queue-m2",
+      "guide": "streaming",
+      "env": "cloud",
+      "step": "queue",
+      "text": "변환은 오래 걸리니까 SQS 를 하나 넣어서 비동기로 넘기자",
+      "expect": "match"
+    },
+    {
+      "id": "streaming-queue-c1",
+      "guide": "streaming",
+      "env": "cloud",
+      "step": "queue",
+      "text": "변환 워커 두 대를 AZ 두 곳에 넣어 줘",
+      "expect": "miss"
+    },
+    {
+      "id": "streaming-queue-c2",
+      "guide": "streaming",
+      "env": "cloud",
+      "step": "queue",
+      "text": "SQS 대신 바로 워커를 부르면 안 돼?",
+      "expect": "question"
+    },
+    {
+      "id": "streaming-worker-m1",
+      "guide": "streaming",
+      "env": "cloud",
+      "step": "worker",
+      "text": "대기열에서 작업을 꺼내서 FFmpeg 로 트랜스코딩하는 서버를 오토스케일링으로 붙여 줘",
+      "expect": "match"
+    },
+    {
+      "id": "streaming-worker-m2",
+      "guide": "streaming",
+      "env": "cloud",
+      "step": "worker",
+      "text": "인코딩 워커를 2a 랑 2c 에 하나씩 둬",
+      "expect": "match"
+    },
+    {
+      "id": "streaming-worker-c1",
+      "guide": "streaming",
+      "env": "cloud",
+      "step": "worker",
+      "text": "변환한 영상은 HLS 로 다른 버킷에 저장해 줘",
+      "expect": "miss"
+    },
+    {
+      "id": "streaming-worker-c2",
+      "guide": "streaming",
+      "env": "cloud",
+      "step": "worker",
+      "text": "트랜스코딩이 뭐야?",
+      "expect": "question"
+    },
+    {
+      "id": "streaming-output-m1",
+      "guide": "streaming",
+      "env": "cloud",
+      "step": "output",
+      "text": "변환본은 화질별 HLS 조각으로 따로 버킷에 넣어 줘",
+      "expect": "match"
+    },
+    {
+      "id": "streaming-output-m2",
+      "guide": "streaming",
+      "env": "cloud",
+      "step": "output",
+      "text": "1080p 720p 480p 로 나눈 m3u8 이랑 썸네일을 결과 버킷에 저장하자",
+      "expect": "match"
+    },
+    {
+      "id": "streaming-output-c1",
+      "guide": "streaming",
+      "env": "cloud",
+      "step": "output",
+      "text": "영상 재생은 CloudFront 가 맡게 하고 서명 쿠키로 막아 줘",
+      "expect": "miss"
+    },
+    {
+      "id": "streaming-output-c2",
+      "guide": "streaming",
+      "env": "cloud",
+      "step": "output",
+      "text": "HLS 가 뭐야?",
+      "expect": "question"
+    },
+    {
+      "id": "streaming-playback-m1",
+      "guide": "streaming",
+      "env": "cloud",
+      "step": "playback",
+      "text": "시청할 때 CloudFront 가 변환본 버킷에서 꺼내서 스트리밍하게 해 줘",
+      "expect": "match"
+    },
+    {
+      "id": "streaming-playback-m2",
+      "guide": "streaming",
+      "env": "cloud",
+      "step": "playback",
+      "text": "CDN 으로 재생하고 OAC 랑 signed cookie 로 권한을 확인하자",
+      "expect": "match"
+    },
+    {
+      "id": "streaming-playback-c1",
+      "guide": "streaming",
+      "env": "cloud",
+      "step": "playback",
+      "text": "시청 기록은 Firehose 로 모아 S3 에 쌓아 줘",
+      "expect": "miss"
+    },
+    {
+      "id": "streaming-playback-c2",
+      "guide": "streaming",
+      "env": "cloud",
+      "step": "playback",
+      "text": "서명 쿠키랑 서명 URL 은 무슨 차이야?",
+      "expect": "question"
+    },
+    {
+      "id": "streaming-logs-m1",
+      "guide": "streaming",
+      "env": "cloud",
+      "step": "logs",
+      "text": "추천에 쓸 시청 로그를 Kinesis 로 모아서 버킷에 쌓자",
+      "expect": "match"
+    },
+    {
+      "id": "streaming-logs-m2",
+      "guide": "streaming",
+      "env": "cloud",
+      "step": "logs",
+      "text": "재생 시작이랑 멈춤 같은 시청 이벤트를 Data Firehose 로 수집해 줘",
+      "expect": "match"
+    },
+    {
+      "id": "streaming-logs-c1",
+      "guide": "streaming",
+      "env": "cloud",
+      "step": "logs",
+      "text": "영상 제목으로 찾게 OpenSearch 검색을 넣어 줘",
+      "expect": "miss"
+    },
+    {
+      "id": "streaming-logs-c2",
+      "guide": "streaming",
+      "env": "cloud",
+      "step": "logs",
+      "text": "Firehose 는 왜 바로 안 쓰고 묶어서 써?",
+      "expect": "question"
+    },
+    {
+      "id": "streaming-search-m1",
+      "guide": "streaming",
+      "env": "cloud",
+      "step": "search",
+      "text": "제목이랑 태그로 영상을 찾을 수 있게 검색 엔진을 붙여 줘",
+      "expect": "match"
+    },
+    {
+      "id": "streaming-search-m2",
+      "guide": "streaming",
+      "env": "cloud",
+      "step": "search",
+      "text": "오픈서치를 데이터 서브넷에 넣고 영상을 색인하자",
+      "expect": "match"
+    },
+    {
+      "id": "streaming-search-c1",
+      "guide": "streaming",
+      "env": "cloud",
+      "step": "search",
+      "text": "CloudWatch 로 모니터링과 알람을 붙여 줘",
+      "expect": "miss"
+    },
+    {
+      "id": "streaming-search-c2",
+      "guide": "streaming",
+      "env": "cloud",
+      "step": "search",
+      "text": "DB 로 검색하면 안 돼?",
+      "expect": "question"
+    },
+    {
+      "id": "streaming-ops-m1",
+      "guide": "streaming",
+      "env": "cloud",
+      "step": "ops",
+      "text": "변환 대기열이 밀리면 알람이 오게 감시를 붙여 줘",
+      "expect": "match"
+    },
+    {
+      "id": "streaming-ops-m2",
+      "guide": "streaming",
+      "env": "cloud",
+      "step": "ops",
+      "text": "클라우드워치로 지표랑 서버 로그를 모아 보자",
+      "expect": "match"
+    },
+    {
+      "id": "streaming-ops-c1",
+      "guide": "streaming",
+      "env": "cloud",
+      "step": "ops",
+      "text": "영상 올리기와 영상 보기 흐름을 정리해 줘",
+      "expect": "miss"
+    },
+    {
+      "id": "streaming-ops-c2",
+      "guide": "streaming",
+      "env": "cloud",
+      "step": "ops",
+      "text": "캐시 적중률은 왜 봐야 해?",
+      "expect": "question"
+    },
+    {
+      "id": "streaming-flows-m1",
+      "guide": "streaming",
+      "env": "cloud",
+      "step": "flows",
+      "text": "업로드부터 재생까지 흐름을 만들어 줘",
+      "expect": "match"
+    },
+    {
+      "id": "streaming-flows-m2",
+      "guide": "streaming",
+      "env": "cloud",
+      "step": "flows",
+      "text": "영상이 올라가고 재생되는 경로를 보여 줘",
+      "expect": "match"
+    },
+    {
+      "id": "streaming-flows-c1",
+      "guide": "streaming",
+      "env": "cloud",
+      "step": "flows",
+      "text": "CloudWatch 로 모니터링과 알람을 붙여 줘",
+      "expect": "miss"
+    },
+    {
+      "id": "streaming-flows-c2",
+      "guide": "streaming",
+      "env": "cloud",
+      "step": "flows",
+      "text": "흐름 재생은 어떻게 해?",
+      "expect": "question"
+    }
+  ]
+}
