@@ -42,16 +42,36 @@ export function useGuide({ diagramId, initial, serverLines, busy, replaceLines }
 
   // 대화 줄을 바꿀 차례: 그때의 서버 줄(이 배열과 다른 새 배열이 오면 바꾼다). null 이면 기다리지 않는다.
   const reloadFrom = useRef<ChatLine[] | null>(null);
+  /**
+   * 걸어 둔 다시 그리기와 차례의 관계. own: 걸어 둔 차례(가이드 이벤트를 보낸 차례)가 아직 돈다.
+   * idle: 차례가 돌지 않는다. next: 건 뒤에 다음 차례가 시작됐다(그 차례의 답은 지금 서버 줄에 없을 수 있다).
+   */
+  const phase = useRef<"own" | "idle" | "next">("idle");
   const serverLinesRef = useRef(serverLines);
+  const busyRef = useRef(busy);
   useEffect(() => {
     serverLinesRef.current = serverLines;
+    busyRef.current = busy;
   });
   const reloadChat = useCallback(() => {
     reloadFrom.current = serverLinesRef.current;
+    phase.current = busyRef.current ? "own" : "idle";
   }, []);
   useEffect(() => {
-    const from = reloadFrom.current;
-    if (from === null || busy || serverLines === from) return;
+    if (reloadFrom.current === null) return;
+    if (busy) {
+      // 건 차례가 끝난 뒤 새 차례가 시작됐다: 그 차례 도중에 오는 서버 줄로 바꾸면 그 차례의 답이 지워진다.
+      if (phase.current === "idle") phase.current = "next";
+      return;
+    }
+    if (phase.current === "next") {
+      // 다음 차례가 끝났다. 지금 서버 줄은 그 차례 전 것일 수 있으니, 그 차례 끝의 새로 그리기(다음 배열)를 기다린다.
+      phase.current = "idle";
+      reloadFrom.current = serverLines;
+      return;
+    }
+    phase.current = "idle";
+    if (serverLines === reloadFrom.current) return;
     reloadFrom.current = null;
     replaceLines?.(serverLines);
   }, [serverLines, busy, replaceLines]);

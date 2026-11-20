@@ -35,6 +35,9 @@ export function GuidePicker({ guides, runs }: { guides: GuideSummary[]; runs: Gu
   const [navPending, startNav] = useTransition();
   const { setNavigating } = useShell();
   useEffect(() => setNavigating(navPending), [navPending, setNavigating]);
+  // 전환이 끝나는 커밋에서 이 화면은 이미 사라져 위 effect 가 false 로 다시 돌지 않는다: 사라질 때 직접 푼다.
+  // (풀지 않으면 .main[data-navigating] 이 새 구성도 화면을 뼈대 뒤에 숨긴다.)
+  useEffect(() => () => setNavigating(false), [setNavigating]);
 
   const start = async (id: string) => {
     if (starting) return;

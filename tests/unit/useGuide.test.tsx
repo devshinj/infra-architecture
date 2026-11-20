@@ -31,15 +31,14 @@ function setup(initial: Partial<UseGuideArgs> = {}) {
 }
 
 test("a guide event takes the view and reloads the chat from the next server render", () => {
-  const { result, rerender, replaceLines, props } = setup();
+  // 가이드 이벤트는 그 차례가 도는 동안(busy) 온다.
+  const { result, rerender, replaceLines, props } = setup({ busy: true });
   expect(result.current.learning).toBe(true);
   const next = { ...VIEW, step: 1, current: { goal: "L4", example: "L4 두 대" } };
   act(() => result.current.onEvent(next));
   expect(result.current.view).toEqual(next);
-  // 아직 같은 서버 줄이면(새로 그리기 전) 바꾸지 않는다. 차례가 도는 동안도 기다린다.
+  // 차례가 끝나도 아직 같은 서버 줄이면(새로 그리기 전) 바꾸지 않는다.
   rerender({ ...props, busy: false });
-  expect(replaceLines).not.toHaveBeenCalled();
-  rerender({ ...props, serverLines: L1, busy: true });
   expect(replaceLines).not.toHaveBeenCalled();
   rerender({ ...props, serverLines: L1, busy: false });
   expect(replaceLines).toHaveBeenCalledTimes(1);
@@ -47,6 +46,24 @@ test("a guide event takes the view and reloads the chat from the next server ren
   // 한 번만: 다음 서버 그리기는 대화를 바꾸지 않는다.
   rerender({ ...props, serverLines: L2, busy: false });
   expect(replaceLines).toHaveBeenCalledTimes(1);
+});
+
+test("a refresh that lands during the next turn does not wipe that turn; the reload waits for the array after it", () => {
+  const { result, rerender, replaceLines, props } = setup({ busy: true });
+  act(() => result.current.onEvent({ ...VIEW, step: 1 }));
+  // 가이드 차례 끝. 그 차례의 새로 그리기가 오기 전에 다음 차례(질문 등)를 보낸다.
+  rerender({ ...props, busy: false });
+  rerender({ ...props, busy: true });
+  // 가이드 차례의 새로 그리기(L1)가 다음 차례 도중에 온다: 기다린다.
+  rerender({ ...props, serverLines: L1, busy: true });
+  expect(replaceLines).not.toHaveBeenCalled();
+  // 다음 차례가 끝났다: L1 에는 그 차례의 답이 없으니 바꾸지 않는다(살아 있는 답을 지우지 않는다).
+  rerender({ ...props, serverLines: L1, busy: false });
+  expect(replaceLines).not.toHaveBeenCalled();
+  // 그 차례 끝의 새로 그리기(L2)가 오면 그것으로 바꾼다.
+  rerender({ ...props, serverLines: L2, busy: false });
+  expect(replaceLines).toHaveBeenCalledTimes(1);
+  expect(replaceLines).toHaveBeenCalledWith(L2);
 });
 
 test("a new server view replaces the local one; done and quit are not learning", () => {
