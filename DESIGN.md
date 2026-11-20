@@ -244,6 +244,12 @@ InfraSketch 는 대화로 고쳐 쓰는 설계도다. 구성도 캔버스가 이
 - **Focus:** 2px Signal Lime 링(입력칸은 안쪽으로 2px).
 - **Error / Disabled:** 오류는 칸 바로 아래 Missing Red Text 한 줄, 자리를 미리 잡아 레이아웃이 밀리지 않는다. 비활성은 0.55 불투명도.
 
+### Chat
+내 말과 InfraSketch 답은 색이 아니라 모양으로 가른다(말풍선에 연두를 쓰지 않는다).
+- **내 말:** 오른쪽 말풍선. Raised Slate 칠, 1px Hairline Strong 테두리, Surface 8px 모서리, 8px 12px.
+- **AI 답:** 말풍선 없이 머리 줄(IS 모노그램·이름·시각) 아래 본문·진행 카드·결과 칩·버튼 전체가 1px Hairline Strong 세로선 하나에 매달린다. 선은 모노그램 가운데 아래, 본문은 이름 열(28px)에 맞춘다.
+- **시스템 줄:** 가운데 Muted Steel 12px(되돌림·학습 그만둠 같은 차례 밖 안내).
+
 ### Navigation
 - **Sidebar:** 프로젝트 → 구성도 트리. 고른 줄은 Raised Slate 칠, 600 굵기, 왼쪽 연두 막대. 바닥에 새 프로젝트, 화면 링크 셋, 계정 줄.
 - **Panel tabs:** 알약 탭(대화·설명·이력·흐름), 선택은 Raised Slate 칠.
