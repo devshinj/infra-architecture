@@ -1,7 +1,13 @@
+import { CCTV } from "./cctv";
+import { DELIVERY } from "./delivery";
+import { MESSENGER } from "./messenger";
+import { RELAY } from "./relay";
 import { SHOP } from "./shop";
+import { SOCIAL_LOGIN } from "./sociallogin";
+import { STREAMING } from "./streaming";
 import { GUIDE_ENVS, type Guide, type GuideEnv } from "./types";
 
-export const GUIDE_LIST: readonly Guide[] = [SHOP];
+export const GUIDE_LIST: readonly Guide[] = [SHOP, MESSENGER, DELIVERY, STREAMING, CCTV, SOCIAL_LOGIN, RELAY];
 
 export function getGuide(id: string): Guide | undefined {
   return GUIDE_LIST.find((g) => g.id === id);

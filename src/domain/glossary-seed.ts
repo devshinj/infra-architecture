@@ -9,6 +9,7 @@ import { GLOSSARY_SEED_BATCH3 } from "./glossary-seed-batch3";
 import { GLOSSARY_SEED_BATCH4 } from "./glossary-seed-batch4";
 import { GLOSSARY_SEED_EXTRA } from "./glossary-seed-extra";
 import { GLOSSARY_SEED_GUIDE } from "./glossary-seed-guide";
+import { GLOSSARY_SEED_GUIDE2 } from "./glossary-seed-guide2";
 
 export interface GlossarySeedEntry {
   term: string;
@@ -536,4 +537,4 @@ export const GLOSSARY_SEED_CORE: GlossarySeedEntry[] = [
 ];
 
 /** 사용자 사전에 넣는 초안 전체(1차분 ~ 4차분, 학습 대본용). */
-export const GLOSSARY_SEED: GlossarySeedEntry[] = [...GLOSSARY_SEED_CORE, ...GLOSSARY_SEED_EXTRA, ...GLOSSARY_SEED_BATCH3, ...GLOSSARY_SEED_BATCH4, ...GLOSSARY_SEED_GUIDE];
+export const GLOSSARY_SEED: GlossarySeedEntry[] = [...GLOSSARY_SEED_CORE, ...GLOSSARY_SEED_EXTRA, ...GLOSSARY_SEED_BATCH3, ...GLOSSARY_SEED_BATCH4, ...GLOSSARY_SEED_GUIDE, ...GLOSSARY_SEED_GUIDE2];

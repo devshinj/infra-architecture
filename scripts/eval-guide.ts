@@ -11,7 +11,7 @@
  *
  * 기준 파일이 있으면 그보다 나빠진 문장을 따로 보여 주고, 하나라도 있으면 실패(1)로 끝낸다.
  */
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 import { formatTable } from "./smoke-table";
@@ -65,7 +65,12 @@ async function main(): Promise<number> {
     return 1;
   }
   const clef = createClefClient(cfg.clef);
-  const cases: Case[] = JSON.parse(readFileSync(join(DIR, "cases.json"), "utf8")).cases.filter((c: Case) => !only || only.has(c.id));
+  // cases.json(쇼핑몰)과 주제별 cases-<주제>.json 을 모두 읽는다.
+  const cases: Case[] = readdirSync(DIR)
+    .filter((f) => /^cases(-[a-z]+)?\.json$/.test(f))
+    .sort()
+    .flatMap((f) => JSON.parse(readFileSync(join(DIR, f), "utf8")).cases as Case[])
+    .filter((c) => !only || only.has(c.id));
 
   const results: Result[] = [];
   const rows: string[][] = [];

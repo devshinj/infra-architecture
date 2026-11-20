@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { auth } from "@/auth";
-import { GUIDE_LIST, getGuide } from "@/domain/guides";
+import { GUIDE_LIST, getGuide, guideEnvs } from "@/domain/guides";
 import { stepCount } from "@/domain/guides/progress";
 import { guideSummary, guideView } from "@/domain/guides/view";
 import { listGuideRuns } from "@/server/guide/runs";
@@ -20,5 +20,5 @@ export default async function Learn() {
     return [{ diagramId: r.diagramId, href: `/p/${r.projectId}/d/${r.diagramId}`, name: r.diagramName, status: r.status, progress }];
   });
   rows.sort((a, b) => a.name.localeCompare(b.name, "ko", { numeric: true }));
-  return <GuidePicker guides={GUIDE_LIST.map(guideSummary)} runs={rows} />;
+  return <GuidePicker guides={GUIDE_LIST.filter((g) => guideEnvs(g).length > 0).map(guideSummary)} runs={rows} />;
 }
