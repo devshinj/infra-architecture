@@ -242,6 +242,16 @@ export async function createProjectWithDiagram(
   }
 }
 
+/** 이름이 같은(대소문자 무시) 내 프로젝트. 없으면 null. */
+export async function findProjectByName(userId: string, name: string): Promise<{ id: string } | null> {
+  const [row] = await db
+    .select({ id: projects.id })
+    .from(projects)
+    .where(and(eq(projects.ownerId, userId), sameName(projects.name, name.trim())))
+    .limit(1);
+  return row ?? null;
+}
+
 export async function renameProject(userId: string, projectId: string, name: string): Promise<void> {
   const clean = cleanName(name);
   await assertOwnedProject(userId, projectId);
@@ -297,13 +307,15 @@ const COPY_ATTEMPTS = 5;
 
 /**
  * 비어 있는 사본 이름으로 구성도 행을 넣는다. 동시에 같은 사본 이름을 먼저 넣은 요청이 있으면
- * 형제 이름을 다시 읽어 다음 번호로 몇 번 더 시도한다.
+ * 형제 이름을 다시 읽어 다음 번호로 몇 번 더 시도한다. keepBase 면 base 가 비어 있을 때 base 를 그대로 쓴다.
  */
-async function insertCopy(projectId: string, base: string): Promise<{ id: string; name: string }> {
+async function insertCopy(projectId: string, base: string, keepBase = false): Promise<{ id: string; name: string }> {
   const lost: string[] = [];
   for (let attempt = 1; ; attempt++) {
     const siblings = await db.select({ name: diagrams.name }).from(diagrams).where(eq(diagrams.projectId, projectId));
-    const name = copyName(base, [...siblings.map((x) => x.name), ...lost]);
+    const taken = [...siblings.map((x) => x.name), ...lost];
+    const free = keepBase && !taken.some((t) => t.toLowerCase() === base.toLowerCase());
+    const name = free ? base : copyName(base, taken);
     try {
       const [row] = await db.insert(diagrams).values({ projectId, name }).returning({ id: diagrams.id, name: diagrams.name });
       return row;
@@ -314,6 +326,15 @@ async function insertCopy(projectId: string, base: string): Promise<{ id: string
       lost.push(name);
     }
   }
+}
+
+/** 빈 구성도를 만든다. 이름이 겹치면 copyName 규칙(‘이름 사본’, ‘이름 사본 2’ …)으로 비어 있는 이름을 쓴다. */
+export async function createDiagramWithFreeName(userId: string, projectId: string, name: string): Promise<{ id: string; name: string }> {
+  const clean = cleanName(name);
+  await assertOwnedProject(userId, projectId);
+  const row = await insertCopy(projectId, clean, true);
+  await createVersion(row.id, emptyState(), { source: "import" });
+  return row;
 }
 
 export async function duplicateDiagram(userId: string, diagramId: string): Promise<{ id: string; name: string }> {

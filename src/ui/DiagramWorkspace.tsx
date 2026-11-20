@@ -25,6 +25,7 @@ import { isFlowCommand } from "@/domain/commands";
 import { gwaWa } from "@/domain/josa";
 import { diffStates } from "@/domain/diff";
 import { checkFlow } from "@/domain/flows";
+import type { GuideView } from "@/domain/guides/view";
 import type { NetworkKnowledge } from "@/domain/network";
 import type { DiagramState } from "@/domain/types";
 
@@ -91,6 +92,8 @@ export interface DiagramWorkspaceProps {
   initialPaging?: SessionPaging;
   /** 계정 공통 망 지식. 없으면(못 읽음) 망 종류·연결 방식 예상 없이 지금처럼 그린다. */
   knowledge?: NetworkKnowledge | null;
+  /** 이 구성도의 학습 상태(학습한 적 없으면 null). status 가 active 일 때 학습 중이다. Task 9 가 단계 카드로 쓴다. */
+  guide?: GuideView | null;
 }
 
 /** Compare view draws current ∪ old so removed nodes appear as ghosts beside the live ones. */

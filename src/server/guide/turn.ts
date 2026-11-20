@@ -46,7 +46,7 @@ const HANDLED: GuideTurnOutcome = { handled: true };
 const counts = (s: DiagramState) => ({ nodes: Object.keys(s.nodes).length, edges: Object.keys(s.edges).length });
 
 /** 구성을 바꾸지 않은 학습 글의 메타. 요약 칩이 생기지 않게 changed 0·version null 로 둔다. */
-const quietMeta = (s: DiagramState): MessageMeta => ({ applied: 0, changed: 0, skipped: 0, version: null, status: "complete", ...counts(s) });
+export const quietMeta = (s: DiagramState): MessageMeta => ({ applied: 0, changed: 0, skipped: 0, version: null, status: "complete", ...counts(s) });
 
 /** 구성을 바꾸지 않은 차례의 done(버전 없음). applied 는 환경 가정처럼 바꾸었어도 구성이 아닌 명령 수. */
 function quietDone(s: DiagramState, knowledge: NetworkKnowledge | null, assistantMessageId: string, applied = 0): ChatEvent {

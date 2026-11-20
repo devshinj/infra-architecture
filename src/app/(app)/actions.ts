@@ -5,6 +5,8 @@ import { notFound, redirect } from "next/navigation";
 
 import { auth, signOut } from "@/auth";
 import type { TermEntry } from "@/domain/explain";
+import type { GuideEnv } from "@/domain/guides/types";
+import type { GuideView } from "@/domain/guides/view";
 import type { DiagramState } from "@/domain/types";
 import {
   clearPinnedPositions,
@@ -23,6 +25,8 @@ import {
   type PinnedPositions,
 } from "@/server/projects";
 import { confirmAssumptionFor } from "@/server/assumptions";
+import { getGuideRun } from "@/server/guide/runs";
+import { quitGuide, startGuide, syncGuideAfterRestore } from "@/server/guide/start";
 import { saveFieldsFor, type SaveFieldsInput } from "@/server/fields";
 import { BusyError, confirmFlow, deleteFlow, removeFlowStep, renameFlow } from "@/server/flows";
 import { ensureSeeded, listTerms, updateTerm, type TermPatch } from "@/server/glossary";
@@ -172,12 +176,15 @@ export async function importSampleAction(diagramId: string, sampleId: string): P
   });
 }
 
-/** describeChange: 안내 둘째 줄에 구성 정보 카드 숫자의 변화를 붙인다(이력의 되돌리기). text 는 남긴 안내. */
+/**
+ * describeChange: 안내 둘째 줄에 구성 정보 카드 숫자의 변화를 붙인다(이력의 되돌리기). text 는 남긴 안내.
+ * 학습 중이면 되돌린 버전에 맞춰 단계를 되돌리고 새 학습 상태(guide)를 함께 돌려준다.
+ */
 export async function restoreVersionAction(
   diagramId: string,
   number: number,
   opts?: { describeChange?: boolean },
-): Promise<{ number: number; text: string }> {
+): Promise<{ number: number; text: string; guide?: GuideView }> {
   validVersion(number);
   return run(async (uid) => {
     await getOwnedDiagram(uid, diagramId);
@@ -189,8 +196,30 @@ export async function restoreVersionAction(
       restoreOpts = { describeChange: knowledge ? { knowledge } : {} };
     }
     const r = await restoreVersionWithMessage(diagramId, number, restoreOpts);
+    const guide = (await getGuideRun(diagramId))?.status === "active" ? await syncGuideAfterRestore(diagramId, number) : null;
     refreshDiagram();
+    return guide ? { ...r, guide } : r;
+  });
+}
+
+/** 학습을 시작한다. "학습" 프로젝트에 새 구성도를 만들고 그 주소에 쓸 id 를 돌려준다. 없는 주제·환경은 안내로 돌려준다. */
+export async function startGuideAction(
+  guideId: string,
+  env: GuideEnv | null,
+): Promise<ActionResult<{ projectId: string; diagramId: string }>> {
+  return runResult(async (uid) => {
+    const r = await startGuide(uid, guideId, env);
+    refreshAll();
     return r;
+  });
+}
+
+/** 학습을 그만둔다. 그 뒤 이 구성도는 일반 구성도다. 대화 차례가 돌고 있으면 바쁨 안내를 돌려준다. */
+export async function quitGuideAction(diagramId: string): Promise<ActionResult> {
+  return runResult(async (uid) => {
+    await quitGuide(uid, diagramId);
+    refreshAll();
+    return {};
   });
 }
 
