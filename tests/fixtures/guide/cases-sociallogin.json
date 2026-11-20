@@ -1,0 +1,468 @@
+{
+  "cases": [
+    {
+      "id": "sociallogin-entry-m1",
+      "guide": "sociallogin",
+      "env": "cloud",
+      "step": "entry",
+      "text": "앱이랑 브라우저 요청이 웹 방화벽 거쳐서 로드밸런서로 들어오게 해 줘",
+      "expect": "match"
+    },
+    {
+      "id": "sociallogin-entry-m2",
+      "guide": "sociallogin",
+      "env": "cloud",
+      "step": "entry",
+      "text": "VPC 만들고 맨 앞에 ALB 랑 WAF 를 두자",
+      "expect": "match"
+    },
+    {
+      "id": "sociallogin-entry-m3",
+      "guide": "sociallogin",
+      "env": "cloud",
+      "step": "entry",
+      "text": "사용자가 들어오는 입구부터 만들어 줘",
+      "expect": "match"
+    },
+    {
+      "id": "sociallogin-entry-c1",
+      "guide": "sociallogin",
+      "env": "cloud",
+      "step": "entry",
+      "text": "인증 서버 두 대를 AZ 두 곳에 나눠 넣어 줘",
+      "expect": "miss"
+    },
+    {
+      "id": "sociallogin-entry-c2",
+      "guide": "sociallogin",
+      "env": "cloud",
+      "step": "entry",
+      "text": "카카오 로그인부터 붙여 줘",
+      "expect": "miss"
+    },
+    {
+      "id": "sociallogin-entry-c3",
+      "guide": "sociallogin",
+      "env": "cloud",
+      "step": "entry",
+      "text": "WAF 를 ALB 에 붙이는 거랑 CloudFront 에 붙이는 거랑 뭐가 달라?",
+      "expect": "question"
+    },
+    {
+      "id": "sociallogin-auth-m1",
+      "guide": "sociallogin",
+      "env": "cloud",
+      "step": "auth",
+      "text": "로그인을 처리할 인증 서버를 AZ 마다 하나씩 두 대 넣어 줘",
+      "expect": "match"
+    },
+    {
+      "id": "sociallogin-auth-m2",
+      "guide": "sociallogin",
+      "env": "cloud",
+      "step": "auth",
+      "text": "auth server 두 대를 Auto Scaling 으로 묶어서 두 AZ 에 둬",
+      "expect": "match"
+    },
+    {
+      "id": "sociallogin-auth-c1",
+      "guide": "sociallogin",
+      "env": "cloud",
+      "step": "auth",
+      "text": "인증 서버 세 대로 해 줘",
+      "expect": "conflict"
+    },
+    {
+      "id": "sociallogin-auth-c2",
+      "guide": "sociallogin",
+      "env": "cloud",
+      "step": "auth",
+      "text": "인증 서버 한 대만 둬 줘",
+      "expect": "conflict"
+    },
+    {
+      "id": "sociallogin-auth-c3",
+      "guide": "sociallogin",
+      "env": "cloud",
+      "step": "auth",
+      "text": "카카오 로그인을 붙이고 NAT 를 거쳐 나가게 해 줘",
+      "expect": "miss"
+    },
+    {
+      "id": "sociallogin-auth-c4",
+      "guide": "sociallogin",
+      "env": "cloud",
+      "step": "auth",
+      "text": "인증 서버를 API 서버랑 따로 두는 이유가 뭐야?",
+      "expect": "question"
+    },
+    {
+      "id": "sociallogin-kakao-m1",
+      "guide": "sociallogin",
+      "env": "cloud",
+      "step": "kakao",
+      "text": "카카오 계정으로 로그인할 수 있게 연동해 줘",
+      "expect": "match"
+    },
+    {
+      "id": "sociallogin-kakao-m2",
+      "guide": "sociallogin",
+      "env": "cloud",
+      "step": "kakao",
+      "text": "kakao 로그인 붙여 주고 서버는 NAT 로 나가게 해",
+      "expect": "match"
+    },
+    {
+      "id": "sociallogin-kakao-c1",
+      "guide": "sociallogin",
+      "env": "cloud",
+      "step": "kakao",
+      "text": "네이버와 구글 로그인도 추가해 줘",
+      "expect": "miss"
+    },
+    {
+      "id": "sociallogin-kakao-c2",
+      "guide": "sociallogin",
+      "env": "cloud",
+      "step": "kakao",
+      "text": "인가 코드는 왜 바로 토큰으로 안 주고 따로 바꿔야 해?",
+      "expect": "question"
+    },
+    {
+      "id": "sociallogin-kakao-c3",
+      "guide": "sociallogin",
+      "env": "cloud",
+      "step": "kakao",
+      "text": "state 값은 뭘 막는 거야?",
+      "expect": "question"
+    },
+    {
+      "id": "sociallogin-providers-m1",
+      "guide": "sociallogin",
+      "env": "cloud",
+      "step": "providers",
+      "text": "네이버 로그인이랑 구글 로그인도 같이 넣어 줘",
+      "expect": "match"
+    },
+    {
+      "id": "sociallogin-providers-m2",
+      "guide": "sociallogin",
+      "env": "cloud",
+      "step": "providers",
+      "text": "Google 이랑 Naver 계정으로도 들어올 수 있게 해 줘",
+      "expect": "match"
+    },
+    {
+      "id": "sociallogin-providers-c1",
+      "guide": "sociallogin",
+      "env": "cloud",
+      "step": "providers",
+      "text": "클라이언트 시크릿은 Secrets Manager 에 보관해 줘",
+      "expect": "miss"
+    },
+    {
+      "id": "sociallogin-providers-c2",
+      "guide": "sociallogin",
+      "env": "cloud",
+      "step": "providers",
+      "text": "카카오 로그인을 붙이고 NAT 를 거쳐 나가게 해 줘",
+      "expect": "miss"
+    },
+    {
+      "id": "sociallogin-providers-c3",
+      "guide": "sociallogin",
+      "env": "cloud",
+      "step": "providers",
+      "text": "구글 ID 토큰은 어떻게 검증해?",
+      "expect": "question"
+    },
+    {
+      "id": "sociallogin-secret-m1",
+      "guide": "sociallogin",
+      "env": "cloud",
+      "step": "secret",
+      "text": "카카오·네이버·구글 시크릿을 Secrets Manager 에 넣어 둬",
+      "expect": "match"
+    },
+    {
+      "id": "sociallogin-secret-m2",
+      "guide": "sociallogin",
+      "env": "cloud",
+      "step": "secret",
+      "text": "토큰 서명 키랑 클라이언트 secret 을 안전한 비밀 저장소에 보관해 줘",
+      "expect": "match"
+    },
+    {
+      "id": "sociallogin-secret-m3",
+      "guide": "sociallogin",
+      "env": "cloud",
+      "step": "secret",
+      "text": "비밀 키는 서버만 꺼내 쓰게 시크릿 매니저에 넣어 줘",
+      "expect": "match"
+    },
+    {
+      "id": "sociallogin-secret-c1",
+      "guide": "sociallogin",
+      "env": "cloud",
+      "step": "secret",
+      "text": "회원 DB 를 RDS 로 넣고 계정 연결을 저장해 줘",
+      "expect": "miss"
+    },
+    {
+      "id": "sociallogin-secret-c2",
+      "guide": "sociallogin",
+      "env": "cloud",
+      "step": "secret",
+      "text": "클라이언트 시크릿을 앱에 넣으면 왜 안 돼?",
+      "expect": "question"
+    },
+    {
+      "id": "sociallogin-secret-c3",
+      "guide": "sociallogin",
+      "env": "cloud",
+      "step": "secret",
+      "text": "PKCE 가 뭐야?",
+      "expect": "question"
+    },
+    {
+      "id": "sociallogin-member-m1",
+      "guide": "sociallogin",
+      "env": "cloud",
+      "step": "member",
+      "text": "회원 정보랑 소셜 계정 연결을 저장할 DB 를 RDS MySQL 로 넣어 줘",
+      "expect": "match"
+    },
+    {
+      "id": "sociallogin-member-m2",
+      "guide": "sociallogin",
+      "env": "cloud",
+      "step": "member",
+      "text": "카카오 네이버 구글 계정을 한 회원으로 묶을 수 있게 회원 DB 를 만들어 줘",
+      "expect": "match"
+    },
+    {
+      "id": "sociallogin-member-c1",
+      "guide": "sociallogin",
+      "env": "cloud",
+      "step": "member",
+      "text": "리프레시 토큰 저장소로 ElastiCache 를 넣어 줘",
+      "expect": "miss"
+    },
+    {
+      "id": "sociallogin-member-c2",
+      "guide": "sociallogin",
+      "env": "cloud",
+      "step": "member",
+      "text": "이메일이 같으면 그냥 같은 회원으로 합치면 안 돼?",
+      "expect": "question"
+    },
+    {
+      "id": "sociallogin-member-c3",
+      "guide": "sociallogin",
+      "env": "cloud",
+      "step": "member",
+      "text": "계정 연결 표는 회원 표랑 왜 나눠?",
+      "expect": "question"
+    },
+    {
+      "id": "sociallogin-token-m1",
+      "guide": "sociallogin",
+      "env": "cloud",
+      "step": "token",
+      "text": "액세스 토큰이랑 리프레시 토큰 저장할 Redis 를 넣어 줘",
+      "expect": "match"
+    },
+    {
+      "id": "sociallogin-token-m2",
+      "guide": "sociallogin",
+      "env": "cloud",
+      "step": "token",
+      "text": "로그인 세션과 토큰을 보관할 캐시를 Multi-AZ 로 붙여 줘",
+      "expect": "match"
+    },
+    {
+      "id": "sociallogin-token-c1",
+      "guide": "sociallogin",
+      "env": "cloud",
+      "step": "token",
+      "text": "서비스 API 서버 두 대를 넣고 토큰을 검증하게 해 줘",
+      "expect": "miss"
+    },
+    {
+      "id": "sociallogin-token-c2",
+      "guide": "sociallogin",
+      "env": "cloud",
+      "step": "token",
+      "text": "회원 DB 를 RDS 로 넣어 줘",
+      "expect": "miss"
+    },
+    {
+      "id": "sociallogin-token-c3",
+      "guide": "sociallogin",
+      "env": "cloud",
+      "step": "token",
+      "text": "리프레시 토큰은 왜 Redis 에 저장해?",
+      "expect": "question"
+    },
+    {
+      "id": "sociallogin-api-m1",
+      "guide": "sociallogin",
+      "env": "cloud",
+      "step": "api",
+      "text": "API 서버를 두 AZ 에 한 대씩 넣고 JWT 서명을 확인하게 해 줘",
+      "expect": "match"
+    },
+    {
+      "id": "sociallogin-api-m2",
+      "guide": "sociallogin",
+      "env": "cloud",
+      "step": "api",
+      "text": "백엔드 서버 두 대 두고 액세스 토큰을 JWKS 로 검증하게 해 줘",
+      "expect": "match"
+    },
+    {
+      "id": "sociallogin-api-c1",
+      "guide": "sociallogin",
+      "env": "cloud",
+      "step": "api",
+      "text": "API 서버 세 대로 넣어 줘",
+      "expect": "conflict"
+    },
+    {
+      "id": "sociallogin-api-c2",
+      "guide": "sociallogin",
+      "env": "cloud",
+      "step": "api",
+      "text": "API 서버 하나만 둬 줘",
+      "expect": "conflict"
+    },
+    {
+      "id": "sociallogin-api-c3",
+      "guide": "sociallogin",
+      "env": "cloud",
+      "step": "api",
+      "text": "카카오 연결 끊기 알림을 웹훅으로 받게 해 줘",
+      "expect": "miss"
+    },
+    {
+      "id": "sociallogin-api-c4",
+      "guide": "sociallogin",
+      "env": "cloud",
+      "step": "api",
+      "text": "JWKS 가 뭐야?",
+      "expect": "question"
+    },
+    {
+      "id": "sociallogin-webhook-m1",
+      "guide": "sociallogin",
+      "env": "cloud",
+      "step": "webhook",
+      "text": "카카오에서 연결을 끊으면 알려 주는 webhook 을 받게 해 줘",
+      "expect": "match"
+    },
+    {
+      "id": "sociallogin-webhook-m2",
+      "guide": "sociallogin",
+      "env": "cloud",
+      "step": "webhook",
+      "text": "사용자가 카카오 쪽에서 연동 해제하면 우리 서버가 통보를 받게 해 줘",
+      "expect": "match"
+    },
+    {
+      "id": "sociallogin-webhook-c1",
+      "guide": "sociallogin",
+      "env": "cloud",
+      "step": "webhook",
+      "text": "CloudWatch 로 모니터링과 감사 로그를 붙여 줘",
+      "expect": "miss"
+    },
+    {
+      "id": "sociallogin-webhook-c2",
+      "guide": "sociallogin",
+      "env": "cloud",
+      "step": "webhook",
+      "text": "서비스 API 서버 두 대를 넣어 줘",
+      "expect": "miss"
+    },
+    {
+      "id": "sociallogin-webhook-c3",
+      "guide": "sociallogin",
+      "env": "cloud",
+      "step": "webhook",
+      "text": "웹훅이 진짜 카카오가 보낸 건지 어떻게 알아?",
+      "expect": "question"
+    },
+    {
+      "id": "sociallogin-ops-m1",
+      "guide": "sociallogin",
+      "env": "cloud",
+      "step": "ops",
+      "text": "모니터링이랑 알람을 붙이고 로그인 기록은 감사 로그로 남겨 줘",
+      "expect": "match"
+    },
+    {
+      "id": "sociallogin-ops-m2",
+      "guide": "sociallogin",
+      "env": "cloud",
+      "step": "ops",
+      "text": "CloudWatch 로 제공자별 로그인 실패율을 보게 해 줘",
+      "expect": "match"
+    },
+    {
+      "id": "sociallogin-ops-c1",
+      "guide": "sociallogin",
+      "env": "cloud",
+      "step": "ops",
+      "text": "카카오 첫 로그인과 API 호출 흐름을 정리해 줘",
+      "expect": "miss"
+    },
+    {
+      "id": "sociallogin-ops-c2",
+      "guide": "sociallogin",
+      "env": "cloud",
+      "step": "ops",
+      "text": "카카오 연결 끊기 알림을 웹훅으로 받게 해 줘",
+      "expect": "miss"
+    },
+    {
+      "id": "sociallogin-ops-c3",
+      "guide": "sociallogin",
+      "env": "cloud",
+      "step": "ops",
+      "text": "로그에 토큰을 남기면 왜 안 돼?",
+      "expect": "question"
+    },
+    {
+      "id": "sociallogin-flows-m1",
+      "guide": "sociallogin",
+      "env": "cloud",
+      "step": "flows",
+      "text": "카카오로 처음 로그인하는 흐름이랑 토큰으로 API 부르는 흐름 보여 줘",
+      "expect": "match"
+    },
+    {
+      "id": "sociallogin-flows-m2",
+      "guide": "sociallogin",
+      "env": "cloud",
+      "step": "flows",
+      "text": "로그인부터 API 호출까지 과정을 정리해 줘",
+      "expect": "match"
+    },
+    {
+      "id": "sociallogin-flows-c1",
+      "guide": "sociallogin",
+      "env": "cloud",
+      "step": "flows",
+      "text": "CloudWatch 로 모니터링과 감사 로그를 붙여 줘",
+      "expect": "miss"
+    },
+    {
+      "id": "sociallogin-flows-c2",
+      "guide": "sociallogin",
+      "env": "cloud",
+      "step": "flows",
+      "text": "로그인할 때 왜 브라우저가 우리 서버를 두 번 지나?",
+      "expect": "question"
+    }
+  ]
+}
