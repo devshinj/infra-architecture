@@ -165,7 +165,7 @@ test("chat bubbles and progress dots follow the restrained spec", () => {
   const css = read("src/ui/chat/chat.module.css");
   const user = rule(css, ".user");
   expect(user).toContain("background: var(--bg-panel-raised)");
-  expect(user).toContain("border-radius: 12px 12px 4px 12px");
+  expect(user).toContain("border-radius: var(--radius-surface)"); // DESIGN.md · Chat (2026-11-20, 예전 12·12·4·12px 는 Same Corners Rule 위반)
   expect(user).toContain("max-width: 85%");
   expect(rule(css, ".mono")).toContain("border: 1px solid var(--line-node)");
   expect(css).toMatch(/\.dots span \{[^}]*animation: dot 1\.2s/);
