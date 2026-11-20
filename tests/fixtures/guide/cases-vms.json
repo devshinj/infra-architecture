@@ -1,0 +1,84 @@
+{
+  "cases": [
+    { "id": "vms-camera-m1", "guide": "vms", "env": "onprem", "step": "camera", "text": "건물마다 CCTV 카메라를 달고 스위치로 묶어 줘", "expect": "match" },
+    { "id": "vms-camera-m2", "guide": "vms", "env": "onprem", "step": "camera", "text": "ONVIF 되는 IP 카메라 120대를 PoE 로 전원 주는 스위치에 연결해 줘", "expect": "match" },
+    { "id": "vms-camera-c1", "guide": "vms", "env": "onprem", "step": "camera", "text": "녹화 서버를 넣어 줘", "expect": "miss" },
+    { "id": "vms-camera-c2", "guide": "vms", "env": "onprem", "step": "camera", "text": "ONVIF 랑 RTSP 는 뭐가 달라?", "expect": "question" },
+    { "id": "vms-camera-c3", "guide": "vms", "env": "onprem", "step": "camera", "text": "카메라망과 전산실 사이에 방화벽을 둬 줘", "expect": "miss" },
+
+    { "id": "vms-room-m1", "guide": "vms", "env": "onprem", "step": "room", "text": "카메라 영상이 전산실로 들어오는 입구에 방화벽을 세워 줘", "expect": "match" },
+    { "id": "vms-room-m2", "guide": "vms", "env": "onprem", "step": "room", "text": "VMS 서버실을 만들고 카메라망 쪽에 방화벽을 놓자", "expect": "match" },
+    { "id": "vms-room-c1", "guide": "vms", "env": "onprem", "step": "room", "text": "IP 카메라와 PoE 스위치를 달아 줘", "expect": "miss" },
+    { "id": "vms-room-c2", "guide": "vms", "env": "onprem", "step": "room", "text": "VMS 는 왜 서버를 여러 대로 나눠?", "expect": "question" },
+    { "id": "vms-room-c3", "guide": "vms", "env": "onprem", "step": "room", "text": "녹화 서버 두 대와 예비 녹화 서버를 넣어 줘", "expect": "miss" },
+    { "id": "vms-room-m3", "guide": "vms", "env": "onprem", "step": "room", "text": "VMS 서버가 들어갈 전산실을 만들어 줘", "expect": "match" },
+
+    { "id": "vms-recorder-m1", "guide": "vms", "env": "onprem", "step": "recorder", "text": "카메라 영상을 받아 녹화할 서버 두 대에 예비 한 대를 더해 줘", "expect": "match" },
+    { "id": "vms-recorder-m2", "guide": "vms", "env": "onprem", "step": "recorder", "text": "레코딩 서버를 N+1 페일오버로 구성해 줘", "expect": "match" },
+    { "id": "vms-recorder-c1", "guide": "vms", "env": "onprem", "step": "recorder", "text": "영상을 담을 저장소를 붙여 줘", "expect": "miss" },
+    { "id": "vms-recorder-c2", "guide": "vms", "env": "onprem", "step": "recorder", "text": "상시 녹화랑 이벤트 녹화는 뭐가 달라?", "expect": "question" },
+    { "id": "vms-recorder-c3", "guide": "vms", "env": "onprem", "step": "recorder", "text": "VMS 관리 서버와 DB 를 넣어 줘", "expect": "miss" },
+
+    { "id": "vms-storage-m1", "guide": "vms", "env": "onprem", "step": "storage", "text": "녹화 영상을 30일 동안 쌓아 둘 스토리지를 RAID 6 으로 붙여 줘", "expect": "match" },
+    { "id": "vms-storage-m2", "guide": "vms", "env": "onprem", "step": "storage", "text": "녹화 서버마다 볼륨을 나눠 주는 200TB 저장 장치를 연결해 줘", "expect": "match" },
+    { "id": "vms-storage-c1", "guide": "vms", "env": "onprem", "step": "storage", "text": "미디어 서버를 넣어 줘", "expect": "miss" },
+    { "id": "vms-storage-c2", "guide": "vms", "env": "onprem", "step": "storage", "text": "보관 기간이 지난 영상은 어떻게 돼?", "expect": "question" },
+    { "id": "vms-storage-c3", "guide": "vms", "env": "onprem", "step": "storage", "text": "VMS 관리 서버를 이중화해 줘", "expect": "miss" },
+
+    { "id": "vms-mgmt-m1", "guide": "vms", "env": "onprem", "step": "mgmt", "text": "카메라 목록과 사용자 권한을 맡는 관리 서버랑 DB 를 두 대씩 넣어 줘", "expect": "match" },
+    { "id": "vms-mgmt-m2", "guide": "vms", "env": "onprem", "step": "mgmt", "text": "마스터 서버와 PostgreSQL 데이터베이스를 Active-Standby 로 구성해 줘", "expect": "match" },
+    { "id": "vms-mgmt-c1", "guide": "vms", "env": "onprem", "step": "mgmt", "text": "관리 서버 한 대만 둬 줘", "expect": "conflict" },
+    { "id": "vms-mgmt-c2", "guide": "vms", "env": "onprem", "step": "mgmt", "text": "관리 서버가 멈추면 녹화도 멈춰?", "expect": "question" },
+    { "id": "vms-mgmt-c3", "guide": "vms", "env": "onprem", "step": "mgmt", "text": "운영실에 뷰어 PC 를 둬 줘", "expect": "miss" },
+
+    { "id": "vms-media-m1", "guide": "vms", "env": "onprem", "step": "media", "text": "화면에 영상을 나눠 줄 스트리밍 서버를 이중화해서 넣어 줘", "expect": "match" },
+    { "id": "vms-media-m2", "guide": "vms", "env": "onprem", "step": "media", "text": "녹화 서버 영상을 중계하는 미디어 서버를 Active-Standby 로 둬 줘", "expect": "match" },
+    { "id": "vms-media-c1", "guide": "vms", "env": "onprem", "step": "media", "text": "미디어 서버 세 대로 해 줘", "expect": "conflict" },
+    { "id": "vms-media-c2", "guide": "vms", "env": "onprem", "step": "media", "text": "미디어 서버는 왜 따로 둬?", "expect": "question" },
+    { "id": "vms-media-c3", "guide": "vms", "env": "onprem", "step": "media", "text": "운영실에 뷰어 PC 와 영상 월을 둬 줘", "expect": "miss" },
+
+    { "id": "vms-viewer-m1", "guide": "vms", "env": "onprem", "step": "viewer", "text": "운영자가 영상을 볼 클라이언트 PC 랑 비디오 월을 놓아 줘", "expect": "match" },
+    { "id": "vms-viewer-m2", "guide": "vms", "env": "onprem", "step": "viewer", "text": "보안 운영실을 만들고 운영자 PC 여섯 대를 넣어 줘", "expect": "match" },
+    { "id": "vms-viewer-c1", "guide": "vms", "env": "onprem", "step": "viewer", "text": "영상 분석 서버를 넣어 줘", "expect": "miss" },
+    { "id": "vms-viewer-c2", "guide": "vms", "env": "onprem", "step": "viewer", "text": "실시간 보기랑 녹화 재생은 경로가 어떻게 달라?", "expect": "question" },
+    { "id": "vms-viewer-c3", "guide": "vms", "env": "onprem", "step": "viewer", "text": "휴대폰으로도 볼 수 있게 해 줘", "expect": "miss" },
+    { "id": "vms-viewer-m3", "guide": "vms", "env": "onprem", "step": "viewer", "text": "운영자가 쓸 VMS 클라이언트를 놓아 줘", "expect": "match" },
+
+    { "id": "vms-web-m1", "guide": "vms", "env": "onprem", "step": "web", "text": "브라우저랑 휴대폰 앱으로도 영상을 볼 수 있게 해 줘", "expect": "match" },
+    { "id": "vms-web-m2", "guide": "vms", "env": "onprem", "step": "web", "text": "RTSP 를 WebRTC 로 바꿔 주는 서버를 넣어 줘", "expect": "match" },
+    { "id": "vms-web-c1", "guide": "vms", "env": "onprem", "step": "web", "text": "영상 분석 서버를 넣어 줘", "expect": "miss" },
+    { "id": "vms-web-c2", "guide": "vms", "env": "onprem", "step": "web", "text": "브라우저는 왜 RTSP 를 바로 못 봐?", "expect": "question" },
+    { "id": "vms-web-c3", "guide": "vms", "env": "onprem", "step": "web", "text": "이벤트가 나면 알람을 띄워 줘", "expect": "miss" },
+
+    { "id": "vms-analytics-m1", "guide": "vms", "env": "onprem", "step": "analytics", "text": "GPU 서버로 사람과 차량을 찾아내는 지능형 분석을 붙여 줘", "expect": "match" },
+    { "id": "vms-analytics-m2", "guide": "vms", "env": "onprem", "step": "analytics", "text": "침입을 감지하는 AI 서버를 추가해 줘", "expect": "match" },
+    { "id": "vms-analytics-c1", "guide": "vms", "env": "onprem", "step": "analytics", "text": "NTP 로 시간을 맞춰 줘", "expect": "miss" },
+    { "id": "vms-analytics-c2", "guide": "vms", "env": "onprem", "step": "analytics", "text": "움직임 감지랑 영상 분석은 뭐가 달라?", "expect": "question" },
+    { "id": "vms-analytics-c3", "guide": "vms", "env": "onprem", "step": "analytics", "text": "웹과 모바일에서도 볼 수 있게 게이트웨이를 넣어 줘", "expect": "miss" },
+
+    { "id": "vms-event-m1", "guide": "vms", "env": "onprem", "step": "event", "text": "분석 결과를 받아 뷰어에 경보를 띄우고 녹화에 표시를 남겨 줘", "expect": "match" },
+    { "id": "vms-event-m2", "guide": "vms", "env": "onprem", "step": "event", "text": "알람 서버를 두고 이벤트를 녹화 서버와 뷰어 PC 로 전달해 줘", "expect": "match" },
+    { "id": "vms-event-c1", "guide": "vms", "env": "onprem", "step": "event", "text": "접속 기록 서버를 넣어 줘", "expect": "miss" },
+    { "id": "vms-event-c2", "guide": "vms", "env": "onprem", "step": "event", "text": "이벤트 서버가 멈추면 녹화는 어떻게 돼?", "expect": "question" },
+    { "id": "vms-event-c3", "guide": "vms", "env": "onprem", "step": "event", "text": "NTP 로 시간을 맞추고 장비 감시를 넣어 줘", "expect": "miss" },
+
+    { "id": "vms-ops-m1", "guide": "vms", "env": "onprem", "step": "ops", "text": "모든 장비 시계를 맞출 시각 서버와 Zabbix 모니터링을 넣어 줘", "expect": "match" },
+    { "id": "vms-ops-m2", "guide": "vms", "env": "onprem", "step": "ops", "text": "카메라나 서버가 끊기면 바로 알 수 있게 SNMP 감시를 붙여 줘", "expect": "match" },
+    { "id": "vms-ops-c1", "guide": "vms", "env": "onprem", "step": "ops", "text": "실시간 보기 흐름을 정리해 줘", "expect": "miss" },
+    { "id": "vms-ops-c2", "guide": "vms", "env": "onprem", "step": "ops", "text": "카메라 시간이 안 맞으면 뭐가 문제야?", "expect": "question" },
+    { "id": "vms-ops-c3", "guide": "vms", "env": "onprem", "step": "ops", "text": "미디어 서버 두 대로 영상을 중계해 줘", "expect": "miss" },
+    { "id": "vms-ops-c4", "guide": "vms", "env": "onprem", "step": "ops", "text": "누가 어떤 영상을 봤는지 접속 기록을 남겨 줘", "expect": "miss" },
+
+    { "id": "vms-audit-m1", "guide": "vms", "env": "onprem", "step": "audit", "text": "누가 언제 어느 카메라를 봤는지 감사 로그를 남겨 줘", "expect": "match" },
+    { "id": "vms-audit-m2", "guide": "vms", "env": "onprem", "step": "audit", "text": "열람 기록을 VMS 밖 서버에 따로 모아 줘", "expect": "match" },
+    { "id": "vms-audit-c1", "guide": "vms", "env": "onprem", "step": "audit", "text": "NTP 로 시간을 맞추고 장비 감시를 넣어 줘", "expect": "miss" },
+    { "id": "vms-audit-c2", "guide": "vms", "env": "onprem", "step": "audit", "text": "접속 기록은 왜 VMS 밖에 따로 둬?", "expect": "question" },
+    { "id": "vms-audit-c3", "guide": "vms", "env": "onprem", "step": "audit", "text": "실시간 보기와 이벤트 영상 재생 흐름을 정리해 줘", "expect": "miss" },
+
+    { "id": "vms-flows-m1", "guide": "vms", "env": "onprem", "step": "flows", "text": "카메라 영상이 뷰어 화면까지 가는 과정을 보여 줘", "expect": "match" },
+    { "id": "vms-flows-m2", "guide": "vms", "env": "onprem", "step": "flows", "text": "라이브 보기랑 이벤트 재생 시나리오를 만들어 줘", "expect": "match" },
+    { "id": "vms-flows-c1", "guide": "vms", "env": "onprem", "step": "flows", "text": "영상 분석 서버를 하나 더 넣어 줘", "expect": "miss" },
+    { "id": "vms-flows-c3", "guide": "vms", "env": "onprem", "step": "flows", "text": "누가 어떤 영상을 봤는지 접속 기록을 남겨 줘", "expect": "miss" },
+    { "id": "vms-flows-c2", "guide": "vms", "env": "onprem", "step": "flows", "text": "재생할 때는 왜 저장소에서 바로 안 읽어?", "expect": "question" }
+  ]
+}

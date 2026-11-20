@@ -1,59 +1,59 @@
 {
   "cases": [
     {
-      "id": "relay-biz-m1",
+      "id": "relay-hub-m1",
       "guide": "relay",
       "env": "onprem",
-      "step": "biz",
-      "text": "망분리된 내부망에 결제·정산 업무를 처리할 서버를 두 대 놓아 줘",
+      "step": "hub",
+      "text": "여러 지자체 자료를 한곳에서 볼 통합 시스템 WAS 를 두 대 놓아 줘",
       "expect": "match"
     },
     {
-      "id": "relay-biz-m2",
+      "id": "relay-hub-m2",
       "guide": "relay",
       "env": "onprem",
-      "step": "biz",
-      "text": "먼저 업무 시스템부터 만들자. WAS 두 대로 해 줘",
+      "step": "hub",
+      "text": "먼저 관리 포털과 현황판을 돌릴 서버를 한 쌍 만들어 줘",
       "expect": "match"
     },
     {
-      "id": "relay-biz-m3",
+      "id": "relay-hub-m3",
       "guide": "relay",
       "env": "onprem",
-      "step": "biz",
-      "text": "업무망 안에 기관 연계를 요청할 업무 서버 한 쌍을 그려 줘",
+      "step": "hub",
+      "text": "내부망에 통합 서버 두 대를 그려 줘",
       "expect": "match"
     },
     {
-      "id": "relay-biz-c1",
+      "id": "relay-hub-c1",
       "guide": "relay",
       "env": "onprem",
-      "step": "biz",
-      "text": "대외계에 중계 서버 두 대를 놓아 줘",
+      "step": "hub",
+      "text": "연계 구간에 중계 서버 두 대를 놓아 줘",
       "expect": "miss"
     },
     {
-      "id": "relay-biz-c2",
+      "id": "relay-hub-c2",
       "guide": "relay",
       "env": "onprem",
-      "step": "biz",
-      "text": "업무망은 왜 인터넷과 바로 이으면 안 돼?",
+      "step": "hub",
+      "text": "통합 시스템이 지자체를 직접 부르면 왜 안 돼?",
       "expect": "question"
     },
     {
-      "id": "relay-biz-c3",
+      "id": "relay-hub-c3",
       "guide": "relay",
       "env": "onprem",
-      "step": "biz",
-      "text": "업무 서버는 세 대로 넣어 줘",
+      "step": "hub",
+      "text": "통합 업무 서버는 세 대로 넣어 줘",
       "expect": "conflict"
     },
     {
-      "id": "relay-biz-c4",
+      "id": "relay-hub-c4",
       "guide": "relay",
       "env": "onprem",
-      "step": "biz",
-      "text": "업무망과 대외계 사이에 내부 방화벽을 넣어 줘",
+      "step": "hub",
+      "text": "내부 업무망과 연계 구간 사이에 내부 방화벽을 넣어 줘",
       "expect": "miss"
     },
     {
@@ -61,7 +61,7 @@
       "guide": "relay",
       "env": "onprem",
       "step": "relay",
-      "text": "바깥 기관 연계를 맡을 공통 중계 서버를 Active-Standby 로 두 대 둬 줘",
+      "text": "지자체 연계를 맡을 공통 중계 서버를 Active-Standby 로 두 대 둬 줘",
       "expect": "match"
     },
     {
@@ -69,7 +69,7 @@
       "guide": "relay",
       "env": "onprem",
       "step": "relay",
-      "text": "FEP 서버를 대외 구간에 한 쌍 만들어 줘",
+      "text": "연계 DMZ 를 만들고 연계 서버를 한 쌍 넣어 줘",
       "expect": "match"
     },
     {
@@ -77,7 +77,7 @@
       "guide": "relay",
       "env": "onprem",
       "step": "relay",
-      "text": "기관 라우팅과 전문 변환을 맡을 중계 서버를 이중화해 줘",
+      "text": "라우팅과 표준 변환을 맡을 중계 서버를 이중화해 줘",
       "expect": "match"
     },
     {
@@ -85,7 +85,7 @@
       "guide": "relay",
       "env": "onprem",
       "step": "relay",
-      "text": "업무망과 대외계 사이에 내부 방화벽을 넣어 줘",
+      "text": "내부 업무망과 연계 구간 사이에 내부 방화벽을 넣어 줘",
       "expect": "miss"
     },
     {
@@ -93,7 +93,7 @@
       "guide": "relay",
       "env": "onprem",
       "step": "relay",
-      "text": "중계 서버를 따로 두는 까닭이 뭐야?",
+      "text": "중계 서버를 가운데 따로 두는 까닭이 뭐야?",
       "expect": "question"
     },
     {
@@ -109,7 +109,7 @@
       "guide": "relay",
       "env": "onprem",
       "step": "fwin",
-      "text": "업무망에서 대외계로 넘어가는 길목에 방화벽을 세워 줘",
+      "text": "내부망에서 연계 구간으로 넘어가는 길목에 방화벽을 세워 줘",
       "expect": "match"
     },
     {
@@ -125,7 +125,7 @@
       "guide": "relay",
       "env": "onprem",
       "step": "fwin",
-      "text": "대외계에서 업무망으로 먼저 못 들어오게 사이에 firewall 을 넣어 줘",
+      "text": "연계 구간에서 내부로 먼저 못 들어오게 사이에 firewall 을 넣어 줘",
       "expect": "match"
     },
     {
@@ -133,7 +133,7 @@
       "guide": "relay",
       "env": "onprem",
       "step": "fwin",
-      "text": "기관마다 큐를 따로 만들어 줘",
+      "text": "지자체마다 큐를 따로 만들어 줘",
       "expect": "miss"
     },
     {
@@ -149,7 +149,15 @@
       "guide": "relay",
       "env": "onprem",
       "step": "fwin",
-      "text": "업무망과 대외계 사이에 망연계 장비를 넣어 줘",
+      "text": "내부 업무망과 연계 구간 사이에 망연계 장비를 넣어 줘",
+      "expect": "miss"
+    },
+    {
+      "id": "relay-fwin-c4",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "fwin",
+      "text": "대외 방화벽을 두고 행정망 전용 회선으로 지자체와 이어 줘",
       "expect": "miss"
     },
     {
@@ -157,7 +165,7 @@
       "guide": "relay",
       "env": "onprem",
       "step": "queue",
-      "text": "한 기관이 느려져도 다른 기관은 괜찮게 기관별 대기열을 만들어 줘",
+      "text": "한 지자체가 느려져도 다른 곳은 괜찮게 지자체별 대기열을 만들어 줘",
       "expect": "match"
     },
     {
@@ -165,7 +173,7 @@
       "guide": "relay",
       "env": "onprem",
       "step": "queue",
-      "text": "중계 뒤에 RabbitMQ 로 기관별 요청 큐를 넣어 줘",
+      "text": "중계 뒤에 RabbitMQ 로 지자체별 요청 큐를 넣어 줘",
       "expect": "match"
     },
     {
@@ -173,7 +181,7 @@
       "guide": "relay",
       "env": "onprem",
       "step": "queue",
-      "text": "기관마다 메시지 큐를 나눠서 장애가 번지지 않게 해 줘",
+      "text": "지자체마다 메시지 큐를 나눠서 장애가 번지지 않게 해 줘",
       "expect": "match"
     },
     {
@@ -181,7 +189,7 @@
       "guide": "relay",
       "env": "onprem",
       "step": "queue",
-      "text": "카드사를 전용 회선으로 연결해 줘",
+      "text": "행정망 전용 회선으로 지자체와 이어 줘",
       "expect": "miss"
     },
     {
@@ -189,111 +197,175 @@
       "guide": "relay",
       "env": "onprem",
       "step": "queue",
-      "text": "큐를 두면 실시간 거래가 느려지지 않아?",
+      "text": "큐를 두면 실시간 조회가 느려지지 않아?",
       "expect": "question"
     },
     {
-      "id": "relay-card-m1",
+      "id": "relay-net-m1",
       "guide": "relay",
       "env": "onprem",
-      "step": "card",
-      "text": "카드사와는 전용선으로 붙이고 고정 길이 전문을 TCP 로 주고받게 해 줘",
+      "step": "net",
+      "text": "지자체와는 인터넷 말고 국가정보통신망으로 연결해 줘",
       "expect": "match"
     },
     {
-      "id": "relay-card-m2",
+      "id": "relay-net-m2",
       "guide": "relay",
       "env": "onprem",
-      "step": "card",
-      "text": "기관 A 카드사 어댑터를 두 대 만들고 대외 방화벽 밖으로 회선을 연결해 줘",
+      "step": "net",
+      "text": "연계 구간 바깥에 대외 방화벽과 접속 라우터를 놓아 줘",
       "expect": "match"
     },
     {
-      "id": "relay-card-m3",
+      "id": "relay-net-m3",
       "guide": "relay",
       "env": "onprem",
-      "step": "card",
-      "text": "카드 승인용으로 카드사 소켓 연동을 붙여 줘",
+      "step": "net",
+      "text": "기관 간 전용망 회선을 붙여서 시·군·구까지 길을 내 줘",
       "expect": "match"
     },
     {
-      "id": "relay-card-c1",
+      "id": "relay-net-c1",
       "guide": "relay",
       "env": "onprem",
-      "step": "card",
-      "text": "제휴사를 VPN 으로 붙여 줘",
+      "step": "net",
+      "text": "A시를 REST API 로 붙여 줘",
       "expect": "miss"
     },
     {
-      "id": "relay-card-c2",
+      "id": "relay-net-c2",
       "guide": "relay",
       "env": "onprem",
-      "step": "card",
-      "text": "전용 회선은 인터넷이랑 뭐가 달라?",
+      "step": "net",
+      "text": "행정망은 인터넷이랑 뭐가 달라?",
       "expect": "question"
     },
     {
-      "id": "relay-card-m4",
+      "id": "relay-net-c3",
       "guide": "relay",
       "env": "onprem",
-      "step": "card",
-      "text": "회선 라우터를 한 대로 두고 카드사를 전용 회선으로 연결해 줘",
-      "expect": "match"
-    },
-    {
-      "id": "relay-partner-m1",
-      "guide": "relay",
-      "env": "onprem",
-      "step": "partner",
-      "text": "제휴사 B 하고는 IPsec 터널을 만들고 REST API 로 주고받게 해 줘",
-      "expect": "match"
-    },
-    {
-      "id": "relay-partner-m2",
-      "guide": "relay",
-      "env": "onprem",
-      "step": "partner",
-      "text": "제휴사 API 를 VPN 너머로 부르게 해 줘",
-      "expect": "match"
-    },
-    {
-      "id": "relay-partner-m3",
-      "guide": "relay",
-      "env": "onprem",
-      "step": "partner",
-      "text": "포인트 제휴사랑 인터넷 VPN 으로 HTTPS 연동해 줘",
-      "expect": "match"
-    },
-    {
-      "id": "relay-partner-c1",
-      "guide": "relay",
-      "env": "onprem",
-      "step": "partner",
-      "text": "정산 협력사와 파일 배치를 붙여 줘",
+      "step": "net",
+      "text": "지자체마다 큐를 따로 둬 줘",
       "expect": "miss"
     },
     {
-      "id": "relay-partner-c2",
+      "id": "relay-api-m1",
       "guide": "relay",
       "env": "onprem",
-      "step": "partner",
-      "text": "VPN 을 쓰는데 HTTPS 도 또 써야 해?",
-      "expect": "question"
-    },
-    {
-      "id": "relay-partner-m4",
-      "guide": "relay",
-      "env": "onprem",
-      "step": "partner",
-      "text": "VPN 장비 한 대로 제휴사를 연결해 줘",
+      "step": "api",
+      "text": "A시 업무 시스템은 API 를 열어 주니까 실시간으로 조회하게 해 줘",
       "expect": "match"
     },
     {
-      "id": "relay-partner-c4",
+      "id": "relay-api-m2",
       "guide": "relay",
       "env": "onprem",
-      "step": "partner",
-      "text": "카드사 API 를 HTTPS 로 붙여 줘",
+      "step": "api",
+      "text": "지자체 A 는 REST 로 붙이고 조회 어댑터를 두 대 둬 줘",
+      "expect": "match"
+    },
+    {
+      "id": "relay-api-m3",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "api",
+      "text": "중앙에서 A시로 지시를 바로 내려보내게 실시간 연계를 만들어 줘",
+      "expect": "match"
+    },
+    {
+      "id": "relay-api-m4",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "api",
+      "text": "A시 시스템 한 대만 붙이고 조회 어댑터는 두 대로 해 줘",
+      "expect": "match"
+    },
+    {
+      "id": "relay-api-c1",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "api",
+      "text": "B군은 연계 에이전트로 붙여 줘",
+      "expect": "miss"
+    },
+    {
+      "id": "relay-api-c2",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "api",
+      "text": "서킷 브레이커는 언제 열려?",
+      "expect": "question"
+    },
+    {
+      "id": "relay-api-c3",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "api",
+      "text": "C구와 SFTP 로 파일을 주고받게 해 줘",
+      "expect": "miss"
+    },
+    {
+      "id": "relay-api-c4",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "api",
+      "text": "B군은 API 가 없으니 에이전트로 변경분을 올리게 해 줘",
+      "expect": "miss"
+    },
+    {
+      "id": "relay-agent-m1",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "agent",
+      "text": "B군 시스템에는 에이전트를 깔아서 바뀐 자료만 올리게 해 줘",
+      "expect": "match"
+    },
+    {
+      "id": "relay-agent-m2",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "agent",
+      "text": "지자체 B 는 API 가 없으니 변경분을 밀어 올리는 방식으로 연결해 줘",
+      "expect": "match"
+    },
+    {
+      "id": "relay-agent-m3",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "agent",
+      "text": "수집 어댑터를 두고 B군 agent 가 보내는 자료를 받아 줘",
+      "expect": "match"
+    },
+    {
+      "id": "relay-agent-m4",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "agent",
+      "text": "B군에 에이전트 한 대만 넣어 줘",
+      "expect": "match"
+    },
+    {
+      "id": "relay-agent-c1",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "agent",
+      "text": "C구와는 SFTP 로 파일 배치를 주고받게 해 줘",
+      "expect": "miss"
+    },
+    {
+      "id": "relay-agent-c2",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "agent",
+      "text": "에이전트가 같은 자료를 두 번 보내면 어떻게 돼?",
+      "expect": "question"
+    },
+    {
+      "id": "relay-agent-c3",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "agent",
+      "text": "연계 로그 DB 를 넣어 줘",
       "expect": "miss"
     },
     {
@@ -301,7 +373,7 @@
       "guide": "relay",
       "env": "onprem",
       "step": "file",
-      "text": "정해진 시각에 정산 파일을 주고받는 배치를 SFTP 로 만들어 줘",
+      "text": "C구는 하루치 자료를 파일로 받아 오게 SFTP 로 연결해 줘",
       "expect": "match"
     },
     {
@@ -309,7 +381,7 @@
       "guide": "relay",
       "env": "onprem",
       "step": "file",
-      "text": "기관 C 와는 파일로 하루치를 모아 주고받게 해 줘",
+      "text": "지자체 C 와는 정해진 시각에 파일 배치로 주고받게 해 줘",
       "expect": "match"
     },
     {
@@ -317,7 +389,7 @@
       "guide": "relay",
       "env": "onprem",
       "step": "file",
-      "text": "정산 협력사에 요청 파일을 올리고 결과 파일을 받아 오는 서버를 넣어 줘",
+      "text": "C구가 올려 둔 파일을 내려받는 파일 송수신 서버를 넣어 줘",
       "expect": "match"
     },
     {
@@ -325,7 +397,7 @@
       "guide": "relay",
       "env": "onprem",
       "step": "file",
-      "text": "거래 로그 DB 를 넣어 줘",
+      "text": "연계 로그 DB 를 넣어 줘",
       "expect": "miss"
     },
     {
@@ -349,15 +421,7 @@
       "guide": "relay",
       "env": "onprem",
       "step": "file",
-      "text": "거래 로그 파일을 남겨 줘",
-      "expect": "miss"
-    },
-    {
-      "id": "relay-file-c5",
-      "guide": "relay",
-      "env": "onprem",
-      "step": "file",
-      "text": "카드 승인과 정산 파일 주고받기 흐름을 정리해 줘",
+      "text": "연계 로그 파일을 남겨 줘",
       "expect": "miss"
     },
     {
@@ -365,7 +429,7 @@
       "guide": "relay",
       "env": "onprem",
       "step": "log",
-      "text": "거래마다 추적 번호를 붙여서 기록하는 DB 를 두 대로 둬 줘",
+      "text": "건마다 추적 번호를 붙여서 기록하는 DB 를 두 대로 둬 줘",
       "expect": "match"
     },
     {
@@ -373,7 +437,7 @@
       "guide": "relay",
       "env": "onprem",
       "step": "log",
-      "text": "재처리와 대사에 쓸 거래 기록 저장소를 PostgreSQL 로 이중화해 줘",
+      "text": "누가 어느 지자체 자료를 조회했는지 접근 기록을 남길 저장소를 이중화해 줘",
       "expect": "match"
     },
     {
@@ -381,7 +445,7 @@
       "guide": "relay",
       "env": "onprem",
       "step": "log",
-      "text": "중계가 남기는 거래 로그를 저장할 데이터베이스를 붙여 줘",
+      "text": "중계가 남기는 연계 로그를 저장할 데이터베이스를 붙여 줘",
       "expect": "match"
     },
     {
@@ -389,7 +453,7 @@
       "guide": "relay",
       "env": "onprem",
       "step": "log",
-      "text": "회선을 통신사 두 곳으로 이중화해 줘",
+      "text": "행정망 회선을 통신사 두 곳으로 이중화해 줘",
       "expect": "miss"
     },
     {
@@ -397,7 +461,7 @@
       "guide": "relay",
       "env": "onprem",
       "step": "log",
-      "text": "대사가 뭐야?",
+      "text": "개인정보는 로그에 어떻게 남겨?",
       "expect": "question"
     },
     {
@@ -413,7 +477,71 @@
       "guide": "relay",
       "env": "onprem",
       "step": "log",
-      "text": "로그인 화면을 만들어 줘",
+      "text": "내부 업무망에 통합 DB 를 이중화해 줘",
+      "expect": "miss"
+    },
+    {
+      "id": "relay-tdb-m1",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "tdb",
+      "text": "지자체에서 모은 자료를 담을 통합 DB 를 내부망에 두 대로 둬 줘",
+      "expect": "match"
+    },
+    {
+      "id": "relay-tdb-m2",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "tdb",
+      "text": "취합한 자료를 한곳에 저장하게 PostgreSQL 을 이중화해 줘",
+      "expect": "match"
+    },
+    {
+      "id": "relay-tdb-m3",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "tdb",
+      "text": "검증 끝난 자료를 적재할 통합 저장소를 만들어 줘",
+      "expect": "match"
+    },
+    {
+      "id": "relay-tdb-c1",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "tdb",
+      "text": "행정망 회선과 접속 라우터를 이중화해 줘",
+      "expect": "miss"
+    },
+    {
+      "id": "relay-tdb-c2",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "tdb",
+      "text": "빠진 자료는 어떻게 다시 받아?",
+      "expect": "question"
+    },
+    {
+      "id": "relay-tdb-c3",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "tdb",
+      "text": "통합 DB 는 한 대만 둬 줘",
+      "expect": "conflict"
+    },
+    {
+      "id": "relay-tdb-c4",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "tdb",
+      "text": "연계 로그 DB 를 이중화해서 추적 번호를 남겨 줘",
+      "expect": "miss"
+    },
+    {
+      "id": "relay-tdb-c5",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "tdb",
+      "text": "지자체 자료 취합 흐름을 정리해 줘",
       "expect": "miss"
     },
     {
@@ -421,7 +549,7 @@
       "guide": "relay",
       "env": "onprem",
       "step": "dual",
-      "text": "카드사 회선을 다른 통신사로 하나 더 받아 주고 VPN 장비도 두 대로 해 줘",
+      "text": "행정망 회선을 다른 통신사로 하나 더 받아 줘",
       "expect": "match"
     },
     {
@@ -429,7 +557,7 @@
       "guide": "relay",
       "env": "onprem",
       "step": "dual",
-      "text": "회선 라우터와 VPN 을 한 쌍씩 이중화해 줘",
+      "text": "접속 라우터를 한 쌍으로 이중화해 줘",
       "expect": "match"
     },
     {
@@ -437,7 +565,15 @@
       "guide": "relay",
       "env": "onprem",
       "step": "dual",
-      "text": "전용선이 끊겨도 되게 예비 회선을 붙이고 VPN 터널도 이중으로 해 줘",
+      "text": "회선이 끊겨도 되게 예비 회선을 붙여 줘",
+      "expect": "match"
+    },
+    {
+      "id": "relay-dual-m4",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "dual",
+      "text": "라우터 한 대만 더 붙여 줘",
       "expect": "match"
     },
     {
@@ -445,7 +581,7 @@
       "guide": "relay",
       "env": "onprem",
       "step": "dual",
-      "text": "기관별 응답 시간을 모니터링해 줘",
+      "text": "지자체별 응답 시간을 모니터링해 줘",
       "expect": "miss"
     },
     {
@@ -457,19 +593,19 @@
       "expect": "question"
     },
     {
-      "id": "relay-dual-m4",
+      "id": "relay-dual-c3",
       "guide": "relay",
       "env": "onprem",
       "step": "dual",
-      "text": "VPN 장비 한 대만 더 붙여 줘",
-      "expect": "match"
+      "text": "내부 업무망에 통합 DB 를 이중화해서 취합 자료를 담아 줘",
+      "expect": "miss"
     },
     {
       "id": "relay-ops-m1",
       "guide": "relay",
       "env": "onprem",
       "step": "ops",
-      "text": "회선이랑 VPN 터널 상태를 Zabbix 로 감시하고 이상하면 운영자에게 알려 줘",
+      "text": "회선 상태를 Zabbix 로 감시하고 이상하면 운영자에게 알려 줘",
       "expect": "match"
     },
     {
@@ -477,7 +613,7 @@
       "guide": "relay",
       "env": "onprem",
       "step": "ops",
-      "text": "기관마다 응답시간과 실패율을 지표로 모아 보여 줘",
+      "text": "지자체마다 응답시간과 실패율을 지표로 모아 보여 줘",
       "expect": "match"
     },
     {
@@ -493,7 +629,7 @@
       "guide": "relay",
       "env": "onprem",
       "step": "ops",
-      "text": "카드 승인 흐름을 정리해 줘",
+      "text": "자료 취합 흐름을 정리해 줘",
       "expect": "miss"
     },
     {
@@ -501,7 +637,7 @@
       "guide": "relay",
       "env": "onprem",
       "step": "ops",
-      "text": "기관별 응답 시간을 왜 따로 봐야 해?",
+      "text": "지자체별 응답 시간을 왜 따로 봐야 해?",
       "expect": "question"
     },
     {
@@ -509,7 +645,7 @@
       "guide": "relay",
       "env": "onprem",
       "step": "flows",
-      "text": "카드 승인이 오가는 경로와 파일 배치 과정을 흐름으로 보여 줘",
+      "text": "자료가 올라오는 경로와 조회가 내려가는 과정을 흐름으로 보여 줘",
       "expect": "match"
     },
     {
@@ -517,7 +653,7 @@
       "guide": "relay",
       "env": "onprem",
       "step": "flows",
-      "text": "실시간 거래와 정산 파일이 지나가는 흐름을 정리해 줘",
+      "text": "취합과 실시간 조회가 지나가는 흐름을 정리해 줘",
       "expect": "match"
     },
     {

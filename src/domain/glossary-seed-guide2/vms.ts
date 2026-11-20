@@ -1,4 +1,41 @@
 import type { GlossarySeedEntry } from "../glossary-seed";
 
 // 영상 관리시스템(VMS) 학습 대본이 쓰는데 기본 사전에 없던 말. 규칙은 glossary-seed.ts 머리말과 같다.
-export const TERMS: GlossarySeedEntry[] = [];
+export const TERMS: GlossarySeedEntry[] = [
+  {
+    term: "비트레이트",
+    fullName: "비트레이트(Bitrate)",
+    category: "영상 / 코덱·전송",
+    definition: "비트레이트는 영상이나 음성 1초 분량을 나타내는 데 쓰는 데이터 양으로, 보통 Mbps 나 kbps 로 적습니다.",
+    why: "화질을 올리면 비트레이트가 커지고 그만큼 회선 대역폭과 저장 용량이 늘어, 영상 시스템의 크기를 정하는 기준이 됩니다.",
+    compare: "해상도는 화면을 이루는 점의 개수이고, 비트레이트는 그 화면을 초당 얼마의 데이터로 담느냐입니다.",
+    aliases: ["bitrate", "비트율", "영상비트레이트"],
+  },
+  {
+    term: "보조 스트림",
+    fullName: "보조 스트림(Sub Stream)",
+    category: "영상 / 카메라 스트림",
+    definition: "보조 스트림은 카메라가 메인 스트림과 함께 내보내는, 해상도와 비트레이트를 낮춘 두 번째 영상 스트림입니다.",
+    why: "여러 카메라를 작은 칸으로 함께 보거나 휴대폰으로 볼 때 대역폭과 영상을 푸는 부담을 줄이려고 씁니다.",
+    compare: "메인 스트림은 녹화와 크게 보기에 쓰는 고화질 영상이고, 보조 스트림은 분할 화면과 원격 보기에 쓰는 저화질 영상입니다.",
+    aliases: ["서브스트림", "substream", "세컨드스트림", "듀얼스트림"],
+  },
+  {
+    term: "이벤트 녹화",
+    fullName: "이벤트 녹화(Event Recording)",
+    category: "영상 / 녹화 방식",
+    definition: "이벤트 녹화는 움직임 감지나 알람 같은 이벤트가 생겼을 때만 그 앞뒤 구간의 영상을 저장하는 녹화 방식입니다.",
+    why: "아무 일도 없는 시간의 영상을 남기지 않아 저장 용량을 아끼려고 씁니다.",
+    compare: "상시 녹화는 24시간 모든 영상을 남기고, 이벤트 녹화는 이벤트가 난 구간만 남겨 감지를 놓치면 영상도 남지 않습니다.",
+    aliases: ["eventrecording", "모션녹화", "이벤트레코딩"],
+  },
+  {
+    term: "순환 녹화",
+    fullName: "순환 녹화(덮어쓰기 녹화, Loop Recording)",
+    category: "영상 / 녹화 방식",
+    definition: "순환 녹화는 저장 공간이 차거나 보관 기간이 지나면 가장 오래된 영상부터 지우고 그 자리에 새 영상을 쓰는 녹화 방식입니다.",
+    why: "저장 공간을 정해진 크기로 유지하면서 사람이 지우지 않아도 녹화가 끊기지 않게 하려고 씁니다.",
+    compare: "순환 녹화는 오래된 영상을 자동으로 덮어쓰고, 보존(잠금) 처리한 영상은 덮어쓰지 않고 따로 남깁니다.",
+    aliases: ["덮어쓰기녹화", "looprecording", "덮어쓰기"],
+  },
+];
