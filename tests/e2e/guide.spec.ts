@@ -64,6 +64,19 @@ test("학습 모드 한 바퀴: 주제 고르기 → 환경 → 1단계 → 안 
   // 새로 그린 서버 글로 바뀌면 해설 칩이 붙는다.
   await expect(page.getByRole("list", { name: "해설" }).first()).toBeVisible({ timeout: 15_000 });
 
+  // 바뀐 곳 보기 → 대화가 잠기지만, 같은 자리의 「비교 끝내기」와 입력칸 위 「현재로 돌아가기」로 빠져나온다.
+  const OLD_REASON = "이전 버전을 보는 중에는 대화할 수 없어요.";
+  await page.getByRole("button", { name: "바뀐 곳 보기" }).click();
+  await expect(page.getByText(OLD_REASON)).toBeVisible();
+  await expect(box).toBeDisabled();
+  await page.getByRole("button", { name: "비교 끝내기" }).click();
+  await expect(box).toBeEnabled();
+  await expect(page.getByText(OLD_REASON)).toHaveCount(0);
+  await page.getByRole("button", { name: "바뀐 곳 보기" }).click();
+  await page.locator("div", { has: page.getByText(OLD_REASON, { exact: true }) }).last().getByRole("button", { name: "현재로 돌아가기" }).click();
+  await expect(box).toBeEnabled();
+  await expect(page.getByRole("button", { name: "바뀐 곳 보기" })).toBeEnabled();
+
   // 다른 말: 안내 문구만, 카드와 그림은 그대로.
   await box.fill("DB 넣어 줘");
   await page.getByRole("button", { name: "보내기" }).click();

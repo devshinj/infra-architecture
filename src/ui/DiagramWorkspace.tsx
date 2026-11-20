@@ -1312,12 +1312,19 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
               onSend: sendChat,
               onStop: chat.stop,
               onOpenWarnings: openWarnings,
-              turnActions: { latest: current.number, disabled: locked || busy || !live, onCompare: (v) => compare(v - 1), onUndo: undoTurn },
+              turnActions: {
+                latest: current.number,
+                disabled: locked || busy || !live,
+                ...(mode.kind === "compare" ? { comparing: mode.number } : {}),
+                onCompare: (v) => compare(v - 1),
+                onEndCompare: backToLive,
+                onUndo: undoTurn,
+              },
               undone,
               guide: { view: guide.view, onQuit: guide.quit, onRebuild: guide.rebuild },
               health,
               mentionRef,
-              ...(live ? {} : { disabledReason: "이전 버전을 보는 중에는 대화할 수 없어요." }),
+              ...(live ? {} : { disabledReason: "이전 버전을 보는 중에는 대화할 수 없어요.", disabledAction: { label: "현재로 돌아가기", run: backToLive } }),
             }}
           />
         </div>

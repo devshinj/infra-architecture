@@ -1488,8 +1488,10 @@ test("the latest turn's summary offers 바뀐 곳 보기 (compare with the versi
   render(ui(mk(2, ["a", "x"])));
   fireEvent.click(screen.getByRole("button", { name: "바뀐 곳 보기" }));
   await waitFor(() => expect(getVersionAction).toHaveBeenCalledWith("d", 1));
-  expect(await screen.findByRole("button", { name: "현재로 돌아가기" })).toBeInTheDocument();
-  fireEvent.click(screen.getByRole("button", { name: "현재로 돌아가기" }));
+  // 비교 중: 캔버스 띠와 입력칸 위에 「현재로 돌아가기」가 하나씩, 그 차례 자리에는 「비교 끝내기」.
+  expect(await screen.findAllByRole("button", { name: "현재로 돌아가기" })).toHaveLength(2);
+  fireEvent.click(screen.getByRole("button", { name: "비교 끝내기" }));
+  expect(screen.queryByRole("button", { name: "현재로 돌아가기" })).toBeNull();
   fireEvent.click(screen.getByRole("button", { name: "되돌리기" }));
   await waitFor(() => expect(restoreVersionAction).toHaveBeenCalledWith("d", 1));
   await waitFor(() => expect(hookState.pushLine).toHaveBeenCalledWith(expect.objectContaining({ kind: "system", text: expect.stringMatching(/되돌렸어요/) })));

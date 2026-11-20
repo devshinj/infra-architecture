@@ -29,6 +29,8 @@ export interface ChatPanelProps {
   onStop(): void;
   health: LlmHealth | null;
   disabledReason?: string;
+  /** 막힌 까닭 옆에 둘 빠져나갈 단추(예: 이전 버전을 보는 중 → 현재로 돌아가기). */
+  disabledAction?: { label: string; run(): void };
   mentionRef: RefObject<MentionInputHandle | null>;
   /** 구성도에 노드가 없다. 대화 기록도 없으면 고정 인사말과 가이드를 보인다(저장·전송 없음). */
   emptyDiagram?: boolean;
@@ -75,7 +77,10 @@ export interface ChatGuide {
 export interface TurnActions {
   latest: number;
   disabled?: boolean;
+  /** 지금 비교 화면이 견주는 버전. 이 차례의 비교(latest - 1)면 `바뀐 곳 보기` 자리에 `비교 끝내기` 를 둔다. */
+  comparing?: number;
   onCompare(version: number): void;
+  onEndCompare?(): void;
   onUndo(version: number): void;
 }
 
@@ -225,6 +230,7 @@ export function ChatPanel({
   onStop,
   health,
   disabledReason,
+  disabledAction,
   mentionRef,
   emptyDiagram = false,
   footer,
@@ -322,9 +328,16 @@ export function ChatPanel({
             {l.text}
           </span>
           <span className={styles.turnActions}>
-            <Button size="sm" disabled={turnActions.disabled} onClick={() => turnActions.onCompare(v)}>
-              바뀐 곳 보기
-            </Button>
+            {turnActions.comparing === v - 1 && turnActions.onEndCompare ? (
+              // 이 차례를 비교하는 중: 같은 자리에서 끝낸다(대화가 잠겨 있어도 눌린다).
+              <Button size="sm" onClick={turnActions.onEndCompare}>
+                비교 끝내기
+              </Button>
+            ) : (
+              <Button size="sm" disabled={turnActions.disabled} onClick={() => turnActions.onCompare(v)}>
+                바뀐 곳 보기
+              </Button>
+            )}
             <Button size="sm" variant="quiet" disabled={turnActions.disabled} onClick={() => turnActions.onUndo(v)}>
               되돌리기
             </Button>
@@ -531,7 +544,17 @@ export function ChatPanel({
         </div>
       ) : (
         <div ref={composer} className={styles.composer}>
-          {reason && <p className={styles.reason}>{reason}</p>}
+          {reason &&
+            (disabledReason && disabledAction ? (
+              <div className={styles.reasonRow}>
+                <p className={styles.reason}>{reason}</p>
+                <Button size="sm" onClick={disabledAction.run}>
+                  {disabledAction.label}
+                </Button>
+              </div>
+            ) : (
+              <p className={styles.reason}>{reason}</p>
+            ))}
           {/* 세션마다 입력칸을 새로 그린다(쓰던 글·참조가 다른 세션으로 따라가지 않게). */}
           <MentionInput
             key={sessionKey}

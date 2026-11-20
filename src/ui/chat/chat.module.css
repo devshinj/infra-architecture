@@ -55,6 +55,8 @@ button.result:focus-visible { outline: 2px solid var(--focus-ring); outline-offs
 .ref { color: var(--text-primary); background: var(--line-node); border-radius: var(--radius-control); padding: 0 4px; font-size: 12px; }
 .composer { display: flex; flex-direction: column; gap: 8px; padding: 12px 12px 12px; border-top: 1px solid var(--line-node); }
 .reason { margin: 0; font-size: 12px; color: var(--text-secondary); }
+/* 막힌 까닭 + 빠져나갈 단추(현재로 돌아가기) 한 줄. */
+.reasonRow { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
 .mention { display: flex; flex-direction: column; gap: 8px; }
 .chipStrip { margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 8px; }
 .chip { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: var(--text-primary); background: var(--bg-panel-raised); border: 1px solid var(--line-node); border-radius: var(--radius-control); padding: 2px 4px 2px 12px; }
