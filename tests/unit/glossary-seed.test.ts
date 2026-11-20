@@ -6,6 +6,7 @@ import { GLOSSARY_SEED, GLOSSARY_SEED_CORE } from "@/domain/glossary-seed";
 import { GLOSSARY_SEED_BATCH3 } from "@/domain/glossary-seed-batch3";
 import { GLOSSARY_SEED_BATCH4 } from "@/domain/glossary-seed-batch4";
 import { GLOSSARY_SEED_EXTRA } from "@/domain/glossary-seed-extra";
+import { GLOSSARY_SEED_GUIDE } from "@/domain/glossary-seed-guide";
 
 const REQUIRED = [
   "Redis", "Nginx", "Apache", "Tomcat", "MySQL", "PostgreSQL", "Oracle", "MongoDB", "Elasticsearch", "Kafka",
@@ -19,10 +20,11 @@ const cp = (s: string) => [...s].length;
 
 test("core has fifty entries with required terms, and the full seed adds the second batch", () => {
   expect(GLOSSARY_SEED_CORE).toHaveLength(50);
-  expect(GLOSSARY_SEED).toHaveLength(GLOSSARY_SEED_CORE.length + GLOSSARY_SEED_EXTRA.length + GLOSSARY_SEED_BATCH3.length + GLOSSARY_SEED_BATCH4.length);
+  expect(GLOSSARY_SEED).toHaveLength(GLOSSARY_SEED_CORE.length + GLOSSARY_SEED_EXTRA.length + GLOSSARY_SEED_BATCH3.length + GLOSSARY_SEED_BATCH4.length + GLOSSARY_SEED_GUIDE.length);
   expect(GLOSSARY_SEED_EXTRA.length).toBeGreaterThan(0);
   expect(GLOSSARY_SEED_BATCH3.length).toBeGreaterThan(0);
   expect(GLOSSARY_SEED_BATCH4.length).toBeGreaterThan(0);
+  expect(GLOSSARY_SEED_GUIDE.length).toBeGreaterThan(0);
   const terms = GLOSSARY_SEED.map((e) => e.term);
   for (const t of REQUIRED) expect(terms).toContain(t);
 });
@@ -90,7 +92,7 @@ test("every node kind has a dictionary entry reachable by its Korean name", () =
 });
 
 test("product entries in the second batch leave why and compare empty; concept entries fill both", () => {
-  for (const e of [...GLOSSARY_SEED_EXTRA, ...GLOSSARY_SEED_BATCH3, ...GLOSSARY_SEED_BATCH4]) {
+  for (const e of [...GLOSSARY_SEED_EXTRA, ...GLOSSARY_SEED_BATCH3, ...GLOSSARY_SEED_BATCH4, ...GLOSSARY_SEED_GUIDE]) {
     expect((e.why === "") === (e.compare === ""), e.term).toBe(true);
   }
   expect(GLOSSARY_SEED_EXTRA.some((e) => e.why !== "")).toBe(true);

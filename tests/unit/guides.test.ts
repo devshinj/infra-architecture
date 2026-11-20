@@ -4,7 +4,7 @@ import { judgeFlowOps } from "@/domain/flows";
 import { GLOSSARY_SEED } from "@/domain/glossary-seed";
 import { buildGuideState } from "@/domain/guides/apply";
 import { GUIDE_LIST, guideEnvs } from "@/domain/guides";
-import { keywordMatch, normalizeUtterance } from "@/domain/guides/judge";
+import { findConflict, keywordMatch, normalizeUtterance } from "@/domain/guides/judge";
 import { GUIDE_LIMITS, type AuthoredEdge, type AuthoredGroup, type AuthoredTermed, type GuideEnv } from "@/domain/guides/types";
 import { normalizeTerm, overLimit, pickTerm, targetTermCandidates, type AnyExplanation } from "@/domain/explain";
 import { computeMissing } from "@/domain/missing";
@@ -104,8 +104,22 @@ describe.each(cases)("guide %s", (key, g, env: GuideEnv) => {
     }
   });
 
-  test("each example is a keyword match for its own step", () => {
-    for (const s of variant.steps) expect(keywordMatch(s.example, s.keywords), s.id).toBe(true);
+  test("every explains key names a node, group or edge of the finished diagram", () => {
+    const { state } = finished();
+    for (const s of variant.steps) {
+      for (const key of Object.keys(s.explains)) {
+        const [kind, id] = [key.slice(0, key.indexOf(":")), key.slice(key.indexOf(":") + 1)];
+        const table = kind === "node" ? state.nodes : kind === "group" ? state.groups : kind === "edge" ? state.edges : null;
+        expect(table !== null && Object.hasOwn(table, id), `${s.id} ${key}`).toBe(true);
+      }
+    }
+  });
+
+  test("each example is a keyword match for its own step and hits no conflict", () => {
+    for (const s of variant.steps) {
+      expect(keywordMatch(s.example, s.keywords), s.id).toBe(true);
+      expect(findConflict(s.example, s), s.id).toBeNull();
+    }
   });
 
   test("no empty keyword or conflict piece", () => {

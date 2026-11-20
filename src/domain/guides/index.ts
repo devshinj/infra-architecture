@@ -1,6 +1,7 @@
+import { SHOP } from "./shop";
 import { GUIDE_ENVS, type Guide, type GuideEnv } from "./types";
 
-export const GUIDE_LIST: readonly Guide[] = [];
+export const GUIDE_LIST: readonly Guide[] = [SHOP];
 
 export function getGuide(id: string): Guide | undefined {
   return GUIDE_LIST.find((g) => g.id === id);
