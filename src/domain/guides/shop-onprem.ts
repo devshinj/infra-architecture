@@ -10,9 +10,9 @@ const server = (hostname: string, ip: string, sw: string, cpu: string, ram: stri
 
 // 방화벽 규칙은 단계마다 늘어난다(같은 칸을 고쳐 쓴다).
 const FW_EXT_RULES_1 = "인터넷 → L4 VIP 10.10.10.100 TCP 443 허용, 나머지 차단";
-const FW_EXT_RULES_8 = "인터넷 → L4 VIP 10.10.10.100 443 허용 · 프록시 10.10.10.21 → PG사 443 허용 · 나머지 차단";
+const FW_EXT_RULES_8 = "인터넷 → L4 VIP 10.10.10.100 443 허용 · 프록시 10.10.10.21~22 → PG사 443 허용 · 나머지 차단";
 const FW_INT_RULES_4 = "WEB 10.10.10.11~12 → WAS 8080 허용, 나머지 차단";
-const FW_INT_RULES_8 = "WEB → WAS 8080 · WAS → 프록시 3128 허용, 나머지 차단";
+const FW_INT_RULES_8 = "WEB → WAS 8080 · WAS → 프록시 VIP 10.10.10.20:3128 허용, 나머지 차단";
 const FW_INT_RULES_10 = "WEB → WAS 8080 · WAS → 프록시 3128 · 사내망 172.16.0.0/16 → 관리자 VIP 8443 허용, 나머지 차단";
 const FW_INT_RULES_11 =
   "WEB → WAS 8080 · WAS → 프록시 3128 · 사내망 → 관리자 VIP 8443 · 관리 구역 → 서버 10050·161 · 서버 → 관리 구역 5044 허용, 나머지 차단";
@@ -20,7 +20,7 @@ const FW_INT_RULES_11 =
 export const SHOP_ONPREM: GuideVariant = {
   environment: "사내 IDC",
   outro:
-    "IDC 안에 DMZ 와 내부 구역을 나누고, L4·WEB·WAS·DB 를 모두 이중화한 쇼핑몰을 만들었어요. 결제 승인은 프록시를 거쳐 PG사로 나가고, 세일 때는 Redis 캐시와 주문 대기열이 몰린 요청을 나눠 받아요.",
+    "IDC 안에 DMZ 와 내부 구역을 나누고, L4·WEB·WAS·DB 를 모두 이중화한 쇼핑몰을 만들었어요. 결제 승인은 프록시를 거쳐 PG사로 나가요. 세일 때는 Redis 캐시가 몰리는 조회를 받고, 주문 대기열이 배송·알림·적립 같은 후속 일을 나눠 받아요.",
   otherEnv: [
     { from: "L4 두 대(VIP)", to: "ALB(AWS 가 이중화하는 관리형)" },
     { from: "WEB·WAS 서버 두 대", to: "EC2 Auto Scaling 그룹(두 AZ)" },
@@ -29,7 +29,7 @@ export const SHOP_ONPREM: GuideVariant = {
     { from: "NAS", to: "S3" },
     { from: "외부 방화벽", to: "WAF·보안 그룹" },
     { from: "사내 큐(RabbitMQ)", to: "SQS" },
-    { from: "아웃바운드 프록시", to: "NAT 게이트웨이" },
+    { from: "아웃바운드 프록시", to: "NAT 게이트웨이(목적지 거르기는 Network Firewall 등 따로)" },
     { from: "사내 전용 회선(운영자)", to: "Client VPN" },
     { from: "Zabbix·ELK", to: "CloudWatch" },
   ],
@@ -267,7 +267,7 @@ export const SHOP_ONPREM: GuideVariant = {
         [G("was-pool")]: groupText(
           "WAS 두 대를 묶은 영역이에요. 두 대가 함께 요청을 처리하고, 로그인 세션은 서버 밖 Redis 에 둬 어느 WAS 로 가도 로그인이 이어져요.",
           "내부 방화벽을 거쳐 WEB 서버에서 8080 이 들어오고, DB·캐시·NAS·대기열로 요청이 나가요.",
-          ["WAS 는 두 대가 함께 일하고 세션은 서버 밖에 둔다", "한 대가 멈춰도 고객이 다시 로그인하지 않는다", "세션을 각 WAS 에 두고 L4 가 같은 서버로 고정(스티키)", "세션 저장소(Redis)를 따로 운영해야 한다"],
+          ["WAS 는 두 대가 함께 일하고 세션은 서버 밖에 둔다", "한 대가 멈춰도 고객이 다시 로그인하지 않는다", "세션을 각 WAS 에 두고 WEB(Nginx)이 같은 WAS 로 고정(스티키·ip_hash)", "세션 저장소(Redis)를 따로 운영해야 한다"],
         ),
         [N("fw-int")]: nodeText(
           "DMZ 와 내부 구역 사이의 두 번째 문지기예요. WEB 서버가 WAS 로 가는 8080 처럼 정해진 통신만 통과시켜요.",
@@ -330,14 +330,14 @@ export const SHOP_ONPREM: GuideVariant = {
       notes: [
         { kind: "net", text: "L4 의 VIP 와 같은 생각이에요. 다만 DB 는 데이터까지 넘겨받아야 해서, 평소에 복제로 Standby 를 Active 와 같게 맞춰 둬요." },
         { kind: "flow", text: "WEB·WAS 는 두 대가 함께 일하지만 DB 는 한 대만 써요. 같은 데이터를 두 곳에서 함께 고치면 맞추기 어렵기 때문이에요." },
-        { kind: "caution", text: "반동기 복제는 Standby 가 받았다고 답해야 커밋이 끝나요. 데이터 유실은 줄지만 쓰기가 조금 느려져요." },
+        { kind: "caution", text: "반동기 복제는 Standby 의 답을 기다려 커밋해 쓰기가 조금 느려요. 답이 10초(기본값) 넘게 없으면 비동기로 바뀌어 유실 위험이 생겨요." },
       ],
       miss: "이번 단계는 주문·회원 DB 를 이중화하는 거예요. 'DB 를 이중화해서 넣어 줘'처럼 말해 보세요.",
       explains: {
         [G("db-ha")]: groupText(
           "DB 두 대를 Active-Standby 로 묶은 영역이에요. 이중화 관리 도구가 VIP 10.10.20.30 을 Active 에 붙여 두고, 장애 때 Standby 로 옮겨요.",
           "WAS·주문 처리기·관리자 서버에서 VIP 로 3306 이 들어와요. DB 가 먼저 바깥으로 거는 통신은 없어요(감시·로그 제외).",
-          ["DB 는 Active-Standby 와 반동기 복제로 둔다", "주문 데이터를 잃지 않으면서 구성이 비교적 단순하다", "Active-Active 클러스터(Galera·RAC 등)", "Standby 는 평소 쉬고, 넘어가는 동안 접속이 잠깐 끊긴다"],
+          ["DB 는 Active-Standby 와 반동기 복제로 둔다", "주문 데이터를 잃을 위험을 크게 줄이면서 구성이 비교적 단순하다", "Active-Active 클러스터(Galera·RAC 등)", "Standby 는 평소 쉬고, 넘어가는 동안 접속이 잠깐 끊긴다"],
         ),
         [N("db-1")]: nodeText(
           "주문·회원·상품 원본 데이터를 저장하는 Active DB 예요. 모든 읽기·쓰기를 받고, 바뀐 내용을 Standby 에 바로 복제해요.",
@@ -361,7 +361,7 @@ export const SHOP_ONPREM: GuideVariant = {
         ),
         [E("db-1", "db-2")]: edgeText(
           "Active 에서 바뀐 데이터가 Standby 로 그대로 복사돼요.",
-          "MySQL 복제(반동기). Active 는 Standby 가 받았다는 답을 기다려 커밋을 끝내요.",
+          "MySQL 복제(반동기). Standby 가 받았다는 답을 기다려 커밋해요. 답이 늦으면 비동기로 바뀌어요.",
           "Active 가 멈춰도 Standby 에 같은 데이터가 있어야 이어받을 수 있어요.",
           "같은 구역 안, 두 DB 사이 3306 만 서로 열어요.",
         ),
@@ -478,18 +478,22 @@ export const SHOP_ONPREM: GuideVariant = {
         assume("external", "PG사 결제(카드 승인 API)"),
         group("ext", "external_service", "외부 결제사"),
         node("pg", "external_pg", "PG사", "ext", "결제 승인", { integration: "REST API(HTTPS), 결제창 연동" }),
-        node("proxy", "generic", "아웃바운드 프록시", "dmz", "포워드 프록시", server("shop-proxy01", "10.10.10.21", "Squid 6", "4 Core", "8GB", "100GB")),
+        group("proxy-ha", "redundancy_group", "프록시 이중화", "dmz"),
+        node("proxy-1", "generic", "아웃바운드 프록시 #1", "proxy-ha", "포워드 프록시", server("shop-proxy01", "10.10.10.21", "Squid 6", "4 Core", "8GB", "100GB")),
+        node("proxy-2", "generic", "아웃바운드 프록시 #2", "proxy-ha", "포워드 프록시", server("shop-proxy02", "10.10.10.22", "Squid 6", "4 Core", "8GB", "100GB")),
         edge("user", "pg", "request", "결제창 HTTPS"),
         edge("mobile", "pg", "request", "결제창 HTTPS"),
         edge("was-1", "fw-int", "request", "프록시 3128"),
         edge("was-2", "fw-int", "request", "프록시 3128"),
-        edge("fw-int", "proxy", "request", "프록시 3128"),
-        edge("proxy", "fw-ext", "request", "HTTPS 443"),
+        edge("fw-int", "proxy-1", "request", "프록시 3128"),
+        edge("fw-int", "proxy-2", "request", "프록시 3128"),
+        edge("proxy-1", "fw-ext", "request", "HTTPS 443"),
+        edge("proxy-2", "fw-ext", "request", "HTTPS 443"),
         edge("fw-ext", "pg", "request", "HTTPS 443"),
         update("fw-ext", { rules: FW_EXT_RULES_8 }),
         update("fw-int", { port: "8080, 3128", rules: FW_INT_RULES_8 }),
       ],
-      say: "PG사 결제를 붙였어요. 카드 정보는 고객이 PG사 결제창에 직접 넣고, 승인은 WAS 가 요청해요. 내부 구역의 WAS 는 인터넷에 바로 못 나가서 DMZ 의 프록시를 거쳐 PG사로 나가요.",
+      say: "PG사 결제를 붙였어요. 카드 정보는 고객이 PG사 결제창에 직접 넣고, 승인은 WAS 가 요청해요. 내부 구역의 WAS 는 인터넷에 바로 못 나가서 DMZ 의 프록시 두 대(VIP)를 거쳐 PG사로 나가요.",
       notes: [
         { kind: "link", text: "승인 요청은 WAS → 내부 방화벽 → 프록시 → 외부 방화벽 → PG사로 나가요. 두 방화벽에 출발지·목적지·포트를 적어 오픈을 요청해요." },
         { kind: "link", text: "PG사의 결제 결과 통보는 고객 요청과 같은 입구로 들어와요. 서버에서 PG사 IP 나 서명을 확인해 진짜 통보만 받아요." },
@@ -506,9 +510,18 @@ export const SHOP_ONPREM: GuideVariant = {
           "고객의 카드 결제를 받아 카드사 승인을 대신 처리하는 결제대행사예요. 쇼핑몰은 카드 번호를 받지 않고, 결제창 인증 결과로 승인만 요청해요.",
           ["결제창 방식으로 카드 정보를 PG사가 직접 받는다", "쇼핑몰 서버에 카드 정보가 지나가지 않아 보안 부담이 준다", "쇼핑몰 화면에서 카드 정보를 받아 넘긴다", "결제 화면 흐름을 PG사 방식에 맞춰야 한다"],
         ),
-        [N("proxy")]: nodeText(
-          "내부 서버가 인터넷에 나갈 때 대신 나가 주는 길목이에요. 허용한 목적지(PG사 승인 주소)로만 내보내고 나간 기록을 남겨요. 실제로는 두 대로 이중화해요.",
-          ["내부 서버는 프록시를 거쳐서만 밖으로 나간다", "나가는 목적지를 한곳에서 통제하고 기록할 수 있다", "두 방화벽에 WAS → PG사를 바로 연다", "프록시가 멈추면 결제 승인도 멈춰 이중화가 필요하다"],
+        [G("proxy-ha")]: groupText(
+          "아웃바운드 프록시 두 대를 Active-Standby 로 묶은 영역이에요. VIP 10.10.10.20 을 Active 가 맡고, 멈추면 Standby 가 넘겨받아요.",
+          "WAS 의 승인 요청이 내부 방화벽을 거쳐 VIP 3128 로 들어오고, 외부 방화벽을 거쳐 PG사 443 으로 나가요.",
+          ["프록시도 두 대로 이중화한다", "결제 승인이 지나는 길이라 한 대가 멈추면 결제도 멈춘다", "프록시 한 대만 둔다", "두 대의 허용 목적지 설정을 늘 똑같이 맞춰야 한다"],
+        ),
+        [N("proxy-1")]: nodeText(
+          "내부 서버가 인터넷에 나갈 때 대신 나가 주는 Active 프록시예요. 허용한 목적지(PG사 승인 주소)로만 내보내고 나간 기록을 남겨요.",
+          ["내부 서버는 프록시를 거쳐서만 밖으로 나간다", "나가는 목적지를 한곳에서 통제하고 기록할 수 있다", "두 방화벽에 WAS → PG사를 바로 연다", "프록시를 따로 운영하고 목적지 목록을 관리해야 한다"],
+        ),
+        [N("proxy-2")]: nodeText(
+          "프록시 #1 과 같은 설정의 Standby 예요. 평소에는 기다리다가 Active 가 멈추면 VIP 를 넘겨받아 결제 승인 요청을 이어서 내보내요.",
+          ["Standby 도 같은 허용 목록으로 둔다", "넘겨받는 순간 같은 목적지로만 내보내야 한다", "장애가 나면 방화벽을 열어 WAS 가 바로 나가게 한다", "쓰지 않는 서버도 늘 같은 설정으로 맞춰야 한다"],
         ),
         [E("user", "pg")]: edgeText(
           "고객이 PG사 결제창에서 카드 정보를 넣고 인증해요.",
@@ -526,25 +539,37 @@ export const SHOP_ONPREM: GuideVariant = {
           "WAS #1 이 PG사 승인 요청을 프록시로 보내요.",
           "HTTP 프록시(TCP 3128). CONNECT 로 PG사까지 TLS 터널을 열어요.",
           "내부 구역 서버는 인터넷에 바로 나갈 수 없어 프록시를 거쳐야 해요.",
-          "내부 방화벽: 10.10.20.11 → 프록시 10.10.10.21:3128 허용.",
+          "내부 방화벽: 10.10.20.11 → 프록시 VIP 10.10.10.20:3128 허용.",
         ),
         [E("was-2", "fw-int")]: edgeText(
           "WAS #2 가 PG사 승인 요청을 프록시로 보내요.",
           "HTTP 프록시(TCP 3128). CONNECT 로 PG사까지 TLS 터널을 열어요.",
           "어느 WAS 가 결제를 받든 같은 길로 나가요.",
-          "내부 방화벽: 10.10.20.12 → 프록시 10.10.10.21:3128 허용.",
+          "내부 방화벽: 10.10.20.12 → 프록시 VIP 10.10.10.20:3128 허용.",
         ),
-        [E("fw-int", "proxy")]: edgeText(
-          "내부 방화벽을 지난 승인 요청이 DMZ 의 프록시에 닿아요.",
-          "HTTP 프록시(TCP 3128).",
+        [E("fw-int", "proxy-1")]: edgeText(
+          "내부 방화벽을 지난 승인 요청이 Active 프록시에 닿아요.",
+          "HTTP 프록시(TCP 3128). 프록시 VIP 10.10.10.20 으로 와요.",
           "나가는 통신을 프록시 한곳으로 모아 통제해요.",
-          "내부 방화벽: WAS 두 대 → 10.10.10.21:3128 만 허용.",
+          "내부 방화벽: WAS 두 대 → 10.10.10.20:3128 만 허용.",
         ),
-        [E("proxy", "fw-ext")]: edgeText(
+        [E("fw-int", "proxy-2")]: edgeText(
+          "Active 가 멈춰 VIP 가 넘어오면 승인 요청이 Standby 프록시로 와요.",
+          "HTTP 프록시(TCP 3128). 같은 VIP 로 와요.",
+          "프록시 한 대가 멈춰도 결제 승인이 멈추지 않게 해요.",
+          "Active 와 같은 VIP 규칙을 써서 따로 열 것이 없어요.",
+        ),
+        [E("proxy-1", "fw-ext")]: edgeText(
           "프록시가 PG사 승인 API 로 요청을 내보내요.",
           "HTTPS(TCP 443). WAS 가 연 TLS 터널을 프록시가 이어 주고, 외부 방화벽이 출발 주소를 공인 IP 로 바꿔요.",
           "인터넷으로 나가는 출구는 외부 방화벽 하나뿐이에요.",
           "외부 방화벽: 10.10.10.21 → PG사 승인 서버 IP 443 허용.",
+        ),
+        [E("proxy-2", "fw-ext")]: edgeText(
+          "Standby 가 Active 가 되었을 때 PG사로 내보내는 길이에요.",
+          "HTTPS(TCP 443). 프록시 #1 과 같은 방식이에요.",
+          "넘겨받은 뒤에도 같은 출구로 나가야 해요.",
+          "외부 방화벽: 10.10.10.22 → PG사 승인 서버 IP 443 허용.",
         ),
         [E("fw-ext", "pg")]: edgeText(
           "승인 요청이 인터넷을 지나 PG사에 닿고, 승인 결과가 돌아와요.",
@@ -577,7 +602,7 @@ export const SHOP_ONPREM: GuideVariant = {
       ],
       say: "주문 대기열과 주문 처리기 두 대를 넣었어요. 결제 승인까지는 WAS 가 바로 하고, 배송 요청·알림·포인트 적립처럼 조금 늦어도 되는 일은 대기열에 넣어 처리기가 차례로 꺼내 처리해요.",
       notes: [
-        { kind: "flow", text: "세일 때 주문이 한꺼번에 와도 대기열이 받아 두고, 처리기는 감당할 만큼씩 꺼내요. 뒤쪽 일이 DB 에 한꺼번에 몰리지 않아요." },
+        { kind: "flow", text: "결제 승인은 바로 하고, 배송·알림·적립 같은 후속 일만 대기열에 쌓여요. 처리기가 감당할 만큼씩 꺼내 DB 쓰기가 한꺼번에 몰리지 않아요." },
         { kind: "caution", text: "대기열은 같은 메시지를 두 번 줄 수 있어요. 처리기는 주문 번호로 이미 처리했는지 보고 건너뛰어야 해요." },
         { kind: "caution", text: "처리기 여러 대가 나눠 꺼내면 처리 순서가 섞일 수 있어요. 같은 주문의 일이 순서에 기대지 않게 만들어요." },
       ],
@@ -826,8 +851,8 @@ export const SHOP_ONPREM: GuideVariant = {
           ["web-2", "fw-int", "WAS 호출", "WEB 이 내부 방화벽을 거쳐 WAS 를 부른다."],
           ["fw-int", "was-2", "통과", "허용된 8080 요청만 WAS 로 넘긴다."],
           ["was-2", "fw-int", "밖으로", "WAS 가 PG사 승인 API 를 부르러 프록시로 간다."],
-          ["fw-int", "proxy", "통과", "허용된 3128 요청만 프록시로 넘긴다."],
-          ["proxy", "fw-ext", "출구", "프록시가 외부 방화벽을 거쳐 인터넷으로 나간다."],
+          ["fw-int", "proxy-1", "통과", "허용된 3128 요청만 프록시로 넘긴다."],
+          ["proxy-1", "fw-ext", "출구", "프록시가 외부 방화벽을 거쳐 인터넷으로 나간다."],
           ["fw-ext", "pg", "승인", "PG사가 카드사 승인을 받아 결과를 돌려준다."],
           ["was-2", "db-1", "주문 저장", "WAS 가 결제된 주문을 DB 에 저장한다."],
           ["was-2", "mq", "접수 메시지", "배송 요청·알림 같은 후속 일을 대기열에 넣는다."],

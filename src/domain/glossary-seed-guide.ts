@@ -20,9 +20,9 @@ export const GLOSSARY_SEED_GUIDE: GlossarySeedEntry[] = [
     fullName: "다중 가용 영역 배포(Multi-AZ Deployment)",
     category: "클라우드 / 고가용성",
     definition:
-      "Multi-AZ는 DB나 캐시의 대기 복제본을 같은 리전의 다른 가용 영역(AZ)에 두고 장애 때 자동으로 넘기는 클라우드 배포 방식입니다.",
+      "Multi-AZ는 DB나 캐시의 복제본을 같은 리전의 다른 가용 영역(AZ)에 두고 장애 때 그 복제본으로 자동으로 넘기는 클라우드 배포 방식입니다.",
     why: "가용 영역 하나의 전원·네트워크 장애가 나도 데이터를 계속 쓸 수 있습니다.",
-    compare: "읽기 전용 복제본은 조회를 나누려고 두고, Multi-AZ의 대기 복제본은 장애에 대비해 둡니다.",
+    compare: "RDS Multi-AZ 인스턴스의 대기 복제본은 조회를 받지 않고 장애에만 대비하며, 조회를 나누려면 읽기 전용 복제본을 따로 둡니다.",
     aliases: ["multiazdeployment", "다중az", "멀티az", "다중가용영역"],
   },
   {

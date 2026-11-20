@@ -1,6 +1,7 @@
 // 대형 쇼핑몰 — 클라우드(AWS 서울 리전). 바탕은 samples/aws-shop.ts.
 // 가상 값: VPC 10.0.0.0/16. 서브넷은 AZ 마다 하나씩이다(공개 10.0.0.0/24·10.0.1.0/24, 앱 10.0.10.0/24·10.0.11.0/24, 데이터 10.0.20.0/24·10.0.21.0/24).
-// 빈 영역이 남지 않게 서브넷은 그 안에 처음 무언가를 놓는 단계에서 만든다(1단계는 리전과 입구, 2단계에 VPC·공개 서브넷).
+// 빈 영역이 남지 않게 영역은 그 안에 처음 무언가를 놓는 단계에서 만든다(1단계는 리전 밖의 입구, 2단계에 리전·VPC·공개 서브넷).
+// WAF 는 CloudFront 에 붙인다(전 세계 범위). 그림은 고객 → WAF → CloudFront 로, 캐시에서 나가는 요청까지 검사함을 보인다.
 import { assume, edge, flow, group, managed, node } from "../samples/dsl";
 
 import { countConflicts, E, edgeText, G, groupText, N, nodeText } from "./authoring";
@@ -19,7 +20,7 @@ const ASG_DEF = {
 export const SHOP_CLOUD: GuideVariant = {
   environment: "클라우드(AWS)",
   outro:
-    "서울 리전의 VPC 를 공개·앱·데이터 서브넷으로 나누고, 서버는 두 AZ 의 Auto Scaling 그룹으로, DB·캐시는 Multi-AZ 로 이중화한 쇼핑몰을 만들었어요. 결제 승인은 NAT 를 거쳐 PG사로 나가고, 세일 때는 CloudFront·ElastiCache·SQS 가 몰린 요청을 나눠 받아요.",
+    "서울 리전의 VPC 를 공개·앱·데이터 서브넷으로 나누고, 서버는 두 AZ 의 Auto Scaling 그룹으로, DB·캐시는 Multi-AZ 로 이중화한 쇼핑몰을 만들었어요. 결제 승인은 NAT 를 거쳐 PG사로 나가요. 세일 때는 CloudFront·ElastiCache 가 몰리는 조회를 받고, SQS 가 배송·알림·적립 같은 후속 일을 나눠 받아요.",
   otherEnv: [
     { from: "ALB", to: "L4 두 대(VIP)" },
     { from: "EC2 Auto Scaling 그룹(두 AZ)", to: "WEB·WAS 서버 두 대" },
@@ -28,7 +29,7 @@ export const SHOP_CLOUD: GuideVariant = {
     { from: "S3", to: "NAS" },
     { from: "WAF·보안 그룹", to: "외부 방화벽" },
     { from: "SQS", to: "사내 큐(RabbitMQ)" },
-    { from: "NAT 게이트웨이", to: "아웃바운드 프록시" },
+    { from: "NAT 게이트웨이", to: "아웃바운드 프록시(목적지 거르기·기록 포함)" },
     { from: "Client VPN", to: "사내 전용 회선(운영자)" },
     { from: "CloudWatch", to: "Zabbix·ELK" },
   ],
@@ -45,28 +46,22 @@ export const SHOP_CLOUD: GuideVariant = {
       ],
       commands: [
         assume("scale", "회원 300만 명, 세일 때 평소의 10배 접속"),
-        group("region", "cloud_region", "AWS 서울 리전"),
         node("user", "client_web", "고객 브라우저", null),
         node("mobile", "client_mobile", "고객 앱", null),
         node("cdn", "cdn", "CloudFront", null, "CDN", { ...managed(), sw: "Amazon CloudFront" }),
-        node("waf", "waf", "AWS WAF", "region", "웹 방화벽", managed()),
-        edge("user", "cdn", "request", "HTTPS 443"),
-        edge("mobile", "cdn", "request", "HTTPS 443"),
-        edge("cdn", "waf", "request", "HTTPS 443"),
+        node("waf", "waf", "AWS WAF", null, "CloudFront 에 붙임", managed()),
+        edge("user", "waf", "request", "HTTPS 443"),
+        edge("mobile", "waf", "request", "HTTPS 443"),
+        edge("waf", "cdn", "request", "엣지 안 검사"),
       ],
-      say: "고객이 먼저 닿는 CloudFront 와 AWS WAF 를 놓았어요. CloudFront 는 고객과 가까운 엣지에서 요청을 받고, 캐시에 없는 요청만 서울 리전으로 보내요. WAF 는 그 요청에서 공격 패턴을 걸러요.",
+      say: "고객이 먼저 닿는 AWS WAF 와 CloudFront 를 놓았어요. WAF 는 CloudFront 에 붙어 엣지에서 모든 요청을 검사하고, CloudFront 는 캐시에 있는 것은 바로 돌려주고 없는 요청만 서울 리전으로 보내요.",
       notes: [
-        { kind: "net", text: "CloudFront 는 특정 리전이 아니라 AWS 의 전 세계 엣지에서 돌아요. 그래서 리전 밖에 그렸어요." },
-        { kind: "flow", text: "고객 → CloudFront → WAF → ALB 순서로 들어와요. 앱도 브라우저와 같은 입구를 써요." },
-        { kind: "caution", text: "이 가이드는 WAF 를 ALB 에 붙여요. CloudFront 에 붙이면 캐시에서 바로 나가는 요청까지 검사할 수 있어요." },
+        { kind: "net", text: "CloudFront 와 거기 붙은 WAF 는 특정 리전이 아니라 AWS 의 전 세계 엣지에서 돌아요. 그래서 리전 밖에 그렸어요." },
+        { kind: "flow", text: "고객 → WAF 검사 → CloudFront(캐시) 순서예요. 캐시에서 바로 나가는 요청도 WAF 검사를 먼저 받아요. 앱도 같은 입구를 써요." },
+        { kind: "caution", text: "WAF 는 따로 지나는 장비가 아니라 CloudFront 에 붙는 기능이라 그림에서만 나눠 그렸어요. 공격은 리전에 닿기 전에 엣지에서 막혀요." },
       ],
       miss: "이번 단계는 고객이 들어오는 입구예요. 'CloudFront 와 WAF 를 거쳐 들어오게 해 줘'처럼 말해 보세요.",
       explains: {
-        [G("region")]: groupText(
-          "쇼핑몰 서버와 데이터를 두는 AWS 서울 리전(ap-northeast-2)이에요. 리전 안에는 서로 떨어진 데이터센터 묶음(AZ)이 여러 곳 있어요.",
-          "CloudFront 를 거친 요청이 들어오고, NAT 게이트웨이를 거쳐 PG사로 나가요. 운영자는 Client VPN 으로 들어와요.",
-          ["고객이 국내라 서울 리전에 둔다", "고객과 가까워 응답이 빠르고, 국내 저장 요구에도 맞추기 쉽다", "도쿄 같은 다른 리전에 둔다", "서울 리전 전체가 멈추는 일까지는 대비하지 않는다"],
-        ),
         [N("user")]: nodeText(
           "PC 브라우저로 상품을 보고 주문하는 고객이에요. 쇼핑몰 주소로 접속하면 가까운 CloudFront 엣지로 연결돼요.",
           ["고객 요청은 HTTPS 로만 받는다", "로그인·주문 정보가 오가므로 암호화가 필요하다", "HTTP 도 그대로 받는다", "인증서를 발급해 CloudFront 에 붙여야 한다"],
@@ -76,30 +71,30 @@ export const SHOP_CLOUD: GuideVariant = {
           ["앱 전용 입구를 따로 두지 않고 같은 입구를 쓴다", "WAF 규칙과 서버를 한 벌로 관리할 수 있다", "앱 전용 ALB·API 서버를 따로 둔다", "앱과 웹의 부하가 같은 서버에 섞인다"],
         ),
         [N("cdn")]: nodeText(
-          "고객과 가까운 엣지에서 요청을 받는 CDN 이에요. 상품 이미지는 캐시해 바로 돌려주고, 주문 같은 API 요청은 캐시하지 않고 서울의 ALB 로 넘겨요.",
+          "WAF 를 통과한 요청을 고객과 가까운 엣지에서 처리하는 CDN 이에요. 상품 이미지는 캐시해 바로 돌려주고, 주문 같은 API 요청은 캐시하지 않고 서울의 ALB 로 넘겨요.",
           ["모든 고객 요청을 CloudFront 로 먼저 받는다", "이미지 부하를 엣지가 받아 세일 때 서버로 오는 요청이 준다", "고객이 ALB 로 바로 접속한다", "캐시 규칙을 잘못 두면 바뀐 가격이 늦게 보일 수 있다"],
         ),
         [N("waf")]: nodeText(
-          "ALB 에 붙어 들어오는 요청을 검사하는 웹 방화벽이에요. 따로 지나는 장비는 아니에요. SQL 인젝션 같은 공격과 요청을 너무 많이 보내는 IP 를 막아요.",
-          ["WAF 를 ALB 에 붙이고 관리형 규칙을 쓴다", "AWS 가 관리하는 공격 규칙과 속도 제한으로 바로 막을 수 있다", "CloudFront 에 붙여 엣지에서 막는다", "요청 수만큼 요금이 들고, 정상 요청을 막지 않게 규칙을 다듬어야 한다"],
+          "CloudFront 에 붙어 엣지에서 모든 요청을 검사하는 웹 방화벽이에요. 캐시에서 나가는 요청도 검사해요. SQL 인젝션 같은 공격과 요청을 너무 많이 보내는 IP 를 막아요.",
+          ["WAF 를 CloudFront 에 붙이고 관리형 규칙을 쓴다", "공격을 서울 리전에 닿기 전에 엣지에서, 캐시 요청까지 막는다", "WAF 를 ALB 에 붙여 리전에서 검사한다", "요청 수만큼 요금이 들고, 정상 요청을 막지 않게 규칙을 다듬어야 한다"],
         ),
-        [E("user", "cdn")]: edgeText(
-          "고객 브라우저의 페이지·이미지·API 요청이 CloudFront 로 가요.",
-          "HTTPS(TCP 443). 고객과 가까운 엣지가 받아요.",
-          "모든 고객 요청을 한 입구로 받아 캐시와 보호를 함께 하려고요.",
+        [E("user", "waf")]: edgeText(
+          "고객 브라우저의 페이지·이미지·API 요청이 엣지에 닿아 WAF 검사를 먼저 받아요.",
+          "HTTPS(TCP 443). 가까운 CloudFront 엣지가 받고, 거기 붙은 WAF 가 먼저 검사해요.",
+          "공격을 서울 리전에 닿기 전에 엣지에서 막으려고요.",
           "CloudFront 는 HTTPS 만 받게 하고, HTTP 로 오면 HTTPS 로 돌려보내요.",
         ),
-        [E("mobile", "cdn")]: edgeText(
-          "고객 앱의 API 요청이 CloudFront 로 가요.",
+        [E("mobile", "waf")]: edgeText(
+          "고객 앱의 API 요청이 엣지에 닿아 WAF 검사를 먼저 받아요.",
           "HTTPS(TCP 443). 브라우저와 같은 주소를 써요.",
           "앱도 같은 입구를 써 보안 설정을 한 벌로 관리해요.",
           "CloudFront 는 HTTPS 만 받아요.",
         ),
-        [E("cdn", "waf")]: edgeText(
-          "캐시에 없는 요청(주로 API)이 서울 리전으로 가요. ALB 에 붙은 WAF 가 먼저 검사해요.",
-          "HTTPS(TCP 443). CloudFront 가 원본(ALB)에 새로 연결해요.",
-          "주문·로그인처럼 서버가 답해야 하는 요청을 원본으로 보내는 길이에요.",
-          "ALB 보안 그룹은 CloudFront 출발 주소 목록(관리형 접두사 목록)만 허용해요.",
+        [E("waf", "cdn")]: edgeText(
+          "검사를 통과한 요청을 CloudFront 가 처리해요. 캐시에 있으면 바로 돌려줘요.",
+          "같은 엣지 안의 처리라 네트워크를 따로 지나지 않아요.",
+          "막을 요청은 캐시에도 닿지 않게, 검사를 캐시보다 앞에 둬요.",
+          "WAF 규칙(관리형 공격 규칙·IP 당 요청 수 제한)이 이 자리에서 적용돼요.",
         ),
       },
     },
@@ -108,22 +103,28 @@ export const SHOP_CLOUD: GuideVariant = {
     {
       id: "alb",
       goal: "VPC·공개 서브넷과 ALB",
-      example: "VPC 를 만들고 WAF 뒤에 ALB 를 둬 줘",
+      example: "VPC 를 만들고 CloudFront 뒤에 ALB 를 둬 줘",
       keywords: [["alb", "로드밸런서", "로드 밸런서", "load balancer", "elb", "vpc", "공개 서브넷", "퍼블릭 서브넷"]],
       commands: [
+        group("region", "cloud_region", "AWS 서울 리전"),
         group("vpc", "vpc", "쇼핑몰 VPC", "region"),
         group("pub", "subnet_public", "공개 서브넷", "vpc"),
         node("alb", "lb_l7", "ALB", "pub", "L7 로드밸런서", { ...managed(), sw: "AWS ALB", port: "443", rules: "443 리스너 → API 대상 그룹(8080), 헬스 체크 /health" }),
-        edge("waf", "alb", "request", "HTTPS 443"),
+        edge("cdn", "alb", "request", "HTTPS 443"),
       ],
-      say: "서울 리전에 쇼핑몰 VPC 를 만들고, 인터넷과 닿는 공개 서브넷에 ALB 를 뒀어요. WAF 검사를 통과한 요청을 ALB 가 받아 뒤의 API 서버들에 나눠요. ALB 는 AWS 가 여러 AZ 에 이중화해 운영해요.",
+      say: "AWS 서울 리전에 쇼핑몰 VPC 를 만들고, 인터넷과 닿는 공개 서브넷에 ALB 를 뒀어요. CloudFront 가 캐시에 없는 요청을 보내면 ALB 가 뒤의 API 서버들에 나눠요. ALB 는 AWS 가 여러 AZ 에 이중화해요.",
       notes: [
         { kind: "net", text: "공개 서브넷은 인터넷 게이트웨이로 가는 경로가 있는 서브넷이에요. 인터넷과 맞닿는 ALB·NAT 만 여기 둬요." },
-        { kind: "caution", text: "서브넷은 AZ 하나에 속해요. 그림의 공개 서브넷은 실제로 2a·2c 에 하나씩, 두 개예요." },
-        { kind: "flow", text: "온프레미스의 L4 자리예요. 다만 ALB 는 HTTPS 를 풀고 주소(경로)를 보고 나누는 L7 이에요." },
+        { kind: "caution", text: "ALB 는 인터넷에 열려 있어요. CloudFront 를 건너뛰고 오는 요청을 막게, 보안 그룹은 CloudFront 주소 목록만 허용해요." },
+        { kind: "flow", text: "온프레미스의 L4 자리예요. ALB 는 HTTPS 를 풀어 경로를 보고 나누는 L7 이에요. 서브넷은 실제로 AZ 마다 하나씩(2a·2c) 둬요." },
       ],
-      miss: "이번 단계는 VPC 와 그 안의 ALB 예요. 'VPC 를 만들고 WAF 뒤에 ALB 를 둬 줘'처럼 말해 보세요.",
+      miss: "이번 단계는 VPC 와 그 안의 ALB 예요. 'VPC 를 만들고 CloudFront 뒤에 ALB 를 둬 줘'처럼 말해 보세요.",
       explains: {
+        [G("region")]: groupText(
+          "쇼핑몰 서버와 데이터를 두는 AWS 서울 리전(ap-northeast-2)이에요. 리전 안에는 서로 떨어진 데이터센터 묶음(AZ)이 여러 곳 있어요.",
+          "CloudFront 를 거친 요청이 ALB 로 들어오고, NAT 게이트웨이를 거쳐 PG사로 나가요. 운영자는 Client VPN 으로 들어와요.",
+          ["고객이 국내라 서울 리전에 둔다", "고객과 가까워 응답이 빠르고, 국내 저장 요구에도 맞추기 쉽다", "도쿄 같은 다른 리전에 둔다", "서울 리전 전체가 멈추는 일까지는 대비하지 않는다"],
+        ),
         [G("vpc")]: groupText(
           "쇼핑몰만 쓰는 사설 네트워크(10.0.0.0/16)예요. 이 안을 공개·앱·데이터 서브넷으로 나눠 자원을 둬요.",
           "인터넷 게이트웨이를 통해 ALB 가 요청을 받고 NAT 가 밖으로 나가요. 운영자는 Client VPN 으로 들어와요.",
@@ -135,14 +136,14 @@ export const SHOP_CLOUD: GuideVariant = {
           ["서버는 공개 서브넷에 두지 않는다", "서버에 공인 IP 가 없어 인터넷에서 바로 닿지 않는다", "서버도 공개 서브넷에 두고 보안 그룹으로만 막는다", "서버가 밖으로 나가려면 NAT 게이트웨이를 거쳐야 한다"],
         ),
         [N("alb")]: nodeText(
-          "WAF 를 거친 요청을 받아 API 서버들에 나눠 주는 L7 로드밸런서예요. HTTPS 를 풀어 경로를 보고, 헬스 체크로 멈춘 서버를 대상에서 빼요.",
+          "CloudFront 가 넘긴 요청을 받아 API 서버들에 나눠 주는 L7 로드밸런서예요. HTTPS 를 풀어 경로를 보고, 헬스 체크로 멈춘 서버를 대상에서 빼요.",
           ["관리형 ALB 로 요청을 나눈다", "AWS 가 여러 AZ 에 이중화하고 늘려 줘 장비 이중화가 필요 없다", "EC2 에 Nginx·HAProxy 를 직접 둔다", "시간과 처리량만큼 요금이 들고 세부 설정은 AWS 가 정한 만큼만 된다"],
         ),
-        [E("waf", "alb")]: edgeText(
-          "WAF 검사를 통과한 요청이 ALB 로 넘어가요.",
-          "HTTPS(TCP 443). ALB 가 인증서로 암호를 풀어요. WAF 는 ALB 에 붙어 같은 자리에서 검사해요.",
-          "통과한 요청만 서버 쪽으로 나누기 위해서예요.",
-          "ALB 보안 그룹: CloudFront 접두사 목록 → 443 허용.",
+        [E("cdn", "alb")]: edgeText(
+          "캐시에 없는 요청(주로 API)을 CloudFront 가 서울의 ALB 로 보내요.",
+          "HTTPS(TCP 443). CloudFront 가 원본(ALB)에 새로 연결하고, ALB 가 인증서로 암호를 풀어요.",
+          "주문·로그인처럼 서버가 답해야 하는 요청을 원본으로 보내는 길이에요.",
+          "ALB 보안 그룹: CloudFront 관리형 접두사 목록 → 443 만 허용.",
         ),
       },
     },
@@ -307,7 +308,7 @@ export const SHOP_CLOUD: GuideVariant = {
       say: "상품 이미지를 S3 에 두고 CloudFront 가 꺼내 가게 했어요. 한 번 꺼낸 이미지는 엣지에 캐시돼, 세일 때 이미지 요청이 몰려도 서버와 S3 까지 오지 않아요.",
       notes: [
         { kind: "net", text: "S3 는 VPC 안이 아니라 리전에 있는 서비스예요. 그래서 VPC 밖, 리전 안에 그렸어요." },
-        { kind: "flow", text: "고객 → CloudFront(캐시) → 캐시에 없을 때만 S3 로 가요. 이미지는 API 서버를 거치지 않아요." },
+        { kind: "flow", text: "고객 → WAF·CloudFront(캐시) → 캐시에 없을 때만 S3 로 가요. 이미지는 API 서버를 거치지 않아요." },
         { kind: "caution", text: "버킷은 공개하지 않아요. CloudFront 만 읽게 OAC(원본 접근 제어)로 막아 둬요." },
       ],
       miss: "이번 단계는 상품 이미지 저장이에요. '상품 이미지는 S3 에 두고 CloudFront 로 내보내 줘'처럼 말해 보세요.",
@@ -357,7 +358,7 @@ export const SHOP_CLOUD: GuideVariant = {
         ),
         [N("nat")]: nodeText(
           "프라이빗 서브넷 서버가 인터넷에 나갈 때 출발 주소를 자기 공인 IP(탄력적 IP)로 바꿔 내보내요. 밖에서 먼저 거는 연결은 받지 않아요. 실제로는 AZ 마다 하나씩 둬요.",
-          ["서버는 NAT 게이트웨이로만 밖에 나간다", "서버에 공인 IP 를 주지 않고도 PG사를 부를 수 있다", "API 서버를 공개 서브넷에 두고 공인 IP 를 준다", "시간·처리량 요금이 들고, AZ 마다 두면 그만큼 더 든다"],
+          ["서버는 NAT 게이트웨이로만 밖에 나간다", "서버에 공인 IP 를 주지 않고도 PG사를 부를 수 있다", "API 서버를 공개 서브넷에 두고 공인 IP 를 준다", "목적지를 거르지 않아 필요하면 Network Firewall 을 더하고, 요금이 든다"],
         ),
         [N("pg")]: nodeText(
           "고객의 카드 결제를 받아 카드사 승인을 대신 처리하는 결제대행사예요. 쇼핑몰은 카드 번호를 받지 않고, 결제창 인증 결과로 승인만 요청해요.",
@@ -416,7 +417,7 @@ export const SHOP_CLOUD: GuideVariant = {
       ],
       say: "SQS 주문 대기열과 주문 처리기 두 대를 넣었어요. 결제 승인까지는 API 가 바로 하고, 배송 요청·알림·포인트 적립처럼 조금 늦어도 되는 일은 SQS 에 넣어 처리기가 꺼내 처리해요.",
       notes: [
-        { kind: "flow", text: "세일 때 주문이 몰려도 SQS 가 받아 두고, 처리기는 감당할 만큼씩 꺼내요. 쌓인 메시지가 늘면 처리기를 늘려요." },
+        { kind: "flow", text: "결제 승인은 바로 하고, 배송·알림·적립 같은 후속 일만 SQS 에 쌓여요. 처리기가 감당할 만큼씩 꺼내고, 쌓이면 처리기를 늘려요." },
         { kind: "caution", text: "표준 대기열은 같은 메시지를 두 번 줄 수 있어요. 처리기는 주문 번호로 이미 처리했는지 보고 건너뛰어야 해요." },
         { kind: "caution", text: "표준 대기열은 넣은 순서대로 꺼내 주지 않을 수 있어요. 순서가 꼭 필요하면 FIFO 대기열을 쓰고 처리량 한도를 확인해요." },
       ],
@@ -632,19 +633,19 @@ export const SHOP_CLOUD: GuideVariant = {
       keywords: [["흐름", "flow", "경로", "과정", "시나리오"]],
       commands: [
         flow("product-view", "상품 보기", "user", "고객이 브라우저로 상품 상세를 연다.", "상품 정보와 이미지를 화면에 돌려준다.", [
-          ["user", "cdn", "상품 요청", "고객 브라우저가 CloudFront 로 상품 페이지를 요청한다."],
+          ["user", "waf", "상품 요청", "고객 브라우저의 요청을 엣지의 WAF 가 먼저 검사한다."],
+          ["waf", "cdn", "캐시 확인", "통과한 요청을 CloudFront 가 받아 캐시를 확인한다."],
           ["cdn", "s3", "이미지", "이미지는 엣지 캐시에서 주고, 없으면 S3 에서 가져온다."],
-          ["cdn", "waf", "API 전달", "상품 정보 API 는 캐시하지 않고 서울 리전으로 보낸다."],
-          ["waf", "alb", "검사", "ALB 에 붙은 WAF 가 요청을 검사한다."],
+          ["cdn", "alb", "API 전달", "상품 정보 API 는 캐시하지 않고 서울의 ALB 로 보낸다."],
           ["alb", "api-1", "분배", "ALB 가 API 서버 한 대로 요청을 나눈다."],
           ["api-1", "redis", "캐시 조회", "API 가 ElastiCache 에서 상품 정보를 먼저 찾는다."],
           ["api-1", "rds", "DB 조회", "캐시에 없으면 RDS 에서 읽어 캐시에 채운다."],
         ]),
         flow("checkout", "결제", "user", "고객이 앱에서 주문을 결제한다.", "결제 결과와 주문 번호를 돌려주고, 배송 준비는 SQS 로 넘긴다.", [
           ["mobile", "pg", "카드 인증", "고객 앱이 PG사 결제창을 열어 카드 정보를 넣고 인증한다."],
-          ["mobile", "cdn", "승인 요청", "인증 결과를 가지고 쇼핑몰에 결제 승인을 요청한다."],
-          ["cdn", "waf", "전달", "CloudFront 가 API 요청을 서울 리전으로 보낸다."],
-          ["waf", "alb", "검사", "ALB 에 붙은 WAF 가 요청을 검사한다."],
+          ["mobile", "waf", "승인 요청", "인증 결과로 결제 승인을 요청하고, 엣지의 WAF 가 검사한다."],
+          ["waf", "cdn", "통과", "검사를 통과한 요청을 CloudFront 가 받는다."],
+          ["cdn", "alb", "전달", "CloudFront 가 API 요청을 서울의 ALB 로 보낸다."],
           ["alb", "api-2", "분배", "ALB 가 API 서버 한 대로 요청을 나눈다."],
           ["api-2", "nat", "밖으로", "API 가 NAT 게이트웨이를 거쳐 인터넷으로 나간다."],
           ["nat", "pg", "승인", "PG사가 카드사 승인을 받아 결과를 돌려준다."],
