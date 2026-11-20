@@ -1,10 +1,10 @@
 import { eq } from "drizzle-orm";
 
-import { db } from "@/db/client";
+import { db, type Tx } from "@/db/client";
 import { diagramVersions, diagrams, type GuideMark } from "@/db/schema";
 import { getGuide, guideEnvs } from "@/domain/guides";
 import { stepFlowIds } from "@/domain/guides/apply";
-import { ENV_LABEL, type AuthoredExplains, type Guide, type GuideEnv } from "@/domain/guides/types";
+import { ENV_LABEL, type AuthoredExplains, type Guide, type GuideEnv, type GuideVariant } from "@/domain/guides/types";
 import { guideView, type GuideView } from "@/domain/guides/view";
 import { emptyState } from "@/domain/types";
 import { BUSY_MESSAGE } from "@/server/chat/busy";
@@ -103,6 +103,8 @@ export async function syncGuideAfterRestore(diagramId: string, restoredFrom: num
 
 /**
  * 학습 중에 이력에서 되돌린다: 구성도 잠금 안에서 되돌리기(시스템 메시지 포함)와 단계 맞추기를 함께 한다.
+ * 둘은 한 트랜잭션으로 저장한다: 맞추기가 실패했는데 되돌리기만 남으면 진행 상태가 구성도보다 앞서 다음 차례가 거절된다.
+ * 실패하면 아무것도 바뀌지 않은 채 오류를 던진다. 대본 설명 다시 넣기는 저장 뒤에 한다(실패해도 되돌리기는 마친다).
  * 잠금을 못 잡으면(대화 차례가 도는 중) 아무것도 되돌리지 않고 { ok: false }.
  */
 export async function restoreGuideVersion(
@@ -113,8 +115,11 @@ export async function restoreGuideVersion(
   const locked = await withDiagramLock(
     diagramId,
     async () => {
-      const r = await restoreVersionWithMessage(diagramId, number, opts);
-      return { ...r, guide: await syncGuideLocked(diagramId, number) };
+      const saved = await db.transaction(async (tx) => {
+        const r = await restoreVersionWithMessage(diagramId, number, { ...opts, tx });
+        return { ...r, synced: await syncGuideRun(diagramId, number, tx) };
+      });
+      return { number: saved.number, text: saved.text, guide: saved.synced ? await finishSync(diagramId, saved.synced) : null };
     },
     { waitMs: USER_TURN_LOCK_WAIT_MS },
   );
@@ -125,9 +130,9 @@ export async function restoreGuideVersion(
  * restoredFrom 이 어느 가이드 버전인지 찾는다. 되돌리기로 만든 버전이면 그 원본(restoredFrom)을 따라간다.
  * 가이드가 만든 버전에 닿지 못하면(환경 확정 전 버전 등) null.
  */
-async function resolveMark(diagramId: string, marks: GuideMark[], restoredFrom: number): Promise<GuideMark | null> {
+async function resolveMark(diagramId: string, marks: GuideMark[], restoredFrom: number, tx: Tx): Promise<GuideMark | null> {
   const byVersion = new Map(marks.map((m) => [m.version, m]));
-  const rows = await db
+  const rows = await tx
     .select({ number: diagramVersions.number, restoredFrom: diagramVersions.restoredFrom })
     .from(diagramVersions)
     .where(eq(diagramVersions.diagramId, diagramId));
@@ -144,6 +149,13 @@ async function resolveMark(diagramId: string, marks: GuideMark[], restoredFrom: 
 /** 대본 어느 환경에서든 add_flow 하는 흐름 id 전부. */
 const allScriptFlowIds = (guide: Guide) => new Set(guideEnvs(guide).flatMap((e) => stepFlowIds(guide.variants[e]!, 0)));
 
+/** 트랜잭션 안에서 맞춘 진행 상태. 저장 뒤 finishSync 가 설명을 넣고 GuideView 를 만든다. */
+interface SyncedRun {
+  run: GuideRun;
+  guide: Guide;
+  variant: GuideVariant | undefined;
+}
+
 /**
  * 잠금을 쥔 호출자가 부른다. active 일 때만 진행 상태를 restoredFrom 버전의 기록(marks)으로 맞춘다.
  * - 가이드 버전(되돌리기 원본을 따라가 찾은 것)이면 그 버전의 env·envVersion·stepVersions·step 으로.
@@ -152,12 +164,18 @@ const allScriptFlowIds = (guide: Guide) => new Set(guideEnvs(guide).flatMap((e) 
  * 새 GuideView(학습 중이 아니면 null)를 돌려준다.
  */
 export async function syncGuideLocked(diagramId: string, restoredFrom: number): Promise<GuideView | null> {
-  const run = await getLiveGuideRun(diagramId);
+  const synced = await db.transaction((tx) => syncGuideRun(diagramId, restoredFrom, tx));
+  return synced ? finishSync(diagramId, synced) : null;
+}
+
+/** syncGuideLocked 의 저장 부분(진행 상태·흐름 지우기). 호출자의 트랜잭션 안에서 한다. 학습 중이 아니면 null. */
+async function syncGuideRun(diagramId: string, restoredFrom: number, tx: Tx): Promise<SyncedRun | null> {
+  const run = await getLiveGuideRun(diagramId, tx);
   if (run?.status !== "active") return null;
   const guide = getGuide(run.guideId);
   if (!guide) return null; // getLiveGuideRun 이 이미 quit 로 바꾼다. 타입을 좁히려고 한 번 더 본다.
 
-  const found = await resolveMark(diagramId, run.marks, restoredFrom);
+  const found = await resolveMark(diagramId, run.marks, restoredFrom, tx);
   const mark = found && guide.variants[found.env] ? found : null;
   const variant = mark ? guide.variants[mark.env] : undefined;
   const next: GuideRun = mark
@@ -166,21 +184,23 @@ export async function syncGuideLocked(diagramId: string, restoredFrom: number): 
   // 남길 흐름: 맞춘 환경에서 끝낸 단계가 넣은 것. 나머지 대본 흐름(뒤 단계·다른 환경)은 지운다.
   const keep = new Set(variant ? stepFlowIds({ ...variant, steps: variant.steps.slice(0, next.step) }, 0) : []);
   const dropFlows = [...allScriptFlowIds(guide)].filter((id) => !keep.has(id));
-  await db.transaction(async (tx) => {
-    await saveGuideRun(next, tx);
-    await deleteGuideFlows(diagramId, dropFlows, tx);
-  });
+  await saveGuideRun(next, tx);
+  await deleteGuideFlows(diagramId, dropFlows, tx);
+  return { run: next, guide, variant };
+}
 
-  if (variant && next.step > 0) {
+/** 저장 뒤: 지금 상태(되돌린 상태)의 서명으로 끝낸 단계들의 대본 설명을 다시 넣는다. 실패해도 맞추기는 마친다. */
+async function finishSync(diagramId: string, { run, guide, variant }: SyncedRun): Promise<GuideView> {
+  if (variant && run.step > 0) {
     const state = (await getLatestState(diagramId))?.state ?? emptyState();
-    const explains: AuthoredExplains = Object.assign({}, ...variant.steps.slice(0, next.step).map((s) => s.explains));
+    const explains: AuthoredExplains = Object.assign({}, ...variant.steps.slice(0, run.step).map((s) => s.explains));
     try {
       await saveAuthoredExplanations(diagramId, state, explains);
     } catch (err) {
       console.error("[guide] save explanations failed", err);
     }
   }
-  return guideView(next, guide);
+  return guideView(run, guide);
 }
 
 /** 구성도 화면이 보일 학습 상태. 범위를 넘은 run 은 여기서 quit 로 바뀐다(getLiveGuideRun). 학습이 없거나 대본이 없으면 null. */

@@ -327,7 +327,8 @@ async function lockedTurn(args: TurnArgs, sessionId: string | null, followUp: bo
     const drawText = choiceCmds.length > 0 ? `${clean}\n\n${choicesNote(picked)}` : clean;
     const messages = buildMessages({ intent, text: drawText, state, mentions, history, missing: openMissing, flows, ...network });
     const keepText = !asksStepText(clean);
-    emit({ t: "status", phase: "thinking" });
+    // 학습 차례가 넘긴 질문이면 판정 전에 이미 thinking 을 보냈다(한 번만 보낸다).
+    if (!guideIntent) emit({ t: "status", phase: "thinking" });
 
     const edges = createEdgeCoalescer();
     // 흐름 명령은 받은 그대로 모으고, 저장 직전에 연결 id 를 다시 바꾼다(흐름 명령 뒤에 짝을 알게 될 수 있다).

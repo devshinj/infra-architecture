@@ -87,8 +87,8 @@ export async function listVersions(diagramId: string) {
     .orderBy(desc(diagramVersions.number));
 }
 
-export async function getVersion(diagramId: string, number: number): Promise<DiagramState | null> {
-  const [row] = await db
+export async function getVersion(diagramId: string, number: number, tx?: Tx): Promise<DiagramState | null> {
+  const [row] = await (tx ?? db)
     .select({ state: diagramVersions.state })
     .from(diagramVersions)
     .where(and(eq(diagramVersions.diagramId, diagramId), eq(diagramVersions.number, number)));
@@ -97,8 +97,9 @@ export async function getVersion(diagramId: string, number: number): Promise<Dia
 
 export async function getLatestState(
   diagramId: string,
+  tx?: Tx,
 ): Promise<{ number: number; state: DiagramState } | null> {
-  const [row] = await db
+  const [row] = await (tx ?? db)
     .select({ number: diagramVersions.number, state: diagramVersions.state })
     .from(diagramVersions)
     .where(eq(diagramVersions.diagramId, diagramId))
@@ -107,12 +108,13 @@ export async function getLatestState(
   return row ?? null;
 }
 
-export async function restoreVersion(diagramId: string, number: number): Promise<{ number: number }> {
-  const state = await getVersion(diagramId, number);
+export async function restoreVersion(diagramId: string, number: number, tx?: Tx): Promise<{ number: number }> {
+  const state = await getVersion(diagramId, number, tx);
   if (!state) throw new Error(`버전 ${number} 을(를) 찾을 수 없습니다`);
   const { number: created } = await createVersion(diagramId, state, {
     source: "restore",
     restoredFrom: number,
+    ...(tx ? { tx } : {}),
   });
   return { number: created };
 }
@@ -120,6 +122,8 @@ export async function restoreVersion(diagramId: string, number: number): Promise
 export interface RestoreMessageOpts {
   /** 주어지면 안내 둘째 줄에 구성 정보 카드 숫자의 변화를 붙인다(이력의 되돌리기). knowledge 는 카드와 같은 망 지식. */
   describeChange?: { knowledge?: NetworkKnowledge };
+  /** 주어지면 되돌리기와 안내 메시지를 이 트랜잭션 안에서 남긴다(학습 단계 맞추기와 함께 저장·취소되게). */
+  tx?: Tx;
 }
 
 /** 되돌리기 + 대화에 시스템 메시지를 남긴다. 소유권은 호출자가 확인한다. text 는 남긴 메시지(화면이 바로 띄운다). */
@@ -128,14 +132,15 @@ export async function restoreVersionWithMessage(
   number: number,
   opts: RestoreMessageOpts = {},
 ): Promise<{ number: number; text: string }> {
-  const before = opts.describeChange ? await getLatestState(diagramId) : null;
-  const r = await restoreVersion(diagramId, number);
+  const { tx } = opts;
+  const before = opts.describeChange ? await getLatestState(diagramId, tx) : null;
+  const r = await restoreVersion(diagramId, number, tx);
   let text = `${euro(`v${number}`)} 되돌림 (새 버전 v${r.number})`;
   if (opts.describeChange) {
     const k = opts.describeChange.knowledge;
-    const after = await getVersion(diagramId, r.number);
+    const after = await getVersion(diagramId, r.number, tx);
     if (after) text += `\n${infoChangeText(infoCounts(before?.state ?? emptyState(), k), infoCounts(after, k))}`;
   }
-  await createMessage(diagramId, "system", text);
+  await createMessage(diagramId, "system", text, {}, null, tx);
   return { number: r.number, text };
 }

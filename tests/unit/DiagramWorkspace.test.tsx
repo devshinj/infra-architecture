@@ -54,11 +54,13 @@ vi.mock("@/canvas/Canvas", () => ({
     );
   },
 }));
+// 학습 차례 뒤 저장된 줄로 대화를 바꾸는 고리(useChatTurn.replaceLines).
+const chatExtra = vi.hoisted(() => ({ replaceLines: vi.fn() }));
 vi.mock("@/ui/chat/useChatTurn", () => ({
   useChatTurn: (a: { onCommand: (c: unknown) => void; onDone(): void; onInterrupted(): void; onRelayout?(): void }) => {
     hookState.onCommand = a.onCommand;
     hookState.turn = a;
-    return { lines: hookState.lines, busy: hookState.busy, send: hookState.send, stop: vi.fn(), pushLine: hookState.pushLine };
+    return { lines: hookState.lines, busy: hookState.busy, send: hookState.send, stop: vi.fn(), pushLine: hookState.pushLine, replaceLines: chatExtra.replaceLines };
   },
 }));
 
@@ -444,6 +446,43 @@ test("sample import after an interrupted turn refits the canvas at once", async 
   rerender(<DiagramWorkspace {...props} latest={mk(2, ["x"]) as never} />);
   expect(screen.getByTestId("n")).toHaveTextContent("x");
   expect(screen.getByTestId("fit").textContent).not.toBe(before);
+});
+
+test("an interrupted guide turn reloads the chat lines", () => {
+  // 학습 차례를 멈춰도 서버는 단계를 마칠 수 있다(그렸으면 단계 글·해설 칩이 저장된다). 멈춘 뒤 새로 그린 저장된 줄로 대화를 바꾼다.
+  hookState.busy = false;
+  chatExtra.replaceLines.mockClear();
+  vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+  try {
+    const view = { guideId: "shop", title: "대형 쇼핑몰", env: "onprem" as const, envChoices: ["onprem" as const, "cloud" as const], step: 0, total: 12, status: "active" as const, current: { goal: "입구", example: "방화벽 넣어 줘" } };
+    const L0 = [{ id: "u0", kind: "user" as const, text: "방화벽 넣어 줘" }];
+    const L1 = [...L0, { id: "a1-say-0", kind: "progress" as const, text: "방화벽을 뒀어요.", turn: "a1" }];
+    const L2 = [...L1, { id: "a1-guide", kind: "guide" as const, text: "", turn: "a1", guide: { kind: "step" as const, step: 1 } }];
+    const props = { diagramId: "d", name: "n", latest: mk(1, []) as never, initialPinned: {}, samples: [], guide: view };
+    const { rerender } = render(<DiagramWorkspace {...props} initialChat={L0} />);
+    act(() => hookState.turn!.onInterrupted());
+    rerender(<DiagramWorkspace {...props} initialChat={L1} />);
+    expect(chatExtra.replaceLines).toHaveBeenCalledTimes(1);
+    expect(chatExtra.replaceLines).toHaveBeenLastCalledWith(L1);
+    // 서버가 차례를 조금 늦게 마치면 첫 새로 그리기에는 아직 없다: 한 번 더 새로 그릴 때 그 줄로 다시 바꾼다.
+    act(() => vi.advanceTimersByTime(1500));
+    rerender(<DiagramWorkspace {...props} initialChat={L2} />);
+    expect(chatExtra.replaceLines).toHaveBeenCalledTimes(2);
+    expect(chatExtra.replaceLines).toHaveBeenLastCalledWith(L2);
+    cleanup();
+
+    // 학습 중이 아니면 멈춰도 대화 줄을 바꾸지 않는다(평소 차례는 살아 있는 줄 그대로).
+    chatExtra.replaceLines.mockClear();
+    const free = { ...props, guide: null };
+    const again = render(<DiagramWorkspace {...free} initialChat={L0} />);
+    act(() => hookState.turn!.onInterrupted());
+    again.rerender(<DiagramWorkspace {...free} initialChat={L1} />);
+    act(() => vi.advanceTimersByTime(1500));
+    again.rerender(<DiagramWorkspace {...free} initialChat={L2} />);
+    expect(chatExtra.replaceLines).not.toHaveBeenCalled();
+  } finally {
+    vi.useRealTimers();
+  }
 });
 
 test("restore while live refits the canvas at once, even after a turn that saved nothing", async () => {

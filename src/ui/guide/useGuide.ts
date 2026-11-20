@@ -53,6 +53,10 @@ export function useGuide({ diagramId, initial, serverLines, busy, replaceLines }
     serverLinesRef.current = serverLines;
     busyRef.current = busy;
   });
+  /**
+   * 다음 서버 그리기가 가져온 저장된 줄로 기본 대화를 한 번 바꾼다. 가이드 이벤트·그만두기가 부르고,
+   * 학습 차례를 멈췄을 때도 부른다(서버가 단계를 마쳤으면 단계 글·해설 칩이 저장된 줄에만 있다).
+   */
   const reloadChat = useCallback(() => {
     reloadFrom.current = serverLinesRef.current;
     phase.current = busyRef.current ? "own" : "idle";
@@ -123,5 +127,5 @@ export function useGuide({ diagramId, initial, serverLines, busy, replaceLines }
     [guideId, router],
   );
 
-  return { view, learning: view?.status === "active", onEvent, onRestored, quit, rebuild };
+  return { view, learning: view?.status === "active", onEvent, onRestored, quit, rebuild, reloadChat };
 }

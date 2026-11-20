@@ -49,10 +49,10 @@ const counts = (s: DiagramState) => ({ nodes: Object.keys(s.nodes).length, edges
 export const quietMeta = (s: DiagramState): MessageMeta => ({ applied: 0, changed: 0, skipped: 0, version: null, status: "complete", ...counts(s) });
 
 /** 구성을 바꾸지 않은 차례의 done(버전 없음). applied 는 환경 가정처럼 바꾸었어도 구성이 아닌 명령 수. */
-function quietDone(s: DiagramState, knowledge: NetworkKnowledge | null, assistantMessageId: string, applied = 0): ChatEvent {
+function quietDone(s: DiagramState, knowledge: NetworkKnowledge | null, assistantMessageId: string, applied = 0, status: "complete" | "aborted" = "complete"): ChatEvent {
   return doneEvent({
     version: null,
-    status: "complete",
+    status,
     applied,
     changed: 0,
     skipped: 0,
@@ -123,7 +123,17 @@ export async function runGuideTurn(args: GuideTurnArgs, deps: GuideTurnDeps): Pr
   const started = Date.now();
   // 흔한 어긋남(수량 등)은 Clef 보다 먼저 본다. 걸리면 Clef 를 부르지 않는다.
   const reply = findConflict(args.text, step);
+  // Clef 판정(최대 3초) 동안 진행 카드가 멈춰 보이지 않게 평소 차례처럼 thinking 을 먼저 보낸다.
+  // start 는 판정 뒤에 보낸다: 질문이면 의도(question)를 실은 start 를 대화 경로가 보낸다.
+  if (reply === null) args.emit({ t: "status", phase: "thinking" });
   const clef = reply === null ? await askClef(deps.clef, args.text, step.goal, args.signal) : { match: null, question: null };
+  // 판정 중에 중단했으면(askClef 는 null 둘을 돌려준다) 키워드로 넘어가 그리지 않고, 평소 차례처럼 중단됨으로 끝낸다.
+  if (args.signal.aborted) {
+    console.info("[guide] aborted while judging", { diagramId: args.diagramId, step: n, ms: Date.now() - started });
+    start();
+    await abortedTurn(args);
+    return HANDLED;
+  }
   const verdict: StepVerdict = reply !== null ? { kind: "conflict", reply } : decideStep(args.text, step, clef);
   // 판정이 어디서 틀리는지 나중에 볼 수 있게 남긴다. 사용자 글은 남기지 않는다.
   console.info("[guide] verdict", { diagramId: args.diagramId, step: n, kind: verdict.kind, clefMatch: clef.match, clefQuestion: clef.question, ms: Date.now() - started });
@@ -163,6 +173,16 @@ async function missTurn(args: GuideTurnArgs, guide: Guide, n: number, text: stri
   const msg = await createMessage(diagramId, "assistant", text, { guide: { kind: "miss", step: n }, says: [text], ...quietMeta(state) });
   emit({ t: "guide", view: guideView(args.run, guide) });
   emit(quietDone(state, knowledge, msg.id));
+}
+
+/**
+ * 판정 중 중단: 아무것도 그리지 않고 진행 상태도 그대로 둔다. 평소 차례가 중단됐을 때처럼 빈 응답(status aborted)을 남기고
+ * done(status aborted, 버전 없음)으로 끝낸다. 다시 불러온 대화에도 중단된 차례로 보인다.
+ */
+async function abortedTurn(args: GuideTurnArgs): Promise<void> {
+  const { diagramId, emit, state, knowledge } = args;
+  const msg = await createMessage(diagramId, "assistant", "", { ...quietMeta(state), status: "aborted" });
+  emit(quietDone(state, knowledge, msg.id, 0, "aborted"));
 }
 
 /** 대본 명령이 거절됐거나 대본이 사라졌다: 학습을 그만두고 알린다. */

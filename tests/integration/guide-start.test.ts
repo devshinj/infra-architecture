@@ -26,6 +26,19 @@ import { getLatestState, listVersions, restoreVersionWithMessage } from "@/serve
 
 import { makeOwnedDiagram } from "./helpers";
 
+// 단계 맞추기 도중 실패를 끼워 넣는 시험용 고리. 비어 있으면 원래 함수 그대로다.
+const hooks: { deleteGuideFlows: (() => Promise<void>) | null } = { deleteGuideFlows: null };
+vi.mock("@/server/flows", async (importOriginal) => {
+  const orig = await importOriginal<typeof import("@/server/flows")>();
+  return {
+    ...orig,
+    deleteGuideFlows: async (...args: Parameters<typeof orig.deleteGuideFlows>) => {
+      await hooks.deleteGuideFlows?.();
+      return orig.deleteGuideFlows(...args);
+    },
+  };
+});
+
 const SHOP = getGuide("shop")!;
 const ONPREM = SHOP.variants.onprem!;
 const CLOUD = SHOP.variants.cloud!;
@@ -73,6 +86,7 @@ beforeEach(() => {
   vi.spyOn(console, "info").mockImplementation(() => {});
 });
 afterEach(() => {
+  hooks.deleteGuideFlows = null;
   vi.restoreAllMocks();
 });
 
@@ -327,5 +341,29 @@ describe("syncGuideAfterRestore", () => {
     expect(r).toMatchObject({ ok: true, number: 5, guide: { step: 1 } });
     expect(await getGuideRun(diagramId)).toMatchObject({ step: 1, stepVersions: [3] });
     expect((await listMessages(diagramId)).at(-1)).toMatchObject({ role: "system" });
+  });
+
+  test("a sync failure after restore does not leave the run ahead of the diagram", async () => {
+    const userId = await makeUser();
+    const { diagramId } = await startGuide(userId, "shop", "onprem");
+    await doSteps(userId, diagramId, 2); // v3 v4
+    const versions = await listVersions(diagramId);
+    const messages = await listMessages(diagramId);
+    const run = await getGuideRun(diagramId);
+
+    // 되돌린 뒤 단계 맞추기가 실패한다.
+    hooks.deleteGuideFlows = async () => {
+      throw new Error("db down");
+    };
+    await expect(restoreGuideVersion(diagramId, 3)).rejects.toThrow("db down");
+    hooks.deleteGuideFlows = null;
+
+    // 되돌리기도 함께 취소된다: 버전·안내 글·진행 상태가 그대로라 구성도와 진행 상태가 어긋나지 않는다.
+    expect(await listVersions(diagramId)).toEqual(versions);
+    expect(await listMessages(diagramId)).toEqual(messages);
+    expect(await getGuideRun(diagramId)).toEqual(run);
+    // 다음 차례는 거절 없이 3단계를 그린다.
+    await doSteps(userId, diagramId, 1, ONPREM, 2);
+    expect(await getGuideRun(diagramId)).toMatchObject({ step: 3, stepVersions: [3, 4, 5], status: "active" });
   });
 });

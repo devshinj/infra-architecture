@@ -226,7 +226,7 @@ describe("runGuideTurn", () => {
   test("a miss sends the step's miss text and draws nothing", async () => {
     const { events, outcome } = await turn("오늘 날씨 좋네요", { clef: clefSays(0.1, 0.2) });
     expect(outcome).toEqual({ handled: true });
-    expect(types(events)).toEqual(["start", "say", "guide", "done"]);
+    expect(types(events)).toEqual(["status", "start", "say", "guide", "done"]);
     expect(ofType(events, "say")[0]!.text).toBe(S0.miss);
     expect(store.versions).toEqual([]);
     expect(store.runs).toEqual([]);
@@ -237,8 +237,9 @@ describe("runGuideTurn", () => {
   test("a conflict sends its reply", async () => {
     const clef = clefSays(0.9, 0.1);
     const { events } = await turn("방화벽을 세 대 둬 줘", { clef });
-    // 충돌은 Clef 보다 먼저 본다.
+    // 충돌은 Clef 보다 먼저 본다. 기다릴 판정이 없으니 thinking 도 보내지 않는다.
     expect(clef.calls).toEqual([]);
+    expect(types(events)).toEqual(["start", "say", "guide", "done"]);
     expect(ofType(events, "say")[0]!.text).toBe("방화벽은 한 대로 시작해요.");
     expect(store.versions).toEqual([]);
     expect(store.messages[0]).toMatchObject({ meta: { guide: { kind: "miss", step: 1 } } });
@@ -247,7 +248,8 @@ describe("runGuideTurn", () => {
   test("a question is handed back as intent question", async () => {
     const { events, outcome } = await turn("DMZ 는 왜 나누나요", { clef: clefSays(0.1, 0.9) });
     expect(outcome).toEqual({ handled: false, intent: "question" });
-    expect(events).toEqual([]);
+    // 판정을 기다리는 동안의 thinking 만 보낸다. start(intent question)는 질문 답변 경로가 보낸다.
+    expect(events).toEqual([{ t: "status", phase: "thinking" }]);
     expect(store.messages).toEqual([]);
     expect(store.versions).toEqual([]);
   });
@@ -272,7 +274,7 @@ describe("runGuideTurn", () => {
     vi.spyOn(console, "error").mockImplementation(() => {});
     const { events, outcome } = await turn(S0.example, { run: { ...RUN, guideId: "broken" } });
     expect(outcome).toEqual({ handled: true });
-    expect(types(events)).toEqual(["start", "error", "guide", "done"]);
+    expect(types(events)).toEqual(["status", "start", "error", "guide", "done"]);
     expect(ofType(events, "error")[0]!.message).toBe(GUIDE_BROKEN_MESSAGE);
     expect(store.versions).toEqual([]);
     expect(store.runs.at(-1)).toMatchObject({ status: "quit", step: 0 });
@@ -296,6 +298,36 @@ describe("runGuideTurn", () => {
     expect(store.runs.at(-1)).toMatchObject({ step: 1 });
   });
 
+  test("an abort during the clef judgement draws nothing", async () => {
+    // 중단을 누르면 Clef 는 답 없이 끝난다(askClef 는 null 둘). 키워드 판정으로 넘어가 그리면 안 된다.
+    const ctrl = new AbortController();
+    const clefWaits: ClefClient = {
+      decide: (_input, _questions, signal) =>
+        new Promise<ClefAnswers>((_resolve, reject) => {
+          signal!.addEventListener("abort", () => reject(new DOMException("The operation was aborted.", "AbortError")), { once: true });
+          ctrl.abort();
+        }),
+      async classifyIntent() {
+        throw new Error("unused");
+      },
+    };
+    const events: ChatEvent[] = [];
+    const outcome = await runGuideTurn(
+      { userId: "u", diagramId: "d", text: S0.example, userMessageId: "um", state: ENV_STATE, knowledge: null, run: RUN, signal: ctrl.signal, emit: (e) => events.push(e) },
+      { clef: clefWaits, guides },
+    );
+    expect(outcome).toEqual({ handled: true });
+    // 평소 차례가 중단됐을 때처럼 끝낸다: 그린 것 없이 중단됨(done status aborted).
+    expect(types(events)).toEqual(["status", "start", "done"]);
+    expect(events.at(-1)).toMatchObject({ t: "done", version: null, status: "aborted", applied: 0, changed: 0, assistantMessageId: "m1" });
+    expect(store.versions).toEqual([]);
+    expect(store.runs).toEqual([]);
+    expect(store.flowCalls).toEqual([]);
+    expect(store.explainCalls).toEqual([]);
+    expect(store.messages).toEqual([{ role: "assistant", content: "", meta: expect.objectContaining({ status: "aborted", version: null, changed: 0 }) }]);
+    expect(store.messages[0]!.meta.guide).toBeUndefined();
+  });
+
   test("same text twice does not apply the step twice", async () => {
     await turn(S0.example);
     // 잠금 안에서 저장된 진행 상태·버전을 다시 읽은 것처럼 다음 차례에 넘긴다.
@@ -305,11 +337,14 @@ describe("runGuideTurn", () => {
     expect(store.messages.at(-1)!.meta.guide).toEqual({ kind: "miss", step: 2 });
   });
 
-  test("the event order is cmd…, say, guide, done", async () => {
+  test("the event order is thinking, start, drawing, cmd…, say, guide, done", async () => {
     const { events } = await turn(S0.example);
+    // Clef 판정 전에 thinking(진행 카드가 멈춰 보이지 않게), 판정 뒤 start, 그리기 시작에 drawing.
     // 작은 대본의 WEB 한 대는 코드 규칙 경고를 낸다. 새 경고는 단계 글 앞에 온다.
-    expect(types(events)).toEqual(["start", "status", "cmd", "cmd", "cmd", "cmd", "cmd", "warnings", "say", "guide", "done"]);
-    expect(events[1]).toEqual({ t: "status", phase: "drawing" });
+    expect(types(events)).toEqual(["status", "start", "status", "cmd", "cmd", "cmd", "cmd", "cmd", "warnings", "say", "guide", "done"]);
+    expect(events[0]).toEqual({ t: "status", phase: "thinking" });
+    expect(events[1]).toEqual({ t: "start", messageId: "um", intent: null });
+    expect(events[2]).toEqual({ t: "status", phase: "drawing" });
     expect(ofType(events, "cmd").map((e) => e.cmd.op)).toEqual(["add_group", "add_node", "add_node", "add_edge", "set_assumption"]);
   });
 });

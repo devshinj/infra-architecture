@@ -385,10 +385,15 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
     timer.current = null;
   };
   // After an interrupt the server saves the aborted version a moment later: refresh once more.
-  const refreshAfterInterrupt = () => {
-    refreshFromServer();
+  // beforeRefresh runs before each of the two refreshes (learning: reload the chat from the saved lines it brings).
+  const refreshAfterInterrupt = (beforeRefresh?: () => void) => {
+    const refresh = () => {
+      beforeRefresh?.();
+      refreshFromServer();
+    };
+    refresh();
     if (timer.current) clearTimeout(timer.current);
-    timer.current = setTimeout(refreshFromServer, 1500);
+    timer.current = setTimeout(refresh, 1500);
   };
   // 흐름: 차례가 끝나면 다시 불러오고, 처음 그린 차례 뒤 흐름이 없으면 자동 제안한다(아래 useFlows 가 채운다).
   const afterTurnRef = useRef<(e: { changed: number } | undefined) => Promise<void>>(async () => {});
@@ -424,7 +429,9 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
     },
     onInterrupted: () => {
       fly.clear();
-      refreshAfterInterrupt();
+      // 학습 차례는 멈춰도 서버가 단계를 마칠 수 있다(그렸으면 버전·단계 글·해설 칩이 남는다).
+      // 단계 글과 칩은 저장된 메시지에만 있으므로, 새로 그린 저장된 줄로 대화를 바꾼다(늦게 마친 것도 두 번째 새로 그리기에서).
+      refreshAfterInterrupt(guide.learning ? guide.reloadChat : undefined);
     },
     onRelayout: () => onAutoArrange(),
     onGuide: (v) => guide.onEvent(v),

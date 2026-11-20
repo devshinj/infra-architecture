@@ -121,6 +121,8 @@ describe("guide turn through runChatTurn", () => {
     await createGuideRun({ diagramId: ids.diagramId, guideId: "shop", env: "onprem" });
     const { events } = await turn(ids, "DMZ 가 뭐야?", { qwen: textQwen("DMZ 는 인터넷과 내부 사이 구역이에요."), clef: clefDown });
     expect(events.find((e) => e.t === "start")).toMatchObject({ intent: "question" });
+    // thinking 은 판정 전에 한 번만(질문 답변 경로가 다시 보내지 않는다), 그 뒤 start·answering.
+    expect(events.filter((e) => e.t === "status" || e.t === "start").map((e) => (e.t === "status" ? (e as { phase: string }).phase : e.t))).toEqual(["thinking", "start", "answering"]);
     expect(events.filter((e) => e.t === "answer").map((e) => (e as { delta: string }).delta).join("")).toBe("DMZ 는 인터넷과 내부 사이 구역이에요.");
     expect(events.filter((e) => e.t === "cmd" || e.t === "clarify" || e.t === "guide")).toEqual([]);
     expect(events.at(-1)).toMatchObject({ t: "done", version: null });
@@ -132,7 +134,8 @@ describe("guide turn through runChatTurn", () => {
     const ids = await makeOwnedDiagram();
     await createGuideRun({ diagramId: ids.diagramId, guideId: "shop", env: "onprem" });
     const { events } = await turn(ids, "DMZ 가 뭐야?", { qwen: null, clef: clefDown });
-    expect(events.map((e) => e.t)).toEqual(["start", "error", "done"]);
+    // 판정 전 thinking 뒤에 AI 를 쓸 수 없다는 안내로 끝난다.
+    expect(events.map((e) => e.t)).toEqual(["status", "start", "error", "done"]);
     expect(await getGuideRun(ids.diagramId)).toMatchObject({ step: 0, status: "active" });
   });
 
