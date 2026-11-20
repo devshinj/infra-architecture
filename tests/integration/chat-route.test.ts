@@ -7,6 +7,7 @@ import { POST } from "@/app/api/diagrams/[id]/chat/route";
 import { setChatDepsForTest } from "@/server/chat/deps";
 import type { ChatEvent } from "@/server/chat/events";
 import type { ChatDeps } from "@/server/chat/pipeline";
+import { createGuideRun } from "@/server/guide/runs";
 import type { ClefClient } from "@/server/llm/clef";
 import type { QwenClient } from "@/server/llm/qwen";
 
@@ -113,6 +114,15 @@ describe("POST /api/diagrams/:id/chat", () => {
       { params: Promise.resolve({ id: ids.diagramId }) },
     );
     expect(noType.status).toBe(400);
+  });
+
+  test("a session POST to a learning diagram is 400 with the lock message", async () => {
+    const ids = await makeOwnedDiagram();
+    await createGuideRun({ diagramId: ids.diagramId, guideId: "shop", env: "onprem" });
+    authMock.mockResolvedValue({ user: { id: ids.userId } });
+    const r = await call(ids.diagramId, { text: "방화벽을 둬 줘", newSession: true });
+    expect(r.status).toBe(400);
+    expect(await r.json()).toEqual({ error: "학습 중에는 바꿀 수 없어요. 학습을 그만두면 바꿀 수 있어요." });
   });
 
   test("409 when a turn is already running", async () => {
