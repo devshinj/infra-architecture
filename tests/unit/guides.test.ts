@@ -117,7 +117,7 @@ describe.each(cases)("guide %s", (key, g, env: GuideEnv) => {
 
   test("quantity conflicts catch wrong counts but not correct requests or questions", () => {
     // 맞는 요청·질문인데 수량 말과 글자가 겹치는 문장. conflict 는 Clef 보다 먼저 보므로 걸리면 안 된다.
-    const safe = ["아까 말한 대로 L4 두 대로 이중화해 줘", "하나만 물어볼게요, VIP 가 뭐야?", "L4 대신 다른 걸 써도 돼?", "L4 대수는 두 대로 해 줘", "L4 두 대로 하고 평소엔 한 대만 일하게 해 줘", "차세대 방화벽 뒤에 WAS 두 대를 넣어 줘", "API 서버를 AZ 마다 한 대씩 두 대 넣어 줘", "질문을 하나만 할게요", "API 하나만 물어볼게", "차세대 두 대를 넣어 줘", "차세대가 뭐야?", "차세대만 써도 돼?"];
+    const safe = ["아까 말한 대로 L4 두 대로 이중화해 줘", "하나만 물어볼게요, VIP 가 뭐야?", "L4 대신 다른 걸 써도 돼?", "L4 대수는 두 대로 해 줘", "L4 두 대로 하고 평소엔 한 대만 일하게 해 줘", "차세대 방화벽 뒤에 WAS 두 대를 넣어 줘", "API 서버를 AZ 마다 한 대씩 두 대 넣어 줘", "질문을 하나만 할게요", "API 하나만 물어볼게", "차세대 두 대를 넣어 줘", "차세대가 뭐야?", "차세대만 써도 돼?", "API 하나만 써도 돼?"];
     for (const s of variant.steps) for (const t of safe) expect(findConflict(t, s), `${s.id}: ${t}`).toBeNull();
     for (const s of variant.steps.filter((x) => x.conflicts?.length)) {
       for (const t of ["L4 세 대로 해 줘", "서버 3대 넣어 줘", "WAS 는 세 대", "웹 서버 세 대 붙여 줘", "한 대만 넣어 줘", "서버 하나만 둬 줘"]) expect(findConflict(t, s), `${s.id}: ${t}`).not.toBeNull();
