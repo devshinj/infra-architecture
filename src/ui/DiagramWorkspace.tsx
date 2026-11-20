@@ -1017,6 +1017,7 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
       expectNewBoard();
       // 서버가 남긴 안내(구성 정보 숫자의 변화 포함)를 대화에도 바로 띄운다. 새로 고치면 저장된 같은 줄이 보인다.
       const r = await restoreVersionAction(diagramId, number, { describeChange: true });
+      if (r && "error" in r) return setError(r.error);
       loadVersions();
       if (r?.text) pushDiagramLine({ kind: "system", text: r.text });
     });
@@ -1026,7 +1027,8 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
     !locked &&
     run(async () => {
       expectNewBoard();
-      await restoreVersionAction(diagramId, v - 1);
+      const r = await restoreVersionAction(diagramId, v - 1);
+      if (r && "error" in r) return setError(r.error);
       loadVersions();
       pushDiagramLine({ kind: "system", text: `방금 바꾼 것을 되돌렸어요. v${v - 1} 구성으로 돌아갔어요.` });
     });

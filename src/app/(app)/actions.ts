@@ -26,7 +26,8 @@ import {
 } from "@/server/projects";
 import { confirmAssumptionFor } from "@/server/assumptions";
 import { getGuideRun } from "@/server/guide/runs";
-import { quitGuide, startGuide, syncGuideAfterRestore } from "@/server/guide/start";
+import { quitGuide, restoreGuideVersion, startGuide } from "@/server/guide/start";
+import { BUSY_MESSAGE } from "@/server/chat/busy";
 import { saveFieldsFor, type SaveFieldsInput } from "@/server/fields";
 import { BusyError, confirmFlow, deleteFlow, removeFlowStep, renameFlow } from "@/server/flows";
 import { ensureSeeded, listTerms, updateTerm, type TermPatch } from "@/server/glossary";
@@ -178,13 +179,14 @@ export async function importSampleAction(diagramId: string, sampleId: string): P
 
 /**
  * describeChange: 안내 둘째 줄에 구성 정보 카드 숫자의 변화를 붙인다(이력의 되돌리기). text 는 남긴 안내.
- * 학습 중이면 되돌린 버전에 맞춰 단계를 되돌리고 새 학습 상태(guide)를 함께 돌려준다.
+ * 학습 중이면 구성도 잠금 안에서 되돌리고 그 버전의 단계로 맞춘 새 학습 상태(guide)를 함께 돌려준다.
+ * 학습 중인데 대화 차례가 돌고 있으면 되돌리지 않고 { ok: false, error } 를 돌려준다.
  */
 export async function restoreVersionAction(
   diagramId: string,
   number: number,
   opts?: { describeChange?: boolean },
-): Promise<{ number: number; text: string; guide?: GuideView }> {
+): Promise<{ number: number; text: string; guide?: GuideView } | { ok: false; error: string }> {
   validVersion(number);
   return run(async (uid) => {
     await getOwnedDiagram(uid, diagramId);
@@ -195,10 +197,15 @@ export async function restoreVersionAction(
       const knowledge = await getNetworkKnowledge(uid).catch(() => null);
       restoreOpts = { describeChange: knowledge ? { knowledge } : {} };
     }
+    if ((await getGuideRun(diagramId))?.status === "active") {
+      const g = await restoreGuideVersion(diagramId, number, restoreOpts);
+      if (!g.ok) return { ok: false as const, error: BUSY_MESSAGE };
+      refreshDiagram();
+      return { number: g.number, text: g.text, ...(g.guide ? { guide: g.guide } : {}) };
+    }
     const r = await restoreVersionWithMessage(diagramId, number, restoreOpts);
-    const guide = (await getGuideRun(diagramId))?.status === "active" ? await syncGuideAfterRestore(diagramId, number) : null;
     refreshDiagram();
-    return guide ? { ...r, guide } : r;
+    return r;
   });
 }
 

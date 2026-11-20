@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 
 import { db, type Tx } from "@/db/client";
-import { diagrams, guideRuns, projects } from "@/db/schema";
+import { diagrams, guideRuns, projects, type GuideMark } from "@/db/schema";
 import { getGuide } from "@/domain/guides";
 import type { GuideEnv } from "@/domain/guides/types";
 import { ValidationError } from "@/server/projects";
@@ -13,8 +13,12 @@ export interface GuideRun {
   step: number;
   stepVersions: number[];
   envVersion: number | null;
+  /** 가이드가 만든 버전의 기록(버전 번호 순). */
+  marks: GuideMark[];
   status: "active" | "done" | "quit";
 }
+
+export type { GuideMark };
 
 export const LEARNING_LOCKED_MESSAGE = "학습 중에는 바꿀 수 없어요. 학습을 그만두면 바꿀 수 있어요.";
 export const GUIDE_BROKEN_MESSAGE = "가이드가 바뀌어 이어갈 수 없어요. 처음부터 다시 해 주세요.";
@@ -29,6 +33,7 @@ function toRun(r: Row): GuideRun {
     step: r.step,
     stepVersions: r.stepVersions,
     envVersion: r.envVersion,
+    marks: r.marks,
     status: r.status,
   };
 }
@@ -43,7 +48,7 @@ export async function createGuideRun(
   run: Pick<GuideRun, "diagramId" | "guideId" | "env">,
   tx?: Tx,
 ): Promise<GuideRun> {
-  const fresh = { guideId: run.guideId, env: run.env, step: 0, stepVersions: [], envVersion: null, status: "active" as const };
+  const fresh = { guideId: run.guideId, env: run.env, step: 0, stepVersions: [], envVersion: null, marks: [], status: "active" as const };
   const [row] = await (tx ?? db)
     .insert(guideRuns)
     .values({ diagramId: run.diagramId, ...fresh })
@@ -61,6 +66,7 @@ export async function saveGuideRun(run: GuideRun, tx?: Tx): Promise<void> {
       step: run.step,
       stepVersions: run.stepVersions,
       envVersion: run.envVersion,
+      marks: run.marks,
       status: run.status,
       updatedAt: new Date(),
     })

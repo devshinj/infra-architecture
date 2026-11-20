@@ -275,6 +275,18 @@ export const networkRules = pgTable(
 
 export type GuideRunStatus = "active" | "done" | "quit";
 
+/**
+ * 가이드가 만든 버전 하나(환경 확정 버전 또는 단계 버전)와 그 버전을 만든 직후의 진행 상태.
+ * 단계 수는 stepVersions.length. 되돌리기·다시 하기 때 이것으로 단계를 맞춘다. 한 번 넣으면 지우지 않는다.
+ */
+export interface GuideMark {
+  version: number;
+  env: GuideEnv;
+  /** 그 갈래의 환경 확정 버전. 학습 시작 전에 env 를 넣어 만든 run 은 null 일 수 있다. */
+  envVersion: number | null;
+  stepVersions: number[];
+}
+
 // 구성도 하나의 학습 진행 상태. 구성도마다 하나만 두고, 그만두거나 끝나도 남긴다.
 export const guideRuns = pgTable("guide_runs", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -284,6 +296,8 @@ export const guideRuns = pgTable("guide_runs", {
   step: integer("step").notNull().default(0),
   stepVersions: jsonb("step_versions").$type<number[]>().notNull().default(sql`'[]'::jsonb`),
   envVersion: integer("env_version"),
+  // 가이드가 만든 버전마다 그때 진행 상태(되돌리기·다시 하기 때 그 버전의 단계로 맞춘다). 지우지 않는다.
+  marks: jsonb("marks").$type<GuideMark[]>().notNull().default(sql`'[]'::jsonb`),
   status: text("status").$type<GuideRunStatus>().notNull().default("active"),
   createdAt: createdAt(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),

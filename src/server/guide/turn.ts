@@ -66,6 +66,7 @@ function quietDone(s: DiagramState, knowledge: NetworkKnowledge | null, assistan
  * 환경 확정: 환경 가정 확정 → 버전(summary "학습: 환경 <라벨>") → run.env·envVersion 저장(버전과 같은 트랜잭션)
  * → assistant 메시지 "<라벨>(으)로 진행합니다. …"(meta.guide 없음 — 단계 안내는 카드가 GuideView 로 보인다).
  * 학습 차례와 학습 시작이 같이 쓴다. opts.guide 를 주지 않으면 getGuide 로 찾는다. 없는 대본·환경이면 throw.
+ * opts.note 를 주면 안내 끝에 한 줄로 붙인다(학습 시작의 "값은 예시입니다."). 이 버전은 진행 기록(marks)에 남긴다.
  */
 export async function confirmGuideEnv(
   diagramId: string,
@@ -73,7 +74,7 @@ export async function confirmGuideEnv(
   env: GuideEnv,
   state: DiagramState,
   messageId: string | null,
-  opts: { guide?: Guide } = {},
+  opts: { guide?: Guide; note?: string } = {},
 ): Promise<{ run: GuideRun; version: number; cmd: Command; state: DiagramState; text: string; assistantMessageId: string }> {
   const variant = (opts.guide ?? getGuide(run.guideId))?.variants[env];
   if (!variant) throw new Error(`guide variant not found: ${run.guideId}/${env}`);
@@ -81,11 +82,12 @@ export async function confirmGuideEnv(
   const label = ENV_LABEL[env];
   const saved = await db.transaction(async (tx) => {
     const v = await createVersion(diagramId, next, { source: "ai", ...(messageId ? { messageId } : {}), summary: `학습: 환경 ${label}`, tx });
-    const confirmed: GuideRun = { ...run, env, envVersion: v.number, step: 0, stepVersions: [], status: "active" };
+    const mark = { version: v.number, env, envVersion: v.number, stepVersions: [] };
+    const confirmed: GuideRun = { ...run, env, envVersion: v.number, step: 0, stepVersions: [], marks: [...run.marks, mark], status: "active" };
     await saveGuideRun(confirmed, tx);
     return { version: v.number, run: confirmed };
   });
-  const text = `${euro(label)} 진행합니다. 위 카드의 이번 단계를 말로 요청해 보세요.`;
+  const text = `${euro(label)} 진행합니다. 위 카드의 이번 단계를 말로 요청해 보세요.${opts.note ? `\n${opts.note}` : ""}`;
   const msg = await createMessage(diagramId, "assistant", text, { says: [text], changed: 0, ...counts(next) });
   return { ...saved, cmd, state: next, text, assistantMessageId: msg.id };
 }
@@ -128,7 +130,7 @@ export async function runGuideTurn(args: GuideTurnArgs, deps: GuideTurnDeps): Pr
   if (verdict.kind === "question") return { handled: false, intent: "question" };
 
   start();
-  if (verdict.kind === "match") await stepTurn(args, deps, guide, variant, step);
+  if (verdict.kind === "match") await stepTurn(args, deps, guide, run.env, variant, step);
   else await missTurn(args, guide, n, verdict.kind === "conflict" ? verdict.reply : step.miss);
   return HANDLED;
 }
@@ -175,7 +177,7 @@ async function quitTurn(args: GuideTurnArgs, guide: Guide | undefined, n: number
 }
 
 /** 맞음: 대본 명령을 확정으로 적용하고, 버전·흐름·진행 상태·설명을 저장한 뒤 단계 글(마지막이면 완료 글도)을 남긴다. */
-async function stepTurn(args: GuideTurnArgs, deps: GuideTurnDeps, guide: Guide, variant: GuideVariant, step: GuideStep): Promise<void> {
+async function stepTurn(args: GuideTurnArgs, deps: GuideTurnDeps, guide: Guide, env: GuideEnv, variant: GuideVariant, step: GuideStep): Promise<void> {
   const { diagramId, emit, state, knowledge, run } = args;
   const n = run.step + 1;
   const applied = applyGuideStep(state, step, knowledge ? { netTypes: knowledge.types } : {});
@@ -198,7 +200,9 @@ async function stepTurn(args: GuideTurnArgs, deps: GuideTurnDeps, guide: Guide, 
   const saved = await db.transaction(async (tx) => {
     const v = await createVersion(diagramId, next, { source: "ai", messageId: args.userMessageId, summary: `학습 ${n}단계: ${step.goal}`, tx });
     const flows = applied.flowOps.length > 0 ? await saveGuideFlows(diagramId, next, applied.flowOps, tx) : { saved: 0, rejected: [] };
-    const advanced: GuideRun = { ...run, step: run.step + 1, stepVersions: [...run.stepVersions, v.number], status: last ? "done" : "active" };
+    const stepVersions = [...run.stepVersions, v.number];
+    const mark = { version: v.number, env, envVersion: run.envVersion, stepVersions };
+    const advanced: GuideRun = { ...run, step: run.step + 1, stepVersions, marks: [...run.marks, mark], status: last ? "done" : "active" };
     await saveGuideRun(advanced, tx);
     return { version: v.number, flows, run: advanced };
   });

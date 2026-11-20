@@ -14,18 +14,21 @@ import {
   LEARNING_PROJECT_NAME,
   liveGuideView,
   quitGuide,
+  restoreGuideVersion,
   startGuide,
   syncGuideAfterRestore,
 } from "@/server/guide/start";
 import type { ClefClient } from "@/server/llm/clef";
 import type { QwenClient } from "@/server/llm/qwen";
 import { NotFoundError, ValidationError } from "@/server/projects";
+import { withDiagramLock } from "@/server/chat/lock";
 import { getLatestState, listVersions, restoreVersionWithMessage } from "@/server/versions";
 
 import { makeOwnedDiagram } from "./helpers";
 
 const SHOP = getGuide("shop")!;
 const ONPREM = SHOP.variants.onprem!;
+const CLOUD = SHOP.variants.cloud!;
 
 const clefDown: ClefClient = {
   async decide() {
@@ -47,9 +50,9 @@ async function makeUser(): Promise<string> {
   return (await makeOwnedDiagram()).userId;
 }
 
-/** 대본의 예시 문장을 보내 단계를 count 개 마친다. */
-async function doSteps(userId: string, diagramId: string, count: number): Promise<void> {
-  for (const step of ONPREM.steps.slice(0, count)) {
+/** 대본의 예시 문장을 보내 from 단계부터 count 개를 마친다. */
+async function doSteps(userId: string, diagramId: string, count: number, variant = ONPREM, from = 0): Promise<void> {
+  for (const step of variant.steps.slice(from, from + count)) {
     const events: { t: string }[] = [];
     await runChatTurn({ userId, diagramId, text: step.example, signal: new AbortController().signal, emit: (e) => events.push(e) }, deps);
     expect(events.filter((e) => e.t === "error")).toEqual([]);
@@ -110,6 +113,7 @@ describe("startGuide", () => {
       envVersion: 2,
       step: 0,
       stepVersions: [],
+      marks: [{ version: 2, env: "onprem", envVersion: 2, stepVersions: [] }],
       status: "active",
     });
     const versions = await listVersions(diagramId);
@@ -120,10 +124,10 @@ describe("startGuide", () => {
     const state = (await getLatestState(diagramId))!.state;
     expect(state.assumptions.environment).toMatchObject({ value: ONPREM.environment, confirmed: true });
 
-    // 메시지는 확정 안내 하나뿐이다(R3). 첫 단계는 카드(GuideView)가 보인다.
+    // 메시지는 확정 안내 하나뿐이다(R3). 첫 대화라 가상 값 안내가 붙는다. 첫 단계는 카드(GuideView)가 보인다.
     const msgs = await listMessages(diagramId);
     expect(msgs).toHaveLength(1);
-    expect(msgs[0]).toMatchObject({ role: "assistant", content: "온프레미스로 진행합니다. 위 카드의 이번 단계를 말로 요청해 보세요." });
+    expect(msgs[0]).toMatchObject({ role: "assistant", content: "온프레미스로 진행합니다. 위 카드의 이번 단계를 말로 요청해 보세요.\n값은 예시입니다." });
     expect(await liveGuideView(diagramId)).toMatchObject({
       env: "onprem",
       step: 0,
@@ -252,5 +256,76 @@ describe("syncGuideAfterRestore", () => {
     await syncGuideAfterRestore(diagramId, 3);
     expect(await getGuideRun(diagramId)).toMatchObject({ step: 1, stepVersions: [3] });
     expect(stale(await rows())).toEqual([]);
+  });
+
+  test("redo to a later step version restores that step", async () => {
+    const userId = await makeUser();
+    const { diagramId } = await startGuide(userId, "shop", "onprem");
+    await doSteps(userId, diagramId, 3); // v3 v4 v5
+    await restoreVersionWithMessage(diagramId, 3); // v6
+    expect(await syncGuideAfterRestore(diagramId, 3)).toMatchObject({ step: 1 });
+    // 다시 하기: 지운 단계 기록이 아니라 그 버전이 끝낸 단계로 맞춘다.
+    await restoreVersionWithMessage(diagramId, 5); // v7
+    expect(await syncGuideAfterRestore(diagramId, 5)).toMatchObject({ step: 3, current: { goal: ONPREM.steps[3]!.goal } });
+    expect(await getGuideRun(diagramId)).toMatchObject({ env: "onprem", envVersion: 2, step: 3, stepVersions: [3, 4, 5], status: "active" });
+    // 다음 차례는 4단계를 그리고 학습을 이어간다.
+    await doSteps(userId, diagramId, 1, ONPREM, 3);
+    expect(await getGuideRun(diagramId)).toMatchObject({ step: 4, stepVersions: [3, 4, 5, 8], status: "active" });
+  });
+
+  test("restoring a restore-created version follows its origin", async () => {
+    const userId = await makeUser();
+    const { diagramId } = await startGuide(userId, "shop", "onprem");
+    await doSteps(userId, diagramId, 3); // v3 v4 v5
+    await restoreVersionWithMessage(diagramId, 4); // v6 (v4 의 되돌림)
+    await syncGuideAfterRestore(diagramId, 4);
+    await restoreVersionWithMessage(diagramId, 5); // v7 (v5 의 되돌림)
+    await syncGuideAfterRestore(diagramId, 5);
+    await restoreVersionWithMessage(diagramId, 6); // v8 → v6 → v4
+    expect(await syncGuideAfterRestore(diagramId, 6)).toMatchObject({ step: 2 });
+    expect(await getGuideRun(diagramId)).toMatchObject({ step: 2, stepVersions: [3, 4] });
+    // 되돌림의 되돌림도 원본까지 따라간다(v9 → v8 → v6 → v4 는 아니고 v7 → v5).
+    await restoreVersionWithMessage(diagramId, 7); // v9
+    expect(await syncGuideAfterRestore(diagramId, 7)).toMatchObject({ step: 3 });
+    await doSteps(userId, diagramId, 1, ONPREM, 3);
+    expect(await getGuideRun(diagramId)).toMatchObject({ step: 4, status: "active" });
+  });
+
+  test("restoring a version from the earlier env branch brings that env back", async () => {
+    const userId = await makeUser();
+    const { diagramId } = await startGuide(userId, "shop", "onprem"); // v2
+    await doSteps(userId, diagramId, 2); // v3 v4
+    await restoreVersionWithMessage(diagramId, 1); // v5
+    await syncGuideAfterRestore(diagramId, 1);
+    await runChatTurn({ userId, diagramId, text: "클라우드로 할게요", signal: new AbortController().signal, emit: () => {} }, deps); // v6
+    await doSteps(userId, diagramId, 1, CLOUD); // v7
+    expect(await getGuideRun(diagramId)).toMatchObject({ env: "cloud", envVersion: 6, stepVersions: [7] });
+    for (const key of ["product-view", "checkout", "mine"]) await addFlowRow(diagramId, key);
+
+    await restoreVersionWithMessage(diagramId, 3); // v8
+    const view = await syncGuideAfterRestore(diagramId, 3);
+    expect(view).toMatchObject({ env: "onprem", step: 1, total: ONPREM.steps.length, current: { goal: ONPREM.steps[1]!.goal } });
+    expect(await getGuideRun(diagramId)).toMatchObject({ env: "onprem", envVersion: 2, step: 1, stepVersions: [3], status: "active" });
+    // 어느 환경 대본의 흐름이든 아직 안 한 단계 것은 남지 않는다.
+    expect(await flowKeys(diagramId)).toEqual(["mine"]);
+    await doSteps(userId, diagramId, 1, ONPREM, 1);
+    expect(await getGuideRun(diagramId)).toMatchObject({ env: "onprem", step: 2, stepVersions: [3, 9], status: "active" });
+  });
+
+  test("restore is refused before restoring while a guide turn holds the lock", async () => {
+    const userId = await makeUser();
+    const { diagramId } = await startGuide(userId, "shop", "onprem");
+    await doSteps(userId, diagramId, 2); // v3 v4
+    const before = await listVersions(diagramId);
+    const held = await withDiagramLock(diagramId, () => restoreGuideVersion(diagramId, 3));
+    expect(held).toEqual({ ok: true, value: { ok: false } });
+    expect(await listVersions(diagramId)).toEqual(before);
+    expect(await getGuideRun(diagramId)).toMatchObject({ step: 2, stepVersions: [3, 4] });
+
+    // 잠금이 풀리면 한 번에 되돌리고 맞춘다.
+    const r = await restoreGuideVersion(diagramId, 3);
+    expect(r).toMatchObject({ ok: true, number: 5, guide: { step: 1 } });
+    expect(await getGuideRun(diagramId)).toMatchObject({ step: 1, stepVersions: [3] });
+    expect((await listMessages(diagramId)).at(-1)).toMatchObject({ role: "system" });
   });
 });

@@ -127,7 +127,7 @@ const clefHangs: ClefClient = {
   },
 };
 
-const RUN: GuideRun = { diagramId: "d", guideId: "mini", env: "onprem", step: 0, stepVersions: [], envVersion: 1, status: "active" };
+const RUN: GuideRun = { diagramId: "d", guideId: "mini", env: "onprem", step: 0, stepVersions: [], envVersion: 1, marks: [], status: "active" };
 const ENV_STATE = confirmEnvironment(emptyState(), "사내 IDC").state;
 
 async function turn(text: string, o: { run?: GuideRun; state?: DiagramState; clef?: ClefClient } = {}) {

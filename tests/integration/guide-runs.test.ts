@@ -21,7 +21,7 @@ describe("guide_runs", () => {
     const { diagramId } = await makeOwnedDiagram();
     expect(await getGuideRun(diagramId)).toBeNull();
     const created = await createGuideRun({ diagramId, guideId: "shop", env: "onprem" });
-    expect(created).toEqual({ diagramId, guideId: "shop", env: "onprem", step: 0, stepVersions: [], envVersion: null, status: "active" });
+    expect(created).toEqual({ diagramId, guideId: "shop", env: "onprem", step: 0, stepVersions: [], envVersion: null, marks: [], status: "active" });
     await saveGuideRun({ ...created, step: 2, stepVersions: [3, 4], envVersion: 4 });
     expect(await getGuideRun(diagramId)).toEqual({ ...created, step: 2, stepVersions: [3, 4], envVersion: 4 });
   });
