@@ -1,5 +1,5 @@
 import "@testing-library/jest-dom/vitest";
-import { act, cleanup, render, screen } from "@testing-library/react";
+import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useState } from "react";
 import { afterEach, expect, test, vi } from "vitest";
@@ -30,10 +30,7 @@ function App() {
 test("starting from /learn clears the navigation skeleton once the diagram opens", async () => {
   render(<App />);
   await userEvent.click(screen.getByRole("button", { name: "시작" }));
-  await act(async () => {
-    await new Promise((r) => setTimeout(r, 50));
-  });
-  expect(screen.getByText("workspace")).toBeInTheDocument();
+  await waitFor(() => expect(screen.getByText("workspace")).toBeInTheDocument());
   // 주제 화면이 사라질 때 navigating 을 풀지 않으면 작업 화면이 뼈대 뒤에 숨는다(.main[data-navigating]).
-  expect(document.querySelector("main")!.getAttribute("data-navigating")).toBeNull();
+  await waitFor(() => expect(document.querySelector("main")!.getAttribute("data-navigating")).toBeNull());
 });

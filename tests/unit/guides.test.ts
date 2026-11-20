@@ -148,6 +148,32 @@ describe.each(cases)("guide %s", (key, g, env: GuideEnv) => {
     for (const s of variant.steps) expect(s.commands.some((c) => c.op === "set_link_guess"), s.id).toBe(false);
   });
 
+  // 다시 하기(redo)는 되돌리기가 지운 흐름을 다시 넣지 않는다(syncGuideLocked 는 지우기만 한다).
+  // 흐름을 마지막 단계에서만 넣어야 되돌렸다 다시 해도 흐름이 빠지지 않는다.
+  test("add_flow appears only in the last step", () => {
+    const last = variant.steps.length - 1;
+    const withFlow = variant.steps.flatMap((s, i) => (s.commands.some((c) => c.op === "add_flow") ? [i] : []));
+    expect(withFlow.filter((i) => i !== last).map((i) => variant.steps[i]!.id)).toEqual([]);
+  });
+
+  test("no script uses update_flow or remove_flow", () => {
+    for (const s of variant.steps) expect(s.commands.filter((c) => c.op === "update_flow" || c.op === "remove_flow").map((c) => c.op), s.id).toEqual([]);
+  });
+
+  // 학습 중에 설명 탭이 Qwen 을 부르지 않게: 그 단계까지 생긴 대상은 그 단계까지의 대본 설명이 있어야 한다.
+  test("every target present after a step has its explanation in that step or earlier", () => {
+    for (let i = 1; i <= variant.steps.length; i++) {
+      const { state } = buildGuideState(variant, i, opts);
+      const known = new Set(variant.steps.slice(0, i).flatMap((s) => Object.keys(s.explains)));
+      const targets = [
+        ...Object.keys(state.nodes).map((id) => `node:${id}`),
+        ...Object.keys(state.groups).map((id) => `group:${id}`),
+        ...Object.keys(state.edges).map((id) => `edge:${id}`),
+      ];
+      expect(targets.filter((t) => !known.has(t)), `단계 ${i}(${variant.steps[i - 1]!.id}) 뒤 설명 없는 대상`).toEqual([]);
+    }
+  });
+
   test("step ids are unique", () => {
     const ids = variant.steps.map((s) => s.id);
     expect(new Set(ids).size).toBe(ids.length);
