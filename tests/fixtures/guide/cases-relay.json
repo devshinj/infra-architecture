@@ -393,6 +393,14 @@
       "expect": "match"
     },
     {
+      "id": "relay-video-m3",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "video",
+      "text": "영상은 자료용과 다른 영상 전용 망연계로 요청한 것만 넘겨 줘",
+      "expect": "match"
+    },
+    {
       "id": "relay-video-c1",
       "guide": "relay",
       "env": "onprem",

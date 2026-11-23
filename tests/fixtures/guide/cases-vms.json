@@ -34,6 +34,8 @@
     { "id": "vms-media-m1", "guide": "vms", "env": "onprem", "step": "media", "text": "화면에 영상을 나눠 줄 스트리밍 서버를 이중화해서 넣어 줘", "expect": "match" },
     { "id": "vms-media-m2", "guide": "vms", "env": "onprem", "step": "media", "text": "녹화 서버 영상을 중계하는 미디어 서버를 Active-Standby 로 둬 줘", "expect": "match" },
     { "id": "vms-media-m3", "guide": "vms", "env": "onprem", "step": "media", "text": "카메라 영상을 한 번 받아 여러 곳에 브로드캐스팅하는 서버 두 대를 놓아 줘", "expect": "match" },
+    { "id": "vms-media-m4", "guide": "vms", "env": "onprem", "step": "media", "text": "스트리밍 서버 두 대로 영상을 여러 곳에 나눠 보내 줘", "expect": "match" },
+    { "id": "vms-media-m5", "guide": "vms", "env": "onprem", "step": "media", "text": "채널마다 RTSP 주소로 영상을 내주는 미디어 서버를 이중화해 줘", "expect": "match" },
     { "id": "vms-media-c1", "guide": "vms", "env": "onprem", "step": "media", "text": "미디어 서버 세 대로 해 줘", "expect": "conflict" },
     { "id": "vms-media-c2", "guide": "vms", "env": "onprem", "step": "media", "text": "뷰어가 카메라에 바로 붙으면 왜 안 돼?", "expect": "question" },
     { "id": "vms-media-c3", "guide": "vms", "env": "onprem", "step": "media", "text": "운영실에 뷰어 PC 와 영상 월을 둬 줘", "expect": "miss" },
