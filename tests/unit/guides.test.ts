@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
 
+import { commandSchema } from "@/domain/commands";
 import { judgeFlowOps } from "@/domain/flows";
 import { GLOSSARY_SEED } from "@/domain/glossary-seed";
 import { buildGuideState } from "@/domain/guides/apply";
@@ -150,6 +151,11 @@ describe.each(cases)("guide %s", (key, g, env: GuideEnv) => {
 
   // 다시 하기(redo)는 되돌리기가 지운 흐름을 다시 넣지 않는다(syncGuideLocked 는 지우기만 한다).
   // 흐름을 마지막 단계에서만 넣어야 되돌렸다 다시 해도 흐름이 빠지지 않는다.
+  test("every scripted command passes the command schema (the store trusts its limits)", () => {
+    const bad = variant.steps.flatMap((s) => s.commands.filter((c) => !commandSchema.safeParse(c).success).map((c) => `${s.id}:${c.op}`));
+    expect(bad).toEqual([]);
+  });
+
   test("add_flow appears only in the last step", () => {
     const last = variant.steps.length - 1;
     const withFlow = variant.steps.flatMap((s, i) => (s.commands.some((c) => c.op === "add_flow") ? [i] : []));

@@ -51,6 +51,10 @@ describe("guide judge", () => {
     expect(readEnv("온프레미스로 할게", ["onprem", "cloud"])).toBe("onprem");
     expect(readEnv("AWS 로", ["onprem", "cloud"])).toBe("cloud");
     expect(readEnv("둘 다 좋아", ["onprem", "cloud"])).toBeNull();
+    // 환경이 하나뿐인 주제: 두 환경 낱말이 함께 나와도 그 환경이 들어 있으면 그쪽이다.
+    expect(readEnv("자체 서버 없이 클라우드로", ["cloud"])).toBe("cloud");
+    expect(readEnv("사내 메신저니까 클라우드로 할게", ["cloud"])).toBe("cloud");
+    expect(readEnv("사내 말고 클라우드로", ["onprem", "cloud"])).toBeNull();
     expect(readEnv("온프렘이랑 클라우드 둘 다", ["onprem", "cloud"])).toBeNull();
     expect(readEnv("클라우드", ["onprem"])).toBeNull();
     expect(readEnv("네 시작할게요", ["cloud"])).toBe("cloud");

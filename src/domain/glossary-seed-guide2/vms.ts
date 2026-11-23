@@ -36,7 +36,7 @@ export const TERMS: GlossarySeedEntry[] = [
     definition: "순환 녹화는 저장 공간이 차거나 보관 기간이 지나면 가장 오래된 영상부터 지우고 그 자리에 새 영상을 쓰는 녹화 방식입니다.",
     why: "저장 공간을 정해진 크기로 유지하면서 사람이 지우지 않아도 녹화가 끊기지 않게 하려고 씁니다.",
     compare: "순환 녹화는 오래된 영상을 자동으로 덮어쓰고, 보존(잠금) 처리한 영상은 덮어쓰지 않고 따로 남깁니다.",
-    aliases: ["덮어쓰기녹화", "looprecording", "덮어쓰기"],
+    aliases: ["덮어쓰기녹화", "looprecording"],
   },
   {
     term: "영상 브로드캐스팅",

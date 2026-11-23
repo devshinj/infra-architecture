@@ -39,6 +39,8 @@ export function readEnv(text: string, available: GuideEnv[]): GuideEnv | null {
   if (looksLikeQuestion(text)) return null;
   const t = normalizeUtterance(text);
   const named = (Object.keys(ENV_KEYWORDS) as GuideEnv[]).filter((e) => ENV_KEYWORDS[e].some((k) => t.includes(k)));
+  // 환경이 하나뿐인 주제는 그 환경이 불렸으면 다른 낱말("사내", "자체")이 섞여도 그쪽이다.
+  if (available.length === 1 && named.includes(available[0])) return available[0];
   if (named.length > 1) return null;
   if (named.length === 1) return available.includes(named[0]) ? named[0] : null;
   return available.length === 1 ? available[0] : null;

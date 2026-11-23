@@ -877,7 +877,7 @@ export const VMS_ONPREM: GuideVariant = {
             forward("fw", "rec-1", "한 번 수신", "녹화 서버가 카메라마다 연결을 걸어 영상을 늘 받고 있다. 카메라에 붙는 것은 녹화 서버뿐이다."),
             forward("rec-1", "stor", "녹화", "녹화 서버가 받은 영상을 자기 볼륨에 쉬지 않고 쓰고, 시각 색인을 남긴다."),
             forward("rec-1", "media-1", "한 줄기 중계", "누군가 이 카메라를 처음 고르면 미디어 서버가 권한을 확인하고 녹화 서버에 요청해, 받고 있던 영상을 한 줄기 받는다."),
-            forward("media-1", "pc", "뷰어 PC", "뷰어 PC 가 채널 RTSP 주소(rtsp://10.60.10.40:554/live/cam001/main)로 연결을 걸어 DESCRIBE·SETUP·PLAY 를 보내면 그 연결로 영상이 간다. 여러 칸일 때는 …/sub 를 받는다."),
+            forward("media-1", "pc", "뷰어 PC", "뷰어 PC 가 채널 RTSP 주소(rtsp://10.60.10.40:554/live/cam001/main)로 연결을 걸면 그 연결로 영상이 간다. 여러 칸일 때는 …/sub 를 받는다."),
             forward("media-1", "wall", "영상 월", "영상 월 컨트롤러가 같은 채널 주소로 붙으면, 미디어 서버는 녹화 서버에 다시 묻지 않고 받고 있던 영상을 복사해 보낸다."),
             forward("media-1", "gw", "게이트웨이", "웹 사용자가 같은 카메라를 고르면 게이트웨이가 미디어 서버의 같은 채널 주소에 RTSP 로 붙어 받는다."),
             forward("gw", "fw-office", "WebRTC·HLS", "게이트웨이가 포장을 WebRTC 나 HLS 로 바꿔 내보낸다(HLS 는 HTTPS, WebRTC 영상은 UDP). 사내망 방화벽은 게이트웨이로 온 연결만 통과시킨다."),

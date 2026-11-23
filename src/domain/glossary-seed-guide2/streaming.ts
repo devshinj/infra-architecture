@@ -10,7 +10,7 @@ export const TERMS: GlossarySeedEntry[] = [
       "Presigned URL은 권한을 가진 서버가 파일 하나와 동작·만료 시간을 정해 서명해 둔 오브젝트 스토리지 주소로, 받은 사람은 그 일만 할 수 있습니다.",
     why: "큰 파일을 서버를 거치지 않고 저장소에 바로 올리거나 받게 하면서도, 버킷을 공개하지 않을 수 있습니다.",
     compare: "CloudFront 서명 URL·쿠키는 엣지에서 내려받기 권한을 확인하고, S3 Presigned URL은 버킷에 바로 올리거나 받는 권한입니다.",
-    aliases: ["presign", "presignedurl", "미리서명한url", "미리서명url", "사전서명url", "s3presignedurl"],
+    aliases: ["presign", "presignedurl", "미리서명한url", "미리서명url", "사전서명url", "s3presignedurl", "signedurl", "서명url", "서명된url"],
   },
   {
     term: "멀티파트 업로드",
@@ -20,7 +20,7 @@ export const TERMS: GlossarySeedEntry[] = [
       "멀티파트 업로드는 큰 파일을 여러 조각으로 나눠 따로 올린 뒤 저장소에서 하나의 파일로 합치는 오브젝트 스토리지의 업로드 방식입니다.",
     why: "조각을 함께 올려 빨라지고, 중간에 끊겨도 실패한 조각만 다시 올리면 됩니다.",
     compare: "한 번에 올리기는 끊기면 처음부터 다시 올려야 하고, 멀티파트 업로드는 끝나지 않은 조각을 따로 지워 줘야 합니다.",
-    aliases: ["multipartupload", "multipart", "멀티파트", "분할업로드"],
+    aliases: ["multipartupload", "멀티파트", "분할업로드"],
   },
   {
     term: "ABR",
@@ -40,7 +40,7 @@ export const TERMS: GlossarySeedEntry[] = [
       "CloudFront 서명 쿠키는 서비스가 개인 키로 서명해 준 쿠키로, CloudFront 엣지가 그 서명과 만료 시간을 확인해 정한 경로의 파일만 내주게 합니다.",
     why: "로그인과 결제를 확인한 시청자만 영상 조각을 받게 하면서도, 확인은 서버가 아닌 엣지에서 합니다.",
     compare: "서명 URL은 파일 하나의 주소에 서명하고, 서명 쿠키는 조각 수백 개처럼 여러 파일을 쿠키 하나로 허용합니다.",
-    aliases: ["cloudfrontsignedcookie", "signedcookie", "서명쿠키", "서명된쿠키", "cloudfrontsignedurl", "signedurl", "서명url", "서명된url"],
+    aliases: ["cloudfrontsignedcookie", "signedcookie", "서명쿠키", "서명된쿠키", "cloudfrontsignedurl", "cloudfront서명url"],
   },
   {
     term: "OAC",
