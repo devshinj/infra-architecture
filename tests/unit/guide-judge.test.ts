@@ -39,8 +39,16 @@ describe("guide judge", () => {
   });
   test("clef match decides when present", () => {
     expect(decideStep("앱 서버를 이중으로", step, { match: 0.8, question: 0.1 })).toEqual({ kind: "match" });
-    expect(decideStep("WAS 두 대 넣어 줘", step, { match: 0.3, question: 0.2 })).toEqual({ kind: "miss" });
+    expect(decideStep("DB 넣어 줘", step, { match: 0.3, question: 0.2 })).toEqual({ kind: "miss" });
     expect(decideStep("WAS 가 뭐야?", step, { match: 0.2, question: 0.9 })).toEqual({ kind: "question" });
+  });
+  test("keywords rescue a request clef was unsure about", () => {
+    // 카드의 예시 문장을 그대로 넣어도 Clef 확신도가 기준에 못 미치는 단계가 있다.
+    expect(decideStep("WAS 두 대를 이중화해서 넣어 줘", step, { match: 0.38, question: 0.02 })).toEqual({ kind: "match" });
+    // 키워드가 일부만 들어 있으면 그대로 안 맞음이다.
+    expect(decideStep("WAS 넣어 줘", step, { match: 0.38, question: 0.02 })).toEqual({ kind: "miss" });
+    // 질문은 키워드가 다 들어 있어도 질문이다.
+    expect(decideStep("WAS 두 대는 왜 둬?", step, { match: 0.3, question: 0.7 })).toEqual({ kind: "question" });
   });
   test("keywords decide when clef is absent", () => {
     expect(decideStep("WAS 두 대 넣어 줘", step, { match: null, question: null })).toEqual({ kind: "match" });

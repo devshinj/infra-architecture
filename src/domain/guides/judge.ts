@@ -64,6 +64,8 @@ export function decideStep(
     if (clef.question !== null && clef.question >= GUIDE_QUESTION_WINS) return { kind: "question" };
     if (clef.match >= threshold) return { kind: "match" };
     if (clef.question !== null && clef.question >= threshold) return { kind: "question" };
+    // Clef 가 확신하지 못해도 이 단계의 키워드가 다 들어 있으면 받는다(카드의 예시 문장도 기준에 못 미칠 때가 있다).
+    if (keywordMatch(text, step.keywords)) return { kind: "match" };
     return { kind: "miss" };
   }
   if (keywordMatch(text, step.keywords)) return { kind: "match" };
