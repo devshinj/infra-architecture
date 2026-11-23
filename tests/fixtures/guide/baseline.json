@@ -2142,6 +2142,16 @@
       "question": 0.024053552894426178
     },
     {
+      "id": "relay-video-m3",
+      "expect": "match",
+      "got": "match",
+      "ok": true,
+      "passes": 3,
+      "runs": 3,
+      "match": 0.8164063773658039,
+      "question": 0.010013570623173138
+    },
+    {
       "id": "relay-video-c1",
       "expect": "miss",
       "got": "miss",
@@ -3764,12 +3774,12 @@
     {
       "id": "vms-media-m1",
       "expect": "match",
-      "got": "miss",
-      "ok": false,
-      "passes": 0,
+      "got": "match",
+      "ok": true,
+      "passes": 3,
       "runs": 3,
-      "match": 0.5350984286266115,
-      "question": 0.005554924703691103
+      "match": 0.6419836947437564,
+      "question": 0.007011795381497108
     },
     {
       "id": "vms-media-m2",
@@ -3778,8 +3788,8 @@
       "ok": true,
       "passes": 3,
       "runs": 3,
-      "match": 0.6736212241584463,
-      "question": 0.008187909901696235
+      "match": 0.7264256089751905,
+      "question": 0.007937994101407319
     },
     {
       "id": "vms-media-m3",
@@ -3788,8 +3798,28 @@
       "ok": true,
       "passes": 3,
       "runs": 3,
-      "match": 0.8354835371034369,
-      "question": 0.015189048807983947
+      "match": 0.8325091688411175,
+      "question": 0.015845361188137366
+    },
+    {
+      "id": "vms-media-m4",
+      "expect": "match",
+      "got": "match",
+      "ok": true,
+      "passes": 3,
+      "runs": 3,
+      "match": 0.8543993677396563,
+      "question": 0.016403032516163058
+    },
+    {
+      "id": "vms-media-m5",
+      "expect": "match",
+      "got": "match",
+      "ok": true,
+      "passes": 3,
+      "runs": 3,
+      "match": 0.7577943712746406,
+      "question": 0.010489091259938018
     },
     {
       "id": "vms-media-c1",
@@ -3808,8 +3838,8 @@
       "ok": true,
       "passes": 3,
       "runs": 3,
-      "match": 0.15974102335538914,
-      "question": 0.8925625233915799
+      "match": 0.19528696789479796,
+      "question": 0.8910549527982959
     },
     {
       "id": "vms-media-c3",
@@ -3818,8 +3848,8 @@
       "ok": true,
       "passes": 3,
       "runs": 3,
-      "match": 0.21800271531236584,
-      "question": 0.00530189486940215
+      "match": 0.24006124795898495,
+      "question": 0.006589771663080563
     },
     {
       "id": "vms-media-c4",
@@ -3828,8 +3858,8 @@
       "ok": false,
       "passes": 0,
       "runs": 3,
-      "match": 0.6951311290900456,
-      "question": 0.010169657753872614
+      "match": 0.7680379962688904,
+      "question": 0.011072160183234295
     },
     {
       "id": "vms-viewer-m1",
