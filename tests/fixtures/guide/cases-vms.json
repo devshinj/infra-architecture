@@ -81,6 +81,8 @@
 
     { "id": "vms-audit-m1", "guide": "vms", "env": "onprem", "step": "audit", "text": "누가 언제 어느 카메라를 봤는지 감사 로그를 남겨 줘", "expect": "match" },
     { "id": "vms-audit-m2", "guide": "vms", "env": "onprem", "step": "audit", "text": "열람 기록을 VMS 밖 서버에 따로 모아 줘", "expect": "match" },
+    { "id": "vms-audit-m3", "guide": "vms", "env": "onprem", "step": "audit", "text": "계정마다 권한을 나누고 누가 봤는지 로그를 남겨 줘", "expect": "match" },
+    { "id": "vms-audit-m4", "guide": "vms", "env": "onprem", "step": "audit", "text": "영상 열람 이력을 따로 보관해 줘", "expect": "match" },
     { "id": "vms-audit-c1", "guide": "vms", "env": "onprem", "step": "audit", "text": "NTP 로 시간을 맞추고 장비 감시를 넣어 줘", "expect": "miss" },
     { "id": "vms-audit-c2", "guide": "vms", "env": "onprem", "step": "audit", "text": "접속 기록은 왜 VMS 밖에 따로 둬?", "expect": "question" },
     { "id": "vms-audit-c3", "guide": "vms", "env": "onprem", "step": "audit", "text": "실시간 브로드캐스팅과 영상 내려받기 흐름을 정리해 줘", "expect": "miss" },

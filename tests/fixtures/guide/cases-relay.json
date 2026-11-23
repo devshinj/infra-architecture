@@ -33,6 +33,14 @@
       "expect": "question"
     },
     {
+      "id": "relay-legacy-c3",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "legacy",
+      "text": "요청한 VMS 채널만 영상을 올려 보내 줘",
+      "expect": "miss"
+    },
+    {
       "id": "relay-lrelay-m1",
       "guide": "relay",
       "env": "onprem",
@@ -71,6 +79,14 @@
       "step": "lrelay",
       "text": "중계 서버를 지자체에 한 벌만 두는 까닭이 뭐야?",
       "expect": "question"
+    },
+    {
+      "id": "relay-lrelay-c4",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "lrelay",
+      "text": "통합관리센터에 중앙 중계 서버 두 대를 이중화해 줘",
+      "expect": "conflict"
     },
     {
       "id": "relay-adapt-m1",
@@ -313,6 +329,14 @@
       "expect": "question"
     },
     {
+      "id": "relay-log-c4",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "log",
+      "text": "누가 지시했는지 감사 이력을 남겨 줘",
+      "expect": "miss"
+    },
+    {
       "id": "relay-ops-m1",
       "guide": "relay",
       "env": "onprem",
@@ -391,6 +415,22 @@
       "step": "video",
       "text": "영상을 왜 계속 올리지 않아?",
       "expect": "question"
+    },
+    {
+      "id": "relay-video-c4",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "video",
+      "text": "현황 수집과 영상 요청 흐름을 정리해 줘",
+      "expect": "miss"
+    },
+    {
+      "id": "relay-video-c5",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "video",
+      "text": "영상 관리 시스템을 그려 줘",
+      "expect": "miss"
     },
     {
       "id": "relay-others-m1",
