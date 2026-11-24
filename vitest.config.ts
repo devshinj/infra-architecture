@@ -19,6 +19,7 @@ export default defineConfig({
       {
         test: {
           name: "node",
+          setupFiles: ["tests/setup.ts", "tests/unit/setup.ts"],
           include: ["tests/unit/**/*.test.ts"],
           exclude: ["tests/unit/**/*.test.tsx"],
         },
@@ -34,6 +35,7 @@ export default defineConfig({
       {
         test: {
           name: "jsdom",
+          setupFiles: ["tests/setup.ts", "tests/unit/setup.ts"],
           include: ["tests/unit/**/*.test.tsx"],
           environment: "jsdom",
         },

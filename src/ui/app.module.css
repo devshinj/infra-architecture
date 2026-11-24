@@ -98,11 +98,17 @@
 .menuRoot { flex: none; display: contents; }
 /* 사이드바 줄의 ⋯: 마우스가 있는 화면에서는 줄에 올리거나 포커스가 들어올 때, 지금 연 구성도 줄, 메뉴가 열린 동안에만 자리를 차지한다(이름이 그만큼 더 보인다).
    숨은 동안에도 크기는 그대로 두고 제 너비만큼 왼쪽으로 당겨 이름 끝에 투명하게 겹친다: Tab 으로 닿고, 올리면 제자리에서 나타난다. 터치 화면은 올릴 수 없으니 늘 보인다. */
-.sidebar .row .menuBtn { width: 28px; padding-left: 0; padding-right: 0; text-align: center; }
-@media (hover: hover) {
-  .sidebar .row .menuBtn { margin-left: -30px; opacity: 0; } /* 너비 28 + 줄 gap 2 */
-  .sidebar .row:hover .menuBtn, .sidebar .row:focus-within .menuBtn, .sidebar .current .menuBtn, .sidebar .row .menuBtn[aria-expanded="true"] { margin-left: 0; opacity: 1; }
+.sidebar .row .menuBtn { width: 28px; min-height: 24px; padding-left: 0; padding-right: 0; text-align: center; }
+@media (hover: hover) and (pointer: fine) {
+  /* 숨은 동안은 누름을 받지 않는다: 겹친 이름 끝을 눌러도 구성도가 열린다(메뉴가 열리지 않는다). */
+  .sidebar .row .menuBtn { margin-left: -30px; opacity: 0; pointer-events: none; } /* 너비 28 + 줄 gap 2 */
+  .sidebar .row:hover .menuBtn, .sidebar .row:focus-within .menuBtn, .sidebar .current .menuBtn, .sidebar .row .menuBtn[aria-expanded="true"] { margin-left: 0; opacity: 1; pointer-events: auto; }
 }
+/* 터치도 되는 기기(터치스크린 노트북)는 손가락으로 올릴 수 없으니 늘 보인다. 좁은 창의 서랍은 단추가 44px 라 겹치지 않고 늘 보인다. */
+@media (any-pointer: coarse) {
+  .sidebar .row .menuBtn { margin-left: 0; opacity: 1; pointer-events: auto; }
+}
+.sidebar.drawerNav .row .menuBtn { margin-left: 0; opacity: 1; pointer-events: auto; }
 .menu {
   position: absolute; right: 4px; top: 100%; z-index: 30; min-width: 120px; display: flex; flex-direction: column;
   background: var(--bg-panel-raised); border: 1px solid var(--line-node); border-radius: var(--radius-surface); padding: 4px;

@@ -35,6 +35,15 @@ vi.mock("@/server/flows", () => ({
   listFlows: vi.fn(async () => []),
   applyFlowOps: vi.fn(async (_d: string, _s: unknown, ops: unknown[]) => ({ saved: ops.length, rejected: [] })),
 }));
+// 망 지식·사용자 용어는 DB 에서 읽는다: 여기서는 없는 것으로 둔다(단위 테스트는 DB 에 붙지 않는다, tests/unit/setup.ts).
+vi.mock("@/server/network", async (orig) => ({
+  ...(await orig<typeof import("@/server/network")>()),
+  getNetworkKnowledge: vi.fn(async () => null),
+}));
+vi.mock("@/server/glossary", async (orig) => ({
+  ...(await orig<typeof import("@/server/glossary")>()),
+  matchUserTerms: vi.fn(async () => []),
+}));
 vi.mock("@/server/chat/warnings", () => ({
   checkWarnings: vi.fn(async () => ({ warnings: [], fresh: [] })),
 }));

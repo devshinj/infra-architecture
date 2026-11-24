@@ -44,6 +44,27 @@ test("floating panel tokens have exact values (translucent paper with blur, hair
   expect(css).toContain("--panel-gap: 12px;");
 });
 
+test("translucent panels fall back to opaque paper without backdrop blur or with reduced transparency", () => {
+  const css = read("src/styles/tokens.css");
+  const block = (head: string) => css.slice(css.indexOf(head)).match(/\{\s*:root\s*\{([^}]*)\}/)?.[1] ?? "";
+  const unsupported = block("@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)))");
+  expect(unsupported).toContain("--glass-bg: var(--bg-sidebar);");
+  const reduced = block("@media (prefers-reduced-transparency: reduce)");
+  expect(reduced).toContain("--glass-bg: var(--bg-sidebar);");
+  expect(reduced).toContain("--glass-blur: 0px;");
+});
+
+test("the hidden sidebar row menu button does not take clicks, and stays visible on touch-capable devices and in the drawer", () => {
+  const css = read("src/ui/app.module.css");
+  const fine = css.slice(css.indexOf("@media (hover: hover) and (pointer: fine)"));
+  expect(fine).toMatch(/\.sidebar \.row \.menuBtn \{ margin-left: -30px; opacity: 0; pointer-events: none; \}/);
+  expect(fine).toMatch(/\.sidebar \.row:hover \.menuBtn,[^{]*\{ margin-left: 0; opacity: 1; pointer-events: auto; \}/);
+  const coarse = css.slice(css.indexOf("@media (any-pointer: coarse)"));
+  expect(coarse).toMatch(/^@media \(any-pointer: coarse\) \{\s*\.sidebar \.row \.menuBtn \{ margin-left: 0; opacity: 1; pointer-events: auto; \}/);
+  expect(css).toContain(".sidebar.drawerNav .row .menuBtn { margin-left: 0; opacity: 1; pointer-events: auto; }");
+  expect(css).toMatch(/\.sidebar \.row \.menuBtn \{ width: 28px; min-height: 24px;/);
+});
+
 test("radius scale comes from the diagram (DESIGN.md · Shapes): control = node, surface = zone", () => {
   const css = read("src/styles/tokens.css");
   expect(css).toContain("--radius-node: 6px;");
