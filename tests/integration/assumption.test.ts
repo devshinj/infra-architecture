@@ -4,6 +4,8 @@ import { emptyState } from "@/domain/types";
 import type { ChatEvent } from "@/server/chat/events";
 import { runChatTurn } from "@/server/chat/pipeline";
 import { confirmAssumptionFor } from "@/server/assumptions";
+import { BUSY_MESSAGE } from "@/server/chat/busy";
+import { withDiagramLock } from "@/server/chat/lock";
 import type { ClefClient } from "@/server/llm/clef";
 import type { QwenClient } from "@/server/llm/qwen";
 import { NotFoundError, ValidationError } from "@/server/projects";
@@ -64,4 +66,18 @@ test("confirmAssumptionFor validates input and ownership", async () => {
   await expect(confirmAssumptionFor(ids.userId, ids.diagramId, "ok", "")).rejects.toBeInstanceOf(ValidationError);
   await expect(confirmAssumptionFor(ids.userId, ids.diagramId, "ok", "x".repeat(81))).rejects.toBeInstanceOf(ValidationError);
   await expect(confirmAssumptionFor(ids.userId, other.diagramId, "ok", "x")).rejects.toBeInstanceOf(NotFoundError);
+});
+
+test("confirming while a chat turn holds the lock returns busy and saves nothing", async () => {
+  const ids = await makeOwnedDiagram();
+  await createVersion(ids.diagramId, emptyState(), { source: "import" });
+  let release!: () => void;
+  const gate = new Promise<void>((r) => (release = r));
+  const held = withDiagramLock(ids.diagramId, () => gate);
+  await new Promise((r) => setTimeout(r, 200));
+  await expect(confirmAssumptionFor(ids.userId, ids.diagramId, "environment", "사내 IDC")).rejects.toThrow(BUSY_MESSAGE);
+  expect((await getLatestState(ids.diagramId))?.number).toBe(1);
+  release();
+  await held;
+  expect((await confirmAssumptionFor(ids.userId, ids.diagramId, "environment", "사내 IDC")).number).toBe(2);
 });

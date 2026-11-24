@@ -53,7 +53,7 @@ import {
   type NetTypeRow,
 } from "@/server/network";
 import { createMcpKey, deleteMcpKey, listMcpKeys } from "@/server/mcpKeys";
-import { getVersion, listVersions, restoreVersionWithMessage, type RestoreMessageOpts } from "@/server/versions";
+import { getVersion, listVersions, restoreVersionLocked, type RestoreMessageOpts } from "@/server/versions";
 
 const DIAGRAM_ROUTE = "/p/[projectId]/d/[diagramId]";
 
@@ -180,7 +180,7 @@ export async function importSampleAction(diagramId: string, sampleId: string): P
 /**
  * describeChange: 안내 둘째 줄에 구성 정보 카드 숫자의 변화를 붙인다(이력의 되돌리기). text 는 남긴 안내.
  * 학습 중이면 구성도 잠금 안에서 되돌리고 그 버전의 단계로 맞춘 새 학습 상태(guide)를 함께 돌려준다.
- * 학습 중인데 대화 차례가 돌고 있으면 되돌리지 않고 { ok: false, error } 를 돌려준다.
+ * 대화 차례가 돌고 있으면(학습 중이든 아니든) 되돌리지 않고 { ok: false, error } 를 돌려준다.
  */
 export async function restoreVersionAction(
   diagramId: string,
@@ -203,9 +203,10 @@ export async function restoreVersionAction(
       refreshDiagram();
       return { number: g.number, text: g.text, ...(g.guide ? { guide: g.guide } : {}) };
     }
-    const r = await restoreVersionWithMessage(diagramId, number, restoreOpts);
+    const r = await restoreVersionLocked(diagramId, number, restoreOpts);
+    if (!r.ok) return { ok: false as const, error: BUSY_MESSAGE };
     refreshDiagram();
-    return r;
+    return { number: r.number, text: r.text };
   });
 }
 

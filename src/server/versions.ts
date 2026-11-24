@@ -6,6 +6,7 @@ import { infoChangeText, infoCounts } from "@/domain/infoCounts";
 import { euro } from "@/domain/josa";
 import type { NetworkKnowledge } from "@/domain/network";
 import { emptyState, type DiagramState } from "@/domain/types";
+import { USER_TURN_LOCK_WAIT_MS, withDiagramLock } from "@/server/chat/lock";
 import { createMessage } from "@/server/chat/messages";
 
 export interface CreateVersionOpts {
@@ -143,4 +144,17 @@ export async function restoreVersionWithMessage(
   }
   await createMessage(diagramId, "system", text, {}, null, tx);
   return { number: r.number, text };
+}
+
+/**
+ * 구성도 잠금 안에서 되돌린다(학습 중이 아닌 구성도의 되돌리기). 잠금을 못 잡으면(대화 차례가 도는 중) 되돌리지 않고 { ok: false }:
+ * 차례는 시작 때 읽은 상태로 저장하므로, 그 사이에 되돌리면 되돌린 구성이 차례 끝에 덮인다.
+ */
+export async function restoreVersionLocked(
+  diagramId: string,
+  number: number,
+  opts: RestoreMessageOpts = {},
+): Promise<{ ok: true; number: number; text: string } | { ok: false }> {
+  const locked = await withDiagramLock(diagramId, () => restoreVersionWithMessage(diagramId, number, opts), { waitMs: USER_TURN_LOCK_WAIT_MS });
+  return locked.ok ? { ok: true, ...locked.value } : { ok: false };
 }
