@@ -35,12 +35,12 @@ test("fly dot token is a silver brighter than the glass highlight", () => {
   expect(read("docs/superpowers/specs/2026-10-29-infra-architecture-visualizer-design.md")).toMatch(/\| `fly-dot` \| `#DCE3EE` \|/);
 });
 
-test("floating panel tokens have exact values (flat paper, hairline, no blur)", () => {
+test("floating panel tokens have exact values (translucent paper with blur, hairline)", () => {
   const css = read("src/styles/tokens.css");
-  expect(css).toContain("--glass-bg: rgba(4, 9, 12, 1);");
+  expect(css).toContain("--glass-bg: rgba(4, 9, 12, 0.55);");
+  expect(css).toContain("--glass-blur: 14px;");
   expect(css).toContain("--glass-line: rgba(32, 40, 44, 1);");
   expect(css).not.toContain("--glass-highlight:");
-  expect(css).not.toContain("--glass-blur:");
   expect(css).toContain("--panel-gap: 12px;");
 });
 
@@ -54,17 +54,16 @@ test("radius scale comes from the diagram (DESIGN.md · Shapes): control = node,
   expect(css).toContain("--radius-pill: 999px;");
 });
 
-test("sidebar and panel float as flat paper panels with a hairline over the full-bleed canvas", () => {
+test("sidebar and panel float as translucent blurred paper panels with a hairline over the full-bleed canvas", () => {
   const css = read("src/ui/app.module.css");
   expect(rule(css, ".shell")).toContain("background: var(--bg-canvas)");
   for (const sel of [".sidebar", ".panel"]) {
     const r = rule(css, sel);
     expect(r, sel).toContain("background: var(--glass-bg)");
-    expect(r, sel).not.toContain("backdrop-filter");
+    expect(r, sel).toContain("backdrop-filter: blur(var(--glass-blur))");
     expect(r, sel).toContain("border: 1px solid var(--glass-line)");
     expect(r, sel).toContain("border-radius: var(--radius-surface)");
   }
-  expect(css).not.toContain("backdrop-filter");
   expect(rule(css, ".sidebar")).toContain("position: absolute");
   expect(rule(css, ".panelDock")).toContain("position: absolute");
   expect(css).not.toMatch(/box-shadow|gradient/);

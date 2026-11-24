@@ -114,6 +114,10 @@ const MISSING_BADGES_KEY = "infrasketch.showMissingBadges";
 export const MOBILE_VIEW_KEY = "infrasketch.mobileView";
 /** 이보다 좁은 작업 영역(사이드바·패널이 함께 뜨는 태블릿 너비)은 패널을 PANEL_MIN_COMPACT 까지 줄여 캔버스 띠를 넓힌다. */
 const COMPACT_WIDTH = 900;
+/** 캔버스 왼쪽 위 제목 판 몫으로 도구 모음이 남겨 두는 폭(제목 판 최소 160 + 사이 여백 12). */
+const TITLE_RESERVE = 172;
+/** 아이콘만으로 접힌 도구 모음이 한 줄에 서는 데 필요한 폭(약 253 + 여유). 보이는 띠가 좁으면 제목 판 몫을 이만큼은 남기고 줄인다(도구 모음이 두 줄이 되지 않게). */
+const TOOLBAR_COMPACT_MIN = 266;
 const CANVAS_ID = "workspace-canvas";
 
 /** 구성 정보 카드의 접힌 줄 높이·카드 너비(재기 전 기본값). 카드는 접힌 줄이 한 줄에 드는 너비(infoCard.module.css)라 대략 값이다. */
@@ -207,12 +211,16 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
   // 좁은 화면(narrow)은 패널이 캔버스 위에 뜨지 않고 아래 탭으로 갈마든다: 캔버스는 양옆 여백만 비운다.
   const { sidebarExtent, narrow } = useShell();
   const insetLeft = sidebarExtent + PANEL_GAP;
+  // 왼쪽 위 제목 판은 도구 모음이 쓰고 남은 폭만 쓴다(Canvas 가 잰 너비). 도구 모음은 제목 판 몫(TITLE_RESERVE)을 남기고 접힌다.
+  const [toolbarW, setToolbarW] = useState(0);
   // 태블릿 너비는 패널을 조금 더 줄일 수 있게 한다(사이드바·패널 사이 캔버스 띠가 카드 하나도 못 담지 않게).
   const panelMin = workspaceW > 0 && workspaceW <= COMPACT_WIDTH ? PANEL_MIN_COMPACT : PANEL_MIN;
   // 보이는 캔버스 띠가 360px 보다 좁아지지 않게 최대를 줄인다(너비를 모르면 줄이지 않는다).
   const panelMax = workspaceW > 0 ? Math.max(panelMin, Math.min(PANEL_MAX, workspaceW - insetLeft - 2 * PANEL_GAP - 360)) : PANEL_MAX;
   const shownPanelWidth = Math.max(panelMin, Math.min(panelWidth, panelMax));
   const insetRight = narrow ? PANEL_GAP : PANEL_GAP + shownPanelWidth + PANEL_GAP;
+  // 두 판 사이 보이는 띠에서 접힌 도구 모음 몫을 뺀 나머지까지만 제목 판 몫으로 남긴다(너비를 모르면 기본 몫).
+  const titleReserve = narrow ? 0 : workspaceW > 0 ? Math.max(0, Math.min(TITLE_RESERVE, workspaceW - insetLeft - insetRight - TOOLBAR_COMPACT_MIN)) : TITLE_RESERVE;
   // 아래: 접힌 구성 정보 카드 줄(+ 위아래 여백)은 늘 비운다. 카드가 열려 있으면 위치 보기가 카드를 피한다.
   const [cardOpen, setCardOpen] = useState(false);
   const [cardSize, setCardSize] = useState<CardMeasure | null>(null);
@@ -1118,7 +1126,7 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
         className={styles.workspace}
         data-workspace=""
         data-mview={panelShown ? "panel" : "canvas"}
-        style={{ "--canvas-inset-left": `${insetLeft}px`, "--canvas-inset-right": `${insetRight}px` } as React.CSSProperties}
+        style={{ "--canvas-inset-left": `${insetLeft}px`, "--canvas-inset-right": `${insetRight}px`, "--canvas-toolbar-w": `${toolbarW}px`, "--canvas-title-reserve": `${titleReserve}px` } as React.CSSProperties}
       >
         {/* 화면의 첫 Tab 칸들(셸 맨 앞, 사이드바보다 앞): 대화 입력으로, 캔버스로. 포커스를 받을 때만 보인다.
             자리가 아직 없으면(첫 렌더) 이 자리에 그대로 둔다. */}
@@ -1136,8 +1144,8 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
           return skipSlot ? createPortal(links, skipSlot) : links;
         })()}
         <section id={CANVAS_ID} className={styles.center} aria-label={name} {...(narrow ? { role: "tabpanel", "aria-labelledby": mobileTabId("구성도") } : {})}>
-          {/* 화면에 보이는 구성도 제목이 없어 보조기기용 제목만 둔다. */}
-          <h1 className={styles.srOnly}>{name}</h1>
+          {/* 좁은 화면은 위 막대(Sidebar)가 「프로젝트 / 구성도」를 보여 주므로 보조기기용 제목만 둔다. 넓은 화면의 제목은 캔버스 왼쪽 위 제목 판. */}
+          {narrow && <h1 className={styles.srOnly}>{name}</h1>}
           {/* 노드·연결을 고르면 오른쪽 패널이 설명으로 바뀐다(좁은 화면은 탭에 점만). 포커스는 캔버스에 남으므로 보조기기에 알린다. */}
           <p className={styles.srOnly} aria-live="polite" data-selection-announce="">
             {selectionLabel ? `${selectionLabel} 선택됨. 설명 탭에서 볼 수 있어요.` : ""}
@@ -1180,6 +1188,18 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
           {/* 좁은 화면은 어느 탭에서든 보이게 위 막대 바로 밑에 띄운다(app.module.css .alertBanner). */}
           {error && <div className={`${styles.banner} ${styles.alertBanner}`} role="alert">{error}</div>}
           <div className={styles.canvasWrap}>
+            {!narrow && (
+              <div className={styles.docTitle}>
+                {projectName !== undefined && projectName !== "" && (
+                  <>
+                    <span className={styles.srOnly}>프로젝트 </span>
+                    <span className={styles.docProject} title={projectName}>{projectName}</span>
+                    <span className={styles.docSep} aria-hidden="true">/</span>
+                  </>
+                )}
+                <h1 className={styles.docDiagram} title={name}>{name}</h1>
+              </div>
+            )}
             <Canvas
               state={shown}
               knowledge={knowledge}
@@ -1213,6 +1233,7 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
               importing={busy || locked}
               onPlaced={fly.placed}
               diagramName={name}
+              onToolbarWidth={setToolbarW}
               {...(projectName !== undefined ? { projectName } : {})}
               {...(focusRequest ? { focusRequest } : {})}
               {...(frameRequest && mode.kind === "compare" ? { frameRequest } : {})}

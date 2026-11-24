@@ -402,16 +402,16 @@ test("fit padding accounts for floating panels", () => {
   window.localStorage.clear();
   hookState.insets.length = 0;
   render(ui(mk(1, ["a"])));
-  // 왼쪽: 여백 12 + 사이드바 240 + 여백 12, 오른쪽: 여백 12 + 패널 360 + 여백 12
+  // 왼쪽: 여백 12 + 사이드바 288 + 여백 12, 오른쪽: 여백 12 + 패널 360 + 여백 12
   // 아래: 여백 12 + 접힌 구성 정보 카드 줄 42 + 여백 12
-  expect(hookState.insets.at(-1)).toEqual({ left: 264, right: 384, bottom: 66 });
+  expect(hookState.insets.at(-1)).toEqual({ left: 312, right: 384, bottom: 66 });
   fireEvent.keyDown(screen.getByRole("separator", { name: "대화 패널 너비" }), { key: "ArrowLeft" });
-  expect(hookState.insets.at(-1)).toEqual({ left: 264, right: 400, bottom: 66 });
+  expect(hookState.insets.at(-1)).toEqual({ left: 312, right: 400, bottom: 66 });
   // 카드를 펼치면 카메라가 피할 장애물(재기 전 카드 폭 기본값 380 + 여백 12)이 함께 간다.
   fireEvent.click(screen.getByRole("button", { name: "구성 정보 펼치기" }));
-  expect(hookState.insets.at(-1)).toMatchObject({ left: 264, right: 400, bottom: 66, card: { width: 392 } });
+  expect(hookState.insets.at(-1)).toMatchObject({ left: 312, right: 400, bottom: 66, card: { width: 392 } });
   fireEvent.click(screen.getByRole("button", { name: "구성 정보 접기" }));
-  expect(hookState.insets.at(-1)).toEqual({ left: 264, right: 400, bottom: 66 });
+  expect(hookState.insets.at(-1)).toEqual({ left: 312, right: 400, bottom: 66 });
   cleanup();
   // 접힌 사이드바(레일 56)
   window.localStorage.setItem("infrasketch.sidebarCollapsed", "1");
@@ -817,6 +817,16 @@ test("the workspace has a single h1 with the diagram name", () => {
   const h1 = screen.getAllByRole("heading", { level: 1 });
   expect(h1).toHaveLength(1);
   expect(h1[0]).toHaveTextContent("운영 구성도");
+});
+
+test("the title plate shows the project and the diagram name on wide screens", () => {
+  hookState.busy = false;
+  render(<DiagramWorkspace diagramId="d" name="운영 구성도" projectName="쇼핑몰" latest={mk(1, ["a"]) as never} initialPinned={{}} samples={[]} />);
+  const h1 = screen.getByRole("heading", { level: 1, name: "운영 구성도" });
+  // 보조기기 전용이 아니라 화면에 보이는 제목이고, 같은 판에 프로젝트 이름이 앞선다.
+  expect(h1.className).not.toMatch(/srOnly/);
+  expect(h1.parentElement).toHaveTextContent("프로젝트 쇼핑몰/운영 구성도");
+  expect(within(h1.parentElement!).getByTitle("쇼핑몰")).toBeInTheDocument();
 });
 
 // ── 좁은 화면(휴대폰): 아래 탭 막대로 구성도·대화·설명·이력을 한 화면씩 본다 ──

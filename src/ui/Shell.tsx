@@ -7,7 +7,7 @@ import styles from "./app.module.css";
 import { useMediaQuery } from "./useMediaQuery";
 
 /** 펼친 사이드바·접힌 레일 너비와 떠 있는 패널 여백(tokens.css --panel-gap 과 같다). */
-export const SIDEBAR_WIDTH = 240;
+export const SIDEBAR_WIDTH = 288;
 export const RAIL_WIDTH = 56;
 export const PANEL_GAP = 12;
 export const SIDEBAR_COLLAPSED_KEY = "infrasketch.sidebarCollapsed";

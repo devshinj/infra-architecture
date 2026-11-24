@@ -44,7 +44,7 @@
   transform: translateX(-50%) scale(var(--tip-scale, 1)); transform-origin: 50% 100%;
   width: max-content; max-width: 320px; box-sizing: border-box; padding: 8px 12px;
   display: flex; flex-direction: column; gap: 2px;
-  background: var(--glass-bg); border: 1px solid var(--glass-line);
+  background: var(--bg-sidebar); border: 1px solid var(--glass-line);
   border-radius: var(--radius-surface);
   color: var(--text-primary); pointer-events: none; z-index: 30;
 }
@@ -218,8 +218,9 @@ button.node__badge--pair-end::before { left: -1px; transform: none; }
   /* 떠 있는 오른쪽 패널에 가리지 않게 그 왼쪽에 둔다(--canvas-inset-right 는 DiagramWorkspace 가 준다). 위 패널과 같은 paper-2 칠. */
   position: absolute; top: var(--panel-gap); right: calc(max(var(--panel-gap), var(--canvas-inset-right, 0px)) + var(--safe-r, 0px)); z-index: 20;
   display: flex; flex-wrap: wrap; align-items: center; gap: 2px; padding: 4px; justify-content: flex-end;
-  max-width: min(70%, calc(100% - max(12px, var(--canvas-inset-left, 0px)) - max(12px, var(--canvas-inset-right, 0px)) - var(--safe-l, 0px) - var(--safe-r, 0px)));
-  background: var(--glass-bg);
+  /* --canvas-title-reserve: 왼쪽 위 제목 판이 있을 때 그 몫으로 남기는 폭(DiagramWorkspace 가 준다). 모자라면 아이콘만으로 접힌다. */
+  max-width: min(70%, calc(100% - max(12px, var(--canvas-inset-left, 0px)) - max(12px, var(--canvas-inset-right, 0px)) - var(--safe-l, 0px) - var(--safe-r, 0px) - var(--canvas-title-reserve, 0px)));
+  background: var(--glass-bg); backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur));
   border: 1px solid var(--glass-line); border-radius: var(--radius-surface);
 }
 .canvas__group { display: flex; align-items: center; gap: 2px; }
@@ -247,7 +248,7 @@ button.node__badge--pair-end::before { left: -1px; transform: none; }
   position: absolute; z-index: 20; transform: translateY(-50%);
   display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; min-height: 32px; box-sizing: border-box;
   font: inherit; font-size: 12px; white-space: nowrap; color: var(--text-primary);
-  background: var(--glass-bg); border: 1px solid var(--glass-line); border-radius: var(--radius-control); cursor: pointer;
+  background: var(--bg-sidebar); border: 1px solid var(--glass-line); border-radius: var(--radius-control); cursor: pointer;
 }
 .canvas__offscreen:hover { background: var(--bg-panel-raised); border-color: var(--line-node); }
 .canvas__offscreen:active { background: var(--line-node); }
@@ -257,7 +258,7 @@ button.node__badge--pair-end::before { left: -1px; transform: none; }
 .canvas__pop {
   position: absolute; z-index: 30; top: calc(100% + 10px); left: 0; width: 300px; padding: 6px;
   display: flex; flex-direction: column; gap: 2px;
-  background: var(--glass-bg);
+  background: var(--bg-sidebar);
   border: 1px solid var(--glass-line); border-radius: var(--radius-surface);
 }
 /* 좁은 화면의 범례: 보기 옵션 아래 머리카락 선으로 나누고, 메뉴가 화면보다 길면 메뉴 안에서 스크롤한다. */
@@ -348,7 +349,7 @@ button.node__badge--pair-end::before { left: -1px; transform: none; }
 .canvas__export-note {
   position: absolute; z-index: 30; top: calc(100% + 10px); right: 0; margin: 0; padding: 7px 12px; white-space: nowrap;
   font-size: 12px; color: var(--text-primary);
-  background: var(--glass-bg);
+  background: var(--bg-sidebar);
   border: 1px solid var(--glass-line); border-radius: var(--radius-surface);
 }
 /* 알림은 클릭을 받지 않는다. 비어 있으면 화면에서만 숨기고 알림 자리(role=status)는 남긴다. */
