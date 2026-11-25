@@ -1,67 +1,74 @@
 ---
 title: "commands.ts"
-sidebar_position: 36
+sidebar_position: 14
 ---
 # commands.ts
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 27 nodes · cohesion 0.09
+> 48 nodes · cohesion 0.06
 
 ## Key Concepts
 
-- **commands.ts** (49 connections) — `src/domain/commands.ts`
-- **parseCommand()** (13 connections) — `src/domain/commands.ts`
-- **isFlowCommand()** (11 connections) — `src/domain/commands.ts`
-- **checkCommands()** (9 connections) — `src/server/mcp/apply.ts`
-- **isStructural()** (8 connections) — `src/domain/commands.ts`
-- **toFlowOp()** (7 connections) — `src/domain/commands.ts`
-- **Task 5: 대화 차례의 흐름 명령** (6 connections) — `docs/superpowers/plans/2026-11-05-flows-and-network-boundaries.md`
+- **commands.ts** (56 connections) — `src/domain/commands.ts`
+- **lockedTurn()** (49 connections) — `src/server/chat/pipeline.ts`
+- **guides/apply.ts** (22 connections) — `src/domain/guides/apply.ts`
+- **isFlowCommand()** (15 connections) — `src/domain/commands.ts`
+- **Task 2: 단계 적용(순수 함수)과 대본 검사 틀** (11 connections) — `docs/superpowers/plans/2026-11-19-learning-mode.md`
+- **isStructural()** (10 connections) — `src/domain/commands.ts`
+- **toFlowOp()** (10 connections) — `src/domain/commands.ts`
+- **FlowOp** (10 connections) — `src/domain/flows.ts`
+- **applyGuideStep()** (7 connections) — `src/domain/guides/apply.ts`
+- **detectForks()** (6 connections) — `src/domain/clarify.ts`
+- **GuideStep** (6 connections) — `src/domain/guides/types.ts`
+- **confirmEnvironment()** (5 connections) — `src/domain/guides/apply.ts`
+- **skips.ts** (5 connections) — `src/server/chat/skips.ts`
+- **SkipTally** (5 connections) — `src/server/chat/skips.ts`
+- **buildGuideState()** (4 connections) — `src/domain/guides/apply.ts`
+- **ApplyOptions** (3 connections) — `src/domain/apply.ts`
 - **COMMAND_OPS** (3 connections) — `src/domain/commands.ts`
+- **createFlowRetarget()** (3 connections) — `src/domain/commands.ts`
 - **SERVER_ONLY_OPS** (3 connections) — `src/domain/commands.ts`
+- **createSkipTally()** (3 connections) — `src/server/chat/skips.ts`
+- **skipKey()** (3 connections) — `src/server/chat/skips.ts`
+- **Checked** (3 connections) — `src/server/mcp/apply.ts`
 - **FLOW_OPS** (2 connections) — `src/domain/commands.ts`
-- **attrs** (1 connections) — `src/domain/commands.ts`
-- **commandSchema** (1 connections) — `src/domain/commands.ts`
-- **direction** (1 connections) — `src/domain/commands.ts`
-- **edgeKind** (1 connections) — `src/domain/commands.ts`
-- **flowName** (1 connections) — `src/domain/commands.ts`
-- **flowNote** (1 connections) — `src/domain/commands.ts`
-- **flowStep** (1 connections) — `src/domain/commands.ts`
-- **flowSteps** (1 connections) — `src/domain/commands.ts`
-- **groupKind** (1 connections) — `src/domain/commands.ts`
-- **id** (1 connections) — `src/domain/commands.ts`
-- **linkGuess** (1 connections) — `src/domain/commands.ts`
-- **medium** (1 connections) — `src/domain/commands.ts`
-- **nodeKind** (1 connections) — `src/domain/commands.ts`
-- **parent** (1 connections) — `src/domain/commands.ts`
-- **payload** (1 connections) — `src/domain/commands.ts`
-- *... and 2 more nodes in this community*
+- **abortError()** (2 connections) — `src/server/chat/pipeline.ts`
+- **opName()** (2 connections) — `src/server/chat/pipeline.ts`
+- *... and 23 more nodes in this community*
 
 ## Relationships
 
-- [pipeline.ts](pipeline.ts.md) (12 shared connections)
-- [getOwnedDiagram](getOwnedDiagram.md) (12 shared connections)
-- [domain/apply.ts](domain-apply.ts.md) (7 shared connections)
+- [pipeline.ts](pipeline.ts.md) (20 shared connections)
+- [applyCommand](applyCommand.md) (18 shared connections)
+- [mcp/apply.ts](mcp-apply.ts.md) (18 shared connections)
+- [turn.ts](turn.ts.md) (16 shared connections)
+- [clarify.ts](clarify.ts.md) (6 shared connections)
+- [getOwnedDiagram](getOwnedDiagram.md) (6 shared connections)
+- [domain/explain.ts](domain-explain.ts.md) (4 shared connections)
+- [domain/flows.ts](domain-flows.ts.md) (4 shared connections)
+- [diff.ts](diff.ts.md) (4 shared connections)
 - [flowSuggest.ts](flowSuggest.ts.md) (4 shared connections)
-- [segments.ts](segments.ts.md) (3 shared connections)
-- [index.ts](index.ts.md) (3 shared connections)
-- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (3 shared connections)
-- [domain/flows.ts](domain-flows.ts.md) (2 shared connections)
-- [drawing/rules.ts](drawing-rules.ts.md) (2 shared connections)
-- [types.ts](types.ts.md) (2 shared connections)
-- [useChatTurn.ts](useChatTurn.ts.md) (2 shared connections)
-- [samples.ts](samples.ts.md) (2 shared connections)
+- [domain/types.ts](domain-types.ts.md) (3 shared connections)
+- [authoring.ts](authoring.ts.md) (3 shared connections)
 
 ## Source Files
 
-- `docs/superpowers/plans/2026-11-05-flows-and-network-boundaries.md`
+- `docs/superpowers/plans/2026-11-19-learning-mode.md`
+- `src/domain/apply.ts`
+- `src/domain/clarify.ts`
 - `src/domain/commands.ts`
+- `src/domain/flows.ts`
+- `src/domain/guides/apply.ts`
+- `src/domain/guides/types.ts`
+- `src/server/chat/pipeline.ts`
+- `src/server/chat/skips.ts`
 - `src/server/mcp/apply.ts`
 
 ## Audit Trail
 
-- EXTRACTED: 85 (89%)
-- INFERRED: 11 (11%)
+- EXTRACTED: 192 (92%)
+- INFERRED: 17 (8%)
 - AMBIGUOUS: 0 (0%)
 
 ---

@@ -1,40 +1,40 @@
 ---
 title: "getOwnedDiagram()"
-sidebar_position: 123
+sidebar_position: 131
 sidebar_label: "핵심 노드: getOwnedDiagram()"
 ---
 # getOwnedDiagram()
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> God node · 53 connections · `src/server/projects.ts`
+> God node · 55 connections · `src/server/projects.ts`
 
 **Community:** [getOwnedDiagram](getOwnedDiagram.md)
 
 ## Connections by Relation
 
 ### calls
-- [NotFoundError](NotFoundError.md) `EXTRACTED`
+- NotFoundError `EXTRACTED`
 - rejectLinkGuessFor() `EXTRACTED`
+- runChatTurn() `EXTRACTED`
 - runAskTurn() `EXTRACTED`
 - saveFieldsFor() `EXTRACTED`
-- listFlows() `EXTRACTED`
-- runChatTurn() `EXTRACTED`
 - restoreMcpVersion() `EXTRACTED`
-- getDiagramForMcp() `EXTRACTED`
 - restoreVersionAction() `EXTRACTED`
-- withOwnedFlow() `EXTRACTED`
+- listFlows() `EXTRACTED`
+- confirmAssumptionFor() `EXTRACTED`
 - setWarningIgnoredFor() `EXTRACTED`
 - removeNoLinkFor() `EXTRACTED`
+- getDiagramForMcp() `EXTRACTED`
 - setZoneTypeFor() `EXTRACTED`
-- confirmAssumptionFor() `EXTRACTED`
+- withOwnedFlow() `EXTRACTED`
 - confirmLinkGuessFor() `EXTRACTED`
-- duplicateDiagram() `EXTRACTED`
-- POST() `EXTRACTED`
-- GET() `EXTRACTED`
-- deleteDiagramAction() `EXTRACTED`
+- importSample() `EXTRACTED`
 - applyMcpCommands() `EXTRACTED`
-- *…and 14 more `calls` connection(s) not listed (lowest-degree first to go)*
+- duplicateDiagram() `EXTRACTED`
+- quitGuide() `EXTRACTED`
+- POST() `EXTRACTED`
+- *…and 15 more `calls` connection(s) not listed (lowest-degree first to go)*
 
 ### contains
 - [projects.ts](projects.ts.md) `EXTRACTED`
@@ -42,22 +42,23 @@ sidebar_label: "핵심 노드: getOwnedDiagram()"
 ### imports
 - [(app)/actions.ts](app-actions.ts.md) `EXTRACTED`
 - [pipeline.ts](pipeline.ts.md) `EXTRACTED`
-- mcp/apply.ts `EXTRACTED`
 - server/explain.ts `EXTRACTED`
+- [mcp/apply.ts](mcp-apply.ts.md) `EXTRACTED`
+- [start.ts](start.ts.md) `EXTRACTED`
 - [read.ts](read.ts.md) `EXTRACTED`
 - ask.ts `EXTRACTED`
-- [flowSuggest.ts](flowSuggest.ts.md) `EXTRACTED`
 - [server/flows.ts](server-flows.ts.md) `EXTRACTED`
-- [samples.ts](samples.ts.md) `EXTRACTED`
+- [flowSuggest.ts](flowSuggest.ts.md) `EXTRACTED`
+- samples.ts `EXTRACTED`
 - [\[sessionId\]/route.ts]([sessionId]-route.ts.md) `EXTRACTED`
 - [ask/route.ts](ask-route.ts.md) `EXTRACTED`
 - server/linkGuess.ts `EXTRACTED`
 - chat/route.ts `EXTRACTED`
 - fields.ts `EXTRACTED`
-- sessions/route.ts `EXTRACTED`
-- zoneType.ts `EXTRACTED`
-- ignore.ts `EXTRACTED`
 - server/assumptions.ts `EXTRACTED`
+- zoneType.ts `EXTRACTED`
+- sessions/route.ts `EXTRACTED`
+- ignore.ts `EXTRACTED`
 
 ---
 

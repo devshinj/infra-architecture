@@ -87,6 +87,18 @@ npm run eval:intent -- --update      # 지금 결과를 기준으로 저장
 npm run eval:intent -- --only a,b --dump out.jsonl   # 고른 문장만, 모델이 낸 명령을 파일로(원인 조사용)
 ```
 
+학습 모드 대본이나 단계 판정(`domain/guides/judge.ts`, `server/guide/judge.ts`)을 고친 뒤에는 단계 판정을 점검합니다. 주제별 평가 문장을 실제 Clef 로 판정해 기준 파일(`tests/fixtures/guide/baseline.json`)보다 나빠진 문장이 있으면 0 이 아닌 코드로 끝납니다. DB 를 쓰지 않고 `npm test` 에는 들어가지 않습니다.
+
+```bash
+npm run eval:guide                     # 전체 문장을 한 번씩
+npm run eval:guide -- --repeat 3       # 문장마다 3번(모두 기대와 같아야 맞음)
+npm run eval:guide -- --only a,b       # 고른 문장만
+npm run eval:guide -- --threshold 0.5  # 다른 판정 기준으로 돌려 보기(저장하지 않음)
+npm run eval:guide -- --repeat 3 --update   # 지금 결과를 기준으로 저장(나빠진 문장이 있으면 --force 도 필요)
+```
+
+학습 모드는 `guide_runs` 테이블이 필요하므로 마이그레이션(`0011`, `0012`)을 먼저 실행해 두세요.
+
 ## Claude Code 연결 (선택)
 
 Claude Code 에서 내 구성도를 읽고 고치게 할 수 있습니다. 앱에 로그인해 사이드바 아래 계정 영역의 **Claude Code 연결**(`/claude-code`)에서 키(`isk_...`)를 만듭니다. 키는 만들 때 한 번만 보이니 바로 복사하세요. 그다음 Claude Code 터미널에서 실행합니다.

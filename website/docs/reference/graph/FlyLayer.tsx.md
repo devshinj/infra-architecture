@@ -1,16 +1,19 @@
 ---
 title: "FlyLayer.tsx"
-sidebar_position: 75
+sidebar_position: 70
 ---
 # FlyLayer.tsx
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 14 nodes · cohesion 0.15
+> 17 nodes · cohesion 0.15
 
 ## Key Concepts
 
 - **FlyLayer.tsx** (19 connections) — `src/ui/FlyLayer.tsx`
+- **prefersReducedMotion()** (7 connections) — `src/canvas/useCamera.ts`
+- **useFly()** (6 connections) — `src/ui/FlyLayer.tsx`
+- **FlyLayer** (3 connections) — `src/ui/FlyLayer.tsx`
 - **flyOrigin()** (3 connections) — `src/ui/FlyLayer.tsx`
 - **FLY_ORIGIN_ATTR** (2 connections) — `src/ui/FlyLayer.tsx`
 - **FlyLayerHandle** (2 connections) — `src/ui/FlyLayer.tsx`
@@ -28,18 +31,20 @@ sidebar_position: 75
 ## Relationships
 
 - [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (5 shared connections)
+- [Canvas.tsx](Canvas.tsx.md) (2 shared connections)
+- [GhostLayer.tsx](GhostLayer.tsx.md) (2 shared connections)
+- [useCamera.ts](useCamera.ts.md) (2 shared connections)
 - [ChatPanel.tsx](ChatPanel.tsx.md) (2 shared connections)
-- [GhostLayer.tsx](GhostLayer.tsx.md) (1 shared connections)
 - [ResetPasswordForm.tsx](ResetPasswordForm.tsx.md) (1 shared connections)
-- [useCamera.ts](useCamera.ts.md) (1 shared connections)
 
 ## Source Files
 
+- `src/canvas/useCamera.ts`
 - `src/ui/FlyLayer.tsx`
 
 ## Audit Trail
 
-- EXTRACTED: 24 (100%)
+- EXTRACTED: 34 (100%)
 - INFERRED: 0 (0%)
 - AMBIGUOUS: 0 (0%)
 

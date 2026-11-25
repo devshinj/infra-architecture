@@ -1,23 +1,24 @@
 ---
 title: "Shell.tsx"
-sidebar_position: 35
+sidebar_position: 40
 ---
 # Shell.tsx
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 28 nodes · cohesion 0.13
+> 29 nodes · cohesion 0.13
 
 ## Key Concepts
 
-- **Shell.tsx** (28 connections) — `src/ui/Shell.tsx`
-- **(app)/layout.tsx** (12 connections) — `src/app/(app)/layout.tsx`
-- **useShell()** (12 connections) — `src/ui/Shell.tsx`
+- **Shell.tsx** (29 connections) — `src/ui/Shell.tsx`
+- **(app)/layout.tsx** (14 connections) — `src/app/(app)/layout.tsx`
+- **useShell()** (14 connections) — `src/ui/Shell.tsx`
+- **src_ui_app_module** (11 connections)
 - **(app)/page.tsx** (10 connections) — `src/app/(app)/page.tsx`
 - **ShellMain.tsx** (8 connections) — `src/ui/ShellMain.tsx`
 - **useNotesPanel.ts** (8 connections) — `src/ui/useNotesPanel.ts`
+- **AppLayout()** (7 connections) — `src/app/(app)/layout.tsx`
 - **useNotesPanel()** (7 connections) — `src/ui/useNotesPanel.ts`
-- **AppLayout()** (6 connections) — `src/app/(app)/layout.tsx`
 - **Home()** (5 connections) — `src/app/(app)/page.tsx`
 - **listProjects()** (5 connections) — `src/server/projects.ts`
 - **CreateButton()** (5 connections) — `src/ui/Shell.tsx`
@@ -34,22 +35,22 @@ sidebar_position: 35
 - **COMPACT_QUERY** (1 connections) — `src/ui/Shell.tsx`
 - **CreateRequest** (1 connections) — `src/ui/Shell.tsx`
 - **NARROW_QUERY** (1 connections) — `src/ui/Shell.tsx`
-- **RAIL_WIDTH** (1 connections) — `src/ui/Shell.tsx`
-- *... and 3 more nodes in this community*
+- *... and 4 more nodes in this community*
 
 ## Relationships
 
 - [Sidebar.tsx](Sidebar.tsx.md) (9 shared connections)
-- [ResetPasswordForm.tsx](ResetPasswordForm.tsx.md) (8 shared connections)
-- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (5 shared connections)
-- [ask/route.ts](ask-route.ts.md) (4 shared connections)
+- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (7 shared connections)
+- [runs.ts](runs.ts.md) (6 shared connections)
+- [ResetPasswordForm.tsx](ResetPasswordForm.tsx.md) (5 shared connections)
+- [\[sessionId\]/route.ts]([sessionId]-route.ts.md) (4 shared connections)
 - [projects.ts](projects.ts.md) (4 shared connections)
-- [NetworkKnowledgePage.tsx](NetworkKnowledgePage.tsx.md) (4 shared connections)
+- [Button](Button.md) (4 shared connections)
+- [PageSkeleton.tsx](PageSkeleton.tsx.md) (4 shared connections)
+- [(app)/actions.ts](app-actions.ts.md) (4 shared connections)
 - [ChatPanel.tsx](ChatPanel.tsx.md) (3 shared connections)
-- [PageSkeleton.tsx](PageSkeleton.tsx.md) (3 shared connections)
 - [GlossaryPage.tsx](GlossaryPage.tsx.md) (3 shared connections)
 - [auth.ts](auth.ts.md) (2 shared connections)
-- [ShellValue](ShellValue.md) (1 shared connections)
 
 ## Source Files
 
@@ -63,7 +64,7 @@ sidebar_position: 35
 
 ## Audit Trail
 
-- EXTRACTED: 94 (100%)
+- EXTRACTED: 108 (100%)
 - INFERRED: 0 (0%)
 - AMBIGUOUS: 0 (0%)
 

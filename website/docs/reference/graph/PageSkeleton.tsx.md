@@ -1,28 +1,30 @@
 ---
 title: "PageSkeleton.tsx"
-sidebar_position: 56
+sidebar_position: 55
 ---
 # PageSkeleton.tsx
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 20 nodes · cohesion 0.22
+> 22 nodes · cohesion 0.20
 
 ## Key Concepts
 
-- **PageSkeleton.tsx** (12 connections) — `src/ui/skeleton/PageSkeleton.tsx`
+- **PageSkeleton.tsx** (13 connections) — `src/ui/skeleton/PageSkeleton.tsx`
+- **PageSkeleton()** (12 connections) — `src/ui/skeleton/PageSkeleton.tsx`
 - **Skeleton.tsx** (11 connections) — `src/ui/skeleton/Skeleton.tsx`
 - **WorkspaceSkeleton.tsx** (11 connections) — `src/ui/skeleton/WorkspaceSkeleton.tsx`
-- **PageSkeleton()** (10 connections) — `src/ui/skeleton/PageSkeleton.tsx`
 - **SkeletonLines()** (8 connections) — `src/ui/skeleton/Skeleton.tsx`
 - **ChatSkeleton()** (7 connections) — `src/ui/skeleton/Skeleton.tsx`
 - **WorkspaceSkeleton()** (7 connections) — `src/ui/skeleton/WorkspaceSkeleton.tsx`
 - **SkeletonBlock()** (6 connections) — `src/ui/skeleton/Skeleton.tsx`
 - **Loading()** (5 connections) — `src/ui/skeleton/Skeleton.tsx`
 - **glossary/loading.tsx** (3 connections) — `src/app/(app)/glossary/loading.tsx`
+- **learn/loading.tsx** (3 connections) — `src/app/(app)/learn/loading.tsx`
 - **mcp/loading.tsx** (3 connections) — `src/app/(app)/mcp/loading.tsx`
 - **network/loading.tsx** (3 connections) — `src/app/(app)/network/loading.tsx`
 - **Loading()** (2 connections) — `src/app/(app)/glossary/loading.tsx`
+- **Loading()** (2 connections) — `src/app/(app)/learn/loading.tsx`
 - **Loading()** (2 connections) — `src/app/(app)/mcp/loading.tsx`
 - **Loading()** (2 connections) — `src/app/(app)/network/loading.tsx`
 - **src_ui_skeleton_skeleton_skeletonstyles** (2 connections)
@@ -33,16 +35,16 @@ sidebar_position: 56
 
 ## Relationships
 
+- [Shell.tsx](Shell.tsx.md) (4 shared connections)
 - [ChatPanel.tsx](ChatPanel.tsx.md) (3 shared connections)
 - [Explanation.tsx](Explanation.tsx.md) (3 shared connections)
-- [Shell.tsx](Shell.tsx.md) (3 shared connections)
 - [ResetPasswordForm.tsx](ResetPasswordForm.tsx.md) (2 shared connections)
 - [RightPanel.tsx](RightPanel.tsx.md) (2 shared connections)
-- [Sidebar.tsx](Sidebar.tsx.md) (1 shared connections)
 
 ## Source Files
 
 - `src/app/(app)/glossary/loading.tsx`
+- `src/app/(app)/learn/loading.tsx`
 - `src/app/(app)/mcp/loading.tsx`
 - `src/app/(app)/network/loading.tsx`
 - `src/ui/skeleton/PageSkeleton.tsx`
@@ -51,7 +53,7 @@ sidebar_position: 56
 
 ## Audit Trail
 
-- EXTRACTED: 56 (100%)
+- EXTRACTED: 60 (100%)
 - INFERRED: 0 (0%)
 - AMBIGUOUS: 0 (0%)
 

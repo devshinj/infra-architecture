@@ -1,22 +1,23 @@
 ---
 title: "josa.ts"
-sidebar_position: 89
+sidebar_position: 86
 ---
 # josa.ts
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 11 nodes · cohesion 0.27
+> 12 nodes · cohesion 0.29
 
 ## Key Concepts
 
-- **josa.ts** (18 connections) — `src/domain/josa.ts`
+- **josa.ts** (20 connections) — `src/domain/josa.ts`
+- **euro()** (14 connections) — `src/domain/josa.ts`
 - **finalOf()** (7 connections) — `src/domain/josa.ts`
 - **fixLegacyJosa()** (6 connections) — `src/domain/josa.ts`
 - **gwaWa()** (6 connections) — `src/domain/josa.ts`
 - **eulReul()** (5 connections) — `src/domain/josa.ts`
 - **textOf()** (5 connections) — `src/domain/networkRules.ts`
-- **iGa()** (3 connections) — `src/domain/josa.ts`
+- **eunNeun()** (4 connections) — `src/domain/josa.ts`
 - **latinWordFinal()** (2 connections) — `src/domain/josa.ts`
 - **DIGIT** (1 connections) — `src/domain/josa.ts`
 - **Final** (1 connections) — `src/domain/josa.ts`
@@ -24,15 +25,17 @@ sidebar_position: 89
 
 ## Relationships
 
-- [Canvas.tsx](Canvas.tsx.md) (5 shared connections)
 - [domain/flows.ts](domain-flows.ts.md) (5 shared connections)
+- [Button](Button.md) (5 shared connections)
 - [domain/warnings.ts](domain-warnings.ts.md) (4 shared connections)
-- [useChatTurn.ts](useChatTurn.ts.md) (3 shared connections)
+- [turn.ts](turn.ts.md) (4 shared connections)
+- [Canvas.tsx](Canvas.tsx.md) (3 shared connections)
+- [getOwnedDiagram](getOwnedDiagram.md) (3 shared connections)
+- [lines.ts](lines.ts.md) (3 shared connections)
 - [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (3 shared connections)
-- [GlossaryPage.tsx](GlossaryPage.tsx.md) (2 shared connections)
-- [glossary.ts](glossary.ts.md) (1 shared connections)
-- [versions.ts](versions.ts.md) (1 shared connections)
-- [missing.ts](missing.ts.md) (1 shared connections)
+- [glossary.ts](glossary.ts.md) (2 shared connections)
+- [(app)/actions.ts](app-actions.ts.md) (1 shared connections)
+- [Task 3: 판정 — 통신 길, 연결 방식 예상 경고, 빠진 정보](Task_3-_판정_—_통신_길,_연결_방식_예상_경고,_빠진_정보.md) (1 shared connections)
 
 ## Source Files
 
@@ -41,8 +44,8 @@ sidebar_position: 89
 
 ## Audit Trail
 
-- EXTRACTED: 35 (88%)
-- INFERRED: 5 (12%)
+- EXTRACTED: 48 (91%)
+- INFERRED: 5 (9%)
 - AMBIGUOUS: 0 (0%)
 
 ---

@@ -1,63 +1,72 @@
 ---
-title: "Button()"
-sidebar_position: 125
-sidebar_label: "핵심 노드: Button()"
+title: "Button"
+sidebar_position: 36
 ---
-# Button()
+# Button
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> God node · 44 connections · `src/ui/Button.tsx`
+> 33 nodes · cohesion 0.11
 
-**Community:** [ResetPasswordForm.tsx](ResetPasswordForm.tsx.md)
+## Key Concepts
 
-## Connections by Relation
+- **Button()** (51 connections) — `src/ui/Button.tsx`
+- **Button.tsx** (30 connections) — `src/ui/Button.tsx`
+- **dialogs.tsx** (22 connections) — `src/ui/dialogs.tsx`
+- **McpKeysPage.tsx** (19 connections) — `src/ui/mcp/McpKeysPage.tsx`
+- **GuideDone.tsx** (18 connections) — `src/ui/guide/GuideDone.tsx`
+- **DialogView()** (16 connections) — `src/ui/dialogs.tsx`
+- **McpKeysPage()** (11 connections) — `src/ui/mcp/McpKeysPage.tsx`
+- **mcp/page.tsx** (8 connections) — `src/app/(app)/mcp/page.tsx`
+- **GENERIC_ERROR** (8 connections) — `src/ui/dialogs.tsx`
+- **GuideDone()** (8 connections) — `src/ui/guide/GuideDone.tsx`
+- **iGa()** (5 connections) — `src/domain/josa.ts`
+- **McpConnection()** (4 connections) — `src/app/(app)/mcp/page.tsx`
+- **RowMenuItem** (4 connections) — `src/ui/dialogs.tsx`
+- **endpointOf()** (4 connections) — `src/ui/mcp/McpKeysPage.tsx`
+- **GuideDoneProps** (3 connections) — `src/ui/guide/GuideDone.tsx`
+- **.onRebuild()** (3 connections) — `src/ui/guide/GuideDone.tsx`
+- **ramyeon()** (3 connections) — `src/ui/guide/GuideDone.tsx`
+- **rebuildLabel()** (3 connections) — `src/ui/guide/GuideDone.tsx`
+- **claudeCommand()** (3 connections) — `src/ui/mcp/McpKeysPage.tsx`
+- **jsonConfig()** (3 connections) — `src/ui/mcp/McpKeysPage.tsx`
+- **McpKeyRow** (2 connections) — `src/app/(app)/actions.ts`
+- **DeleteDialog** (2 connections) — `src/ui/dialogs.tsx`
+- **focusables()** (2 connections) — `src/ui/dialogs.tsx`
+- **NameDialog** (2 connections) — `src/ui/dialogs.tsx`
+- **day()** (2 connections) — `src/ui/mcp/McpKeysPage.tsx`
+- *... and 8 more nodes in this community*
 
-### calls
-- [DiagramWorkspace()](DiagramWorkspace.md) `EXTRACTED`
-- Sidebar() `EXTRACTED`
-- NetworkKnowledgePage() `EXTRACTED`
-- MissingChecklist() `EXTRACTED`
-- ChatPanel() `EXTRACTED`
-- FlowPanel() `EXTRACTED`
-- SessionPicker() `EXTRACTED`
-- DialogView() `EXTRACTED`
-- GlossaryPage() `EXTRACTED`
-- McpKeysPage() `EXTRACTED`
-- AuthSubmit() `EXTRACTED`
-- ResetRequestPage() `EXTRACTED`
-- ZoneTypePicker() `EXTRACTED`
-- HistoryPanel() `EXTRACTED`
-- LinkGuessPart() `EXTRACTED`
-- expandedNav() `EXTRACTED`
-- ClarifyCard() `EXTRACTED`
-- LinkButton() `EXTRACTED`
-- CreateButton() `EXTRACTED`
-- buttonClassName() `EXTRACTED`
-- *…and 5 more `calls` connection(s) not listed (lowest-degree first to go)*
+## Relationships
 
-### contains
-- Button.tsx `EXTRACTED`
+- [(app)/actions.ts](app-actions.ts.md) (20 shared connections)
+- [ResetPasswordForm.tsx](ResetPasswordForm.tsx.md) (14 shared connections)
+- [runs.ts](runs.ts.md) (11 shared connections)
+- [FlowPanel.tsx](FlowPanel.tsx.md) (10 shared connections)
+- [Sidebar.tsx](Sidebar.tsx.md) (10 shared connections)
+- [SessionPicker.tsx](SessionPicker.tsx.md) (8 shared connections)
+- [GuideCard.tsx](GuideCard.tsx.md) (7 shared connections)
+- [ChatPanel.tsx](ChatPanel.tsx.md) (6 shared connections)
+- [josa.ts](josa.ts.md) (5 shared connections)
+- [NodeInfo.tsx](NodeInfo.tsx.md) (5 shared connections)
+- [Explanation.tsx](Explanation.tsx.md) (4 shared connections)
+- [Shell.tsx](Shell.tsx.md) (4 shared connections)
 
-### imports
-- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) `EXTRACTED`
-- [NodeInfo.tsx](NodeInfo.tsx.md) `EXTRACTED`
-- [NetworkKnowledgePage.tsx](NetworkKnowledgePage.tsx.md) `EXTRACTED`
-- [ChatPanel.tsx](ChatPanel.tsx.md) `EXTRACTED`
-- [Sidebar.tsx](Sidebar.tsx.md) `EXTRACTED`
-- [Explanation.tsx](Explanation.tsx.md) `EXTRACTED`
-- [MissingChecklist.tsx](MissingChecklist.tsx.md) `EXTRACTED`
-- [SessionPicker.tsx](SessionPicker.tsx.md) `EXTRACTED`
-- [FlowPanel.tsx](FlowPanel.tsx.md) `EXTRACTED`
-- [Shell.tsx](Shell.tsx.md) `EXTRACTED`
-- reset/page.tsx `EXTRACTED`
-- [GlossaryPage.tsx](GlossaryPage.tsx.md) `EXTRACTED`
-- ZoneTypePicker.tsx `EXTRACTED`
-- McpKeysPage.tsx `EXTRACTED`
-- dialogs.tsx `EXTRACTED`
-- AuthField.tsx `EXTRACTED`
-- HistoryPanel.tsx `EXTRACTED`
-- ClarifyCard.tsx `EXTRACTED`
+## Source Files
+
+- `src/app/(app)/actions.ts`
+- `src/app/(app)/mcp/page.tsx`
+- `src/domain/josa.ts`
+- `src/ui/Button.tsx`
+- `src/ui/dialogs.tsx`
+- `src/ui/guide/GuideDone.tsx`
+- `src/ui/mcp/McpKeysPage.tsx`
+
+## Audit Trail
+
+- EXTRACTED: 182 (97%)
+- INFERRED: 5 (3%)
+- AMBIGUOUS: 0 (0%)
 
 ---
 

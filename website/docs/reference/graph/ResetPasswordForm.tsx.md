@@ -1,19 +1,17 @@
 ---
 title: "ResetPasswordForm.tsx"
-sidebar_position: 16
+sidebar_position: 33
 ---
 # ResetPasswordForm.tsx
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 41 nodes · cohesion 0.15
+> 34 nodes · cohesion 0.19
 
 ## Key Concepts
 
-- **ref_react** (54 connections)
-- **Button()** (44 connections) — `src/ui/Button.tsx`
-- **ref_next** (29 connections)
-- **Button.tsx** (27 connections) — `src/ui/Button.tsx`
+- **ref_react** (59 connections)
+- **ref_next** (32 connections)
 - **ResetPasswordForm.tsx** (24 connections) — `src/app/(auth)/reset/[token]/ResetPasswordForm.tsx`
 - **reset/page.tsx** (23 connections) — `src/app/(auth)/reset/page.tsx`
 - **signup/page.tsx** (22 connections) — `src/app/(auth)/signup/page.tsx`
@@ -29,32 +27,33 @@ sidebar_position: 16
 - **AuthField()** (9 connections) — `src/app/(auth)/_components/AuthField.tsx`
 - **useAuthForm()** (9 connections) — `src/app/(auth)/_components/useAuthForm.ts`
 - **SignupPage()** (9 connections) — `src/app/(auth)/signup/page.tsx`
+- **checkNewPassword()** (9 connections) — `src/server/auth/rules.ts`
 - **Logo.tsx** (8 connections) — `src/ui/brand/Logo.tsx`
 - **FormAlert()** (7 connections) — `src/app/(auth)/_components/AuthField.tsx`
 - **src_app_auth_auth_module** (6 connections)
 - **FieldErrors** (5 connections) — `src/app/(auth)/_components/useAuthForm.ts`
+- **validate()** (5 connections) — `src/app/(auth)/signup/page.tsx`
 - **login/page.tsx** (4 connections) — `src/app/(auth)/login/page.tsx`
 - **buttonClassName()** (4 connections) — `src/ui/Button.tsx`
-- *... and 16 more nodes in this community*
+- *... and 9 more nodes in this community*
 
 ## Relationships
 
-- [auth/actions.ts](auth-actions.ts.md) (29 shared connections)
-- [Sidebar.tsx](Sidebar.tsx.md) (14 shared connections)
+- [auth/actions.ts](auth-actions.ts.md) (20 shared connections)
+- [Button](Button.md) (14 shared connections)
 - [AuthStage.tsx](AuthStage.tsx.md) (10 shared connections)
-- [Shell.tsx](Shell.tsx.md) (8 shared connections)
-- [FlowPanel.tsx](FlowPanel.tsx.md) (8 shared connections)
-- [reset.ts](reset.ts.md) (8 shared connections)
-- [NetworkKnowledgePage.tsx](NetworkKnowledgePage.tsx.md) (7 shared connections)
-- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (7 shared connections)
-- [mcpKeys.ts](mcpKeys.ts.md) (6 shared connections)
-- [MissingChecklist.tsx](MissingChecklist.tsx.md) (6 shared connections)
-- [NodeInfo.tsx](NodeInfo.tsx.md) (6 shared connections)
-- [Explanation.tsx](Explanation.tsx.md) (6 shared connections)
+- [reset.ts](reset.ts.md) (10 shared connections)
+- [auth/rules.ts](auth-rules.ts.md) (9 shared connections)
+- [Sidebar.tsx](Sidebar.tsx.md) (6 shared connections)
+- [Shell.tsx](Shell.tsx.md) (5 shared connections)
+- [runs.ts](runs.ts.md) (5 shared connections)
+- [(app)/actions.ts](app-actions.ts.md) (4 shared connections)
+- [EdgePanels.tsx](EdgePanels.tsx.md) (4 shared connections)
+- [\[sessionId\]/route.ts]([sessionId]-route.ts.md) (3 shared connections)
+- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (3 shared connections)
 
 ## Source Files
 
-- `src/app/(app)/claude-code/page.tsx`
 - `src/app/(auth)/_components/AuthField.tsx`
 - `src/app/(auth)/_components/AuthStage.tsx`
 - `src/app/(auth)/_components/useAuthForm.ts`
@@ -69,7 +68,7 @@ sidebar_position: 16
 
 ## Audit Trail
 
-- EXTRACTED: 290 (97%)
+- EXTRACTED: 245 (97%)
 - INFERRED: 8 (3%)
 - AMBIGUOUS: 0 (0%)
 

@@ -1,6 +1,6 @@
 ---
 title: "RightPanel.tsx"
-sidebar_position: 42
+sidebar_position: 46
 ---
 # RightPanel.tsx
 
@@ -37,18 +37,18 @@ sidebar_position: 42
 
 ## Relationships
 
-- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (10 shared connections)
+- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (8 shared connections)
 - [ChatPanel.tsx](ChatPanel.tsx.md) (6 shared connections)
 - [NodeInfo.tsx](NodeInfo.tsx.md) (6 shared connections)
-- [ResetPasswordForm.tsx](ResetPasswordForm.tsx.md) (5 shared connections)
-- [FlowPanel.tsx](FlowPanel.tsx.md) (5 shared connections)
+- [FlowPanel.tsx](FlowPanel.tsx.md) (6 shared connections)
+- [Button](Button.md) (3 shared connections)
 - [Explanation.tsx](Explanation.tsx.md) (3 shared connections)
+- [ResetPasswordForm.tsx](ResetPasswordForm.tsx.md) (2 shared connections)
 - [PageSkeleton.tsx](PageSkeleton.tsx.md) (2 shared connections)
+- [MobileTabBar.tsx](MobileTabBar.tsx.md) (2 shared connections)
 - [diff.ts](diff.ts.md) (2 shared connections)
-- [useChatTurn.ts](useChatTurn.ts.md) (1 shared connections)
+- [ChatLine](ChatLine.md) (1 shared connections)
 - [SessionPicker.tsx](SessionPicker.tsx.md) (1 shared connections)
-- [versions.ts](versions.ts.md) (1 shared connections)
-- [domain/flows.ts](domain-flows.ts.md) (1 shared connections)
 
 ## Source Files
 

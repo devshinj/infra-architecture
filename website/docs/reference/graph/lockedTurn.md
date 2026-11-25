@@ -1,43 +1,46 @@
 ---
 title: "lockedTurn()"
-sidebar_position: 124
+sidebar_position: 133
 sidebar_label: "핵심 노드: lockedTurn()"
 ---
 # lockedTurn()
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> God node · 46 connections · `src/server/chat/pipeline.ts`
+> God node · 49 connections · `src/server/chat/pipeline.ts`
 
-**Community:** [pipeline.ts](pipeline.ts.md)
+**Community:** [commands.ts](commands.ts.md)
 
 ## Connections by Relation
 
 ### calls
-- emptyState() `EXTRACTED`
-- getLatestState() `EXTRACTED`
+- [emptyState()](emptyState.md) `EXTRACTED`
 - createVersion() `EXTRACTED`
+- getLatestState() `EXTRACTED`
 - computeMissing() `EXTRACTED`
 - applyCommand() `EXTRACTED`
 - getNetworkKnowledge() `EXTRACTED`
 - checkWarnings() `EXTRACTED`
+- createMessage() `EXTRACTED`
+- isFlowCommand() `EXTRACTED`
 - createJsonlParser() `EXTRACTED`
+- runGuideTurn() `EXTRACTED`
 - listMessages() `EXTRACTED`
 - listFlows() `EXTRACTED`
 - parseCommand() `EXTRACTED`
+- getLiveGuideRun() `EXTRACTED`
 - buildMessages() `EXTRACTED`
 - settleTurn() `EXTRACTED`
 - matchUserTerms() `EXTRACTED`
-- isFlowCommand() `EXTRACTED`
 - rewriteFlows() `EXTRACTED`
 - createEdgeCoalescer() `EXTRACTED`
-- normalizeAiCommand() `EXTRACTED`
-- createThinkStripper() `EXTRACTED`
-- applyFlowOps() `EXTRACTED`
-- *…and 25 more `calls` connection(s) not listed (lowest-degree first to go)*
+- *…and 27 more `calls` connection(s) not listed (lowest-degree first to go)*
 
 ### contains
 - [pipeline.ts](pipeline.ts.md) `EXTRACTED`
+
+### references
+- Task 6: 가이드 차례와 대화 경로 연결 `INFERRED`
 
 ---
 

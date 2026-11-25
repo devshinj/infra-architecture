@@ -1,6 +1,6 @@
 ---
 title: "NodeInfo.tsx"
-sidebar_position: 19
+sidebar_position: 26
 ---
 # NodeInfo.tsx
 
@@ -13,58 +13,56 @@ sidebar_position: 19
 - **NodeInfo.tsx** (82 connections) — `src/ui/NodeInfo.tsx`
 - **NodeInfo()** (26 connections) — `src/ui/NodeInfo.tsx`
 - **GroupInfo()** (13 connections) — `src/ui/NodeInfo.tsx`
-- **Flow** (12 connections) — `src/domain/flows.ts`
 - **NodeInfoProps** (10 connections) — `src/ui/NodeInfo.tsx`
-- **yesNo()** (6 connections) — `src/domain/managed.ts`
+- **LinkGuessPart()** (7 connections) — `src/ui/NodeInfo.tsx`
 - **AskNode()** (6 connections) — `src/ui/explain/AskNode.tsx`
-- **Arrow()** (5 connections) — `src/ui/Arrow.tsx`
+- **flowsThrough()** (5 connections) — `src/domain/flows.ts`
+- **isEmpty()** (5 connections) — `src/domain/missing.ts`
 - **AskNode.tsx** (5 connections) — `src/ui/explain/AskNode.tsx`
 - **AskNodeProps** (5 connections) — `src/ui/explain/AskNode.tsx`
 - **LinkButton()** (5 connections) — `src/ui/NodeInfo.tsx`
-- **Task 4: 질문 시작하기(설명 패널·우클릭 메뉴)** (4 connections) — `docs/superpowers/plans/2026-11-01-infrasketch-phase3c2-ask-node.md`
-- **ArrowMark()** (4 connections) — `src/ui/Arrow.tsx`
+- **stepEnd()** (4 connections) — `src/domain/flows.ts`
 - **Cautions()** (4 connections) — `src/ui/NodeInfo.tsx`
 - **FlowChips()** (4 connections) — `src/ui/NodeInfo.tsx`
 - **TrunkLines()** (4 connections) — `src/ui/NodeInfo.tsx`
 - **src_ui_panel_module** (4 connections)
 - **edgeKindName()** (3 connections) — `src/ui/NodeInfo.tsx`
 - **Fields()** (3 connections) — `src/ui/NodeInfo.tsx`
-- **multiAzText()** (3 connections) — `src/ui/NodeInfo.tsx`
 - **nameOf()** (3 connections) — `src/ui/NodeInfo.tsx`
+- **NetTypePart()** (3 connections) — `src/ui/NodeInfo.tsx`
 - **.onSelect()** (3 connections) — `src/ui/NodeInfo.tsx`
 - **.onAsk()** (2 connections) — `src/ui/explain/AskNode.tsx`
+- **src_ui_network_network_module** (2 connections)
 - **kindName()** (2 connections) — `src/ui/NodeInfo.tsx`
 - **LinkGuessSave** (2 connections) — `src/ui/NodeInfo.tsx`
 - *... and 14 more nodes in this community*
 
 ## Relationships
 
-- [missing.ts](missing.ts.md) (15 shared connections)
-- [FlowPanel.tsx](FlowPanel.tsx.md) (10 shared connections)
+- [missing.ts](missing.ts.md) (13 shared connections)
 - [domain/assumptions.ts](domain-assumptions.ts.md) (8 shared connections)
 - [Explanation.tsx](Explanation.tsx.md) (7 shared connections)
-- [ResetPasswordForm.tsx](ResetPasswordForm.tsx.md) (6 shared connections)
-- [(app)/actions.ts](app-actions.ts.md) (6 shared connections)
-- [segments.ts](segments.ts.md) (6 shared connections)
 - [RightPanel.tsx](RightPanel.tsx.md) (6 shared connections)
-- [domain/warnings.ts](domain-warnings.ts.md) (5 shared connections)
+- [InfoCard.tsx](InfoCard.tsx.md) (5 shared connections)
 - [groupInfo.ts](groupInfo.ts.md) (5 shared connections)
+- [domain/types.ts](domain-types.ts.md) (5 shared connections)
+- [Button](Button.md) (5 shared connections)
+- [(app)/actions.ts](app-actions.ts.md) (5 shared connections)
 - [domain/flows.ts](domain-flows.ts.md) (4 shared connections)
-- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (3 shared connections)
+- [turn.ts](turn.ts.md) (3 shared connections)
+- [Canvas.tsx](Canvas.tsx.md) (3 shared connections)
 
 ## Source Files
 
-- `docs/superpowers/plans/2026-11-01-infrasketch-phase3c2-ask-node.md`
 - `src/domain/flows.ts`
-- `src/domain/managed.ts`
-- `src/ui/Arrow.tsx`
+- `src/domain/missing.ts`
 - `src/ui/NodeInfo.tsx`
 - `src/ui/explain/AskNode.tsx`
 
 ## Audit Trail
 
-- EXTRACTED: 168 (98%)
-- INFERRED: 4 (2%)
+- EXTRACTED: 161 (98%)
+- INFERRED: 3 (2%)
 - AMBIGUOUS: 0 (0%)
 
 ---

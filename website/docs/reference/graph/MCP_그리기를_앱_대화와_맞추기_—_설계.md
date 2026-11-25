@@ -1,6 +1,6 @@
 ---
 title: "MCP 그리기를 앱 대화와 맞추기 — 설계"
-sidebar_position: 114
+sidebar_position: 123
 ---
 # MCP 그리기를 앱 대화와 맞추기 — 설계
 

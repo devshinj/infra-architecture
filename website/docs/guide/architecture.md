@@ -11,13 +11,13 @@ InfraSketch 는 Next.js 15 (App Router) 하나로 화면과 서버를 함께 띄
 
 | 폴더 | 역할 |
 | --- | --- |
-| `src/app` | 라우트. `(app)` 은 로그인 후 화면(구성도 작업 화면, 용어 사전 `(app)/glossary`, 망 지식 `(app)/network`), `(auth)` 는 로그인·가입·비밀번호 재설정(공통 입력칸과 제출 훅은 `(auth)/_components`. 폭 1080px 이상이면 화면 가운데 판 하나의 왼쪽 반에 정의 한 줄과 장면 `(auth)/_components/AuthStage.tsx`(요청 한 줄 → 노드가 나타나 이어짐 → 접속·결제 흐름이 번갈아 지나감. 장식이라 보조기기에 숨기고, 동작 줄이기 설정이면 마지막 장면으로 멈추며, 탭이 가려지면 재생을 멈춘다), 오른쪽 반에 양식이 서고, 좁으면 점 격자 위 양식만 보인다), `api` 는 대화(`diagrams/[id]/chat`)·노드 질문(`diagrams/[id]/ask`)·흐름 목록(`diagrams/[id]/flows`)·흐름 제안(`diagrams/[id]/flows/suggest`)·질문 세션 조회(`diagrams/[id]/sessions/[sessionId]`)·설명(`diagrams/[id]/explain`)·인증·AI 상태 API. 폼 저장·경고 무시·용어 사전 편집·망 지식 편집·망 종류 확정·망연계 맞아요/아니에요 같은 나머지 쓰기는 `(app)/actions.ts` 의 서버 액션이 맡습니다. Claude Code 연동 주소 `api/mcp`(MCP 서버)와 열어 둔 구성도가 최신 버전을 묻는 `diagrams/[id]/head`, 키 관리 화면 `(app)/claude-code`(`/claude-code`)|
-| `src/ui` | 작업 화면 컴포넌트. 모든 버튼이 쓰는 공용 `Button.tsx`(primary·secondary·danger·quiet × sm·md·lg, 모양은 `button.module.css` 한 곳, 링크에는 `buttonClassName`), 전체 틀(`Shell.tsx`), 사이드바, 오른쪽 패널(대화·설명·이력·흐름)과 너비 조절 손잡이(`PanelResizer.tsx`), 대화 입력·체크리스트·질문 세션 선택(`chat/`, `SessionPicker.tsx`. 가장 최근 차례 요약 옆에 “바뀐 곳 보기”(직전 버전과 비교)·“되돌리기”(직전 버전으로, 새 버전을 만들어 이력은 남김), 구성도는 있고 대화가 비면 고치기 예시 칩), 설명 패널과 “이 노드에 대해 물어보기”(`explain/`, `AskNode.tsx`), 흐름 탭(`flows/FlowPanel.tsx`, 목록·상태를 맡는 `flows/useFlows.ts`), 용어 사전 화면(`glossary/`: 남은 폭을 쓰는 범례표와 오른쪽 주기 판), 망 지식 화면(같은 범례표·주기 판 배치)과 망 종류 고르개(`network/`: `NetworkKnowledgePage.tsx`, `ZoneTypePicker.tsx`, 정보 카드에 지식을 내려 주는 `NetworkKnowledgeContext.tsx`), 로고(`brand/`), 캔버스 위에 뜨는 정보 카드(`canvas/InfoCard.tsx`)와 범례(`canvas/Legend.tsx`, 연결선 종류 견본·보조 연결 숨김 표시), 노드가 날아가 앉는 효과(`FlyLayer.tsx`), 용어 배지 규칙(`glossary/aiBadge.ts`: AI가 추가했고 아직 확인하지 않은 설명에만 “AI 설명” 배지). 폭 640px 이하(휴대폰)에서는 위 막대와 서랍으로 연 사이드바, 아래 탭 막대(`MobileTabBar.tsx`: 구성도·대화·설명·이력·흐름)로 한 번에 한 화면만 보이고, 폭 900px 이하는 사이드바를 접은 채 시작합니다(`useMediaQuery.ts`, `Shell.tsx`). Claude Code 연결 화면(`mcp/McpKeysPage.tsx`: 키 만들기·지우기·설정 예 복사), 구성도 화면 단축키(`DiagramWorkspace.tsx`: `/` 대화 입력칸, `F` 전체 보기, `Esc` 선택 풀기. 입력칸·대화상자·메뉴 안, 조합 키, 한글 조합 중에는 건너뜀)와 노드·연결을 고를 때 보조기기 알림, 바깥 변경을 몇 초마다 묻는 `useRemoteChanges.ts`, 지워진 노드·연결이 잠깐 비쳤다 사라지는 `GhostLayer.tsx` |
+| `src/app` | 라우트. `(app)` 은 로그인 후 화면(구성도 작업 화면, 용어 사전 `(app)/glossary`, 망 지식 `(app)/network`), `(auth)` 는 로그인·가입·비밀번호 재설정(공통 입력칸과 제출 훅은 `(auth)/_components`. 폭 1080px 이상이면 화면 가운데 판 하나의 왼쪽 반에 정의 한 줄과 장면 `(auth)/_components/AuthStage.tsx`(요청 한 줄 → 노드가 나타나 이어짐 → 접속·결제 흐름이 번갈아 지나감. 장식이라 보조기기에 숨기고, 동작 줄이기 설정이면 마지막 장면으로 멈추며, 탭이 가려지면 재생을 멈춘다), 오른쪽 반에 양식이 서고, 좁으면 점 격자 위 양식만 보인다), `api` 는 대화(`diagrams/[id]/chat`)·노드 질문(`diagrams/[id]/ask`)·흐름 목록(`diagrams/[id]/flows`)·흐름 제안(`diagrams/[id]/flows/suggest`)·질문 세션 조회(`diagrams/[id]/sessions/[sessionId]`)·설명(`diagrams/[id]/explain`)·인증·AI 상태 API. 폼 저장·경고 무시·용어 사전 편집·망 지식 편집·망 종류 확정·망연계 맞아요/아니에요 같은 나머지 쓰기는 `(app)/actions.ts` 의 서버 액션이 맡습니다. Claude Code 연동 주소 `api/mcp`(MCP 서버)와 열어 둔 구성도가 최신 버전을 묻는 `diagrams/[id]/head`, 키 관리 화면 `(app)/claude-code`(`/claude-code`), 학습 주제 고르기 `(app)/learn`(`/learn`). 학습 시작·그만두기는 서버 액션 `startGuideAction`·`quitGuideAction` 이 맡고, 학습 중 이력 되돌리기는 `restoreVersionAction` 이 그 버전의 단계로 진행 상태를 함께 맞춥니다 |
+| `src/ui` | 작업 화면 컴포넌트. 모든 버튼이 쓰는 공용 `Button.tsx`(primary·secondary·danger·quiet × sm·md·lg, 모양은 `button.module.css` 한 곳, 링크에는 `buttonClassName`), 전체 틀(`Shell.tsx`), 사이드바, 오른쪽 패널(대화·설명·이력·흐름)과 너비 조절 손잡이(`PanelResizer.tsx`), 대화 입력·체크리스트·질문 세션 선택(`chat/`, `SessionPicker.tsx`. 가장 최근 차례 요약 옆에 “바뀐 곳 보기”(직전 버전과 비교)·“되돌리기”(직전 버전으로, 새 버전을 만들어 이력은 남김), 구성도는 있고 대화가 비면 고치기 예시 칩), 설명 패널과 “이 노드에 대해 물어보기”(`explain/`, `AskNode.tsx`), 흐름 탭(`flows/FlowPanel.tsx`, 목록·상태를 맡는 `flows/useFlows.ts`), 용어 사전 화면(`glossary/`: 남은 폭을 쓰는 범례표와 오른쪽 주기 판), 망 지식 화면(같은 범례표·주기 판 배치)과 망 종류 고르개(`network/`: `NetworkKnowledgePage.tsx`, `ZoneTypePicker.tsx`, 정보 카드에 지식을 내려 주는 `NetworkKnowledgeContext.tsx`), 로고(`brand/`), 학습 모드 화면(`guide/`: 주제 고르기 `GuidePicker.tsx`, 대화 위 단계 카드 `GuideCard.tsx`(연두 머리띠·진행 점·이번 단계 예시 문장), 해설 칩 `GuideNotes.tsx`(흐름·망 특성·연계 구간·주의), 완료 판 `GuideDone.tsx`(다른 환경으로 다시 만들기), 진행 상태를 서버 값·`guide` 이벤트·되돌리기 결과로 맞추는 `useGuide.ts`. 사이드바의 학습 중인 구성도 줄에는 “학습 3/12” 배지), 캔버스 왼쪽 위에 지금 연 「프로젝트 / 구성도」를 보이는 제목 판(`DiagramWorkspace.tsx`, 도구 모음이 쓰고 남은 폭만 씀), 캔버스 위에 뜨는 정보 카드(`canvas/InfoCard.tsx`)와 범례(`canvas/Legend.tsx`, 연결선 종류 견본·보조 연결 숨김 표시), 노드가 날아가 앉는 효과(`FlyLayer.tsx`), 용어 배지 규칙(`glossary/aiBadge.ts`: AI가 추가했고 아직 확인하지 않은 설명에만 “AI 설명” 배지). 폭 640px 이하이거나 높이 480px 이하인 가로 휴대폰(`Shell.tsx` 의 `NARROW_QUERY`, CSS 미디어 쿼리도 같은 조건이고 `tokens.test.ts` 가 어긋나지 않는지 봄)에서는 위 막대와 서랍으로 연 사이드바, 아래 탭 막대(`MobileTabBar.tsx`: 구성도·대화·설명·이력·흐름)로 한 번에 한 화면만 보이고, 폭 900px 이하는 사이드바를 접은 채 시작합니다(`useMediaQuery.ts`, `Shell.tsx`). Claude Code 연결 화면(`mcp/McpKeysPage.tsx`: 키 만들기·지우기·설정 예 복사), 구성도 화면 단축키(`DiagramWorkspace.tsx`: `/` 대화 입력칸, `F` 전체 보기, `Esc` 선택 풀기. 입력칸·대화상자·메뉴 안, 조합 키, 한글 조합 중에는 건너뜀)와 노드·연결을 고를 때 보조기기 알림, 바깥 변경을 몇 초마다 묻는 `useRemoteChanges.ts`, 지워진 노드·연결이 잠깐 비쳤다 사라지는 `GhostLayer.tsx` |
 | `src/canvas` | React Flow(`@xyflow/react`) 캔버스. 노드·영역·연결선 그리기, ELK.js 자동 배치(`layout.ts`), 확대·이동 카메라(`useCamera.ts`), 선택·호버 강조 집합 계산(`emphasis.ts`)과 호버 지연(`useHoverEmphasis.ts`), 잘린 이름을 보여 주는 말풍선(`NameTooltip.tsx`), 키보드 조작(캔버스는 Tab 정지점 하나이고 안에서는 화살표·Home·End 로 노드와 영역을 오감(`roving.ts`), Enter·Space 로 선택, Esc 로 해제, 영역에서 Space 로 접기·펴기, 편집 모드에서 고른 노드는 화살표로 옮기고 키를 뗄 때 저장)과 한국어 화면 읽기 안내(`ariaLabels.ts`), 안쪽 영역을 바깥 영역 위에 쌓는 순서(`stacking.ts`), 맞춤 보기(도구 막대·정보 카드를 피하고 글자를 읽을 크기 아래로는 줄이지 않으며 그때는 위쪽부터 보임, “전체 보기”만 늘 전부 보임. 구성을 바꾼 대화 차례가 끝나면 서버 버전을 받은 뒤 선택을 풀고 “전체 보기”와 같은 맞춤을 한 번 한다), 애니메이션, 경고 배지, 구성도 전체를 PNG·SVG(어두운·흰 바탕)로 저장하는 이미지 저장(`exportImage.ts`, `ExportMenu.tsx`, html-to-image) |
-| `src/domain` | 구성도 규칙. 변경 명령 스키마(`commands.ts`), 명령 적용(`apply.ts`), 노드 종류 목록(`catalog.ts`), 빠진 정보 계산(`missing.ts`), 경고 규칙(`warnings.ts`), 흐름 타입·끊김 계산(`flows.ts`), 망 경계 판정(`boundary.ts`), 망 지식 계산(`network.ts`: 망 종류·등급·두 종류 사이에 보통 필요한 연결 방식)과 기본 망 종류 시드(`network-seed.ts`), 통신 길 판정과 망연계 예상 경고(`networkRules.ts`), 망연계 추정의 기록·되돌리기·흐름 단계 나누기(`linkGuess.ts`), 관리형 서비스 판정(`managed.ts`: `attrs.managed`·`multi_az` 의 예/아니오 읽기, 관리형이 묻지 않는 서버 칸), 샘플 구성도(`samples/`: 손으로 쓴 변경 명령 목록 8종과 `buildSample`), 구성 패턴(`patterns.ts`), 설명 모양·길이 상한·서명(`explain.ts`), 용어 사전 시드와 화면용 타입(`glossary-seed.ts`, `glossary-types.ts`) |
-| `src/server` | 서버 로직. 대화 파이프라인·노드 질문·질문 세션·경고 점검(`chat/`), AI 연동(`llm/`), 설명 생성(`explain.ts`), 용어 사전(`glossary.ts`), 체크리스트 폼 저장(`fields.ts`), 경고 무시(`ignore.ts`), 흐름 저장소(`flows.ts`)와 흐름 제안(`flowSuggest.ts`), 망 지식 저장소(`network.ts`: 종류·규칙 편집, 처음 쓸 때 시드 채우기), 망 종류 확정(`zoneType.ts`), 망연계 맞아요·아니에요(`linkGuess.ts`), 샘플 불러오기(`samples.ts`: 샘플을 새 버전으로 넣고 흐름을 같은 트랜잭션에서 확인된 사용자 흐름으로 넣음. 옛 스파이크 변환 `convertSpikeScenario` 는 e2e 가짜 AI·fixture 용으로만 남음), 프로젝트·버전 저장(프로젝트와 첫 구성도를 함께 만들고, 이름 중복을 막고, 홈에서 이어 갈 최근 구성도를 고름), 인증(가입·재설정·로그인이 함께 쓰는 입력 규칙과 문구는 `auth/rules.ts`, 로그인·재설정 횟수 제한은 `auth/rateLimit.ts`: 같은 아이디 15분 실패 10번·같은 IP 15분 실패 30번·재설정 같은 주소 1시간 3번, IP 는 `x-forwarded-for` 첫 값. 재설정 메일은 응답 뒤 `after()` 로 보내 응답 시간으로 가입 여부가 드러나지 않게 함. 비밀번호를 재설정하면 `users.session_version` 이 오르고 `src/auth.ts` 의 jwt 콜백이 서버에서 토큰 번호와 맞춰 보아(`auth/session.ts`) 다른 기기의 로그인을 끊으며, 같은 계정의 남은 재설정 링크도 못 쓰게 됨. 미들웨어(Edge)는 DB 를 보지 않으므로 끊긴 로그인은 화면·API 의 `auth()` 가 막음). Claude Code 연동(`mcp/`: 도구 9개를 등록하는 `server.ts`, 읽기 `read.ts`, 쓰기 `apply.ts`, 변경 설명 `explain.ts`), 키 저장소(`mcpKeys.ts`), 그리기 규칙 공용 모듈(`drawing/rules.ts`), 차례 끝 정리 공용 함수(`chat/settle.ts`) |
+| `src/domain` | 구성도 규칙. 변경 명령 스키마(`commands.ts`), 명령 적용(`apply.ts`), 노드 종류 목록(`catalog.ts`), 빠진 정보 계산(`missing.ts`), 경고 규칙(`warnings.ts`), 흐름 타입·끊김 계산(`flows.ts`), 망 경계 판정(`boundary.ts`), 망 지식 계산(`network.ts`: 망 종류·등급·두 종류 사이에 보통 필요한 연결 방식)과 기본 망 종류 시드(`network-seed.ts`), 통신 길 판정과 망연계 예상 경고(`networkRules.ts`), 망연계 추정의 기록·되돌리기·흐름 단계 나누기(`linkGuess.ts`), 관리형 서비스 판정(`managed.ts`: `attrs.managed`·`multi_az` 의 예/아니오 읽기, 관리형이 묻지 않는 서버 칸), 샘플 구성도(`samples/`: 손으로 쓴 변경 명령 목록 8종과 `buildSample`), 구성 패턴(`patterns.ts`), 설명 모양·길이 상한·서명(`explain.ts`), 용어 사전 시드와 화면용 타입(`glossary-seed.ts`, `glossary-types.ts`), 학습 대본(`guides/`: 대본 타입 `types.ts`, 주제 여덟(대형 쇼핑몰·메신저·배달앱·동영상 스트리밍·영상관제·영상 관리시스템(VMS)·SNS 로그인 연동·외부 연계 중계)의 환경별 대본, 단계 판정 `judge.ts`, 단계 적용 `apply.ts`, 화면용 진행 상태 `view.ts`·`progress.ts`, 대본 작성 도우미 `authoring.ts`) |
+| `src/server` | 서버 로직. 대화 파이프라인·노드 질문·질문 세션·경고 점검(`chat/`), AI 연동(`llm/`), 설명 생성(`explain.ts`), 용어 사전(`glossary.ts`), 체크리스트 폼 저장(`fields.ts`), 경고 무시(`ignore.ts`), 흐름 저장소(`flows.ts`)와 흐름 제안(`flowSuggest.ts`), 망 지식 저장소(`network.ts`: 종류·규칙 편집, 처음 쓸 때 시드 채우기), 망 종류 확정(`zoneType.ts`), 망연계 맞아요·아니에요(`linkGuess.ts`), 샘플 불러오기(`samples.ts`: 샘플을 새 버전으로 넣고 흐름을 같은 트랜잭션에서 확인된 사용자 흐름으로 넣음. 옛 스파이크 변환 `convertSpikeScenario` 는 e2e 가짜 AI·fixture 용으로만 남음), 프로젝트·버전 저장(프로젝트와 첫 구성도를 함께 만들고, 이름 중복을 막고, 홈에서 이어 갈 최근 구성도를 고름), 인증(가입·재설정·로그인이 함께 쓰는 입력 규칙과 문구는 `auth/rules.ts`, 로그인·재설정·가입 횟수 제한은 `auth/rateLimit.ts`: 같은 아이디 15분 실패 10번·같은 IP 15분 실패 30번·재설정 같은 주소 1시간 3번·같은 IP 1시간에 만든 계정 5개(만들어진 계정만 세고, IP 를 모르면 세지 않음. 막힌 IP 에는 아이디·메일이 쓰이는지도 알려 주지 않음), IP 는 `x-forwarded-for` 첫 값. 재설정 메일은 응답 뒤 `after()` 로 보내 응답 시간으로 가입 여부가 드러나지 않게 함. 비밀번호를 재설정하면 `users.session_version` 이 오르고 `src/auth.ts` 의 jwt 콜백이 서버에서 토큰 번호와 맞춰 보아(`auth/session.ts`) 다른 기기의 로그인을 끊으며, 같은 계정의 남은 재설정 링크도 못 쓰게 됨. 미들웨어(Edge)는 DB 를 보지 않으므로 끊긴 로그인은 화면·API 의 `auth()` 가 막음). 학습 모드(`guide/`: 진행 상태 저장소와 학습 중 잠금 `runs.ts`, 학습 시작·그만두기·되돌린 뒤 단계 맞추기 `start.ts`, 학습 차례 `turn.ts`, Clef 단계 판정 `judge.ts`), 계정당 동시 차례 제한(`chat/userTurns.ts`), Claude Code 연동(`mcp/`: 도구 10개를 등록하는 `server.ts`, 읽기 `read.ts`, 쓰기 `apply.ts`, 변경 설명 `explain.ts`), 키 저장소(`mcpKeys.ts`), 그리기 규칙 공용 모듈(`drawing/rules.ts`), 차례 끝 정리 공용 함수(`chat/settle.ts`) |
 | `src/db` | Drizzle 스키마와 마이그레이션 |
-| `src/styles` | 색·간격 토큰(`tokens.css`)과 전역 스타일(`globals.css`, 맨 위에 Hallmark 기록). 테마는 Hallmark Vantage(steel)로, 거의 검은 남색 바탕 한 가지 위에 사이드바·패널·캔버스를 가는 선으로만 나누고 그림자·흐림은 쓰지 않습니다. 강조색은 라임 하나뿐이며 주 동작·지금 고른 것·흐름 표시에만 칠합니다(`--accent-fill`, `--on-accent`). 글꼴은 SUIT 하나(`--font-suit` 변수)이고, 구성도 캔버스는 색만 테마를 따르고 크기·간격은 배치 계산과 맞물려 있어 바꾸지 않습니다, 빨간 글자는 대비를 맞춘 `--state-missing-text`, 입력칸 테두리는 `--line-input` 을 씁니다. 화면의 모서리는 구성도에서 와서 조작 부품은 `--radius-control`(노드와 같은 6px), 판은 `--radius-surface`(영역과 같은 8px), 알약은 탭·상태 배지만 씁니다. 화면 틀 글자는 12px 아래로 내려가지 않습니다(캔버스 안 글자는 배치 상수와 묶여 예외). 이 디자인 체계(“살아 있는 설계도”)와 제품 사실은 저장소 맨 위 `DESIGN.md`·`PRODUCT.md` 에 적혀 있습니다 |
+| `src/styles` | 색·간격 토큰(`tokens.css`)과 전역 스타일(`globals.css`, 맨 위에 Hallmark 기록). 테마는 Hallmark Vantage(steel)로, 거의 검은 남색 바탕 한 가지 위에 사이드바·패널·캔버스를 가는 선으로 나누고 그림자는 쓰지 않습니다. 캔버스 위에 떠 있는 판(사이드바·오른쪽 패널·제목 판)은 반투명 칠(`--glass-bg`, 55%)과 뒤 흐림(`--glass-blur`)을 쓰고, 브라우저가 흐림을 못 쓰거나 투명도 줄이기 설정이면 불투명 칠로 돌아갑니다. 강조색은 라임 하나뿐이며 주 동작·지금 고른 것·흐름 표시에만 칠합니다(`--accent-fill`, `--on-accent`). 글꼴은 SUIT 하나(`--font-suit` 변수)이고, 구성도 캔버스는 색만 테마를 따르고 크기·간격은 배치 계산과 맞물려 있어 바꾸지 않습니다, 빨간 글자는 대비를 맞춘 `--state-missing-text`, 입력칸 테두리는 `--line-input` 을 씁니다. 화면의 모서리는 구성도에서 와서 조작 부품은 `--radius-control`(노드와 같은 6px), 판은 `--radius-surface`(영역과 같은 8px), 알약은 탭·상태 배지만 씁니다. 화면 틀 글자는 12px 아래로 내려가지 않습니다(캔버스 안 글자는 배치 상수와 묶여 예외). 이 디자인 체계(“살아 있는 설계도”)와 제품 사실은 저장소 맨 위 `DESIGN.md`·`PRODUCT.md` 에 적혀 있습니다 |
 
 `domain` 은 서버와 브라우저가 함께 쓰는 순수 로직이라 DB 나 네트워크에 의존하지 않습니다. 예를 들어 경고 규칙(`evaluateRules`)과 설명 서명(`signatureOf`)은 서버와 화면이 같은 함수를 씁니다.
 
@@ -32,10 +32,13 @@ InfraSketch 는 Next.js 15 (App Router) 하나로 화면과 서버를 함께 띄
 chat/route.ts ── 로그인·본문·소유권 확인 (401 / 400 / 404)
   │
   ▼
-runChatTurn ── 구성도별 잠금 (잠깐 쥔 잠금은 0.4초까지 기다림, 그래도 진행 중이면 409)
+runChatTurn ── 계정당 동시 차례 2개 (세 번째는 잠금 연결을 열기 전에 409)
+  │           ── 구성도별 잠금 (잠깐 쥔 잠금은 0.4초까지 기다림, 그래도 진행 중이면 409)
   1. 최신 버전 상태와 최근 대화 기록(차례마다 적용한 명령 포함)을 읽고, 계정의 망 지식을 읽는다
        (`server/network.ts` 의 `getNetworkKnowledge`. 못 읽으면 망 지식 없이 지금까지처럼 돈다)
   2. @멘션을 노드 ID 로 풀고, 사용자 메시지를 저장한다
+     학습 중인 구성도의 기본 대화면 여기서 학습 차례(`server/guide/turn.ts` 의 `runGuideTurn`)로 넘긴다
+       단계를 그렸거나 안내했으면 끝, 질문이면 의도 분류 없이 아래 질문 답변 경로로 이어 간다(아래 “학습 모드”)
   3. 의도를 정한다 (`server/chat/intent.ts` 의 `resolveIntent`)
        메시지가 “가정 변경:” 으로 시작하면 Clef 를 부르지 않고 무조건 구조 변경
        그 밖에는 Clef 로 분류 (구조 변경 / 질문 / 빠진 정보 답변 / 이력 / 재정렬 / 기타)
@@ -150,11 +153,31 @@ runChatTurn ── 구성도별 잠금 (잠깐 쥔 잠금은 0.4초까지 기다
 | `answer` | 질문에 대한 답변 글 조각 |
 | `warnings` | 이번 차례에 새로 생긴 경고(무시한 것 제외). 있을 때만, `done` 바로 앞에 옵니다 |
 | `handoff` | 노드 질문에서 구성 변경을 요청했을 때, 사용자 글을 그대로 돌려줘 구성도 대화로 넘기게 합니다 |
+| `guide` | 학습 차례가 끝난 뒤의 진행 상태(`GuideView`: 주제·환경·끝낸 단계 수·다음 단계 카드). 학습 차례일 때만, `done` 바로 앞에 옵니다 |
 | `open_history` | 이력 탭 열기 요청 |
 | `error` | 사용자에게 보여 줄 오류 문구 (AI 미설정, 시간 초과, 진행 중인 차례 등) |
 | `done` | 차례 끝. 새 버전 번호, `complete`/`aborted`, 적용·건너뜀·구성 변경(`changed`: 노드·연결·영역을 더하거나 고치거나 지운 명령만, 가정은 빼고)·빠진 정보 수, 노드·연결 수, 경고가 바뀌었으면 `warningCounts`(새로·해결·지금 모두). 구성 변경 요청인데 바뀐 구성도, 답한 글도 없으면 요약 칩에 “요청을 반영하지 못했어요. 다시 말해 주세요.”, 글만 있으면 “바꾼 곳이 없어요” 가 보입니다 |
 
-응답 메시지의 메타(`MessageMeta`)에는 의도·적용·건너뜀 수·버전·상태·차례 끝의 노드·연결 수(`nodes`, `edges`)와 함께, 해당될 때만 `missing`(남은 빠진 정보 수)과 `warnings`(새 경고), `warningCounts`(경고 변화)가 저장됩니다. 그래서 대화 기록을 다시 열어도 경고 줄이 보입니다. 구조 변경 경로 차례에는 서버 전용 `commands`(적용한 명령 앞 60개, 위 “대화 기록 재생”)도 저장되며 화면으로는 내려가지 않습니다. 노드 질문에서 구성도 대화로 넘긴 답에는 `handoff` 가 남습니다.
+응답 메시지의 메타(`MessageMeta`)에는 의도·적용·건너뜀 수·버전·상태·차례 끝의 노드·연결 수(`nodes`, `edges`)와 함께, 해당될 때만 `missing`(남은 빠진 정보 수)과 `warnings`(새 경고), `warningCounts`(경고 변화)가 저장됩니다. 그래서 대화 기록을 다시 열어도 경고 줄이 보입니다. 구조 변경 경로 차례에는 서버 전용 `commands`(적용한 명령 앞 60개, 위 “대화 기록 재생”)도 저장되며 화면으로는 내려가지 않습니다. 노드 질문에서 구성도 대화로 넘긴 답에는 `handoff` 가 남습니다. 학습 차례의 답에는 `guide`(종류 `env`·`step`·`miss`·`done`·`quit`, 단계 번호, 해설 칩, 완료 글·다른 환경 비교·다시 만들 환경)가 남아, 해설 칩과 완료 판은 다시 불러온 대화에서도 이 메타로 그립니다. `done` 이벤트는 대화 차례와 학습 차례가 같은 `doneEvent` 로 만듭니다.
+
+## 학습 모드
+
+주제 하나를 골라 대화로 구성도를 단계별로 완성하는 모드입니다. 그리는 내용은 AI 가 지어내지 않고 **미리 쓴 대본**(`domain/guides/`)의 명령과 교육 문구이며, 학습자의 말은 “이번 단계를 요청했는지”만 판정합니다. 끝나거나 그만두면 일반 구성도로 남아 이어서 고칠 수 있습니다.
+
+- **대본**(`domain/guides/types.ts`): 주제(`Guide`)마다 소개·배울 것·환경 안내와 환경별 대본(`variants`: `onprem`·`cloud`, 주제에 따라 하나만)이 있습니다. 환경 대본은 확정할 환경 가정 값, 단계 목록, 완료 글, 다른 환경과의 비교(`otherEnv`)를 담습니다. 단계(`GuideStep`)는 목표·예시 문장·키워드 묶음·흔한 어긋남(`conflicts`: 수량 등 조각 패턴과 답)·적용할 명령·단계 글(`say`)·해설 칩(`notes`, 최대 3개)·안 맞을 때 안내(`miss`)·설명 탭 글(`explains`: 노드·영역은 역할과 ADR 네 칸, 연결은 흐름·방식·까닭·방화벽)입니다. 글 길이 상한은 `GUIDE_LIMITS` 에 있고, 대본 불변식 테스트가 명령이 차례로 적용되는지, 흐름은 마지막 단계에만 넣는지 등을 봅니다.
+- **시작**(`server/guide/start.ts` 의 `startGuide`): “학습” 프로젝트(없으면 만듦)에 빈 구성도를 만들고 진행 상태(`guide_runs`)를 만듭니다. 환경을 골라 시작하면 바로 환경을 확정하고, 아니면 환경을 묻는 첫 메시지를 남깁니다. 첫 메시지 끝에는 “값은 예시입니다.” 한 줄이 붙습니다. 실패하면 반쯤 만든 구성도를 지웁니다.
+- **학습 차례**(`server/guide/turn.ts` 의 `runGuideTurn`): 구성도 잠금 안에서, 사용자 메시지를 저장한 뒤 불립니다. 진행 상태는 잠금 안에서 읽으므로(`getLiveGuideRun`) 같은 글을 두 번 보내도 두 번째는 다음 단계로 판정됩니다.
+  1. 환경을 아직 안 정했으면 환경 낱말(`readEnv`)로 읽어 확정합니다(환경 가정 확정 → 버전 → 진행 상태, 한 트랜잭션). 못 읽으면 환경 설명을 다시 보냅니다.
+  2. 흔한 어긋남(`findConflict`)을 먼저 봅니다. 걸리면 Clef 를 부르지 않고 그 답을 안내합니다.
+  3. Clef 에 “이번 단계 목표를 요청하는가”·“질문인가”를 한 번에 묻습니다(`server/guide/judge.ts` 의 `askClef`, noul 둘, 대기 포함 **3초 상한**, 재시도 없음). 판정은 `decideStep` 이 합니다: 질문 확률 0.85 이상이면 질문, 요청 확률 0.6 이상이면 맞음, 질문 확률 0.6 이상이면 질문, 그 밖에는 이 단계 키워드 묶음이 다 들어 있을 때만 맞음, 아니면 안 맞음입니다. Clef 가 답하지 못하면 키워드와 물음 표지로 정합니다.
+  4. **맞음**이면 대본 명령을 확정으로 적용하고(`applyGuideStep`, 대본이 넣은 가정·망 종류는 학습자가 확정한 것으로 침) 경고는 코드 규칙만 점검한 뒤, 버전·흐름·진행 상태를 한 트랜잭션으로 저장합니다. 그다음 끝낸 단계들의 대본 설명을 지금 서명으로 설명 캐시에 다시 넣고(실패해도 차례는 마침), 단계 글과 `guide` 이벤트, `done` 을 보냅니다. 마지막 단계면 완료 글도 남깁니다.
+  5. **안 맞음·어긋남**은 안내 글만 남기고 버전·진행 상태는 그대로입니다. **질문**이면 아무것도 보내지 않고 돌려주어, 대화 파이프라인의 질문 답변 경로(Qwen)가 답합니다. 판정 중에 중단하면 그리지 않고 중단된 차례로 끝냅니다. 대본 명령이 거절되거나 대본이 사라졌으면 학습을 그만두고 알립니다.
+  판정·확률·걸린 시간은 서버 로그(`[guide] verdict`)에 남고, 사용자 글은 남기지 않습니다.
+- **학습 중 잠금**(`server/guide/runs.ts` 의 `assertNotLearning`·`isLearning`): 가이드 밖의 변경은 `LEARNING_LOCKED_MESSAGE`(“학습 중에는 바꿀 수 없어요. …”)로 막습니다. 폼 저장·가정 확정·경고 무시·망 종류 확정·망연계 맞아요/아니에요·흐름 편집·샘플 불러오기·흐름 직접 제안·설명 다시 쓰기·구성도 대화 세션·Claude Code 쓰기가 대상입니다. 흐름 자동 제안은 조용히 건너뜁니다. 위치 고정, 되돌리기, 복제는 됩니다(복제본은 일반 구성도).
+- **되돌리기와 다시 하기**(`restoreGuideVersion`, `syncGuideLocked`): 진행 상태에는 가이드가 만든 버전마다 그때의 진행 기록(`marks`)이 쌓입니다. 학습 중 이력에서 되돌리면 같은 잠금·같은 트랜잭션 안에서 되돌리기와 단계 맞추기를 함께 하고, 되돌린 버전(되돌리기로 만든 버전이면 그 원본을 따라감)의 환경·단계로 진행 상태를 맞춥니다. 가이드 버전에 닿지 못하면 환경부터 다시 묻습니다. 맞춘 단계 이후(다른 환경 대본 포함)가 넣은 흐름은 지웁니다.
+- **그만두기**(`quitGuide`): 구성도 잠금 안에서 진행 상태를 `quit` 로 바꿉니다. 진행 상태 행은 끝나거나 그만둬도 남습니다.
+- **화면**: `/learn` 에서 주제와 환경을 고르면 새 구성도가 열리고, 대화 위에 단계 카드가 뜹니다. `guide` 이벤트는 진행 상태만 실으므로, 해설 칩과 완료 판은 차례 끝의 서버 다시 그리기가 가져온 저장된 대화 줄로 한 번 바꿔 보입니다(`useGuide.ts`). 그사이 다음 차례가 시작됐으면 그 차례의 답을 덮지 않게 기다립니다.
+- **판정 평가**: `npm run eval:guide` 가 실제 Clef 로 주제별 평가 문장을 판정해 기준 파일(`tests/fixtures/guide/baseline.json`)과 비교합니다([시작하기](./getting-started.md) 참고).
 
 ## 노드에 대해 물어보기
 
@@ -165,7 +188,7 @@ runAskTurn
   1. 소유권 확인 (남의 구성도·세션은 404)
   2. sessionId 가 있으면 세션을 찾고, 세션의 노드와 nodeId 가 같은지 확인 (다르면 400)
   3. 노드(또는 영역)가 지금 구성도에 있는지 확인 (없으면 409, 세션을 만들지 않음)
-  4. 구성도별 잠금 (구성도 대화와 같은 잠금이라 둘이 동시에 돌지 않음. 잠깐 쥔 잠금은 0.4초까지 기다리고, 그래도 진행 중이면 409)
+  4. 계정당 동시 차례 2개(구성도 대화와 같은 한도)를 잡고 구성도별 잠금 (구성도 대화와 같은 잠금이라 둘이 동시에 돌지 않음. 잠깐 쥔 잠금은 0.4초까지 기다리고, 그래도 진행 중이면 409)
   5. 잠금 안에서 최신 상태를 다시 읽어 노드를 한 번 더 확인
      (기다리는 사이 구성도 대화가 지웠을 수 있음)
   6. 첫 질문이면 세션을 만들고 session 이벤트를 start 앞에 보낸다
@@ -191,6 +214,7 @@ runAskTurn
 - 대화 탭 위쪽의 세션 선택(`ui/chat/SessionPicker.tsx`)에서 “구성도 대화”와 질문 세션들을 오갑니다. 세션은 최근에 이어간 순서로 보이며 `노드 이름 · 제목` 으로 표시됩니다. 목록은 `useSessions.ts` 가 관리하고, 세션의 메시지는 `GET /api/diagrams/[id]/sessions/[sessionId]` (최근 100개) 로 불러옵니다.
 - 서버가 `session` 이벤트로 새 세션의 id 를 알려 주기 전까지 화면은 대기 중인 새 세션으로 다룹니다.
 - 질문 차례와 구성도 대화는 같은 잠금을 쓰므로, 한쪽이 진행 중일 때 다른 쪽을 보내면 409(진행 중) 오류가 납니다. 다만 사용자가 보낸 말은 잠금을 0.4초까지 25ms 간격으로 다시 잡아 봅니다(`chat/lock.ts` 의 `USER_TURN_LOCK_WAIT_MS`). 그리기 직후의 자동 흐름 제안처럼 수십 ms 쥐었다 놓는 일과 겹쳐도 돌려보내지 않기 위해서입니다.
+- 구성도 잠금은 구성도마다 따로라서, 한 계정이 동시에 돌리는 대화·학습·노드 질문 차례는 따로 2개로 막습니다(`chat/userTurns.ts` 의 `withUserTurnSlot`, `MAX_USER_TURNS`). 세 번째 차례는 잠금용 DB 연결을 열기 전에 같은 409(진행 중) 안내로 돌려보냅니다. 수는 서버 프로세스 메모리에서 세므로 서버를 여러 대로 늘리면 대수만큼 한도가 늘어납니다. 자동 흐름 제안과 설명 생성은 세지 않습니다.
 
 ## 변경 명령
 
@@ -260,13 +284,14 @@ Qwen 요청 하나는 30초 상한이고, 실패하면 "설명을 만들지 못�
 
 Claude Code 에서 내 구성도를 읽고 고치게 하는 길입니다. 앱이 `/api/mcp` 에 MCP 서버(Streamable HTTP)를 열어 두고, 이 길은 Qwen·Clef 를 부르지 않습니다. 서버는 상태를 기억하지 않아서(stateless), 요청마다 키로 계정을 확인하고 그 계정만 보는 서버를 새로 만들어 JSON 으로 답합니다. GET·DELETE 는 405 입니다. 로그인 세션 대신 라우트가 직접 키를 확인하므로 `/api/mcp` 는 로그인 검사에서 빼 둡니다(`middleware-paths.ts`).
 
-### 도구 9개
+### 도구 10개
 
 모든 도구 설명은 “처음 그리기 전에 `get_guide` 를 먼저 읽으세요”로 끝납니다.
 
 | 도구 | 하는 일 |
 | --- | --- |
 | `get_guide` | 그리는 법: 명령 형식, 종류 목록, 그리기 규칙, 표준 구성 패턴, 이 계정의 망 지식 |
+| `lookup_terms` | 요청 글에 나온 말을 이 계정의 용어 사전에서 찾아 뜻을 돌려줍니다(앱 대화와 같은 방식, 6개까지) |
 | `list_projects` | 내 프로젝트와 그 안 구성도 목록(id·이름·최신 버전 번호) |
 | `create_project` | 새 프로젝트를 만듭니다. 첫 구성도(버전 1)가 함께 생깁니다 |
 | `list_diagrams` | 프로젝트 안 구성도 목록 |
@@ -295,6 +320,7 @@ Claude Code 에서 내 구성도를 읽고 고치게 하는 길입니다. 앱이
 - **저장 순간 다시 확인**: 읽을 때 최신이었어도 저장하는 사이 다른 쪽이 새 버전을 만들 수 있습니다. 그래서 버전 번호를 잠근 트랜잭션 안에서 `createVersion` 이 최신 번호를 한 번 더 확인합니다(`expectedLatest`, `lockLatestNumber`). 다르면 `StaleVersionError` 로 저장하지 않고 다시 읽으라고 알립니다. `restore_version` 도 같은 확인을 합니다.
 - **이력 요약**: `summary` 를 비우면 “Claude Code에서 N곳 바꿈”(N 은 적용한 명령 수)이 남습니다. 최대 80자입니다.
 - 버전은 `source: "mcp"`, `via: "mcp"` 로 저장되고, 이력 탭에 “Claude Code에서”로 보입니다.
+- 학습 중인 구성도에는 `apply_commands`·`restore_version` 이 쓰지 않고 학습 중이라고 알립니다(`kind: "locked"`).
 
 ### 그리기 규칙 공용 모듈
 
@@ -314,7 +340,7 @@ Claude Code 에게 알려 주는 그리기 규칙과 Qwen 프롬프트의 규칙
 | 테이블 | 내용 |
 | --- | --- |
 | `users`, `accounts`, `password_reset_tokens` | 회원과 인증(`users.session_version` 은 재설정 때 올라 옛 로그인을 끊는 번호) |
-| `auth_attempts` | 로그인 실패·재설정 요청 기록(횟수 제한, 계정과 묶지 않음, 하루 지난 줄은 기록할 때 지움) |
+| `auth_attempts` | 로그인 실패·재설정 요청·IP 별 가입 기록(횟수 제한, 계정과 묶지 않음, 하루 지난 줄은 기록할 때 지움) |
 | `projects` | 사용자별 프로젝트. 같은 사용자 안에서 이름이 겹치지 않습니다(대소문자 무시, 유니크 인덱스 `projects_owner_name_uidx`) |
 | `diagrams` | 프로젝트 안의 구성도. 같은 프로젝트 안에서 이름이 겹치지 않습니다(대소문자 무시, `diagrams_project_name_uidx`). `flows_suggested_at` 은 흐름 자동 제안을 한 번만 하려는 표식입니다 |
 | `chat_sessions` | 대화 세션. 종류(`kind`: `node` 노드 질문, `diagram` 구성도 대화), 구성도(`diagram_id`)·노드(`node_id`, 노드 질문만)·만들 때의 노드 이름(`node_label`, 노드 질문만)·제목·갱신 시각(DB 시계). 종류와 노드 칸이 맞는지 CHECK 로 지킵니다(마이그레이션 0005). 구성도가 지워지면 함께 지워집니다 |
@@ -325,6 +351,7 @@ Claude Code 에게 알려 주는 그리기 규칙과 Qwen 프롬프트의 규칙
 | `flows` | 구성도의 흐름(마이그레이션 0006). `diagram_id`(구성도가 지워지면 함께 지움)·`key`(흐름 id, 구성도마다 유일)·`data`(jsonb: 이름·시작 주체·요약·결과·단계)·출처 `source`(`ai`/`user`)·검수 여부 `reviewed`·생성/갱신 시각 |
 | `network_types` | 계정 공통 망 종류(마이그레이션 0007). `key`(사용자 안에서 유일)·이름·별칭·설명·등급(`grade`)·망분리 대상 `separated`(마이그레이션 0009)·출처 `source`(`seed` 기본 제공 / `user` 직접 만듦)·고침 여부 `edited`·숨김 `hidden`. 기본 종류는 57개(공공·금융·의료·제어·영상·데이터센터·일반 기업·클라우드)입니다. `ensureNetworkSeeded` 는 먼저 읽어 보고, 없는 기본 종류를 넣고 사용자가 고치지 않은 기본 종류를 지금 기본값으로 맞춥니다(고친 것·숨김은 그대로). 시드는 고치거나 숨기거나 되돌릴 수 있습니다. 숨긴 종류는 망 지식에서 빠집니다 |
 | `network_rules` | 계정 공통 기관 연결 규칙(마이그레이션 0007). 두 종류(`type_a` < `type_b` 로 정렬해 저장, 짝은 유일)·방식 `method`(`firewall` / `network_link` / `direct` / `none`)·근거 `note`. 기본 제공 짝 규칙 38건은 이 테이블이 아니라 코드(`NETWORK_RULE_SEED`)에 있고, 같은 짝에 이 테이블의 규칙이 있으면 그쪽이 먼저입니다. 두 종류는 규칙을 만든 뒤 바꾸지 못하고 방식과 근거만 고칩니다 |
+| `guide_runs` | 구성도 하나의 학습 진행 상태(마이그레이션 0011·0012). 구성도마다 하나(`diagram_id` 유일, 구성도가 지워지면 함께 지움)·주제 `guide_id`·환경 `env`(고르기 전 null)·지금 단계 `step`·단계별 버전 `step_versions`·환경 확정 버전 `env_version`·가이드가 만든 버전마다의 진행 기록 `marks`(0012, 지우지 않음)·상태 `status`(`active`/`done`/`quit`) |
 | `explanations` | 노드·연결·영역 설명 캐시. 대상 종류 `target_kind` 는 `node`/`edge`/`group`(text 칸이라 마이그레이션 없음). 구성도·대상별로 하나이고, 내용 서명(`signature`)이 바뀌면 다시 만듭니다 |
 
 버전 상태(`DiagramState`, `domain/types.ts`)는 JSON 으로 저장되며 다음을 담습니다.
@@ -335,7 +362,7 @@ Claude Code 에게 알려 주는 그리기 규칙과 Qwen 프롬프트의 규칙
 
 **흐름은 버전 상태에 넣지 않고 `flows` 테이블에 따로 저장합니다.** 그래서 이력에서 구성도를 되돌려도 흐름은 남습니다. 단계가 가리키는 연결이 사라지거나 방향이 어긋나는 **끊김은 저장하지 않고 불러올 때마다 최신 상태로 계산**합니다(`domain/flows.ts` 의 `checkFlow`: 없는 연결·시작 노드 불일치·앞 단계와 이어지지 않음·단방향 연결을 거슬러 감. 갈래는 허용). 끊긴 흐름은 대화로 다시 맞추거나 단계를 하나 지워 고칠 수 있고, 마지막 단계는 지울 수 없습니다.
 
-마이그레이션은 `src/db/migrations` 에 있으며, 용어 사전·설명 테이블은 `0002`, 질문 세션 테이블과 `messages.session_id` 는 `0003` 에서 추가됐습니다. `0004` 는 이미 겹친 프로젝트·구성도 이름 중 나중 것에 ` 2`, ` 3` … 을 붙여 정리한 뒤 이름 유니크 인덱스를 만들고, `0006_flows` 는 `flows` 테이블과 `diagrams.flows_suggested_at` 을 추가하고, `0007_network_knowledge` 는 `network_types`·`network_rules` 테이블을 추가하고, `0008` 은 `mcp_keys` 테이블과 `diagram_versions.via`·`summary` 를 추가하고, `0009_network_separated` 는 `network_types.separated` 를 추가하면서 이미 있던 내부 등급 망을 망분리 대상으로 표시합니다(예전에는 내부 망이 모두 외부와 망연계였으므로 그 동작을 지킵니다).
+마이그레이션은 `src/db/migrations` 에 있으며, 용어 사전·설명 테이블은 `0002`, 질문 세션 테이블과 `messages.session_id` 는 `0003` 에서 추가됐습니다. `0004` 는 이미 겹친 프로젝트·구성도 이름 중 나중 것에 ` 2`, ` 3` … 을 붙여 정리한 뒤 이름 유니크 인덱스를 만들고, `0006_flows` 는 `flows` 테이블과 `diagrams.flows_suggested_at` 을 추가하고, `0007_network_knowledge` 는 `network_types`·`network_rules` 테이블을 추가하고, `0008` 은 `mcp_keys` 테이블과 `diagram_versions.via`·`summary` 를 추가하고, `0009_network_separated` 는 `network_types.separated` 를 추가하면서 이미 있던 내부 등급 망을 망분리 대상으로 표시합니다(예전에는 내부 망이 모두 외부와 망연계였으므로 그 동작을 지킵니다). `0011_guide_runs` 는 학습 진행 상태 `guide_runs` 테이블을, `0012_guide_run_marks` 는 그 진행 기록 칸 `marks` 를 추가합니다.
 
 `listMessages` 는 `sessionId` 가 null 이면 구성도 대화만, 아니면 그 세션의 것만 돌려줍니다. 그래서 `pipeline.ts` 의 대화 기록과 Clef 에 넘기는 직전 AI 답변(`lastAssistant`)에는 구성도 대화 메시지만 쓰이고, 질문 세션의 글은 섞이지 않습니다.
 

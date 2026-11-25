@@ -1,6 +1,6 @@
 ---
 title: "Review Focus"
-sidebar_position: 134
+sidebar_position: 138
 ---
 # Review Focus
 
@@ -22,7 +22,7 @@ sidebar_position: 134
 
 ## Relationships
 
-- [Task 5: 주의 항목 바로 가기](Task_5-_주의_항목_바로_가기.md) (1 shared connections)
+- [InfoCard.tsx](InfoCard.tsx.md) (1 shared connections)
 - [EdgeLayer.tsx](EdgeLayer.tsx.md) (1 shared connections)
 
 ## Source Files

@@ -1,6 +1,6 @@
 ---
 title: "clarify.ts"
-sidebar_position: 44
+sidebar_position: 49
 ---
 # clarify.ts
 
@@ -12,8 +12,8 @@ sidebar_position: 44
 
 - **clarify.ts** (31 connections) — `src/domain/clarify.ts`
 - **ClarifyCard.tsx** (11 connections) — `src/ui/chat/ClarifyCard.tsx`
+- **ClarifyQuestion** (8 connections) — `src/domain/clarify.ts`
 - **ClarifyCard()** (6 connections) — `src/ui/chat/ClarifyCard.tsx`
-- **detectForks()** (5 connections) — `src/domain/clarify.ts`
 - **Task 5: 그리기 전에 물을 것·첫 그리기 흐름·가정 key 안내** (4 connections) — `docs/superpowers/plans/2026-11-12-mcp-parity.md`
 - **choicesOf()** (4 connections) — `src/domain/clarify.ts`
 - **choicesSummary()** (4 connections) — `src/domain/clarify.ts`
@@ -37,13 +37,16 @@ sidebar_position: 44
 
 ## Relationships
 
-- [pipeline.ts](pipeline.ts.md) (14 shared connections)
+- [pipeline.ts](pipeline.ts.md) (7 shared connections)
 - [read.ts](read.ts.md) (6 shared connections)
-- [useChatTurn.ts](useChatTurn.ts.md) (5 shared connections)
-- [ResetPasswordForm.tsx](ResetPasswordForm.tsx.md) (4 shared connections)
+- [commands.ts](commands.ts.md) (6 shared connections)
 - [ChatPanel.tsx](ChatPanel.tsx.md) (4 shared connections)
-- [types.ts](types.ts.md) (3 shared connections)
+- [domain/assumptions.ts](domain-assumptions.ts.md) (3 shared connections)
+- [domain/types.ts](domain-types.ts.md) (3 shared connections)
+- [useChatTurn.ts](useChatTurn.ts.md) (3 shared connections)
+- [Button](Button.md) (3 shared connections)
 - [diff.ts](diff.ts.md) (2 shared connections)
+- [ask/route.ts](ask-route.ts.md) (2 shared connections)
 - [patternPromptBlock](patternPromptBlock.md) (1 shared connections)
 - [segments.ts](segments.ts.md) (1 shared connections)
 
@@ -55,7 +58,7 @@ sidebar_position: 44
 
 ## Audit Trail
 
-- EXTRACTED: 70 (96%)
+- EXTRACTED: 73 (96%)
 - INFERRED: 3 (4%)
 - AMBIGUOUS: 0 (0%)
 
