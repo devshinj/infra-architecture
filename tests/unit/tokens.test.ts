@@ -272,6 +272,21 @@ test("narrow canvas toolbar: icon-only 44px tools on one row, labels kept for sc
   expect(narrow).not.toMatch(/\.canvas__tool > span \{[^}]*display: none/);
 });
 
+test("every 640px breakpoint in CSS is the same condition as Shell.tsx NARROW_QUERY (DESIGN.md · 좁은 화면)", () => {
+  // 셸은 NARROW_QUERY 로 사이드바·패널을 탭 막대로 바꾼다. 너비만 보는 쿼리가 섞이면 가로로 든 휴대폰에서 셸만 좁은 배치가 된다.
+  const narrowQuery = read("src/ui/Shell.tsx").match(/export const NARROW_QUERY = "([^"]+)";/)![1];
+  const bad: string[] = [];
+  let count = 0;
+  for (const f of cssFiles(join(process.cwd(), "src"))) {
+    for (const m of readFileSync(f, "utf8").matchAll(/@media ([^{]*max-width: 640px[^{]*)\{/g)) {
+      count++;
+      if (m[1].trim() !== narrowQuery) bad.push(`${f} @media ${m[1].trim()}`);
+    }
+  }
+  expect(bad).toEqual([]);
+  expect(count).toBeGreaterThan(10);
+});
+
 test("placeholders use text-secondary everywhere, not the browser grey", () => {
   expect(read("src/styles/globals.css")).toMatch(/::placeholder \{[^}]*color: var\(--text-secondary\);[^}]*opacity: 1;/);
 });
