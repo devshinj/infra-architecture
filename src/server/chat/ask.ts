@@ -11,6 +11,7 @@ import { getLatestState } from "@/server/versions";
 import { NODE_GONE_MESSAGE, SESSION_GONE_MESSAGE, sessionPayload, type ChatEvent, type MessageMeta } from "./events";
 import { resolveIntent } from "./intent";
 import { USER_TURN_LOCK_WAIT_MS, withDiagramLock } from "./lock";
+import { withUserTurnSlot } from "./userTurns";
 import { createMessage, listMessages } from "./messages";
 import {
   AI_UNAVAILABLE_MESSAGE,
@@ -68,7 +69,11 @@ export async function runAskTurn(args: AskArgs, deps: ChatDeps): Promise<AskTurn
   // 잠금 전에 노드를 확인해 없으면 세션을 만들지 않는다.
   if (!hasNode((await getLatestState(args.diagramId))?.state, args.nodeId)) return gone();
 
-  const locked = await withDiagramLock(args.diagramId, () => lockedAsk({ ...args, emit }, session, deps), { waitMs: USER_TURN_LOCK_WAIT_MS });
+  // 계정의 동시 차례 자리를 먼저 잡는다(구성도 대화와 같은 한도).
+  const slot = await withUserTurnSlot(args.userId, () =>
+    withDiagramLock(args.diagramId, () => lockedAsk({ ...args, emit }, session, deps), { waitMs: USER_TURN_LOCK_WAIT_MS }),
+  );
+  const locked = slot.ok ? slot.value : slot;
   if (!locked.ok) {
     emit({ t: "error", message: BUSY_MESSAGE });
     return { status: "busy" };

@@ -24,6 +24,7 @@ import { runGuideTurn } from "@/server/guide/turn";
 import { doneEvent, SESSION_GONE_MESSAGE, sessionPayload, type ChatEvent, type MessageMeta } from "./events";
 import { BUSY_MESSAGE } from "./busy";
 import { USER_TURN_LOCK_WAIT_MS, withDiagramLock } from "./lock";
+import { withUserTurnSlot } from "./userTurns";
 import { clefOpenItems, resolveIntent } from "./intent";
 import { createMessage, listMessages } from "./messages";
 import { normalizeAiCommand } from "./normalize";
@@ -93,7 +94,11 @@ export async function runChatTurn(args: TurnArgs, deps: ChatDeps): Promise<ChatT
   if (target !== undefined && (await isLearning(args.diagramId))) throw new ValidationError(LEARNING_LOCKED_MESSAGE);
   const emit = guardEmit(args.emit);
   const turnArgs = { ...args, emit };
-  const locked = await withDiagramLock(args.diagramId, () => sessionTurn(turnArgs, deps), { waitMs: USER_TURN_LOCK_WAIT_MS });
+  // 계정의 동시 차례 자리를 먼저 잡는다(자리가 없으면 잠금용 연결도 열지 않는다).
+  const slot = await withUserTurnSlot(args.userId, () =>
+    withDiagramLock(args.diagramId, () => sessionTurn(turnArgs, deps), { waitMs: USER_TURN_LOCK_WAIT_MS }),
+  );
+  const locked = slot.ok ? slot.value : slot;
   if (!locked.ok) {
     emit({ t: "error", message: BUSY_MESSAGE });
     return { status: "busy" };

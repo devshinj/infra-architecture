@@ -134,3 +134,35 @@ test("unknown session is NotFoundError, a node session is ValidationError, befor
   await expect(turn({ id: "n1" })).rejects.toBeInstanceOf(ValidationError);
   expect(store.created).toEqual([]);
 });
+
+test("a third concurrent turn of the same user is refused as busy, even on another diagram", async () => {
+  // 구성도 잠금은 구성도마다 따로라서 계정 한도가 없으면 구성도 수만큼 동시에 돈다(src/server/chat/userTurns.ts).
+  let release!: () => void;
+  const gate = new Promise<void>((r) => (release = r));
+  const slow = (): QwenClient => ({
+    async streamCompletion(_m, { onDelta }) {
+      await gate;
+      const text = JSON.stringify({ op: "say", text: "알겠어요" });
+      onDelta(text);
+      return { text, finishReason: "stop" };
+    },
+  });
+  const run = (diagramId: string, userId = "busy-user") => {
+    const events: ChatEvent[] = [];
+    const result = runChatTurn({ userId, diagramId, text: "글", signal: new AbortController().signal, emit: (e) => events.push(e) }, { qwen: slow(), clef });
+    return { events, result };
+  };
+  const first = run("d1");
+  const second = run("d2");
+  const third = run("d3");
+  expect(await third.result).toEqual({ status: "busy" });
+  expect(third.events).toEqual([{ t: "error", message: "다른 응답을 처리하고 있어요. 끝난 뒤 다시 보내 주세요." }]);
+  // 다른 계정은 막히지 않는다.
+  const other = run("d4", "other-user");
+  release();
+  expect(await first.result).toEqual({ status: "ok" });
+  expect(await second.result).toEqual({ status: "ok" });
+  expect(await other.result).toEqual({ status: "ok" });
+  // 끝나면 자리가 난다.
+  expect(await run("d5").result).toEqual({ status: "ok" });
+});
