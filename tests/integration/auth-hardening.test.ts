@@ -26,6 +26,33 @@ async function resetToken(email = "a@b.co"): Promise<string> {
   return link.split("/reset/")[1];
 }
 
+describe("가입 횟수 제한", () => {
+  const account = (i: number) => ({ username: `bulk${i}`, password: "password1", email: `bulk${i}@b.co` });
+
+  test("같은 IP 에서 1시간에 계정 5개까지 만들고, 그 뒤는 만들지 않는다(다른 IP 는 그대로)", async () => {
+    for (let i = 0; i < LIMITS.signupIp.max; i++) expect((await signup(account(i), { ip: "10.7.7.7" })).ok).toBe(true);
+    expect(await signup(account(99), { ip: "10.7.7.7" })).toEqual({ ok: false, field: "form", message: MESSAGES.tooManyAttempts });
+    expect(await db.select().from(users).where(eq(users.username, "bulk99"))).toHaveLength(0);
+    // 막힌 IP 에는 이미 쓰는 아이디인지도 알려 주지 않는다.
+    expect(await signup(account(0), { ip: "10.7.7.7" })).toMatchObject({ ok: false, field: "form" });
+    expect((await signup(account(99), { ip: "10.7.7.8" })).ok).toBe(true);
+  });
+
+  test("입력 실수·중복은 세지 않는다", async () => {
+    expect((await signup(account(0), { ip: "10.7.7.7" })).ok).toBe(true);
+    for (let i = 0; i < LIMITS.signupIp.max + 2; i++) {
+      expect(await signup(account(0), { ip: "10.7.7.7" })).toMatchObject({ ok: false, field: "username" });
+      expect(await signup({ ...account(50), password: "short" }, { ip: "10.7.7.7" })).toMatchObject({ ok: false, field: "password" });
+    }
+    expect(await db.select().from(authAttempts).where(eq(authAttempts.key, "signup:ip:10.7.7.7"))).toHaveLength(1);
+  });
+
+  test("IP 를 모르면(unknown) 세지 않는다", async () => {
+    for (let i = 0; i < LIMITS.signupIp.max + 1; i++) expect((await signup(account(i), { ip: "unknown" })).ok).toBe(true);
+    expect(await db.select().from(authAttempts)).toHaveLength(0);
+  });
+});
+
 describe("로그인 횟수 제한", () => {
   test("같은 아이디로 10번 틀리면 맞는 비밀번호도 막고, 막힌 시도는 세지 않는다", async () => {
     await makeUser();
