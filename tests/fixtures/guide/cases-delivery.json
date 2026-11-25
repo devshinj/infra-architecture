@@ -1,0 +1,460 @@
+{
+  "cases": [
+    {
+      "id": "delivery-entry-m1",
+      "guide": "delivery",
+      "env": "cloud",
+      "step": "entry",
+      "text": "고객 앱, 가게 앱, 라이더 앱을 놓고 로드밸런서 하나로 받게 해 줘",
+      "expect": "match"
+    },
+    {
+      "id": "delivery-entry-m2",
+      "guide": "delivery",
+      "env": "cloud",
+      "step": "entry",
+      "text": "세 앱이 같은 입구로 접속하게 ALB 를 둬 줘",
+      "expect": "match"
+    },
+    {
+      "id": "delivery-entry-c1",
+      "guide": "delivery",
+      "env": "cloud",
+      "step": "entry",
+      "text": "주문 API 서버를 두 대 넣어 줘",
+      "expect": "miss"
+    },
+    {
+      "id": "delivery-entry-c2",
+      "guide": "delivery",
+      "env": "cloud",
+      "step": "entry",
+      "text": "ALB 랑 API 게이트웨이는 뭐가 달라?",
+      "expect": "question"
+    },
+    {
+      "id": "delivery-order-api-m1",
+      "guide": "delivery",
+      "env": "cloud",
+      "step": "order-api",
+      "text": "주문을 처리할 백엔드 서버를 AZ 마다 한 대씩 두 대 두자",
+      "expect": "match"
+    },
+    {
+      "id": "delivery-order-api-m2",
+      "guide": "delivery",
+      "env": "cloud",
+      "step": "order-api",
+      "text": "ALB 뒤에 주문 서비스를 오토스케일링으로 붙여 줘",
+      "expect": "match"
+    },
+    {
+      "id": "delivery-order-api-c1",
+      "guide": "delivery",
+      "env": "cloud",
+      "step": "order-api",
+      "text": "주문 API 서버 세 대로 해 줘",
+      "expect": "conflict"
+    },
+    {
+      "id": "delivery-order-api-c2",
+      "guide": "delivery",
+      "env": "cloud",
+      "step": "order-api",
+      "text": "API 한 대만 넣어 줘",
+      "expect": "conflict"
+    },
+    {
+      "id": "delivery-order-api-c3",
+      "guide": "delivery",
+      "env": "cloud",
+      "step": "order-api",
+      "text": "RDS 를 붙여 줘",
+      "expect": "miss"
+    },
+    {
+      "id": "delivery-order-api-c4",
+      "guide": "delivery",
+      "env": "cloud",
+      "step": "order-api",
+      "text": "점심에 서버는 언제 늘려야 해?",
+      "expect": "question"
+    },
+    {
+      "id": "delivery-rds-m1",
+      "guide": "delivery",
+      "env": "cloud",
+      "step": "rds",
+      "text": "주문이랑 가게 정보를 저장할 데이터베이스를 넣어 줘",
+      "expect": "match"
+    },
+    {
+      "id": "delivery-rds-m2",
+      "guide": "delivery",
+      "env": "cloud",
+      "step": "rds",
+      "text": "MySQL 을 Multi-AZ 로 두고 주문 API 가 쓰게 해 줘",
+      "expect": "match"
+    },
+    {
+      "id": "delivery-rds-c1",
+      "guide": "delivery",
+      "env": "cloud",
+      "step": "rds",
+      "text": "메뉴 캐시를 넣어 줘",
+      "expect": "miss"
+    },
+    {
+      "id": "delivery-rds-c2",
+      "guide": "delivery",
+      "env": "cloud",
+      "step": "rds",
+      "text": "장애 조치하는 동안 주문은 어떻게 돼?",
+      "expect": "question"
+    },
+    {
+      "id": "delivery-menu-cache-m1",
+      "guide": "delivery",
+      "env": "cloud",
+      "step": "menu-cache",
+      "text": "가게 목록이랑 메뉴를 Redis 에 캐시해 줘",
+      "expect": "match"
+    },
+    {
+      "id": "delivery-menu-cache-m2",
+      "guide": "delivery",
+      "env": "cloud",
+      "step": "menu-cache",
+      "text": "점심에 메뉴 조회가 몰려도 DB 까지 안 가게 캐시를 둬 줘",
+      "expect": "match"
+    },
+    {
+      "id": "delivery-menu-cache-c1",
+      "guide": "delivery",
+      "env": "cloud",
+      "step": "menu-cache",
+      "text": "SQS 대기열을 붙여 줘",
+      "expect": "miss"
+    },
+    {
+      "id": "delivery-menu-cache-c2",
+      "guide": "delivery",
+      "env": "cloud",
+      "step": "menu-cache",
+      "text": "캐시랑 DB 가 다르면 어떻게 돼?",
+      "expect": "question"
+    },
+    {
+      "id": "delivery-pg-m1",
+      "guide": "delivery",
+      "env": "cloud",
+      "step": "pg",
+      "text": "카드 결제는 PG사에 맡기고 승인 요청은 NAT 로 내보내 줘",
+      "expect": "match"
+    },
+    {
+      "id": "delivery-pg-m2",
+      "guide": "delivery",
+      "env": "cloud",
+      "step": "pg",
+      "text": "결제대행사랑 연동해 줘",
+      "expect": "match"
+    },
+    {
+      "id": "delivery-pg-c1",
+      "guide": "delivery",
+      "env": "cloud",
+      "step": "pg",
+      "text": "푸시 알림을 보내게 해 줘",
+      "expect": "miss"
+    },
+    {
+      "id": "delivery-pg-c2",
+      "guide": "delivery",
+      "env": "cloud",
+      "step": "pg",
+      "text": "출구 IP 는 왜 알려 줘야 해?",
+      "expect": "question"
+    },
+    {
+      "id": "delivery-events-m1",
+      "guide": "delivery",
+      "env": "cloud",
+      "step": "events",
+      "text": "주문 상태가 바뀔 때마다 이벤트를 내고 큐로 받아서 처리하게 해 줘",
+      "expect": "match"
+    },
+    {
+      "id": "delivery-events-m2",
+      "guide": "delivery",
+      "env": "cloud",
+      "step": "events",
+      "text": "SNS 주제랑 SQS 알림 큐, 알림 워커 두 대를 넣어 줘",
+      "expect": "match"
+    },
+    {
+      "id": "delivery-events-c1",
+      "guide": "delivery",
+      "env": "cloud",
+      "step": "events",
+      "text": "가게 앱이 실시간으로 주문을 받게 해 줘",
+      "expect": "miss"
+    },
+    {
+      "id": "delivery-events-c2",
+      "guide": "delivery",
+      "env": "cloud",
+      "step": "events",
+      "text": "알림이 늦게 가면 주문도 늦어져?",
+      "expect": "question"
+    },
+    {
+      "id": "delivery-push-m1",
+      "guide": "delivery",
+      "env": "cloud",
+      "step": "push",
+      "text": "고객이랑 라이더 휴대폰으로 푸시 알림이 가게 해 줘",
+      "expect": "match"
+    },
+    {
+      "id": "delivery-push-m2",
+      "guide": "delivery",
+      "env": "cloud",
+      "step": "push",
+      "text": "안드로이드는 FCM, 아이폰은 APNs 로 알림 보내 줘",
+      "expect": "match"
+    },
+    {
+      "id": "delivery-push-c1",
+      "guide": "delivery",
+      "env": "cloud",
+      "step": "push",
+      "text": "지도 API 를 붙여 줘",
+      "expect": "miss"
+    },
+    {
+      "id": "delivery-push-c2",
+      "guide": "delivery",
+      "env": "cloud",
+      "step": "push",
+      "text": "앱이 꺼져 있어도 알림이 와?",
+      "expect": "question"
+    },
+    {
+      "id": "delivery-realtime-m1",
+      "guide": "delivery",
+      "env": "cloud",
+      "step": "realtime",
+      "text": "가게 태블릿이 웹소켓 연결을 계속 열어 두고 새 주문을 받게 해 줘",
+      "expect": "match"
+    },
+    {
+      "id": "delivery-realtime-m2",
+      "guide": "delivery",
+      "env": "cloud",
+      "step": "realtime",
+      "text": "실시간 서버를 두 대 두고 Redis Pub/Sub 으로 주문을 전달해 줘",
+      "expect": "match"
+    },
+    {
+      "id": "delivery-realtime-c1",
+      "guide": "delivery",
+      "env": "cloud",
+      "step": "realtime",
+      "text": "라이더 위치를 받는 API 를 넣어 줘",
+      "expect": "miss"
+    },
+    {
+      "id": "delivery-realtime-c2",
+      "guide": "delivery",
+      "env": "cloud",
+      "step": "realtime",
+      "text": "가게 태블릿이 와이파이가 끊기면 주문을 놓쳐?",
+      "expect": "question"
+    },
+    {
+      "id": "delivery-realtime-m3",
+      "guide": "delivery",
+      "env": "cloud",
+      "step": "realtime",
+      "text": "가게 앱이 실시간으로 주문을 받게 해 줘",
+      "expect": "match"
+    },
+    {
+      "id": "delivery-realtime-c3",
+      "guide": "delivery",
+      "env": "cloud",
+      "step": "realtime",
+      "text": "라이더 위치를 실시간으로 보여 줘",
+      "expect": "miss"
+    },
+    {
+      "id": "delivery-location-m1",
+      "guide": "delivery",
+      "env": "cloud",
+      "step": "location",
+      "text": "라이더 앱이 몇 초마다 GPS 위치를 올리면 Redis 에 저장해 줘",
+      "expect": "match"
+    },
+    {
+      "id": "delivery-location-m2",
+      "guide": "delivery",
+      "env": "cloud",
+      "step": "location",
+      "text": "라이더 위치 추적용 서버를 따로 두고 최신 위치는 캐시에 둬 줘",
+      "expect": "match"
+    },
+    {
+      "id": "delivery-location-c1",
+      "guide": "delivery",
+      "env": "cloud",
+      "step": "location",
+      "text": "주변 라이더를 골라 배차해 줘",
+      "expect": "miss"
+    },
+    {
+      "id": "delivery-location-c2",
+      "guide": "delivery",
+      "env": "cloud",
+      "step": "location",
+      "text": "위치를 DB 에 안 쓰면 이력은 어떻게 남겨?",
+      "expect": "question"
+    },
+    {
+      "id": "delivery-dispatch-m1",
+      "guide": "delivery",
+      "env": "cloud",
+      "step": "dispatch",
+      "text": "가게가 접수하면 가까운 라이더를 골라서 배차 제안을 보내 줘",
+      "expect": "match"
+    },
+    {
+      "id": "delivery-dispatch-m2",
+      "guide": "delivery",
+      "env": "cloud",
+      "step": "dispatch",
+      "text": "접수 이벤트를 받는 배차 큐와 배차 서버를 붙여 줘",
+      "expect": "match"
+    },
+    {
+      "id": "delivery-dispatch-c1",
+      "guide": "delivery",
+      "env": "cloud",
+      "step": "dispatch",
+      "text": "CloudWatch 를 붙여 줘",
+      "expect": "miss"
+    },
+    {
+      "id": "delivery-dispatch-c2",
+      "guide": "delivery",
+      "env": "cloud",
+      "step": "dispatch",
+      "text": "두 라이더가 동시에 수락하면 어떻게 돼?",
+      "expect": "question"
+    },
+    {
+      "id": "delivery-map-m1",
+      "guide": "delivery",
+      "env": "cloud",
+      "step": "map",
+      "text": "고객 앱이랑 라이더 앱에 지도를 띄우고 주소 검색도 되게 해 줘",
+      "expect": "match"
+    },
+    {
+      "id": "delivery-map-m2",
+      "guide": "delivery",
+      "env": "cloud",
+      "step": "map",
+      "text": "배달 주소를 좌표로 바꾸는 지오코딩 API 를 연동해 줘",
+      "expect": "match"
+    },
+    {
+      "id": "delivery-map-c1",
+      "guide": "delivery",
+      "env": "cloud",
+      "step": "map",
+      "text": "모니터링을 붙여 줘",
+      "expect": "miss"
+    },
+    {
+      "id": "delivery-map-c2",
+      "guide": "delivery",
+      "env": "cloud",
+      "step": "map",
+      "text": "앱 키가 새면 어떻게 돼?",
+      "expect": "question"
+    },
+    {
+      "id": "delivery-ops-m1",
+      "guide": "delivery",
+      "env": "cloud",
+      "step": "ops",
+      "text": "지표랑 로그를 모아 보고 기준 넘으면 알람이 오게 해 줘",
+      "expect": "match"
+    },
+    {
+      "id": "delivery-ops-m2",
+      "guide": "delivery",
+      "env": "cloud",
+      "step": "ops",
+      "text": "클라우드워치로 감시를 붙여 줘",
+      "expect": "match"
+    },
+    {
+      "id": "delivery-ops-c1",
+      "guide": "delivery",
+      "env": "cloud",
+      "step": "ops",
+      "text": "흐름을 정리해 줘",
+      "expect": "miss"
+    },
+    {
+      "id": "delivery-ops-c2",
+      "guide": "delivery",
+      "env": "cloud",
+      "step": "ops",
+      "text": "점심 몰림은 미리 알 수 있어?",
+      "expect": "question"
+    },
+    {
+      "id": "delivery-ops-c3",
+      "guide": "delivery",
+      "env": "cloud",
+      "step": "ops",
+      "text": "로그인 서버를 넣어 줘",
+      "expect": "miss"
+    },
+    {
+      "id": "delivery-flows-m1",
+      "guide": "delivery",
+      "env": "cloud",
+      "step": "flows",
+      "text": "주문하고 라이더 위치 보는 과정을 흐름으로 보여 줘",
+      "expect": "match"
+    },
+    {
+      "id": "delivery-flows-m2",
+      "guide": "delivery",
+      "env": "cloud",
+      "step": "flows",
+      "text": "주문 흐름이랑 위치 추적 흐름을 만들어 줘",
+      "expect": "match"
+    },
+    {
+      "id": "delivery-flows-c1",
+      "guide": "delivery",
+      "env": "cloud",
+      "step": "flows",
+      "text": "CloudWatch 알람을 붙여 줘",
+      "expect": "miss"
+    },
+    {
+      "id": "delivery-flows-c2",
+      "guide": "delivery",
+      "env": "cloud",
+      "step": "flows",
+      "text": "재생하면 뭐가 보여?",
+      "expect": "question"
+    }
+  ]
+}

@@ -1,5 +1,7 @@
 import { NODE_KINDS, type GroupKind } from "@/domain/catalog";
 import { crossingEdges, groupMembers } from "@/domain/groupInfo";
+import { GLOSSARY_SEED } from "@/domain/glossary-seed";
+import type { AuthoredEdge, AuthoredGroup, AuthoredTermed } from "@/domain/guides/types";
 import type { DiagramState, DNode, Group } from "@/domain/types";
 
 /** 설명을 만드는 대상 종류. 서버 캐시(explanations.target_kind)와 화면 큐 키("kind:id")가 같은 이름을 쓴다. */
@@ -125,6 +127,8 @@ export interface NodeExplanation {
   compare?: string; // 사전에 있으면
   role: string;
   adr: { decision: string; reason: string; alternative: string; cost: string };
+  /** 학습 대본이 쓴 글. 계정 사전 값으로 덮지 않고 다시 쓰기도 막는다. */
+  authored?: true;
 }
 
 /** 영역 설명. 정의 부분은 노드와 같고, 역할 다음에 경계(드나드는 것)가 붙는다. */
@@ -140,6 +144,7 @@ export interface GroupExplanation {
   role: string;
   boundary: string;
   adr: { decision: string; reason: string; alternative: string; cost: string };
+  authored?: true;
 }
 
 /** 정의 부분(사전 용어)이 있는 설명: 노드와 영역. */
@@ -152,6 +157,7 @@ export interface EdgeExplanation {
   method: string;
   why: string;
   firewall: string;
+  authored?: true;
 }
 
 /** 항목별 글자 수 상한(코드 포인트 기준). */
@@ -244,4 +250,46 @@ export function signatureOf(state: DiagramState, targetKind: ExplainTargetKind, 
   }
   const sorted = links.map((l) => l.text).sort((x, y) => (x < y ? -1 : x > y ? 1 : 0));
   return fnv1a(`[${JSON.stringify(n.kind)},${JSON.stringify(n.label)},${JSON.stringify(n.sub ?? "")},${JSON.stringify(attrText(n.attrs.sw))},${JSON.stringify(attrText(n.attrs.version))},[${sorted.join(",")}]]`);
+}
+
+/**
+ * 학습 대본이 쓴 설명 글을 설명 저장 모양으로 만든다. key 는 "node:<id>" | "group:<id>" | "edge:<id>". 대상이 없으면 null.
+ * 정의가 비면 기본 사전(seed)에서 읽는다(용어·why·compare·termSource seed). 있으면 대본 글을 그대로 쓴다.
+ * 계정 사전은 사용자가 고칠 수 있어 출처로 쓰지 않는다.
+ */
+export function authoredExplanation(
+  state: DiagramState,
+  key: string,
+  text: AuthoredTermed | AuthoredGroup | AuthoredEdge,
+): { targetKind: ExplainTargetKind; targetId: string; signature: string; data: AnyExplanation } | null {
+  const at = key.indexOf(":");
+  const targetKind = key.slice(0, at);
+  const targetId = key.slice(at + 1);
+  if (targetKind !== "node" && targetKind !== "group" && targetKind !== "edge") return null;
+  const signature = signatureOf(state, targetKind, targetId);
+  if (!signature) return null;
+  if (targetKind === "edge") {
+    const e = text as AuthoredEdge;
+    return { targetKind, targetId, signature, data: { kind: "edge", flow: e.flow, method: e.method, why: e.why, firewall: e.firewall, authored: true } };
+  }
+  const t = text as AuthoredTermed;
+  const name = targetKind === "node" ? state.nodes[targetId]!.label : state.groups[targetId]!.label;
+  const seed = t.definition ? null : pickTerm(seedRows(), targetTermCandidates(state, targetKind, targetId).map((c) => c.key))?.entry ?? null;
+  const part = {
+    term: t.term ?? seed?.term ?? name,
+    definition: t.definition ?? seed?.definition ?? "",
+    definitionSource: "glossary" as const,
+    reviewed: true,
+    ...(seed ? { termSource: "seed" as const, ...(seed.why ? { why: seed.why } : {}), ...(seed.compare ? { compare: seed.compare } : {}) } : {}),
+  };
+  const data: AnyExplanation =
+    targetKind === "group"
+      ? { kind: "group", ...part, role: t.role, boundary: (text as AuthoredGroup).boundary, adr: t.adr, authored: true }
+      : { kind: "node", ...part, role: t.role, adr: t.adr, authored: true };
+  return { targetKind, targetId, signature, data };
+}
+
+let seedIndex: { key: string; aliases: string[]; entry: (typeof GLOSSARY_SEED)[number] }[] | null = null;
+function seedRows() {
+  return (seedIndex ??= GLOSSARY_SEED.map((entry) => ({ key: normalizeTerm(entry.term), aliases: entry.aliases, entry })));
 }

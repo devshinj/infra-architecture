@@ -8,9 +8,12 @@ import type { Command } from "@/domain/commands";
 import { buildSample, SAMPLE_LIST } from "@/domain/samples";
 import { emptyState } from "@/domain/types";
 import type { DiagramState } from "@/domain/types";
+import { BUSY_MESSAGE } from "@/server/chat/busy";
+import { USER_TURN_LOCK_WAIT_MS, withDiagramLock } from "@/server/chat/lock";
 import { createVersion } from "@/server/versions";
 
-import { getOwnedDiagram } from "./projects";
+import { getOwnedDiagram, ValidationError } from "./projects";
+import { assertNotLearning } from "./guide/runs";
 
 export interface SpikeGroup { id: string; group_kind: string; label: string; parent: string | null }
 export interface SpikeNode { id: string; kind: string; label: string; sub?: string | null; parent: string | null; attrs?: Record<string, string | number | null> }
@@ -124,16 +127,25 @@ export function sampleState(sampleId: string): DiagramState {
 /**
  * 샘플을 새 버전으로 넣고 흐름도 함께 넣는다(같은 트랜잭션). 흐름은 사람이 쓴 것이라 확인한 사용자 흐름으로 둔다.
  * 같은 id 의 흐름이 남아 있으면 샘플 것으로 바꾼다.
+ * 대화 차례가 돌고 있으면(잠금) 넣지 않고 BUSY_MESSAGE: 차례가 끝나며 옛 상태로 샘플을 덮지 않게 한다.
  */
 export async function importSample(userId: string, diagramId: string, sampleId: string): Promise<{ number: number }> {
   await getOwnedDiagram(userId, diagramId);
+  await assertNotLearning(diagramId);
   const { state, flows: sampleFlows } = sampleOf(sampleId);
-  return db.transaction(async (tx) => {
-    const { number } = await createVersion(diagramId, state, { source: "import", tx });
-    if (sampleFlows.length > 0) {
-      await tx.delete(flows).where(and(eq(flows.diagramId, diagramId), inArray(flows.key, sampleFlows.map((f) => f.id))));
-      await tx.insert(flows).values(sampleFlows.map((f) => ({ diagramId, key: f.id, data: f, source: "user" as const, reviewed: true })));
-    }
-    return { number };
-  });
+  const locked = await withDiagramLock(
+    diagramId,
+    () =>
+      db.transaction(async (tx) => {
+        const { number } = await createVersion(diagramId, state, { source: "import", tx });
+        if (sampleFlows.length > 0) {
+          await tx.delete(flows).where(and(eq(flows.diagramId, diagramId), inArray(flows.key, sampleFlows.map((f) => f.id))));
+          await tx.insert(flows).values(sampleFlows.map((f) => ({ diagramId, key: f.id, data: f, source: "user" as const, reviewed: true })));
+        }
+        return { number };
+      }),
+    { waitMs: USER_TURN_LOCK_WAIT_MS },
+  );
+  if (!locked.ok) throw new ValidationError(BUSY_MESSAGE);
+  return locked.value;
 }

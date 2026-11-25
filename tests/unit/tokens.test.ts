@@ -35,13 +35,34 @@ test("fly dot token is a silver brighter than the glass highlight", () => {
   expect(read("docs/superpowers/specs/2026-10-29-infra-architecture-visualizer-design.md")).toMatch(/\| `fly-dot` \| `#DCE3EE` \|/);
 });
 
-test("floating panel tokens have exact values (flat paper, hairline, no blur)", () => {
+test("floating panel tokens have exact values (translucent paper with blur, hairline)", () => {
   const css = read("src/styles/tokens.css");
-  expect(css).toContain("--glass-bg: rgba(4, 9, 12, 1);");
+  expect(css).toContain("--glass-bg: rgba(4, 9, 12, 0.55);");
+  expect(css).toContain("--glass-blur: 14px;");
   expect(css).toContain("--glass-line: rgba(32, 40, 44, 1);");
   expect(css).not.toContain("--glass-highlight:");
-  expect(css).not.toContain("--glass-blur:");
   expect(css).toContain("--panel-gap: 12px;");
+});
+
+test("translucent panels fall back to opaque paper without backdrop blur or with reduced transparency", () => {
+  const css = read("src/styles/tokens.css");
+  const block = (head: string) => css.slice(css.indexOf(head)).match(/\{\s*:root\s*\{([^}]*)\}/)?.[1] ?? "";
+  const unsupported = block("@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)))");
+  expect(unsupported).toContain("--glass-bg: var(--bg-sidebar);");
+  const reduced = block("@media (prefers-reduced-transparency: reduce)");
+  expect(reduced).toContain("--glass-bg: var(--bg-sidebar);");
+  expect(reduced).toContain("--glass-blur: 0px;");
+});
+
+test("the hidden sidebar row menu button does not take clicks, and stays visible on touch-capable devices and in the drawer", () => {
+  const css = read("src/ui/app.module.css");
+  const fine = css.slice(css.indexOf("@media (hover: hover) and (pointer: fine)"));
+  expect(fine).toMatch(/\.sidebar \.row \.menuBtn \{ margin-left: -30px; opacity: 0; pointer-events: none; \}/);
+  expect(fine).toMatch(/\.sidebar \.row:hover \.menuBtn,[^{]*\{ margin-left: 0; opacity: 1; pointer-events: auto; \}/);
+  const coarse = css.slice(css.indexOf("@media (any-pointer: coarse)"));
+  expect(coarse).toMatch(/^@media \(any-pointer: coarse\) \{\s*\.sidebar \.row \.menuBtn \{ margin-left: 0; opacity: 1; pointer-events: auto; \}/);
+  expect(css).toContain(".sidebar.drawerNav .row .menuBtn { margin-left: 0; opacity: 1; pointer-events: auto; }");
+  expect(css).toMatch(/\.sidebar \.row \.menuBtn \{ width: 28px; min-height: 24px;/);
 });
 
 test("radius scale comes from the diagram (DESIGN.md · Shapes): control = node, surface = zone", () => {
@@ -54,17 +75,16 @@ test("radius scale comes from the diagram (DESIGN.md · Shapes): control = node,
   expect(css).toContain("--radius-pill: 999px;");
 });
 
-test("sidebar and panel float as flat paper panels with a hairline over the full-bleed canvas", () => {
+test("sidebar and panel float as translucent blurred paper panels with a hairline over the full-bleed canvas", () => {
   const css = read("src/ui/app.module.css");
   expect(rule(css, ".shell")).toContain("background: var(--bg-canvas)");
   for (const sel of [".sidebar", ".panel"]) {
     const r = rule(css, sel);
     expect(r, sel).toContain("background: var(--glass-bg)");
-    expect(r, sel).not.toContain("backdrop-filter");
+    expect(r, sel).toContain("backdrop-filter: blur(var(--glass-blur))");
     expect(r, sel).toContain("border: 1px solid var(--glass-line)");
     expect(r, sel).toContain("border-radius: var(--radius-surface)");
   }
-  expect(css).not.toContain("backdrop-filter");
   expect(rule(css, ".sidebar")).toContain("position: absolute");
   expect(rule(css, ".panelDock")).toContain("position: absolute");
   expect(css).not.toMatch(/box-shadow|gradient/);
@@ -165,7 +185,7 @@ test("chat bubbles and progress dots follow the restrained spec", () => {
   const css = read("src/ui/chat/chat.module.css");
   const user = rule(css, ".user");
   expect(user).toContain("background: var(--bg-panel-raised)");
-  expect(user).toContain("border-radius: 12px 12px 4px 12px");
+  expect(user).toContain("border-radius: var(--radius-surface)"); // DESIGN.md · Chat (2026-11-20, 예전 12·12·4·12px 는 Same Corners Rule 위반)
   expect(user).toContain("max-width: 85%");
   expect(rule(css, ".mono")).toContain("border: 1px solid var(--line-node)");
   expect(css).toMatch(/\.dots span \{[^}]*animation: dot 1\.2s/);
@@ -250,6 +270,21 @@ test("narrow canvas toolbar: icon-only 44px tools on one row, labels kept for sc
   // 글자는 지우지 않고 화면에서만 감춘다(버튼 이름으로 읽힌다).
   expect(narrow).toMatch(/\.canvas__tool > span \{[^}]*position: absolute;[^}]*clip-path: inset\(50%\);/);
   expect(narrow).not.toMatch(/\.canvas__tool > span \{[^}]*display: none/);
+});
+
+test("every 640px breakpoint in CSS is the same condition as Shell.tsx NARROW_QUERY (DESIGN.md · 좁은 화면)", () => {
+  // 셸은 NARROW_QUERY 로 사이드바·패널을 탭 막대로 바꾼다. 너비만 보는 쿼리가 섞이면 가로로 든 휴대폰에서 셸만 좁은 배치가 된다.
+  const narrowQuery = read("src/ui/Shell.tsx").match(/export const NARROW_QUERY = "([^"]+)";/)![1];
+  const bad: string[] = [];
+  let count = 0;
+  for (const f of cssFiles(join(process.cwd(), "src"))) {
+    for (const m of readFileSync(f, "utf8").matchAll(/@media ([^{]*max-width: 640px[^{]*)\{/g)) {
+      count++;
+      if (m[1].trim() !== narrowQuery) bad.push(`${f} @media ${m[1].trim()}`);
+    }
+  }
+  expect(bad).toEqual([]);
+  expect(count).toBeGreaterThan(10);
 });
 
 test("placeholders use text-secondary everywhere, not the browser grey", () => {

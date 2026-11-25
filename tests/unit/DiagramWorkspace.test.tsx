@@ -54,11 +54,13 @@ vi.mock("@/canvas/Canvas", () => ({
     );
   },
 }));
+// 학습 차례 뒤 저장된 줄로 대화를 바꾸는 고리(useChatTurn.replaceLines).
+const chatExtra = vi.hoisted(() => ({ replaceLines: vi.fn() }));
 vi.mock("@/ui/chat/useChatTurn", () => ({
   useChatTurn: (a: { onCommand: (c: unknown) => void; onDone(): void; onInterrupted(): void; onRelayout?(): void }) => {
     hookState.onCommand = a.onCommand;
     hookState.turn = a;
-    return { lines: hookState.lines, busy: hookState.busy, send: hookState.send, stop: vi.fn(), pushLine: hookState.pushLine };
+    return { lines: hookState.lines, busy: hookState.busy, send: hookState.send, stop: vi.fn(), pushLine: hookState.pushLine, replaceLines: chatExtra.replaceLines };
   },
 }));
 
@@ -400,16 +402,16 @@ test("fit padding accounts for floating panels", () => {
   window.localStorage.clear();
   hookState.insets.length = 0;
   render(ui(mk(1, ["a"])));
-  // 왼쪽: 여백 12 + 사이드바 240 + 여백 12, 오른쪽: 여백 12 + 패널 360 + 여백 12
+  // 왼쪽: 여백 12 + 사이드바 288 + 여백 12, 오른쪽: 여백 12 + 패널 360 + 여백 12
   // 아래: 여백 12 + 접힌 구성 정보 카드 줄 42 + 여백 12
-  expect(hookState.insets.at(-1)).toEqual({ left: 264, right: 384, bottom: 66 });
+  expect(hookState.insets.at(-1)).toEqual({ left: 312, right: 384, bottom: 66 });
   fireEvent.keyDown(screen.getByRole("separator", { name: "대화 패널 너비" }), { key: "ArrowLeft" });
-  expect(hookState.insets.at(-1)).toEqual({ left: 264, right: 400, bottom: 66 });
+  expect(hookState.insets.at(-1)).toEqual({ left: 312, right: 400, bottom: 66 });
   // 카드를 펼치면 카메라가 피할 장애물(재기 전 카드 폭 기본값 380 + 여백 12)이 함께 간다.
   fireEvent.click(screen.getByRole("button", { name: "구성 정보 펼치기" }));
-  expect(hookState.insets.at(-1)).toMatchObject({ left: 264, right: 400, bottom: 66, card: { width: 392 } });
+  expect(hookState.insets.at(-1)).toMatchObject({ left: 312, right: 400, bottom: 66, card: { width: 392 } });
   fireEvent.click(screen.getByRole("button", { name: "구성 정보 접기" }));
-  expect(hookState.insets.at(-1)).toEqual({ left: 264, right: 400, bottom: 66 });
+  expect(hookState.insets.at(-1)).toEqual({ left: 312, right: 400, bottom: 66 });
   cleanup();
   // 접힌 사이드바(레일 56)
   window.localStorage.setItem("infrasketch.sidebarCollapsed", "1");
@@ -444,6 +446,43 @@ test("sample import after an interrupted turn refits the canvas at once", async 
   rerender(<DiagramWorkspace {...props} latest={mk(2, ["x"]) as never} />);
   expect(screen.getByTestId("n")).toHaveTextContent("x");
   expect(screen.getByTestId("fit").textContent).not.toBe(before);
+});
+
+test("an interrupted guide turn reloads the chat lines", () => {
+  // 학습 차례를 멈춰도 서버는 단계를 마칠 수 있다(그렸으면 단계 글·해설 칩이 저장된다). 멈춘 뒤 새로 그린 저장된 줄로 대화를 바꾼다.
+  hookState.busy = false;
+  chatExtra.replaceLines.mockClear();
+  vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+  try {
+    const view = { guideId: "shop", title: "대형 쇼핑몰", env: "onprem" as const, envChoices: ["onprem" as const, "cloud" as const], step: 0, total: 12, status: "active" as const, current: { goal: "입구", example: "방화벽 넣어 줘" } };
+    const L0 = [{ id: "u0", kind: "user" as const, text: "방화벽 넣어 줘" }];
+    const L1 = [...L0, { id: "a1-say-0", kind: "progress" as const, text: "방화벽을 뒀어요.", turn: "a1" }];
+    const L2 = [...L1, { id: "a1-guide", kind: "guide" as const, text: "", turn: "a1", guide: { kind: "step" as const, step: 1 } }];
+    const props = { diagramId: "d", name: "n", latest: mk(1, []) as never, initialPinned: {}, samples: [], guide: view };
+    const { rerender } = render(<DiagramWorkspace {...props} initialChat={L0} />);
+    act(() => hookState.turn!.onInterrupted());
+    rerender(<DiagramWorkspace {...props} initialChat={L1} />);
+    expect(chatExtra.replaceLines).toHaveBeenCalledTimes(1);
+    expect(chatExtra.replaceLines).toHaveBeenLastCalledWith(L1);
+    // 서버가 차례를 조금 늦게 마치면 첫 새로 그리기에는 아직 없다: 한 번 더 새로 그릴 때 그 줄로 다시 바꾼다.
+    act(() => vi.advanceTimersByTime(1500));
+    rerender(<DiagramWorkspace {...props} initialChat={L2} />);
+    expect(chatExtra.replaceLines).toHaveBeenCalledTimes(2);
+    expect(chatExtra.replaceLines).toHaveBeenLastCalledWith(L2);
+    cleanup();
+
+    // 학습 중이 아니면 멈춰도 대화 줄을 바꾸지 않는다(평소 차례는 살아 있는 줄 그대로).
+    chatExtra.replaceLines.mockClear();
+    const free = { ...props, guide: null };
+    const again = render(<DiagramWorkspace {...free} initialChat={L0} />);
+    act(() => hookState.turn!.onInterrupted());
+    again.rerender(<DiagramWorkspace {...free} initialChat={L1} />);
+    act(() => vi.advanceTimersByTime(1500));
+    again.rerender(<DiagramWorkspace {...free} initialChat={L2} />);
+    expect(chatExtra.replaceLines).not.toHaveBeenCalled();
+  } finally {
+    vi.useRealTimers();
+  }
 });
 
 test("restore while live refits the canvas at once, even after a turn that saved nothing", async () => {
@@ -778,6 +817,16 @@ test("the workspace has a single h1 with the diagram name", () => {
   const h1 = screen.getAllByRole("heading", { level: 1 });
   expect(h1).toHaveLength(1);
   expect(h1[0]).toHaveTextContent("운영 구성도");
+});
+
+test("the title plate shows the project and the diagram name on wide screens", () => {
+  hookState.busy = false;
+  render(<DiagramWorkspace diagramId="d" name="운영 구성도" projectName="쇼핑몰" latest={mk(1, ["a"]) as never} initialPinned={{}} samples={[]} />);
+  const h1 = screen.getByRole("heading", { level: 1, name: "운영 구성도" });
+  // 보조기기 전용이 아니라 화면에 보이는 제목이고, 같은 판에 프로젝트 이름이 앞선다.
+  expect(h1.className).not.toMatch(/srOnly/);
+  expect(h1.parentElement).toHaveTextContent("프로젝트 쇼핑몰/운영 구성도");
+  expect(within(h1.parentElement!).getByTitle("쇼핑몰")).toBeInTheDocument();
 });
 
 // ── 좁은 화면(휴대폰): 아래 탭 막대로 구성도·대화·설명·이력을 한 화면씩 본다 ──
@@ -1449,8 +1498,10 @@ test("the latest turn's summary offers 바뀐 곳 보기 (compare with the versi
   render(ui(mk(2, ["a", "x"])));
   fireEvent.click(screen.getByRole("button", { name: "바뀐 곳 보기" }));
   await waitFor(() => expect(getVersionAction).toHaveBeenCalledWith("d", 1));
-  expect(await screen.findByRole("button", { name: "현재로 돌아가기" })).toBeInTheDocument();
-  fireEvent.click(screen.getByRole("button", { name: "현재로 돌아가기" }));
+  // 비교 중: 캔버스 띠와 입력칸 위에 「현재로 돌아가기」가 하나씩, 그 차례 자리에는 「비교 끝내기」.
+  expect(await screen.findAllByRole("button", { name: "현재로 돌아가기" })).toHaveLength(2);
+  fireEvent.click(screen.getByRole("button", { name: "비교 끝내기" }));
+  expect(screen.queryByRole("button", { name: "현재로 돌아가기" })).toBeNull();
   fireEvent.click(screen.getByRole("button", { name: "되돌리기" }));
   await waitFor(() => expect(restoreVersionAction).toHaveBeenCalledWith("d", 1));
   await waitFor(() => expect(hookState.pushLine).toHaveBeenCalledWith(expect.objectContaining({ kind: "system", text: expect.stringMatching(/되돌렸어요/) })));

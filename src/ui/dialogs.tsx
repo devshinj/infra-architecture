@@ -20,7 +20,8 @@ export type NameDialog = {
   initial: string;
   run(name: string): Promise<string | void>;
 };
-export type DeleteDialog = { kind: "delete"; title: string; message: ReactNode; run(): Promise<string | void> };
+/** 되돌릴 수 없는 일의 확인. 확인 버튼 글은 기본 「삭제」(진행 중 「삭제하는 중…」), 다른 일이면 submit·pendingLabel 로 바꾼다. */
+export type DeleteDialog = { kind: "delete"; title: string; message: ReactNode; submit?: string; pendingLabel?: string; run(): Promise<string | void> };
 export type Dialog = NameDialog | DeleteDialog;
 
 export type RowMenuItem<A extends string> = { action: A; label: string; disabled?: boolean; danger?: boolean };
@@ -207,7 +208,7 @@ export function DialogView({ dialog, onClose }: { dialog: Dialog; onClose(): voi
   const unchanged = isName && dialog.initial !== "" && value.trim() === dialog.initial.trim();
   const submitDisabled = pending || blank || unchanged;
   const describedBy = [isName && dialog.hint ? DIALOG_HINT_ID : "", error ? DIALOG_ERROR_ID : ""].filter(Boolean).join(" ") || undefined;
-  const submitLabel = dialog.kind === "name" ? (pending ? dialog.pendingLabel : dialog.submit) : pending ? "삭제하는 중…" : "삭제";
+  const submitLabel = pending ? (dialog.pendingLabel ?? "삭제하는 중…") : (dialog.submit ?? "삭제");
 
   return (
     <div

@@ -5,6 +5,8 @@ import { notFound, redirect } from "next/navigation";
 
 import { auth, signOut } from "@/auth";
 import type { TermEntry } from "@/domain/explain";
+import type { GuideEnv } from "@/domain/guides/types";
+import type { GuideView } from "@/domain/guides/view";
 import type { DiagramState } from "@/domain/types";
 import {
   clearPinnedPositions,
@@ -23,6 +25,9 @@ import {
   type PinnedPositions,
 } from "@/server/projects";
 import { confirmAssumptionFor } from "@/server/assumptions";
+import { getGuideRun } from "@/server/guide/runs";
+import { quitGuide, restoreGuideVersion, startGuide } from "@/server/guide/start";
+import { BUSY_MESSAGE } from "@/server/chat/busy";
 import { saveFieldsFor, type SaveFieldsInput } from "@/server/fields";
 import { BusyError, confirmFlow, deleteFlow, removeFlowStep, renameFlow } from "@/server/flows";
 import { ensureSeeded, listTerms, updateTerm, type TermPatch } from "@/server/glossary";
@@ -48,7 +53,7 @@ import {
   type NetTypeRow,
 } from "@/server/network";
 import { createMcpKey, deleteMcpKey, listMcpKeys } from "@/server/mcpKeys";
-import { getVersion, listVersions, restoreVersionWithMessage, type RestoreMessageOpts } from "@/server/versions";
+import { getVersion, listVersions, restoreVersionLocked, type RestoreMessageOpts } from "@/server/versions";
 
 const DIAGRAM_ROUTE = "/p/[projectId]/d/[diagramId]";
 
@@ -163,21 +168,25 @@ export async function duplicateDiagramAction(
   });
 }
 
-export async function importSampleAction(diagramId: string, sampleId: string): Promise<{ number: number }> {
+export async function importSampleAction(diagramId: string, sampleId: string): Promise<ActionResult<{ number: number }>> {
   if (!SAMPLES.some((x) => x.id === sampleId)) notFound();
-  return run(async (uid) => {
+  return runResult(async (uid) => {
     const r = await importSample(uid, diagramId, sampleId);
     refreshDiagram();
     return r;
   });
 }
 
-/** describeChange: 안내 둘째 줄에 구성 정보 카드 숫자의 변화를 붙인다(이력의 되돌리기). text 는 남긴 안내. */
+/**
+ * describeChange: 안내 둘째 줄에 구성 정보 카드 숫자의 변화를 붙인다(이력의 되돌리기). text 는 남긴 안내.
+ * 학습 중이면 구성도 잠금 안에서 되돌리고 그 버전의 단계로 맞춘 새 학습 상태(guide)를 함께 돌려준다.
+ * 대화 차례가 돌고 있으면(학습 중이든 아니든) 되돌리지 않고 { ok: false, error } 를 돌려준다.
+ */
 export async function restoreVersionAction(
   diagramId: string,
   number: number,
   opts?: { describeChange?: boolean },
-): Promise<{ number: number; text: string }> {
+): Promise<{ number: number; text: string; guide?: GuideView } | { ok: false; error: string }> {
   validVersion(number);
   return run(async (uid) => {
     await getOwnedDiagram(uid, diagramId);
@@ -188,9 +197,37 @@ export async function restoreVersionAction(
       const knowledge = await getNetworkKnowledge(uid).catch(() => null);
       restoreOpts = { describeChange: knowledge ? { knowledge } : {} };
     }
-    const r = await restoreVersionWithMessage(diagramId, number, restoreOpts);
+    if ((await getGuideRun(diagramId))?.status === "active") {
+      const g = await restoreGuideVersion(diagramId, number, restoreOpts);
+      if (!g.ok) return { ok: false as const, error: BUSY_MESSAGE };
+      refreshDiagram();
+      return { number: g.number, text: g.text, ...(g.guide ? { guide: g.guide } : {}) };
+    }
+    const r = await restoreVersionLocked(diagramId, number, restoreOpts);
+    if (!r.ok) return { ok: false as const, error: BUSY_MESSAGE };
     refreshDiagram();
+    return { number: r.number, text: r.text };
+  });
+}
+
+/** 학습을 시작한다. "학습" 프로젝트에 새 구성도를 만들고 그 주소에 쓸 id 를 돌려준다. 없는 주제·환경은 안내로 돌려준다. */
+export async function startGuideAction(
+  guideId: string,
+  env: GuideEnv | null,
+): Promise<ActionResult<{ projectId: string; diagramId: string }>> {
+  return runResult(async (uid) => {
+    const r = await startGuide(uid, guideId, env);
+    refreshAll();
     return r;
+  });
+}
+
+/** 학습을 그만둔다. 그 뒤 이 구성도는 일반 구성도다. 대화 차례가 돌고 있으면 바쁨 안내를 돌려준다. */
+export async function quitGuideAction(diagramId: string): Promise<ActionResult> {
+  return runResult(async (uid) => {
+    await quitGuide(uid, diagramId);
+    refreshAll();
+    return {};
   });
 }
 

@@ -12,6 +12,7 @@ import {
   type ChatTurnResult,
 } from "@/server/chat/pipeline";
 import { getSession } from "@/server/chat/sessions";
+import { LEARNING_LOCKED_MESSAGE } from "@/server/guide/runs";
 import { streamTurn } from "@/server/chat/stream";
 import { getOwnedDiagram, NotFoundError, ValidationError } from "@/server/projects";
 
@@ -79,7 +80,11 @@ export async function POST(request: Request, ctx: { params: Promise<{ id: string
     run: (emit, signal) => runChatTurn({ userId, diagramId: id, text, session: target, ...(choices ? { choices } : {}), signal, emit }, defaultChatDeps()),
     early(outcome) {
       if (!outcome.ok && outcome.err instanceof NotFoundError) return NextResponse.json({ error: NOT_FOUND }, { status: 404 });
-      if (!outcome.ok && outcome.err instanceof ValidationError) return NextResponse.json({ error: BAD_BODY }, { status: 400 });
+      // 학습 중 세션 요청은 막힘 문구를 그대로 보인다. 그 밖의 검증 실패는 지금처럼 본문 안내로 답한다.
+      if (!outcome.ok && outcome.err instanceof ValidationError) {
+        const error = outcome.err.message === LEARNING_LOCKED_MESSAGE ? LEARNING_LOCKED_MESSAGE : BAD_BODY;
+        return NextResponse.json({ error }, { status: 400 });
+      }
       if (outcome.ok && outcome.result.status === "busy") return NextResponse.json({ error: BUSY_MESSAGE }, { status: 409 });
       if (outcome.ok && outcome.result.status === "session_gone") return NextResponse.json({ error: SESSION_GONE_MESSAGE }, { status: 404 });
       return null;

@@ -2,11 +2,16 @@
 
 import { type ReactNode, type RefObject, useEffect, useLayoutEffect, useRef, useState } from "react";
 
+import type { GuideEnv } from "@/domain/guides/types";
+import type { GuideView } from "@/domain/guides/view";
 import { NODE_GONE_MESSAGE } from "@/server/chat/events";
 import { Button } from "@/ui/Button";
 import { ChatSkeleton } from "@/ui/skeleton/Skeleton";
 
 import { FLY_ORIGIN_ATTR } from "../FlyLayer";
+import { GuideCard } from "../guide/GuideCard";
+import { GuideDone } from "../guide/GuideDone";
+import { GuideNotes } from "../guide/GuideNotes";
 import { useShell } from "../Shell";
 
 import styles from "./chat.module.css";
@@ -24,6 +29,8 @@ export interface ChatPanelProps {
   onStop(): void;
   health: LlmHealth | null;
   disabledReason?: string;
+  /** 막힌 까닭 옆에 둘 빠져나갈 단추(예: 이전 버전을 보는 중 → 현재로 돌아가기). */
+  disabledAction?: { label: string; run(): void };
   mentionRef: RefObject<MentionInputHandle | null>;
   /** 구성도에 노드가 없다. 대화 기록도 없으면 고정 인사말과 가이드를 보인다(저장·전송 없음). */
   emptyDiagram?: boolean;
@@ -53,12 +60,27 @@ export interface ChatPanelProps {
   turnActions?: TurnActions;
   /** 되돌려진 차례의 버전들. 그 요약 줄은 흐리게 하고 끝에 "· 되돌림" 을 붙인다(지금 구성과 다른 숫자라). */
   undone?: ReadonlySet<number>;
+  /**
+   * 이 구성도의 학습. view.status 가 active 면 대화 위에 단계 카드를 붙이고 `새 대화` 를 숨긴다(학습 대화는 기본 대화에만 쌓는다).
+   * 끝난 학습이어도 완료 판의 다시 만들기에 주제(view.guideId)를 쓴다.
+   */
+  guide?: ChatGuide;
+}
+
+export interface ChatGuide {
+  view: GuideView | null;
+  onQuit(): Promise<string | void>;
+  /** 완료 판의 「<환경>으로 다시 만들기」. 없으면 버튼을 그리지 않는다. */
+  onRebuild?(env: GuideEnv): Promise<string | void>;
 }
 
 export interface TurnActions {
   latest: number;
   disabled?: boolean;
+  /** 지금 비교 화면이 견주는 버전. 이 차례의 비교(latest - 1)면 `바뀐 곳 보기` 자리에 `비교 끝내기` 를 둔다. */
+  comparing?: number;
   onCompare(version: number): void;
+  onEndCompare?(): void;
   onUndo(version: number): void;
 }
 
@@ -112,7 +134,7 @@ const hhmm = (ms: number) => {
 /** 차례 끝 결과 칩(요약·주의 N). */
 const CHIP_KINDS = new Set<ChatLine["kind"]>(["summary", "warning"]);
 /** 질문 세션에서 보이지 않는 줄: 진행 카드·결과 칩. */
-const HIDDEN_IN_ASK = new Set<ChatLine["kind"]>(["card", "summary", "warning"]);
+const HIDDEN_IN_ASK = new Set<ChatLine["kind"]>(["card", "summary", "warning", "guide"]);
 
 /** 차례 밖의 줄은 하나씩, 같은 차례(turn)의 줄은 한 AI 메시지로 묶는다. */
 type Block = { kind: "line"; line: ChatLine } | { kind: "turn"; id: string; lines: ChatLine[] };
@@ -208,6 +230,7 @@ export function ChatPanel({
   onStop,
   health,
   disabledReason,
+  disabledAction,
   mentionRef,
   emptyDiagram = false,
   footer,
@@ -220,6 +243,7 @@ export function ChatPanel({
   handoffTo = "main",
   turnActions,
   undone,
+  guide,
 }: ChatPanelProps) {
   const { narrow } = useShell();
   const lines = ask ? allLines.filter((l) => !HIDDEN_IN_ASK.has(l.kind)) : allLines;
@@ -279,6 +303,9 @@ export function ChatPanel({
   const openClarifyId = lines.at(-1)?.kind === "clarify" ? lines.at(-1)!.id : null;
   const lastCard = lines.findLast((l) => l.kind === "card" && l.card)?.card;
   const down = health !== null && health.qwen !== "ok";
+  // 학습 중: 단계 카드(노드 질문 세션은 제외)와 `새 대화` 숨김. 학습 대화는 기본 대화에만 쌓는다.
+  const learning = guide?.view?.status === "active" ? guide.view : null;
+  const shownPicker = picker && learning ? { ...picker, onNew: undefined } : picker;
 
   const renderChip = (l: ChatLine) => {
     const tone = l.kind === "summary" ? styles.chipSummary : styles.chipWarning;
@@ -301,9 +328,16 @@ export function ChatPanel({
             {l.text}
           </span>
           <span className={styles.turnActions}>
-            <Button size="sm" disabled={turnActions.disabled} onClick={() => turnActions.onCompare(v)}>
-              바뀐 곳 보기
-            </Button>
+            {turnActions.comparing === v - 1 && turnActions.onEndCompare ? (
+              // 이 차례를 비교하는 중: 같은 자리에서 끝낸다(대화가 잠겨 있어도 눌린다).
+              <Button size="sm" onClick={turnActions.onEndCompare}>
+                비교 끝내기
+              </Button>
+            ) : (
+              <Button size="sm" disabled={turnActions.disabled} onClick={() => turnActions.onCompare(v)}>
+                바뀐 곳 보기
+              </Button>
+            )}
             <Button size="sm" variant="quiet" disabled={turnActions.disabled} onClick={() => turnActions.onUndo(v)}>
               되돌리기
             </Button>
@@ -344,6 +378,23 @@ export function ChatPanel({
             {HANDOFF_LABEL}
           </button>
         </div>
+      );
+    }
+    if (l.kind === "guide") {
+      const g = l.guide;
+      if (ask || !g) return null;
+      if (g.kind === "step") return g.notes?.length ? <GuideNotes key={l.id} notes={g.notes} /> : null;
+      if (g.kind !== "done") return null;
+      const rebuild = guide?.onRebuild;
+      return (
+        <GuideDone
+          key={l.id}
+          env={guide?.view?.env ?? null}
+          {...(g.outro ? { outro: g.outro } : {})}
+          {...(g.otherEnv ? { otherEnv: g.otherEnv } : {})}
+          {...(g.rebuild ? { rebuild: g.rebuild } : {})}
+          {...(rebuild && guide?.view ? { onRebuild: rebuild } : {})}
+        />
       );
     }
     const cls = l.kind === "system" && inTurn ? styles.note : styles[l.kind];
@@ -437,7 +488,22 @@ export function ChatPanel({
 
   return (
     <div className={styles.chat}>
-      {picker && <SessionPicker fallbackFocus={() => mentionRef.current?.focus()} {...picker} />}
+      {shownPicker && <SessionPicker fallbackFocus={() => mentionRef.current?.focus()} {...shownPicker} />}
+      {learning && guide && !ask && (
+        <GuideCard
+          view={learning}
+          disabled={blocked}
+          quitDisabled={busy || elsewhereBusy}
+          onInsert={(t) => mentionRef.current?.setText(t)}
+          onSendEnv={(t) => {
+            send(t);
+            // 환경 칩은 고르면 사라진다: 차례 동안은 중단 버튼, 끝나면 입력칸으로 포커스를 옮긴다.
+            refocus.current = true;
+          }}
+          onQuit={guide.onQuit}
+          fallbackFocus={() => mentionRef.current?.focus()}
+        />
+      )}
       {down && (
         <div className={styles.notice} role="status">
           {DOWN}
@@ -478,7 +544,17 @@ export function ChatPanel({
         </div>
       ) : (
         <div ref={composer} className={styles.composer}>
-          {reason && <p className={styles.reason}>{reason}</p>}
+          {reason &&
+            (disabledReason && disabledAction ? (
+              <div className={styles.reasonRow}>
+                <p className={styles.reason}>{reason}</p>
+                <Button size="sm" onClick={disabledAction.run}>
+                  {disabledAction.label}
+                </Button>
+              </div>
+            ) : (
+              <p className={styles.reason}>{reason}</p>
+            ))}
           {/* 세션마다 입력칸을 새로 그린다(쓰던 글·참조가 다른 세션으로 따라가지 않게). */}
           <MentionInput
             key={sessionKey}

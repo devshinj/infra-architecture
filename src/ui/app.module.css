@@ -1,6 +1,6 @@
 /* Hallmark · part of the InfraSketch Vantage redesign, stamped in src/styles/globals.css · shape: app screen · posture: restrained */
 /* App shell, sidebar, right panel, workspace. Tokens only. */
-/* 캔버스가 바탕 전체를 채우고, 사이드바·오른쪽 패널은 사방 --panel-gap 을 두고 떠 있다: 흐림 없는 paper-2 판과 머리카락 선 하나(캔버스가 앞에 선다). */
+/* 캔버스가 바탕 전체를 채우고, 사이드바·오른쪽 패널은 사방 --panel-gap 을 두고 떠 있다: 캔버스가 비치는 반투명 paper 판(뒤 흐림)과 머리카락 선 하나(캔버스가 앞에 선다). */
 .shell {
   position: fixed; inset: 0; overflow: hidden; background: var(--bg-canvas); color: var(--text-primary);
   /* 노치·홈 표시줄(가로 휴대폰): 떠 있는 판의 바깥 여백이 max(--panel-gap, 안전 영역)이 되도록 더할 몫. 보통 화면은 0. */
@@ -29,9 +29,9 @@
 .emptyActions { margin-top: 8px; display: flex; justify-content: center; }
 
 .sidebar {
-  position: absolute; top: var(--panel-gap); bottom: calc(var(--panel-gap) + var(--safe-b, 0px)); left: calc(var(--panel-gap) + var(--safe-l, 0px)); z-index: 40; width: 240px;
+  position: absolute; top: var(--panel-gap); bottom: calc(var(--panel-gap) + var(--safe-b, 0px)); left: calc(var(--panel-gap) + var(--safe-l, 0px)); z-index: 40; width: 288px; /* = Shell.tsx SIDEBAR_WIDTH */
   display: flex; flex-direction: column; min-height: 0;
-  background: var(--glass-bg);
+  background: var(--glass-bg); backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur));
   border: 1px solid var(--glass-line); border-radius: var(--radius-surface);
 }
 .sideHead { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 8px 8px 16px; }
@@ -73,6 +73,8 @@
 .rowName { display: block; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 /* 접혀 있을 때만: "구성도 N". */
 .count { flex: none; font-size: 12px; font-weight: 400; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+/* 학습 중인 구성도: 상태 배지(알약) "학습 3/12". */
+.learnBadge { flex: none; font-size: 12px; font-weight: 400; line-height: 1.5; padding: 0 8px; color: var(--text-secondary); border: 1px solid var(--line-node); border-radius: var(--radius-pill); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .diagramRow { margin-left: 20px; }
 .addRow {
   display: block; width: calc(100% - 20px); margin-left: 20px; text-align: left; font: inherit; font-size: 12px;
@@ -94,6 +96,19 @@
 .menuBtn:active, .addRow:active, .rowMain:active, .iconBtn:active, .railBtn:active, .sideLink:active { color: var(--text-primary); background: var(--line-shell); }
 .menuBtn:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: -2px; }
 .menuRoot { flex: none; display: contents; }
+/* 사이드바 줄의 ⋯: 마우스가 있는 화면에서는 줄에 올리거나 포커스가 들어올 때, 지금 연 구성도 줄, 메뉴가 열린 동안에만 자리를 차지한다(이름이 그만큼 더 보인다).
+   숨은 동안에도 크기는 그대로 두고 제 너비만큼 왼쪽으로 당겨 이름 끝에 투명하게 겹친다: Tab 으로 닿고, 올리면 제자리에서 나타난다. 터치 화면은 올릴 수 없으니 늘 보인다. */
+.sidebar .row .menuBtn { width: 28px; min-height: 24px; padding-left: 0; padding-right: 0; text-align: center; }
+@media (hover: hover) and (pointer: fine) {
+  /* 숨은 동안은 누름을 받지 않는다: 겹친 이름 끝을 눌러도 구성도가 열린다(메뉴가 열리지 않는다). */
+  .sidebar .row .menuBtn { margin-left: -30px; opacity: 0; pointer-events: none; } /* 너비 28 + 줄 gap 2 */
+  .sidebar .row:hover .menuBtn, .sidebar .row:focus-within .menuBtn, .sidebar .current .menuBtn, .sidebar .row .menuBtn[aria-expanded="true"] { margin-left: 0; opacity: 1; pointer-events: auto; }
+}
+/* 터치도 되는 기기(터치스크린 노트북)는 손가락으로 올릴 수 없으니 늘 보인다. 좁은 창의 서랍은 단추가 44px 라 겹치지 않고 늘 보인다. */
+@media (any-pointer: coarse) {
+  .sidebar .row .menuBtn { margin-left: 0; opacity: 1; pointer-events: auto; }
+}
+.sidebar.drawerNav .row .menuBtn { margin-left: 0; opacity: 1; pointer-events: auto; }
 .menu {
   position: absolute; right: 4px; top: 100%; z-index: 30; min-width: 120px; display: flex; flex-direction: column;
   background: var(--bg-panel-raised); border: 1px solid var(--line-node); border-radius: var(--radius-surface); padding: 4px;
@@ -156,7 +171,7 @@
   text-decoration: none;
   font: inherit; font-size: 13px; font-weight: 600; color: var(--text-primary); white-space: nowrap; cursor: pointer;
   padding: 8px 16px; min-height: 36px; border-radius: var(--radius-control);
-  background: var(--glass-bg); border: 1px solid var(--glass-line);
+  background: var(--glass-bg); backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur)); border: 1px solid var(--glass-line);
 }
 .skipLink:not(:focus) { width: 1px; height: 1px; min-height: 0; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); border: 0; }
 .skipLink:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
@@ -171,6 +186,19 @@
 /* 너비(--panel-width)는 DiagramWorkspace 가 인라인으로 준다. */
 .panelDock { position: absolute; top: var(--panel-gap); bottom: calc(var(--panel-gap) + var(--safe-b, 0px)); right: calc(var(--panel-gap) + var(--safe-r, 0px)); z-index: 40; display: flex; min-height: 0; width: var(--panel-width, 360px); }
 .canvasWrap { flex: 1; min-height: 0; position: relative; }
+/* 지금 연 구성도 제목 판: 캔버스 왼쪽 위(사이드바 바로 옆)에 「프로젝트 / 구성도」. 사이드바를 접어도 보인다. 좁은 화면은 위 막대가 같은 일을 한다.
+   도구 모음과 같은 높이·칠. 폭은 도구 모음(--canvas-toolbar-w)이 쓰고 남은 띠까지만 쓰고, 넘치면 프로젝트 이름부터 줄인다. */
+.docTitle {
+  position: absolute; z-index: 20; top: var(--panel-gap); left: calc(var(--canvas-inset-left, var(--panel-gap)) + var(--safe-l, 0px));
+  box-sizing: border-box; display: flex; align-items: center; gap: 8px; min-width: 0; min-height: 36px; padding: 4px 14px;
+  max-width: calc(100% - var(--canvas-inset-left, var(--panel-gap)) - max(var(--panel-gap), var(--canvas-inset-right, 0px)) - var(--safe-l, 0px) - var(--safe-r, 0px) - var(--canvas-toolbar-w, 0px) - var(--panel-gap));
+  font-size: 13px; white-space: nowrap;
+  background: var(--glass-bg); backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur)); border: 1px solid var(--glass-line); border-radius: var(--radius-surface);
+}
+/* 자리가 모자라면 프로젝트 이름이 먼저 줄어든다(구성도 이름이 끝까지 남는다). */
+.docProject { flex: 0 1000 auto; min-width: 0; max-width: 45%; overflow: hidden; text-overflow: ellipsis; color: var(--text-secondary); }
+.docSep { flex: none; color: var(--text-secondary); opacity: 0.6; }
+.docDiagram { flex: 0 1 auto; min-width: 0; margin: 0; overflow: hidden; text-overflow: ellipsis; font-size: 14px; font-weight: 600; letter-spacing: -0.01em; color: var(--text-primary); }
 /* 보기·비교·오류 띠: 떠 있는 패널 사이의 보이는 캔버스 폭에 맞춘다. */
 .banner {
   display: flex; align-items: center; gap: 12px; padding: 8px 16px; font-size: 13px;
@@ -197,7 +225,7 @@
 
 .panel {
   flex: 1; display: flex; flex-direction: column; min-width: 0; min-height: 0; overflow: hidden;
-  background: var(--glass-bg);
+  background: var(--glass-bg); backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur));
   border: 1px solid var(--glass-line); border-radius: var(--radius-surface);
 }
 /* 알약 탭 */

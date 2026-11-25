@@ -1,0 +1,68 @@
+{
+  "cases": [
+    { "id": "cctv-field-m1", "guide": "cctv", "env": "onprem", "step": "field", "text": "길가 함체에 CCTV 카메라 200대랑 스위치를 설치해 줘", "expect": "match" },
+    { "id": "cctv-field-m2", "guide": "cctv", "env": "onprem", "step": "field", "text": "현장에 IP 카메라를 달고 PoE 로 전원 주는 스위치에 연결해 줘", "expect": "match" },
+    { "id": "cctv-field-c1", "guide": "cctv", "env": "onprem", "step": "field", "text": "녹화 서버를 넣어 줘", "expect": "miss" },
+    { "id": "cctv-field-c2", "guide": "cctv", "env": "onprem", "step": "field", "text": "PoE 가 뭐야?", "expect": "question" },
+    { "id": "cctv-field-c3", "guide": "cctv", "env": "onprem", "step": "field", "text": "카메라 영상을 녹화할 서버를 넣어 줘", "expect": "miss" },
+
+    { "id": "cctv-line-m1", "guide": "cctv", "env": "onprem", "step": "line", "text": "현장 스위치를 센터까지 광 전용선으로 연결하고 입구에 방화벽 세워 줘", "expect": "match" },
+    { "id": "cctv-line-m2", "guide": "cctv", "env": "onprem", "step": "line", "text": "카메라 영상이 들어오는 전용 회선 앞에 영상망 방화벽을 놓자", "expect": "match" },
+    { "id": "cctv-line-c1", "guide": "cctv", "env": "onprem", "step": "line", "text": "현장 카메라와 PoE 스위치를 달아 줘", "expect": "miss" },
+    { "id": "cctv-line-c2", "guide": "cctv", "env": "onprem", "step": "line", "text": "영상 전용 회선은 왜 따로 깔아?", "expect": "question" },
+    { "id": "cctv-line-c3", "guide": "cctv", "env": "onprem", "step": "line", "text": "관제망 방화벽을 둬 줘", "expect": "miss" },
+
+    { "id": "cctv-recorder-m1", "guide": "cctv", "env": "onprem", "step": "recorder", "text": "카메라 영상을 받아 녹화할 서버 두 대에 예비 한 대를 더해 줘", "expect": "match" },
+    { "id": "cctv-recorder-m2", "guide": "cctv", "env": "onprem", "step": "recorder", "text": "VMS 녹화 서버를 N+1 로 구성해 줘", "expect": "match" },
+    { "id": "cctv-recorder-c1", "guide": "cctv", "env": "onprem", "step": "recorder", "text": "영상을 담을 저장소를 붙여 줘", "expect": "miss" },
+    { "id": "cctv-recorder-c2", "guide": "cctv", "env": "onprem", "step": "recorder", "text": "N+1 이 뭐야?", "expect": "question" },
+    { "id": "cctv-recorder-c3", "guide": "cctv", "env": "onprem", "step": "recorder", "text": "VMS 관리 서버를 넣어 줘", "expect": "miss" },
+
+    { "id": "cctv-storage-m1", "guide": "cctv", "env": "onprem", "step": "storage", "text": "녹화 영상을 30일 동안 쌓아 둘 스토리지를 RAID 6 으로 붙여 줘", "expect": "match" },
+    { "id": "cctv-storage-m2", "guide": "cctv", "env": "onprem", "step": "storage", "text": "녹화 서버 뒤에 300TB 저장 장치를 연결해 줘", "expect": "match" },
+    { "id": "cctv-storage-c1", "guide": "cctv", "env": "onprem", "step": "storage", "text": "미디어 서버를 넣어 줘", "expect": "miss" },
+    { "id": "cctv-storage-c2", "guide": "cctv", "env": "onprem", "step": "storage", "text": "RAID 6 이랑 RAID 5 는 뭐가 달라?", "expect": "question" },
+
+    { "id": "cctv-media-m1", "guide": "cctv", "env": "onprem", "step": "media", "text": "관제 화면에 영상을 나눠 줄 스트리밍 서버를 이중화해서 넣어 줘", "expect": "match" },
+    { "id": "cctv-media-m2", "guide": "cctv", "env": "onprem", "step": "media", "text": "녹화 서버 영상을 중계하는 미디어 서버를 Active-Standby 로 둬 줘", "expect": "match" },
+    { "id": "cctv-media-c1", "guide": "cctv", "env": "onprem", "step": "media", "text": "미디어 서버 세 대로 해 줘", "expect": "conflict" },
+    { "id": "cctv-media-c2", "guide": "cctv", "env": "onprem", "step": "media", "text": "미디어 서버는 왜 따로 둬?", "expect": "question" },
+    { "id": "cctv-media-c3", "guide": "cctv", "env": "onprem", "step": "media", "text": "관제 PC 와 영상 월을 둬 줘", "expect": "miss" },
+
+    { "id": "cctv-control-m1", "guide": "cctv", "env": "onprem", "step": "control", "text": "관제요원이 볼 관제석 PC 랑 비디오 월을 관제망에 놓아 줘", "expect": "match" },
+    { "id": "cctv-control-m2", "guide": "cctv", "env": "onprem", "step": "control", "text": "관제실 모니터와 운영자 PC 를 방화벽 뒤에 붙여 줘", "expect": "match" },
+    { "id": "cctv-control-c1", "guide": "cctv", "env": "onprem", "step": "control", "text": "VMS 관리 서버를 넣어 줘", "expect": "miss" },
+    { "id": "cctv-control-c2", "guide": "cctv", "env": "onprem", "step": "control", "text": "영상 월이 뭐야?", "expect": "question" },
+
+    { "id": "cctv-vms-m1", "guide": "cctv", "env": "onprem", "step": "vms", "text": "관제요원 로그인과 권한을 맡는 관리 서버랑 DB 를 두 대씩 넣어 줘", "expect": "match" },
+    { "id": "cctv-vms-m2", "guide": "cctv", "env": "onprem", "step": "vms", "text": "카메라 목록과 권한을 담을 PostgreSQL DB 와 VMS 관리 서버를 이중화해 줘", "expect": "match" },
+    { "id": "cctv-vms-c1", "guide": "cctv", "env": "onprem", "step": "vms", "text": "관리 서버 한 대만 둬 줘", "expect": "conflict" },
+    { "id": "cctv-vms-c2", "guide": "cctv", "env": "onprem", "step": "vms", "text": "관리 서버가 멈추면 녹화도 멈춰?", "expect": "question" },
+    { "id": "cctv-vms-c3", "guide": "cctv", "env": "onprem", "step": "vms", "text": "반출 서버를 넣어 줘", "expect": "miss" },
+
+    { "id": "cctv-export-m1", "guide": "cctv", "env": "onprem", "step": "export", "text": "승인된 녹화 영상만 업무망으로 넘기게 망연계 솔루션을 붙여 줘", "expect": "match" },
+    { "id": "cctv-export-m2", "guide": "cctv", "env": "onprem", "step": "export", "text": "영상 반출 서버를 두고 업무망 담당자에게 파일로 보내 줘", "expect": "match" },
+    { "id": "cctv-export-c1", "guide": "cctv", "env": "onprem", "step": "export", "text": "경찰서에 실시간 영상을 보내 줘", "expect": "miss" },
+    { "id": "cctv-export-c2", "guide": "cctv", "env": "onprem", "step": "export", "text": "망연계랑 방화벽은 뭐가 달라?", "expect": "question" },
+
+    { "id": "cctv-agency-m1", "guide": "cctv", "env": "onprem", "step": "agency", "text": "협약한 카메라 영상을 경찰서 상황실에 단방향으로 제공해 줘", "expect": "match" },
+    { "id": "cctv-agency-m2", "guide": "cctv", "env": "onprem", "step": "agency", "text": "소방서에도 데이터 다이오드로 영상을 내보내 줘", "expect": "match" },
+    { "id": "cctv-agency-c1", "guide": "cctv", "env": "onprem", "step": "agency", "text": "반출 영상을 망연계로 업무망에 보내 줘", "expect": "miss" },
+    { "id": "cctv-agency-c2", "guide": "cctv", "env": "onprem", "step": "agency", "text": "일방향 전송 장비는 어떻게 동작해?", "expect": "question" },
+
+    { "id": "cctv-ops-m1", "guide": "cctv", "env": "onprem", "step": "ops", "text": "카메라가 끊기면 알 수 있게 Zabbix 로 SNMP 감시를 붙여 줘", "expect": "match" },
+    { "id": "cctv-ops-m2", "guide": "cctv", "env": "onprem", "step": "ops", "text": "GPS 시각 서버를 두고 장비 시계를 NTP 로 맞춰 줘", "expect": "match" },
+    { "id": "cctv-ops-c1", "guide": "cctv", "env": "onprem", "step": "ops", "text": "누가 영상을 봤는지 접근 기록을 남겨 줘", "expect": "miss" },
+    { "id": "cctv-ops-c2", "guide": "cctv", "env": "onprem", "step": "ops", "text": "폐쇄망에서는 시간을 어떻게 맞춰?", "expect": "question" },
+
+    { "id": "cctv-audit-m1", "guide": "cctv", "env": "onprem", "step": "audit", "text": "누가 어떤 카메라를 열람했는지 접속 기록 서버에 남겨 줘", "expect": "match" },
+    { "id": "cctv-audit-m2", "guide": "cctv", "env": "onprem", "step": "audit", "text": "관리 서버 로그와 반출 이력을 모으고 DB 를 매일 백업해 줘", "expect": "match" },
+    { "id": "cctv-audit-c1", "guide": "cctv", "env": "onprem", "step": "audit", "text": "실시간 관제와 영상 반출 흐름을 정리해 줘", "expect": "miss" },
+    { "id": "cctv-audit-c2", "guide": "cctv", "env": "onprem", "step": "audit", "text": "접속 기록은 얼마나 보관해야 해?", "expect": "question" },
+
+    { "id": "cctv-flows-m1", "guide": "cctv", "env": "onprem", "step": "flows", "text": "카메라에서 관제 화면까지 가는 경로랑 반출 과정을 보여 줘", "expect": "match" },
+    { "id": "cctv-flows-m2", "guide": "cctv", "env": "onprem", "step": "flows", "text": "실시간 관제 시나리오와 반출 시나리오를 그려 줘", "expect": "match" },
+    { "id": "cctv-flows-c1", "guide": "cctv", "env": "onprem", "step": "flows", "text": "백업 서버를 넣어 줘", "expect": "miss" },
+    { "id": "cctv-flows-c2", "guide": "cctv", "env": "onprem", "step": "flows", "text": "흐름 재생은 어떻게 해?", "expect": "question" }
+  ]
+}

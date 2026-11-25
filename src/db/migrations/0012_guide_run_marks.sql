@@ -1,0 +1,1 @@
+ALTER TABLE "guide_runs" ADD COLUMN "marks" jsonb DEFAULT '[]'::jsonb NOT NULL;

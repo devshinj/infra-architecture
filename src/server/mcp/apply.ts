@@ -16,6 +16,7 @@ import { settleTurn } from "@/server/chat/settle";
 import { checkCodeWarnings } from "@/server/chat/warnings";
 import { applyFlowOps, listFlows, rewriteFlows } from "@/server/flows";
 import { getNetworkKnowledge } from "@/server/network";
+import { isLearning, LEARNING_LOCKED_MESSAGE } from "@/server/guide/runs";
 import { getOwnedDiagram } from "@/server/projects";
 import { createVersion, getLatestState, getVersion, StaleVersionError } from "@/server/versions";
 
@@ -46,7 +47,7 @@ export type McpApplyInput = {
 };
 
 export type McpApplyResult =
-  | { ok: false; kind: "busy" | "stale" | "rejected"; message: string; errors?: string[]; latestVersion?: number }
+  | { ok: false; kind: "busy" | "locked" | "stale" | "rejected"; message: string; errors?: string[]; latestVersion?: number }
   | {
       ok: true;
       dryRun: boolean;
@@ -60,7 +61,7 @@ export type McpApplyResult =
     };
 
 export type McpRestoreResult =
-  | { ok: false; kind: "busy" | "stale" | "not_found"; message: string; latestVersion?: number }
+  | { ok: false; kind: "busy" | "locked" | "stale" | "not_found"; message: string; latestVersion?: number }
   | { ok: true; version: number; brokenFlows: { id: string; name: string }[]; url: string };
 
 const KNOWN_OPS: ReadonlySet<string> = new Set(COMMAND_OPS);
@@ -161,6 +162,7 @@ async function readFlows(diagramId: string): Promise<Flow[]> {
 export async function applyMcpCommands(input: McpApplyInput): Promise<McpApplyResult> {
   const diagram = await getOwnedDiagram(input.userId, input.diagramId);
   const url = diagramUrl(diagram.projectId, diagram.id);
+  if (await isLearning(input.diagramId)) return { ok: false, kind: "locked", message: LEARNING_LOCKED_MESSAGE };
   const locked = await withDiagramLock(input.diagramId, () => lockedApply(input, url));
   if (!locked.ok) return { ok: false, kind: "busy", message: MCP_BUSY_MESSAGE };
   return locked.value;
@@ -274,6 +276,7 @@ export async function restoreMcpVersion(input: {
 }): Promise<McpRestoreResult> {
   const diagram = await getOwnedDiagram(input.userId, input.diagramId);
   const url = diagramUrl(diagram.projectId, diagram.id);
+  if (await isLearning(input.diagramId)) return { ok: false, kind: "locked", message: LEARNING_LOCKED_MESSAGE };
   const locked = await withDiagramLock(input.diagramId, async (): Promise<McpRestoreResult> => {
     const latestVersion = (await getLatestState(input.diagramId))?.number ?? 0;
     if (latestVersion !== input.baseVersion) return { ok: false, kind: "stale", message: staleMessage(latestVersion), latestVersion };

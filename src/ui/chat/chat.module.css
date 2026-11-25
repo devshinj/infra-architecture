@@ -4,18 +4,19 @@
 .notice { margin: 12px 12px 0; padding: 8px 12px; font-size: 13px; line-height: 1.5; color: var(--text-primary); border: 1px solid var(--state-missing); border-radius: var(--radius-surface); }
 .log { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; padding: 16px 12px; }
 .line { margin: 0; font-size: 13px; line-height: 1.6; white-space: pre-wrap; word-break: break-word; color: var(--text-primary); }
-/* 내 말풍선: 오른쪽, 채움만(테두리 없음), 오른쪽 아래 모서리만 각지게. */
-.user { align-self: flex-end; max-width: 85%; padding: 8px 12px; background: var(--bg-panel-raised); border-radius: 12px 12px 4px 12px; }
+/* 내 말풍선: 오른쪽, 한 단 밝은 칠 + 머리카락 선, 판 모서리(DESIGN.md · Chat). */
+.user { align-self: flex-end; max-width: 85%; padding: 8px 12px; background: var(--bg-panel-raised); border: 1px solid var(--line-node); border-radius: var(--radius-surface); }
 /* 차례 밖 안내(되돌림 등): 가운데 작은 회색 글. */
 .system { align-self: center; max-width: 90%; text-align: center; font-size: 12px; color: var(--text-secondary); }
 .error { font-size: 13px; color: var(--text-primary); border: 1px solid var(--state-missing); border-radius: var(--radius-surface); padding: 8px 12px; }
-/* AI 메시지: 말풍선 없이 정돈된 글. 머리 줄 아래 본문·카드·칩은 이름 열에 맞춘다. */
+/* AI 메시지: 말풍선 없이 정돈된 글. 머리 줄 아래 본문·카드·칩은 이름 열에 맞추고,
+   아이콘 가운데 아래로 내린 세로선 하나에 매단다(9px + 선 1px + 18px = 이름 열 28px). */
 .ai { align-self: stretch; display: flex; flex-direction: column; gap: 8px; }
 .aiHead { display: flex; align-items: center; gap: 8px; min-height: 20px; }
 .mono { flex: none; display: inline-grid; place-items: center; width: 20px; height: 20px; box-sizing: border-box; border: 1px solid var(--line-node); border-radius: 3px; font-size: 9px; font-weight: 700; line-height: 1; color: var(--text-primary); }
 .aiName { font-size: 12px; font-weight: 600; color: var(--text-primary); }
 .aiTime { font-size: 12px; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
-.aiBody { display: flex; flex-direction: column; gap: 8px; padding-left: 28px; min-width: 0; }
+.aiBody { display: flex; flex-direction: column; gap: 8px; margin-left: 9px; padding-left: 18px; border-left: 1px solid var(--line-node); min-width: 0; }
 .assistant, .progress { color: var(--text-primary); }
 .note { font-size: 12px; color: var(--text-secondary); }
 /* 진행 카드: 단계 목록. 지난 단계는 체크, 지금 단계는 점 3개. 강조색은 쓰지 않는다. */
@@ -54,6 +55,8 @@ button.result:focus-visible { outline: 2px solid var(--focus-ring); outline-offs
 .ref { color: var(--text-primary); background: var(--line-node); border-radius: var(--radius-control); padding: 0 4px; font-size: 12px; }
 .composer { display: flex; flex-direction: column; gap: 8px; padding: 12px 12px 12px; border-top: 1px solid var(--line-node); }
 .reason { margin: 0; font-size: 12px; color: var(--text-secondary); }
+/* 막힌 까닭 + 빠져나갈 단추(현재로 돌아가기) 한 줄. */
+.reasonRow { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
 .mention { display: flex; flex-direction: column; gap: 8px; }
 .chipStrip { margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 8px; }
 .chip { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: var(--text-primary); background: var(--bg-panel-raised); border: 1px solid var(--line-node); border-radius: var(--radius-control); padding: 2px 4px 2px 12px; }
@@ -129,7 +132,7 @@ button.blockTitle:hover { text-decoration: underline; text-underline-offset: 3px
 .sessionChevron { flex: none; color: var(--text-secondary); }
 .sessionList {
   position: absolute; z-index: 30; top: calc(100% - 2px); left: 6px; right: 6px; max-height: 320px; overflow-y: auto; margin: 0; padding: 4px; list-style: none;
-  background: var(--glass-bg);
+  background: var(--bg-sidebar); /* 패널 안에서 뜨는 목록은 불투명 */
   border: 1px solid var(--glass-line); border-radius: var(--radius-surface);
 }
 .sessionItem { display: flex; align-items: baseline; gap: 12px; width: 100%; font: inherit; font-size: 13px; text-align: left; color: var(--text-primary); background: transparent; border: 0; border-radius: var(--radius-control); padding: 8px 8px; cursor: pointer; }

@@ -71,6 +71,21 @@ test("client to k8s_ingress or bastion is a legitimate entry, no no_firewall", (
   }
 });
 
+test("a client reaching object storage directly (presigned URL upload) is a legitimate entry, a DB is not", () => {
+  const s3 = build([node("c", "client_mobile", "앱"), node("s", "object_storage", "S3")], [], [["e1", "c", "s", "request"]]);
+  expect(evaluateRules(s3).some((x) => x.rule === "no_firewall")).toBe(false);
+  const db = build([node("c", "client_mobile", "앱"), node("d", "db_rdb", "DB")], [], [["e1", "c", "d", "request"]]);
+  expect(evaluateRules(db).some((x) => x.rule === "no_firewall")).toBe(true);
+  const web = build([node("c", "client_web", "웹"), node("s", "object_storage", "S3")], [], [["e1", "c", "s", "async"]]);
+  expect(evaluateRules(web).some((x) => x.rule === "no_firewall")).toBe(false);
+  // 관리자 PC 는 사용자 기기가 아니다: 저장소에 바로 붙으면 경고한다.
+  const admin = build([node("a", "admin_user", "관리자"), node("s", "object_storage", "S3")], [], [["e1", "a", "s", "request"]]);
+  expect(evaluateRules(admin).some((x) => x.rule === "no_firewall")).toBe(true);
+  // 외부 시스템이 저장소로 바로 들어오는 것은 여전히 경고한다.
+  const ext = build([node("x", "external_api", "외부"), node("s", "object_storage", "S3")], [], [["e1", "x", "s", "request"]]);
+  expect(evaluateRules(ext).some((x) => x.rule === "no_firewall")).toBe(true);
+});
+
 test("client to was directly warns with edge id, client to lb does not", () => {
   const direct = build([node("c", "client_web", "사용자"), node("w", "was", "WAS")], [], [["e1", "c", "w", "request"]]);
   const w = evaluateRules(direct).find((x) => x.rule === "no_firewall")!;

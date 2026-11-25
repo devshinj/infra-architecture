@@ -19,8 +19,10 @@
   --bg-panel-raised: #182126; /* 패널 위 입력칸·말풍선·메뉴·고른 줄 = oklch(24% 0.016 235) */
   --line-shell: #20282C; /* 영역 경계 머리카락 선 = rule, oklch(27% 0.014 235) */
 
-  /* 떠 있는 판(사이드바·패널·도구 막대·카드): 흐림 없이 불투명한 paper 와 머리카락 선 하나. 그림자도 없다. */
-  --glass-bg: rgba(4, 9, 12, 1); /* = --bg-sidebar */
+  /* 떠 있는 판(사이드바·패널·도구 막대·제목 판·카드): 캔버스가 은은히 비치는 반투명 paper 와 뒤 흐림, 머리카락 선 하나. 그림자는 없다.
+     글자가 읽히도록 흐림과 늘 함께 쓴다. 판 안에서 뜨는 메뉴·팝오버는 불투명한 칠(--bg-sidebar 등)을 쓴다. */
+  --glass-bg: rgba(4, 9, 12, 0.55); /* = --bg-sidebar 를 55% 로 */
+  --glass-blur: 14px;
   --glass-line: rgba(32, 40, 44, 1); /* = --line-shell */
 
   /* 포커스·위치 보기 링: 연두 신호(바탕과 15:1, 노드와 13:1) */
@@ -162,4 +164,12 @@
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --dur-micro: 120ms;
   --dur-short: 220ms;
+}
+
+/* 반투명 판은 뒤 흐림이 있어야 글자가 읽힌다. 흐림을 못 쓰는 브라우저와 투명 효과를 줄인 사용자에게는 불투명한 paper 로 돌린다. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  :root { --glass-bg: var(--bg-sidebar); }
+}
+@media (prefers-reduced-transparency: reduce) {
+  :root { --glass-bg: var(--bg-sidebar); --glass-blur: 0px; }
 }

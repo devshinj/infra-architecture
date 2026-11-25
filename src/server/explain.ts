@@ -4,6 +4,7 @@ import { db } from "@/db/client";
 import { explanations, type ExplanationTargetKind } from "@/db/schema";
 import { NODE_KINDS } from "@/domain/catalog";
 import {
+  authoredExplanation,
   LIMITS,
   overLimit,
   signatureOf,
@@ -21,6 +22,8 @@ import { buildExplainMessages } from "@/server/chat/prompt";
 import { addAiTerm, ensureSeeded, findTerm, type AiTermInput, type GlossaryRow } from "@/server/glossary";
 import { EXPLAIN_SCORE_QUESTION, scoreValue, type ClefClient } from "@/server/llm/clef";
 import type { ChatMessage, QwenClient } from "@/server/llm/qwen";
+import type { AuthoredExplains } from "@/domain/guides/types";
+import { isLearning, LEARNING_LOCKED_MESSAGE } from "@/server/guide/runs";
 import { getOwnedDiagram, ValidationError } from "@/server/projects";
 import { getLatestState } from "@/server/versions";
 
@@ -53,6 +56,8 @@ export interface ExplainRepo {
   /** 남의 것·없는 것이면 NotFoundError 를 던진다. */
   getOwnedDiagram(userId: string, diagramId: string): Promise<unknown>;
   getLatestState(diagramId: string): Promise<{ state: DiagramState } | null>;
+  /** 학습 중인 구성도인가(학습 중에는 설명 다시 쓰기를 막는다). */
+  isLearning(diagramId: string): Promise<boolean>;
   ensureSeeded(userId: string): Promise<void>;
   findTerm(userId: string, keys: string[]): Promise<GlossaryRow | null>;
   addAiTerm(userId: string, entry: AiTermInput): Promise<GlossaryRow>;
@@ -78,6 +83,7 @@ export interface ExplainDeps {
 const dbRepo: ExplainRepo = {
   getOwnedDiagram,
   getLatestState,
+  isLearning,
   ensureSeeded,
   findTerm,
   addAiTerm,
@@ -289,6 +295,8 @@ async function withCurrentGlossary<T extends TermedExplanation>(
   candidates: TermCandidate[],
   data: T,
 ): Promise<T> {
+  // 대본이 쓴 글은 계정 사전으로 덮지 않는다.
+  if (data.authored) return data;
   const current = await repo.findTerm(userId, candidates.map((c) => c.key));
   if (!current) return data;
   const rest: T = { ...data };
@@ -343,6 +351,8 @@ export async function explainTarget(
   const deps = resolveDeps(depsInput);
   const { repo } = deps;
   await repo.getOwnedDiagram(userId, diagramId);
+  // 학습 중에는 대본 글을 Qwen 글로 덮지 못하게 다시 쓰기를 막는다.
+  if ((instruction || opts.force) && (await repo.isLearning(diagramId))) throw new ValidationError(LEARNING_LOCKED_MESSAGE);
   const state = (await repo.getLatestState(diagramId))?.state;
   const signature = state ? signatureOf(state, targetKind, targetId) : null;
   if (!state || !signature) throw new ValidationError(NOT_FOUND_MESSAGE);
@@ -442,6 +452,28 @@ export async function explainTarget(
   const explanation = assemble(draft, finalRow, source);
   await repo.saveExplanation({ diagramId, targetKind, targetId, signature, data: explanation, updatedAt: deps.now() });
   return { ok: true, explanation, signature };
+}
+
+/**
+ * 학습 대본의 설명 글을 지금 상태의 현재 서명으로 저장(upsert)한다. 상태에 없는 대상은 건너뛴다.
+ * 이웃이 붙으면 서명이 바뀌므로 단계를 적용할 때마다 다시 부른다. 저장한 수를 돌려준다.
+ */
+export async function saveAuthoredExplanations(
+  diagramId: string,
+  state: DiagramState,
+  explains: AuthoredExplains,
+  depsInput: { repo?: Partial<ExplainRepo>; now?: () => Date } = {},
+): Promise<number> {
+  const repo = { ...dbRepo, ...depsInput.repo };
+  const now = depsInput.now ?? (() => new Date());
+  let saved = 0;
+  for (const [key, text] of Object.entries(explains)) {
+    const a = authoredExplanation(state, key, text);
+    if (!a) continue;
+    await repo.saveExplanation({ diagramId, targetKind: a.targetKind, targetId: a.targetId, signature: a.signature, data: a.data, updatedAt: now() });
+    saved++;
+  }
+  return saved;
 }
 
 /** 저장된 설명 서명. key 는 "node:<id>"/"edge:<id>". 남의 구성도는 NotFoundError. */

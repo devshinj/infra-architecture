@@ -14,6 +14,7 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "node --env-file=.env node_modules/drizzle-kit/bin.cjs migrate",
     "eval:intent": "tsx --env-file=.env scripts/eval-intent.ts",
+    "eval:guide": "tsx --env-file=.env scripts/eval-guide.ts",
     "backfill:commands": "tsx --env-file=.env scripts/backfill-message-commands.ts"
   },
   "dependencies": {

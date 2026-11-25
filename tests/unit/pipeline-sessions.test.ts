@@ -14,6 +14,12 @@ vi.mock("@/server/projects", async (orig) => ({
   getOwnedDiagram: vi.fn(async () => ({})),
 }));
 vi.mock("@/server/versions", () => ({ getLatestState: vi.fn(async () => null), createVersion: vi.fn() }));
+// 학습 중이 아닌 구성도(진행 상태 표를 읽지 않는다).
+vi.mock("@/server/guide/runs", async (orig) => ({
+  ...(await orig<typeof import("@/server/guide/runs")>()),
+  getLiveGuideRun: vi.fn(async () => null),
+  isLearning: vi.fn(async () => false),
+}));
 vi.mock("@/server/chat/lock", () => ({ USER_TURN_LOCK_WAIT_MS: 0, withDiagramLock: async (_id: string, fn: () => Promise<unknown>) => ({ ok: true, value: await fn() }) }));
 vi.mock("@/server/chat/messages", () => ({
   listMessages: vi.fn(async (_d: string, _limit: number, sessionId: string | null) => {
@@ -26,6 +32,15 @@ vi.mock("@/server/chat/messages", () => ({
   }),
 }));
 vi.mock("@/server/flows", () => ({ listFlows: vi.fn(async () => []), applyFlowOps: vi.fn(async () => ({ saved: 0, rejected: [] })) }));
+// 망 지식·사용자 용어는 DB 에서 읽는다: 여기서는 없는 것으로 둔다(단위 테스트는 DB 에 붙지 않는다, tests/unit/setup.ts).
+vi.mock("@/server/network", async (orig) => ({
+  ...(await orig<typeof import("@/server/network")>()),
+  getNetworkKnowledge: vi.fn(async () => null),
+}));
+vi.mock("@/server/glossary", async (orig) => ({
+  ...(await orig<typeof import("@/server/glossary")>()),
+  matchUserTerms: vi.fn(async () => []),
+}));
 vi.mock("@/server/chat/sessions", () => ({
   getSession: vi.fn(async (_d: string, id: string) => (store.sessions[id] ? { id, ...store.sessions[id] } : null)),
   createSession: vi.fn(async () => ({ id: "fresh", kind: "diagram", nodeId: null, nodeLabel: null, title: "t", updatedAt: new Date(0) })),
@@ -118,4 +133,36 @@ test("unknown session is NotFoundError, a node session is ValidationError, befor
   await expect(turn({ id: "nope" })).rejects.toBeInstanceOf(NotFoundError);
   await expect(turn({ id: "n1" })).rejects.toBeInstanceOf(ValidationError);
   expect(store.created).toEqual([]);
+});
+
+test("a third concurrent turn of the same user is refused as busy, even on another diagram", async () => {
+  // 구성도 잠금은 구성도마다 따로라서 계정 한도가 없으면 구성도 수만큼 동시에 돈다(src/server/chat/userTurns.ts).
+  let release!: () => void;
+  const gate = new Promise<void>((r) => (release = r));
+  const slow = (): QwenClient => ({
+    async streamCompletion(_m, { onDelta }) {
+      await gate;
+      const text = JSON.stringify({ op: "say", text: "알겠어요" });
+      onDelta(text);
+      return { text, finishReason: "stop" };
+    },
+  });
+  const run = (diagramId: string, userId = "busy-user") => {
+    const events: ChatEvent[] = [];
+    const result = runChatTurn({ userId, diagramId, text: "글", signal: new AbortController().signal, emit: (e) => events.push(e) }, { qwen: slow(), clef });
+    return { events, result };
+  };
+  const first = run("d1");
+  const second = run("d2");
+  const third = run("d3");
+  expect(await third.result).toEqual({ status: "busy" });
+  expect(third.events).toEqual([{ t: "error", message: "다른 응답을 처리하고 있어요. 끝난 뒤 다시 보내 주세요." }]);
+  // 다른 계정은 막히지 않는다.
+  const other = run("d4", "other-user");
+  release();
+  expect(await first.result).toEqual({ status: "ok" });
+  expect(await second.result).toEqual({ status: "ok" });
+  expect(await other.result).toEqual({ status: "ok" });
+  // 끝나면 자리가 난다.
+  expect(await run("d5").result).toEqual({ status: "ok" });
 });

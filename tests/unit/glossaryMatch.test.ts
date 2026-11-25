@@ -77,3 +77,10 @@ describe("프롬프트에 붙는 용어 사전 글", () => {
     expect(buildAskMessages({ state, nodeId: "sfu", history: [], text: "TURN이랑 뭐가 달라?" }).at(-1)!.content).not.toContain("용어 사전(");
   });
 });
+
+test("plain '서명 URL' resolves to the presigned URL term, loose aliases do not hijack common words", () => {
+  expect(terms("서명 URL 이 뭐야?")).toContain("Presigned URL");
+  expect(terms("서명 URL 이 뭐야?")).not.toContain("CloudFront 서명 쿠키");
+  expect(terms("기존 설정을 덮어쓰기 해도 돼?")).toEqual([]);
+  expect(terms("multipart/form-data 로 보내?")).toEqual([]);
+});

@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 
-import { LIMITS, overLimit, signatureOf } from "@/domain/explain";
+import { authoredExplanation, LIMITS, overLimit, signatureOf } from "@/domain/explain";
+import { GLOSSARY_SEED } from "@/domain/glossary-seed";
 import type { EdgeExplanation, GroupExplanation, NodeExplanation } from "@/domain/explain";
 import type { DiagramState } from "@/domain/types";
 
@@ -172,5 +173,52 @@ describe("overLimit for groups", () => {
     expect(overLimit(group())).toEqual([]);
     expect(overLimit(group({ boundary: "x".repeat(LIMITS.boundary + 1), role: "x".repeat(LIMITS.role + 1), adr: { decision: "x".repeat(81), reason: "b", alternative: "c", cost: "d" } })))
       .toEqual(["role", "boundary", "adr.decision"]);
+  });
+});
+
+describe("authoredExplanation", () => {
+  const ADR = { decision: "d", reason: "r", alternative: "a", cost: "c" };
+
+  test("authoredExplanation fills the definition from the seed", () => {
+    const seed = GLOSSARY_SEED.find((e) => e.term === "Tomcat")!;
+    const r = authoredExplanation(makeState(), "node:a", { role: "주문을 처리합니다.", adr: ADR })!;
+    expect(r.targetKind).toBe("node");
+    expect(r.targetId).toBe("a");
+    expect(r.signature).toBe(signatureOf(makeState(), "node", "a"));
+    expect(r.data).toMatchObject({
+      kind: "node",
+      term: seed.term,
+      definition: seed.definition,
+      definitionSource: "glossary",
+      termSource: "seed",
+      reviewed: true,
+      authored: true,
+      role: "주문을 처리합니다.",
+    });
+    if (seed.why) expect((r.data as NodeExplanation).why).toBe(seed.why);
+    if (seed.compare) expect((r.data as NodeExplanation).compare).toBe(seed.compare);
+  });
+
+  test("authoredExplanation keeps an authored definition", () => {
+    const r = authoredExplanation(makeState(), "node:a", { term: "주문 WAS", definition: "대본이 쓴 정의", role: "r", adr: ADR })!;
+    const d = r.data as NodeExplanation;
+    expect(d).toMatchObject({ term: "주문 WAS", definition: "대본이 쓴 정의", definitionSource: "glossary", reviewed: true, authored: true });
+    expect(d.termSource).toBeUndefined();
+    expect(d.why).toBeUndefined();
+    expect(d.compare).toBeUndefined();
+    // term 이 없고 seed 도 안 쓰면 대상 이름.
+    const named = authoredExplanation(makeState(), "node:b", { definition: "x", role: "r", adr: ADR })!;
+    expect((named.data as NodeExplanation).term).toBe("주문 DB");
+  });
+
+  test("group and edge shapes, missing targets give null", () => {
+    const s = makeState();
+    s.groups.z = { id: "z", groupKind: "dmz", label: "DMZ 구역", parent: null };
+    const g = authoredExplanation(s, "group:z", { role: "r", boundary: "b", adr: ADR })!;
+    expect(g.data).toMatchObject({ kind: "group", boundary: "b", authored: true, definitionSource: "glossary" });
+    const e = authoredExplanation(s, "edge:e1", { flow: "f", method: "m", why: "w", firewall: "x" })!;
+    expect(e.data).toEqual({ kind: "edge", flow: "f", method: "m", why: "w", firewall: "x", authored: true });
+    expect(authoredExplanation(s, "node:nope", { role: "r", adr: ADR })).toBeNull();
+    expect(authoredExplanation(s, "edge:nope", { flow: "f", method: "m", why: "w", firewall: "x" })).toBeNull();
   });
 });

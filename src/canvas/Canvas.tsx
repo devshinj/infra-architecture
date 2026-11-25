@@ -100,6 +100,8 @@ export interface CanvasProps {
    * 접힌 영역 안이거나 보이는 캔버스 띠(패널이 가린 곳 제외) 밖이면 null. 함수는 늘 최신 배치·카메라로 계산한다.
    */
   onPlaced?(locate: (id: string) => { x: number; y: number } | null): void;
+  /** 도구 모음 너비가 바뀔 때마다 알린다(작업 화면의 왼쪽 위 제목 판이 남은 폭만 쓴다). */
+  onToolbarWidth?(width: number): void;
   /** 이미지로 내보낼 때 파일 이름(`<프로젝트>-<구성도>.png`)에 쓴다. */
   projectName?: string;
   diagramName?: string;
@@ -252,6 +254,8 @@ export function Canvas(props: CanvasProps) {
   // 이름을 붙인 채로는 한 줄에 안 들어가면(띠가 좁거나 오른쪽 패널이 넓을 때) 아이콘만 보인다. 이름은 툴팁과 보조기기로.
   // 이름을 붙여 다시 재 보고 정하므로 넓어지면 이름이 돌아온다. data-compact 는 CSS 가, compact 는 툴팁이 쓴다.
   const [compact, setCompact] = useState(false);
+  const onToolbarWidth = useRef(props.onToolbarWidth);
+  onToolbarWidth.current = props.onToolbarWidth;
   useLayoutEffect(() => {
     const el = toolbarRef.current;
     if (!el) return;
@@ -262,6 +266,7 @@ export function Canvas(props: CanvasProps) {
       if (wrapped) el.setAttribute("data-compact", "");
       setCompact(wrapped);
       setToolbarBottom(el.offsetHeight > 0 ? el.offsetTop + el.offsetHeight : 0);
+      onToolbarWidth.current?.(el.offsetWidth);
     };
     measure();
     if (typeof ResizeObserver === "undefined") return;

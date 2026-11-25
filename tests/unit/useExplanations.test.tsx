@@ -276,6 +276,21 @@ test("retry after a failed rewrite re-sends the same instruction", async () => {
   expect(result.current.get("node", "a")).toMatchObject({ status: "ready", data: { definition: "다시 쓴 글" } });
 });
 
+test("a refused rewrite (400) shows the server's reason, and retry re-sends it", async () => {
+  const s = mkState(["a"]);
+  const { posts, result } = setup({}, { state: s });
+  await waitFor(() => expect(posts).toHaveLength(1));
+  await answer(posts[0]!, ok(s, "node", "a", nodeEx("처음")));
+  act(() => result.current.rewrite("node", "a", "더 쉽게"));
+  await waitFor(() => expect(posts).toHaveLength(2));
+  const locked = "학습 중에는 바꿀 수 없어요. 학습을 그만두면 바꿀 수 있어요.";
+  await answer(posts[1]!, { error: locked }, 400);
+  expect(result.current.get("node", "a")).toMatchObject({ status: "error", message: locked });
+  act(() => result.current.retry("node", "a"));
+  await waitFor(() => expect(posts).toHaveLength(3));
+  expect(posts[2]!.body).toEqual({ targetKind: "node", targetId: "a", instruction: "더 쉽게" });
+});
+
 test("a zone is explained only when selected, and its glossary word shows while loading", async () => {
   const s = mkState(["a", "b"]);
   // 영역 이름이 사전 별칭과 맞으면 바로 정의를 보인다(서버와 같은 이름 → 종류 용어 순).

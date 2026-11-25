@@ -1,20 +1,22 @@
 import { and, desc, eq, isNull } from "drizzle-orm";
 
-import { db } from "@/db/client";
+import { db, type Tx } from "@/db/client";
 import { messages, type MessageRole } from "@/db/schema";
 
 import type { MessageMeta } from "./events";
 
 export type { MessageRole };
 
+/** tx 를 주면 그 트랜잭션 안에서 남긴다(함께 저장할 버전·진행 상태와 같이 취소되게). */
 export async function createMessage(
   diagramId: string,
   role: MessageRole,
   content: string,
   meta: MessageMeta = {},
   sessionId: string | null = null,
+  tx?: Tx,
 ): Promise<{ id: string; createdAt: Date }> {
-  const [row] = await db
+  const [row] = await (tx ?? db)
     .insert(messages)
     .values({ diagramId, role, content, meta, sessionId })
     .returning({ id: messages.id, createdAt: messages.createdAt });

@@ -12,6 +12,7 @@ import { buildFlowSuggestMessages } from "@/server/chat/prompt";
 import { applyFlowOps, FLOW_BUSY_MESSAGE } from "@/server/flows";
 import { createJsonlParser } from "@/server/llm/jsonl";
 import type { ChatMessage, QwenClient } from "@/server/llm/qwen";
+import { isLearning, LEARNING_LOCKED_MESSAGE } from "@/server/guide/runs";
 import { getOwnedDiagram } from "@/server/projects";
 import { getLatestState } from "@/server/versions";
 
@@ -35,6 +36,7 @@ export type SuggestResult = { ok: true; saved: number } | { ok: false; message: 
 export interface FlowSuggestRepo {
   /** 남의 것·없는 것이면 NotFoundError 를 던진다. */
   getOwnedDiagram(userId: string, diagramId: string): Promise<unknown>;
+  isLearning(diagramId: string): Promise<boolean>;
   withLock<T>(diagramId: string, fn: () => Promise<T>): Promise<{ ok: true; value: T } | { ok: false }>;
   /**
    * 제안 시각을 적는다. onlyFirst 면 아직 제안한 적 없을 때만 적고, 적었는지 돌려준다
@@ -57,6 +59,7 @@ export interface FlowSuggestDeps {
 
 const dbRepo: FlowSuggestRepo = {
   getOwnedDiagram,
+  isLearning,
   withLock: withDiagramLock,
   async claimSuggest(diagramId, at, onlyFirst) {
     const where = onlyFirst ? and(eq(diagrams.id, diagramId), isNull(diagrams.flowsSuggestedAt)) : eq(diagrams.id, diagramId);
@@ -151,6 +154,8 @@ export async function suggestFlows(
   const deps = resolveDeps(depsInput);
   const { repo } = deps;
   await repo.getOwnedDiagram(userId, diagramId);
+  // 학습 중에는 자동 제안은 조용히 건너뛰고, 버튼은 막힘 문구를 돌려준다.
+  if (await repo.isLearning(diagramId)) return opts.auto ? { ok: true, saved: 0 } : { ok: false, message: LEARNING_LOCKED_MESSAGE };
 
   // 1. 준비(잠금 없음)
   const current = await repo.listFlows(diagramId);

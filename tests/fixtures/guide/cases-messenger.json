@@ -1,0 +1,69 @@
+{
+  "cases": [
+    { "id": "messenger-entry-m1", "guide": "messenger", "env": "cloud", "step": "entry", "text": "휴대폰 앱이랑 PC 가 로드밸런서로 들어와서 웹소켓 연결을 유지하게 해 줘", "expect": "match" },
+    { "id": "messenger-entry-m2", "guide": "messenger", "env": "cloud", "step": "entry", "text": "VPC 를 만들고 공개 서브넷에 ALB 를 둬서 실시간 연결을 받게 해 줘", "expect": "match" },
+    { "id": "messenger-entry-c1", "guide": "messenger", "env": "cloud", "step": "entry", "text": "연결을 받을 채팅 서버를 두 AZ 에 놓아 줘", "expect": "miss" },
+    { "id": "messenger-entry-c2", "guide": "messenger", "env": "cloud", "step": "entry", "text": "WebSocket 이 그냥 HTTP 요청이랑 뭐가 달라?", "expect": "question" },
+
+    { "id": "messenger-chat-m1", "guide": "messenger", "env": "cloud", "step": "chat", "text": "ALB 뒤에 웹소켓 서버를 AZ 마다 한 대씩 두 대 놓아 줘", "expect": "match" },
+    { "id": "messenger-chat-m2", "guide": "messenger", "env": "cloud", "step": "chat", "text": "연결을 쥐고 있을 채팅 서버를 Auto Scaling 그룹으로 2a, 2c 에 넣어 줘", "expect": "match" },
+    { "id": "messenger-chat-c1", "guide": "messenger", "env": "cloud", "step": "chat", "text": "주고받은 메시지를 DynamoDB 에 남겨 줘", "expect": "miss" },
+    { "id": "messenger-chat-c2", "guide": "messenger", "env": "cloud", "step": "chat", "text": "채팅 서버는 왜 CPU 말고 연결 수로 늘려?", "expect": "question" },
+    { "id": "messenger-chat-c3", "guide": "messenger", "env": "cloud", "step": "chat", "text": "채팅 서버 세 대로 해 줘", "expect": "conflict" },
+    { "id": "messenger-chat-c4", "guide": "messenger", "env": "cloud", "step": "chat", "text": "채팅 서버 한 대만 둬 줘", "expect": "conflict" },
+
+    { "id": "messenger-store-m1", "guide": "messenger", "env": "cloud", "step": "store", "text": "주고받은 대화를 다이나모 DB 에 대화방별로 남겨 줘", "expect": "match" },
+    { "id": "messenger-store-m2", "guide": "messenger", "env": "cloud", "step": "store", "text": "메시지 기록은 쓰기를 많이 받는 NoSQL 에 넣어 줘", "expect": "match" },
+    { "id": "messenger-store-c1", "guide": "messenger", "env": "cloud", "step": "store", "text": "누가 접속해 있는지 Redis 에 적어 줘", "expect": "miss" },
+    { "id": "messenger-store-c3", "guide": "messenger", "env": "cloud", "step": "store", "text": "회원 DB 를 넣어 줘", "expect": "miss" },
+    { "id": "messenger-store-c2", "guide": "messenger", "env": "cloud", "step": "store", "text": "메시지 저장에 RDS 대신 DynamoDB 를 쓰는 이유가 뭐야?", "expect": "question" },
+
+    { "id": "messenger-presence-m1", "guide": "messenger", "env": "cloud", "step": "presence", "text": "누가 온라인인지 접속 여부를 캐시에 적어 둬 줘", "expect": "match" },
+    { "id": "messenger-presence-m2", "guide": "messenger", "env": "cloud", "step": "presence", "text": "사용자가 어느 채팅 서버에 붙어 있는지 presence 정보를 Redis 에 둬 줘", "expect": "match" },
+    { "id": "messenger-presence-c1", "guide": "messenger", "env": "cloud", "step": "presence", "text": "채팅 서버끼리 메시지를 넘기는 길을 만들어 줘", "expect": "miss" },
+    { "id": "messenger-presence-c3", "guide": "messenger", "env": "cloud", "step": "presence", "text": "메시지 중계 캐시를 넣어 줘", "expect": "miss" },
+    { "id": "messenger-presence-c2", "guide": "messenger", "env": "cloud", "step": "presence", "text": "접속 상태는 왜 DB 가 아니라 캐시에 둬?", "expect": "question" },
+
+    { "id": "messenger-pubsub-m1", "guide": "messenger", "env": "cloud", "step": "pubsub", "text": "다른 서버에 붙은 사람한테도 가게 서버끼리 발행 구독으로 이어 줘", "expect": "match" },
+    { "id": "messenger-pubsub-m2", "guide": "messenger", "env": "cloud", "step": "pubsub", "text": "채팅 서버 간 메시지 중계용으로 ElastiCache Pub/Sub 를 넣어 줘", "expect": "match" },
+    { "id": "messenger-pubsub-c1", "guide": "messenger", "env": "cloud", "step": "pubsub", "text": "로그인 API 서버를 붙여 줘", "expect": "miss" },
+    { "id": "messenger-pubsub-c2", "guide": "messenger", "env": "cloud", "step": "pubsub", "text": "Pub/Sub 랑 메시지 큐는 뭐가 달라?", "expect": "question" },
+
+    { "id": "messenger-api-m1", "guide": "messenger", "env": "cloud", "step": "api", "text": "회원가입이랑 로그인을 받는 API 서버를 두 AZ 에 두고 회원 정보는 RDS 에 넣어 줘", "expect": "match" },
+    { "id": "messenger-api-m2", "guide": "messenger", "env": "cloud", "step": "api", "text": "토큰을 발급할 인증 서버 두 대랑 MySQL 회원 DB 를 붙여 줘", "expect": "match" },
+    { "id": "messenger-api-c1", "guide": "messenger", "env": "cloud", "step": "api", "text": "사진 보내기는 S3 로 해 줘", "expect": "miss" },
+    { "id": "messenger-api-c2", "guide": "messenger", "env": "cloud", "step": "api", "text": "채팅 서버는 JWT 를 어떻게 검증해?", "expect": "question" },
+    { "id": "messenger-api-c3", "guide": "messenger", "env": "cloud", "step": "api", "text": "API 서버 세 대로 넣어 줘", "expect": "conflict" },
+    { "id": "messenger-api-c4", "guide": "messenger", "env": "cloud", "step": "api", "text": "API 서버 한 대만 둬", "expect": "conflict" },
+
+    { "id": "messenger-files-m1", "guide": "messenger", "env": "cloud", "step": "files", "text": "첨부 사진은 버킷에 올리고 CDN 으로 내려받게 해 줘", "expect": "match" },
+    { "id": "messenger-files-m2", "guide": "messenger", "env": "cloud", "step": "files", "text": "이미지랑 동영상은 서명 URL 로 S3 에 업로드하게 해 줘", "expect": "match" },
+    { "id": "messenger-files-c1", "guide": "messenger", "env": "cloud", "step": "files", "text": "오프라인일 때 보낼 푸시를 SQS 에 쌓아 줘", "expect": "miss" },
+    { "id": "messenger-files-c2", "guide": "messenger", "env": "cloud", "step": "files", "text": "서명 URL 은 왜 기한을 짧게 둬?", "expect": "question" },
+
+    { "id": "messenger-queue-m1", "guide": "messenger", "env": "cloud", "step": "queue", "text": "푸시 작업을 대기열에 쌓고 워커가 꺼내 가게 해 줘", "expect": "match" },
+    { "id": "messenger-queue-m2", "guide": "messenger", "env": "cloud", "step": "queue", "text": "접속 안 한 사람한테 갈 알림 요청은 SQS 에 넣고 푸시 워커 2대로 처리해 줘", "expect": "match" },
+    { "id": "messenger-queue-c1", "guide": "messenger", "env": "cloud", "step": "queue", "text": "FCM 이랑 APNs 로 알림을 보내 줘", "expect": "miss" },
+    { "id": "messenger-queue-c5", "guide": "messenger", "env": "cloud", "step": "queue", "text": "시큐리티 그룹을 설정해 줘", "expect": "miss" },
+    { "id": "messenger-queue-c2", "guide": "messenger", "env": "cloud", "step": "queue", "text": "SQS 표준 대기열은 왜 같은 메시지가 두 번 와?", "expect": "question" },
+    { "id": "messenger-queue-c3", "guide": "messenger", "env": "cloud", "step": "queue", "text": "푸시 워커 세 대 넣어 줘", "expect": "conflict" },
+    { "id": "messenger-queue-c4", "guide": "messenger", "env": "cloud", "step": "queue", "text": "워커 한 대로 해 줘", "expect": "conflict" },
+
+    { "id": "messenger-push-m1", "guide": "messenger", "env": "cloud", "step": "push", "text": "NAT 게이트웨이로 나가서 안드로이드는 FCM, 아이폰은 APNs 로 알림 보내 줘", "expect": "match" },
+    { "id": "messenger-push-m2", "guide": "messenger", "env": "cloud", "step": "push", "text": "앱이 꺼진 사용자한테도 파이어베이스와 애플 쪽으로 푸시 알림이 가게 해 줘", "expect": "match" },
+    { "id": "messenger-push-c1", "guide": "messenger", "env": "cloud", "step": "push", "text": "CloudWatch 로 대기열 지표를 봐 줘", "expect": "miss" },
+    { "id": "messenger-push-c3", "guide": "messenger", "env": "cloud", "step": "push", "text": "1:1 메시지와 오프라인 푸시 흐름을 정리해 줘", "expect": "miss" },
+    { "id": "messenger-push-c4", "guide": "messenger", "env": "cloud", "step": "push", "text": "native 앱 화면을 만들어 줘", "expect": "miss" },
+    { "id": "messenger-push-c2", "guide": "messenger", "env": "cloud", "step": "push", "text": "FCM 하나로 iOS 까지 보낼 수 있어?", "expect": "question" },
+
+    { "id": "messenger-ops-m1", "guide": "messenger", "env": "cloud", "step": "ops", "text": "모니터링을 붙여서 서버당 연결 수에 알람을 걸어 줘", "expect": "match" },
+    { "id": "messenger-ops-m2", "guide": "messenger", "env": "cloud", "step": "ops", "text": "클라우드워치로 ALB 와 DynamoDB 지표를 보고 로그를 모아 줘", "expect": "match" },
+    { "id": "messenger-ops-c1", "guide": "messenger", "env": "cloud", "step": "ops", "text": "메시지가 가는 흐름을 정리해 줘", "expect": "miss" },
+    { "id": "messenger-ops-c2", "guide": "messenger", "env": "cloud", "step": "ops", "text": "CloudWatch 알람은 어떻게 운영자한테 가?", "expect": "question" },
+
+    { "id": "messenger-flows-m1", "guide": "messenger", "env": "cloud", "step": "flows", "text": "메시지가 전달되는 과정이랑 푸시가 가는 경로를 보여 줘", "expect": "match" },
+    { "id": "messenger-flows-m2", "guide": "messenger", "env": "cloud", "step": "flows", "text": "1:1 대화와 오프라인 알림 시나리오를 그려 줘", "expect": "match" },
+    { "id": "messenger-flows-c1", "guide": "messenger", "env": "cloud", "step": "flows", "text": "운영자에게 알람이 가게 해 줘", "expect": "miss" },
+    { "id": "messenger-flows-c2", "guide": "messenger", "env": "cloud", "step": "flows", "text": "흐름 재생은 어디서 해?", "expect": "question" }
+  ]
+}

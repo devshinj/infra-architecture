@@ -1,0 +1,87 @@
+/* 학습 모드: 주제 고르기 화면, 대화 탭 위 단계 카드, 메시지 아래 해설 칩·완료 판. 토큰 색만 쓰고, 칠한 연두 버튼은 두지 않는다. */
+.srOnly { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+
+/* ---- 주제 고르기(/learn): 보조 페이지와 같은 머리 여백·제목 ---- */
+.page { box-sizing: border-box; height: 100%; overflow-y: auto; background: var(--bg-canvas); color: var(--text-primary); padding: 0 32px 40px; padding-left: calc(var(--shell-inset-left, 0px) + var(--safe-l, 0px) + 40px); display: flex; flex-direction: column; gap: 24px; }
+.pageTitle { margin: 32px 0 0; font-size: var(--text-page); font-weight: var(--weight-display); letter-spacing: var(--tracking-display); line-height: 1.15; }
+.lead { margin: 0; display: flex; flex-direction: column; gap: 2px; font-size: 14px; line-height: 1.6; color: var(--text-secondary); max-width: 64ch; word-break: keep-all; }
+.lead p { margin: 0; }
+.topics { margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+.topic { box-sizing: border-box; height: 100%; display: flex; flex-direction: column; gap: 12px; padding: 16px; background: var(--color-paper-2); border: 1px solid var(--line-node); border-radius: var(--radius-surface); }
+.topicTitle { margin: 0; font-size: var(--text-title); font-weight: 600; }
+.intro { margin: 0; font-size: 13px; line-height: 1.6; color: var(--color-ink-2); word-break: keep-all; }
+.label { margin: 0; font-size: 12px; font-weight: 500; color: var(--text-secondary); }
+.learns { margin: 0; padding-left: 16px; display: flex; flex-direction: column; gap: 2px; font-size: 13px; line-height: 1.5; }
+.envList { margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 8px; }
+/* 준비된 환경: 상태 배지(알약). */
+.envBadge { font-size: 12px; line-height: 1.5; padding: 2px 8px; color: var(--text-primary); border: 1px solid var(--line-node); border-radius: var(--radius-pill); font-variant-numeric: tabular-nums; }
+.topicFoot { margin-top: auto; display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
+.section { display: flex; flex-direction: column; gap: 8px; }
+.sectionTitle { margin: 0; font-size: var(--text-title); font-weight: 600; }
+.runs { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; max-width: 720px; border: 1px solid var(--line-node); border-radius: var(--radius-surface); }
+.runs li + li { border-top: 1px solid var(--line-shell); }
+.run { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 8px 12px; font-size: 13px; color: var(--text-primary); text-decoration: none; border-radius: var(--radius-control); }
+.run:hover .runName { text-decoration: underline; text-underline-offset: 3px; }
+.runName { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.runProgress { flex: none; font-size: 12px; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+.page a:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+
+/* ---- 단계 카드(대화 탭 맨 위) ---- */
+.card { flex: none; margin: 12px 12px 0; overflow: hidden; display: flex; flex-direction: column; border: 1px solid var(--line-node); border-radius: var(--radius-surface); }
+/* 머리띠: "지금 할 일" 판에만 허락된 옅은 연두(DESIGN.md · One Signal Rule 보충). 칠한 연두 버튼은 여전히 보내기 하나. */
+.band { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 12px; background: color-mix(in srgb, var(--accent) 12%, var(--bg-canvas)); border-bottom: 1px solid color-mix(in srgb, var(--accent) 35%, var(--line-node)); }
+.bandTitle { margin: 0; min-width: 0; font-size: 12px; font-weight: 600; line-height: 1.5; color: var(--accent); overflow-wrap: anywhere; }
+/* 진행 점: 지난 단계 강철, 지금 단계 길쭉한 연두, 남은 단계 선 색. 꾸밈이라 보조기기에서 숨긴다. */
+.dots { flex: none; display: flex; align-items: center; gap: 4px; }
+.dot { width: 6px; height: 6px; border-radius: var(--radius-pill); background: var(--line-node); }
+.dot[data-state="done"] { background: var(--text-secondary); }
+.dot[data-state="now"] { width: 14px; background: var(--accent); }
+.cardBody { padding: 12px; display: flex; flex-direction: column; gap: 8px; background: var(--color-paper-2); }
+.count { font-variant-numeric: tabular-nums; }
+.goal { font-size: 15px; font-weight: 600; }
+.rows { margin: 0; display: flex; flex-direction: column; gap: 8px; }
+.rows dt { font-size: 12px; font-weight: 500; color: var(--text-secondary); }
+.rows dd { margin: 2px 0 0; font-size: 13px; line-height: 1.5; color: var(--text-primary); }
+.example { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+/* 예시 문장: 칩(DESIGN.md · Chips). */
+.exampleText { font-size: 12px; line-height: 1.5; padding: 2px 8px; background: var(--bg-panel-raised); border: 1px solid var(--line-node); border-radius: var(--radius-control); }
+.envs { margin: 4px 0 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { font: inherit; font-size: 12px; line-height: 1.5; color: var(--text-primary); background: var(--bg-panel-raised); border: 1px solid var(--line-node); border-radius: var(--radius-control); padding: 4px 12px; cursor: pointer; }
+.chip:hover:not(:disabled) { border-color: var(--text-secondary); }
+.chip:active:not(:disabled) { background: var(--line-node); }
+.chip:disabled { opacity: 0.55; cursor: not-allowed; }
+.cardFoot { display: flex; justify-content: flex-end; }
+
+/* ---- 해설 칩(단계 글 아래) ---- */
+.notes { display: flex; flex-direction: column; gap: 8px; }
+.noteChips { margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 8px; }
+.noteChip { display: inline-flex; align-items: center; gap: 4px; }
+.noteChip::after { content: "▸"; font-size: 12px; color: var(--text-secondary); }
+.noteChip[aria-expanded="true"] { font-weight: 600; border-color: var(--text-secondary); }
+.noteChip[aria-expanded="true"]::after { content: "▾"; }
+/* 펼친 해설: 칩 아래 작은 판 하나(칩 순서대로 쌓인다). */
+.noteText { margin: 0; padding: 6px 10px; background: var(--color-paper-2); border: 1px solid var(--line-shell); border-radius: var(--radius-control); font-size: 12px; line-height: 1.6; color: var(--color-ink-2); word-break: keep-all; }
+.noteText::before { content: attr(data-label) " · "; font-size: 12px; font-weight: 500; color: var(--text-secondary); }
+
+/* ---- 완료 판 ---- */
+.done { display: flex; flex-direction: column; gap: 12px; }
+.outro { margin: 0; font-size: 13px; line-height: 1.6; color: var(--text-primary); word-break: keep-all; }
+/* 다른 환경 표: 범례표와 같은 선·모서리. */
+.table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 12px; line-height: 1.5; border: 1px solid var(--line-node); border-radius: var(--radius-surface); }
+.table caption { caption-side: top; text-align: left; padding: 0 0 4px; font-size: 12px; font-weight: 500; color: var(--text-secondary); }
+.table th { text-align: left; font-weight: 500; color: var(--text-secondary); padding: 4px 8px; border-bottom: 1px solid var(--text-secondary); }
+.table td { vertical-align: top; padding: 4px 8px; color: var(--text-primary); overflow-wrap: anywhere; }
+.table tbody tr + tr td { border-top: 1px solid var(--line-shell); }
+.free { margin: 0; font-size: 13px; color: var(--text-primary); }
+.rebuild { display: flex; flex-wrap: wrap; gap: 8px; }
+.error { margin: 0; font-size: 12px; color: var(--text-primary); border: 1px solid var(--state-missing); border-radius: var(--radius-surface); padding: 4px 8px; }
+
+.chip:focus-visible, .noteChip:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+
+@media (max-width: 640px), (max-height: 480px) and (orientation: landscape) {
+  .page { padding: 16px; }
+  /* 위 막대가 같은 제목을 보인다: 화면에서만 감추고 보조기기에는 제목으로 남긴다. */
+  .pageTitle { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .topics { grid-template-columns: minmax(0, 1fr); }
+  .chip { font-size: 14px; padding: 8px 12px; }
+}

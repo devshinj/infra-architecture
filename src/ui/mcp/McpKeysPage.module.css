@@ -46,7 +46,8 @@
 .error { margin: 0; font-size: 12px; color: var(--text-primary); border: 1px solid var(--state-missing); border-radius: var(--radius-surface); padding: 4px 8px; }
 .srOnly { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
-@media (max-width: 640px) {
+/* 좁은 화면(Shell.tsx NARROW_QUERY): 표는 옆으로 밀어 보고, 판은 아래로 쌓는다. */
+@media (max-width: 640px), (max-height: 480px) and (orientation: landscape) {
   .page { padding: 16px; }
   /* 위 막대가 같은 제목을 보인다: 화면에서만 감추고 보조기기에는 제목으로 남긴다. */
   .title { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }

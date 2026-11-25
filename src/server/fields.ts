@@ -6,6 +6,7 @@ import { emptyState, type DiagramState, type EdgeDirection, type EdgePayload } f
 import { BUSY_MESSAGE } from "@/server/chat/busy";
 import { withDiagramLock } from "@/server/chat/lock";
 import { getOwnedDiagram, ValidationError } from "@/server/projects";
+import { assertNotLearning } from "@/server/guide/runs";
 import { createVersion, getLatestState } from "@/server/versions";
 
 const VALUE_MAX = 80;
@@ -30,6 +31,7 @@ export async function saveFieldsFor(
   input: SaveFieldsInput,
 ): Promise<{ number: number | null }> {
   await getOwnedDiagram(userId, diagramId);
+  await assertNotLearning(diagramId);
   const { targetKind, targetId } = input;
   if ((targetKind !== "node" && targetKind !== "edge") || typeof targetId !== "string") {
     throw new ValidationError(NO_TARGET);

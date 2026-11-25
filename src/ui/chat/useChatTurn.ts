@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import type { ClarifyQuestion } from "@/domain/clarify";
 import type { Command } from "@/domain/commands";
+import type { GuideView } from "@/domain/guides/view";
 import type { Warning } from "@/domain/types";
 import type { WarningCounts } from "@/domain/warnings";
 import type { ChatEvent, MessageMeta } from "@/server/chat/events";
@@ -36,8 +37,9 @@ export interface ChatLine {
    * system: 안내 글(차례 밖이면 가운데 작은 글).
    * handoff: 질문 세션의 `구성도 대화로 보내기` 버튼. text 는 넘길 사용자 글.
    * clarify: 그리기 전에 되묻는 카드. 물은 것은 clarify 에 있다.
+   * guide: 학습 차례의 해설 칩(step)·완료 판(done). 글은 guide 에 있다(저장된 meta.guide 를 다시 불러올 때만 생긴다).
    */
-  kind: "user" | "assistant" | "system" | "progress" | "error" | "warning" | "card" | "summary" | "handoff" | "clarify";
+  kind: "user" | "assistant" | "system" | "progress" | "error" | "warning" | "card" | "summary" | "handoff" | "clarify" | "guide";
   text: string;
   meta?: MessageMeta;
   /** 같은 값의 줄은 한 AI 메시지로 묶인다(차례 id 또는 assistant 메시지 id). */
@@ -48,6 +50,8 @@ export interface ChatLine {
   card?: ProgressCard;
   /** kind "clarify" */
   clarify?: ClarifyQuestion[];
+  /** kind "guide" */
+  guide?: NonNullable<MessageMeta["guide"]>;
   /** kind "summary": 이 차례가 만든 버전과 바꾼 곳 수. 가장 최근 차례면 `바뀐 곳 보기`·`되돌리기`를 붙인다(ChatPanel turnActions). */
   version?: number | null;
   changed?: number;
@@ -84,6 +88,8 @@ export interface UseChatTurnArgs {
   onSession?(session: SessionSummary): void;
   /** 세션 차례의 줄은 이 함수로 그 세션에 쌓는다(useSessions.setLines). 기본 대화 줄은 이 훅이 가진다. */
   onSessionLines?(key: SessionKey, update: (lines: ChatLine[]) => ChatLine[]): void;
+  /** 학습 차례가 끝난 뒤의 진행 상태(`guide` 이벤트, done 앞). 기본 대화·구성도 대화 차례에서만. */
+  onGuide?(view: GuideView): void;
 }
 
 const GENERIC_ERROR = "응답을 받지 못했어요. 다시 시도해 주세요.";
@@ -226,6 +232,9 @@ export function useChatTurn(args: UseChatTurnArgs) {
           case "relayout":
             if (!ask) a.onRelayout?.();
             break;
+          case "guide":
+            if (!ask) a.onGuide?.(ev.view);
+            break;
           case "done": {
             gotDone = true;
             if (ask) break; // 버전도 요약도 없다
@@ -330,6 +339,8 @@ export function useChatTurn(args: UseChatTurnArgs) {
   );
 
   const stop = useCallback(() => abortRef.current?.abort(), []);
+  /** 기본 대화 줄을 통째로 바꾼다(학습 차례 뒤 저장된 메시지로 다시 그릴 때). */
+  const replaceLines = useCallback((next: ChatLine[]) => setLines(next), []);
 
-  return { lines, busy, runningKey, runningAsk, errors, send, stop, pushLine: push };
+  return { lines, busy, runningKey, runningAsk, errors, send, stop, pushLine: push, replaceLines };
 }

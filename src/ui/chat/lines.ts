@@ -120,14 +120,18 @@ export function messagesToLines(rows: Row[]): ChatLine[] {
       out.push({ id: `${m.id}-card`, kind: "card", text: "", card, ...t });
     }
     // content = says 와 답을 줄바꿈으로 이은 것. 안내(say)는 따로, 남은 글은 답으로 둔다.
+    // 학습 완료 글(outro)은 완료 판(GuideDone)이 맨 위에 보이므로 안내 줄로 따로 두지 않는다.
+    const guide = meta.guide;
     const says = meta.says ?? [];
     const joined = says.join("\n");
     let answer = m.content;
     if (says.length > 0 && m.content.startsWith(joined)) {
-      says.forEach((s, i) => out.push({ id: `${m.id}-say-${i}`, kind: "progress", text: s, ...t }));
+      if (guide?.kind !== "done") says.forEach((s, i) => out.push({ id: `${m.id}-say-${i}`, kind: "progress", text: s, ...t }));
       answer = m.content.slice(joined.length).replace(/^\n/, "");
     }
     if (answer.trim()) out.push({ id: m.id, kind: "assistant", text: answer, meta, ...t });
+    // 학습 차례: 단계 글 아래 접힌 해설 칩, 완료 글은 다른 환경 표·다시 만들기 판.
+    if ((guide?.kind === "step" && guide.notes?.length) || guide?.kind === "done") out.push({ id: `${m.id}-guide`, kind: "guide", text: "", guide, ...t });
     // 그리기 전에 되물은 차례: 선택 카드만 두고 요약 칩은 두지 않는다.
     if (meta.clarify) {
       out.push({ id: `${m.id}-clarify`, kind: "clarify", text: "", clarify: meta.clarify.questions, ...t });

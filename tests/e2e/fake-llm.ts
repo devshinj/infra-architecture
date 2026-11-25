@@ -4,6 +4,8 @@ import http from "node:http";
 import "./fake-env";
 
 import spike from "../../docs/superpowers/spike/spike-results.json";
+import { GUIDE_LIST } from "../../src/domain/guides";
+import { normalizeUtterance } from "../../src/domain/guides/judge";
 import { ASK_PROMPT, EXPLAIN_EDGE_PROMPT, EXPLAIN_GROUP_PROMPT, EXPLAIN_NODE_PROMPT, FLOW_SUGGEST_PROMPT, WARNING_PROMPT } from "../../src/server/chat/prompt";
 import { convertSpikeScenario, type SpikeState } from "../../src/server/samples";
 import { FAKE_PORT } from "./fake-config";
@@ -309,6 +311,23 @@ function intentFor(state: unknown): string {
   return t.includes("왜") ? "question" : "structure_change";
 }
 
+/**
+ * 학습 단계 판정(askClef: state 가 { 사용자_말, 이번_단계_목표 }): 그 목표의 단계 예시 문장이 글에 들어 있으면 match 0.95,
+ * 글이 "?" 로 끝나면 question 0.95, 나머지는 0.1. 학습 판정이 아니면 null.
+ */
+function guideAnswers(state: unknown): Record<string, unknown> | null {
+  if (!state || typeof state !== "object" || !("사용자_말" in state) || !("이번_단계_목표" in state)) return null;
+  const { 사용자_말: text, 이번_단계_목표: goal } = state as { 사용자_말: string; 이번_단계_목표: string };
+  const steps = GUIDE_LIST.flatMap((g) => Object.values(g.variants).flatMap((v) => v?.steps ?? []));
+  const example = steps.find((s) => s.goal === goal)?.example;
+  const match = example !== undefined && normalizeUtterance(text).includes(normalizeUtterance(example));
+  const question = /[?？]\s*$/.test(text.trim());
+  return {
+    match: { type: "noul", noul: match ? 0.95 : 0.1 },
+    question: { type: "noul", noul: question ? 0.95 : 0.1 },
+  };
+}
+
 /** 받은 대화 요청의 마지막 사용자 글(넘치면 오래된 것부터 버린다). E2E 가 "다음 프롬프트에 무엇이 들어갔나"를 본다. */
 const received: string[] = [];
 const RECEIVED_LIMIT = 200;
@@ -325,6 +344,8 @@ export function startFakeLlm(): Promise<http.Server> {
     if (req.method === "GET" && url === "/e2e/received") return json(200, { messages: received });
     if (req.method === "POST" && url === "/v1/systemone") {
       const body = JSON.parse(await readBody(req)) as { state?: unknown; questions?: Record<string, { type?: string }> };
+      const guide = guideAnswers(body.state);
+      if (guide) return json(200, { answers: guide });
       // noul 질문은 기본 0.1, 상태에 "외부DB" 가 있으면 0.95. 의도 분류는 항상 structure_change 0.95.
       const exposed = String(body.state ?? "").includes("외부DB");
       const answers: Record<string, unknown> = {};

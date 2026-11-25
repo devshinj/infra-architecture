@@ -1,11 +1,13 @@
 "use server";
 
 import { AuthError } from "next-auth";
+import { headers } from "next/headers";
 import { after } from "next/server";
 import { redirect } from "next/navigation";
 
 import { LoginRateLimited, signIn } from "@/auth";
 
+import { clientIp } from "./rateLimit";
 import { requestPasswordReset, resetPassword } from "./reset";
 import { checkEmail, MESSAGES, normalizeEmail } from "./rules";
 import { signup } from "./signup";
@@ -41,7 +43,7 @@ export async function loginAction(_prev: FormState, data: FormData): Promise<For
 export async function signupAction(_prev: FormState, data: FormData): Promise<FormState> {
   const username = text(data, "username");
   const password = text(data, "password");
-  const result = await signup({ username, password, email: text(data, "email") });
+  const result = await signup({ username, password, email: text(data, "email") }, { ip: clientIp(await headers()) });
   if (!result.ok) return { errors: { [result.field]: result.message } };
   try {
     await signIn("credentials", { username, password, redirectTo: "/" });

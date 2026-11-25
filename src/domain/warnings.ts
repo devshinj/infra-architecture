@@ -257,6 +257,8 @@ export function evaluateRules(state: DiagramState, knowledge?: NetworkKnowledge)
     const tc = categoryOf(to.kind);
     // 인그레스·배스천은 정당한 진입점이다.
     if (to.kind === "k8s_ingress" || to.kind === "bastion") continue;
+    // 사용자 기기 → 객체 저장소: 서명 URL 로 바로 올리고 받는 흔한 길이다(접근은 서명·버킷 정책이 막는다).
+    if ((from.kind === "client_web" || from.kind === "client_mobile") && to.kind === "object_storage") continue;
     if ((fc === "client" || fc === "external") && (tc === "compute" || tc === "data")) out.push(make(state, noFw, to, e));
   }
 

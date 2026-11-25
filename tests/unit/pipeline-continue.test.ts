@@ -17,6 +17,12 @@ vi.mock("@/server/versions", () => ({
     return { number: store.versions.length };
   }),
 }));
+// 학습 중이 아닌 구성도(진행 상태 표를 읽지 않는다).
+vi.mock("@/server/guide/runs", async (orig) => ({
+  ...(await orig<typeof import("@/server/guide/runs")>()),
+  getLiveGuideRun: vi.fn(async () => null),
+  isLearning: vi.fn(async () => false),
+}));
 vi.mock("@/server/chat/lock", () => ({ USER_TURN_LOCK_WAIT_MS: 0, withDiagramLock: async (_id: string, fn: () => Promise<unknown>) => ({ ok: true, value: await fn() }) }));
 vi.mock("@/server/chat/messages", () => ({
   listMessages: vi.fn(async () => []),
@@ -28,6 +34,15 @@ vi.mock("@/server/chat/messages", () => ({
 vi.mock("@/server/flows", () => ({
   listFlows: vi.fn(async () => []),
   applyFlowOps: vi.fn(async (_d: string, _s: unknown, ops: unknown[]) => ({ saved: ops.length, rejected: [] })),
+}));
+// 망 지식·사용자 용어는 DB 에서 읽는다: 여기서는 없는 것으로 둔다(단위 테스트는 DB 에 붙지 않는다, tests/unit/setup.ts).
+vi.mock("@/server/network", async (orig) => ({
+  ...(await orig<typeof import("@/server/network")>()),
+  getNetworkKnowledge: vi.fn(async () => null),
+}));
+vi.mock("@/server/glossary", async (orig) => ({
+  ...(await orig<typeof import("@/server/glossary")>()),
+  matchUserTerms: vi.fn(async () => []),
 }));
 vi.mock("@/server/chat/warnings", () => ({
   checkWarnings: vi.fn(async () => ({ warnings: [], fresh: [] })),

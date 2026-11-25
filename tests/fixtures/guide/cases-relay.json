@@ -1,0 +1,556 @@
+{
+  "cases": [
+    {
+      "id": "relay-legacy-m1",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "legacy",
+      "text": "지자체에 이미 있는 VMS 랑 시설물 관리, 주차 관리 시스템을 놓아 줘",
+      "expect": "match"
+    },
+    {
+      "id": "relay-legacy-m2",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "legacy",
+      "text": "먼저 A시가 운영 중인 시스템들부터 그려 줘",
+      "expect": "match"
+    },
+    {
+      "id": "relay-legacy-c1",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "legacy",
+      "text": "A시 내부망에 지자체 중계 서버 두 대를 놓아 줘",
+      "expect": "miss"
+    },
+    {
+      "id": "relay-legacy-c2",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "legacy",
+      "text": "기존 시스템을 왜 고치지 않고 그대로 둬?",
+      "expect": "question"
+    },
+    {
+      "id": "relay-legacy-c3",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "legacy",
+      "text": "요청한 VMS 채널만 영상을 올려 보내 줘",
+      "expect": "miss"
+    },
+    {
+      "id": "relay-lrelay-m1",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "lrelay",
+      "text": "기존 시스템들 자료를 모을 연계 서버를 한 쌍 만들어 줘",
+      "expect": "match"
+    },
+    {
+      "id": "relay-lrelay-m2",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "lrelay",
+      "text": "지자체 안에 중계 서버 2대를 Active-Standby 로 둬 줘",
+      "expect": "match"
+    },
+    {
+      "id": "relay-lrelay-c1",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "lrelay",
+      "text": "중계 서버를 세 대 넣어 줘",
+      "expect": "conflict"
+    },
+    {
+      "id": "relay-lrelay-c2",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "lrelay",
+      "text": "망연계 솔루션으로 통합관리망과 이어 줘",
+      "expect": "miss"
+    },
+    {
+      "id": "relay-lrelay-c3",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "lrelay",
+      "text": "중계 서버를 지자체에 한 벌만 두는 까닭이 뭐야?",
+      "expect": "question"
+    },
+    {
+      "id": "relay-lrelay-c4",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "lrelay",
+      "text": "통합관리센터에 중앙 중계 서버 두 대를 이중화해 줘",
+      "expect": "conflict"
+    },
+    {
+      "id": "relay-adapt-m1",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "adapt",
+      "text": "시설물은 REST API 로, 주차는 DB 뷰로 중계 서버에 붙여 줘",
+      "expect": "match"
+    },
+    {
+      "id": "relay-adapt-m2",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "adapt",
+      "text": "기존 시스템 네 개를 각자 내주는 방식대로 연결해 줘",
+      "expect": "match"
+    },
+    {
+      "id": "relay-adapt-c1",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "adapt",
+      "text": "A시 내부망에 지자체 중계 서버 두 대를 이중화해 줘",
+      "expect": "miss"
+    },
+    {
+      "id": "relay-adapt-c2",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "adapt",
+      "text": "망연계 솔루션을 두고 통합관리망과 이어 줘",
+      "expect": "miss"
+    },
+    {
+      "id": "relay-adapt-c3",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "adapt",
+      "text": "DB 를 직접 읽지 않고 뷰로 보는 까닭이 뭐야?",
+      "expect": "question"
+    },
+    {
+      "id": "relay-link-m1",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "link",
+      "text": "두 망 사이에 망연계 장비를 넣어 줘",
+      "expect": "match"
+    },
+    {
+      "id": "relay-link-m2",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "link",
+      "text": "내부망과 통합관리망을 망간 자료전송 솔루션으로 연결해 줘",
+      "expect": "match"
+    },
+    {
+      "id": "relay-link-c1",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "link",
+      "text": "통합관리센터에 중앙 중계 서버 두 대를 놓아 줘",
+      "expect": "miss"
+    },
+    {
+      "id": "relay-link-c2",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "link",
+      "text": "두 망 사이에 방화벽을 넣어서 이어 줘",
+      "expect": "miss"
+    },
+    {
+      "id": "relay-link-c3",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "link",
+      "text": "망연계는 방화벽과 뭐가 달라?",
+      "expect": "question"
+    },
+    {
+      "id": "relay-center-m1",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "center",
+      "text": "센터 쪽에도 연계 서버를 한 쌍 둬 줘",
+      "expect": "match"
+    },
+    {
+      "id": "relay-center-m2",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "center",
+      "text": "통합관리망 전산실에 중앙 중계 시스템을 이중화해서 넣어 줘",
+      "expect": "match"
+    },
+    {
+      "id": "relay-center-c1",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "center",
+      "text": "중앙 중계 서버 3대 넣어 줘",
+      "expect": "conflict"
+    },
+    {
+      "id": "relay-center-c2",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "center",
+      "text": "통합 관리 시스템과 통합 DB 를 넣어 줘",
+      "expect": "miss"
+    },
+    {
+      "id": "relay-center-c3",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "center",
+      "text": "중앙 중계 서버는 왜 지자체 중계와 따로 있어?",
+      "expect": "question"
+    },
+    {
+      "id": "relay-hub-m1",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "hub",
+      "text": "센터에 현황을 모을 통합 DB 를 이중화해 줘",
+      "expect": "match"
+    },
+    {
+      "id": "relay-hub-m2",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "hub",
+      "text": "지자체 현황을 보여 줄 통합 관리 서버 WAS 를 두 대 놓아 줘",
+      "expect": "match"
+    },
+    {
+      "id": "relay-hub-c1",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "hub",
+      "text": "WAS 한 대만 넣어 줘",
+      "expect": "conflict"
+    },
+    {
+      "id": "relay-hub-c2",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "hub",
+      "text": "지자체마다 따로 큐를 둬 줘",
+      "expect": "miss"
+    },
+    {
+      "id": "relay-hub-c3",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "hub",
+      "text": "통합 DB 의 현황은 원본이랑 뭐가 달라?",
+      "expect": "question"
+    },
+    {
+      "id": "relay-queue-m1",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "queue",
+      "text": "중앙 중계 뒤에 RabbitMQ 를 붙여 줘",
+      "expect": "match"
+    },
+    {
+      "id": "relay-queue-m2",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "queue",
+      "text": "한 지자체가 끊겨도 다른 지자체가 밀리지 않게 대기열을 나눠 줘",
+      "expect": "match"
+    },
+    {
+      "id": "relay-queue-c1",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "queue",
+      "text": "연계 로그를 남겨서 추적하게 해 줘",
+      "expect": "miss"
+    },
+    {
+      "id": "relay-queue-c2",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "queue",
+      "text": "통합 DB 를 이중화해 줘",
+      "expect": "miss"
+    },
+    {
+      "id": "relay-queue-c3",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "queue",
+      "text": "제어 지시에 유효 시간을 왜 붙여?",
+      "expect": "question"
+    },
+    {
+      "id": "relay-log-m1",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "log",
+      "text": "같은 건이 두 번 반영되지 않게 중복을 막아 줘",
+      "expect": "match"
+    },
+    {
+      "id": "relay-log-m2",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "log",
+      "text": "한 건이 어디까지 갔는지 추적 번호로 찾을 수 있게 해 줘",
+      "expect": "match"
+    },
+    {
+      "id": "relay-log-c1",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "log",
+      "text": "상황실에 현황판 PC 를 놓아 줘",
+      "expect": "miss"
+    },
+    {
+      "id": "relay-log-c2",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "log",
+      "text": "지자체별 큐를 넣어 줘",
+      "expect": "miss"
+    },
+    {
+      "id": "relay-log-c3",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "log",
+      "text": "멱등 키가 뭐야?",
+      "expect": "question"
+    },
+    {
+      "id": "relay-log-c4",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "log",
+      "text": "누가 지시했는지 감사 이력을 남겨 줘",
+      "expect": "miss"
+    },
+    {
+      "id": "relay-ops-m1",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "ops",
+      "text": "운영자가 볼 대시보드 PC 를 센터에 놓아 줘",
+      "expect": "match"
+    },
+    {
+      "id": "relay-ops-m2",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "ops",
+      "text": "누가 제어 지시를 내릴 수 있는지 권한을 정하고 감사 기록을 남겨 줘",
+      "expect": "match"
+    },
+    {
+      "id": "relay-ops-c1",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "ops",
+      "text": "요청한 채널만 영상을 올려 줘",
+      "expect": "miss"
+    },
+    {
+      "id": "relay-ops-c2",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "ops",
+      "text": "연계 로그를 남겨 줘",
+      "expect": "miss"
+    },
+    {
+      "id": "relay-ops-c3",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "ops",
+      "text": "제어 지시는 어떤 순서로 내려가?",
+      "expect": "question"
+    },
+    {
+      "id": "relay-video-m1",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "video",
+      "text": "중앙에서 고른 카메라 화면만 올라오게 해 줘",
+      "expect": "match"
+    },
+    {
+      "id": "relay-video-m2",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "video",
+      "text": "RTSP 스트림을 필요할 때만 센터로 보내게 해 줘",
+      "expect": "match"
+    },
+    {
+      "id": "relay-video-m3",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "video",
+      "text": "영상은 자료용과 다른 영상 전용 망연계로 요청한 것만 넘겨 줘",
+      "expect": "match"
+    },
+    {
+      "id": "relay-video-c1",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "video",
+      "text": "다른 지자체도 붙여 줘",
+      "expect": "miss"
+    },
+    {
+      "id": "relay-video-c2",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "video",
+      "text": "상황실에 현황판을 놓아 줘",
+      "expect": "miss"
+    },
+    {
+      "id": "relay-video-c3",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "video",
+      "text": "영상을 왜 계속 올리지 않아?",
+      "expect": "question"
+    },
+    {
+      "id": "relay-video-c4",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "video",
+      "text": "현황 수집과 영상 요청 흐름을 정리해 줘",
+      "expect": "miss"
+    },
+    {
+      "id": "relay-video-c5",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "video",
+      "text": "영상 관리 시스템을 그려 줘",
+      "expect": "miss"
+    },
+    {
+      "id": "relay-others-m1",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "others",
+      "text": "B군이랑 C구도 A시처럼 연결해 줘",
+      "expect": "match"
+    },
+    {
+      "id": "relay-others-m2",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "others",
+      "text": "나머지 지자체는 상자 하나로 그려서 센터에 붙여 줘",
+      "expect": "match"
+    },
+    {
+      "id": "relay-others-c1",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "others",
+      "text": "지자체별 연계 상태를 감시해 줘",
+      "expect": "miss"
+    },
+    {
+      "id": "relay-others-c2",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "others",
+      "text": "요청한 채널 영상만 올려 줘",
+      "expect": "miss"
+    },
+    {
+      "id": "relay-others-c3",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "others",
+      "text": "지자체끼리는 서로 통신할 수 있어?",
+      "expect": "question"
+    },
+    {
+      "id": "relay-monitor-m1",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "monitor",
+      "text": "어느 지자체가 끊겼는지 알 수 있게 Zabbix 를 넣어 줘",
+      "expect": "match"
+    },
+    {
+      "id": "relay-monitor-m2",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "monitor",
+      "text": "지자체 중계가 살아 있는지 하트비트로 감시해 줘",
+      "expect": "match"
+    },
+    {
+      "id": "relay-monitor-c1",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "monitor",
+      "text": "현황 수집 흐름을 정리해 줘",
+      "expect": "miss"
+    },
+    {
+      "id": "relay-monitor-c2",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "monitor",
+      "text": "다른 지자체도 같은 구성으로 붙여 줘",
+      "expect": "miss"
+    },
+    {
+      "id": "relay-monitor-c3",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "monitor",
+      "text": "센터에서 지자체 내부망을 직접 볼 수 없는 까닭이 뭐야?",
+      "expect": "question"
+    },
+    {
+      "id": "relay-flows-m1",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "flows",
+      "text": "A시 현황이 센터까지 올라가는 과정을 보여 줘",
+      "expect": "match"
+    },
+    {
+      "id": "relay-flows-m2",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "flows",
+      "text": "영상 요청이 내려갔다가 영상이 올라오는 경로를 정리해 줘",
+      "expect": "match"
+    },
+    {
+      "id": "relay-flows-c1",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "flows",
+      "text": "모니터링을 넣어 줘",
+      "expect": "miss"
+    },
+    {
+      "id": "relay-flows-c2",
+      "guide": "relay",
+      "env": "onprem",
+      "step": "flows",
+      "text": "지시는 내려가고 영상은 올라오는데 정책이 따로야?",
+      "expect": "question"
+    }
+  ]
+}

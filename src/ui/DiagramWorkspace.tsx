@@ -25,6 +25,7 @@ import { isFlowCommand } from "@/domain/commands";
 import { gwaWa } from "@/domain/josa";
 import { diffStates } from "@/domain/diff";
 import { checkFlow } from "@/domain/flows";
+import type { GuideView } from "@/domain/guides/view";
 import type { NetworkKnowledge } from "@/domain/network";
 import type { DiagramState } from "@/domain/types";
 
@@ -44,6 +45,7 @@ import type { ExplanationProps } from "./explain/Explanation";
 import { type TargetKind, useExplanations } from "./explain/useExplanations";
 import type { FlowPanelProps } from "./flows/FlowPanel";
 import { useFlows } from "./flows/useFlows";
+import { useGuide } from "./guide/useGuide";
 import { MOBILE_VIEWS, MobileTabBar, type MobileView, mobileTabId } from "./MobileTabBar";
 import { PANEL_DEFAULT, PANEL_MAX, PANEL_MIN, PANEL_MIN_COMPACT, PanelResizer } from "./PanelResizer";
 import { PANEL_GAP, SKIP_SLOT_ID, useShell } from "./Shell";
@@ -91,6 +93,8 @@ export interface DiagramWorkspaceProps {
   initialPaging?: SessionPaging;
   /** 계정 공통 망 지식. 없으면(못 읽음) 망 종류·연결 방식 예상 없이 지금처럼 그린다. */
   knowledge?: NetworkKnowledge | null;
+  /** 이 구성도의 학습 상태(학습한 적 없으면 null). status 가 active 일 때 학습 중이고 대화 탭 위에 단계 카드가 붙는다(useGuide). */
+  guide?: GuideView | null;
 }
 
 /** Compare view draws current ∪ old so removed nodes appear as ghosts beside the live ones. */
@@ -110,6 +114,10 @@ const MISSING_BADGES_KEY = "infrasketch.showMissingBadges";
 export const MOBILE_VIEW_KEY = "infrasketch.mobileView";
 /** 이보다 좁은 작업 영역(사이드바·패널이 함께 뜨는 태블릿 너비)은 패널을 PANEL_MIN_COMPACT 까지 줄여 캔버스 띠를 넓힌다. */
 const COMPACT_WIDTH = 900;
+/** 캔버스 왼쪽 위 제목 판 몫으로 도구 모음이 남겨 두는 폭(제목 판 최소 160 + 사이 여백 12). */
+const TITLE_RESERVE = 172;
+/** 아이콘만으로 접힌 도구 모음이 한 줄에 서는 데 필요한 폭(약 253 + 여유). 보이는 띠가 좁으면 제목 판 몫을 이만큼은 남기고 줄인다(도구 모음이 두 줄이 되지 않게). */
+const TOOLBAR_COMPACT_MIN = 266;
 const CANVAS_ID = "workspace-canvas";
 
 /** 구성 정보 카드의 접힌 줄 높이·카드 너비(재기 전 기본값). 카드는 접힌 줄이 한 줄에 드는 너비(infoCard.module.css)라 대략 값이다. */
@@ -121,6 +129,8 @@ const CARD_WIDTH = 380;
 const optionsFor = (state: DiagramState): CanvasOptions => ({ ...defaultDisplayOptions(state), hoverLabels: false, showMissingBadges: false });
 
 const NO_SESSIONS: SessionSummary[] = [];
+/** 대화 기록이 없을 때. 렌더마다 새 배열이면 학습 차례 뒤 대화 다시 그리기(useGuide)가 서버 그리기로 착각한다. */
+const NO_LINES: ChatLine[] = [];
 
 /** 스스로 쓴 버전을 받아 오기를 기다리는 가장 긴 시간. 그동안은 Claude Code 변경을 묻지 않는다(넘으면 다시 묻는다). */
 const OWN_WRITE_MS = 5000;
@@ -140,7 +150,7 @@ function escapeBelongsElsewhere(e: KeyboardEvent): boolean {
 
 const sameSet = (a: ReadonlySet<string>, b: ReadonlySet<string>) => a.size === b.size && [...a].every((x) => b.has(x));
 
-export function DiagramWorkspace({ diagramId, name, projectName, latest, initialPinned, samples, initialChat = [], initialSessions = NO_SESSIONS, initialPaging, knowledge = null }: DiagramWorkspaceProps) {
+export function DiagramWorkspace({ diagramId, name, projectName, latest, initialPinned, samples, initialChat = NO_LINES, initialSessions = NO_SESSIONS, initialPaging, knowledge = null, guide: guideProp = null }: DiagramWorkspaceProps) {
   const router = useRouter();
   const [current, setCurrent] = useState(latest);
   const [pinned, setPinned] = useState<Pinned>(initialPinned);
@@ -201,12 +211,16 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
   // 좁은 화면(narrow)은 패널이 캔버스 위에 뜨지 않고 아래 탭으로 갈마든다: 캔버스는 양옆 여백만 비운다.
   const { sidebarExtent, narrow } = useShell();
   const insetLeft = sidebarExtent + PANEL_GAP;
+  // 왼쪽 위 제목 판은 도구 모음이 쓰고 남은 폭만 쓴다(Canvas 가 잰 너비). 도구 모음은 제목 판 몫(TITLE_RESERVE)을 남기고 접힌다.
+  const [toolbarW, setToolbarW] = useState(0);
   // 태블릿 너비는 패널을 조금 더 줄일 수 있게 한다(사이드바·패널 사이 캔버스 띠가 카드 하나도 못 담지 않게).
   const panelMin = workspaceW > 0 && workspaceW <= COMPACT_WIDTH ? PANEL_MIN_COMPACT : PANEL_MIN;
   // 보이는 캔버스 띠가 360px 보다 좁아지지 않게 최대를 줄인다(너비를 모르면 줄이지 않는다).
   const panelMax = workspaceW > 0 ? Math.max(panelMin, Math.min(PANEL_MAX, workspaceW - insetLeft - 2 * PANEL_GAP - 360)) : PANEL_MAX;
   const shownPanelWidth = Math.max(panelMin, Math.min(panelWidth, panelMax));
   const insetRight = narrow ? PANEL_GAP : PANEL_GAP + shownPanelWidth + PANEL_GAP;
+  // 두 판 사이 보이는 띠에서 접힌 도구 모음 몫을 뺀 나머지까지만 제목 판 몫으로 남긴다(너비를 모르면 기본 몫).
+  const titleReserve = narrow ? 0 : workspaceW > 0 ? Math.max(0, Math.min(TITLE_RESERVE, workspaceW - insetLeft - insetRight - TOOLBAR_COMPACT_MIN)) : TITLE_RESERVE;
   // 아래: 접힌 구성 정보 카드 줄(+ 위아래 여백)은 늘 비운다. 카드가 열려 있으면 위치 보기가 카드를 피한다.
   const [cardOpen, setCardOpen] = useState(false);
   const [cardSize, setCardSize] = useState<CardMeasure | null>(null);
@@ -379,10 +393,15 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
     timer.current = null;
   };
   // After an interrupt the server saves the aborted version a moment later: refresh once more.
-  const refreshAfterInterrupt = () => {
-    refreshFromServer();
+  // beforeRefresh runs before each of the two refreshes (learning: reload the chat from the saved lines it brings).
+  const refreshAfterInterrupt = (beforeRefresh?: () => void) => {
+    const refresh = () => {
+      beforeRefresh?.();
+      refreshFromServer();
+    };
+    refresh();
     if (timer.current) clearTimeout(timer.current);
-    timer.current = setTimeout(refreshFromServer, 1500);
+    timer.current = setTimeout(refresh, 1500);
   };
   // 흐름: 차례가 끝나면 다시 불러오고, 처음 그린 차례 뒤 흐름이 없으면 자동 제안한다(아래 useFlows 가 채운다).
   const afterTurnRef = useRef<(e: { changed: number } | undefined) => Promise<void>>(async () => {});
@@ -418,10 +437,15 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
     },
     onInterrupted: () => {
       fly.clear();
-      refreshAfterInterrupt();
+      // 학습 차례는 멈춰도 서버가 단계를 마칠 수 있다(그렸으면 버전·단계 글·해설 칩이 남는다).
+      // 단계 글과 칩은 저장된 메시지에만 있으므로, 새로 그린 저장된 줄로 대화를 바꾼다(늦게 마친 것도 두 번째 새로 그리기에서).
+      refreshAfterInterrupt(guide.learning ? guide.reloadChat : undefined);
     },
     onRelayout: () => onAutoArrange(),
+    onGuide: (v) => guide.onEvent(v),
   });
+  // 학습: 단계 카드의 진행 상태, 학습 차례 뒤 저장된 대화 줄(해설 칩·완료 판)로 다시 그리기, 그만두기·다시 만들기.
+  const guide = useGuide({ diagramId, initial: guideProp, serverLines: initialChat, busy: chat.busy, replaceLines: chat.replaceLines });
   // The server re-renders with a newer version after import/restore/chat: adopt it, but never mid-turn
   // (it would wipe the commands already streamed); the done-refresh brings the newer version later.
   // 물어서 저절로 온 바깥 변경은 이력 보기·비교 중이면 미룬다(보던 화면에서 끌어내지 않는다). 현재로 돌아오면 그때 받는다.
@@ -504,6 +528,8 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
       terms: explanations.terms,
       target: selKind,
       busy: locked,
+      // 학습 중에는 대본 설명을 다시 쓸 수 없다: 버튼은 보이되 막고 이유를 적는다. 그만두면 바로 풀린다.
+      ...(guide.learning ? { rewriteLocked: true } : {}),
       ...(live ? { onRewrite: (instruction: string) => rewrite(selKind, selId, instruction), onRetry: () => retry(selKind, selId) } : {}),
     };
   }
@@ -1014,6 +1040,8 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
       expectNewBoard();
       // 서버가 남긴 안내(구성 정보 숫자의 변화 포함)를 대화에도 바로 띄운다. 새로 고치면 저장된 같은 줄이 보인다.
       const r = await restoreVersionAction(diagramId, number, { describeChange: true });
+      if (r && "error" in r) return setError(r.error);
+      guide.onRestored(r?.guide);
       loadVersions();
       if (r?.text) pushDiagramLine({ kind: "system", text: r.text });
     });
@@ -1023,7 +1051,9 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
     !locked &&
     run(async () => {
       expectNewBoard();
-      await restoreVersionAction(diagramId, v - 1);
+      const r = await restoreVersionAction(diagramId, v - 1);
+      if (r && "error" in r) return setError(r.error);
+      guide.onRestored(r?.guide);
       loadVersions();
       pushDiagramLine({ kind: "system", text: `방금 바꾼 것을 되돌렸어요. v${v - 1} 구성으로 돌아갔어요.` });
     });
@@ -1032,7 +1062,8 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
     !locked &&
     run(async () => {
       expectNewBoard();
-      await importSampleAction(diagramId, sampleId);
+      const r = await importSampleAction(diagramId, sampleId);
+      if (!r.ok) return setError(r.error);
       await clearPinnedAction(diagramId);
       setPinned({});
       loadVersions();
@@ -1095,7 +1126,7 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
         className={styles.workspace}
         data-workspace=""
         data-mview={panelShown ? "panel" : "canvas"}
-        style={{ "--canvas-inset-left": `${insetLeft}px`, "--canvas-inset-right": `${insetRight}px` } as React.CSSProperties}
+        style={{ "--canvas-inset-left": `${insetLeft}px`, "--canvas-inset-right": `${insetRight}px`, "--canvas-toolbar-w": `${toolbarW}px`, "--canvas-title-reserve": `${titleReserve}px` } as React.CSSProperties}
       >
         {/* 화면의 첫 Tab 칸들(셸 맨 앞, 사이드바보다 앞): 대화 입력으로, 캔버스로. 포커스를 받을 때만 보인다.
             자리가 아직 없으면(첫 렌더) 이 자리에 그대로 둔다. */}
@@ -1113,8 +1144,8 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
           return skipSlot ? createPortal(links, skipSlot) : links;
         })()}
         <section id={CANVAS_ID} className={styles.center} aria-label={name} {...(narrow ? { role: "tabpanel", "aria-labelledby": mobileTabId("구성도") } : {})}>
-          {/* 화면에 보이는 구성도 제목이 없어 보조기기용 제목만 둔다. */}
-          <h1 className={styles.srOnly}>{name}</h1>
+          {/* 좁은 화면은 위 막대(Sidebar)가 「프로젝트 / 구성도」를 보여 주므로 보조기기용 제목만 둔다. 넓은 화면의 제목은 캔버스 왼쪽 위 제목 판. */}
+          {narrow && <h1 className={styles.srOnly}>{name}</h1>}
           {/* 노드·연결을 고르면 오른쪽 패널이 설명으로 바뀐다(좁은 화면은 탭에 점만). 포커스는 캔버스에 남으므로 보조기기에 알린다. */}
           <p className={styles.srOnly} aria-live="polite" data-selection-announce="">
             {selectionLabel ? `${selectionLabel} 선택됨. 설명 탭에서 볼 수 있어요.` : ""}
@@ -1157,6 +1188,18 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
           {/* 좁은 화면은 어느 탭에서든 보이게 위 막대 바로 밑에 띄운다(app.module.css .alertBanner). */}
           {error && <div className={`${styles.banner} ${styles.alertBanner}`} role="alert">{error}</div>}
           <div className={styles.canvasWrap}>
+            {!narrow && (
+              <div className={styles.docTitle}>
+                {projectName !== undefined && projectName !== "" && (
+                  <>
+                    <span className={styles.srOnly}>프로젝트 </span>
+                    <span className={styles.docProject} title={projectName}>{projectName}</span>
+                    <span className={styles.docSep} aria-hidden="true">/</span>
+                  </>
+                )}
+                <h1 className={styles.docDiagram} title={name}>{name}</h1>
+              </div>
+            )}
             <Canvas
               state={shown}
               knowledge={knowledge}
@@ -1190,6 +1233,7 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
               importing={busy || locked}
               onPlaced={fly.placed}
               diagramName={name}
+              onToolbarWidth={setToolbarW}
               {...(projectName !== undefined ? { projectName } : {})}
               {...(focusRequest ? { focusRequest } : {})}
               {...(frameRequest && mode.kind === "compare" ? { frameRequest } : {})}
@@ -1289,11 +1333,19 @@ export function DiagramWorkspace({ diagramId, name, projectName, latest, initial
               onSend: sendChat,
               onStop: chat.stop,
               onOpenWarnings: openWarnings,
-              turnActions: { latest: current.number, disabled: locked || busy || !live, onCompare: (v) => compare(v - 1), onUndo: undoTurn },
+              turnActions: {
+                latest: current.number,
+                disabled: locked || busy || !live,
+                ...(mode.kind === "compare" ? { comparing: mode.number } : {}),
+                onCompare: (v) => compare(v - 1),
+                onEndCompare: backToLive,
+                onUndo: undoTurn,
+              },
               undone,
+              guide: { view: guide.view, onQuit: guide.quit, onRebuild: guide.rebuild },
               health,
               mentionRef,
-              ...(live ? {} : { disabledReason: "이전 버전을 보는 중에는 대화할 수 없어요." }),
+              ...(live ? {} : { disabledReason: "이전 버전을 보는 중에는 대화할 수 없어요.", disabledAction: { label: "현재로 돌아가기", run: backToLive } }),
             }}
           />
         </div>
