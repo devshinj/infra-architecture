@@ -26,22 +26,30 @@
    ```env
    # 필수
    DATABASE_URL=postgres://postgres:postgres@localhost:5432/infrasketch
-   AUTH_SECRET=아주-긴-무작위-문자열   # `npx auth secret` 으로 만들거나 긴 임의 문자열 사용
+   AUTH_SECRET=아주-긴-무작위-문자열   # `npx auth secret` 으로 만들거나 32자 이상의 임의 문자열 사용
 
-   # 권장
+   # 권장 (운영에서는 필수)
    APP_URL=http://localhost:3000
    # 프록시 뒤에서 실행할 때만
    # AUTH_URL=https://example.com
+   # 앞단 프록시 수. 한 겹이면 1, 프록시 없이 바로 열면 0. 비워 두면 x-forwarded-for 의 첫 값을 믿습니다.
+   # TRUSTED_PROXY_HOPS=1
 
-   # 선택: 메일 발송(비밀번호 재설정). 비워 두면 재설정 링크가 서버 로그에 출력됩니다.
+   # 선택: 메일 발송(비밀번호 재설정). 비워 두면 개발 서버에서는 재설정 링크가 서버 로그에 출력됩니다.
    # SMTP_HOST=
    # SMTP_PORT=
    # SMTP_USER=
    # SMTP_PASS=
    # SMTP_FROM=
+   # 운영에서 메일 서버 없이 쓸 때만: 재설정 링크를 서버 로그에 남깁니다.
+   # RESET_LINK_LOG=1
    ```
 
    `DATABASE_URL` 과 `AUTH_SECRET` 이 없으면 앱이 시작되지 않습니다.
+
+   운영(`next start`)으로 켤 때는 더 엄격합니다. `AUTH_SECRET` 이 32자 미만이거나 `APP_URL` 이 없으면 이유를 적고 켜지 않습니다. `SMTP_HOST`·`TRUSTED_PROXY_HOPS` 가 없으면 경고만 남깁니다. 운영에서는 `SMTP_HOST` 가 없어도 재설정 링크를 로그에 남기지 않습니다(`RESET_LINK_LOG=1` 로 켠 때만).
+
+   `docker-compose.yml` 의 DB 는 개발용입니다. 비밀번호가 고정이라 이 컴퓨터(`127.0.0.1`)에서만 붙을 수 있게 열려 있습니다.
 
 4. 데이터베이스 마이그레이션
 
