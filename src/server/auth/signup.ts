@@ -4,7 +4,7 @@ import { db } from "@/db/client";
 import { users } from "@/db/schema";
 
 import { hashPassword } from "./password";
-import { attemptKey, isLimited, LIMITS, recordAttempt, UNKNOWN_IP } from "./rateLimit";
+import { attemptKey, claimAttempt, LIMITS, UNKNOWN_IP } from "./rateLimit";
 import { checkEmail, checkNewPassword, checkUsername, MESSAGES, normalizeEmail, normalizeUsername } from "./rules";
 
 export type SignupInput = { username: string; password: string; email: string };
@@ -14,7 +14,8 @@ export type SignupResult =
 
 /**
  * 계정을 만든다. `ip` 를 주면 그 IP 에서 만든 계정 수를 센다(LIMITS.signupIp): 한도를 넘으면 만들지 않고 `form` 오류로 돌려준다.
- * IP 를 모르는 요청(프록시 헤더 없음 — 로컬 개발·테스트)은 세지 않는다.
+ * IP 를 모르는 요청(프록시 헤더 없음 — 로컬 개발·테스트)은 세지 않는다. 한꺼번에 온 요청이 서로 자리를 잡고 있는 동안에는
+ * 한도 안의 요청도 잠깐 막힐 수 있다(넘치는 쪽이 아니라 모자란 쪽으로 틀린다).
  */
 export async function signup(input: SignupInput, opts: { ip?: string } = {}): Promise<SignupResult> {
   const { password } = input;
@@ -30,9 +31,20 @@ export async function signup(input: SignupInput, opts: { ip?: string } = {}): Pr
   if (passwordError) return { ok: false, field: "password", message: passwordError };
 
   // 막힌 IP 에는 아이디·메일이 쓰이는지도 알려 주지 않는다(중복 확인보다 먼저 본다).
-  const ipKey = opts.ip && opts.ip !== UNKNOWN_IP ? attemptKey.signupIp(opts.ip) : null;
-  if (ipKey && (await isLimited(ipKey, LIMITS.signupIp))) return { ok: false, field: "form", message: MESSAGES.tooManyAttempts };
+  // 자리를 먼저 잡아 두고(한꺼번에 보내도 한도를 못 넘는다), 계정을 만들지 못하면 돌려준다 — 만든 계정만 센다.
+  const claim = opts.ip && opts.ip !== UNKNOWN_IP ? await claimAttempt({ key: attemptKey.signupIp(opts.ip), limit: LIMITS.signupIp }) : null;
+  if (claim?.limited) return { ok: false, field: "form", message: MESSAGES.tooManyAttempts };
 
+  let result: SignupResult | undefined;
+  try {
+    result = await createAccount(username, email, password);
+    return result;
+  } finally {
+    if (!result?.ok) await claim?.release();
+  }
+}
+
+async function createAccount(username: string, email: string, password: string): Promise<SignupResult> {
   const [sameName] = await db.select({ id: users.id }).from(users).where(eq(users.username, username)).limit(1);
   if (sameName) return { ok: false, field: "username", message: MESSAGES.usernameTaken };
   const [sameEmail] = await db.select({ id: users.id }).from(users).where(eq(users.email, email)).limit(1);
@@ -41,7 +53,6 @@ export async function signup(input: SignupInput, opts: { ip?: string } = {}): Pr
   const passwordHash = await hashPassword(password);
   try {
     const [row] = await db.insert(users).values({ username, email, passwordHash }).returning({ id: users.id });
-    if (ipKey) await recordAttempt(ipKey);
     return { ok: true, userId: row.id };
   } catch (e) {
     // 동시 가입으로 unique 제약에 걸린 경우.

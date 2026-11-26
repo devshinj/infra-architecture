@@ -73,5 +73,5 @@ export async function resetPasswordAction(_prev: FormState, data: FormData): Pro
       ? { errors: { form: result.message }, expired: true }
       : { errors: { password: result.message } };
   }
-  redirect("/login?notice=reset");
+  redirect(result.revokedKeys > 0 ? "/login?notice=reset_keys" : "/login?notice=reset");
 }
