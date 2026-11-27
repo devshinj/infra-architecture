@@ -15,7 +15,7 @@ import type { QwenClient } from "@/server/llm/qwen";
 import { deleteDiagram, duplicateDiagram, NotFoundError, ValidationError } from "@/server/projects";
 import { createVersion, restoreVersion } from "@/server/versions";
 
-import { makeOwnedDiagram } from "./helpers";
+import { holdDiagramLock, makeOwnedDiagram } from "./helpers";
 
 vi.mock("@/auth", () => ({ auth: vi.fn() }));
 import { auth } from "@/auth";
@@ -164,14 +164,10 @@ describe("flows repo", () => {
   test("rename while a chat turn holds the lock is BusyError", async () => {
     const { userId, diagramId, state } = await setup();
     await applyFlowOps(diagramId, state, [addLogin()], "ai");
-    let release!: () => void;
-    const gate = new Promise<void>((r) => (release = r));
-    const held = withDiagramLock(diagramId, () => gate);
-    await new Promise((r) => setTimeout(r, 200));
+    const lock = await holdDiagramLock(diagramId);
     await expect(renameFlow(userId, diagramId, "login", "x")).rejects.toBeInstanceOf(BusyError);
     await expect(confirmFlow(userId, diagramId, "login")).rejects.toThrow(FLOW_BUSY_MESSAGE);
-    release();
-    await held;
+    await lock.release();
     await renameFlow(userId, diagramId, "login", "x");
   });
 
@@ -218,13 +214,9 @@ describe("flows repo", () => {
     test("is BusyError while a chat turn holds the lock", async () => {
       const { userId, diagramId, state } = await setup();
       await applyFlowOps(diagramId, state, [addLogin()], "ai");
-      let release!: () => void;
-      const gate = new Promise<void>((r) => (release = r));
-      const held = withDiagramLock(diagramId, () => gate);
-      await new Promise((r) => setTimeout(r, 200));
+      const lock = await holdDiagramLock(diagramId);
       await expect(removeFlowStep(userId, diagramId, "login", 0)).rejects.toBeInstanceOf(BusyError);
-      release();
-      await held;
+      await lock.release();
       await removeFlowStep(userId, diagramId, "login", 0);
       expect((await listFlows(userId, diagramId))[0].steps.map((s) => s.edge)).toEqual(["e2"]);
     });
@@ -393,15 +385,11 @@ describe("flow suggest", () => {
       authMock.mockResolvedValue({ user: { id: userId } });
       expect((await post(diagramId, { auto: "yes" })).status).toBe(400);
 
-      let release!: () => void;
-      const gate = new Promise<void>((r) => (release = r));
-      const held = withDiagramLock(diagramId, () => gate);
-      await new Promise((r) => setTimeout(r, 200));
+      const lock = await holdDiagramLock(diagramId);
       const busy = await post(diagramId);
       expect(busy.status).toBe(409);
       expect(await busy.json()).toEqual({ error: FLOW_SUGGEST_BUSY_MESSAGE });
-      release();
-      await held;
+      await lock.release();
 
       const ok = await post(diagramId);
       expect(ok.status).toBe(200);

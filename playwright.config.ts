@@ -1,9 +1,11 @@
 import { defineConfig, devices } from "@playwright/test";
 
+import { E2E_DB_URL } from "./tests/e2e/db";
 import { FAKE_CLEF_KEY, FAKE_PORT, FAKE_QWEN_KEY } from "./tests/e2e/fake-config";
 
-const PORT = 3100;
-const DB_URL = process.env.DATABASE_URL_TEST || "postgres://postgres:postgres@localhost:5433/infrasketch_test";
+// 다른 worktree 의 E2E 와 같이 돌릴 때는 E2E_PORT·E2E_FAKE_PORT 를 바꾼다(DB 는 폴더마다 이미 다르다).
+const PORT = Number(process.env.E2E_PORT) || 3100;
+const DB_URL = E2E_DB_URL;
 
 export default defineConfig({
   testDir: "./tests/e2e",
@@ -15,7 +17,8 @@ export default defineConfig({
     baseURL: `http://localhost:${PORT}`,
   },
   webServer: {
-    command: `npx next build && npx next start -p ${PORT}`,
+    // 서버가 globalSetup 보다 먼저 켜지므로 DB 준비(없으면 만들기·마이그레이션)를 먼저 한다.
+    command: `npx tsx tests/e2e/prepare-db.ts && npx next build && npx next start -p ${PORT}`,
     url: `http://localhost:${PORT}/login`,
     reuseExistingServer: false,
     timeout: 300_000,
