@@ -19,31 +19,50 @@ const replacedEdge = z.object({
   from: id,
   to: id,
   edgeKind,
-  label: z.string().optional(),
+  label: z.string().max(200).optional(),
   payload: payload.optional(),
   direction: direction.optional(),
   medium: medium.optional(),
   id: id.optional(),
 });
-const linkGuess = z.object({ replaced: z.array(replacedEdge), bridge: replacedEdge.optional() });
-const attrs = z.record(z.string(), z.union([z.string(), z.number(), z.null()]));
+/**
+ * 글 길이·개수의 상한. 화면에 보이는 글은 이보다 훨씬 짧다 — 평소 쓰임을 막는 값이 아니라, 모델이나 MCP 가
+ * 아주 긴 글을 넣어 구성도가 MB 단위로 커지는 것을 막는 값이다(구성도는 버전마다 통째로 저장된다).
+ */
+export const TEXT_LIMITS = {
+  label: 200,
+  sub: 300,
+  attrKey: 60,
+  attrValue: 500,
+  attrCount: 50,
+  assumptionKey: 80,
+  assumptionValue: 500,
+  stepShort: 200,
+} as const;
+const name = z.string().min(1).max(TEXT_LIMITS.label);
+const edgeLabel = z.string().max(TEXT_LIMITS.label);
+const sub = z.string().max(TEXT_LIMITS.sub);
+const linkGuess = z.object({ replaced: z.array(replacedEdge).max(20), bridge: replacedEdge.optional() });
+const attrs = z
+  .record(z.string().max(TEXT_LIMITS.attrKey), z.union([z.string().max(TEXT_LIMITS.attrValue), z.number(), z.null()]))
+  .refine((o) => Object.keys(o).length <= TEXT_LIMITS.attrCount, { message: `attrs 는 ${TEXT_LIMITS.attrCount}개까지` });
 // 흐름 명령. 저장소(applyFlowOps)는 이 검사를 믿는다: 이름 1~60자(앞뒤 공백 제거), 요약·결과 200자, 단계 설명 120자, 단계 1~20개.
 // 짧은 설명(short)은 길이를 묻지 않는다(저장할 때 자른다).
 const flowName = z.string().trim().min(1).max(60);
 const flowNote = z.string().max(200);
-const flowStep = z.object({ edge: id, from: id, short: z.string(), text: z.string().max(120) });
+const flowStep = z.object({ edge: id, from: id, short: z.string().max(200), text: z.string().max(120) });
 const flowSteps = z.array(flowStep).min(1).max(20);
 
 export const commandSchema = z.discriminatedUnion("op", [
-  z.object({ op: z.literal("add_group"), id, group_kind: groupKind, label: z.string().min(1), parent }),
-  z.object({ op: z.literal("add_node"), id, kind: nodeKind, label: z.string().min(1), sub: z.string().optional(), parent, attrs: attrs.optional(), guess: z.boolean().optional() }),
-  z.object({ op: z.literal("add_edge"), id: id.optional(), from: id, to: id, edge_kind: edgeKind, label: z.string().optional(), payload: payload.optional(), direction: direction.optional(), medium: medium.optional() }),
-  z.object({ op: z.literal("update_node"), id, label: z.string().min(1).optional(), sub: z.string().optional(), parent: parent.optional(), attrs: attrs.optional() }),
-  z.object({ op: z.literal("update_edge"), id, label: z.string().optional(), edge_kind: edgeKind.optional(), payload: payload.optional(), direction: direction.optional(), medium: medium.optional() }),
+  z.object({ op: z.literal("add_group"), id, group_kind: groupKind, label: name, parent }),
+  z.object({ op: z.literal("add_node"), id, kind: nodeKind, label: name, sub: sub.optional(), parent, attrs: attrs.optional(), guess: z.boolean().optional() }),
+  z.object({ op: z.literal("add_edge"), id: id.optional(), from: id, to: id, edge_kind: edgeKind, label: edgeLabel.optional(), payload: payload.optional(), direction: direction.optional(), medium: medium.optional() }),
+  z.object({ op: z.literal("update_node"), id, label: name.optional(), sub: sub.optional(), parent: parent.optional(), attrs: attrs.optional() }),
+  z.object({ op: z.literal("update_edge"), id, label: edgeLabel.optional(), edge_kind: edgeKind.optional(), payload: payload.optional(), direction: direction.optional(), medium: medium.optional() }),
   z.object({ op: z.literal("remove_node"), id }),
   z.object({ op: z.literal("remove_edge"), id }),
   z.object({ op: z.literal("remove_group"), id }),
-  z.object({ op: z.literal("set_assumption"), key: z.string().min(1), value: z.string() }),
+  z.object({ op: z.literal("set_assumption"), key: z.string().min(1).max(TEXT_LIMITS.assumptionKey), value: z.string().max(TEXT_LIMITS.assumptionValue) }),
   z.object({ op: z.literal("set_zone_type"), id, type: id.nullable() }),
   z.object({ op: z.literal("set_link_guess"), id, guess: linkGuess.nullable() }),
   z.object({ op: z.literal("add_flow"), id, name: flowName, origin: z.enum(["user", "system"]), summary: flowNote.optional(), result: flowNote.optional(), steps: flowSteps }),

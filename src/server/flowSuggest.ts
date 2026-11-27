@@ -8,6 +8,7 @@ import type { DiagramState } from "@/domain/types";
 import { defaultChatDeps } from "@/server/chat/deps";
 import { withDiagramLock } from "@/server/chat/lock";
 import { normalizeAiCommand } from "@/server/chat/normalize";
+import { BACKGROUND_WAIT_MS, withBackgroundSlot } from "@/server/chat/userTurns";
 import { buildFlowSuggestMessages } from "@/server/chat/prompt";
 import { applyFlowOps, FLOW_BUSY_MESSAGE } from "@/server/flows";
 import { createJsonlParser } from "@/server/llm/jsonl";
@@ -55,6 +56,8 @@ export interface FlowSuggestDeps {
   repo: FlowSuggestRepo;
   now: () => Date;
   sleep: (ms: number) => Promise<void>;
+  /** 배경 작업 자리를 기다려 주는 시간(ms). */
+  slotWaitMs: number;
 }
 
 const dbRepo: FlowSuggestRepo = {
@@ -89,6 +92,7 @@ function resolveDeps(input: DepsInput): FlowSuggestDeps {
     repo: { ...dbRepo, ...input.repo },
     now: input.now ?? (() => new Date()),
     sleep: input.sleep ?? ((ms) => new Promise((r) => setTimeout(r, ms))),
+    slotWaitMs: input.slotWaitMs ?? BACKGROUND_WAIT_MS,
   };
 }
 
@@ -174,15 +178,25 @@ export async function suggestFlows(
     return r;
   };
 
-  // 2. 모델 호출(잠금 없음)
+  // 2. 모델 호출(잠금 없음). 계정의 배경 작업 자리 안에서 돈다 — 설명 만들기와 같은 한도를 나눠 쓴다.
+  const qwen = deps.qwen;
   const messages = buildFlowSuggestMessages(state, current);
   const taken = new Set(current.map((f) => f.id));
-  let picked: AddFlowOp[] = [];
-  for (let attempt = 0; attempt < ATTEMPTS && picked.length === 0; attempt++) {
-    if (opts.signal?.aborted) break;
-    const out = await complete(deps.qwen, messages, opts.signal);
-    if (out !== null) picked = pickFlows(out, state, taken);
-  }
+  const called = await withBackgroundSlot(
+    userId,
+    async () => {
+      let found: AddFlowOp[] = [];
+      for (let attempt = 0; attempt < ATTEMPTS && found.length === 0; attempt++) {
+        if (opts.signal?.aborted) break;
+        const out = await complete(qwen, messages, opts.signal);
+        if (out !== null) found = pickFlows(out, state, taken);
+      }
+      return found;
+    },
+    { waitMs: deps.slotWaitMs, signal: opts.signal },
+  );
+  if (!called.ok) return giveUp({ ok: false, message: FLOW_SUGGEST_BUSY_MESSAGE });
+  const picked = called.value;
   if (picked.length === 0) return giveUp(fail);
 
   // 3. 저장(잠금 안, 최신 구성도로 다시 검사)

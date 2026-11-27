@@ -3,12 +3,12 @@ import { createHash, randomBytes } from "node:crypto";
 import { and, eq, gt, isNull, sql } from "drizzle-orm";
 
 import { db } from "@/db/client";
-import { passwordResetTokens, users } from "@/db/schema";
+import { mcpKeys, passwordResetTokens, users } from "@/db/schema";
 import { env } from "@/env";
 
 import { sendMail } from "./mailer";
 import { hashPassword } from "./password";
-import { attemptKey, clearAttempts, isLimited, LIMITS, recordAttempt } from "./rateLimit";
+import { attemptKey, claimAttempt, clearAttempts, LIMITS } from "./rateLimit";
 import { checkNewPassword, MESSAGES, RESET_TTL_HOURS } from "./rules";
 
 const TTL_MS = RESET_TTL_HOURS * 60 * 60 * 1000;
@@ -24,9 +24,8 @@ export type Defer = (task: () => Promise<void>) => void;
  */
 export async function requestPasswordReset(email: string, defer?: Defer): Promise<"ok" | "limited"> {
   const address = email.trim().toLowerCase();
-  const key = attemptKey.resetEmail(address);
-  if (await isLimited(key, LIMITS.resetEmail)) return "limited";
-  await recordAttempt(key);
+  const claim = await claimAttempt({ key: attemptKey.resetEmail(address), limit: LIMITS.resetEmail });
+  if (claim.limited) return "limited";
 
   const [user] = await db.select({ id: users.id }).from(users).where(eq(users.email, address)).limit(1);
   if (!user) return "ok"; // 존재 여부를 드러내지 않는다.
@@ -46,7 +45,9 @@ export async function requestPasswordReset(email: string, defer?: Defer): Promis
 
 async function deliverResetLink(email: string, link: string): Promise<void> {
   if (!env.SMTP_HOST) {
-    console.info("[reset-link]", link);
+    // 링크는 그 계정에 들어갈 수 있는 열쇠다. 운영 로그에는 남기지 않고, 메일 서버 없이 쓰겠다고 켠 때(RESET_LINK_LOG)만 찍는다.
+    if (process.env.NODE_ENV !== "production" || env.RESET_LINK_LOG) console.info("[reset-link]", link);
+    else console.error("[reset-mail] SMTP 설정이 없어 재설정 메일을 보내지 못했습니다. 메일 서버 없이 쓰려면 RESET_LINK_LOG=1 을 넣으세요.");
     return;
   }
   try {
@@ -73,9 +74,12 @@ export async function isResetTokenUsable(token: string): Promise<boolean> {
   return Boolean(row);
 }
 
-/** reason 이 "token" 이면 비밀번호를 다시 입력해도 소용없다 — 화면은 새 링크를 받도록 안내한다. */
+/**
+ * reason 이 "token" 이면 비밀번호를 다시 입력해도 소용없다 — 화면은 새 링크를 받도록 안내한다.
+ * revokedKeys 는 함께 지운 MCP 키 수(화면이 다시 만들라고 안내한다).
+ */
 export type ResetResult =
-  | { ok: true }
+  | { ok: true; revokedKeys: number }
   | { ok: false; reason: "password" | "token"; message: string };
 
 export async function resetPassword(
@@ -85,6 +89,9 @@ export async function resetPassword(
   const passwordError = checkNewPassword(newPassword);
   if (passwordError) return { ok: false, reason: "password", message: passwordError };
   const invalid: ResetResult = { ok: false, reason: "token", message: MESSAGES.resetLinkExpired };
+  // 해시(bcrypt)는 느리다. 로그인 없이 부르는 길이라, 쓸 수 있는 링크일 때만 돌린다.
+  // 이 조회와 아래 UPDATE 사이에 다른 요청이 링크를 쓰면 UPDATE 가 걸러 낸다.
+  if (!(await isResetTokenUsable(token))) return invalid;
   const passwordHash = await hashPassword(newPassword);
 
   // 한 번만 쓰이도록 usedAt 갱신을 조건부 UPDATE 로 먼저 선점한다.
@@ -111,10 +118,12 @@ export async function resetPassword(
       .update(passwordResetTokens)
       .set({ usedAt: new Date() })
       .where(and(eq(passwordResetTokens.userId, claimed.userId), isNull(passwordResetTokens.usedAt)));
-    return user?.username ?? "";
+    // 재설정은 계정을 되찾는 일이다. 그 전에 누가 만들어 둔 MCP 키로 구성도를 계속 읽고 고치지 못하게 모두 지운다.
+    const revoked = await tx.delete(mcpKeys).where(eq(mcpKeys.userId, claimed.userId)).returning({ id: mcpKeys.id });
+    return { username: user?.username ?? "", revokedKeys: revoked.length };
   });
   if (result === null) return invalid;
   // 새 비밀번호로는 바로 로그인할 수 있게, 그 아이디의 로그인 실패 기록을 지운다.
-  if (result) await clearAttempts(attemptKey.loginUser(result));
-  return { ok: true };
+  if (result.username) await clearAttempts(attemptKey.loginUser(result.username));
+  return { ok: true, revokedKeys: result.revokedKeys };
 }

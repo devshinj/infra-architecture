@@ -27,6 +27,11 @@
 }
 .emptySheet p { margin: 0; font-size: 14px; line-height: 1.6; color: var(--text-secondary); max-width: 46ch; word-break: keep-all; text-wrap: pretty; }
 .emptyActions { margin-top: 8px; display: flex; justify-content: center; }
+/* 없는 화면·오류 화면(StatusScreen). 셸 밖에서는 화면 높이를 스스로 채운다. 단추가 둘이면 8px 띄운다. */
+.statusPage { min-height: 100dvh; padding-left: calc(var(--safe-l, 0px) + 24px); }
+.statusActions { flex-wrap: wrap; gap: 8px; }
+.emptySheet p.statusCode { font-size: var(--text-label); }
+.statusCode code { font-family: var(--font-mono); color: var(--text-primary); user-select: all; }
 
 .sidebar {
   position: absolute; top: var(--panel-gap); bottom: calc(var(--panel-gap) + var(--safe-b, 0px)); left: calc(var(--panel-gap) + var(--safe-l, 0px)); z-index: 40; width: 288px; /* = Shell.tsx SIDEBAR_WIDTH */

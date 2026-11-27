@@ -4,7 +4,8 @@ import { NODE_KINDS } from "@/domain/catalog";
 import { normalizeTerm, signatureOf, type NodeExplanation } from "@/domain/explain";
 import { emptyState, type DiagramState } from "@/domain/types";
 import { buildExplainMessages, EXPLAIN_EDGE_PROMPT, EXPLAIN_GROUP_PROMPT, EXPLAIN_NODE_PROMPT } from "@/server/chat/prompt";
-import { cachedNodeExplanation, explainTarget, saveAuthoredExplanations, type ExplainRepo } from "@/server/explain";
+import { MAX_BACKGROUND_JOBS, withBackgroundSlot } from "@/server/chat/userTurns";
+import { cachedNodeExplanation, EXPLAIN_BUSY_MESSAGE, explainTarget, saveAuthoredExplanations, type ExplainRepo } from "@/server/explain";
 import type { GlossaryRow } from "@/server/glossary";
 import { EXPLAIN_SCORE_QUESTION, type ClefAnswers, type ClefClient } from "@/server/llm/clef";
 import type { ChatMessage, QwenClient } from "@/server/llm/qwen";
@@ -603,5 +604,48 @@ describe("authored explanations", () => {
     expect(await explainTarget("u", "d", "node", "lb", { force: true }, deps)).toMatchObject({ ok: true });
     expect(await explainTarget("u", "d", "node", "lb", { instruction: "더 쉽게" }, deps)).toMatchObject({ ok: true });
     expect(calls.length).toBeGreaterThanOrEqual(2);
+  });
+});
+
+describe("배경 작업 한도", () => {
+  /** 계정 "u" 의 배경 작업 자리를 모두 채워 둔다. 돌려받은 함수를 부르면 비운다. */
+  function fillSlots() {
+    let finish!: () => void;
+    const gate = new Promise<void>((r) => (finish = r));
+    const jobs = Array.from({ length: MAX_BACKGROUND_JOBS }, () => withBackgroundSlot("u", () => gate));
+    return async () => {
+      finish();
+      await Promise.all(jobs);
+    };
+  }
+
+  test("자리가 없으면 모델을 부르지 않고 바쁨으로 돌려주며, 사전 정의는 그대로 보여 준다", async () => {
+    const { repo, log } = fakeRepo();
+    const { qwen, calls } = fakeQwen(nodeJson());
+    const free = fillSlots();
+    try {
+      const r = await explainTarget("u", "d", "node", "lb", {}, { qwen, clef: fakeClef().clef, repo, slotWaitMs: 0 });
+      expect(r).toMatchObject({ ok: false, message: EXPLAIN_BUSY_MESSAGE, partial: { term: "L4 로드밸런서" } });
+      expect(calls).toHaveLength(0);
+      expect(log.some((l) => l.startsWith("save:"))).toBe(false);
+    } finally {
+      await free();
+    }
+    // 자리가 나면 만든다.
+    expect(await explainTarget("u", "d", "node", "lb", {}, { qwen, clef: fakeClef().clef, repo, slotWaitMs: 0 })).toMatchObject({ ok: true });
+  });
+
+  test("캐시로 답하는 요청은 자리가 없어도 돌려준다", async () => {
+    const { repo } = fakeRepo();
+    const { qwen, calls } = fakeQwen(nodeJson());
+    const deps = { qwen, clef: fakeClef().clef, repo, slotWaitMs: 0 };
+    expect(await explainTarget("u", "d", "node", "lb", {}, deps)).toMatchObject({ ok: true });
+    const free = fillSlots();
+    try {
+      expect(await explainTarget("u", "d", "node", "lb", {}, deps)).toMatchObject({ ok: true });
+      expect(calls).toHaveLength(1);
+    } finally {
+      await free();
+    }
   });
 });

@@ -1,0 +1,11 @@
+# 앞단 HTTPS 프록시. SITE_ADDRESS 는 deploy/.env 에서 온다.
+#   공인 DNS 이름(sketch.example.com): Caddy 가 인증서를 받아 HTTPS 로 연다(80·443 이 밖에서 닿아야 한다).
+#   사내 이름·IP: http://sketch.intra 처럼 http:// 를 붙여 HTTP 로 열거나, 아래 블록에 `tls internal` 을 넣는다
+#   (그때는 사용자 브라우저가 Caddy 루트 인증서를 믿게 해야 한다).
+# Caddy 앞에 사내 프록시가 또 있으면 그 주소를 trusted_proxies 에 넣어야 실제 접속 IP 가 앱에 간다.
+{$SITE_ADDRESS} {
+	reverse_proxy app:3000 {
+		# 대화 응답은 ndjson 으로 조금씩 온다. 모아 두지 않고 바로 흘린다.
+		flush_interval -1
+	}
+}

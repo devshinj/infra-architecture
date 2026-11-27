@@ -5,12 +5,11 @@ import { db } from "@/db/client";
 import { diagramVersions } from "@/db/schema";
 import { emptyState, type DiagramState } from "@/domain/types";
 import { BUSY_MESSAGE } from "@/server/chat/pipeline";
-import { withDiagramLock } from "@/server/chat/lock";
 import { saveFieldsFor } from "@/server/fields";
 import { NotFoundError, ValidationError } from "@/server/projects";
 import { createVersion, getLatestState } from "@/server/versions";
 
-import { makeOwnedDiagram } from "./helpers";
+import { holdDiagramLock, makeOwnedDiagram } from "./helpers";
 
 async function setup() {
   const ids = await makeOwnedDiagram();
@@ -86,13 +85,9 @@ test("save on a removed target is rejected", async () => {
 
 test("save while a chat turn holds the lock returns busy", async () => {
   const ids = await setup();
-  let release!: () => void;
-  const gate = new Promise<void>((r) => (release = r));
-  const held = withDiagramLock(ids.diagramId, () => gate);
-  await new Promise((r) => setTimeout(r, 200));
+  const lock = await holdDiagramLock(ids.diagramId);
   await expect(save(ids, { targetId: "was-1", values: { ram: "8GB" } })).rejects.toThrow(BUSY_MESSAGE);
-  release();
-  await held;
+  await lock.release();
   expect((await save(ids, { targetId: "was-1", values: { ram: "8GB" } })).number).toBe(2);
 });
 

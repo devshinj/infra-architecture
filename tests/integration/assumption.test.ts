@@ -5,13 +5,12 @@ import type { ChatEvent } from "@/server/chat/events";
 import { runChatTurn } from "@/server/chat/pipeline";
 import { confirmAssumptionFor } from "@/server/assumptions";
 import { BUSY_MESSAGE } from "@/server/chat/busy";
-import { withDiagramLock } from "@/server/chat/lock";
 import type { ClefClient } from "@/server/llm/clef";
 import type { QwenClient } from "@/server/llm/qwen";
 import { NotFoundError, ValidationError } from "@/server/projects";
 import { createVersion, getLatestState } from "@/server/versions";
 
-import { makeOwnedDiagram } from "./helpers";
+import { holdDiagramLock, makeOwnedDiagram } from "./helpers";
 import { db } from "@/db/client";
 import { diagramVersions } from "@/db/schema";
 import { eq } from "drizzle-orm";
@@ -71,13 +70,9 @@ test("confirmAssumptionFor validates input and ownership", async () => {
 test("confirming while a chat turn holds the lock returns busy and saves nothing", async () => {
   const ids = await makeOwnedDiagram();
   await createVersion(ids.diagramId, emptyState(), { source: "import" });
-  let release!: () => void;
-  const gate = new Promise<void>((r) => (release = r));
-  const held = withDiagramLock(ids.diagramId, () => gate);
-  await new Promise((r) => setTimeout(r, 200));
+  const lock = await holdDiagramLock(ids.diagramId);
   await expect(confirmAssumptionFor(ids.userId, ids.diagramId, "environment", "사내 IDC")).rejects.toThrow(BUSY_MESSAGE);
   expect((await getLatestState(ids.diagramId))?.number).toBe(1);
-  release();
-  await held;
+  await lock.release();
   expect((await confirmAssumptionFor(ids.userId, ids.diagramId, "environment", "사내 IDC")).number).toBe(2);
 });

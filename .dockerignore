@@ -1,0 +1,21 @@
+# 이미지 빌드에 보내지 않는 것. 비밀값(.env)과 로컬 산출물은 빼고, 소스·테스트는 둔다
+# (next build 의 타입 검사가 playwright.config.ts → tests/, scripts/ → docs/ 의 JSON 을 따라간다).
+.git
+**/node_modules
+.next
+.next-*
+**/.env
+**/.env.*
+!.env.example
+!deploy/.env.example
+deploy/backups
+test-results
+playwright-report
+coverage
+.claude
+.agents
+.serena
+.omo
+.superpowers
+.impeccable
+*.log

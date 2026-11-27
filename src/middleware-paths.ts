@@ -1,5 +1,6 @@
 // /api/mcp 는 로그인 세션 대신 라우트가 직접 키(Authorization: Bearer)를 확인한다.
-const PUBLIC = [/^\/login$/, /^\/signup$/, /^\/reset(\/.*)?$/, /^\/api\/auth(\/.*)?$/, /^\/api\/mcp$/];
+// /api/health 는 컨테이너·프록시 헬스체크용이라 로그인 없이 연다(DB 가 닿는지만 알려 준다).
+const PUBLIC = [/^\/login$/, /^\/signup$/, /^\/reset(\/.*)?$/, /^\/api\/auth(\/.*)?$/, /^\/api\/mcp$/, /^\/api\/health$/];
 
 export function isPublicPath(pathname: string): boolean {
   return PUBLIC.some((re) => re.test(pathname));

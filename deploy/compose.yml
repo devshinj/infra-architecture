@@ -1,0 +1,109 @@
+# 운영 배포. 이 폴더에서 실행한다: cd deploy && ./deploy.sh  (절차는 docs/deploy.md)
+# 비밀값은 이 폴더의 .env(.env.example 을 복사해 채운다). compose 가 ${...} 자리와 앱 환경변수로 함께 읽는다.
+# 저장소 맨 위 docker-compose.yml 은 개발용이다.
+name: infrasketch
+
+x-db-env: &db-env
+  # 비밀번호는 주소에 그대로 들어간다. 영문·숫자만 쓴다(openssl rand -hex 24).
+  DATABASE_URL: postgres://infrasketch:${POSTGRES_PASSWORD:?deploy/.env 에 POSTGRES_PASSWORD 를 넣어 주세요}@db:5432/infrasketch
+
+services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: infrasketch
+      POSTGRES_USER: infrasketch
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?deploy/.env 에 POSTGRES_PASSWORD 를 넣어 주세요}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    # 포트를 밖으로 열지 않는다. 앱·백업·도구만 compose 망 안에서 db:5432 로 붙는다.
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U infrasketch -d infrasketch"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  app:
+    build:
+      context: ..
+      target: runner
+    image: infrasketch-app:latest
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      <<: *db-env
+      # 로그인 이동 주소의 기준. 없으면 Auth.js 가 컨테이너 안 주소(http://0.0.0.0:3000)로 이동시킨다.
+      AUTH_URL: ${APP_URL:?deploy/.env 에 APP_URL 을 넣어 주세요}
+      # Caddy 한 겹. Caddy 는 들어온 x-forwarded-for 를 버리고 접속한 주소로 새로 쓴다.
+      TRUSTED_PROXY_HOPS: ${TRUSTED_PROXY_HOPS:-1}
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/health').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    ports:
+      - "${HTTP_PORT:-80}:80"
+      - "${HTTPS_PORT:-443}:443"
+      - "${HTTPS_PORT:-443}:443/udp"
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS:?deploy/.env 에 SITE_ADDRESS 를 넣어 주세요}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - app
+
+  backup:
+    image: postgres:16
+    restart: unless-stopped
+    entrypoint: ["sh", "/backup.sh"]
+    environment:
+      PGHOST: db
+      PGUSER: infrasketch
+      PGPASSWORD: ${POSTGRES_PASSWORD:?deploy/.env 에 POSTGRES_PASSWORD 를 넣어 주세요}
+      PGDATABASE: infrasketch
+      BACKUP_AT: ${BACKUP_AT:-03:00}
+      BACKUP_KEEP_DAYS: ${BACKUP_KEEP_DAYS:-7}
+      TZ: ${TZ:-Asia/Seoul}
+    volumes:
+      - ./backup.sh:/backup.sh:ro
+      - ${BACKUP_DIR:-./backups}:/backups
+    depends_on:
+      db:
+        condition: service_healthy
+    # 26시간 안의 백업 파일이 없으면 unhealthy(docker compose ps 로 보인다).
+    healthcheck:
+      test: ["CMD-SHELL", "find /backups -maxdepth 1 -name 'infrasketch-*.dump' -mmin -1560 | grep -q ."]
+      interval: 5m
+      timeout: 10s
+      retries: 1
+      start_period: 10m
+
+  # 마이그레이션·일회성 스크립트. 늘 떠 있지 않고 docker compose run --rm tools [명령] 으로만 쓴다.
+  tools:
+    build:
+      context: ..
+      target: tools
+    image: infrasketch-tools:latest
+    profiles: ["tools"]
+    env_file: .env
+    environment:
+      <<: *db-env
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  db_data:
+  caddy_data:
+  caddy_config:

@@ -51,6 +51,22 @@ describe("auth", () => {
     expect(await verifyCredentials("jae", "newpass12")).not.toBeNull();
   });
 
+  test("운영에서 SMTP 가 없으면 링크를 로그에 찍지 않는다(RESET_LINK_LOG 로 켠 때만)", async () => {
+    const info = vi.spyOn(console, "info").mockImplementation(() => {});
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    await signup({ username: "jae", password: "password1", email: "a@b.co" });
+    vi.stubEnv("NODE_ENV", "production");
+    try {
+      await requestPasswordReset("a@b.co");
+      expect(info).not.toHaveBeenCalled();
+      expect(error).toHaveBeenCalledTimes(1);
+      expect(JSON.stringify(error.mock.calls)).not.toContain("/reset/");
+      expect(JSON.stringify(error.mock.calls)).toContain("RESET_LINK_LOG");
+    } finally {
+      vi.unstubAllEnvs();
+    }
+  });
+
   test("unknown email does not throw and sends nothing", async () => {
     const spy = vi.spyOn(console, "info").mockImplementation(() => {});
     await requestPasswordReset("nobody@x.co");
@@ -60,6 +76,25 @@ describe("auth", () => {
   test("unknown token and too-short new password are rejected", async () => {
     expect((await resetPassword("nope", "newpass12")).ok).toBe(false);
     expect(await isResetTokenUsable("nope")).toBe(false);
+  });
+});
+
+describe("reset link log opt-in", () => {
+  test("RESET_LINK_LOG 를 켜면 운영에서도 링크를 찍는다", async () => {
+    vi.resetModules();
+    vi.doMock("@/env", async (orig) => ({ env: { ...(await orig<typeof import("@/env")>()).env, RESET_LINK_LOG: true } }));
+    const info = vi.spyOn(console, "info").mockImplementation(() => {});
+    const { signup: su } = await import("@/server/auth/signup");
+    const { requestPasswordReset: req } = await import("@/server/auth/reset");
+    await su({ username: "jae", password: "password1", email: "a@b.co" });
+    vi.stubEnv("NODE_ENV", "production");
+    try {
+      await req("a@b.co");
+      expect(String(info.mock.calls[0][1])).toContain("/reset/");
+    } finally {
+      vi.unstubAllEnvs();
+      vi.doUnmock("@/env");
+    }
   });
 });
 

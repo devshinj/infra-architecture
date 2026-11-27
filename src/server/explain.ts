@@ -19,6 +19,7 @@ import {
 import type { DiagramState } from "@/domain/types";
 import { defaultChatDeps } from "@/server/chat/deps";
 import { buildExplainMessages } from "@/server/chat/prompt";
+import { BACKGROUND_WAIT_MS, withBackgroundSlot } from "@/server/chat/userTurns";
 import { addAiTerm, ensureSeeded, findTerm, type AiTermInput, type GlossaryRow } from "@/server/glossary";
 import { EXPLAIN_SCORE_QUESTION, scoreValue, type ClefClient } from "@/server/llm/clef";
 import type { ChatMessage, QwenClient } from "@/server/llm/qwen";
@@ -28,6 +29,8 @@ import { getOwnedDiagram, ValidationError } from "@/server/projects";
 import { getLatestState } from "@/server/versions";
 
 export const EXPLAIN_FAIL_MESSAGE = "설명을 만들지 못했어요. 다시 시도해 주세요.";
+/** 이 계정의 설명·흐름 제안이 이미 여러 개 돌고 있어, 기다려도 자리가 나지 않았다. */
+export const EXPLAIN_BUSY_MESSAGE = "설명을 여러 개 만들고 있어요. 잠시 후 다시 시도해 주세요.";
 const NOT_FOUND_MESSAGE = "대상을 찾을 수 없어요";
 const INSTRUCTION_MAX = 200;
 // 길이 초과와 Clef 점수를 합쳐 다시 쓰는 최대 횟수.
@@ -78,6 +81,8 @@ export interface ExplainDeps {
   clef: ClefClient;
   repo: ExplainRepo;
   now: () => Date;
+  /** 배경 작업 자리를 기다려 주는 시간(ms). */
+  slotWaitMs: number;
 }
 
 const dbRepo: ExplainRepo = {
@@ -122,6 +127,7 @@ function resolveDeps(input: DepsInput): ExplainDeps {
     clef: input.clef ?? ai!.clef,
     repo: { ...dbRepo, ...input.repo },
     now: input.now ?? (() => new Date()),
+    slotWaitMs: input.slotWaitMs ?? BACKGROUND_WAIT_MS,
   };
 }
 
@@ -408,50 +414,57 @@ export async function explainTarget(
   };
   const source = row ? "glossary" : "ai";
 
-  // 첫 생성: 형식이 틀리면 1회 다시 요청한다.
-  const firstMessages = buildExplainMessages({ ...base, previous: instruction ? draftOf(fresh?.data) : undefined });
-  let draft: Draft | null = null;
-  for (let attempt = 0; attempt < 2 && !draft; attempt++) {
-    const out = await complete(qwen, firstMessages, opts.signal);
-    if (out === null) return fail();
-    draft = parseDraft(out, targetKind, needDefinition);
-  }
-  if (!draft) return fail();
-
-  // 품질: 길이 초과가 있으면 그것만, 없으면 Clef 점수를 본다. 최대 2회 다시 쓴다.
-  for (let round = 0; round < MAX_REWRITES; round++) {
-    const current = assemble(draft, row, source);
-    const problems = lengthProblems(current);
-    if (!problems.length) {
-      const score = await easeScore(deps.clef, current, opts.signal);
-      if (score !== null && score > SCORE_MAX) {
-        problems.push(`비전공자가 읽기에 어렵거나 장황하다(난이도 ${score.toFixed(1)}/2). 전문용어를 풀어 쓰고 문장을 더 짧고 쉽게 쓸 것`);
-      }
+  // 모델을 부르는 구간은 계정의 배경 작업 자리 안에서 돈다 — 한 계정이 설명 요청을 몰아 보내 모델을 독차지하지 못하게.
+  // 캐시로 답하는 요청(위)은 자리를 쓰지 않는다.
+  const generate = async (): Promise<ExplainResult> => {
+    // 첫 생성: 형식이 틀리면 1회 다시 요청한다.
+    const firstMessages = buildExplainMessages({ ...base, previous: instruction ? draftOf(fresh?.data) : undefined });
+    let draft: Draft | null = null;
+    for (let attempt = 0; attempt < 2 && !draft; attempt++) {
+      const out = await complete(qwen, firstMessages, opts.signal);
+      if (out === null) return fail();
+      draft = parseDraft(out, targetKind, needDefinition);
     }
-    if (!problems.length) break;
-    const out = await complete(qwen, buildExplainMessages({ ...base, previous: draft, problems }), opts.signal);
-    const next = out === null ? null : parseDraft(out, targetKind, needDefinition);
-    // 다시 쓰기가 실패하면 마지막 올바른 결과를 쓴다.
-    if (!next) break;
-    draft = next;
-  }
+    if (!draft) return fail();
 
-  let finalRow = row;
-  if (termed && !row && candidate && candidate.origin !== "sub") {
-    // AI 정의는 미검수로 사전에 넣는다. 같은 용어가 이미 있으면 그 항목을 쓴다.
-    // sub(영역은 이름)에서 온 용어는 용어 이름이 아닐 수 있어 이 설명에만 쓰고 사전에 넣지 않는다.
-    const node = state.nodes[targetId];
-    finalRow = await repo.addAiTerm(userId, {
-      term: candidate.display,
-      category: node ? kindKo(node.kind) : "영역",
-      definition: (draft as NodeDraft).definition ?? "",
-      why: "",
-      compare: "",
-    });
-  }
-  const explanation = assemble(draft, finalRow, source);
-  await repo.saveExplanation({ diagramId, targetKind, targetId, signature, data: explanation, updatedAt: deps.now() });
-  return { ok: true, explanation, signature };
+    // 품질: 길이 초과가 있으면 그것만, 없으면 Clef 점수를 본다. 최대 2회 다시 쓴다.
+    for (let round = 0; round < MAX_REWRITES; round++) {
+      const current = assemble(draft, row, source);
+      const problems = lengthProblems(current);
+      if (!problems.length) {
+        const score = await easeScore(deps.clef, current, opts.signal);
+        if (score !== null && score > SCORE_MAX) {
+          problems.push(`비전공자가 읽기에 어렵거나 장황하다(난이도 ${score.toFixed(1)}/2). 전문용어를 풀어 쓰고 문장을 더 짧고 쉽게 쓸 것`);
+        }
+      }
+      if (!problems.length) break;
+      const out = await complete(qwen, buildExplainMessages({ ...base, previous: draft, problems }), opts.signal);
+      const next = out === null ? null : parseDraft(out, targetKind, needDefinition);
+      // 다시 쓰기가 실패하면 마지막 올바른 결과를 쓴다.
+      if (!next) break;
+      draft = next;
+    }
+
+    let finalRow = row;
+    if (termed && !row && candidate && candidate.origin !== "sub") {
+      // AI 정의는 미검수로 사전에 넣는다. 같은 용어가 이미 있으면 그 항목을 쓴다.
+      // sub(영역은 이름)에서 온 용어는 용어 이름이 아닐 수 있어 이 설명에만 쓰고 사전에 넣지 않는다.
+      const node = state.nodes[targetId];
+      finalRow = await repo.addAiTerm(userId, {
+        term: candidate.display,
+        category: node ? kindKo(node.kind) : "영역",
+        definition: (draft as NodeDraft).definition ?? "",
+        why: "",
+        compare: "",
+      });
+    }
+    const explanation = assemble(draft, finalRow, source);
+    await repo.saveExplanation({ diagramId, targetKind, targetId, signature, data: explanation, updatedAt: deps.now() });
+    return { ok: true, explanation, signature };
+  };
+  const generated = await withBackgroundSlot(userId, generate, { waitMs: deps.slotWaitMs, signal: opts.signal });
+  if (generated.ok) return generated.value;
+  return row ? { ok: false, message: EXPLAIN_BUSY_MESSAGE, partial: glossaryPart(row, "glossary") } : { ok: false, message: EXPLAIN_BUSY_MESSAGE };
 }
 
 /**

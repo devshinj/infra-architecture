@@ -1,2 +1,6 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+# 컨테이너 안에서 도는 파일은 Windows 에서 받아도 LF 로 둔다(CRLF 면 sh 가 읽지 못한다).
+*.sh text eol=lf
+Dockerfile text eol=lf
+Caddyfile text eol=lf

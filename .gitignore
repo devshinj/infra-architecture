@@ -29,3 +29,6 @@ graphify-out/*
 # skills CLI 로 설치한 외부 스킬 설치본. skills-lock.json 으로 다시 설치한다.
 .agents/
 .claude/skills/design-taste-frontend
+
+# 운영 배포(deploy/): 비밀값은 deploy/.env(위 .env 규칙), 백업 파일은 올리지 않는다.
+deploy/backups/
