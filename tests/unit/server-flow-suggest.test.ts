@@ -5,6 +5,7 @@ import { emptyState, type DiagramState } from "@/domain/types";
 import { buildFlowSuggestMessages, FLOW_SUGGEST_PROMPT } from "@/server/chat/prompt";
 import { FLOW_SUGGEST_BUSY_MESSAGE, FLOW_SUGGEST_FAIL_MESSAGE, FLOW_SUGGEST_LIMIT_MESSAGE, suggestFlows, type FlowSuggestRepo } from "@/server/flowSuggest";
 import type { ChatMessage, QwenClient } from "@/server/llm/qwen";
+import { MAX_BACKGROUND_JOBS, withBackgroundSlot } from "@/server/chat/userTurns";
 import { FLOW_BUSY_MESSAGE } from "@/server/flows";
 import { NotFoundError } from "@/server/projects";
 
@@ -282,5 +283,24 @@ describe("buildFlowSuggestMessages", () => {
 
   test("prompt states the rules", () => {
     for (const s of ["add_flow", "3~5", "12자", "result", "origin"]) expect(FLOW_SUGGEST_PROMPT).toContain(s);
+  });
+});
+
+describe("배경 작업 한도", () => {
+  test("계정의 배경 작업 자리가 없으면 모델을 부르지 않고, 자동 제안은 다음에 다시 하게 시각을 되돌린다", async () => {
+    let finish!: () => void;
+    const gate = new Promise<void>((r) => (finish = r));
+    const jobs = Array.from({ length: MAX_BACKGROUND_JOBS }, () => withBackgroundSlot("u", () => gate));
+    try {
+      const { repo, store } = fakeRepo();
+      const { qwen, calls } = fakeQwen(flowLine("a"));
+      expect(await suggestFlows("u", "d", { auto: true }, { ...deps(repo, qwen), slotWaitMs: 0 })).toEqual({ ok: false, message: FLOW_SUGGEST_BUSY_MESSAGE });
+      expect(calls).toHaveLength(0);
+      expect(store.suggestedAt).toBeNull();
+      expect(repo.applyFlowOps).not.toHaveBeenCalled();
+    } finally {
+      finish();
+      await Promise.all(jobs);
+    }
   });
 });

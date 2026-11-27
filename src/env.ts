@@ -14,6 +14,8 @@ const envSchema = z.object({
   CLEF_API_KEY: z.string().optional(),
   CLEF_API_URL: z.string().default("http://192.168.102.105:30000"),
   CLEF_MAX_CONCURRENCY: z.coerce.number().int().positive().default(2),
+  /** 구성도 잠금 전용 DB 연결 수의 천장. 도는 중인 대화 차례마다 하나씩 쥔다. 공용 풀(10)과 합쳐 DB 의 max_connections 안이어야 한다. */
+  DB_LOCK_POOL_MAX: z.coerce.number().int().positive().default(20),
   APP_URL: z.string().default("http://localhost:3000"),
   /** 앞단 프록시 수. 주면 x-forwarded-for 를 오른쪽에서 그만큼 세고(0 이면 헤더를 믿지 않는다), 없으면 첫 값을 믿는다. */
   TRUSTED_PROXY_HOPS: z.coerce.number().int().min(0).optional(),

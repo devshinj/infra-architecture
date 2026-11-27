@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 
-import { MAX_USER_TURNS, withUserTurnSlot } from "@/server/chat/userTurns";
+import { MAX_BACKGROUND_JOBS, MAX_USER_TURNS, withBackgroundSlot, withUserTurnSlot } from "@/server/chat/userTurns";
 
 /** 밖에서 끝낼 수 있는 일 하나. */
 function pending() {
@@ -39,4 +39,43 @@ test("a turn that throws gives its slot back", async () => {
     ).rejects.toThrow("boom");
   }
   expect(await withUserTurnSlot("u3", async () => 1)).toEqual({ ok: true, value: 1 });
+});
+
+test("background work has its own per-user limit and does not use the turn slots", async () => {
+  const held = Array.from({ length: MAX_BACKGROUND_JOBS }, pending);
+  const running = held.map((h) => withBackgroundSlot("b1", h.run));
+  // 배경 자리가 다 찼어도 대화 차례는 돈다.
+  expect(await withUserTurnSlot("b1", async () => "turn")).toEqual({ ok: true, value: "turn" });
+  let ran = false;
+  expect(
+    await withBackgroundSlot("b1", async () => {
+      ran = true;
+    }),
+  ).toEqual({ ok: false });
+  expect(ran).toBe(false);
+  expect(await withBackgroundSlot("b2", async () => "other user")).toEqual({ ok: true, value: "other user" });
+  held.forEach((h) => h.finish());
+  await Promise.all(running);
+});
+
+test("background work waits for a slot up to waitMs, then gives up", async () => {
+  const held = Array.from({ length: MAX_BACKGROUND_JOBS }, pending);
+  const running = held.map((h) => withBackgroundSlot("b3", h.run));
+  // 기다리는 동안 자리가 나면 돈다.
+  const waiting = withBackgroundSlot("b3", async () => "after wait", { waitMs: 2000 });
+  held[0]!.finish();
+  expect(await waiting).toEqual({ ok: true, value: "after wait" });
+  // 자리가 안 나면 기다린 뒤 포기한다.
+  const filler = pending();
+  const fill = withBackgroundSlot("b3", filler.run);
+  const started = Date.now();
+  expect(await withBackgroundSlot("b3", async () => "never", { waitMs: 120 })).toEqual({ ok: false });
+  expect(Date.now() - started).toBeGreaterThanOrEqual(100);
+  // 기다리는 중에 요청이 끊기면 바로 포기한다.
+  const ctrl = new AbortController();
+  const aborted = withBackgroundSlot("b3", async () => "never", { waitMs: 60_000, signal: ctrl.signal });
+  ctrl.abort();
+  expect(await aborted).toEqual({ ok: false });
+  [filler, ...held.slice(1)].forEach((h) => h.finish());
+  await Promise.all([fill, ...running]);
 });
