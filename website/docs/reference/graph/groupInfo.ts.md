@@ -1,6 +1,6 @@
 ---
 title: "groupInfo.ts"
-sidebar_position: 111
+sidebar_position: 127
 ---
 # groupInfo.ts
 
@@ -24,9 +24,9 @@ sidebar_position: 111
 - [domain/explain.ts](domain-explain.ts.md) (5 shared connections)
 - [prompt.ts](prompt.ts.md) (5 shared connections)
 - [NodeInfo.tsx](NodeInfo.tsx.md) (5 shared connections)
-- [diff.ts](diff.ts.md) (1 shared connections)
+- [flowSuggest.ts](flowSuggest.ts.md) (1 shared connections)
 - [domain/types.ts](domain-types.ts.md) (1 shared connections)
-- [Canvas.tsx](Canvas.tsx.md) (1 shared connections)
+- [Flow](Flow.md) (1 shared connections)
 
 ## Source Files
 

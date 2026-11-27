@@ -17,6 +17,7 @@ InfraSketch 는 Next.js 15 (App Router) 하나로 화면과 서버를 함께 띄
 | `src/domain` | 구성도 규칙. 변경 명령 스키마(`commands.ts`), 명령 적용(`apply.ts`), 노드 종류 목록(`catalog.ts`), 빠진 정보 계산(`missing.ts`), 경고 규칙(`warnings.ts`), 흐름 타입·끊김 계산(`flows.ts`), 망 경계 판정(`boundary.ts`), 망 지식 계산(`network.ts`: 망 종류·등급·두 종류 사이에 보통 필요한 연결 방식)과 기본 망 종류 시드(`network-seed.ts`), 통신 길 판정과 망연계 예상 경고(`networkRules.ts`), 망연계 추정의 기록·되돌리기·흐름 단계 나누기(`linkGuess.ts`), 관리형 서비스 판정(`managed.ts`: `attrs.managed`·`multi_az` 의 예/아니오 읽기, 관리형이 묻지 않는 서버 칸), 샘플 구성도(`samples/`: 손으로 쓴 변경 명령 목록 8종과 `buildSample`), 구성 패턴(`patterns.ts`), 설명 모양·길이 상한·서명(`explain.ts`), 용어 사전 시드와 화면용 타입(`glossary-seed.ts`, `glossary-types.ts`), 학습 대본(`guides/`: 대본 타입 `types.ts`, 주제 여덟(대형 쇼핑몰·메신저·배달앱·동영상 스트리밍·영상관제·영상 관리시스템(VMS)·SNS 로그인 연동·외부 연계 중계)의 환경별 대본, 단계 판정 `judge.ts`, 단계 적용 `apply.ts`, 화면용 진행 상태 `view.ts`·`progress.ts`, 대본 작성 도우미 `authoring.ts`) |
 | `src/server` | 서버 로직. 대화 파이프라인·노드 질문·질문 세션·경고 점검(`chat/`), AI 연동(`llm/`), 설명 생성(`explain.ts`), 용어 사전(`glossary.ts`), 체크리스트 폼 저장(`fields.ts`), 경고 무시(`ignore.ts`), 흐름 저장소(`flows.ts`)와 흐름 제안(`flowSuggest.ts`), 망 지식 저장소(`network.ts`: 종류·규칙 편집, 처음 쓸 때 시드 채우기), 망 종류 확정(`zoneType.ts`), 망연계 맞아요·아니에요(`linkGuess.ts`), 샘플 불러오기(`samples.ts`: 샘플을 새 버전으로 넣고 흐름을 같은 트랜잭션에서 확인된 사용자 흐름으로 넣음. 옛 스파이크 변환 `convertSpikeScenario` 는 e2e 가짜 AI·fixture 용으로만 남음), 프로젝트·버전 저장(프로젝트와 첫 구성도를 함께 만들고, 이름 중복을 막고, 홈에서 이어 갈 최근 구성도를 고름), 인증(가입·재설정·로그인이 함께 쓰는 입력 규칙과 문구는 `auth/rules.ts`, 로그인·재설정·가입 횟수 제한은 `auth/rateLimit.ts`: 같은 아이디 15분 실패 10번·같은 IP 15분 실패 30번·재설정 같은 주소 1시간 3번·같은 IP 1시간에 만든 계정 5개(만들어진 계정만 세고, IP 를 모르면 세지 않음. 막힌 IP 에는 아이디·메일이 쓰이는지도 알려 주지 않음), IP 는 `x-forwarded-for` 첫 값. 재설정 메일은 응답 뒤 `after()` 로 보내 응답 시간으로 가입 여부가 드러나지 않게 함. 비밀번호를 재설정하면 `users.session_version` 이 오르고 `src/auth.ts` 의 jwt 콜백이 서버에서 토큰 번호와 맞춰 보아(`auth/session.ts`) 다른 기기의 로그인을 끊으며, 같은 계정의 남은 재설정 링크도 못 쓰게 됨. 미들웨어(Edge)는 DB 를 보지 않으므로 끊긴 로그인은 화면·API 의 `auth()` 가 막음). 학습 모드(`guide/`: 진행 상태 저장소와 학습 중 잠금 `runs.ts`, 학습 시작·그만두기·되돌린 뒤 단계 맞추기 `start.ts`, 학습 차례 `turn.ts`, Clef 단계 판정 `judge.ts`), 계정당 동시 차례 제한(`chat/userTurns.ts`), Claude Code 연동(`mcp/`: 도구 10개를 등록하는 `server.ts`, 읽기 `read.ts`, 쓰기 `apply.ts`, 변경 설명 `explain.ts`), 키 저장소(`mcpKeys.ts`), 그리기 규칙 공용 모듈(`drawing/rules.ts`), 차례 끝 정리 공용 함수(`chat/settle.ts`) |
 | `src/db` | Drizzle 스키마와 마이그레이션 |
+| `deploy` | 운영 배포. Docker compose(DB·앱·Caddy·매일 백업·마이그레이션 도구), `deploy.sh`·`rollback.sh`·`backup.sh`. 이미지는 저장소 맨 위 `Dockerfile`(Docker 빌드 때만 Next standalone). 절차는 `docs/deploy.md` |
 | `src/styles` | 색·간격 토큰(`tokens.css`)과 전역 스타일(`globals.css`, 맨 위에 Hallmark 기록). 테마는 Hallmark Vantage(steel)로, 거의 검은 남색 바탕 한 가지 위에 사이드바·패널·캔버스를 가는 선으로 나누고 그림자는 쓰지 않습니다. 캔버스 위에 떠 있는 판(사이드바·오른쪽 패널·제목 판)은 반투명 칠(`--glass-bg`, 55%)과 뒤 흐림(`--glass-blur`)을 쓰고, 브라우저가 흐림을 못 쓰거나 투명도 줄이기 설정이면 불투명 칠로 돌아갑니다. 강조색은 라임 하나뿐이며 주 동작·지금 고른 것·흐름 표시에만 칠합니다(`--accent-fill`, `--on-accent`). 글꼴은 SUIT 하나(`--font-suit` 변수)이고, 구성도 캔버스는 색만 테마를 따르고 크기·간격은 배치 계산과 맞물려 있어 바꾸지 않습니다, 빨간 글자는 대비를 맞춘 `--state-missing-text`, 입력칸 테두리는 `--line-input` 을 씁니다. 화면의 모서리는 구성도에서 와서 조작 부품은 `--radius-control`(노드와 같은 6px), 판은 `--radius-surface`(영역과 같은 8px), 알약은 탭·상태 배지만 씁니다. 화면 틀 글자는 12px 아래로 내려가지 않습니다(캔버스 안 글자는 배치 상수와 묶여 예외). 이 디자인 체계(“살아 있는 설계도”)와 제품 사실은 저장소 맨 위 `DESIGN.md`·`PRODUCT.md` 에 적혀 있습니다 |
 
 `domain` 은 서버와 브라우저가 함께 쓰는 순수 로직이라 DB 나 네트워크에 의존하지 않습니다. 예를 들어 경고 규칙(`evaluateRules`)과 설명 서명(`signatureOf`)은 서버와 화면이 같은 함수를 씁니다.
@@ -280,6 +281,24 @@ Qwen 요청 하나는 30초 상한이고, 실패하면 "설명을 만들지 못�
 - 경고 문구가 늦으면 정해진 문구를 씁니다.
 - 한 차례에는 시간 제한이 있고, 넘으면 중단 상태로 저장합니다.
 
+### 자원 한도
+
+한 계정이나 한 요청이 서버 전체를 묶지 않게 둔 천장입니다.
+
+- **구성도 잠금 연결**(`server/chat/lock.ts`): 잠금은 Postgres 세션 advisory lock 이라 쥐는 동안 연결 하나를 씁니다. 연결은 잠금 전용 풀(`max: 1` 클라이언트를 돌려 씀, 천장 `DB_LOCK_POOL_MAX` 기본 20)에서 빌리고, 다 쓰이면 연결을 더 열지 않고 "진행 중"(409)으로 돌려줍니다. 빌린 연결이 끊겨 있으면 버리고 새로 엽니다. postgres.js 의 `sql.reserve()` 는 빌린 연결이 끊기면 처리되지 않는 예외로 멈춰서 쓰지 않습니다.
+- **배경 작업**(`server/chat/userTurns.ts` 의 `withBackgroundSlot`): 설명 생성·흐름 제안은 대화 차례(계정당 2개)와 따로 계정당 3개까지 동시에 Qwen 을 부릅니다. 자리가 없으면 15초까지 기다리고, 그래도 없으면 "여러 개를 만들고 있어요" 실패로 돌아갑니다. 캐시된 설명은 자리를 쓰지 않습니다.
+- **명령·상태 크기**(`domain/commands.ts` 의 `TEXT_LIMITS`, `domain/apply.ts` 의 `STATE_LIMITS`): 이름 200자, 부제 300자, 속성 값 500자·50개, 가정 값 500자, 흐름 단계 설명 200자. 구성도는 영역 200개·노드 500개·연결 1500개까지이고, 넘으면 그 명령을 거절합니다.
+- **MCP 요청**(`server/mcp/body.ts`·`rate.ts`): 본문 1MB 를 넘으면 413, 키 확인 뒤 계정당 1분 120번을 넘으면 429 와 `Retry-After`.
+- **로그인·가입·재설정 횟수 제한**(`server/auth/rateLimit.ts`): 기록을 먼저 넣고 센 뒤 한도를 넘으면 자기 기록을 지웁니다. 동시에 몰려도 한도를 넘지 못합니다. 접속 IP 는 `TRUSTED_PROXY_HOPS` 를 주면 `x-forwarded-for` 의 오른쪽에서 그만큼 센 값이고, 0 이면 IP 한도를 세지 않습니다.
+
+### 운영 안전장치
+
+- **시작 검사**(`src/instrumentation.ts`): 운영으로 켤 때 `AUTH_SECRET` 32자 미만이나 `APP_URL` 이 없으면 이유를 적고 종료합니다. 빌드 중에는 검사하지 않습니다.
+- **보안 헤더**(`next.config.ts`): 모든 응답에 nosniff, Referrer-Policy, 프레임 금지(X-Frame-Options·CSP frame-ancestors), Permissions-Policy 를 붙이고 `X-Powered-By` 를 뺍니다.
+- **헬스체크**(`api/health`, `server/health.ts`): 로그인 없이 DB 에 `select 1` 을 3초 안에 하면 200, 아니면 503. AI 서버는 보지 않습니다.
+- **오류 화면**: 없는 주소는 루트 `not-found`, 남의·지운 구성도는 구성도 경로의 `not-found`(셸 안), 그리다 난 오류는 `(app)/error`·`error`·`global-error` 가 공용 `ui/StatusScreen.tsx` 로 그립니다. 오류 화면은 오류 내용 대신 서버 로그와 맞춰 볼 오류 번호(digest)만 보입니다.
+- **DB 가 끊기면** 세션 확인(`session_version` 조회)이 실패해 로그인 화면이 보입니다. 세션 쿠키는 남아 DB 가 돌아오면 그대로 이어집니다.
+
 ## Claude Code 연동 (MCP)
 
 Claude Code 에서 내 구성도를 읽고 고치게 하는 길입니다. 앱이 `/api/mcp` 에 MCP 서버(Streamable HTTP)를 열어 두고, 이 길은 Qwen·Clef 를 부르지 않습니다. 서버는 상태를 기억하지 않아서(stateless), 요청마다 키로 계정을 확인하고 그 계정만 보는 서버를 새로 만들어 JSON 으로 답합니다. GET·DELETE 는 405 입니다. 로그인 세션 대신 라우트가 직접 키를 확인하므로 `/api/mcp` 는 로그인 검사에서 빼 둡니다(`middleware-paths.ts`).
@@ -311,6 +330,7 @@ Claude Code 에서 내 구성도를 읽고 고치게 하는 길입니다. 앱이
 - Claude Code 는 `Authorization: Bearer <키>` 를 보냅니다. 라우트가 해시로 계정을 찾고, 찾으면 마지막 사용 시각을 갱신합니다. 키 모양이 아니면 DB 를 보지 않습니다.
 - **키가 없으면 401**, **키가 틀렸거나 지워졌으면 403** 과 한국어 안내(“새 키를 만들어 다시 등록해 주세요”)를 돌려줍니다. 틀린 키에 401 을 주면 Claude Code(SDK)가 OAuth 를 찾아 나서서 안내가 보이지 않기 때문에 403 으로 나눴습니다. 키 확인 중 DB 오류가 나도 JSON 500 으로 답합니다.
 - 키는 화면(`/claude-code`)에서 만들고 지웁니다. 지우면 그 키로는 바로 403 이 됩니다.
+- 비밀번호를 재설정하면 그 계정의 키를 모두 지웁니다(남의 이메일로 먼저 가입해 만들어 둔 키가 주인의 재설정 뒤에도 살아 있지 않게). 로그인 화면이 키를 다시 만들라고 알립니다.
 
 ### 전부 아니면 하나도 아니게, 그리고 덮어쓰기 막기
 

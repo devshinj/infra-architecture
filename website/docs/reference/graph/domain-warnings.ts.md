@@ -1,6 +1,6 @@
 ---
 title: "domain/warnings.ts"
-sidebar_position: 52
+sidebar_position: 59
 ---
 # domain/warnings.ts
 
@@ -36,18 +36,18 @@ sidebar_position: 52
 
 ## Relationships
 
+- [missing.ts](missing.ts.md) (11 shared connections)
 - [chat/warnings.ts](chat-warnings.ts.md) (9 shared connections)
-- [missing.ts](missing.ts.md) (8 shared connections)
-- [turn.ts](turn.ts.md) (6 shared connections)
-- [domain/types.ts](domain-types.ts.md) (5 shared connections)
-- [domain/flows.ts](domain-flows.ts.md) (5 shared connections)
-- [Canvas.tsx](Canvas.tsx.md) (4 shared connections)
-- [josa.ts](josa.ts.md) (4 shared connections)
+- [networkRules.ts](networkRules.ts.md) (8 shared connections)
+- [domain/types.ts](domain-types.ts.md) (7 shared connections)
 - [NodeInfo.tsx](NodeInfo.tsx.md) (3 shared connections)
-- [Task 3: 판정 — 통신 길, 연결 방식 예상 경고, 빠진 정보](Task_3-_판정_—_통신_길,_연결_방식_예상_경고,_빠진_정보.md) (3 shared connections)
+- [domain/flows.ts](domain-flows.ts.md) (3 shared connections)
 - [useChatTurn.ts](useChatTurn.ts.md) (3 shared connections)
-- [segments.ts](segments.ts.md) (2 shared connections)
-- [diff.ts](diff.ts.md) (2 shared connections)
+- [events.ts](events.ts.md) (3 shared connections)
+- [Flow](Flow.md) (2 shared connections)
+- [Canvas.tsx](Canvas.tsx.md) (2 shared connections)
+- [read.ts](read.ts.md) (2 shared connections)
+- [flowSuggest.ts](flowSuggest.ts.md) (2 shared connections)
 
 ## Source Files
 

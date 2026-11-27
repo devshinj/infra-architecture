@@ -1,12 +1,12 @@
 ---
 title: "auth.ts"
-sidebar_position: 57
+sidebar_position: 58
 ---
 # auth.ts
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 21 nodes · cohesion 0.14
+> 23 nodes · cohesion 0.12
 
 ## Key Concepts
 
@@ -21,7 +21,9 @@ sidebar_position: 57
 - **session.ts** (3 connections) — `src/server/auth/session.ts`
 - **[...nextauth]/route.ts** (2 connections) — `src/app/api/auth/[...nextauth]/route.ts`
 - **handlers** (2 connections) — `src/auth.ts`
+- **LoginRateLimited** (2 connections) — `src/auth.ts`
 - **isPublicPath()** (2 connections) — `src/middleware-paths.ts`
+- **currentSessionVersion()** (2 connections) — `src/server/auth/password.ts`
 - **keepIfCurrent()** (2 connections) — `src/server/auth/session.ts`
 - **{ auth }** (1 connections) — `src/middleware.ts`
 - **config** (1 connections) — `src/middleware.ts`
@@ -34,18 +36,18 @@ sidebar_position: 57
 
 ## Relationships
 
-- [auth/actions.ts](auth-actions.ts.md) (5 shared connections)
-- [reset.ts](reset.ts.md) (4 shared connections)
-- [\[sessionId\]/route.ts]([sessionId]-route.ts.md) (4 shared connections)
-- [(app)/actions.ts](app-actions.ts.md) (3 shared connections)
-- [ask/route.ts](ask-route.ts.md) (2 shared connections)
+- [password.ts](password.ts.md) (5 shared connections)
+- [auth/actions.ts](auth-actions.ts.md) (4 shared connections)
+- [ask/route.ts](ask-route.ts.md) (3 shared connections)
+- [ValidationError](ValidationError.md) (2 shared connections)
+- [(app)/actions.ts](app-actions.ts.md) (2 shared connections)
 - [Shell.tsx](Shell.tsx.md) (2 shared connections)
 - [explain/route.ts](explain-route.ts.md) (1 shared connections)
-- [mcp/apply.ts](mcp-apply.ts.md) (1 shared connections)
 - [flowSuggest.ts](flowSuggest.ts.md) (1 shared connections)
 - [head/route.ts](head-route.ts.md) (1 shared connections)
+- [sessions.ts](sessions.ts.md) (1 shared connections)
+- [\[sessionId\]/route.ts]([sessionId]-route.ts.md) (1 shared connections)
 - [deps.ts](deps.ts.md) (1 shared connections)
-- [GlossaryPage.tsx](GlossaryPage.tsx.md) (1 shared connections)
 
 ## Source Files
 
@@ -54,12 +56,13 @@ sidebar_position: 57
 - `src/auth.ts`
 - `src/middleware-paths.ts`
 - `src/middleware.ts`
+- `src/server/auth/password.ts`
 - `src/server/auth/session.ts`
 - `src/types/next-auth.d.ts`
 
 ## Audit Trail
 
-- EXTRACTED: 58 (100%)
+- EXTRACTED: 60 (100%)
 - INFERRED: 0 (0%)
 - AMBIGUOUS: 0 (0%)
 

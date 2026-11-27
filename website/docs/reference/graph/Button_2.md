@@ -1,13 +1,13 @@
 ---
 title: "Button()"
-sidebar_position: 132
+sidebar_position: 152
 sidebar_label: "핵심 노드: Button()"
 ---
 # Button()
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> God node · 51 connections · `src/ui/Button.tsx`
+> God node · 53 connections · `src/ui/Button.tsx`
 
 **Community:** [Button](Button.md)
 
@@ -28,16 +28,16 @@ sidebar_label: "핵심 노드: Button()"
 - AuthSubmit() `EXTRACTED`
 - ResetRequestPage() `EXTRACTED`
 - ZoneTypePicker() `EXTRACTED`
+- ErrorScreen() `EXTRACTED`
 - HistoryPanel() `EXTRACTED`
 - GuideDone() `EXTRACTED`
 - LinkGuessPart() `EXTRACTED`
 - expandedNav() `EXTRACTED`
-- ClarifyCard() `EXTRACTED`
-- LinkButton() `EXTRACTED`
-- *…and 8 more `calls` connection(s) not listed (lowest-degree first to go)*
+- buttonClassName() `EXTRACTED`
+- *…and 9 more `calls` connection(s) not listed (lowest-degree first to go)*
 
 ### contains
-- Button.tsx `EXTRACTED`
+- [Button.tsx](Button.tsx.md) `EXTRACTED`
 
 ### imports
 - [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) `EXTRACTED`
@@ -47,7 +47,7 @@ sidebar_label: "핵심 노드: Button()"
 - [Sidebar.tsx](Sidebar.tsx.md) `EXTRACTED`
 - [Explanation.tsx](Explanation.tsx.md) `EXTRACTED`
 - [MissingChecklist.tsx](MissingChecklist.tsx.md) `EXTRACTED`
-- [SessionPicker.tsx](SessionPicker.tsx.md) `EXTRACTED`
+- SessionPicker.tsx `EXTRACTED`
 - [FlowPanel.tsx](FlowPanel.tsx.md) `EXTRACTED`
 - [Shell.tsx](Shell.tsx.md) `EXTRACTED`
 - reset/page.tsx `EXTRACTED`
@@ -55,12 +55,12 @@ sidebar_label: "핵심 노드: Button()"
 - GuidePicker.tsx `EXTRACTED`
 - dialogs.tsx `EXTRACTED`
 - ZoneTypePicker.tsx `EXTRACTED`
-- [GuideCard.tsx](GuideCard.tsx.md) `EXTRACTED`
-- McpKeysPage.tsx `EXTRACTED`
-- GuideDone.tsx `EXTRACTED`
+- GuideCard.tsx `EXTRACTED`
+- [McpKeysPage.tsx](McpKeysPage.tsx.md) `EXTRACTED`
+- [GuideDone.tsx](GuideDone.tsx.md) `EXTRACTED`
+- [StatusScreen.tsx](StatusScreen.tsx.md) `EXTRACTED`
 - AuthField.tsx `EXTRACTED`
-- HistoryPanel.tsx `EXTRACTED`
-- *…and 1 more `imports` connection(s) not listed (lowest-degree first to go)*
+- *…and 2 more `imports` connection(s) not listed (lowest-degree first to go)*
 
 ### references
 - Global Constraints `INFERRED`

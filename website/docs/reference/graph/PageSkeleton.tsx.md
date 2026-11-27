@@ -1,6 +1,6 @@
 ---
 title: "PageSkeleton.tsx"
-sidebar_position: 55
+sidebar_position: 62
 ---
 # PageSkeleton.tsx
 
@@ -38,7 +38,7 @@ sidebar_position: 55
 - [Shell.tsx](Shell.tsx.md) (4 shared connections)
 - [ChatPanel.tsx](ChatPanel.tsx.md) (3 shared connections)
 - [Explanation.tsx](Explanation.tsx.md) (3 shared connections)
-- [ResetPasswordForm.tsx](ResetPasswordForm.tsx.md) (2 shared connections)
+- [ref_react](ref_react.md) (2 shared connections)
 - [RightPanel.tsx](RightPanel.tsx.md) (2 shared connections)
 
 ## Source Files

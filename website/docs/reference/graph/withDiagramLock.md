@@ -1,13 +1,13 @@
 ---
 title: "withDiagramLock()"
-sidebar_position: 134
+sidebar_position: 154
 sidebar_label: "핵심 노드: withDiagramLock()"
 ---
 # withDiagramLock()
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> God node · 43 connections · `src/server/chat/lock.ts`
+> God node · 47 connections · `src/server/chat/lock.ts`
 
 **Community:** [getOwnedDiagram](getOwnedDiagram.md)
 
@@ -32,6 +32,9 @@ sidebar_label: "핵심 노드: withDiagramLock()"
 - DELETE() `EXTRACTED`
 - syncGuideAfterRestore() `EXTRACTED`
 - restoreVersionLocked() `EXTRACTED`
+- release() `EXTRACTED`
+- warnExhausted() `EXTRACTED`
+- *…and 2 more `calls` connection(s) not listed (lowest-degree first to go)*
 
 ### contains
 - lock.ts `EXTRACTED`
@@ -39,11 +42,11 @@ sidebar_label: "핵심 노드: withDiagramLock()"
 ### imports
 - [pipeline.ts](pipeline.ts.md) `EXTRACTED`
 - [mcp/apply.ts](mcp-apply.ts.md) `EXTRACTED`
-- [start.ts](start.ts.md) `EXTRACTED`
+- start.ts `EXTRACTED`
 - ask.ts `EXTRACTED`
-- [server/flows.ts](server-flows.ts.md) `EXTRACTED`
+- server/flows.ts `EXTRACTED`
 - versions.ts `EXTRACTED`
-- samples.ts `EXTRACTED`
+- [samples.ts](samples.ts.md) `EXTRACTED`
 - [\[sessionId\]/route.ts]([sessionId]-route.ts.md) `EXTRACTED`
 - server/linkGuess.ts `EXTRACTED`
 - fields.ts `EXTRACTED`

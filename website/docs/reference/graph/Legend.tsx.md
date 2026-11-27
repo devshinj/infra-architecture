@@ -1,6 +1,6 @@
 ---
 title: "Legend.tsx"
-sidebar_position: 71
+sidebar_position: 82
 ---
 # Legend.tsx
 
@@ -30,10 +30,10 @@ sidebar_position: 71
 ## Relationships
 
 - [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (7 shared connections)
-- [domain/types.ts](domain-types.ts.md) (4 shared connections)
+- [domain/types.ts](domain-types.ts.md) (5 shared connections)
 - [EdgeLayer.tsx](EdgeLayer.tsx.md) (3 shared connections)
-- [segments.ts](segments.ts.md) (2 shared connections)
-- [ResetPasswordForm.tsx](ResetPasswordForm.tsx.md) (1 shared connections)
+- [segments.ts](segments.ts.md) (1 shared connections)
+- [ref_react](ref_react.md) (1 shared connections)
 
 ## Source Files
 

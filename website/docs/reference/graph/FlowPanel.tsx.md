@@ -1,25 +1,20 @@
 ---
 title: "FlowPanel.tsx"
-sidebar_position: 51
+sidebar_position: 73
 ---
 # FlowPanel.tsx
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 24 nodes · cohesion 0.13
+> 19 nodes · cohesion 0.16
 
 ## Key Concepts
 
 - **FlowPanel.tsx** (31 connections) — `src/ui/flows/FlowPanel.tsx`
 - **FlowPanel()** (18 connections) — `src/ui/flows/FlowPanel.tsx`
 - **FlowPanelProps** (14 connections) — `src/ui/flows/FlowPanel.tsx`
-- **Review Focus** (10 connections) — `docs/superpowers/plans/2026-11-05-flows-and-network-boundaries.md`
-- **crossingNote()** (8 connections) — `src/domain/flows.ts`
-- **Task 8: "흐름" 탭·지나는 흐름·연동** (7 connections) — `docs/superpowers/plans/2026-11-05-flows-and-network-boundaries.md`
-- **Dialog** (7 connections) — `src/ui/dialogs.tsx`
-- **isUnreviewedAi()** (7 connections) — `src/ui/glossary/aiBadge.ts`
-- **Task 2: 망 경계 판정·경고·채워야 할 정보** (4 connections) — `docs/superpowers/plans/2026-11-05-flows-and-network-boundaries.md`
-- **Task 3: 흐름 도메인(모양·검사·끊김)** (4 connections) — `docs/superpowers/plans/2026-11-05-flows-and-network-boundaries.md`
+- **RowMenuItem** (4 connections) — `src/ui/dialogs.tsx`
+- **FlowOrigin** (2 connections) — `src/domain/flows.ts`
 - **.onActivate()** (2 connections) — `src/ui/flows/FlowPanel.tsx`
 - **.onConfirm()** (2 connections) — `src/ui/flows/FlowPanel.tsx`
 - **.onDelete()** (2 connections) — `src/ui/flows/FlowPanel.tsx`
@@ -29,7 +24,7 @@ sidebar_position: 51
 - **.onRepair()** (2 connections) — `src/ui/flows/FlowPanel.tsx`
 - **menuRootId()** (2 connections) — `src/ui/flows/FlowPanel.tsx`
 - **stepMark()** (2 connections) — `src/ui/flows/FlowPanel.tsx`
-- **Task 9: E2E·화면 확인·문서** (1 connections) — `docs/superpowers/plans/2026-11-05-flows-and-network-boundaries.md`
+- **AI_SUGGEST_BADGE** (2 connections) — `src/ui/glossary/aiBadge.ts`
 - **Action** (1 connections) — `src/ui/flows/FlowPanel.tsx`
 - **.onSuggest()** (1 connections) — `src/ui/flows/FlowPanel.tsx`
 - **GROUPS** (1 connections) — `src/ui/flows/FlowPanel.tsx`
@@ -37,22 +32,21 @@ sidebar_position: 51
 
 ## Relationships
 
-- [Button](Button.md) (10 shared connections)
-- [RightPanel.tsx](RightPanel.tsx.md) (6 shared connections)
-- [domain/flows.ts](domain-flows.ts.md) (5 shared connections)
-- [mcp/apply.ts](mcp-apply.ts.md) (4 shared connections)
-- [SessionPicker.tsx](SessionPicker.tsx.md) (4 shared connections)
-- [Canvas.tsx](Canvas.tsx.md) (4 shared connections)
-- [diff.ts](diff.ts.md) (3 shared connections)
-- [InfoCard.tsx](InfoCard.tsx.md) (3 shared connections)
-- [domain/types.ts](domain-types.ts.md) (2 shared connections)
-- [GuideCard.tsx](GuideCard.tsx.md) (2 shared connections)
-- [server/flows.ts](server-flows.ts.md) (2 shared connections)
+- [Button.tsx](Button.tsx.md) (10 shared connections)
+- [InfoCard.tsx](InfoCard.tsx.md) (6 shared connections)
+- [RightPanel.tsx](RightPanel.tsx.md) (5 shared connections)
+- [domain/flows.ts](domain-flows.ts.md) (4 shared connections)
+- [Explanation.tsx](Explanation.tsx.md) (2 shared connections)
+- [flowSuggest.ts](flowSuggest.ts.md) (2 shared connections)
+- [(app)/actions.ts](app-actions.ts.md) (2 shared connections)
+- [Button](Button.md) (2 shared connections)
 - [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (2 shared connections)
+- [Sidebar.tsx](Sidebar.tsx.md) (1 shared connections)
+- [ref_react](ref_react.md) (1 shared connections)
+- [domain/types.ts](domain-types.ts.md) (1 shared connections)
 
 ## Source Files
 
-- `docs/superpowers/plans/2026-11-05-flows-and-network-boundaries.md`
 - `src/domain/flows.ts`
 - `src/ui/dialogs.tsx`
 - `src/ui/flows/FlowPanel.tsx`
@@ -60,8 +54,8 @@ sidebar_position: 51
 
 ## Audit Trail
 
-- EXTRACTED: 85 (87%)
-- INFERRED: 13 (13%)
+- EXTRACTED: 66 (100%)
+- INFERRED: 0 (0%)
 - AMBIGUOUS: 0 (0%)
 
 ---

@@ -1,6 +1,6 @@
 ---
 title: "DiagramState"
-sidebar_position: 128
+sidebar_position: 148
 sidebar_label: "핵심 노드: DiagramState"
 ---
 # DiagramState
@@ -9,7 +9,7 @@ sidebar_label: "핵심 노드: DiagramState"
 
 > God node · 70 connections · `src/domain/types.ts`
 
-**Community:** [diff.ts](diff.ts.md)
+**Community:** [flowSuggest.ts](flowSuggest.ts.md)
 
 ## Connections by Relation
 
@@ -31,11 +31,11 @@ sidebar_label: "핵심 노드: DiagramState"
 - schema.ts `EXTRACTED`
 - ask.ts `EXTRACTED`
 - [domain/warnings.ts](domain-warnings.ts.md) `EXTRACTED`
-- server/network.ts `EXTRACTED`
-- [server/flows.ts](server-flows.ts.md) `EXTRACTED`
 - [flowSuggest.ts](flowSuggest.ts.md) `EXTRACTED`
+- server/network.ts `EXTRACTED`
+- server/flows.ts `EXTRACTED`
 - versions.ts `EXTRACTED`
-- samples.ts `EXTRACTED`
+- [samples.ts](samples.ts.md) `EXTRACTED`
 - [domain/explain.ts](domain-explain.ts.md) `EXTRACTED`
 - *…and 31 more `imports` connection(s) not listed (lowest-degree first to go)*
 
@@ -49,7 +49,7 @@ sidebar_label: "핵심 노드: DiagramState"
 - DiagramWorkspaceProps `EXTRACTED`
 - GuideTurnArgs `EXTRACTED`
 - .applyFlowOps() `EXTRACTED`
-- 흐름 보기와 망 경계 표시 Implementation Plan `INFERRED`
+- [흐름 보기와 망 경계 표시 Implementation Plan](흐름_보기와_망_경계_표시_Implementation_Plan.md) `INFERRED`
 - Fork `EXTRACTED`
 - .getLatestState() `EXTRACTED`
 - .getLatestState() `EXTRACTED`

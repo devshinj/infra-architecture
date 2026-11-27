@@ -1,6 +1,6 @@
 ---
 title: "messenger-cloud.ts"
-sidebar_position: 110
+sidebar_position: 126
 ---
 # messenger-cloud.ts
 
@@ -21,12 +21,13 @@ sidebar_position: 110
 
 ## Relationships
 
-- [authoring.ts](authoring.ts.md) (11 shared connections)
-- [index.ts](index.ts.md) (4 shared connections)
-- [guides/types.ts](guides-types.ts.md) (3 shared connections)
-- [relay-onprem.ts](relay-onprem.ts.md) (2 shared connections)
-- [applyCommand](applyCommand.md) (1 shared connections)
-- [delivery-cloud.ts](delivery-cloud.ts.md) (1 shared connections)
+- [authoring.ts](authoring.ts.md) (9 shared connections)
+- [index.ts](index.ts.md) (5 shared connections)
+- [delivery-cloud.ts](delivery-cloud.ts.md) (3 shared connections)
+- [guides/types.ts](guides-types.ts.md) (2 shared connections)
+- [GuideEnv](GuideEnv.md) (1 shared connections)
+- [Command](Command.md) (1 shared connections)
+- [guides/judge.ts](guides-judge.ts.md) (1 shared connections)
 - [commands.ts](commands.ts.md) (1 shared connections)
 - [domain/types.ts](domain-types.ts.md) (1 shared connections)
 

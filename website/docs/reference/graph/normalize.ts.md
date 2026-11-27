@@ -1,18 +1,17 @@
 ---
 title: "normalize.ts"
-sidebar_position: 76
+sidebar_position: 90
 ---
 # normalize.ts
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 15 nodes · cohesion 0.16
+> 14 nodes · cohesion 0.18
 
 ## Key Concepts
 
 - **normalize.ts** (17 connections) — `src/server/chat/normalize.ts`
 - **normalizeAiCommand()** (9 connections) — `src/server/chat/normalize.ts`
-- **pickFlows()** (7 connections) — `src/server/flowSuggest.ts`
 - **flattenAttr()** (2 connections) — `src/server/chat/normalize.ts`
 - **isPlainObject()** (2 connections) — `src/server/chat/normalize.ts`
 - **normalizeId()** (2 connections) — `src/server/chat/normalize.ts`
@@ -28,23 +27,19 @@ sidebar_position: 76
 
 ## Relationships
 
-- [flowSuggest.ts](flowSuggest.ts.md) (4 shared connections)
+- [clarify.ts](clarify.ts.md) (3 shared connections)
 - [domain/types.ts](domain-types.ts.md) (2 shared connections)
-- [pipeline.ts](pipeline.ts.md) (2 shared connections)
-- [commands.ts](commands.ts.md) (2 shared connections)
-- [mcp/apply.ts](mcp-apply.ts.md) (2 shared connections)
-- [applyCommand](applyCommand.md) (1 shared connections)
-- [createJsonlParser](createJsonlParser.md) (1 shared connections)
+- [flowSuggest.ts](flowSuggest.ts.md) (2 shared connections)
+- [parseCommand](parseCommand.md) (2 shared connections)
 
 ## Source Files
 
 - `src/server/chat/normalize.ts`
-- `src/server/flowSuggest.ts`
 
 ## Audit Trail
 
-- EXTRACTED: 30 (97%)
-- INFERRED: 1 (3%)
+- EXTRACTED: 24 (96%)
+- INFERRED: 1 (4%)
 - AMBIGUOUS: 0 (0%)
 
 ---

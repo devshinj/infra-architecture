@@ -1,61 +1,62 @@
 ---
 title: "guides/judge.ts"
-sidebar_position: 56
+sidebar_position: 71
 ---
 # guides/judge.ts
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 22 nodes · cohesion 0.13
+> 20 nodes · cohesion 0.15
 
 ## Key Concepts
 
+- **guides/types.ts** (55 connections) — `src/domain/guides/types.ts`
 - **guides/judge.ts** (15 connections) — `src/domain/guides/judge.ts`
-- **Review Focus** (14 connections) — `docs/superpowers/plans/2026-11-19-learning-mode.md`
 - **decideStep()** (8 connections) — `src/domain/guides/judge.ts`
-- **findConflict()** (6 connections) — `src/domain/guides/judge.ts`
+- **GuideNotes.tsx** (7 connections) — `src/ui/guide/GuideNotes.tsx`
 - **readEnv()** (6 connections) — `src/domain/guides/judge.ts`
-- **학습 모드 1차 Implementation Plan** (5 connections) — `docs/superpowers/plans/2026-11-19-learning-mode.md`
+- **GuideStep** (6 connections) — `src/domain/guides/types.ts`
 - **looksLikeQuestion()** (5 connections) — `src/domain/guides/judge.ts`
 - **normalizeUtterance()** (5 connections) — `src/domain/guides/judge.ts`
 - **Task 10: 판정 평가 스크립트** (4 connections) — `docs/superpowers/plans/2026-11-19-learning-mode.md`
+- **src_ui_guide_guide_module** (4 connections)
 - **keywordMatch()** (3 connections) — `src/domain/guides/judge.ts`
-- **Global Constraints** (2 connections) — `docs/superpowers/plans/2026-11-19-learning-mode.md`
-- **Task 1: 대본 타입과 판정 함수** (2 connections) — `docs/superpowers/plans/2026-11-19-learning-mode.md`
-- **Task 4: 진행 상태 저장(`guide_runs`)** (2 connections) — `docs/superpowers/plans/2026-11-19-learning-mode.md`
 - **StepVerdict** (2 connections) — `src/domain/guides/judge.ts`
 - **GUIDE_MIN_CONFIDENCE** (2 connections) — `src/domain/guides/types.ts`
 - **GUIDE_QUESTION_WINS** (2 connections) — `src/domain/guides/types.ts`
-- **2026-11-19-learning-mode.md** (1 connections) — `docs/superpowers/plans/2026-11-19-learning-mode.md`
-- **Task 0: 작업 공간** (1 connections) — `docs/superpowers/plans/2026-11-19-learning-mode.md`
-- **Task 11: E2E** (1 connections) — `docs/superpowers/plans/2026-11-19-learning-mode.md`
-- **Task 12: 마무리** (1 connections) — `docs/superpowers/plans/2026-11-19-learning-mode.md`
+- **NOTE_LABEL** (2 connections) — `src/domain/guides/types.ts`
 - **ENV_KEYWORDS** (1 connections) — `src/domain/guides/judge.ts`
 - **QUESTION_WORDS** (1 connections) — `src/domain/guides/judge.ts`
+- **Adr** (1 connections) — `src/domain/guides/types.ts`
+- **GUIDE_LIMITS** (1 connections) — `src/domain/guides/types.ts`
+- **NoteKind** (1 connections) — `src/domain/guides/types.ts`
 
 ## Relationships
 
 - [turn.ts](turn.ts.md) (14 shared connections)
-- [runs.ts](runs.ts.md) (4 shared connections)
-- [guides/types.ts](guides-types.ts.md) (3 shared connections)
-- [commands.ts](commands.ts.md) (2 shared connections)
-- [Button](Button.md) (1 shared connections)
-- [delivery-cloud.ts](delivery-cloud.ts.md) (1 shared connections)
-- [domain/explain.ts](domain-explain.ts.md) (1 shared connections)
-- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (1 shared connections)
-- [getOwnedDiagram](getOwnedDiagram.md) (1 shared connections)
-- [pipeline.ts](pipeline.ts.md) (1 shared connections)
+- [authoring.ts](authoring.ts.md) (10 shared connections)
+- [guides/types.ts](guides-types.ts.md) (8 shared connections)
+- [runs.ts](runs.ts.md) (6 shared connections)
+- [GuideEnv](GuideEnv.md) (3 shared connections)
+- [projects.ts](projects.ts.md) (3 shared connections)
+- [domain/explain.ts](domain-explain.ts.md) (3 shared connections)
+- [delivery-cloud.ts](delivery-cloud.ts.md) (3 shared connections)
+- [events.ts](events.ts.md) (3 shared connections)
+- [ChatPanel.tsx](ChatPanel.tsx.md) (3 shared connections)
+- [Review Focus](Review_Focus.md) (2 shared connections)
+- [Command](Command.md) (2 shared connections)
 
 ## Source Files
 
 - `docs/superpowers/plans/2026-11-19-learning-mode.md`
 - `src/domain/guides/judge.ts`
 - `src/domain/guides/types.ts`
+- `src/ui/guide/GuideNotes.tsx`
 
 ## Audit Trail
 
-- EXTRACTED: 48 (81%)
-- INFERRED: 11 (19%)
+- EXTRACTED: 96 (94%)
+- INFERRED: 6 (6%)
 - AMBIGUOUS: 0 (0%)
 
 ---

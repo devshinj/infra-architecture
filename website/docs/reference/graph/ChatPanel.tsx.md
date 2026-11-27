@@ -1,12 +1,12 @@
 ---
 title: "ChatPanel.tsx"
-sidebar_position: 13
+sidebar_position: 5
 ---
 # ChatPanel.tsx
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 48 nodes · cohesion 0.06
+> 47 nodes · cohesion 0.07
 
 ## Key Concepts
 
@@ -19,7 +19,6 @@ sidebar_position: 13
 - **src_ui_chat_chat_module** (6 connections)
 - **CardView()** (5 connections) — `src/ui/chat/ChatPanel.tsx`
 - **GuideNotes()** (5 connections) — `src/ui/guide/GuideNotes.tsx`
-- **parseMentions()** (4 connections) — `src/server/chat/prompt.ts`
 - **TurnActions** (4 connections) — `src/ui/chat/ChatPanel.tsx`
 - **SendOptions** (4 connections) — `src/ui/chat/useChatTurn.ts`
 - **노드 참조 (@WAS#1 칩)** (3 connections) — `docs/superpowers/specs/2026-10-29-infra-architecture-visualizer-design.md`
@@ -35,29 +34,29 @@ sidebar_position: 13
 - **pad()** (2 connections) — `src/ui/chat/ChatPanel.tsx`
 - **renderText()** (2 connections) — `src/ui/chat/ChatPanel.tsx`
 - **stepName()** (2 connections) — `src/ui/chat/ChatPanel.tsx`
-- *... and 23 more nodes in this community*
+- **stepRows()** (2 connections) — `src/ui/chat/ChatPanel.tsx`
+- *... and 22 more nodes in this community*
 
 ## Relationships
 
-- [SessionPicker.tsx](SessionPicker.tsx.md) (6 shared connections)
-- [Button](Button.md) (6 shared connections)
+- [Button.tsx](Button.tsx.md) (7 shared connections)
 - [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) (6 shared connections)
 - [RightPanel.tsx](RightPanel.tsx.md) (6 shared connections)
-- [clarify.ts](clarify.ts.md) (4 shared connections)
-- [GuideCard.tsx](GuideCard.tsx.md) (4 shared connections)
-- [runs.ts](runs.ts.md) (4 shared connections)
+- [clarify.ts](clarify.ts.md) (5 shared connections)
+- [useChatTurn.ts](useChatTurn.ts.md) (4 shared connections)
+- [useSessions.ts](useSessions.ts.md) (3 shared connections)
+- [GuideDone.tsx](GuideDone.tsx.md) (3 shared connections)
 - [Shell.tsx](Shell.tsx.md) (3 shared connections)
-- [useChatTurn.ts](useChatTurn.ts.md) (3 shared connections)
 - [PageSkeleton.tsx](PageSkeleton.tsx.md) (3 shared connections)
-- [guides/types.ts](guides-types.ts.md) (3 shared connections)
+- [guides/judge.ts](guides-judge.ts.md) (3 shared connections)
 - [Review Focus](Review_Focus.md) (2 shared connections)
+- [FlyLayer.tsx](FlyLayer.tsx.md) (2 shared connections)
 
 ## Source Files
 
 - `docs/superpowers/plans/2026-11-01-infrasketch-phase3c2-ask-node.md`
 - `docs/superpowers/specs/2026-10-29-infra-architecture-visualizer-design.md`
 - `docs/superpowers/specs/2026-11-20-chat-look-design.md`
-- `src/server/chat/prompt.ts`
 - `src/ui/chat/ChatPanel.tsx`
 - `src/ui/chat/MentionInput.tsx`
 - `src/ui/chat/useChatTurn.ts`
@@ -65,7 +64,7 @@ sidebar_position: 13
 
 ## Audit Trail
 
-- EXTRACTED: 129 (93%)
+- EXTRACTED: 126 (93%)
 - INFERRED: 9 (7%)
 - AMBIGUOUS: 0 (0%)
 

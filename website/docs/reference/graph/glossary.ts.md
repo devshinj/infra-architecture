@@ -1,6 +1,6 @@
 ---
 title: "glossary.ts"
-sidebar_position: 37
+sidebar_position: 28
 ---
 # glossary.ts
 
@@ -39,16 +39,16 @@ sidebar_position: 37
 
 ## Relationships
 
-- [domain/explain.ts](domain-explain.ts.md) (7 shared connections)
-- [(app)/actions.ts](app-actions.ts.md) (5 shared connections)
-- [GlossaryPage.tsx](GlossaryPage.tsx.md) (4 shared connections)
-- [reset.ts](reset.ts.md) (3 shared connections)
+- [domain/explain.ts](domain-explain.ts.md) (6 shared connections)
+- [projects.ts](projects.ts.md) (6 shared connections)
+- [GlossaryPage.tsx](GlossaryPage.tsx.md) (5 shared connections)
+- [설명 생성과 품질 검사](설명_생성과_품질_검사.md) (4 shared connections)
 - [glossaryMatch.ts](glossaryMatch.ts.md) (3 shared connections)
-- [pipeline.ts](pipeline.ts.md) (3 shared connections)
-- [설명 생성과 품질 검사](설명_생성과_품질_검사.md) (3 shared connections)
-- [start.ts](start.ts.md) (2 shared connections)
-- [josa.ts](josa.ts.md) (2 shared connections)
-- [projects.ts](projects.ts.md) (1 shared connections)
+- [ValidationError](ValidationError.md) (2 shared connections)
+- [networkRules.ts](networkRules.ts.md) (2 shared connections)
+- [(app)/actions.ts](app-actions.ts.md) (2 shared connections)
+- [pipeline.ts](pipeline.ts.md) (2 shared connections)
+- [clarify.ts](clarify.ts.md) (1 shared connections)
 - [read.ts](read.ts.md) (1 shared connections)
 
 ## Source Files

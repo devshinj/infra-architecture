@@ -1,21 +1,23 @@
 ---
 title: "domain/types.ts"
-sidebar_position: 42
+sidebar_position: 19
 ---
 # domain/types.ts
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 29 nodes · cohesion 0.13
+> 39 nodes · cohesion 0.10
 
 ## Key Concepts
 
 - **domain/types.ts** (88 connections) — `src/domain/types.ts`
 - **dsl.ts** (41 connections) — `src/domain/samples/dsl.ts`
+- **catalog.ts** (38 connections) — `src/domain/catalog.ts`
 - **display.ts** (34 connections) — `src/canvas/display.ts`
 - **DisplayEdge** (13 connections) — `src/canvas/display.ts`
 - **mediumMark.tsx** (13 connections) — `src/canvas/mediumMark.tsx`
 - **DNode** (13 connections) — `src/domain/types.ts`
+- **EdgeKind** (11 connections) — `src/domain/catalog.ts`
 - **Group** (11 connections) — `src/domain/types.ts`
 - **GroupKind** (9 connections) — `src/domain/catalog.ts`
 - **Edge** (8 connections) — `src/domain/types.ts`
@@ -29,28 +31,26 @@ sidebar_position: 42
 - **ExportRequest** (3 connections) — `src/canvas/exportImage.ts`
 - **MEDIUM_LABELS** (3 connections) — `src/canvas/mediumMark.tsx`
 - **pointAlong()** (3 connections) — `src/canvas/mediumMark.tsx`
+- **Segment** (3 connections) — `src/canvas/segments.ts`
 - **Attrs** (3 connections) — `src/domain/types.ts`
 - **Target** (3 connections) — `src/domain/warnings.ts`
 - **PanelEdge** (2 connections) — `src/app/dev/edges/EdgePanels.tsx`
-- **DisplayGroup** (2 connections) — `src/canvas/display.ts`
-- **EDGE_DIRECTIONS** (2 connections) — `src/domain/types.ts`
-- **EDGE_PAYLOADS** (2 connections) — `src/domain/types.ts`
-- *... and 4 more nodes in this community*
+- *... and 14 more nodes in this community*
 
 ## Relationships
 
-- [index.ts](index.ts.md) (17 shared connections)
-- [getOwnedDiagram](getOwnedDiagram.md) (12 shared connections)
-- [segments.ts](segments.ts.md) (10 shared connections)
-- [applyCommand](applyCommand.md) (10 shared connections)
-- [layout.ts](layout.ts.md) (9 shared connections)
-- [authoring.ts](authoring.ts.md) (9 shared connections)
-- [EdgePanels.tsx](EdgePanels.tsx.md) (7 shared connections)
-- [Canvas.tsx](Canvas.tsx.md) (7 shared connections)
-- [diff.ts](diff.ts.md) (6 shared connections)
+- [index.ts](index.ts.md) (18 shared connections)
+- [getOwnedDiagram](getOwnedDiagram.md) (10 shared connections)
+- [EdgePanels.tsx](EdgePanels.tsx.md) (8 shared connections)
+- [useDiagramView.ts](useDiagramView.ts.md) (8 shared connections)
+- [segments.ts](segments.ts.md) (8 shared connections)
+- [missing.ts](missing.ts.md) (8 shared connections)
+- [authoring.ts](authoring.ts.md) (8 shared connections)
+- [domain/warnings.ts](domain-warnings.ts.md) (7 shared connections)
+- [domain/flows.ts](domain-flows.ts.md) (6 shared connections)
 - [EdgeLayer.tsx](EdgeLayer.tsx.md) (6 shared connections)
-- [restingLabels.ts](restingLabels.ts.md) (5 shared connections)
-- [NodeInfo.tsx](NodeInfo.tsx.md) (5 shared connections)
+- [NodeInfo.tsx](NodeInfo.tsx.md) (6 shared connections)
+- [domain/explain.ts](domain-explain.ts.md) (6 shared connections)
 
 ## Source Files
 
@@ -59,6 +59,7 @@ sidebar_position: 42
 - `src/canvas/display.ts`
 - `src/canvas/exportImage.ts`
 - `src/canvas/mediumMark.tsx`
+- `src/canvas/segments.ts`
 - `src/domain/catalog.ts`
 - `src/domain/samples/dsl.ts`
 - `src/domain/types.ts`
@@ -66,8 +67,8 @@ sidebar_position: 42
 
 ## Audit Trail
 
-- EXTRACTED: 237 (98%)
-- INFERRED: 4 (2%)
+- EXTRACTED: 279 (99%)
+- INFERRED: 4 (1%)
 - AMBIGUOUS: 0 (0%)
 
 ---

@@ -1,29 +1,31 @@
 ---
 title: "flowSuggest.ts"
-sidebar_position: 43
+sidebar_position: 31
 ---
 # flowSuggest.ts
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 29 nodes · cohesion 0.12
+> 31 nodes · cohesion 0.11
 
 ## Key Concepts
 
-- **flowSuggest.ts** (57 connections) — `src/server/flowSuggest.ts`
+- **DiagramState** (70 connections) — `src/domain/types.ts`
+- **flowSuggest.ts** (60 connections) — `src/server/flowSuggest.ts`
 - **suggest/route.ts** (17 connections) — `src/app/api/diagrams/[id]/flows/suggest/route.ts`
-- **suggestFlows()** (16 connections) — `src/server/flowSuggest.ts`
-- **Flow** (12 connections) — `src/domain/flows.ts`
+- **suggestFlows()** (17 connections) — `src/server/flowSuggest.ts`
+- **FlowOp** (10 connections) — `src/domain/flows.ts`
 - **FlowSuggestRepo** (9 connections) — `src/server/flowSuggest.ts`
+- **LEARNING_LOCKED_MESSAGE** (6 connections) — `src/server/guide/runs.ts`
 - **.applyFlowOps()** (5 connections) — `src/server/flowSuggest.ts`
 - **.getLatestState()** (4 connections) — `src/server/flowSuggest.ts`
 - **POST()** (3 connections) — `src/app/api/diagrams/[id]/flows/suggest/route.ts`
 - **FLOW_BUSY_MESSAGE** (3 connections) — `src/server/flows.ts`
-- **complete()** (3 connections) — `src/server/flowSuggest.ts`
 - **.getOwnedDiagram()** (3 connections) — `src/server/flowSuggest.ts`
 - **.isLearning()** (3 connections) — `src/server/flowSuggest.ts`
 - **.listFlows()** (3 connections) — `src/server/flowSuggest.ts`
 - **resolveDeps()** (3 connections) — `src/server/flowSuggest.ts`
+- **Checked** (3 connections) — `src/server/mcp/apply.ts`
 - **FLOW_SUGGEST_BUSY_MESSAGE** (2 connections) — `src/server/flowSuggest.ts`
 - **.claimSuggest()** (2 connections) — `src/server/flowSuggest.ts`
 - **.releaseSuggest()** (2 connections) — `src/server/flowSuggest.ts`
@@ -33,36 +35,37 @@ sidebar_position: 43
 - **dynamic** (1 connections) — `src/app/api/diagrams/[id]/flows/suggest/route.ts`
 - **maxDuration** (1 connections) — `src/app/api/diagrams/[id]/flows/suggest/route.ts`
 - **runtime** (1 connections) — `src/app/api/diagrams/[id]/flows/suggest/route.ts`
-- **AddFlowOp** (1 connections) — `src/server/flowSuggest.ts`
-- **dbRepo** (1 connections) — `src/server/flowSuggest.ts`
-- *... and 4 more nodes in this community*
+- *... and 6 more nodes in this community*
 
 ## Relationships
 
-- [mcp/apply.ts](mcp-apply.ts.md) (8 shared connections)
-- [getOwnedDiagram](getOwnedDiagram.md) (7 shared connections)
-- [ask/route.ts](ask-route.ts.md) (5 shared connections)
+- [projects.ts](projects.ts.md) (18 shared connections)
+- [getOwnedDiagram](getOwnedDiagram.md) (9 shared connections)
+- [mcp/apply.ts](mcp-apply.ts.md) (7 shared connections)
+- [ask/route.ts](ask-route.ts.md) (6 shared connections)
+- [clarify.ts](clarify.ts.md) (5 shared connections)
+- [domain/flows.ts](domain-flows.ts.md) (5 shared connections)
+- [chat/warnings.ts](chat-warnings.ts.md) (5 shared connections)
+- [guides/apply.ts](guides-apply.ts.md) (4 shared connections)
+- [NodeInfo.tsx](NodeInfo.tsx.md) (4 shared connections)
 - [prompt.ts](prompt.ts.md) (4 shared connections)
-- [normalize.ts](normalize.ts.md) (4 shared connections)
-- [commands.ts](commands.ts.md) (4 shared connections)
-- [start.ts](start.ts.md) (3 shared connections)
-- [reset.ts](reset.ts.md) (3 shared connections)
-- [diff.ts](diff.ts.md) (3 shared connections)
-- [\[sessionId\]/route.ts]([sessionId]-route.ts.md) (2 shared connections)
-- [(app)/actions.ts](app-actions.ts.md) (2 shared connections)
-- [projects.ts](projects.ts.md) (2 shared connections)
+- [userTurns.ts](userTurns.ts.md) (4 shared connections)
+- [ValidationError](ValidationError.md) (3 shared connections)
 
 ## Source Files
 
 - `src/app/api/diagrams/[id]/flows/suggest/route.ts`
 - `src/domain/flows.ts`
+- `src/domain/types.ts`
 - `src/server/flowSuggest.ts`
 - `src/server/flows.ts`
+- `src/server/guide/runs.ts`
+- `src/server/mcp/apply.ts`
 
 ## Audit Trail
 
-- EXTRACTED: 106 (94%)
-- INFERRED: 7 (6%)
+- EXTRACTED: 179 (96%)
+- INFERRED: 8 (4%)
 - AMBIGUOUS: 0 (0%)
 
 ---

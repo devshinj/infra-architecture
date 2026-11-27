@@ -11,114 +11,130 @@ sidebar_label: "개요"
 
 [인터랙티브 그래프 열기](pathname:///graph/graph.html) — 노드를 끌고 확대해서 전체 연결을 볼 수 있습니다.
 
-**2970 nodes · 8363 edges · 126 communities**
+**3078 nodes · 8532 edges · 146 communities**
 
 ---
 
 ## Communities
 (sorted by size, largest first)
 
-- [(app)/actions.ts](app-actions.ts.md) — 95 nodes
-- [Canvas.tsx](Canvas.tsx.md) — 74 nodes
-- [applyCommand](applyCommand.md) — 71 nodes
-- [read.ts](read.ts.md) — 66 nodes
-- [getOwnedDiagram](getOwnedDiagram.md) — 63 nodes
-- [exportImage.ts](exportImage.ts.md) — 53 nodes
-- [authoring.ts](authoring.ts.md) — 51 nodes
-- [InfraSketch 설계 문서](InfraSketch_설계_문서.md) — 50 nodes
-- [layout.ts](layout.ts.md) — 50 nodes
-- [EdgeLayer.tsx](EdgeLayer.tsx.md) — 50 nodes
-- [mcp/apply.ts](mcp-apply.ts.md) — 50 nodes
-- [ChatPanel.tsx](ChatPanel.tsx.md) — 48 nodes
-- [commands.ts](commands.ts.md) — 48 nodes
-- [restingLabels.ts](restingLabels.ts.md) — 48 nodes
-- [index.ts](index.ts.md) — 46 nodes
-- [useCamera.ts](useCamera.ts.md) — 44 nodes
-- [runs.ts](runs.ts.md) — 44 nodes
-- [설명 생성과 품질 검사](설명_생성과_품질_검사.md) — 43 nodes
-- [edgeLabels.ts](edgeLabels.ts.md) — 43 nodes
-- [EdgePanels.tsx](EdgePanels.tsx.md) — 43 nodes
-- [domain/explain.ts](domain-explain.ts.md) — 43 nodes
-- [\[sessionId\]/route.ts]([sessionId]-route.ts.md) — 42 nodes
-- [segments.ts](segments.ts.md) — 39 nodes
-- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) — 39 nodes
-- [NodeInfo.tsx](NodeInfo.tsx.md) — 39 nodes
-- [reset.ts](reset.ts.md) — 39 nodes
-- [pipeline.ts](pipeline.ts.md) — 38 nodes
-- [Sidebar.tsx](Sidebar.tsx.md) — 37 nodes
-- [prompt.ts](prompt.ts.md) — 36 nodes
-- [turn.ts](turn.ts.md) — 36 nodes
-- [start.ts](start.ts.md) — 36 nodes
-- [ResetPasswordForm.tsx](ResetPasswordForm.tsx.md) — 34 nodes
-- [Explanation.tsx](Explanation.tsx.md) — 34 nodes
-- [ask/route.ts](ask-route.ts.md) — 33 nodes
-- [Button](Button.md) — 33 nodes
+- [(app)/actions.ts](app-actions.ts.md) — 84 nodes
+- [projects.ts](projects.ts.md) — 78 nodes
+- [index.ts](index.ts.md) — 48 nodes
+- [ChatPanel.tsx](ChatPanel.tsx.md) — 47 nodes
+- [InfraSketch 설계 문서](InfraSketch_설계_문서.md) — 47 nodes
+- [mcp/apply.ts](mcp-apply.ts.md) — 47 nodes
+- [설명 생성과 품질 검사](설명_생성과_품질_검사.md) — 46 nodes
+- [authoring.ts](authoring.ts.md) — 44 nodes
+- [edgeLabels.ts](edgeLabels.ts.md) — 44 nodes
+- [getOwnedDiagram](getOwnedDiagram.md) — 43 nodes
+- [EdgeLayer.tsx](EdgeLayer.tsx.md) — 43 nodes
+- [NodeInfo.tsx](NodeInfo.tsx.md) — 43 nodes
+- [clarify.ts](clarify.ts.md) — 43 nodes
+- [layoutMetrics.ts](layoutMetrics.ts.md) — 43 nodes
+- [ValidationError](ValidationError.md) — 43 nodes
+- [domain/explain.ts](domain-explain.ts.md) — 40 nodes
+- [layout.ts](layout.ts.md) — 39 nodes
+- [domain/types.ts](domain-types.ts.md) — 39 nodes
+- [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) — 38 nodes
+- [Sidebar.tsx](Sidebar.tsx.md) — 35 nodes
+- [Explanation.tsx](Explanation.tsx.md) — 35 nodes
+- [useCamera.ts](useCamera.ts.md) — 34 nodes
+- [domain/network.ts](domain-network.ts.md) — 34 nodes
+- [useChatTurn.ts](useChatTurn.ts.md) — 33 nodes
+- [prompt.ts](prompt.ts.md) — 32 nodes
+- [ResetPasswordForm.tsx](ResetPasswordForm.tsx.md) — 32 nodes
 - [glossary.ts](glossary.ts.md) — 32 nodes
-- [layoutMetrics.ts](layoutMetrics.ts.md) — 31 nodes
-- [projects.ts](projects.ts.md) — 31 nodes
+- [InfoCard.tsx](InfoCard.tsx.md) — 32 nodes
+- [useSessions.ts](useSessions.ts.md) — 31 nodes
+- [flowSuggest.ts](flowSuggest.ts.md) — 31 nodes
+- [read.ts](read.ts.md) — 30 nodes
+- [Button.tsx](Button.tsx.md) — 30 nodes
+- [FlyLayer.tsx](FlyLayer.tsx.md) — 30 nodes
+- [chat/warnings.ts](chat-warnings.ts.md) — 29 nodes
+- [ask/route.ts](ask-route.ts.md) — 29 nodes
 - [Shell.tsx](Shell.tsx.md) — 29 nodes
-- [guides/types.ts](guides-types.ts.md) — 29 nodes
-- [domain/types.ts](domain-types.ts.md) — 29 nodes
-- [flowSuggest.ts](flowSuggest.ts.md) — 29 nodes
-- [InfoCard.tsx](InfoCard.tsx.md) — 26 nodes
-- [MissingChecklist.tsx](MissingChecklist.tsx.md) — 25 nodes
-- [RightPanel.tsx](RightPanel.tsx.md) — 24 nodes
+- [pipeline.ts](pipeline.ts.md) — 29 nodes
+- [EdgePanels.tsx](EdgePanels.tsx.md) — 29 nodes
+- [exportImage.ts](exportImage.ts.md) — 28 nodes
+- [Canvas.tsx](Canvas.tsx.md) — 28 nodes
+- [domain/flows.ts](domain-flows.ts.md) — 27 nodes
+- [segments.ts](segments.ts.md) — 27 nodes
+- [Flow](Flow.md) — 27 nodes
+- [restingLabels.ts](restingLabels.ts.md) — 27 nodes
+- [delivery-cloud.ts](delivery-cloud.ts.md) — 27 nodes
+- [runs.ts](runs.ts.md) — 26 nodes
+- [auth/actions.ts](auth-actions.ts.md) — 26 nodes
+- [mcp/route.ts](mcp-route.ts.md) — 26 nodes
+- [RightPanel.tsx](RightPanel.tsx.md) — 25 nodes
+- [commands.ts](commands.ts.md) — 25 nodes
+- [turn.ts](turn.ts.md) — 25 nodes
 - [6. 출처 목록](6._출처_목록.md) — 24 nodes
-- [SessionPicker.tsx](SessionPicker.tsx.md) — 24 nodes
-- [clarify.ts](clarify.ts.md) — 24 nodes
-- [relay-onprem.ts](relay-onprem.ts.md) — 24 nodes
-- [FlowPanel.tsx](FlowPanel.tsx.md) — 24 nodes
+- [networkRules.ts](networkRules.ts.md) — 24 nodes
+- [MissingChecklist.tsx](MissingChecklist.tsx.md) — 24 nodes
+- [StatusScreen.tsx](StatusScreen.tsx.md) — 24 nodes
+- [Button](Button.md) — 24 nodes
+- [auth.ts](auth.ts.md) — 23 nodes
 - [domain/warnings.ts](domain-warnings.ts.md) — 23 nodes
-- [domain/assumptions.ts](domain-assumptions.ts.md) — 23 nodes
-- [domain/flows.ts](domain-flows.ts.md) — 22 nodes
+- [sessions.ts](sessions.ts.md) — 23 nodes
+- [reset.ts](reset.ts.md) — 23 nodes
 - [PageSkeleton.tsx](PageSkeleton.tsx.md) — 22 nodes
-- [guides/judge.ts](guides-judge.ts.md) — 22 nodes
-- [auth.ts](auth.ts.md) — 21 nodes
+- [ref_react](ref_react.md) — 22 nodes
+- [GlossaryPage.tsx](GlossaryPage.tsx.md) — 21 nodes
 - [배치 가독성 3·4단계 — 처음 접기, 묶음 접기 단추, 엇갈림 줄이기](배치_가독성_3·4단계_—_처음_접기,_묶음_접기_단추,_엇갈림_줄이기.md) — 21 nodes
+- [samples.ts](samples.ts.md) — 21 nodes
 - [3. 망·보안 관점](3._망·보안_관점.md) — 20 nodes
-- [chat/warnings.ts](chat-warnings.ts.md) — 19 nodes
+- [guides/types.ts](guides-types.ts.md) — 20 nodes
+- [domain/linkGuess.ts](domain-linkGuess.ts.md) — 20 nodes
+- [password.ts](password.ts.md) — 20 nodes
+- [guides/judge.ts](guides-judge.ts.md) — 20 nodes
 - [B) CCTV·영상 관제 — 구성 지식](B_CCTV·영상_관제_—_구성_지식.md) — 19 nodes
-- [GlossaryPage.tsx](GlossaryPage.tsx.md) — 19 nodes
+- [FlowPanel.tsx](FlowPanel.tsx.md) — 19 nodes
+- [\[sessionId\]/route.ts]([sessionId]-route.ts.md) — 19 nodes
 - [목표](목표.md) — 18 nodes
-- [missing.ts](missing.ts.md) — 18 nodes
-- [GuideCard.tsx](GuideCard.tsx.md) — 18 nodes
-- [diff.ts](diff.ts.md) — 18 nodes
-- [deps.ts](deps.ts.md) — 18 nodes
+- [운영 안전망 (묶음 B) 설계](운영_안전망_묶음_B_설계.md) — 18 nodes
 - [Review Focus](Review_Focus.md) — 17 nodes
 - [AuthStage.tsx](AuthStage.tsx.md) — 17 nodes
-- [FlyLayer.tsx](FlyLayer.tsx.md) — 17 nodes
+- [구성도 배치 조화 1단계 — 선택 강조와 선 간격](구성도_배치_조화_1단계_—_선택_강조와_선_간격.md) — 17 nodes
+- [학습 모드](학습_모드.md) — 17 nodes
+- [guides/apply.ts](guides-apply.ts.md) — 17 nodes
 - [Legend.tsx](Legend.tsx.md) — 16 nodes
-- [구성도 배치 조화 1단계 — 선택 강조와 선 간격](구성도_배치_조화_1단계_—_선택_강조와_선_간격.md) — 16 nodes
-- [학습 모드](학습_모드.md) — 16 nodes
-- [mcpKeys.ts](mcpKeys.ts.md) — 16 nodes
-- [clef.ts](clef.ts.md) — 15 nodes
-- [normalize.ts](normalize.ts.md) — 15 nodes
-- [3C-1 계획 작업 목록](3C-1_계획_작업_목록.md) — 14 nodes
-- [domain/network.ts](domain-network.ts.md) — 14 nodes
+- [domain/assumptions.ts](domain-assumptions.ts.md) — 16 nodes
+- [missing.ts](missing.ts.md) — 16 nodes
+- [userTurns.ts](userTurns.ts.md) — 16 nodes
+- [relay-onprem.ts](relay-onprem.ts.md) — 15 nodes
+- [useDiagramView.ts](useDiagramView.ts.md) — 15 nodes
 - [흐름 보기와 망 경계 표시 — 설계](흐름_보기와_망_경계_표시_—_설계.md) — 14 nodes
-- [useSessions.ts](useSessions.ts.md) — 14 nodes
-- [GhostLayer.tsx](GhostLayer.tsx.md) — 13 nodes
-- [auth/actions.ts](auth-actions.ts.md) — 13 nodes
+- [clef.ts](clef.ts.md) — 14 nodes
+- [normalize.ts](normalize.ts.md) — 14 nodes
+- [diff.ts](diff.ts.md) — 14 nodes
+- [applyCommand](applyCommand.md) — 14 nodes
+- [ZoneNameLayer.tsx](ZoneNameLayer.tsx.md) — 14 nodes
+- [3C-1 계획 작업 목록](3C-1_계획_작업_목록.md) — 13 nodes
 - [02. 금융·의료·산업제어(OT)·통신/기반시설 분야 망 구분과 망 사이 연결 규칙](02._금융·의료·산업제어OT·통신-기반시설_분야_망_구분과_망_사이_연결_규칙.md) — 13 nodes
-- [server/flows.ts](server-flows.ts.md) — 13 nodes
 - [useRemoteChanges.ts](useRemoteChanges.ts.md) — 13 nodes
-- [josa.ts](josa.ts.md) — 12 nodes
+- [운영 배포](운영_배포.md) — 13 nodes
+- [Command](Command.md) — 13 nodes
+- [McpKeysPage.tsx](McpKeysPage.tsx.md) — 12 nodes
+- [missing.ts](missing.ts.md) — 12 nodes
 - [A) BLE·IoT 기기 통신 — 구성 지식](A_BLE·IoT_기기_통신_—_구성_지식.md) — 12 nodes
-- [lines.ts](lines.ts.md) — 12 nodes
-- [delivery-cloud.ts](delivery-cloud.ts.md) — 12 nodes
 - [연결선 경로와 가독성 — 줄기 펼치기·겹치지 않는 이름·선 간격](연결선_경로와_가독성_—_줄기_펼치기·겹치지_않는_이름·선_간격.md) — 12 nodes
-- [createJsonlParser](createJsonlParser.md) — 12 nodes
+- [deps.ts](deps.ts.md) — 12 nodes
+- [Claude Code 연동(MCP 서버) — 설계](Claude_Code_연동MCP_서버_—_설계.md) — 12 nodes
 - [망 지식 · 용어 사전 기본 데이터 리서치 (2026-11-11)](망_지식_·_용어_사전_기본_데이터_리서치_2026-11-11.md) — 11 nodes
 - [03. 기업·클라우드 망 구분과 망·보안 용어 조사](03._기업·클라우드_망_구분과_망·보안_용어_조사.md) — 11 nodes
-- [useChatTurn.ts](useChatTurn.ts.md) — 11 nodes
-- [useChatTurn](useChatTurn.md) — 11 nodes
-- [MobileTabBar.tsx](MobileTabBar.tsx.md) — 11 nodes
-- [explain/route.ts](explain-route.ts.md) — 10 nodes
+- [Review Focus](Review_Focus.md) — 10 nodes
 - [파일 구조](파일_구조.md) — 10 nodes
+- [createJsonlParser](createJsonlParser.md) — 10 nodes
 - [정한 것](정한_것.md) — 10 nodes
-- [Review Focus](Review_Focus.md) — 9 nodes
+- [EdgeLayerProps](EdgeLayerProps.md) — 10 nodes
+- [Review Focus](Review_Focus.md) — 10 nodes
+- [parseCommand](parseCommand.md) — 10 nodes
+- [roving.ts](roving.ts.md) — 10 nodes
+- [explain/route.ts](explain-route.ts.md) — 9 nodes
 - [공공기관 망 구분과 망 사이 연결 규칙 — 조사 결과](공공기관_망_구분과_망_사이_연결_규칙_—_조사_결과.md) — 9 nodes
 - [4. 용어 사전 후보 (74개)](4._용어_사전_후보_74개.md) — 9 nodes
+- [Review Focus](Review_Focus.md) — 9 nodes
 - [요청 범위 넘침 점검](요청_범위_넘침_점검.md) — 8 nodes
 - [Review Focus](Review_Focus.md) — 8 nodes
 - [04. 시스템 소프트웨어 · 하드웨어 · 국내 SI 현업 용어 — 용어 사전 후보](04._시스템_소프트웨어_·_하드웨어_·_국내_SI_현업_용어_—_용어_사전_후보.md) — 8 nodes
@@ -128,20 +144,24 @@ sidebar_label: "개요"
 - [overlap.ts](overlap.ts.md) — 8 nodes
 - [messenger-cloud.ts](messenger-cloud.ts.md) — 8 nodes
 - [groupInfo.ts](groupInfo.ts.md) — 8 nodes
+- [server/health.ts](server-health.ts.md) — 8 nodes
+- [GuideEnv](GuideEnv.md) — 8 nodes
+- [GuideDone.tsx](GuideDone.tsx.md) — 8 nodes
 - [4. 분야별 설명](4._분야별_설명.md) — 7 nodes
 - [2-B. 하드웨어 · 물리 인프라 (why·compare 채움)](2-B._하드웨어_·_물리_인프라_why·compare_채움.md) — 7 nodes
 - [현장 기기 · 영상 관제 · 실시간 통신 · AI 결합 구성 지식 리서치 (2026-11-12)](현장_기기_·_영상_관제_·_실시간_통신_·_AI_결합_구성_지식_리서치_2026-11-12.md) — 7 nodes
+- [events.ts](events.ts.md) — 7 nodes
+- [patternPromptBlock](patternPromptBlock.md) — 7 nodes
 - [NodeMenu](NodeMenu.md) — 7 nodes
-- [glossaryMatch.ts](glossaryMatch.ts.md) — 7 nodes
-- [auth/rules.ts](auth-rules.ts.md) — 7 nodes
-- [app/layout.tsx](app-layout.tsx.md) — 6 nodes
-- [patternPromptBlock](patternPromptBlock.md) — 6 nodes
+- [대화창 모양 정리 Implementation Plan](대화창_모양_정리_Implementation_Plan.md) — 6 nodes
+- [glossaryMatch.ts](glossaryMatch.ts.md) — 6 nodes
 - [대화창 모양 정리 (짧은 설계)](대화창_모양_정리_짧은_설계.md) — 6 nodes
 - [head/route.ts](head-route.ts.md) — 6 nodes
-- [ChatLine](ChatLine.md) — 6 nodes
+- [patternPromptBlock](patternPromptBlock.md) — 6 nodes
+- [GuideCard](GuideCard.md) — 6 nodes
 - [MCP 그리기를 앱 대화와 맞추기 — 설계](MCP_그리기를_앱_대화와_맞추기_—_설계.md) — 5 nodes
-- [Task 3: 판정 — 통신 길, 연결 방식 예상 경고, 빠진 정보](Task_3-_판정_—_통신_길,_연결_방식_예상_경고,_빠진_정보.md) — 3 nodes
-- [claude-code/page.tsx](claude-code-page.tsx.md) — 2 nodes
+- [restoreVersionWithMessage](restoreVersionWithMessage.md) — 5 nodes
+- [흐름 보기와 망 경계 표시 Implementation Plan](흐름_보기와_망_경계_표시_Implementation_Plan.md) — 3 nodes
 - [라우트 재수출](라우트_재수출.md) — 1 nodes
 - [docs_superpowers_spike_spike_results](docs_superpowers_spike_spike_results.md) — 1 nodes
 
@@ -150,12 +170,12 @@ sidebar_label: "개요"
 
 - [DiagramState](DiagramState.md) — 70 connections
 - [ValidationError](ValidationError.md) — 67 connections
-- [DiagramWorkspace()](DiagramWorkspace.md) — 61 connections
+- [DiagramWorkspace()](DiagramWorkspace.md) — 62 connections
 - [getOwnedDiagram()](getOwnedDiagram_2.md) — 55 connections
-- [Button()](Button_2.md) — 51 connections
+- [Button()](Button_2.md) — 53 connections
 - [lockedTurn()](lockedTurn.md) — 49 connections
-- [withDiagramLock()](withDiagramLock.md) — 43 connections
-- [Flow()](Flow.md) — 41 connections
+- [withDiagramLock()](withDiagramLock.md) — 47 connections
+- [Flow()](Flow_2.md) — 41 connections
 - [emptyState()](emptyState.md) — 39 connections
 - [runResult()](runResult.md) — 37 connections
 

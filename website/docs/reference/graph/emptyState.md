@@ -1,6 +1,6 @@
 ---
 title: "emptyState()"
-sidebar_position: 136
+sidebar_position: 156
 sidebar_label: "핵심 노드: emptyState()"
 ---
 # emptyState()
@@ -43,15 +43,15 @@ sidebar_label: "핵심 노드: emptyState()"
 - [pipeline.ts](pipeline.ts.md) `EXTRACTED`
 - [mcp/apply.ts](mcp-apply.ts.md) `EXTRACTED`
 - [projects.ts](projects.ts.md) `EXTRACTED`
-- [start.ts](start.ts.md) `EXTRACTED`
+- start.ts `EXTRACTED`
 - [read.ts](read.ts.md) `EXTRACTED`
-- [server/flows.ts](server-flows.ts.md) `EXTRACTED`
+- server/flows.ts `EXTRACTED`
 - versions.ts `EXTRACTED`
-- samples.ts `EXTRACTED`
+- [samples.ts](samples.ts.md) `EXTRACTED`
 - samples/index.ts `EXTRACTED`
 - server/linkGuess.ts `EXTRACTED`
 - fields.ts `EXTRACTED`
-- guides/apply.ts `EXTRACTED`
+- [guides/apply.ts](guides-apply.ts.md) `EXTRACTED`
 - server/assumptions.ts `EXTRACTED`
 - zoneType.ts `EXTRACTED`
 - ignore.ts `EXTRACTED`

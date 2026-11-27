@@ -1,13 +1,13 @@
 ---
 title: "DiagramWorkspace()"
-sidebar_position: 130
+sidebar_position: 150
 sidebar_label: "핵심 노드: DiagramWorkspace()"
 ---
 # DiagramWorkspace()
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> God node · 61 connections · `src/ui/DiagramWorkspace.tsx`
+> God node · 62 connections · `src/ui/DiagramWorkspace.tsx`
 
 **Community:** [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md)
 
@@ -34,7 +34,7 @@ sidebar_label: "핵심 노드: DiagramWorkspace()"
 - getVersionAction() `EXTRACTED`
 - importSampleAction() `EXTRACTED`
 - Legend() `EXTRACTED`
-- *…and 33 more `calls` connection(s) not listed (lowest-degree first to go)*
+- *…and 34 more `calls` connection(s) not listed (lowest-degree first to go)*
 
 ### contains
 - [DiagramWorkspace.tsx](DiagramWorkspace.tsx.md) `EXTRACTED`

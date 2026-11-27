@@ -1,72 +1,70 @@
 ---
 title: "DiagramWorkspace.tsx"
-sidebar_position: 25
+sidebar_position: 20
 ---
 # DiagramWorkspace.tsx
 
 > 이 문서는 graphify 가 코드에서 자동 생성했습니다. 직접 고치지 마세요. `INFERRED` 로 표시된 관계는 추론이므로 코드로 확인하세요.
 
-> 39 nodes · cohesion 0.10
+> 38 nodes · cohesion 0.08
 
 ## Key Concepts
 
 - **DiagramWorkspace.tsx** (137 connections) — `src/ui/DiagramWorkspace.tsx`
-- **DiagramWorkspace()** (61 connections) — `src/ui/DiagramWorkspace.tsx`
-- **restoreVersionAction()** (13 connections) — `src/app/(app)/actions.ts`
-- **run()** (13 connections) — `src/app/(app)/actions.ts`
-- **refreshDiagram()** (12 connections) — `src/app/(app)/actions.ts`
-- **Task 7: 시작·그만두기·되돌리기 맞추기** (10 connections) — `docs/superpowers/plans/2026-11-19-learning-mode.md`
+- **DiagramWorkspace()** (62 connections) — `src/ui/DiagramWorkspace.tsx`
+- **MobileTabBar.tsx** (13 connections) — `src/ui/MobileTabBar.tsx`
 - **PanelResizer.tsx** (9 connections) — `src/ui/PanelResizer.tsx`
-- **getVersionAction()** (7 connections) — `src/app/(app)/actions.ts`
-- **saveFieldsAction()** (7 connections) — `src/app/(app)/actions.ts`
-- **setWarningIgnoredAction()** (7 connections) — `src/app/(app)/actions.ts`
-- **clearPinnedAction()** (6 connections) — `src/app/(app)/actions.ts`
-- **confirmAssumptionAction()** (6 connections) — `src/app/(app)/actions.ts`
-- **listVersionsAction()** (6 connections) — `src/app/(app)/actions.ts`
-- **removeNoLinkAction()** (6 connections) — `src/app/(app)/actions.ts`
-- **savePinnedAction()** (6 connections) — `src/app/(app)/actions.ts`
-- **trunkColor()** (6 connections) — `src/canvas/trunk.ts`
-- **confirmAssumption()** (6 connections) — `src/domain/assumptions.ts`
-- **validVersion()** (3 connections) — `src/app/(app)/actions.ts`
-- **assumptionChangeMessage()** (3 connections) — `src/domain/assumptions.ts`
-- **undoneVersions()** (3 connections) — `src/ui/HistoryPanel.tsx`
-- **NetworkKnowledgeProvider()** (3 connections) — `src/ui/network/NetworkKnowledgeContext.tsx`
+- **MobileTabBar()** (6 connections) — `src/ui/MobileTabBar.tsx`
+- **mobileTabId()** (4 connections) — `src/ui/MobileTabBar.tsx`
+- **MobileTabBarProps** (3 connections) — `src/ui/MobileTabBar.tsx`
 - **PanelResizer()** (3 connections) — `src/ui/PanelResizer.tsx`
+- **CanvasOptions** (2 connections) — `src/canvas/Canvas.tsx`
+- **.onAutoArrange()** (2 connections) — `src/canvas/Canvas.tsx`
+- **DiffMarks** (2 connections) — `src/canvas/Canvas.tsx`
+- **TurnMarks** (2 connections) — `src/canvas/Canvas.tsx`
+- **name** (2 connections) — `src/domain/commands.ts`
 - **diffItems()** (2 connections) — `src/ui/DiagramWorkspace.tsx`
 - **escapeBelongsElsewhere()** (2 connections) — `src/ui/DiagramWorkspace.tsx`
 - **hasId()** (2 connections) — `src/ui/DiagramWorkspace.tsx`
-- *... and 14 more nodes in this community*
+- **sameSet()** (2 connections) — `src/ui/DiagramWorkspace.tsx`
+- **unionState()** (2 connections) — `src/ui/DiagramWorkspace.tsx`
+- **MOBILE_VIEWS** (2 connections) — `src/ui/MobileTabBar.tsx`
+- **.controls()** (2 connections) — `src/ui/MobileTabBar.tsx`
+- **.onChange()** (2 connections) — `src/ui/MobileTabBar.tsx`
+- **MobileView** (2 connections) — `src/ui/MobileTabBar.tsx`
+- **PARTIAL_UNDO** (2 connections) — `src/ui/NodeInfo.tsx`
+- **PANEL_DEFAULT** (2 connections) — `src/ui/PanelResizer.tsx`
+- **PANEL_MAX** (2 connections) — `src/ui/PanelResizer.tsx`
+- *... and 13 more nodes in this community*
 
 ## Relationships
 
-- [(app)/actions.ts](app-actions.ts.md) (28 shared connections)
-- [getOwnedDiagram](getOwnedDiagram.md) (13 shared connections)
-- [Canvas.tsx](Canvas.tsx.md) (10 shared connections)
-- [RightPanel.tsx](RightPanel.tsx.md) (8 shared connections)
-- [InfoCard.tsx](InfoCard.tsx.md) (8 shared connections)
-- [MobileTabBar.tsx](MobileTabBar.tsx.md) (8 shared connections)
-- [runs.ts](runs.ts.md) (7 shared connections)
+- [(app)/actions.ts](app-actions.ts.md) (25 shared connections)
+- [RightPanel.tsx](RightPanel.tsx.md) (11 shared connections)
+- [useSessions.ts](useSessions.ts.md) (9 shared connections)
+- [InfoCard.tsx](InfoCard.tsx.md) (9 shared connections)
+- [FlyLayer.tsx](FlyLayer.tsx.md) (9 shared connections)
+- [Shell.tsx](Shell.tsx.md) (8 shared connections)
 - [Legend.tsx](Legend.tsx.md) (7 shared connections)
-- [Shell.tsx](Shell.tsx.md) (7 shared connections)
+- [Canvas.tsx](Canvas.tsx.md) (6 shared connections)
 - [ChatPanel.tsx](ChatPanel.tsx.md) (6 shared connections)
-- [applyCommand](applyCommand.md) (5 shared connections)
-- [EdgeLayer.tsx](EdgeLayer.tsx.md) (5 shared connections)
+- [runs.ts](runs.ts.md) (5 shared connections)
+- [useRemoteChanges.ts](useRemoteChanges.ts.md) (5 shared connections)
+- [배치 가독성 3·4단계 — 처음 접기, 묶음 접기 단추, 엇갈림 줄이기](배치_가독성_3·4단계_—_처음_접기,_묶음_접기_단추,_엇갈림_줄이기.md) (4 shared connections)
 
 ## Source Files
 
-- `docs/superpowers/plans/2026-11-19-learning-mode.md`
-- `src/app/(app)/actions.ts`
-- `src/canvas/trunk.ts`
-- `src/domain/assumptions.ts`
+- `src/canvas/Canvas.tsx`
+- `src/domain/commands.ts`
 - `src/ui/DiagramWorkspace.tsx`
-- `src/ui/HistoryPanel.tsx`
+- `src/ui/MobileTabBar.tsx`
+- `src/ui/NodeInfo.tsx`
 - `src/ui/PanelResizer.tsx`
-- `src/ui/network/NetworkKnowledgeContext.tsx`
 
 ## Audit Trail
 
-- EXTRACTED: 268 (94%)
-- INFERRED: 17 (6%)
+- EXTRACTED: 223 (97%)
+- INFERRED: 6 (3%)
 - AMBIGUOUS: 0 (0%)
 
 ---

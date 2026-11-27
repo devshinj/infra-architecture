@@ -31,11 +31,21 @@ title: 시작하기
    DATABASE_URL=postgres://postgres:postgres@localhost:5432/infrasketch
    AUTH_SECRET=아주-긴-무작위-문자열
 
-   # 권장
+   # 권장 (운영에서는 필수)
    APP_URL=http://localhost:3000
+   # 앞단 프록시 수. 한 겹이면 1, 프록시 없이 바로 열면 0. 비워 두면 x-forwarded-for 의 첫 값을 믿습니다.
+   # TRUSTED_PROXY_HOPS=1
+   # 운영에서 메일 서버 없이 쓸 때만: 재설정 링크를 서버 로그에 남깁니다.
+   # RESET_LINK_LOG=1
+   # 구성도 잠금 전용 DB 연결 수의 천장(기본 20)
+   # DB_LOCK_POOL_MAX=20
    ```
 
    `DATABASE_URL` 과 `AUTH_SECRET` 이 없으면 앱이 시작되지 않습니다.
+
+   운영(`next start`)으로 켤 때는 더 엄격합니다. `AUTH_SECRET` 이 32자 미만이거나 `APP_URL` 이 없으면 이유를 적고 켜지 않습니다. `SMTP_HOST`·`TRUSTED_PROXY_HOPS` 가 없으면 경고만 남깁니다. 운영에서는 `SMTP_HOST` 가 없어도 재설정 링크를 로그에 남기지 않습니다(`RESET_LINK_LOG=1` 로 켠 때만).
+
+   저장소 맨 위 `docker-compose.yml` 의 DB 는 개발용입니다. 비밀번호가 고정이라 이 컴퓨터(`127.0.0.1`)에서만 붙을 수 있습니다.
 
 4. 데이터베이스 마이그레이션을 실행합니다.
 
@@ -115,6 +125,22 @@ claude mcp add --transport http infrasketch <앱 주소>/api/mcp --header "Autho
 | --- | --- | --- |
 | `npm test` | 단위 테스트 | 없음 |
 | `npm run test:int` | 통합 테스트 | `docker compose up -d db_test` (5433 포트) |
-| `npm run test:e2e` | 브라우저 E2E | `npx playwright install chromium` |
+| `npm run test:e2e` | 브라우저 E2E | `npx playwright install chromium`, `docker compose up -d db_test` |
 
 E2E 는 앱을 `.next-e2e` 에 따로 빌드한 뒤 띄웁니다.
+
+통합·E2E 테스트는 폴더(worktree)마다 따로 DB 를 씁니다. `DATABASE_URL_TEST`(비우면 5433 의 `infrasketch_test`) 서버에, 이름 끝 `_test` 앞에 폴더 이름과 경로 해시를 붙인 DB(예: `infrasketch_infra_hardening_6ecd16_test`)를 처음 돌릴 때 만듭니다(`tests/test-db.ts`). 그래서 다른 worktree 의 테스트가 데이터를 지우지 않습니다. 두 worktree 에서 E2E 를 함께 돌리려면 `E2E_PORT`(기본 3100)·`E2E_FAKE_PORT`(기본 3199)를 바꿉니다.
+
+PR 과 main push 마다 GitHub Actions(`.github/workflows/ci.yml`)가 lint·단위·빌드·타입·통합 테스트와 운영 Docker 이미지 빌드를 돌립니다. E2E 는 넣지 않았습니다.
+
+## 운영 배포
+
+서버 한 대에서 `deploy/` 의 Docker compose 로 DB·앱·HTTPS 프록시(Caddy)·매일 백업을 띄웁니다. 처음 세우기, 옛 서버에서 옮기기, 배포·되돌리기, 백업 복구 연습은 저장소의 `docs/deploy.md` 에 있습니다.
+
+```bash
+cd deploy && cp .env.example .env   # 값을 채운다
+./deploy.sh                          # 빌드 → 배포 전 백업 → 마이그레이션 → 교체 → 헬스 확인
+./rollback.sh                        # 앱을 직전 이미지로
+```
+
+앱은 로그인 없이 `GET /api/health` 로 상태를 알려 줍니다(DB 에 닿으면 200 `{"status":"ok"}`, 아니면 503).
