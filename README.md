@@ -43,6 +43,8 @@
    # SMTP_FROM=
    # 운영에서 메일 서버 없이 쓸 때만: 재설정 링크를 서버 로그에 남깁니다.
    # RESET_LINK_LOG=1
+   # 선택: 구성도 잠금 전용 DB 연결 수의 천장(기본 20). 공용 풀 10개와 합쳐 DB 의 max_connections 안이어야 합니다.
+   # DB_LOCK_POOL_MAX=20
    ```
 
    `DATABASE_URL` 과 `AUTH_SECRET` 이 없으면 앱이 시작되지 않습니다.

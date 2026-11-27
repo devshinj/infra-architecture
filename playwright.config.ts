@@ -24,6 +24,9 @@ export default defineConfig({
       DATABASE_URL: DB_URL,
       AUTH_SECRET: "e2e-only-secret-not-for-production",
       APP_URL: `http://localhost:${PORT}`,
+      // 앞단 프록시가 없다. 이 값이 없으면 Next 가 붙이는 x-forwarded-for(::1)로 모든 가입이 한 IP 로 세어져,
+      // 여섯 번째 가입부터 "같은 IP 1시간 5개" 제한에 걸린다.
+      TRUSTED_PROXY_HOPS: "0",
       QWEN_API_URL: `http://127.0.0.1:${FAKE_PORT}/v1`,
       QWEN_CODER_KEY: FAKE_QWEN_KEY,
       CLEF_API_URL: `http://127.0.0.1:${FAKE_PORT}`,
