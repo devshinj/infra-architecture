@@ -13,12 +13,12 @@ const matcher = new RegExp(`^${pattern}$`);
 const protectedPath = (p: string) => matcher.test(p) && !isPublicPath(p);
 
 describe("middleware matcher", () => {
-  test.each(["/projects/xpng", "/apitxt", "/signup-foo", "/_nextfoo", "/", "/projects/1", "/api/mcpx", "/api/mcp/x"])(
+  test.each(["/projects/xpng", "/apitxt", "/signup-foo", "/_nextfoo", "/", "/projects/1", "/api/mcpx", "/api/mcp/x", "/api/healthz", "/api/health/x"])(
     "%s is protected",
     (p) => expect(protectedPath(p)).toBe(true),
   );
   test.each([
-    "/login", "/signup", "/reset", "/reset/abc", "/api/auth/session", "/api/mcp",
+    "/login", "/signup", "/reset", "/reset/abc", "/api/auth/session", "/api/mcp", "/api/health",
     "/_next/static/x.js", "/favicon.ico", "/logo.png",
   ])("%s is public", (p) => expect(protectedPath(p)).toBe(false));
 });
