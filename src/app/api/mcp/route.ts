@@ -1,6 +1,8 @@
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
 import { NextResponse } from "next/server";
 
+import { readLimitedBody } from "@/server/mcp/body";
+import { takeMcpRequest } from "@/server/mcp/rate";
 import { createMcpServer } from "@/server/mcp/server";
 import { verifyMcpKey } from "@/server/mcpKeys";
 
@@ -10,6 +12,8 @@ export const dynamic = "force-dynamic";
 const NO_KEY = "키가 맞지 않아요.";
 const WRONG_KEY = "키가 맞지 않거나 지워졌어요. InfraSketch 의 MCP 연결 화면에서 새 키를 만들어 다시 등록해 주세요.";
 const GENERIC = "요청을 처리하지 못했어요. 잠시 뒤 다시 시도해 주세요.";
+const TOO_BIG = "요청이 너무 커요. 명령을 나눠서 보내 주세요.";
+const TOO_OFTEN = "요청을 너무 자주 보냈어요. 잠시 뒤 다시 시도해 주세요.";
 
 /** "Bearer <키>" 에서 키만 꺼낸다. 키·헤더는 로그에 쓰지 않는다. */
 function bearerKey(request: Request): string | null {
@@ -28,15 +32,25 @@ export async function POST(request: Request) {
 
   let server: ReturnType<typeof createMcpServer> | null = null;
   try {
+    // 큰 본문은 DB 를 보기 전에 돌려보낸다.
+    const body = await readLimitedBody(request);
+    if (body === null) return NextResponse.json({ error: TOO_BIG }, { status: 413 });
+
     // 키 확인도 try 안에서 한다. DB 가 안 되면 Next 기본 HTML 500 대신 아래 JSON 500 으로 답한다.
     const userId = await verifyMcpKey(key);
     // 키는 왔는데 틀렸거나 지워졌으면 403. 401 이면 Claude Code(SDK)가 OAuth 를 찾아 나서서 이 문구가 안 보인다.
     if (!userId) return NextResponse.json({ error: WRONG_KEY }, { status: 403 });
 
+    const rate = takeMcpRequest(userId);
+    if (!rate.ok) {
+      return NextResponse.json({ error: TOO_OFTEN }, { status: 429, headers: { "Retry-After": String(rate.retryAfterS) } });
+    }
+
     server = createMcpServer(userId);
     const transport = new WebStandardStreamableHTTPServerTransport({ sessionIdGenerator: undefined, enableJsonResponse: true });
     await server.connect(transport);
-    return await transport.handleRequest(request);
+    // 본문은 위에서 이미 읽었으므로, 같은 내용으로 요청을 다시 만들어 넘긴다.
+    return await transport.handleRequest(new Request(request.url, { method: request.method, headers: request.headers, body }));
   } catch (err) {
     console.error("mcp request failed", err instanceof Error ? err.message : err);
     return NextResponse.json({ error: GENERIC }, { status: 500 });

@@ -12,6 +12,13 @@ const idTaken = (s: DiagramState, id: string) => has(s.groups, id) || has(s.node
 const parentOk = (s: DiagramState, parent: string | null) => parent === null || has(s.groups, parent);
 const endpointOk = (s: DiagramState, id: string) => has(s.nodes, id) || has(s.groups, id);
 
+/**
+ * 구성도 하나에 둘 수 있는 수. 실제 구성도(큰 것이 노드 60개쯤)보다 훨씬 넉넉하다 — 명령을 되풀이해 넣어
+ * 구성도를 끝없이 키우는 것을 막는 값이다(버전마다 통째로 저장되고, 배치·프롬프트도 전체를 본다).
+ */
+export const STATE_LIMITS = { groups: 200, nodes: 500, edges: 1500 } as const;
+const full = (items: object, max: number) => Object.keys(items).length >= max;
+
 /** add_edge 가 id 를 안 받았을 때 쓰는 규칙: e-<from>-<to>, 있으면 -2, -3… */
 export function freeEdgeId(s: DiagramState, from: string, to: string): string {
   const stem = `e-${from}-${to}`;
@@ -28,6 +35,7 @@ export interface ApplyOptions {
 export function applyCommand(state: DiagramState, cmd: Command, opts: ApplyOptions = {}): ApplyResult {
   switch (cmd.op) {
     case "add_group": {
+      if (full(state.groups, STATE_LIMITS.groups)) return fail(state, `group limit ${STATE_LIMITS.groups} reached`);
       if (idTaken(state, cmd.id)) return fail(state, `id ${cmd.id} already exists`);
       if (!parentOk(state, cmd.parent)) return fail(state, `parent ${cmd.parent} not found`);
       return {
@@ -39,6 +47,7 @@ export function applyCommand(state: DiagramState, cmd: Command, opts: ApplyOptio
       };
     }
     case "add_node": {
+      if (full(state.nodes, STATE_LIMITS.nodes)) return fail(state, `node limit ${STATE_LIMITS.nodes} reached`);
       if (idTaken(state, cmd.id)) return fail(state, `id ${cmd.id} already exists`);
       if (!parentOk(state, cmd.parent)) return fail(state, `parent ${cmd.parent} not found`);
       const node = {
@@ -53,6 +62,7 @@ export function applyCommand(state: DiagramState, cmd: Command, opts: ApplyOptio
       return { ok: true, state: { ...state, nodes: { ...state.nodes, [cmd.id]: node } } };
     }
     case "add_edge": {
+      if (full(state.edges, STATE_LIMITS.edges)) return fail(state, `edge limit ${STATE_LIMITS.edges} reached`);
       if (!endpointOk(state, cmd.from)) return fail(state, `endpoint ${cmd.from} not found`);
       if (!endpointOk(state, cmd.to)) return fail(state, `endpoint ${cmd.to} not found`);
       let id = cmd.id;
