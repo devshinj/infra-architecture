@@ -19,6 +19,9 @@ const nextConfig: NextConfig = {
   // `next dev` 는 .next-dev, 빌드는 .next, E2E 는 NEXT_DIST_DIR=.next-e2e 를 쓴다.
   // 그래서 빌드가 돌고 있는 개발 서버의 폴더를 덮어쓰지 않는다. NODE_ENV 는 Next CLI 가 설정을 읽기 전에 정한다(dev → development).
   distDir: process.env.NEXT_DIST_DIR || (process.env.NODE_ENV === "development" ? ".next-dev" : ".next"),
+  // Docker 이미지(Dockerfile)는 NEXT_OUTPUT=standalone 으로 빌드해 node_modules 없이 server.js 하나로 뜬다.
+  // 로컬·E2E 의 `next start` 는 그대로 둔다(standalone 이면 next start 가 경고를 낸다).
+  output: process.env.NEXT_OUTPUT === "standalone" ? "standalone" : undefined,
   poweredByHeader: false,
   async headers() {
     return [{ source: "/:path*", headers: SECURITY_HEADERS }];

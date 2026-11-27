@@ -145,4 +145,20 @@ MCP 를 쓰는 도구(Claude Code·Cursor 등)에서 내 구성도를 읽고 고
 | --- | --- | --- |
 | `npm test` | 단위 테스트 | 없음 |
 | `npm run test:int` | 통합 테스트 | `docker compose up -d db_test` (5433 포트) |
-| `npm run test:e2e` | 브라우저 E2E | `npx playwright install chromium` |
+| `npm run test:e2e` | 브라우저 E2E | `npx playwright install chromium`, `docker compose up -d db_test` |
+
+통합·E2E 테스트는 폴더(worktree)마다 따로 DB 를 씁니다. `DATABASE_URL_TEST`(비우면 5433 의 `infrasketch_test`) 서버에, 이름 끝 `_test` 앞에 폴더 이름과 경로 해시를 붙인 DB(예: `infrasketch_infra_hardening_6ecd16_test`)를 처음 돌릴 때 만듭니다. 그래서 다른 worktree 의 테스트가 데이터를 지우지 않습니다. 이름이 `_test` 로 끝나지 않는 DB 주소는 거절합니다. 두 worktree 에서 E2E 를 함께 돌리려면 `E2E_PORT`(기본 3100)·`E2E_FAKE_PORT`(기본 3199)를 바꿉니다.
+
+PR 과 main push 마다 GitHub Actions(`.github/workflows/ci.yml`)가 lint·단위·빌드·타입·통합 테스트와 운영 Docker 이미지 빌드를 돌립니다. E2E 는 넣지 않았습니다.
+
+## 운영 배포
+
+서버 한 대에서 `deploy/` 의 Docker compose 로 DB·앱·HTTPS 프록시(Caddy)·매일 백업을 띄웁니다. 처음 세우기, 옛 서버에서 옮기기, 배포·되돌리기, 백업 복구 연습은 [docs/deploy.md](docs/deploy.md) 에 있습니다.
+
+```bash
+cd deploy && cp .env.example .env   # 값을 채운다
+./deploy.sh                          # 빌드 → 배포 전 백업 → 마이그레이션 → 교체 → 헬스 확인
+./rollback.sh                        # 앱을 직전 이미지로
+```
+
+앱은 로그인 없이 `GET /api/health` 로 상태를 알려 줍니다(DB 에 닿으면 200 `{"status":"ok"}`, 아니면 503).

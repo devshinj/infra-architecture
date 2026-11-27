@@ -61,6 +61,7 @@
 ### Docker·compose (`deploy/`)
 - 서비스: `db`(포트를 밖으로 열지 않음), `app`(standalone, node 사용자, 헬스체크), `caddy`(80·443, `SITE_ADDRESS`, ndjson 스트림을 바로 흘림), `backup`, `tools`(profile).
 - `DATABASE_URL` 은 compose 가 `POSTGRES_PASSWORD` 로 만든다. `TRUSTED_PROXY_HOPS` 기본 1(Caddy 는 들어온 x-forwarded-for 를 버리고 제 값을 쓴다).
+- `AUTH_URL` 은 compose 가 `APP_URL` 로 채운다. standalone 서버는 요청 주소를 `HOSTNAME`(0.0.0.0:3000)으로 만들어, 없으면 Auth.js 라우트의 이동 주소가 `http://0.0.0.0:3000/...` 이 된다(검증 중 발견).
 - 비밀값은 `deploy/.env`(저장소에 올리지 않음). 예시는 `deploy/env.example`.
 
 ### 배포 절차 (`deploy/deploy.sh`)
